@@ -1,0 +1,117 @@
+<mxfile host="app.diagrams.net" modified="2026-09-19T00:00:00.000Z" agent="claude" version="24.0.0" type="device">
+  <diagram id="nampedal" name="NAM pedal">
+    <mxGraphModel dx="1600" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="tib" value="&lt;b&gt;tib — ASUS Tinker Board (RK3288)&lt;/b&gt;&lt;br&gt;NAM A2-full kernel · RT kernel&lt;br&gt;isolcpus · SCHED_FIFO · performance governor&lt;br&gt;&lt;b&gt;I2S slave&lt;/b&gt; · &lt;b&gt;I2C master&lt;/b&gt; (codec 0x1A)&lt;br&gt;JACK/PipeWire + LV2 host&lt;br&gt;&lt;i&gt;simple-audio-card DT node,&lt;br&gt;bitclock-master + frame-master on codec DAI&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fillColor=#dae8fc;strokeColor=#2b6098;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="560" y="40" width="600" height="170" as="geometry" />
+        </mxCell>
+
+        <mxCell id="codec" value="&lt;b&gt;SparkFun WM8960 breakout&lt;/b&gt;&lt;br&gt;&lt;br&gt;Y1 24 MHz osc → MCLK (always on) — codec is I2S master&lt;br&gt;&lt;br&gt;IN: 100R + 47nF LPF → 1uF coupling → PGA → ADC&lt;br&gt;&lt;i&gt;swap 47nF to 4.7nF if buffer Zout &amp;gt; ~200R&lt;/i&gt;&lt;br&gt;&lt;br&gt;OUT: DAC → HP_L / HP_R — &lt;b&gt;no coupling caps fitted&lt;/b&gt;&lt;br&gt;&lt;i&gt;OUT3 unused — leave disabled in registers&lt;/i&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Jumpers:&lt;/b&gt; AVDD-ISO CUT · SPKVDD both open · VIN n/c&lt;br&gt;3V3 pin → DCVDD, DBVDD, Y1 · AVDD ← external LDO" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fillColor=#ffe6cc;strokeColor=#b4531f;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="560" y="390" width="420" height="330" as="geometry" />
+        </mxCell>
+
+        <mxCell id="injack" value="&lt;b&gt;IN&lt;/b&gt;&lt;br&gt;6.35 mm TS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#b4531f;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="60" y="440" width="150" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="buffer" value="&lt;b&gt;Hi-Z buffer&lt;/b&gt;&lt;br&gt;OPA1642, 9 V single supply&lt;br&gt;1 MOhm in, 4.5 V bias&lt;br&gt;&lt;b&gt;Inst / Line switch&lt;/b&gt;&lt;br&gt;x10 (guitar) / x1 (pedal)&lt;br&gt;100R series out" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#b4531f;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="280" y="410" width="220" height="130" as="geometry" />
+        </mxCell>
+
+        <mxCell id="outcapL" value="10 uF + 100R&lt;br&gt;1 MOhm bleed to GND" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#b4531f;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="410" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="outjackL" value="&lt;b&gt;OUT L&lt;/b&gt;&lt;br&gt;6.35 mm TS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#b4531f;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="410" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="outcapR" value="10 uF + 100R&lt;br&gt;1 MOhm bleed to GND" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#b4531f;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1050" y="520" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="outjackR" value="&lt;b&gt;OUT R&lt;/b&gt;&lt;br&gt;6.35 mm TS" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#b4531f;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="1290" y="520" width="150" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="pico" value="&lt;b&gt;Pico 2 — control surface only&lt;/b&gt;&lt;br&gt;footswitches · rotary encoder · OLED · status LEDs&lt;br&gt;expression pedal ADC · MIDI&lt;br&gt;talks to tib over UART; tib applies changes via ALSA mixer controls&lt;br&gt;&lt;b&gt;Does NOT touch the codec I2C bus — one owner only&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fillColor=#dae8fc;strokeColor=#2b6098;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="560" y="840" width="600" height="140" as="geometry" />
+        </mxCell>
+
+        <mxCell id="psu5" value="&lt;b&gt;5 V / 3 A supply&lt;/b&gt;&lt;br&gt;USB-C brick, or&lt;br&gt;DC7 v2 USB-C (15 W)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#9b2d3a;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="60" y="60" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="psu9" value="&lt;b&gt;9 V centre-negative&lt;/b&gt;&lt;br&gt;one isolated Cioks outlet&lt;br&gt;~30 mA total draw" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#a8760d;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="60" y="680" width="200" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="ldo" value="&lt;b&gt;LDO → 3.3 V&lt;/b&gt;&lt;br&gt;low-noise, feeds AVDD&lt;br&gt;~0.1 W dissipation" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#a8760d;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="310" y="680" width="180" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="star" value="&lt;b&gt;STAR GROUND&lt;/b&gt;&lt;br&gt;PSU 0 V · codec GND · buffer GND&lt;br&gt;jack sleeves&lt;br&gt;&lt;i&gt;joined at ONE point&lt;/i&gt;" style="ellipse;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#6b6862;strokeWidth=2;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="850" width="240" height="120" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b4531f;strokeWidth=2;" edge="1" parent="1" source="injack" target="buffer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" value="LINPUT1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b4531f;strokeWidth=2;" edge="1" parent="1" source="buffer" target="codec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" value="HP_L" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b4531f;strokeWidth=2;" edge="1" parent="1" source="codec" target="outcapL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" value="HP_R" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b4531f;strokeWidth=2;" edge="1" parent="1" source="codec" target="outcapR">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b4531f;strokeWidth=2;" edge="1" parent="1" source="outcapL" target="outjackL">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#b4531f;strokeWidth=2;" edge="1" parent="1" source="outcapR" target="outjackR">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e7" value="I2S: BCLK, ADCLRC, DACLRC (from codec)&lt;br&gt;ADCDAT → tib · DACDAT → codec&lt;br&gt;I2C: SDA/SCL · 3V3 to codec&lt;br&gt;&lt;b&gt;keep leads &amp;lt; 10 cm&lt;/b&gt;" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2b6098;strokeWidth=2;startArrow=classic;startFill=1;" edge="1" parent="1" source="tib" target="codec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e8" value="UART" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#2b6098;strokeWidth=2;startArrow=classic;startFill=1;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="tib" target="pico">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e9" value="5 V → header pins" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#9b2d3a;strokeWidth=2;" edge="1" parent="1" source="psu5" target="tib">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="5 V to Pico" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#9b2d3a;strokeWidth=2;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" edge="1" parent="1" source="tib" target="pico">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="e11" value="9 V to buffer" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#a8760d;strokeWidth=2;" edge="1" parent="1" source="psu9" target="buffer">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#a8760d;strokeWidth=2;" edge="1" parent="1" source="psu9" target="ldo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" value="AVDD" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#a8760d;strokeWidth=2;" edge="1" parent="1" source="ldo" target="codec">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="g1" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6b6862;strokeWidth=2;dashed=1;endArrow=none;" edge="1" parent="1" source="psu9" target="star">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g2" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6b6862;strokeWidth=2;dashed=1;endArrow=none;" edge="1" parent="1" source="ldo" target="star">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g3" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6b6862;strokeWidth=2;dashed=1;endArrow=none;" edge="1" parent="1" source="codec" target="star">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="g4" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#6b6862;strokeWidth=2;dashed=1;endArrow=none;" edge="1" parent="1" source="buffer" target="star">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
