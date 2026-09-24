@@ -98,17 +98,20 @@ Small and first, because every later phase deploys from it.
    - In namchain, replace the research copy with a one-line pointer here.
 3. **One diagram.**
    - Move namchain's two-layer diagram and its untracked `-2` successor here, and retire this
-     repo's single-layer one.
+     repo's single-layer one. The `-2` file is already here, unchanged
+     (`docs/diagrams/nam-pedal-block-diagram-2.drawio`); it left namchain's working tree with step 4.
    - Attach the AVDD arrow to the codec.
    - Drop "App comms (WiFi)" from Control, replace JACK/LV2 with `namchaind`, and add the pedal
      service.
    - Keep the lower, USB-interface layout, labelled Phase 1.
    - Render it with the draw.io CLI to check it.
-4. **Decide what happens to the in-flight work** (your call): the namchain CoreAudio/loop backends
-   and ljoss's LocalEngine.
-   - Either commit them to a `local-engine` branch in both repos (rule 4), which loses nothing and
-     keeps `main` deployable, or finish them first.
-   - Push ljoss's unpushed commit, and fast-forward piv's checkouts.
+4. **Park the in-flight work.** Done 2026-09-24, at your call to keep it separate.
+   - namchain's CoreAudio and loop backends are on the `local-engine` branch (`4cec06c`).
+   - ljoss's LocalEngine and model-finder work is on its own `local-engine` branch (`f83ad56`).
+   - Both branches are pushed, and both `main`s are clean.
+   - ljoss's finished test commit (`6fc69b0`) is pushed to `main`.
+   - piv's namchain and ljoss checkouts are fast-forwarded to `origin/main`.
+   - Work on either aspect continues on `local-engine`, committed and pushed there.
 5. **Rename `~/code.local/nodey` → `~/code.local/ljoss`.** namchain's comparison doc already uses
    that path, and it's the one piv uses. Xcode's DerivedData will rebuild.
 6. **Commit the armv7-NEON build** in namchain. The committed armv7 build (`-mfpu=vfpv3-d16`)
@@ -393,5 +396,5 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
-Phase 0, steps 1–3, which touch only documents; then 4, which is your call on the in-flight work;
-then 6, because Phase 1's deploy depends on it.
+Phase 0, steps 1–3, which touch only documents, then 6, because Phase 1's deploy depends on it.
+Step 4 is done.
