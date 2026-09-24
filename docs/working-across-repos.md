@@ -44,9 +44,13 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 3. **Work in the repo that owns the change.** Cross-cutting sessions start here, with the other
    repos added as extra directories (below). A session that is deep in one component starts in that
    component's repo.
-4. **A change that spans repos is a set of commits under one branch name**, landed in dependency
-   order (engine before app, `tib` bridge before Pico firmware), each commit green on its own. The
-   plan names the set, so "which ljoss goes with which namchain" is never a guess.
+4. **Work lands on each repo's default branch**, committed and pushed, with no pull requests. That's
+   how you work on your own repos; forks and other people's repos still go through PRs. An aspect
+   you ask to keep separate gets its own branch, named the same in every repo it touches, and its
+   work is committed and pushed there until it merges. A change that spans repos lands in
+   dependency order (engine before app, `tib` bridge before Pico firmware), each commit green on its
+   own. The plan names the commits that belong together, so "which ljoss goes with which namchain"
+   is never a guess.
 5. **Nothing runs on tib from a state nobody recorded.** Every deployed binary carries the commit it
    was built from, marked dirty if the tree was. A manifest on `tib` and a lock file here say what
    is running. (Your MIDI Commander firmware already stamps its builds this way, and NAMBench pins

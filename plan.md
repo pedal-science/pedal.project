@@ -225,13 +225,39 @@ Small and first, because every later phase deploys from it.
    - The LDO's noise.
    - How the star ground is laid out.
    - The reserved RINPUT1 (D5).
-2. **Order parts.** The OPA1642 only comes in SOIC, so the stripboard prototype needs an adapter,
-   or a DIP JFET op-amp.
+
+   **Early findings** (2026-09-24, from the WM8960, OPA1642 and OPA2197 datasheets). 2a's
+   measurements confirm or overturn them.
+   - **×10 is far too much gain.** It puts full scale at 0.14 V peak at the jack, while guitar
+     peaks run from about 0.5 V to 2 V. Put full scale near the loudest expected peak instead:
+     about ×1 for guitar (1.4 V peak), with a pad ahead of the buffer for Line. The codec's PGA
+     can't add gain quietly either. The datasheet gives its equivalent input noise as 150 µV at
+     +30 dB, against about 20 µV (A-weighted) through the 0 dB path.
+   - **At these gains the codec sets the noise floor, not the op-amp.** Its ~20 µV is far above
+     the OPA1642's ~0.7 µV, or even a TL072's ~2.5 µV, over 20 kHz. What the op-amp has to
+     provide is headroom.
+   - **Headroom depends on the bias point.** The OPA1642's input range stops 3.5 V below its
+     supply, so at 9 V with the drafted 4.5 V bias, input peaks above +1 V distort. Biased at about
+     2.75 V, it has roughly ±2.5 V. The OPA2197, which is rail-to-rail, gets about ±3 V at a 3 V
+     bias before its input stage changes over, and it keeps working beyond that.
+   - **Keep the 47 nF shunts.** The board's own 100 Ω already isolates the op-amp from them, so the
+     draft's extra 100 Ω isn't needed and the corner stays at 34 kHz. The 4.7 nF swap only
+     mattered for an unbuffered, high-impedance source.
+   - **The output level works.** HP_L and HP_R reach 1 Vrms at full scale. That's hot for an amp's
+     input and right for a line input, and `namchaind`'s output gain sets it either way.
+   - **AVDD draws about 5–8 mA** (the datasheet's playback figures), so a TO-92 78L33 is plenty.
+     There's a simpler option for 2c too: feed the board's VIN from a 78L05 on the 9 V side. AVDD
+     then comes off `tib`'s supply with no cutting, and the board's own LDO becomes a second stage.
+2. **Settle the values.** The parts are already in the basket, including the OPA2197 (CPC doesn't
+   sell the OPA1642). [docs/bom.md](docs/bom.md) describes a provisional input stage built on these
+   findings: ×1 on Inst, a 680 kΩ / 330 kΩ pad on Line, and a 2.9 V bias. If 2a's measurements move
+   any of that, only resistor values change.
 3. **Build the buffer and the output stage** on stripboard, powered from a Cioks outlet through the
    LDO.
 
 **2c. Modify and compare.**
-- Cut AVDD-ISO and fit the external LDO, open SPKVDD, disconnect VIN.
+- First try the option that needs no cutting: VIN from a 78L05 on the 9 V side.
+- If that isn't enough, cut AVDD-ISO and fit the external LDO, open SPKVDD and disconnect VIN.
 - Measure against 2a, and keep what measurably helps.
 
 **Done when:**
@@ -347,18 +373,23 @@ These don't block Phase 0 or 1.
   service would reach every device with nothing to install. Worth weighing before a Qt designer.
   Not before the pedal plays.
 
-## Shopping (now, while the RP2350 board is in transit)
+## Shopping
 
-- 2 × Raspberry Pi **Pico 2**: one for the build, one for experiments. Get the Pico 2 W if you
-  want to keep Pico WiFi as an option; it's only a little dearer.
-- 1 × Raspberry Pi **Debug Probe**: SWD flashing and debugging, and a USB-UART for testing the
-  `tib` link from the Mac.
-- Headers, breadboard, jumper wires. Female-to-female leads for the WM8960 bring-up, if the board
-  needs headers soldered on.
-- Optional now, since it's cheap to add to the same order: a 5-pin DIN socket and a 3.3 V-capable
-  optocoupler (H11L1 or 6N138) for MIDI in. Resistor values follow the MIDI electrical spec for
-  3.3 V.
-- **Not yet:** the analogue parts. Buy them after the 2b review.
+Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs/bom.md).
+
+- **In the CPC basket, not yet ordered (2026-09-24, 41 lines, £117.19 ex VAT):**
+  - 2 × Pico 2 WH and the Debug Probe
+  - two breadboards (one a spare) and header strips. You already have jumper leads, including the
+    female-to-female ones for the WM8960 bring-up.
+  - five Neutrik NMJ6HF-S switched TRS jacks: IN, OUT L, OUT R, expression, and a spare
+  - the MIDI-in parts. The BOM gives the circuit and its values.
+  - everything else that doesn't wait on a decision: the output stage (which 2a's measurements
+    need too), power, the relay and its driver, footswitches, LEDs, sockets and stripboard
+  - the op-amp: 2 × OPA2197 on SOIC-to-DIP adapters. It's on back order until 4 Oct, so CPC may
+    send it separately.
+  - the Inst/Line switch and the Line pad's resistors, at provisional values; screened cable and
+    hook-up wire.
+- **Not designed yet:** the 5 V input, the mic stage, cooling and the enclosure hardware.
 
 ## Next session starts with
 
