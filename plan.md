@@ -96,7 +96,8 @@ Small and first, because every later phase deploys from it.
      schematic path, and your note about keeping the diagram's formatting.
    - Rewrite its software section: `namchaind` on `alsa_raw` instead of JACK/LV2, plus D2–D6.
    - In namchain, replace the research copy with a one-line pointer here.
-3. **One diagram.**
+3. **One diagram.** Done 2026-09-25: `docs/diagrams/nam-pedal-block-diagram.drawio`. The App
+   arrows now go to the Engine (D2), which moved the 5 V supply row down 60 px to clear a path.
    - Move namchain's two-layer diagram and its untracked `-2` successor here, and retire this
      repo's single-layer one. The `-2` file is already here, unchanged
      (`docs/diagrams/nam-pedal-block-diagram-2.drawio`); it left namchain's working tree with step 4.
@@ -396,5 +397,4 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
-Phase 0, steps 1–3, which touch only documents, then 6, because Phase 1's deploy depends on it.
-Step 4 is done.
+Phase 0 step 6 (the armv7-NEON build), because Phase 1's deploy depends on it. Steps 1–4 are done.
