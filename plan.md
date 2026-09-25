@@ -115,7 +115,10 @@ Small and first, because every later phase deploys from it.
    - Work on either aspect continues on `local-engine`, committed and pushed there.
 5. **Rename `~/code.local/nodey` → `~/code.local/ljoss`.** namchain's comparison doc already uses
    that path, and it's the one piv uses. Xcode's DerivedData will rebuild.
-6. **Commit the armv7-NEON build** in namchain. The committed armv7 build (`-mfpu=vfpv3-d16`)
+6. **Commit the armv7-NEON build** in namchain. Done 2026-09-25 (namchain `907ef81`):
+   `cmake/toolchains/armv7-neon-linux-gnueabihf.cmake`, a CI job that runs the tests and the
+   planar parity gate under qemu-arm, and a configure summary that compiles `a2_planar.h`'s own
+   gate. Verified on piv: 261/261 tests pass and the parity test runs. The committed armv7 build (`-mfpu=vfpv3-d16`)
    can't run A2-Full in real time on `tib` at all: 133% of a core, against 52% with NEON
    (`bench-results/tib-summary.txt` §1–2).
    - A toolchain file or `CMakePresets.json` entry for NEON-guaranteed boards (`-mfpu=neon-vfpv4`),
@@ -397,4 +400,4 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
-Phase 0 step 6 (the armv7-NEON build), because Phase 1's deploy depends on it. Steps 1–4 are done.
+Phase 0 step 5 (the ljoss rename) or step 7 (agent setup). Steps 1–4 and 6 are done.
