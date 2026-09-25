@@ -18,9 +18,10 @@ require_tib() {
 }
 
 # The commit the tree came from, marked dirty if devices/tib has uncommitted changes (rule 5).
+# Backups are output, not input, so they do not count.
 tree_commit() {
   local c; c=$(git -C "$TIB_DIR" rev-parse --short HEAD)
-  [[ -z $(git -C "$TIB_DIR" status --porcelain -- .) ]] || c="$c-dirty"
+  [[ -z $(git -C "$TIB_DIR" status --porcelain -- . ":!backups") ]] || c="$c-dirty"
   echo "$c"
 }
 

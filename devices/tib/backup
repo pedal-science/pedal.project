@@ -11,7 +11,7 @@ out="${1:-$TIB_DIR/backups/$(timestamp)}"
 mkdir -p "$out"
 log "backing up $TIB_HOST into ${out#"$TIB_DIR"/}"
 
-tib 'bash -s' > "$out/state.txt" 2>&1 <<'EOF'
+tib 'bash -s' > "$out/state.txt" 2>&1 <<'EOF' || die "reading tib state failed; see $out/state.txt"
 section() { printf '\n== %s\n' "$*"; }
 section host;      uname -a; cat /proc/cmdline; uptime
 section applied;   cat /etc/pedal/applied 2>/dev/null || echo "not applied"
@@ -29,12 +29,13 @@ section timers;    systemctl list-timers --all --no-legend --no-pager
 section sysctl;    sysctl vm.swappiness vm.stat_interval vm.dirty_ratio vm.dirty_background_ratio kernel.sched_rt_runtime_us
 section limits;    head -50 /etc/security/limits.d/* 2>/dev/null
 section pedal-manifest;    sudo -n cat /var/lib/pedal/manifest 2>/dev/null
-section host-slim-manifest; sudo -n cat /var/lib/namchain/host-slim/manifest 2>/dev/null
+section host-slim-manifest; sudo -n cat /var/lib/namchain/host-slim/manifest 2>/dev/null || echo "none (taken over by pedal-device)"
+true   # a missing section is not a failed backup
 EOF
 
 # Only paths that exist go into the tar, so a first backup and a later one both work. tib's login
 # shell is zsh, which errors on an unmatched glob, so this runs under bash with nullglob.
-tib 'bash -s' > "$out/files.tar" <<'EOF'
+tib 'bash -s' > "$out/files.tar" <<'EOF' || die "copying tib files failed"
 shopt -s nullglob
 cd /
 paths=(etc/pedal var/lib/pedal var/lib/namchain/host-slim
