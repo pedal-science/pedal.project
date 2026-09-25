@@ -101,7 +101,7 @@ check() {
             flags=$(sed 's/.*) //' "$t/stat" 2>/dev/null | awk '{print $7}') || continue
             # PF_KTHREAD (0x00200000): per-CPU kernel threads belong there
             (( ${flags:-0} & 0x00200000 )) && continue
-            grep -qs '^0::/pedal-rt.slice' "${t%/task/*}/cgroup" && continue
+            grep -qs 'pedal-rt\.slice' "${t%/task/*}/cgroup" && continue   # /pedal.slice/pedal-rt.slice/...
             cat "$t/comm"
           done | sort | uniq -c | awk '{printf "%s%s(%s)", s, $2, $1; s=" "}')
   if [[ -z $stray ]]; then okay "user tasks allowed on cpu $RT_CPUS" "none outside pedal-rt.slice"

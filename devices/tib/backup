@@ -32,14 +32,20 @@ section pedal-manifest;    sudo -n cat /var/lib/pedal/manifest 2>/dev/null
 section host-slim-manifest; sudo -n cat /var/lib/namchain/host-slim/manifest 2>/dev/null
 EOF
 
-# Only paths that exist go into the tar, so a first backup and a later one both work.
-tib 'cd / && sudo -n tar -cf - $(ls -d \
-  etc/pedal var/lib/pedal var/lib/namchain/host-slim \
-  etc/systemd/system/*.slice.d etc/systemd/system/*.slice \
-  etc/systemd/system/pedal-* etc/systemd/system/namchain-host-slim-* \
-  etc/systemd/journald.conf etc/systemd/journald.conf.d \
-  etc/sysctl.d etc/security/limits.d etc/udev/rules.d \
-  usr/local/sbin usr/local/bin 2>/dev/null)' > "$out/files.tar"
+# Only paths that exist go into the tar, so a first backup and a later one both work. tib's login
+# shell is zsh, which errors on an unmatched glob, so this runs under bash with nullglob.
+tib 'bash -s' > "$out/files.tar" <<'EOF'
+shopt -s nullglob
+cd /
+paths=(etc/pedal var/lib/pedal var/lib/namchain/host-slim
+       etc/systemd/system/*.slice.d etc/systemd/system/*.slice
+       etc/systemd/system/pedal-* etc/systemd/system/namchain-host-slim-*
+       etc/systemd/journald.conf etc/systemd/journald.conf.d
+       etc/sysctl.d etc/security/limits.d etc/udev/rules.d usr/local/sbin usr/local/bin)
+existing=()
+for p in "${paths[@]}"; do [[ -e $p ]] && existing+=("$p"); done
+sudo -n tar -cf - "${existing[@]}"
+EOF
 
 ln -sfn "$(basename "$out")" "$TIB_DIR/backups/latest"
 ok "backup: ${out#"$TIB_DIR"/} ($(wc -l < "$out/state.txt") lines, $(du -h "$out/files.tar" | cut -f1) tar)"
