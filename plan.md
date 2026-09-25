@@ -147,6 +147,8 @@ Small and first, because every later phase deploys from it.
 1. **Open devices by name** (namchain). `alsa_raw` resolves `hw:CARD=<id>` or `hw:<id>,<dev>`
    through `/proc/asound/<id>`, so a reboot can't point the engine at the wrong card. This is
    needed for the WM8960 too.
+   Done 2026-09-25 (namchain `412e151`). On `tib` the SSL 2+'s id is `II` (ALSA takes it from
+   "SSL 2+ Mk II"), so the config names `hw:CARD=II,DEV=0`.
 2. **Make an amp + cab rig fit on `tib`** (namchain).
    - First, measure `nc.cab.ir` on `tib` at your library's real lengths.
    - Then port the partitioned FFT convolution from your AudioDSPTools `partitioned-ir` branch
@@ -402,4 +404,4 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
-Phase 0 is done. Next is Phase 1.
+Phase 1 step 2: measure `nc.cab.ir` on `tib`, then port the partitioned convolution. Step 1 is done.
