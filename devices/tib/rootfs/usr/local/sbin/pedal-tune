@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+# pedal-tune — the runtime half of tib's tuning, run at boot by pedal-tune.service.
+#
+#   pedal-tune apply   set what cannot be written down as a file (the default)
+#   pedal-tune check   report whether it is all in force; exits 1 if anything is not
+#
+# The kernel half (isolcpus, nohz_full, rcu_nocbs on core 3) is rtpi's. The persistent files
+# (slice drop-ins, journald, sysctl, limits) are installed by pedal-device. What is left for this
+# script is state that only exists at runtime:
+#
+#   1. the clock: governor and cap, on the one policy all four cores share
+#   2. init.scope's cpuset, which cannot take a drop-in (it is a transient unit)
+#   3. the audio interrupt: its affinity and its threads' realtime priority
+#
+# apply never fails the boot: a machine running untuned is still reachable, a failed unit here
+# would not make it better. check is the strict one.
+
+set -u
+
+CONF=/etc/pedal/tune.conf
+[[ -r $CONF ]] || { echo "pedal-tune: $CONF not readable" >&2; exit 1; }
+# shellcheck source=/dev/null
+source "$CONF"
+: "${RT_CPUS:?} ${HOUSEKEEPING_CPUS:?} ${CPU_GOVERNOR:?} ${CPU_MAX_KHZ:?}"
+: "${AUDIO_IRQ_MATCH:?} ${AUDIO_IRQ_PRIO:?}"
+AUDIO_IRQ_CPU="${AUDIO_IRQ_CPU:-}"
+
+MODE="${1:-apply}"
+bad=0
+say()  { echo "pedal-tune: $*"; }
+okay() { printf '  ok    %-34s %s\n' "$1" "$2"; }
+fail() { printf '  FAIL  %-34s %s\n' "$1" "$2"; bad=1; }
+note() { printf '  --    %-34s %s\n' "$1" "$2"; }
+expect() { if [[ $2 == "$3" ]]; then okay "$1" "$2"; else fail "$1" "${2:-<empty>} (want $3)"; fi; }
+
+# Interrupts whose /proc/interrupts line names the controller. A shared line can have more than
+# one handler, and under PREEMPT_RT each handler gets its own irq/<N>-<name> thread.
+audio_irqs() { awk -v m="$AUDIO_IRQ_MATCH" 'index($0, m) { sub(/:$/, "", $1); print $1 }' /proc/interrupts; }
+irq_threads() { ps -eLo tid=,comm= | awk -v p="irq/$1-" 'index($2, p) == 1 { print $1 }'; }
+
+apply() {
+  local p irq tid
+  # 1. the clock
+  for p in /sys/devices/system/cpu/cpufreq/policy*; do
+    echo "$CPU_GOVERNOR" > "$p/scaling_governor" 2>/dev/null || say "WARNING: could not set governor on ${p##*/}"
+    echo "$CPU_MAX_KHZ" > "$p/scaling_max_freq" 2>/dev/null || say "WARNING: could not cap ${p##*/}"
+  done
+  # 2. init.scope. Runtime only, by necessity: /etc/systemd/system/init.scope.d is ignored.
+  systemctl set-property --runtime init.scope AllowedCPUs="$HOUSEKEEPING_CPUS" \
+    || say "WARNING: could not confine init.scope"
+  # 3. the audio interrupt
+  local irqs; irqs=$(audio_irqs)
+  [[ -n $irqs ]] || say "WARNING: no interrupt matches '$AUDIO_IRQ_MATCH'"
+  for irq in $irqs; do
+    if [[ -n $AUDIO_IRQ_CPU ]]; then
+      echo "$AUDIO_IRQ_CPU" > "/proc/irq/$irq/smp_affinity_list" 2>/dev/null \
+        || say "WARNING: could not set IRQ $irq affinity"
+    fi
+    # Interrupt threads refuse sched_setaffinity (PF_NO_SETAFFINITY); they follow the IRQ's own
+    # affinity, so only the priority is set here.
+    for tid in $(irq_threads "$irq"); do
+      chrt -f -p "$AUDIO_IRQ_PRIO" "$tid" || say "WARNING: could not set priority on thread $tid"
+    done
+  done
+  check >/dev/null || say "applied, with differences; run 'pedal-tune check'"
+  say "applied"
+}
+
+check() {
+  local p irq tid
+  echo "== kernel isolation (rtpi)"
+  expect "isolated cpus" "$(cat /sys/devices/system/cpu/isolated)" "$RT_CPUS"
+  expect "nohz_full cpus" "$(cat /sys/devices/system/cpu/nohz_full)" "$RT_CPUS"
+
+  echo "== clock"
+  for p in /sys/devices/system/cpu/cpufreq/policy*; do
+    expect "${p##*/} governor" "$(cat "$p/scaling_governor")" "$CPU_GOVERNOR"
+    expect "${p##*/} max kHz" "$(cat "$p/scaling_max_freq")" "$CPU_MAX_KHZ"
+    note "${p##*/} cpus / now kHz" "$(cat "$p/related_cpus") / $(cat "$p/scaling_cur_freq")"
+  done
+  local z c
+  for z in /sys/class/thermal/thermal_zone*; do
+    note "$(cat "$z/type") temperature" "$(( $(cat "$z/temp") / 1000 )) C (passive trip $(( $(cat "$z/trip_point_0_temp") / 1000 )) C)"
+  done
+  for c in /sys/class/thermal/cooling_device*; do
+    [[ $(cat "$c/type") == cpufreq-* ]] || continue
+    expect "$(cat "$c/type") throttle state" "$(cat "$c/cur_state")" "0"
+  done
+
+  echo "== cpusets"
+  for s in system.slice user.slice init.scope; do
+    expect "$s" "$(cat "/sys/fs/cgroup/$s/cpuset.cpus.effective" 2>/dev/null)" "$HOUSEKEEPING_CPUS"
+  done
+  expect "pedal-rt.slice loads" "$(systemctl show -p LoadState --value pedal-rt.slice)" "loaded"
+  # What actually matters: nothing but per-CPU kernel threads may be allowed onto the render
+  # core. Anything else listed here got onto it past both the kernel and the cpusets.
+  local stray
+  stray=$(for t in /proc/[0-9]*/task/[0-9]*; do
+            [[ $(grep -s Cpus_allowed_list "$t/status" | cut -f2) == *"$RT_CPUS"* ]] || continue
+            # flags is the 7th field after "(comm) ", and comm may contain spaces
+            flags=$(sed 's/.*) //' "$t/stat" 2>/dev/null | awk '{print $7}') || continue
+            # PF_KTHREAD (0x00200000): per-CPU kernel threads belong there
+            (( ${flags:-0} & 0x00200000 )) && continue
+            grep -qs '^0::/pedal-rt.slice' "${t%/task/*}/cgroup" && continue
+            cat "$t/comm"
+          done | sort | uniq -c | awk '{printf "%s%s(%s)", s, $2, $1; s=" "}')
+  if [[ -z $stray ]]; then okay "user tasks allowed on cpu $RT_CPUS" "none outside pedal-rt.slice"
+  else fail "user tasks allowed on cpu $RT_CPUS" "$stray"; fi
+
+  echo "== audio interrupt ($AUDIO_IRQ_MATCH)"
+  local irqs; irqs=$(audio_irqs)
+  [[ -n $irqs ]] || fail "interrupt" "none matches"
+  for irq in $irqs; do
+    [[ -n $AUDIO_IRQ_CPU ]] && expect "IRQ $irq affinity" "$(cat "/proc/irq/$irq/effective_affinity_list" 2>/dev/null || cat "/proc/irq/$irq/smp_affinity_list")" "$AUDIO_IRQ_CPU"
+    for tid in $(irq_threads "$irq"); do
+      expect "thread $(cat "/proc/$tid/comm") prio" "$(chrt -p "$tid" | awk '/priority/ {print $NF}')" "$AUDIO_IRQ_PRIO"
+    done
+  done
+  return "$bad"
+}
+
+case $MODE in
+  apply) apply; exit 0 ;;
+  check) check; exit $? ;;
+  *) echo "usage: pedal-tune [apply|check]" >&2; exit 2 ;;
+esac

@@ -1,0 +1,9 @@
+#!/bin/sh
+# pedal-rt <command...> — run a command in pedal-rt.slice, the only place it may pin to core 3.
+#
+# The login and service slices are confined to the housekeeping cores, so `taskset -c 3` or a
+# soak's `--cpu 3` from an ssh session fails with EINVAL, and namchain-soak then reports the
+# failure and carries on unpinned. Run measurements as:  sudo pedal-rt ./namchain-soak --cpu 3 ...
+[ "$(id -u)" -eq 0 ] || { echo "pedal-rt: run with sudo" >&2; exit 2; }
+[ $# -gt 0 ] || { echo "usage: sudo pedal-rt <command...>" >&2; exit 2; }
+exec systemd-run --scope --quiet --collect --slice=pedal-rt.slice -- "$@"

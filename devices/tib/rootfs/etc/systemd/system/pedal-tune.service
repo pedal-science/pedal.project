@@ -1,0 +1,13 @@
+[Unit]
+Description=Pedal: clock cap, init.scope cpuset and audio interrupt tuning
+Documentation=file:/etc/pedal/tune.conf
+After=sysinit.target systemd-udevd.service
+ConditionPathExists=/etc/pedal/tune.conf
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/pedal-tune apply
+
+[Install]
+WantedBy=multi-user.target

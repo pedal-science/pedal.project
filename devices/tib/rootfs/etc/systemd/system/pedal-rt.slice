@@ -1,0 +1,9 @@
+[Unit]
+Description=Pedal realtime work: namchaind and measurements, allowed onto the render core
+Documentation=file:/etc/pedal/tune.conf
+Before=slices.target
+
+# The one slice whose cpuset includes core 3, so its processes can pin a thread there. Their
+# other threads run on the housekeeping cores; the pin is what puts the render thread on 3.
+[Slice]
+AllowedCPUs=0-3

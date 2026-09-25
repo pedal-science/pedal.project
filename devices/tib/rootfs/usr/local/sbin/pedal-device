@@ -1,0 +1,207 @@
+#!/usr/bin/env bash
+# pedal-device — install, check and remove tib's appliance configuration. Runs on tib, as root.
+# The Mac side (devices/tib/apply in pedal.project) stages the tree and calls this.
+#
+#   pedal-device apply <stage-dir> [--dry-run] [--commit <id>]
+#   pedal-device revert [--dry-run]
+#   pedal-device status
+#
+# <stage-dir> holds rootfs/, a copy of devices/tib/rootfs. Every file there is installed at the
+# same path. Everything done is recorded in /var/lib/pedal/manifest, and revert undoes exactly
+# that list. A file that already existed and was not ours is saved first and put back on revert.
+#
+# It touches no package, no boot asset and no kernel setting: those are rtpi's.
+
+set -euo pipefail
+
+STATE=/var/lib/pedal
+MANIFEST=$STATE/manifest
+SAVED=$STATE/preexisting
+LOCK=/run/lock/tib.lock          # the same lock scripts/tib-lock will take
+
+# namchain's tools/soak/host-slim.sh configured this board before this tree existed. apply takes
+# its place: it removes host-slim's files (saving them) and takes over the masks we share. The
+# realtime limits in audio.conf were written by hand during namchain's plan-rt-tib work, and are
+# now in 90-pedal-rt.conf.
+HOSTSLIM_MANIFEST=/var/lib/namchain/host-slim/manifest
+HOSTSLIM_UNITS=(namchain-host-slim-vmstat.service namchain-host-slim-initconfine.service)
+ADOPT_FILES=(/etc/security/limits.d/audio.conf)
+
+DRY=0
+say()  { echo "pedal-device: $*"; }
+run()  { if (( DRY )); then echo "  DRY   $*"; else "$@"; fi; }
+record() { (( DRY )) || grep -qxF "$1" "$MANIFEST" 2>/dev/null || echo "$1" >> "$MANIFEST"; }
+recorded() { grep -qxF "$1" "$MANIFEST" 2>/dev/null; }
+
+save_preexisting() {   # save a file that is not ours before replacing or removing it
+  local f=$1
+  [[ -e $f ]] || return 0
+  recorded "file $f" && return 0
+  run install -D -m 0644 "$f" "$SAVED$f"
+  record "saved $f"
+}
+
+adopt() {
+  local kind what u f
+  if [[ -r $HOSTSLIM_MANIFEST ]]; then
+    say "taking over from namchain host-slim"
+    for u in "${HOSTSLIM_UNITS[@]}"; do
+      systemctl cat "$u" >/dev/null 2>&1 && run systemctl disable --now "$u"
+    done
+    while read -r kind what _; do
+      case $kind in
+        # Kept in $STATE/adopted for reference, but not restored by revert: half of host-slim
+        # (files without their enabled units) would be worse than none of it.
+        file) [[ -e $what ]] && { run install -D -m 0644 "$what" "$STATE/adopted$what"; run rm -f "$what"; } ;;
+        mask) grep -qxF "$what" <(units) || run systemctl unmask "$what" ;;
+      esac
+    done < "$HOSTSLIM_MANIFEST"
+    while read -r kind what _; do
+      [[ $kind == dir ]] && run rmdir "$what" 2>/dev/null || true
+    done < "$HOSTSLIM_MANIFEST"
+    # The masks we share are ours now, so revert unmasks them.
+    while read -r kind what _; do
+      [[ $kind == mask ]] && grep -qxF "$what" <(units) && record "mask $what"
+    done < "$HOSTSLIM_MANIFEST"
+    run install -D -m 0644 "$HOSTSLIM_MANIFEST" "$STATE/adopted/host-slim.manifest"
+    run rm -f "$HOSTSLIM_MANIFEST"
+  fi
+  for f in "${ADOPT_FILES[@]}"; do
+    [[ -e $f ]] || continue
+    say "taking over $f"
+    save_preexisting "$f"
+    run rm -f "$f"
+  done
+}
+
+units() { grep -v -e '^#' -e '^[[:space:]]*$' "${UNITS_FILE:-/etc/pedal/masked-units}"; }
+
+install_tree() {
+  local root=$1 rel dst mode
+  while IFS= read -r rel; do
+    dst=/${rel#./}
+    if [[ -e $dst ]] && cmp -s "$root/$rel" "$dst"; then record "file $dst"; continue; fi
+    save_preexisting "$dst"
+    case $dst in */bin/*|*/sbin/*) mode=0755 ;; *) mode=0644 ;; esac
+    run install -D -m "$mode" -o root -g root "$root/$rel" "$dst"
+    record "file $dst"
+    echo "  installed $dst"
+  done < <(cd "$root" && find . -type f | sed "s|^\./||" | sort)
+}
+
+mask_units() {
+  local u st
+  while IFS= read -r u; do
+    systemctl cat "$u" >/dev/null 2>&1 || { echo "  absent    $u"; continue; }
+    st=$(systemctl is-enabled "$u" 2>/dev/null || true)
+    if [[ $st == masked ]]; then
+      recorded "mask $u" || echo "  masked by someone else, left alone: $u"
+      continue
+    fi
+    run systemctl mask "$u" >/dev/null
+    record "mask $u"
+    echo "  masked    $u"
+  done < <(units)
+  # A masked timer whose service is also masked reports result=resources in systemctl --failed.
+  # It cannot fire, so clear the noise rather than let it hide a real failure later.
+  run systemctl reset-failed >/dev/null 2>&1 || true
+}
+
+activate() {
+  local conf=$1 hk
+  hk=$(. "$conf"; echo "${HOUSEKEEPING_CPUS:-}")
+  run systemctl daemon-reload
+  # The drop-ins are read at daemon-reload, but a running slice's cgroup is only rewritten when
+  # a property is set, so set it now too.
+  if [[ -n $hk ]]; then
+    run systemctl set-property --runtime system.slice AllowedCPUs="$hk"
+    run systemctl set-property --runtime user.slice AllowedCPUs="$hk"
+  fi
+  run sysctl -q -p /etc/sysctl.d/90-pedal.conf
+  run systemctl restart systemd-journald
+  run systemctl enable pedal-tune.service
+  run systemctl restart pedal-tune.service
+}
+
+do_apply() {
+  local stage=$1 commit=$2
+  [[ -d $stage/rootfs ]] || { say "no rootfs/ in $stage"; exit 2; }
+  UNITS_FILE=$stage/rootfs/etc/pedal/masked-units
+  (( DRY )) && say "DRY RUN: nothing will change"
+  run mkdir -p "$STATE"; (( DRY )) || touch "$MANIFEST"
+  adopt
+  install_tree "$stage/rootfs"
+  mask_units
+  activate "$stage/rootfs/etc/pedal/tune.conf"
+  if (( ! DRY )); then
+    printf 'commit=%s\napplied=%s\n' "$commit" "$(date -u +%FT%TZ)" > /etc/pedal/applied
+    record "file /etc/pedal/applied"
+  fi
+  say "done. Manifest: $MANIFEST"
+}
+
+do_revert() {
+  local kind what
+  [[ -r $MANIFEST ]] || { say "nothing to revert: no $MANIFEST"; exit 0; }
+  systemctl cat pedal-tune.service >/dev/null 2>&1 && run systemctl disable --now pedal-tune.service
+  while read -r kind what; do
+    case $kind in
+      mask) run systemctl unmask "$what" >/dev/null; echo "  unmasked  $what" ;;
+      file) run rm -f "$what"; echo "  removed   $what" ;;
+    esac
+  done < "$MANIFEST"
+  while read -r kind what; do
+    [[ $kind == saved ]] || continue
+    run install -D -m 0644 "$SAVED$what" "$what"; echo "  restored  $what"
+  done < "$MANIFEST"
+  run rmdir /etc/systemd/system/system.slice.d /etc/systemd/system/user.slice.d /etc/pedal 2>/dev/null || true
+  run systemctl daemon-reload
+  run systemctl set-property --runtime system.slice AllowedCPUs=
+  run systemctl set-property --runtime user.slice AllowedCPUs=
+  run systemctl set-property --runtime init.scope AllowedCPUs=
+  run systemctl restart systemd-journald
+  local p
+  for p in /sys/devices/system/cpu/cpufreq/policy*; do
+    (( DRY )) || cat "$p/cpuinfo_max_freq" > "$p/scaling_max_freq"
+  done
+  (( DRY )) || mv "$MANIFEST" "$MANIFEST.reverted-$(date -u +%Y%m%dT%H%M%SZ)"
+  say "reverted. The audio interrupt keeps its affinity and priority until the next reboot."
+  say "host-slim's files, if this took over from it, are in $STATE/adopted and $SAVED."
+}
+
+do_status() {
+  [[ -r /etc/pedal/applied ]] && cat /etc/pedal/applied || echo "commit=<not applied>"
+  local u st n=0
+  if [[ -r /etc/pedal/masked-units ]]; then
+    while IFS= read -r u; do
+      systemctl cat "$u" >/dev/null 2>&1 || continue
+      st=$(systemctl is-enabled "$u" 2>/dev/null || true)
+      if [[ $st == masked ]]; then n=$((n+1)); else printf '  FAIL  %-34s %s (want masked)\n' "$u" "$st"; fi
+    done < <(units)
+    printf '  ok    %-34s %s\n' "masked units" "$n"
+  fi
+  printf '  --    %-34s %s\n' "pedal-tune.service" "$(systemctl is-enabled pedal-tune.service 2>/dev/null) / $(systemctl is-active pedal-tune.service 2>/dev/null)"
+  [[ -x /usr/local/sbin/pedal-tune ]] && /usr/local/sbin/pedal-tune check
+}
+
+[[ $(id -u) -eq 0 ]] || { say "run as root"; exit 2; }
+cmd=${1:-}; shift || true
+stage=""; commit="unknown"
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --dry-run) DRY=1 ;;
+    --commit) commit=$2; shift ;;
+    *) stage=$1 ;;
+  esac
+  shift
+done
+
+exec 9> "$LOCK"
+case $cmd in
+  apply)  flock -n 9 || { say "tib is locked by another job ($LOCK)"; exit 3; }
+          do_apply "${stage:?usage: pedal-device apply <stage-dir>}" "$commit" ;;
+  revert) flock -n 9 || { say "tib is locked by another job ($LOCK)"; exit 3; }
+          do_revert ;;
+  status) do_status ;;
+  *) sed -n '2,13p' "$0"; exit 2 ;;
+esac

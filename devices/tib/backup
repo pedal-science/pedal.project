@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# devices/tib/backup [dir] — pull everything this tree touches on tib, before changing it.
+#
+# Writes devices/tib/backups/<stamp>/ (or [dir]): state.txt, a readable snapshot of the settings,
+# and files.tar, the files themselves. Both are small and are committed.
+
+source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+require_tib
+
+out="${1:-$TIB_DIR/backups/$(timestamp)}"
+mkdir -p "$out"
+log "backing up $TIB_HOST into ${out#"$TIB_DIR"/}"
+
+tib 'bash -s' > "$out/state.txt" 2>&1 <<'EOF'
+section() { printf '\n== %s\n' "$*"; }
+section host;      uname -a; cat /proc/cmdline; uptime
+section applied;   cat /etc/pedal/applied 2>/dev/null || echo "not applied"
+section isolation; echo "isolated=$(cat /sys/devices/system/cpu/isolated) nohz_full=$(cat /sys/devices/system/cpu/nohz_full)"
+section cpufreq;   for p in /sys/devices/system/cpu/cpufreq/policy*; do echo "${p##*/} $(cat $p/scaling_governor) max=$(cat $p/scaling_max_freq) cur=$(cat $p/scaling_cur_freq)"; done
+section thermal;   for z in /sys/class/thermal/thermal_zone*; do echo "$(cat $z/type) $(cat $z/temp)"; done
+section cpusets;   for s in /sys/fs/cgroup/*.slice /sys/fs/cgroup/init.scope; do echo "${s##*/} $(cat $s/cpuset.cpus.effective)"; done
+section interrupts; cat /proc/interrupts
+section irq-affinity; for i in /proc/irq/[0-9]*; do echo "${i##*/} $(cat $i/smp_affinity_list)"; done
+section irq-threads; ps -eLo tid,cls,rtprio,psr,comm | grep 'irq/'
+section masked;    systemctl list-unit-files --state=masked --no-legend --no-pager
+section enabled;   systemctl list-unit-files --state=enabled --no-legend --no-pager
+section running;   systemctl list-units --type=service --state=running --no-legend --no-pager --plain
+section timers;    systemctl list-timers --all --no-legend --no-pager
+section sysctl;    sysctl vm.swappiness vm.stat_interval vm.dirty_ratio vm.dirty_background_ratio kernel.sched_rt_runtime_us
+section limits;    head -50 /etc/security/limits.d/* 2>/dev/null
+section pedal-manifest;    sudo -n cat /var/lib/pedal/manifest 2>/dev/null
+section host-slim-manifest; sudo -n cat /var/lib/namchain/host-slim/manifest 2>/dev/null
+EOF
+
+# Only paths that exist go into the tar, so a first backup and a later one both work.
+tib 'cd / && sudo -n tar -cf - $(ls -d \
+  etc/pedal var/lib/pedal var/lib/namchain/host-slim \
+  etc/systemd/system/*.slice.d etc/systemd/system/*.slice \
+  etc/systemd/system/pedal-* etc/systemd/system/namchain-host-slim-* \
+  etc/systemd/journald.conf etc/systemd/journald.conf.d \
+  etc/sysctl.d etc/security/limits.d etc/udev/rules.d \
+  usr/local/sbin usr/local/bin 2>/dev/null)' > "$out/files.tar"
+
+ln -sfn "$(basename "$out")" "$TIB_DIR/backups/latest"
+ok "backup: ${out#"$TIB_DIR"/} ($(wc -l < "$out/state.txt") lines, $(du -h "$out/files.tar" | cut -f1) tar)"
