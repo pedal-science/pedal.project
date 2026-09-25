@@ -150,6 +150,14 @@ Small and first, because every later phase deploys from it.
    Done 2026-09-25 (namchain `412e151`). On `tib` the SSL 2+'s id is `II` (ALSA takes it from
    "SSL 2+ Mk II"), so the config names `hw:CARD=II,DEV=0`.
 2. **Make an amp + cab rig fit on `tib`** (namchain).
+   Done 2026-09-25 (namchain `79939b4`). `nc.cab.ir` now uses `PartitionedConvolution` from your
+   AudioDSPTools fork at `b505422`, with all three NAMBench optimisations. The core's `nam::Linear`
+   it replaced was already a partitioned FFT, but without the spreading. On `tib` at 1.416 GHz, a
+   full-length cab alone is p99 9–10% of a 64-frame deadline (it was 111%), and A2-Full plus the cab
+   is p99 70% (was 168%). It also resamples 44.1/96 kHz IRs and caps them at 8192 taps, as the
+   plugin does, less the plugin's −18 dB. Numbers: namchain `bench-results/tib-cab-ir.txt`.
+   **For step 8:** A2-Full *alone* overran 7–9 blocks in 30 s today, where the same load ran a
+   clean hour on 16 Sep. `tib` is noisier than it was; find out why before the soak.
    - First, measure `nc.cab.ir` on `tib` at your library's real lengths.
    - Then port the partitioned FFT convolution from your AudioDSPTools `partitioned-ir` branch
      into `nc.cab.ir`: direct up to 512 taps and FFT above, as the branch's `Auto` does.
@@ -168,8 +176,7 @@ Small and first, because every later phase deploys from it.
    - Give `tib` a fixed address (a DHCP reservation) or use its mDNS name, because ljoss has no
      discovery.
 4. **Library on the pedal.** Rsync the models and IRs your rigs use into `tib`'s library folders,
-   converting 44.1 and 96 kHz IRs to 48 kHz on the way. This is by hand until the pedal service's
-   uploads can convert them itself.
+   no conversion needed: `nc.cab.ir` resamples 44.1 and 96 kHz IRs itself (step 2).
 5. **ljoss → tib.**
    - Point ljoss's Hardware settings at `tib`, and run `Tools/check-device.sh` against it.
    - Play an amp + cab + EQ + delay rig and edit it live.
@@ -404,4 +411,4 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
-Phase 1 step 2: measure `nc.cab.ir` on `tib`, then port the partitioned convolution. Step 1 is done.
+Phase 1 step 3: deploy `namchaind` to `tib`. Steps 1 and 2 are done.
