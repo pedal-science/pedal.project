@@ -113,7 +113,8 @@ Small and first, because every later phase deploys from it.
    - ljoss's finished test commit (`6fc69b0`) is pushed to `main`.
    - piv's namchain and ljoss checkouts are fast-forwarded to `origin/main`.
    - Work on either aspect continues on `local-engine`, committed and pushed there.
-5. **Rename `~/code.local/nodey` → `~/code.local/ljoss`.** namchain's comparison doc already uses
+5. **Rename `~/code.local/nodey` → `~/code.local/ljoss`.** Done 2026-09-25, with its Claude
+   project history moved to match. namchain's comparison doc already uses
    that path, and it's the one piv uses. Xcode's DerivedData will rebuild.
 6. **Commit the armv7-NEON build** in namchain. Done 2026-09-25 (namchain `907ef81`):
    `cmake/toolchains/armv7-neon-linux-gnueabihf.cmake`, a CI job that runs the tests and the
@@ -400,4 +401,4 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
-Phase 0 step 5 (the ljoss rename) or step 7 (agent setup). Steps 1–4 and 6 are done.
+Phase 0 step 7 (agent setup). Steps 1–6 are done.

@@ -14,7 +14,7 @@ rather than a rule.
 |---|---|---|
 | `pedal.project` | `~/code.local/pedal.project` | The pedal as a system: goal, hardware design, diagrams, decisions, plan. Later: `tib`'s appliance configuration, the Pico firmware, and the `tib`-side control bridge |
 | `namchain` | `~/code.local/namchain` | The engine library, `namchaind`, `namchainctl`, the soak and bench tools, and **the control protocol** (protocol 2) |
-| `ljoss` | `~/code.local/nodey` — the directory name differs from the repo | The rig designer (macOS/iOS), including flattening the rig tree into an engine graph |
+| `ljoss` | `~/code.local/ljoss` | The rig designer (macOS/iOS), including flattening the rig tree into an engine graph |
 | `rtpi` | `~/code.local/rtpi` | `tib`'s kernel, the boot-slot safety net, RT tuning, and so any **device-tree** change such as the WM8960 sound card |
 | `NAMBench` | `~/code.local/NAMBench` | NAM and IR kernel research. It reaches the pedal only through `namchain`, as a vendor patch or a port |
 | `OptimisationWorkOnNeuralAmpModelerCore`, `AudioDSPTools` (forks) | not checked out here | The planar NEON kernels (upstream PR #313, which `namchain` carries as a vendor patch) and the partitioned-FFT IR branch. `namchain`'s `nc.cab.ir` doesn't use AudioDSPTools, so that branch reaches the pedal as a port |
@@ -87,7 +87,7 @@ Rollback on `tib` is the previous symlink. For the kernel it is `rtpi`'s known-g
 
   ```json
   { "permissions": { "additionalDirectories": [
-      "/Users/rik/code.local/namchain", "/Users/rik/code.local/nodey",
+      "/Users/rik/code.local/namchain", "/Users/rik/code.local/ljoss",
       "/Users/rik/code.local/rtpi", "/Users/rik/code.local/NAMBench" ] } }
   ```
 
