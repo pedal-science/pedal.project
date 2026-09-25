@@ -82,22 +82,22 @@ Rollback on `tib` is the previous symlink. For the kernel it is `rtpi`'s known-g
 
 ## Setting up an agent session
 
-- **Here, for cross-repo work:** `.claude/settings.local.json` (per machine, not committed) lists the
-  other checkouts as extra directories:
+- **Here, for cross-repo work:** `.claude/settings.local.json` (per machine, gitignored) lists the
+  other checkouts as extra directories, and sets the variable that makes Claude Code load their
+  `CLAUDE.md` files too. Without it, extra directories are readable but their instructions are not
+  loaded:
 
   ```json
-  { "permissions": { "additionalDirectories": [
+  { "env": { "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1" },
+    "permissions": { "additionalDirectories": [
       "/Users/rik/code.local/namchain", "/Users/rik/code.local/ljoss",
       "/Users/rik/code.local/rtpi", "/Users/rik/code.local/NAMBench" ] } }
   ```
 
-  Check whether Claude Code reads the `CLAUDE.md` files in those extra directories. If it doesn't,
-  this repo's `CLAUDE.md` has to name the component documents to read.
 - **In each component repo:** an `AGENTS.md` (purpose, build and test commands, constraints) and a
   `CLAUDE.md` that is just `@AGENTS.md`. Cursor and the DeepSeek harness read the former, and
-  Claude Code reads the latter. Each ends with one line pointing here for system context. None of
-  `namchain`, `rtpi` or `ljoss` has either file today; `namchain`'s `plan.md` "How to resume" does
-  the job but runs to 2,180 lines.
+  Claude Code reads the latter. Each ends with one line pointing here for system context.
+  `namchain`'s points into its `plan.md` at "How to resume" rather than the whole file.
 - **Two agents on one repo** each get a git worktree, so neither sees or clobbers the other's
   uncommitted work.
 - **Every session starts with `scripts/status`**, which reports each repo on each host (branch,

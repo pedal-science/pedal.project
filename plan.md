@@ -129,7 +129,8 @@ Small and first, because every later phase deploys from it.
    - Fix the configure summary. It prints "A2 planar NEON: OFF" on an armv7 NEON build while the
      planar kernels are running, because `NAMCHAIN_A2_PLANAR_ACTIVE` only matches
      aarch64/arm64/armv8.
-7. **Agent setup.**
+7. **Agent setup.** Done 2026-09-25. Claude Code loads the other repos' `CLAUDE.md` only with
+   `CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1`, which the local settings set.
    - `.claude/settings.local.json` with the other checkouts as extra directories.
    - `AGENTS.md` plus a one-line `CLAUDE.md` in namchain, rtpi and ljoss.
    - Check whether Claude Code reads `CLAUDE.md` from extra directories.
@@ -401,4 +402,4 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
-Phase 0 step 7 (agent setup). Steps 1–6 are done.
+Phase 0 is done. Next is Phase 1.
