@@ -85,12 +85,12 @@ deliberately left out:
 
 Small and first, because every later phase deploys from it.
 
-1. **Correct `CLAUDE.md`.**
+1. **Correct `CLAUDE.md`.** Done 2026-09-25.
    - Take the title and the diagram notes from `docs/handoff-from-claude.md`, then remove that file.
    - Current phase → this plan's.
    - "Hardware that differs from stock" → "planned modifications (D8)".
    - Add D2 and D4 as architecture lines, and a pointer to the repo map.
-2. **One hardware handoff.**
+2. **One hardware handoff.** Done 2026-09-25; namchain's copy is a pointer.
    - Merge your notes from `namchain/docs/research/namchain-hardware-handoff.md` into
      `docs/hardware-handoff.md`: arrival status, the note that a Pi could stand in for `tib`, the
      schematic path, and your note about keeping the diagram's formatting.

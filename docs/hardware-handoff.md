@@ -8,22 +8,26 @@ something is unverified it says so.
 
 ## Current status
 
-- NAM **A2-full** kernel runs at **~53% of one core** on `tib`, with a local patch.
+- NAM **A2-full** kernel runs at **~53% of one core** on `tib`, with the armv7 NEON
+  build and the planar-kernel vendor patch.
 - PREEMPT_RT kernel built, running, and stress-tested — no dropouts or glitches
   on a quiet machine.
 - Performance risk is therefore **closed**. Remaining work is physical build and
   bring-up, not DSP optimisation.
+- In hand: `tib`, the WM8960 board (stock, not yet inspected), the display module.
+  Due: RP2350-USB-A. In the basket: 2 × Pico 2 WH and a Debug Probe. See
+  [bom.md](bom.md) and `plan.md`.
 
 ## Hardware
 
 | Part | Notes |
 |---|---|
-| `tib` | ASUS Tinker Board, RK3288 Cortex-A17, **armhf / 32-bit** (no aarch64) |
+| `tib` | ASUS Tinker Board, RK3288 Cortex-A17, **armhf / 32-bit** (no aarch64). Out of production; a similarly powerful Pi-class board would stand in, as namchain already builds and tests for aarch64 on a Pi 500 |
 | Codec | SparkFun WM8960 Audio Codec Breakout, schematic v1.0 (Eagle 9.4.2, Jan 2023). Retired product — consider a spare. |
-| Control MCU | Raspberry Pi Pico 2 (planned) |
+| Control MCU | Raspberry Pi Pico 2 (ordering). An RP2350-USB-A is due, but its 15 GPIO are short of the ~18 needed, so it's for experiments |
 | Display | 2.4" ST7789 320×240 SPI module with EC11 encoder + tactile button, board V1.2 (in hand) |
 | Front end | Hi-Z buffer, to be built |
-| Power | Cioks DC7: 7 isolated outlets at 6 W each (660 mA @ 9 V); USB-A 1 A on v1, USB-C 15 W on v2; AUX 24 V @ 2 A |
+| Power | Cioks DC7: 7 isolated outlets at 6 W each (660 mA @ 9 V); USB-A 1 A (Cioks' site may say 5 W) on v1, USB-C 15 W on v2; AUX 24 V @ 2 A |
 
 **Topology: mono in, stereo out.** NAM input is mono; the chain may split into two
 channels running different kernels, and those are sometimes kept as stereo rather
@@ -116,7 +120,9 @@ pad → 100 Ω series → [47 nF to GND] → 1 µF series → codec pin
   must never write codec registers — it talks to `tib` over UART and `tib` applies
   changes through ALSA mixer controls.
 
-### Jumpers
+### Jumpers (planned, D8)
+
+The target state after stock bring-up and measurement. The board is stock today.
 
 - **AVDD-ISO: cut.** AVDD fed externally from a dedicated LDO.
 - **SPKVDD: both open.** Class-D amplifier unpowered — it's a switching noise source
@@ -124,6 +130,12 @@ pad → 100 Ω series → [47 nF to GND] → 1 µF series → codec pin
 - **VIN: unconnected.** With AVDD-ISO cut and SPKVDD open it feeds nothing.
 
 ### Input stage
+
+> **Superseded in part** (2026-09-24, datasheet review in `plan.md` Phase 2b): ×10
+> is far too much gain, the OPA2197 replaces the OPA1642 (CPC doesn't sell it), the
+> bias moves to ~2.9 V, and the extra 100 Ω and the 4.7 nF swap aren't needed. The
+> provisional values are in [bom.md](bom.md). The reasoning below still holds for the
+> single 1 MΩ jack and the Inst/Line gain switch.
 
 One jack, **permanently 1 MΩ**. A pedal output is low-impedance and is perfectly
 happy driving 1 MΩ, so impedance never needs switching — only level does.
@@ -220,29 +232,45 @@ firmware-only change.
 
 ---
 
-## Software work outstanding
+## Software
 
-1. **Device tree.** Write a `simple-audio-card` node: WM8960 codec at 0x1A, with
-   `bitclock-master` and `frame-master` on the codec DAI. The mainline `wm8960`
-   ASoC driver is available, but there is **no ready-made overlay** — the Pi's
-   `wm8960-soundcard` overlay does not apply here. On Armbian use
-   `armbian-add-overlay`.
-2. **Verify the I2S wiring** on this Tinker Board revision: which signals the
-   40-pin header actually exposes, and whether the RK3288 side provides separate
-   TX and RX frame clocks (the board breaks out ADCLRC and DACLRC separately, and
-   the WM8960 can alternatively slave the ADC to DACLRC).
-3. **ALSA mixer configuration.** ALC **off** — it pumps audibly on guitar dynamics.
-   3D enhancement off. Simplest possible analogue routing. PGA near 0 dB, boost
-   mixer at 0 dB (the boost stages are noisier than the PGA).
-4. **Audio host.** JACK or PipeWire plus the NAM LV2 plugin. PiPedal and similar
-   turnkey stacks assume a Raspberry Pi.
-5. **Pico firmware.** ST7789 display driver, EC11 quadrature decoder, three
-   footswitches with long-press, DIN MIDI input, expression ADC, status LEDs.
-   Define the UART protocol to `tib` so that footswitch and MIDI events produce
-   identical messages.
-6. **Boot-time bypass.** ~30 s of boot before audio passes. A relay held in hard
-   bypass until userspace signals ready, with the Pico holding the relay. This is
-   the difference between a gig-usable pedal and a desk toy.
+The order and the done-when checks are in `plan.md`. What matters for the hardware:
+
+- **Audio host is `namchaind`** (namchain), driving ALSA directly through its
+  `alsa_raw` backend. It opens devices by name, so the SSL 2+ now and the WM8960
+  later are chosen by card id, not number. No JACK, PipeWire or LV2, and PiPedal-style
+  stacks assume a Raspberry Pi anyway.
+- **ljoss** edits rigs on `namchaind` directly over WiFi (D2). The Pico never carries
+  app traffic.
+- **A pedal service** beside `namchaind` (this repo) owns the rig library on the SD
+  card, resume at power-up, uploads, and mapping footswitch/MIDI events onto rigs
+  (D3, D4).
+- **MIDI is DIN in on the Pico** (D6). USB MIDI is a later firmware change.
+- **Mic input**: panel position and RINPUT1 reserved, circuit later (D5).
+
+Hardware-side work outstanding:
+
+1. **Device tree** (in `rtpi`). A `simple-audio-card` node: WM8960 at 0x1A, with
+   `bitclock-master` and `frame-master` on the codec DAI, and a 24 MHz fixed clock as
+   MCLK so the driver can set its PLL for 48 kHz. `tib` has **one** I2S controller,
+   held today by the HDMI card (`rockchip,tinker-codec`); the WM8960 card replaces
+   it. There is no ready-made overlay — the Pi's `wm8960-soundcard` does not apply.
+2. **Verify the I2S wiring** on this Tinker Board revision: which I2C bus the header
+   carries, and whether the RK3288 side provides separate TX and RX frame clocks (the
+   board breaks out ADCLRC and DACLRC separately, and the WM8960 can alternatively
+   slave the ADC to DACLRC).
+3. **ALSA mixer state as code** (`devices/tib/`). ALC **off** — it pumps audibly on
+   guitar dynamics. 3D enhancement off. Speaker amp and OUT3 off. Simplest possible
+   analogue routing. PGA near 0 dB, boost mixer at 0 dB (the boost stages are noisier
+   than the PGA).
+4. **Header UART** for the Pico link: UART1 on pins 8/10 (the console is ttyS2 on
+   32/33).
+5. **Pico firmware.** Three footswitches with long-press, DIN MIDI input, status LEDs,
+   bypass relay; display and encoder later. Footswitch and MIDI events produce
+   identical UART messages.
+6. **Boot-time bypass.** ~30 s of boot before audio passes. A relay whose
+   **de-energised** state is bypass, energised by the Pico only once `tib` reports
+   audio ready. This is the difference between a gig-usable pedal and a desk toy.
 
 ---
 
@@ -269,13 +297,17 @@ firmware-only change.
 - This is **not** a Raspberry Pi. Pi-specific overlays, `config.txt` entries and
   HAT conventions do not apply.
 - This is **not** aarch64. Anything assuming 64-bit ARM needs checking.
-- The codec board is **not** stock — AVDD-ISO is cut, and the input shunt caps may
-  have been changed.
+- Don't assume the codec board's modification state. It is stock today; D8 brings
+  it up stock and modifies it afterwards, measuring each step. Inspect the jumpers
+  before relying on either.
 
 ---
 
 ## References
 
 - Block diagram: `docs/diagrams/` (draw.io source, two-layer: blocks and connections,
-  with non-component junction squares on the connection layer)
-- SparkFun WM8960 Audio Codec Breakout schematic v1.0
+  with non-component junction squares on the connection layer). Keep its formatting;
+  if it's confusing, render it and read the image, or ask.
+- SparkFun WM8960 Audio Codec Breakout schematic v1.0:
+  `references/Stereo_Audio_Codec_Breakout_WM8960_v10_Schematic.pdf`
+- Display module schematic: `references/screen-board-schematic-*.png`
