@@ -1,0 +1,40 @@
+  ok    /etc/namchain/namchaind.json
+  ok    /etc/pedal/default-rig.json
+  ok    /etc/pedal/masked-units
+  ok    /etc/pedal/tune.conf
+  ok    /etc/security/limits.d/90-pedal-rt.conf
+  ok    /etc/sysctl.d/90-pedal.conf
+  ok    /etc/systemd/journald.conf.d/10-pedal.conf
+  ok    /etc/systemd/system/machine.slice.d/10-pedal-cpuset.conf
+  ok    /etc/systemd/system/namchaind.service.d/10-pedal.conf
+  ok    /etc/systemd/system/pedal-resume.service
+  ok    /etc/systemd/system/pedal-rt.slice
+  ok    /etc/systemd/system/pedal-tune.service
+  ok    /etc/systemd/system/system.slice.d/10-pedal-cpuset.conf
+  ok    /etc/systemd/system/user.slice.d/10-pedal-cpuset.conf
+  ok    /usr/local/bin/pedal-rt
+  ok    /usr/local/sbin/pedal-device
+  ok    /usr/local/sbin/pedal-resume
+  ok    /usr/local/sbin/pedal-tune
+commit=c0cabcf-dirty
+applied=2026-09-26T16:43:17Z
+  ok    masked units                       30
+  --    pedal-tune.service                 enabled / active
+== kernel isolation (rtpi)
+  ok    isolated cpus                      2-3
+  ok    nohz_full cpus                     2-3
+== clock
+  ok    policy0 governor                   performance
+  ok    policy0 max kHz                    2400000
+  --    policy0 cpus / now kHz             0 1 2 3 / 2400000
+  --    cpu-thermal temperature            41 C (first trip 110 C)
+== cpusets
+  ok    system.slice                       0-1
+  ok    user.slice                         0-1
+  ok    machine.slice                      0-1
+  ok    init.scope                         0-1
+  ok    pedal-rt.slice loads               loaded
+  ok    user tasks allowed on cpu 2-3      none outside pedal-rt.slice
+== audio interrupt
+  --    owner                              not this tree (AUDIO_IRQ_MATCH is empty)
+  --    repo tree                          c0cabcf-dirty

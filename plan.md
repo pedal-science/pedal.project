@@ -297,6 +297,26 @@ numbers need re-measuring on piv.
 
    D9 already settles that 3.8 comes before footswitches. The boot number decides how urgent the
    bypass relay (3.6) is.
+
+   Measured on piv 2026-09-26 (`tools/measure-switch.py`; namchain
+   `bench-results/e1-warm-candidates-piv.txt`):
+   - **Cold switch:** `rig.apply` to the new rig audible and the fade done, cycling four A2 + cab
+     rigs: **25 ms** median (27 max) with the files in the page cache, **33 ms** median (35 max)
+     read from disk, 0 xruns. Add ~5 ms of output path (the loopback, out 3 → in 1, measures 8.7 ms
+     round trip): about 38–40 ms to the jack, already inside D9's 50 ms. **But** the new rig starts
+     from NAM's silence-state prewarm, and E1 shows that is the wrong sound for the first 170–340 ms
+     (up to +15 dBFS from what it should be). Fast, but not right: see E1.
+   - **Memory:** `namchaind` with one rig: 21 MB resident. Each extra rig held: ~2 MB. vip's 1 GB
+     is not a constraint on the bank.
+   - **Power-on to sound:** 13.2–14.2 s from kernel start to a running rig (three boots, the last a
+     power cycle). Power cut to rig running was 33.7 s, but that includes however long piv was
+     unplugged: the bootloader leaves no timestamp to separate it, so firmware time is unmeasured.
+     A Pi 5 is typically a few seconds before the kernel; call it **~20 s power-on to sound**. WiFi
+     came up ~5 s after the rig did, so the app can't reach the pedal until well after it plays.
+     20 s of silence at power-on makes the bypass relay (3.6) worth having.
+   - Found on the way: `namchaind`'s control thread, which compiles rigs, ran SCHED_FIFO 80 with
+     core 3 allowed, beside the render thread. The pedal's drop-in now keeps it on cores 0–1 at
+     normal priority.
 8. **Soak it the way it will be used.** An hour through `namchaind` with an A2-Full + full-length
    cab IR rig, holding the `tib` lock, with ljoss editing over WiFi and one library rsync in the
    middle.
@@ -474,6 +494,27 @@ numbers need re-measuring on piv.
    the results: D if the render tail and memory hold with a full bank, otherwise C, with B as the
    floor. D also depends on namchain rendering on two threads, which is its M4 (parallel
    rendering, off by default), so D's result is also the case for or against admitting M4.
+
+   **E1 results, piv, 2026-09-26** (namchain `bench-results/e1-warm-candidates-piv.txt`, tool
+   `tools/warm/namchain-warm-bench`). A rig is a library A2 model + an 8192-tap cab; q64.
+   - **B (silent prewarm) is the wrong sound for 170–340 ms** after every switch (0/44 pass the
+     glitch detector's convergence rule; no clicks, but up to +15 dBFS from the right output). The
+     cold path A does the same today.
+   - **C (catch-up)** with 170 ms of replay: 39/44 pass, −51 to −68 dBFS. With **340 ms** of replay:
+     −114 dBFS, all pass; the replay costs **27 ms**, so ~38 ms to the jack. These models remember
+     longer than their nominal receptive field.
+   - **D (always warm)** is identical by construction, and costs the render core almost nothing:
+     0 overruns in every run, p99 14.7% → 16.7% of the deadline with 5 candidates warm for 10
+     minutes, 17.4% with 8. Core 2 is the limit: **5 candidates fit one core** with its p99 under a
+     quantum (97%); 6–8 keep up on average but run a block or two late at the tail. ~2 MB each.
+     Switch ~11 ms to the jack.
+   - piv stayed at 36–41 °C, never throttled. vip is the same SoC; its cooling needs checking.
+
+   **Suggested decision** (yours to make): **D for the footswitch bank, up to 5 rigs on core 2**,
+   so the common switch is ~11 ms and exact; **C with 340 ms of replay for everything else** (MIDI
+   jumps, a 6th–8th rig), ~38 ms and near-exact; never B. The cold path (`rig.apply` of a new
+   document) should do C's catch-up too, since it has B's problem now. D needs namchain to render
+   candidates on a second RT thread (its M4), which this result argues for admitting.
 
 **Done when:**
 - With no app, the footswitches and the MIDI Commander step through rigs stored on the pedal.

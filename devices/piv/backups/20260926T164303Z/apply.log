@@ -1,0 +1,2 @@
+  installed /etc/systemd/system/namchaind.service.d/10-pedal.conf
+pedal-device: done. Manifest: /var/lib/pedal/manifest
