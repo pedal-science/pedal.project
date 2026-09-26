@@ -14,7 +14,7 @@ something is unverified it says so.
   on a quiet machine.
 - Performance risk is therefore **closed**. Remaining work is physical build and
   bring-up, not DSP optimisation.
-- In hand: `tib`, the WM8960 board (stock, not yet inspected), the display module.
+- In hand: `tib`, the WM8960 board (stock, inspected 2026-09-26), the display module.
   Due: RP2350-USB-A. In the basket: 2 × Pico 2 WH and a Debug Probe. See
   [bom.md](bom.md) and `plan.md`.
 
@@ -67,7 +67,9 @@ pad → 100 Ω series → [47 nF to GND] → 1 µF series → codec pin
 | 470 Ω | 5.9 kHz |
 | 1 kΩ | 3.1 kHz |
 
-- Component mapping (**verify against silkscreen before desoldering**):
+- Component mapping (**unverified — the board has no reference designators on its
+  silkscreen, so check by continuity from the pad before desoldering**). The parts sit
+  above the codec as three rows of six: caps, resistors (dark bodies), caps:
 
 | Input | Series R | Shunt C | Coupling C |
 |---|---|---|---|
@@ -100,6 +102,17 @@ pad → 100 Ω series → [47 nF to GND] → 1 µF series → codec pin
   broken out on J4 pin 3.
 - **SPKVDD jumper** selects 3.3 V or VIN; leaving both open means the class-D amp is
   unpowered and SPKVDD can be supplied at the header.
+
+### As received (inspected 2026-09-26, photos in `references/wm8960-photos/`)
+
+- **AVDD-ISO bridged**: onboard LDO feeds AVDD.
+- **SPKVDD bridged to VIN**, 3V3 side open (from the photo; confirm with a meter). With VIN
+  powered, the class-D amp is live, so the mixer state must keep it disabled.
+- Two jumpers not in the schematic notes above, both bridged: **I2C** (enables the onboard
+  2.2 kΩ pull-ups; check against any on `tib`'s header bus) and **LED** (PWR LED on 3V3, the
+  rail that also feeds Y1; a candidate to cut under D8).
+- A **Qwiic** connector carries I2C and 3V3. Leave it unused: `tib` is the only I2C master.
+- Y1 marked 24.000 MHz. No headers fitted.
 
 ### Other
 
