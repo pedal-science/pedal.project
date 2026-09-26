@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# pedal-device — install, check and remove tib's appliance configuration. Runs on tib, as root.
-# The Mac side (devices/tib/apply in pedal.project) stages the tree and calls this.
+# pedal-device — install, check and remove the pedal host's appliance configuration. Runs on the
+# host, as root. The Mac side (devices/<host>/apply in pedal.project) stages the tree and calls this.
 #
 #   pedal-device apply <stage-dir> [--dry-run] [--commit <id>]
 #   pedal-device revert [--dry-run]
 #   pedal-device status
 #
-# <stage-dir> holds rootfs/, a copy of devices/tib/rootfs. Every file there is installed at the
+# <stage-dir> holds rootfs/: devices/common/rootfs with devices/<host>/rootfs on top. Every file there is installed at the
 # same path. Everything done is recorded in /var/lib/pedal/manifest, and revert undoes exactly
 # that list. A file that already existed and was not ours is saved first and put back on revert.
 #
@@ -17,15 +17,15 @@ set -euo pipefail
 STATE=/var/lib/pedal
 MANIFEST=$STATE/manifest
 SAVED=$STATE/preexisting
-LOCK=/run/lock/tib.lock          # the same lock scripts/tib-lock will take
+LOCK=/run/lock/$(hostname).lock  # the same lock scripts/tib-lock will take (tib.lock on tib)
 
-# namchain's tools/soak/host-slim.sh configured this board before this tree existed. apply takes
+# namchain's tools/soak/host-slim.sh configured tib and piv before this tree existed. apply takes
 # its place: it removes host-slim's files (saving them) and takes over the masks we share. The
-# realtime limits in audio.conf were written by hand during namchain's plan-rt-tib work, and are
-# now in 90-pedal-rt.conf.
+# realtime limits in audio.conf (tib) and 99-namchain-audio.conf (piv) were written by hand during
+# namchain's plan-rt work, and are now in 90-pedal-rt.conf.
 HOSTSLIM_MANIFEST=/var/lib/namchain/host-slim/manifest
 HOSTSLIM_UNITS=(namchain-host-slim-vmstat.service namchain-host-slim-initconfine.service)
-ADOPT_FILES=(/etc/security/limits.d/audio.conf)
+ADOPT_FILES=(/etc/security/limits.d/audio.conf /etc/security/limits.d/99-namchain-audio.conf)
 
 DRY=0
 say()  { echo "pedal-device: $*"; }
@@ -114,13 +114,19 @@ activate() {
   # The drop-ins are read at daemon-reload, but a running slice's cgroup is only rewritten when
   # a property is set, so set it now too.
   if [[ -n $hk ]]; then
-    run systemctl set-property --runtime system.slice AllowedCPUs="$hk"
-    run systemctl set-property --runtime user.slice AllowedCPUs="$hk"
+    local d
+    for d in /etc/systemd/system/*.slice.d/10-pedal-cpuset.conf; do
+      [[ -e $d ]] || continue
+      d=${d%.d/*}; run systemctl set-property --runtime "${d##*/}" AllowedCPUs="$hk"
+    done
   fi
   run sysctl -q -p /etc/sysctl.d/90-pedal.conf
   run systemctl restart systemd-journald
   run systemctl enable pedal-tune.service
   run systemctl restart pedal-tune.service
+  # namchaind itself is installed and enabled by scripts/deploy-engine, with its binaries.
+  run systemctl enable pedal-resume.service
+  run systemctl restart --no-block pedal-resume.service
 }
 
 do_apply() {
@@ -144,6 +150,7 @@ do_revert() {
   local kind what
   [[ -r $MANIFEST ]] || { say "nothing to revert: no $MANIFEST"; exit 0; }
   systemctl cat pedal-tune.service >/dev/null 2>&1 && run systemctl disable --now pedal-tune.service
+  systemctl cat pedal-resume.service >/dev/null 2>&1 && run systemctl disable --now pedal-resume.service
   while read -r kind what; do
     case $kind in
       mask) run systemctl unmask "$what" >/dev/null; echo "  unmasked  $what" ;;
@@ -154,10 +161,11 @@ do_revert() {
     [[ $kind == saved ]] || continue
     run install -D -m 0644 "$SAVED$what" "$what"; echo "  restored  $what"
   done < "$MANIFEST"
-  run rmdir /etc/systemd/system/system.slice.d /etc/systemd/system/user.slice.d /etc/pedal 2>/dev/null || true
+  local s
+  for s in system user machine; do run rmdir "/etc/systemd/system/$s.slice.d" 2>/dev/null || true; done
+  run rmdir /etc/pedal 2>/dev/null || true
   run systemctl daemon-reload
-  run systemctl set-property --runtime system.slice AllowedCPUs=
-  run systemctl set-property --runtime user.slice AllowedCPUs=
+  for s in system user machine; do run systemctl set-property --runtime "$s.slice" AllowedCPUs= 2>/dev/null || true; done
   run systemctl set-property --runtime init.scope AllowedCPUs=
   run systemctl restart systemd-journald
   local p
@@ -198,9 +206,9 @@ done
 
 exec 9> "$LOCK"
 case $cmd in
-  apply)  flock -n 9 || { say "tib is locked by another job ($LOCK)"; exit 3; }
+  apply)  flock -n 9 || { say "$(hostname) is locked by another job ($LOCK)"; exit 3; }
           do_apply "${stage:?usage: pedal-device apply <stage-dir>}" "$commit" ;;
-  revert) flock -n 9 || { say "tib is locked by another job ($LOCK)"; exit 3; }
+  revert) flock -n 9 || { say "$(hostname) is locked by another job ($LOCK)"; exit 3; }
           do_revert ;;
   status) do_status ;;
   *) sed -n '2,13p' "$0"; exit 2 ;;

@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+# scripts/deploy-engine [--host piv] [--commit <rev>] [--no-tests] — build namchain from a commit
+# and install it on the pedal host.
+#
+# Builds in a dedicated tree on the host (~/pedal-build/namchain), never the dev checkout, runs
+# the tests, installs into /opt/namchain/<commit>/, swaps /opt/namchain/current to it, installs
+# namchain's own unit (packaging/systemd/namchaind.service; devices/common adds the pedal's
+# drop-in), makes the TCP token if there is none, and restarts namchaind.
+#
+# piv only, for now: it builds natively for aarch64. tib's armv7-NEON build is a cross build on
+# piv plus a copy, and comes back with tib.
+set -euo pipefail
+
+HOST=piv
+REV=origin/main
+TESTS=1
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --commit) REV=$2; shift ;;
+    --no-tests) TESTS=0 ;;
+    -h|--help) sed -n '2,12p' "$0"; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+[[ $HOST == piv ]] || { echo "deploy-engine: only piv is supported while tib is down" >&2; exit 2; }
+
+SSH=(ssh -o BatchMode=yes -o ConnectTimeout=10 "$HOST")
+log() { printf '\033[1;34m==>\033[0m %s\n' "$*" >&2; }
+
+busy=$("${SSH[@]}" "pgrep -a -f 'namchain-soak|stress-ng|cyclictest' | grep -v pgrep" || true)
+[[ -z $busy ]] || { echo "deploy-engine: $HOST is busy:"$'\n'"$busy" >&2; exit 1; }
+
+log "building $REV on $HOST"
+"${SSH[@]}" bash -s -- "$REV" "$TESTS" <<'REMOTE'
+set -euo pipefail
+rev=$1 tests=$2
+mkdir -p ~/pedal-build && cd ~/pedal-build
+[[ -d namchain ]] || git clone -q git@github.com:rikkus/namchain.git
+cd namchain
+git config url."git@github.com:".insteadOf https://github.com/
+git fetch -q origin
+git checkout -q --detach "$rev"
+git submodule sync -q --recursive
+git submodule update -q --init --recursive
+commit=$(git rev-parse --short=7 HEAD)
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_CXX_FLAGS=-march=armv8-a -mtune=cortex-a76" \
+  -DNAMCHAIN_BUILD_TESTS=ON -DNAMCHAIN_BUILD_TOOLS=ON > build-configure.log
+grep -q 'A2 planar NEON:  ON' build-configure.log || { echo "planar NEON kernels are off" >&2; exit 1; }
+nice cmake --build build -j2 > build.log || { tail -30 build.log >&2; exit 1; }
+# Serially: under -j2 one timing test fails from contention, not from a defect.
+[[ $tests == 1 ]] && (cd build && nice ctest --output-on-failure | tail -3)
+
+dest=/opt/namchain/$commit
+sudo install -d "$dest/bin" "$dest/packaging"
+for b in namchaind namchainctl namchain-soak namchain-latency namchain-render; do
+  sudo install -m 0755 "build/$b" "$dest/bin/$b"
+done
+sudo install -m 0644 packaging/systemd/namchaind.service "$dest/packaging/"
+printf 'commit=%s\nrev=%s\nbuilt=%s\nhost=%s\nkernel=%s\n' "$(git rev-parse HEAD)" "$rev" \
+  "$(date -u +%FT%TZ)" "$(hostname)" "$(uname -r)" | sudo tee "$dest/MANIFEST" >/dev/null
+sudo ln -sfn "$dest" /opt/namchain/current
+sudo install -m 0644 "$dest/packaging/namchaind.service" /etc/systemd/system/namchaind.service
+
+if ! sudo test -s /etc/namchain/token; then
+  sudo install -d -m 0755 /etc/namchain
+  (umask 077; openssl rand -hex 32 | sudo tee /etc/namchain/token >/dev/null)
+  sudo chmod 0600 /etc/namchain/token
+  echo "made a new TCP token in /etc/namchain/token" >&2
+fi
+sudo systemctl daemon-reload
+sudo systemctl enable -q namchaind.service
+sudo systemctl restart namchaind.service
+sleep 3
+systemctl is-active namchaind.service
+/opt/namchain/current/bin/namchainctl --compact status 2>&1 | head -c 600; echo
+echo "installed $commit"
+REMOTE

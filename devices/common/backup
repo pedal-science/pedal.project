@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
-# devices/tib/backup [dir] — pull everything this tree touches on tib, before changing it.
+# devices/<host>/backup [dir] — pull everything this tree touches on the host, before changing it.
 #
-# Writes devices/tib/backups/<stamp>/ (or [dir]): state.txt, a readable snapshot of the settings,
+# Writes devices/$DEV_NAME/backups/<stamp>/ (or [dir]): state.txt, a readable snapshot of the settings,
 # and files.tar, the files themselves. Both are small and are committed.
 
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
-require_tib
+require_dev
 
-out="${1:-$TIB_DIR/backups/$(timestamp)}"
+out="${1:-$DEV_DIR/backups/$(timestamp)}"
 mkdir -p "$out"
-log "backing up $TIB_HOST into ${out#"$TIB_DIR"/}"
+log "backing up $DEV_HOST into ${out#"$DEV_DIR"/}"
 
-tib 'bash -s' > "$out/state.txt" 2>&1 <<'EOF' || die "reading tib state failed; see $out/state.txt"
+dev 'bash -s' > "$out/state.txt" 2>&1 <<'EOF' || die "reading $DEV_HOST state failed; see $out/state.txt"
 section() { printf '\n== %s\n' "$*"; }
 section host;      uname -a; cat /proc/cmdline; uptime
 section applied;   cat /etc/pedal/applied 2>/dev/null || echo "not applied"
@@ -33,9 +33,9 @@ section host-slim-manifest; sudo -n cat /var/lib/namchain/host-slim/manifest 2>/
 true   # a missing section is not a failed backup
 EOF
 
-# Only paths that exist go into the tar, so a first backup and a later one both work. tib's login
+# Only paths that exist go into the tar, so a first backup and a later one both work. The hosts' login
 # shell is zsh, which errors on an unmatched glob, so this runs under bash with nullglob.
-tib 'bash -s' > "$out/files.tar" <<'EOF' || die "copying tib files failed"
+dev 'bash -s' > "$out/files.tar" <<'EOF' || die "copying $DEV_HOST files failed"
 shopt -s nullglob
 cd /
 paths=(etc/pedal var/lib/pedal var/lib/namchain/host-slim
@@ -48,5 +48,5 @@ for p in "${paths[@]}"; do [[ -e $p ]] && existing+=("$p"); done
 sudo -n tar -cf - "${existing[@]}"
 EOF
 
-ln -sfn "$(basename "$out")" "$TIB_DIR/backups/latest"
-ok "backup: ${out#"$TIB_DIR"/} ($(wc -l < "$out/state.txt") lines, $(du -h "$out/files.tar" | cut -f1) tar)"
+ln -sfn "$(basename "$out")" "$DEV_DIR/backups/latest"
+ok "backup: ${out#"$DEV_DIR"/} ($(wc -l < "$out/state.txt") lines, $(du -h "$out/files.tar" | cut -f1) tar)"

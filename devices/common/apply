@@ -1,53 +1,59 @@
 #!/usr/bin/env bash
-# devices/tib/apply [--dry-run] — put devices/tib/rootfs on tib and bring it into force.
+# devices/<host>/apply [--dry-run] — put devices/common/rootfs and devices/<host>/rootfs on the
+# host and bring them into force. The host's own file wins where both have one.
 #
 # Backs up first, refuses while a measurement or the engine is running, stages the tree in
 # /var/tmp, runs pedal-device on the board (which records everything it does, for revert), then
 # checks the result. Re-running it is safe: files that already match are left alone.
 #
-# To undo:  ssh tib sudo pedal-device revert
+# To undo:  ssh <host> sudo pedal-device revert
 
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 dry=""
 case ${1:-} in
   --dry-run) dry=--dry-run ;;
-  -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
+  -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
   "") ;;
   *) die "unknown argument: $1" ;;
 esac
 
-require_tib
+require_dev
 commit=$(tree_commit)
-[[ $commit == *-dirty ]] && warn "devices/tib has uncommitted changes; tib will record $commit"
+[[ $commit == *-dirty ]] && warn "devices/$DEV_NAME has uncommitted changes; $DEV_HOST will record $commit"
 
-# Rule 8: tib is shared. Don't change it under a running measurement.
-busy=$(tib "pgrep -a -f 'namchain-soak|namchaind|stress-ng|cyclictest' | grep -v pgrep" || true)
-[[ -z $busy ]] || die "tib is busy, not changing it now:
+# Rule 8: the pedal host is shared. Don't change it under a running measurement.
+busy=$(dev "pgrep -a -f 'namchain-soak|namchaind|stress-ng|cyclictest' | grep -v pgrep" || true)
+[[ -z $busy ]] || die "$DEV_HOST is busy, not changing it now:
 $busy"
 
 stamp=$(timestamp)
-backup_dir="$TIB_DIR/backups/$stamp"
+backup_dir="$DEV_DIR/backups/$stamp"
 logfile=/dev/null
 if [[ -z $dry ]]; then
-  "$TIB_DIR/backup" "$backup_dir"
+  "$DEV_DIR/backup" "$backup_dir"
   logfile="$backup_dir/apply.log"
 fi
 
 stage="/var/tmp/pedal-stage-$stamp"
-log "staging rootfs in $TIB_HOST:$stage"
-COPYFILE_DISABLE=1 tar -C "$TIB_DIR" --no-xattrs --no-mac-metadata --exclude .DS_Store -cf - rootfs \
-  | tib "mkdir -p '$stage' && tar -C '$stage' -xf -"
+log "staging rootfs in $DEV_HOST:$stage"
+# One tree, common first and then the host's own on top, so the host's files win.
+pack=$(mktemp -d); trap 'rm -rf "$pack"' EXIT
+while IFS=$'\t' read -r src dst; do
+  mkdir -p "$pack/rootfs$(dirname "$dst")"; cp -p "$src" "$pack/rootfs$dst"
+done < <(rootfs_files)
+COPYFILE_DISABLE=1 tar -C "$pack" --no-xattrs --no-mac-metadata -cf - rootfs \
+  | dev "mkdir -p '$stage' && tar -C '$stage' -xf -"
 
 log "applying $commit${dry:+ (dry run)}"
 set +e
-tib "sudo -n bash '$stage/rootfs/usr/local/sbin/pedal-device' apply '$stage' --commit '$commit' $dry" \
+dev "sudo -n bash '$stage/rootfs/usr/local/sbin/pedal-device' apply '$stage' --commit '$commit' $dry" \
   2>&1 | tee "$logfile"
 rc=${PIPESTATUS[0]}
 set -e
-tib "rm -rf '$stage'"
+dev "rm -rf '$stage'"
 (( rc == 0 )) || die "pedal-device apply failed ($rc)"
 
 if [[ -z $dry ]]; then
-  "$TIB_DIR/check" | tee "$backup_dir/check-after.txt"
+  "$DEV_DIR/check" | tee "$backup_dir/check-after.txt"
 fi

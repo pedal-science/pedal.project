@@ -1,0 +1,120 @@
+#!/usr/bin/env python3
+"""pedal-resume — the pedal service, v0: come back after a power cycle with the rig you left.
+
+    pedal-resume run    watch namchaind; whenever the rig's generation changes, save the
+                        document it is running as <rigs_root>/last.json (pedal-resume.service)
+    pedal-resume seed   before namchaind starts: if there is no last.json yet, copy the default
+                        rig there (namchaind's ExecStartPre)
+
+namchaind's config names last.json as its startup rig, and namchaind already compiles and
+prewarms that before the clock starts. This process only ever reads from the engine, through
+namchainctl on the Unix socket, so its being down never means audio is down: the pedal just
+resumes an older rig.
+
+The write is atomic (temp file, fsync, rename, fsync the directory), because a pedal gets
+unplugged, and a half-written last.json would cost the next boot its rig. The previous rig is
+kept as last.prev.json.
+"""
+import json, os, shutil, subprocess, sys, time
+
+CONFIG = "/etc/namchain/namchaind.json"
+DEFAULT_RIG = "/etc/pedal/default-rig.json"
+CTL = "/opt/namchain/current/bin/namchainctl"
+POLL_S = 1.0
+# An edit arrives as a burst of patches (a knob being turned). Save once it has been still this
+# long, not on every generation, so a drag is one write to the SD card rather than hundreds.
+SETTLE_S = 2.0
+
+
+def log(msg):
+    print(f"pedal-resume: {msg}", flush=True)
+
+
+def rigs_root():
+    with open(CONFIG) as f:
+        cfg = json.load(f)
+    return cfg.get("rigs_root", "/etc/namchain/rigs"), cfg.get("rig") or "last.json"
+
+
+def write_atomic(path, data):
+    d = os.path.dirname(path)
+    os.makedirs(d, exist_ok=True)
+    tmp = f"{path}.tmp"
+    with open(tmp, "w") as f:
+        f.write(data)
+        f.flush()
+        os.fsync(f.fileno())
+    if os.path.exists(path):
+        shutil.copy2(path, os.path.join(d, "last.prev.json"))
+    os.replace(tmp, path)
+    fd = os.open(d, os.O_DIRECTORY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def seed():
+    root, name = rigs_root()
+    path = os.path.join(root, name)
+    if os.path.exists(path):
+        log(f"resuming {path}")
+        return 0
+    with open(DEFAULT_RIG) as f:
+        write_atomic(path, f.read())
+    log(f"no saved rig yet; seeded {path} from {DEFAULT_RIG}")
+    return 0
+
+
+def get():
+    out = subprocess.run([CTL, "--compact", "get"], capture_output=True, text=True, timeout=5)
+    if out.returncode != 0:
+        return None
+    return json.loads(out.stdout)
+
+
+def run():
+    root, name = rigs_root()
+    path = os.path.join(root, name)
+    saved = None
+    try:
+        with open(path) as f:
+            saved = json.load(f)
+    except (OSError, ValueError):
+        pass
+    seen_gen, changed_at, down = None, None, False
+    while True:
+        try:
+            rig = get()
+        except (subprocess.TimeoutExpired, ValueError, OSError) as e:
+            rig = None
+            if not down:
+                log(f"cannot read the engine ({e})")
+        if rig is None:
+            down = True
+            time.sleep(POLL_S)
+            continue
+        if down:
+            log("engine reachable")
+            down = False
+        gen, doc = rig.get("generation"), rig.get("document")
+        if gen != seen_gen:
+            seen_gen, changed_at = gen, time.monotonic()
+        elif changed_at is not None and time.monotonic() - changed_at >= SETTLE_S:
+            changed_at = None
+            # An engine with no rig (started silent) has nothing worth resuming.
+            if doc and doc.get("chains", doc.get("nodes")) and doc != saved:
+                write_atomic(path, json.dumps(doc, indent=2) + "\n")
+                saved = doc
+                log(f"saved generation {gen} to {path}")
+        time.sleep(POLL_S)
+
+
+if __name__ == "__main__":
+    cmd = sys.argv[1] if len(sys.argv) > 1 else "run"
+    if cmd == "seed":
+        sys.exit(seed())
+    if cmd == "run":
+        run()
+    print(__doc__.strip().splitlines()[0], file=sys.stderr)
+    sys.exit(2)

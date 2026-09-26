@@ -1,16 +1,17 @@
 #!/usr/bin/env bash
-# pedal-tune — the runtime half of tib's tuning, run at boot by pedal-tune.service.
+# pedal-tune — the runtime half of the pedal host's tuning, run at boot by pedal-tune.service.
 #
 #   pedal-tune apply   set what cannot be written down as a file (the default)
 #   pedal-tune check   report whether it is all in force; exits 1 if anything is not
 #
-# The kernel half (isolcpus, nohz_full, rcu_nocbs on core 3) is rtpi's. The persistent files
+# The kernel half (isolcpus, nohz_full, rcu_nocbs) is rtpi's. The persistent files
 # (slice drop-ins, journald, sysctl, limits) are installed by pedal-device. What is left for this
 # script is state that only exists at runtime:
 #
 #   1. the clock: governor and cap, on the one policy all four cores share
 #   2. init.scope's cpuset, which cannot take a drop-in (it is a transient unit)
-#   3. the audio interrupt: its affinity and its threads' realtime priority
+#   3. the audio interrupt: its affinity and its threads' realtime priority, unless the host
+#      leaves that to rtpi (AUDIO_IRQ_MATCH empty, as on piv)
 #
 # apply never fails the boot: a machine running untuned is still reachable, a failed unit here
 # would not make it better. check is the strict one.
@@ -22,7 +23,11 @@ CONF=/etc/pedal/tune.conf
 # shellcheck source=/dev/null
 source "$CONF"
 : "${RT_CPUS:?} ${HOUSEKEEPING_CPUS:?} ${CPU_GOVERNOR:?} ${CPU_MAX_KHZ:?}"
-: "${AUDIO_IRQ_MATCH:?} ${AUDIO_IRQ_PRIO:?}"
+# The cores the kernel isolates. On tib that is just the render core; piv isolates 2-3 and
+# renders on 3.
+ISOLATED_CPUS="${ISOLATED_CPUS:-$RT_CPUS}"
+AUDIO_IRQ_MATCH="${AUDIO_IRQ_MATCH:-}"
+AUDIO_IRQ_PRIO="${AUDIO_IRQ_PRIO:-85}"
 AUDIO_IRQ_CPU="${AUDIO_IRQ_CPU:-}"
 
 MODE="${1:-apply}"
@@ -35,7 +40,12 @@ expect() { if [[ $2 == "$3" ]]; then okay "$1" "$2"; else fail "$1" "${2:-<empty
 
 # Interrupts whose /proc/interrupts line names the controller. A shared line can have more than
 # one handler, and under PREEMPT_RT each handler gets its own irq/<N>-<name> thread.
-audio_irqs() { awk -v m="$AUDIO_IRQ_MATCH" 'index($0, m) { sub(/:$/, "", $1); print $1 }' /proc/interrupts; }
+audio_irqs() { [[ -n $AUDIO_IRQ_MATCH ]] || return 0; awk -v m="$AUDIO_IRQ_MATCH" 'index($0, m) { sub(/:$/, "", $1); print $1 }' /proc/interrupts; }
+# A cpu list ("0-1,3") expanded to one number per line.
+expand_cpus() { tr ',' '\n' <<< "$1" | awk -F- 'NF { e = ($2 == "" ? $1 : $2); for (c = $1; c <= e; c++) print c }'; }
+# True if the cpu list $1 includes any cpu in $2.
+cpus_overlap() { [[ -n $(comm -12 <(expand_cpus "$1" | sort) <(expand_cpus "$2" | sort)) ]]; }
+
 irq_threads() { ps -eLo tid=,comm= | awk -v p="irq/$1-" 'index($2, p) == 1 { print $1 }'; }
 
 apply() {
@@ -50,7 +60,7 @@ apply() {
     || say "WARNING: could not confine init.scope"
   # 3. the audio interrupt
   local irqs; irqs=$(audio_irqs)
-  [[ -n $irqs ]] || say "WARNING: no interrupt matches '$AUDIO_IRQ_MATCH'"
+  [[ -n $irqs || -z $AUDIO_IRQ_MATCH ]] || say "WARNING: no interrupt matches '$AUDIO_IRQ_MATCH'"
   for irq in $irqs; do
     if [[ -n $AUDIO_IRQ_CPU ]]; then
       echo "$AUDIO_IRQ_CPU" > "/proc/irq/$irq/smp_affinity_list" 2>/dev/null \
@@ -69,8 +79,8 @@ apply() {
 check() {
   local p irq tid
   echo "== kernel isolation (rtpi)"
-  expect "isolated cpus" "$(cat /sys/devices/system/cpu/isolated)" "$RT_CPUS"
-  expect "nohz_full cpus" "$(cat /sys/devices/system/cpu/nohz_full)" "$RT_CPUS"
+  expect "isolated cpus" "$(cat /sys/devices/system/cpu/isolated)" "$ISOLATED_CPUS"
+  expect "nohz_full cpus" "$(cat /sys/devices/system/cpu/nohz_full)" "$ISOLATED_CPUS"
 
   echo "== clock"
   for p in /sys/devices/system/cpu/cpufreq/policy*; do
@@ -80,7 +90,7 @@ check() {
   done
   local z c
   for z in /sys/class/thermal/thermal_zone*; do
-    note "$(cat "$z/type") temperature" "$(( $(cat "$z/temp") / 1000 )) C (passive trip $(( $(cat "$z/trip_point_0_temp") / 1000 )) C)"
+    note "$(cat "$z/type") temperature" "$(( $(cat "$z/temp") / 1000 )) C (first trip $(( $(cat "$z/trip_point_0_temp" 2>/dev/null || echo 0) / 1000 )) C)"
   done
   for c in /sys/class/thermal/cooling_device*; do
     [[ $(cat "$c/type") == cpufreq-* ]] || continue
@@ -88,15 +98,16 @@ check() {
   done
 
   echo "== cpusets"
-  for s in system.slice user.slice init.scope; do
+  for s in system.slice user.slice machine.slice init.scope; do
+    [[ $s != machine.slice || -e /etc/systemd/system/machine.slice.d ]] || continue
     expect "$s" "$(cat "/sys/fs/cgroup/$s/cpuset.cpus.effective" 2>/dev/null)" "$HOUSEKEEPING_CPUS"
   done
   expect "pedal-rt.slice loads" "$(systemctl show -p LoadState --value pedal-rt.slice)" "loaded"
-  # What actually matters: nothing but per-CPU kernel threads may be allowed onto the render
-  # core. Anything else listed here got onto it past both the kernel and the cpusets.
+  # What actually matters: nothing but per-CPU kernel threads may be allowed onto the isolated
+  # cores. Anything else listed here got onto them past both the kernel and the cpusets.
   local stray
   stray=$(for t in /proc/[0-9]*/task/[0-9]*; do
-            [[ $(grep -s Cpus_allowed_list "$t/status" | cut -f2) == *"$RT_CPUS"* ]] || continue
+            cpus_overlap "$(grep -s Cpus_allowed_list "$t/status" | cut -f2)" "$ISOLATED_CPUS" || continue
             # flags is the 7th field after "(comm) ", and comm may contain spaces
             flags=$(sed 's/.*) //' "$t/stat" 2>/dev/null | awk '{print $7}') || continue
             # PF_KTHREAD (0x00200000): per-CPU kernel threads belong there
@@ -104,9 +115,13 @@ check() {
             grep -qs 'pedal-rt\.slice' "${t%/task/*}/cgroup" && continue   # /pedal.slice/pedal-rt.slice/...
             cat "$t/comm"
           done | sort | uniq -c | awk '{printf "%s%s(%s)", s, $2, $1; s=" "}')
-  if [[ -z $stray ]]; then okay "user tasks allowed on cpu $RT_CPUS" "none outside pedal-rt.slice"
-  else fail "user tasks allowed on cpu $RT_CPUS" "$stray"; fi
+  if [[ -z $stray ]]; then okay "user tasks allowed on cpu $ISOLATED_CPUS" "none outside pedal-rt.slice"
+  else fail "user tasks allowed on cpu $ISOLATED_CPUS" "$stray"; fi
 
+  if [[ -z $AUDIO_IRQ_MATCH ]]; then
+    echo "== audio interrupt"; note "owner" "not this tree (AUDIO_IRQ_MATCH is empty)"
+    return "$bad"
+  fi
   echo "== audio interrupt ($AUDIO_IRQ_MATCH)"
   local irqs; irqs=$(audio_irqs)
   [[ -n $irqs ]] || fail "interrupt" "none matches"

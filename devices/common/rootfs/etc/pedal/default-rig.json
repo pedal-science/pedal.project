@@ -1,0 +1,14 @@
+{
+  "nodes": [
+    { "id": "in", "type": "nc.input" },
+    { "id": "amp", "type": "nc.nam", "model": "Ampeg GVT52 - Channel 2/AMPEG_CH 2 NEUTRAL G5" },
+    { "id": "cab", "type": "nc.cab.ir",
+      "ir": "Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT" },
+    { "id": "out", "type": "nc.output" }
+  ],
+  "connections": [
+    { "from": "in", "to": "amp" },
+    { "from": "amp", "to": "cab" },
+    { "from": "cab", "to": "out" }
+  ]
+}

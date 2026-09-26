@@ -1,27 +1,28 @@
 #!/usr/bin/env bash
-# devices/tib/check — is tib running exactly this tree, and is it all in force? Read-only.
+# devices/<host>/check — is the host running exactly this tree, and is it all in force? Read-only.
 #
-# Compares every file under rootfs/ with the copy on tib, then runs `pedal-device status`, which
-# checks the masks, the clock, the cpusets, the audio interrupt and what may run on core 3.
+# Compares every file under both rootfs/ trees with the copy on the host, then runs
+# `pedal-device status`, which checks the masks, the clock, the cpusets, the audio interrupt and what may run on core 3.
 # Exits non-zero on any difference.
 
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
-require_tib
+require_dev
 
 bad=0
-log "files: devices/tib/rootfs against $TIB_HOST"
-mapfile -t files < <(cd "$TIB_DIR/rootfs" && find . -type f ! -name .DS_Store | sed 's|^\./|/|' | sort)
-local_sums=$(cd "$TIB_DIR/rootfs" && for f in "${files[@]}"; do printf '%s  %s\n' "$(shasum -a 256 ".$f" | cut -d' ' -f1)" "$f"; done)
-remote_sums=$(tib "sudo -n sha256sum ${files[*]} 2>/dev/null" || true)
+log "files: devices/common + devices/$DEV_NAME rootfs against $DEV_HOST"
+local_sums=$(while IFS=$'\t' read -r src dst; do
+  printf '%s  %s\n' "$(shasum -a 256 "$src" | cut -d' ' -f1)" "$dst"; done < <(rootfs_files))
+files=$(cut -d' ' -f3 <<< "$local_sums" | tr '\n' ' ')
+remote_sums=$(dev "sudo -n sha256sum $files 2>/dev/null" || true)
 while read -r sum path; do
   theirs=$(awk -v p="$path" '$2 == p { print $1 }' <<< "$remote_sums")
-  if [[ -z $theirs ]]; then printf '  FAIL  %-50s missing on tib\n' "$path"; bad=1
+  if [[ -z $theirs ]]; then printf '  FAIL  %-50s missing on %s\n' "$path" "$DEV_HOST"; bad=1
   elif [[ $theirs != "$sum" ]]; then printf '  FAIL  %-50s differs from the repo\n' "$path"; bad=1
   else printf '  ok    %s\n' "$path"; fi
 done <<< "$local_sums"
 
-log "state on $TIB_HOST"
-tib "sudo -n /usr/local/sbin/pedal-device status" || bad=1
+log "state on $DEV_HOST"
+dev "sudo -n /usr/local/sbin/pedal-device status" || bad=1
 printf '  --    %-34s %s\n' "repo tree" "$(tree_commit)"
 
-(( bad == 0 )) && ok "tib matches devices/tib and it is in force" || { warn "tib differs; see FAIL lines"; exit 1; }
+(( bad == 0 )) && ok "$DEV_HOST matches devices/$DEV_NAME and it is in force" || { warn "$DEV_HOST differs; see FAIL lines"; exit 1; }

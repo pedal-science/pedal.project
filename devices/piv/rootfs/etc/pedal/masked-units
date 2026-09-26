@@ -1,0 +1,52 @@
+# Units masked on piv, one per line. Mask, not disable: a disabled unit can still be started by a
+# socket, a timer or a dependency. Units that do not exist on the board are skipped.
+#
+# This is namchain host-slim's list for piv (bench-results/host-slim-state-piv.txt), which had
+# decayed: its files were gone and all of these were running again on 2026-09-26.
+#
+# Package maintenance that wakes up on its own. Updates happen when you choose, not mid-gig.
+apt-daily.service
+apt-daily.timer
+apt-daily-upgrade.service
+apt-daily-upgrade.timer
+unattended-upgrades.service
+man-db.timer
+fwupd.service
+fwupd-refresh.timer
+motd-news.service
+motd-news.timer
+ubuntu-advantage.service
+ua-reboot-cmds.service
+apport.service
+# cloud-init and snapd: first-boot provisioning and snap refreshes.
+cloud-init-local.service
+cloud-final.service
+cloud-config.service
+cloud-init-main.service
+cloud-init-network.service
+snapd.service
+snapd.socket
+snapd.seeded.service
+snapd.apparmor.service
+# Hardware and services a pedal doesn't have or need.
+ModemManager.service
+bluetooth.service
+udisks2.service
+multipathd.service
+open-iscsi.service
+NetworkManager-wait-online.service
+# Logging: the journal, in RAM, is enough.
+rsyslog.service
+sysstat.service
+#
+# Deliberately NOT masked:
+#   avahi-daemon       host-slim masked it, but it is what makes piv.local resolve for ljoss,
+#                      which has no discovery (plan 1.3). It is inactive today; not started either.
+#   docker, containerd, libvirt
+#                      piv's other jobs. They live in system.slice and machine.slice, so they run
+#                      on cores 0-1 with everything else. Stop them before a soak.
+#   NetworkManager, wpa_supplicant, systemd-networkd
+#                      WiFi is the way in; the same boot-time-fallback question as tib's.
+#   namchain-realtime-tune.service
+#                      namchain's: sets the governor and turns USB autosuspend off. Harmless
+#                      beside pedal-tune, and the autosuspend half is worth keeping.
