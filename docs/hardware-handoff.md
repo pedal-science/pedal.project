@@ -8,13 +8,18 @@ something is unverified it says so.
 
 ## Current status
 
+> **`tib` is retired (2026-09-26); the Core host is a Pi 5** (piv now, vip soon). Where this
+> doc says `tib`, read "the Core host". The RK3288-specific parts (the device tree, the one I2S
+> controller, UART1 on pins 8/10, and "What not to assume") are superseded. The Pi's header
+> equivalents still need to be worked out.
+
 - NAM **A2-full** kernel runs at **~53% of one core** on `tib`, with the armv7 NEON
   build and the planar-kernel vendor patch.
 - PREEMPT_RT kernel built, running, and stress-tested — no dropouts or glitches
   on a quiet machine.
 - Performance risk is therefore **closed**. Remaining work is physical build and
   bring-up, not DSP optimisation.
-- In hand: `tib`, the WM8960 board (stock, inspected 2026-09-26), the display module.
+- In hand: piv (standing in as the Core host), the WM8960 board (stock, inspected 2026-09-26), the display module.
   Due: RP2350-USB-A. In the basket: 2 × Pico 2 WH and a Debug Probe. See
   [bom.md](bom.md) and `plan.md`.
 
@@ -22,7 +27,7 @@ something is unverified it says so.
 
 | Part | Notes |
 |---|---|
-| `tib` | ASUS Tinker Board, RK3288 Cortex-A17, **armhf / 32-bit** (no aarch64). Out of production; a similarly powerful Pi-class board would stand in, as namchain already builds and tests for aarch64 on a Pi 500 |
+| Core host | **vip**, a Raspberry Pi 5 (1 GB, BCM2712, aarch64), on order. **piv** (Pi 500, same SoC) stands in until it arrives. `tib` (ASUS Tinker Board, RK3288, armhf) was the original Core and is **retired** (2026-09-26) |
 | Codec | SparkFun WM8960 Audio Codec Breakout, schematic v1.0 (Eagle 9.4.2, Jan 2023). Retired product — consider a spare. |
 | Control MCU | Raspberry Pi Pico 2 (ordering). An RP2350-USB-A is due, but its 15 GPIO are short of the ~18 needed, so it's for experiments |
 | Display | 2.4" ST7789 320×240 SPI module with EC11 encoder + tactile button, board V1.2 (in hand) |
@@ -307,9 +312,8 @@ Hardware-side work outstanding:
 
 ## What not to assume
 
-- This is **not** a Raspberry Pi. Pi-specific overlays, `config.txt` entries and
-  HAT conventions do not apply.
-- This is **not** aarch64. Anything assuming 64-bit ARM needs checking.
+- ~~This is **not** a Raspberry Pi.~~ It is now (a Pi 5). Superseded 2026-09-26.
+- ~~This is **not** aarch64.~~ It is now. Superseded 2026-09-26.
 - Don't assume the codec board's modification state. It is stock today; D8 brings
   it up stock and modifies it afterwards, measuring each step. Inspect the jumpers
   before relying on either.

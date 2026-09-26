@@ -31,8 +31,9 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 | Host | Role | Notes |
 |---|---|---|
 | **M2** (MacBook Air) | Where editing and agent sessions happen, and where every deploy is started. Xcode, macOS builds of the engine | Holds every repo |
-| **piv** (Pi 500, aarch64) | ARM build host: native aarch64, armv7 cross-compiler (GCC 15.2), `qemu-arm-static` for running armv7 tests | Allowed to be busy or down, so every build that runs on it also needs a fallback (colima on the Mac, which `rtpi` already uses) |
-| **tib** (Tinker Board S, armv7) | The target, and nothing else. PREEMPT_RT `7.2.6-tib1`, core 3 isolated, SSL 2+ attached, on WiFi only | Has **no compiler, by design**: everything arrives already built. Occasionally used for your own benchmarks |
+| **piv** (Pi 500, aarch64) | **Core host stand-in until vip arrives.** Otherwise the ARM build host: native aarch64, armv7 cross-compiler (GCC 15.2), `qemu-arm-static` for running armv7 tests | Allowed to be busy or down, so every build that runs on it also needs a fallback (colima on the Mac, which `rtpi` already uses) |
+| **vip** (Pi 5, 1 GB, aarch64) | The Core target from its arrival (ordered 2026-09-26), and nothing else | Same rules `tib` had: no compiler, everything arrives built |
+| ~~**tib**~~ (Tinker Board S, armv7) | **Retired 2026-09-26** (stopped working 2026-09-25). "`tib`" in the rules below now means the Core host | History only: `devices/tib/` and its backups |
 
 ## The rules
 
