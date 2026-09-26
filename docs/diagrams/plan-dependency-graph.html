@@ -58,8 +58,9 @@ const N={
  soak:[5,2,'todo','1.8 Soak it the way','it will be used (1 h)'],
  cmeas:[5,8,'todo','2a.5 Measure the codec','response, noise, THD'],
  fw:[6,11,'todo','3.5 Firmware v1','footswitches, MIDI in'],
- models:[5,13,'todo','3.8 Rigs ready to switch','≤ 50 ms, no click (D9)'],
+ models:[5,13,'todo','3.8 Rigs ready to switch','≤ 50 ms, no click (D10)'],
  e1:[3,13,'done','E1 Always-warm candidates','works for 5 on core 2'],
+ e2:[4,13,'next','E2 Lite, chains, density','decide the switch tiers'],
  target:[6,2,'mile','FIRST TARGET','Play through the Core host'],
  csoak:[6,7,'todo','2a.6 Hour-long soak','on the codec'],
  review:[6,9,'todo','2b.1–2 Review the design,','settle the values'],
@@ -79,7 +80,7 @@ const E=[['docs','scripts'],['park','scripts'],['neon','scripts'],['agent','scri
 ['wm','inspect'],['inspect','wire'],['wire','dtree'],['dtree','mixer'],['mixer','cmeas'],['deploy','cmeas'],
 ['cmeas','csoak'],['cmeas','review'],['review','buffer'],['parts','buffer'],['csoak','modify'],['buffer','modify'],['modify','p2'],
 ['parts','boards'],['resume','service'],['service','proto'],['dtree','tibuart'],['boards','fw'],['proto','fw'],['tibuart','fw'],
-['fw','relay'],['fw','display'],['measure','models'],['e1','models'],['models','fw'],['service','models'],['relay','p3'],['models','p3'],['target','p3'],
+['fw','relay'],['fw','display'],['measure','models'],['e1','e2'],['e2','models'],['models','fw'],['service','models'],['relay','p3'],['models','p3'],['target','p3'],
 ['target','p4'],['p2','p4'],['p3','p4'],['p4','goal']];
 const cols=12,rows=14,SW=PX*2+(cols-1)*CW+W,SH=PY*2+(rows-1)*RH+H+30;
 const g=document.getElementById('g');g.setAttribute('width',SW);g.setAttribute('height',SH);g.setAttribute('viewBox',`0 0 ${SW} ${SH}`);

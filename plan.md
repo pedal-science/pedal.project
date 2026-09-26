@@ -126,8 +126,8 @@ What this changes:
 | D6 | MIDI arrives as 5-pin DIN into the Pico, through an optocoupler | you | The MIDI Commander needs its own power (the DC7's USB-A). USB MIDI goes in the debt register |
 | D7 | No new DSP is needed before the pedal is usable | you | Effects work is off the critical path |
 | D8 | Bring the codec up stock, then modify it, measuring before and after | proposed | `CLAUDE.md`'s "differs from stock" becomes "planned modifications" |
-| D9 | Every rig one interaction away is held ready: the current bank (the 4–8 rigs the footswitches step through) plus any rig MIDI can jump to. A switch takes **≤ 50 ms** from footswitch or MIDI to the new sound, crossfaded, with **no dropout and no click** | you, 2026-09-26 | 3.8 is required, not optional, and comes before 3.5. namchain's M3 (warm start) moves onto the critical path. Whole rigs are held ready: compiled plans, loaded models and prepared IRs. vip's 1 GB bounds the bank. Experiment E1 decides *how* models are kept warm |
 | D9 | Work across repos as set out in `docs/working-across-repos.md` | proposed | Phase 0 |
+| D10 | Every rig one interaction away is held ready: the current bank (the 4–8 rigs the footswitches step through) plus any rig MIDI can jump to. A switch takes **≤ 50 ms** from footswitch or MIDI to the new sound, crossfaded, with **no dropout and no click** | you, 2026-09-26 | 3.8 is required, not optional, and comes before 3.5. namchain's M3 (warm start) moves onto the critical path. Whole rigs are held ready: compiled plans, loaded models and prepared IRs. vip's 1 GB bounds the bank. *How* each rig is kept ready is a tier (`docs/rig-switch-strategies.md`), set by experiments E1 and E2 |
 
 **On storage (D3).** The existing design already keeps models and IRs on the pedal, in
 `namchaind`'s `models_root` and `irs_root` on the SD card. D3 and D4 bring in the four things it
@@ -289,13 +289,13 @@ numbers need re-measuring on piv.
    the kernel not counted).
 7. **Measure what D3 needs:**
    - how long `rig.apply` takes on the Core host, from the command to hearing the new rig, with
-     its NAM and IR: the **cold-switch baseline** that 3.8 has to beat to reach D9's 50 ms
+     its NAM and IR: the **cold-switch baseline** that 3.8 has to beat to reach D10's 50 ms
    - power-on to sound (13–14 s from kernel start to a running rig on piv, 2026-09-26; firmware
      time and the first audible output still to add).
    - `namchaind`'s memory with one rig loaded, and per extra model held: what bounds the bank on
      vip's 1 GB.
 
-   D9 already settles that 3.8 comes before footswitches. The boot number decides how urgent the
+   D10 already settles that 3.8 comes before footswitches. The boot number decides how urgent the
    bypass relay (3.6) is.
 
    Measured on piv 2026-09-26 (`tools/measure-switch.py`; namchain
@@ -303,7 +303,7 @@ numbers need re-measuring on piv.
    - **Cold switch:** `rig.apply` to the new rig audible and the fade done, cycling four A2 + cab
      rigs: **25 ms** median (27 max) with the files in the page cache, **33 ms** median (35 max)
      read from disk, 0 xruns. Add ~5 ms of output path (the loopback, out 3 → in 1, measures 8.7 ms
-     round trip): about 38–40 ms to the jack, already inside D9's 50 ms. **But** the new rig starts
+     round trip): about 38–40 ms to the jack, already inside D10's 50 ms. **But** the new rig starts
      from NAM's silence-state prewarm, and E1 shows that is the wrong sound for the first 170–340 ms
      (up to +15 dBFS from what it should be). Fast, but not right: see E1.
    - **Memory:** `namchaind` with one rig: 21 MB resident. Each extra rig held: ~2 MB. vip's 1 GB
@@ -325,7 +325,7 @@ numbers need re-measuring on piv.
    - Separately: the same soak with only an rsync running, so WiFi's cost, if it has one, is
      isolated.
    - Once 3.8 exists, the soak also switches rigs: a switch every few seconds through a bank, with
-     the same gates plus D9's: each switch ≤ 50 ms and no click in the output (namchain's glitch
+     the same gates plus D10's: each switch ≤ 50 ms and no click in the output (namchain's glitch
      detector on the captured output).
 
 **Done when:**
@@ -449,7 +449,7 @@ numbers need re-measuring on piv.
    - A long press gives a panic bypass.
 7. **Display and encoder**, low priority per `about.md`. Check it has no onboard LDO before
    powering it (per `CLAUDE.md`).
-8. **Rigs ready for switching** (D9; namchain's M3). Required before 3.5: without it a footswitch
+8. **Rigs ready for switching** (D10; namchain's M3). Required before 3.5: without it a footswitch
    press stalls on the SD card, JSON parsing and prewarm, and then clicks.
    - The **ready set**: the current bank (4–8 rigs) plus any rig MIDI can jump to. Each one held
      as a compiled plan with its models loaded and prewarmed and its IRs prepared. Changing bank
@@ -459,7 +459,21 @@ numbers need re-measuring on piv.
      the render thread.
    - The pedal service owns the set (it knows the bank and the MIDI map); namchain provides
      "hold these ready" and "switch to this one" as protocol calls. That split goes in 3.2.
-   - How the models are kept warm is decided by **E1**, below.
+   - How each rig is kept ready is its **tier** (proposed 2026-09-26, detail and worked numbers in
+     [docs/rig-switch-strategies.md](docs/rig-switch-strategies.md)):
+     - **0, toggles in the live rig:** every instance runs, bypassed or not, so a toggle is only
+       a crossfade. The rig's all-on budget is reserved anyway.
+     - **1, one-press candidates** (footswitch neighbours, the assignable target): Full always
+       warm, IRs kept as a record of their input. ~11 ms, exact.
+     - **2, the rest of the bank and MIDI jumps:** a Lite copy always warm takes over at once;
+       Full catches up in the background and takes over with a 5 ms crossfade.
+     - **3, anything else** (ljoss): loaded in RAM; Lite catch-up at the switch, then Full as in
+       tier 2.
+
+     Anything not warm is caught up, never started from silence (E1). Requests don't queue: one
+     switch is in flight, and a newer request replaces the pending one. The service drops
+     candidates a tier when the budget is full, and refuses a rig that can't run all-on (M2).
+   - E1 and E2, below, decide whether the tiers hold.
 
    **E1 — always-warm candidates: an experiment before deciding.** The question is whether every
    rig in the ready set can be kept *running* on the live input all the time, so a switch is only
@@ -510,15 +524,33 @@ numbers need re-measuring on piv.
      Switch ~11 ms to the jack.
    - piv stayed at 36–41 °C, never throttled. vip is the same SoC; its cooling needs checking.
 
-   **Suggested decision** (yours to make): **D for the footswitch bank, up to 5 rigs on core 2**,
-   so the common switch is ~11 ms and exact; **C with 340 ms of replay for everything else** (MIDI
-   jumps, a 6th–8th rig), ~38 ms and near-exact; never B. The cold path (`rig.apply` of a new
-   document) should do C's catch-up too, since it has B's problem now. D needs namchain to render
-   candidates on a second RT thread (its M4), which this result argues for admitting.
+   **What E1 led to:** the tiers above. D becomes tier 1, for a few rigs only. C becomes the
+   catch-up in tiers 2 and 3, with Lite first. B is never used. The cold path (`rig.apply` of a
+   new document) should catch up as well, since today it has B's problem. D needs namchain to run
+   candidates on a second thread (its M4), and E1 argues for admitting that.
+
+   **E2 — before building the tiers** (2026-09-26; the reasoning is in
+   `docs/rig-switch-strategies.md`). E1 measured one model plus an IR. The tiers rest on four
+   things it didn't measure:
+   1. **Lite against Full** for every library model: the null level between them, and whether a
+      5 ms crossfade either way can be heard (listening plus the glitch detector). Lite and Full
+      are separate submodels in each `SlimmableContainer`, so the handover is a small change of
+      sound. If it can be heard, tier 2 becomes tier 1 or catch-up.
+   2. **Catch-up for chains** of 1–4 models in series, against replay lengths of 85, 170, 340 and
+      680 ms per model. Does depth d need d × 340 ms, which makes the work grow as d(d+1)/2? And is
+      an error of −60 dB as good as −114 dB to the ear?
+   3. **Warm density without IRs:** how many Full and how many Lite models keep up on one core,
+      and on a housekeeping core under load (warm work only needs to keep up on average). Measure
+      the render core's tail beside them. The estimate is ~10 Full or ~50 Lite per core.
+   4. **IRs as input records:** fill a convolver from recorded input and check it matches one
+      that ran all along.
+
+   Extend `namchain-warm-bench` for these rather than build engine features. Then decide the
+   tiers, and the limits the pedal service enforces.
 
 **Done when:**
 - With no app, the footswitches and the MIDI Commander step through rigs stored on the pedal.
-- Changes are click-free, and each takes ≤ 50 ms (D9), through an hour's switching soak.
+- Changes are click-free, and each takes ≤ 50 ms (D10), through an hour's switching soak.
 - The relay covers boot and failure.
 
 ## Phase 4 — Enclosure, power and hardening
@@ -541,7 +573,7 @@ numbers need re-measuring on piv.
 
 ## Tracks off the critical path
 
-- namchain M2: admission control. (M3, warm start, is on the critical path now: D9 and 3.8.)
+- namchain M2: admission control. (M3, warm start, is on the critical path now: D10 and 3.8.)
 - DSP when you want it: noise gate, tuner, reverb, compressor, modulation.
 - ljoss on iOS: it compiles, but the touch path has never been run.
 

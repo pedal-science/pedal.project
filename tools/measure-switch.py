@@ -3,7 +3,7 @@
 
 Runs on the host, as root (the socket is 0660 root). Cycles `rig.apply` through four A2 + cab
 rigs with different models and IRs, so every switch loads, parses and prewarms a model and
-prepares an IR: the cold path D9's 50 ms has to beat. For each switch it records
+prepares an IR: the cold path D10's 50 ms has to beat. For each switch it records
 
   reply    the command sent -> namchaind's reply (compiled and published)
   audible  the command sent -> audible_generation reaches the new generation and the crossfade
