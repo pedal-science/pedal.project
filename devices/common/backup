@@ -45,7 +45,8 @@ paths=(etc/pedal var/lib/pedal var/lib/namchain/host-slim
        etc/sysctl.d etc/security/limits.d etc/udev/rules.d usr/local/sbin usr/local/bin)
 existing=()
 for p in "${paths[@]}"; do [[ -e $p ]] && existing+=("$p"); done
-sudo -n tar -cf - "${existing[@]}"
+# The library (models, IRs, rigs) is data, synced from the Mac; the backup is configuration.
+sudo -n tar --exclude var/lib/pedal/library -cf - "${existing[@]}"
 EOF
 
 ln -sfn "$(basename "$out")" "$DEV_DIR/backups/latest"

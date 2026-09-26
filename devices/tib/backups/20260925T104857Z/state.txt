@@ -1,0 +1,327 @@
+
+== host
+Linux tinkerboard 7.2.6-tib1 #1 SMP PREEMPT_RT Sat Sep 19 08:43:21 UTC 2026 armv7l GNU/Linux
+earlyprintk root=UUID=e04f90b4-4c61-41cf-80bd-03df2cb494d6 rootwait rootfstype=ext4 splash=verbose console=ttyS2,115200n8 console=tty1 consoleblank=0 loglevel=1 ubootpart=4c19c430-01 usb-storage.quirks=0x2537:0x1066:u,0x2537:0x1068:u rtpi.slot=known-good isolcpus=managed_irq,domain,3 nohz_full=3 rcu_nocbs=3 coherent_pool=2M  cgroup_enable=cpuset cgroup_memory=1 cgroup_enable=memory
+ 11:49:01 up 5 days, 21:59,  2 users,  load average: 0.73, 0.50, 0.32
+
+== applied
+commit=4c3d8ad-dirty
+applied=2026-09-25T10:47:27Z
+
+== isolation
+isolated=3 nohz_full=3
+
+== cpufreq
+policy0 performance max=1416000 cur=1416000
+
+== thermal
+cpu-thermal 53750
+gpu-thermal 51666
+
+== cpusets
+pedal.slice 0-3
+system.slice 0-2
+user.slice 0-2
+init.scope 0-2
+
+== interrupts
+            CPU0       CPU1       CPU2       CPU3       
+  25:  516802128   30512993   24063314        332  GIC-0   29 Level     arch_timer
+  26:          0          0          0          0  GIC-0   30 Level     arch_timer
+  29:          0          0          0          0  GIC-0  104 Level     rk_timer
+  39:          0          0          0          0  GIC-0   34 Level     ff250000.dma-controller
+  40:          0          0          0          0  GIC-0   35 Level     ff250000.dma-controller
+  41:          0          0          0          0  GIC-0   32 Level     ffb20000.dma-controller
+  42:          0          0          0          0  GIC-0   33 Level     ffb20000.dma-controller
+  45:         10          0          0          0  GIC-0   89 Level     ttyS2
+  48:          0          0          0          0  GIC-0   47 Level     ff930300.iommu, ff930000.vop
+  49:          0          0          0          0  GIC-0   48 Level     ff940300.iommu, ff940000.vop
+  50:          0          0          0          0  GIC-0   43 Level     ff9a0800.iommu
+  51:          0          0          0          0  GIC-0  143 Level     ff9c0440.iommu
+  52: 4088417627          0     770439          0  GIC-0   57 Level     ff540000.usb, dwc2_hsotg:usb1
+  53:          0          0          0          0  GIC-0   55 Level     ff580000.usb, ff580000.usb, dwc2_hsotg:usb2
+  54:        333          0          0          0  GIC-0   56 Level     ehci_hcd:usb3
+  55:          0          0          0          0  GIC-0   97 Level     ff170000.i2c
+  56:      14286          0          0          0  GIC-0   92 Level     ff650000.i2c
+  57:          0          0          0          0  rockchip_gpio_irq    4 Level     rk808
+  63:          0          0          0          0  rk808                5 Edge      RTC alarm
+  67:          0          0          0          0  GIC-0   93 Level     ff660000.i2c
+  68:    1086708          0          0          0  GIC-0   64 Level     dw-mci
+  69:         87          0          0          0  GIC-0   67 Level     dw-mci
+  70:  156576601          0          0          0  GIC-0   65 Level     dw-mci
+  71:          0          0          0          0  GIC-0   68 Level     ff100000.saradc
+  72:          0          0          0          0  GIC-0  183 Level     arm-pmu
+  73:          0          0          0          0  GIC-0  184 Level     arm-pmu
+  74:          0          0          0          0  GIC-0  185 Level     arm-pmu
+  75:          0          0          0          0  GIC-0  186 Level     arm-pmu
+  76:          0          0          0          0  GIC-0  135 Level     ff980000.hdmi, dw-hdmi-cec
+  77:          0          0          0          0  GIC-0   59 Level     end0
+  78:          0          0          0          0  GIC-0   60 Level     end0
+  79:          0          0          0          0  GIC-0  111 Edge      ff800000.watchdog
+  80:          0          0          0          0  rockchip_gpio_irq    5 Edge      GPIO Key Power
+  81:          0          0          0          0  GIC-0   69 Level     rockchip_thermal
+  82:          0          0          0          0  GIC-0   80 Level     rk-crypto
+  83:          0          0          0          0  GIC-0   50 Level     ff920000.rga
+  84:          0          0          0          0  GIC-0   44 Level     ff9c0000.video-codec
+  85:          0          0          0          0  GIC-0   41 Level     ff9a0000.video-codec
+  86:          0          0          0          0  GIC-0   42 Level     ff9a0000.video-codec
+  87:          0          0          0          0  GIC-0   40 Level     panfrost-gpu
+  88:          0          0          0          0  GIC-0   39 Level     panfrost-mmu
+  89:          0          0          0          0  GIC-0   38 Level     panfrost-job
+IPI0:         0          0          0          0  CPU wakeup interrupts
+IPI1:         0          0          0          0  Timer broadcast interrupts
+IPI2:   1345317   14851012   19644059         37  Rescheduling interrupts
+IPI3:     60789   11408011    1683816          2  Function call interrupts
+IPI4:         0          0          0          0  CPU stop interrupts
+IPI5:  55346877      37721      36559         57  IRQ work interrupts
+IPI6:         0          0          0          0  completion interrupts
+ Err:          0
+
+== irq-affinity
+16 0-3
+17 0-3
+18 0-3
+19 0-3
+20 0-3
+21 0-3
+22 0-3
+23 0-3
+24 0-3
+25 0-3
+26 0-3
+27 0-3
+28 0-3
+29 0
+39 0-3
+40 0-3
+41 0-3
+42 0-3
+45 0-3
+48 0-3
+49 0-3
+50 0-3
+51 0-3
+52 2
+53 0-3
+54 0-3
+55 0-3
+56 0-3
+57 0-3
+63 0-3
+67 0-3
+68 0-3
+69 0-3
+70 0-3
+71 0-3
+72 0
+73 1
+74 2
+75 3
+76 0-3
+77 0-3
+78 0-3
+79 0-3
+80 0-3
+81 0-3
+82 0-3
+83 0-3
+84 0-3
+85 0-3
+86 0-3
+87 0-3
+88 0-3
+89 0-3
+
+== irq-threads
+   96  FF     50   0 irq/39-ff250000.dma-controller
+   97  FF     50   0 irq/40-ff250000.dma-controller
+   98  FF     50   0 irq/41-ffb20000.dma-controller
+   99  FF     50   0 irq/42-ffb20000.dma-controller
+  101  FF     50   0 irq/48-ff930300.iommu
+  102  FF     50   0 irq/49-ff940300.iommu
+  103  FF     50   0 irq/50-ff9a0800.iommu
+  104  FF     50   0 irq/51-ff9c0440.iommu
+  110  FF     85   2 irq/52-ff540000.usb
+  111  FF     85   2 irq/52-dwc2_hsotg:usb1
+  112  FF     50   0 irq/53-ff580000.usb
+  113  FF     50   0 irq/53-ff580000.usb
+  114  FF     50   0 irq/53-dwc2_hsotg:usb2
+  115  FF     50   0 irq/54-ehci_hcd:usb3
+  116  FF     50   0 irq/55-ff170000.i2c
+  117  FF     50   0 irq/56-ff650000.i2c
+  118  FF     50   2 irq/57-rk808
+  119  FF     50   0 irq/67-ff660000.i2c
+  122  FF     50   0 irq/68-dw-mci
+  123  FF     50   0 irq/69-dw-mci
+  124  FF     50   0 irq/70-dw-mci
+  125  FF     50   0 irq/71-ff100000.saradc
+  144  FF     50   0 irq/48-ff930000.vop
+  145  FF     50   0 irq/49-ff940000.vop
+  146  FF     50   0 irq/76-ff980000.hdmi
+  147  FF     49   0 irq/76-s-ff980000.hdmi
+  198  FF     50   0 irq/79-ff800000.watchdog
+  200  FF     50   0 irq/76-dw-hdmi-cec
+  201  FF     49   0 irq/76-s-dw-hdmi-cec
+  202  FF     50   1 irq/80-GPIO Key Power
+  430  FF     50   0 irq/77-end0
+  431  FF     50   0 irq/78-end0
+  458  FF     50   0 irq/81-rockchip_thermal
+  464  FF     50   0 irq/82-rk-crypto
+  466  FF     50   0 irq/83-ff920000.rga
+  468  FF     50   0 irq/84-ff9c0000.video-codec
+  470  FF     50   0 irq/85-ff9a0000.video-codec
+  471  FF     50   0 irq/86-ff9a0000.video-codec
+  477  FF     50   0 irq/87-panfrost-gpu
+  478  FF     50   0 irq/88-panfrost-mmu
+  479  FF     49   0 irq/88-s-panfrost-mmu
+  480  FF     50   0 irq/89-panfrost-job
+  481  FF     49   0 irq/89-s-panfrost-job
+  772  FF     50   0 irq/45-ttyS2
+
+== masked
+alsa-utils.service                   masked enabled
+apt-daily-upgrade.service            masked enabled
+apt-daily.service                    masked enabled
+armbian-hardware-monitor.service     masked enabled
+armbian-hardware-optimize.service    masked enabled
+armbian-led-state.service            masked enabled
+armbian-zram-config.service          masked enabled
+cron.service                         masked enabled
+cryptdisks-early.service             masked enabled
+cryptdisks.service                   masked enabled
+e2scrub_all.service                  masked enabled
+fake-hwclock.service                 masked enabled
+hwclock.service                      masked enabled
+rsyslog.service                      masked enabled
+sudo.service                         masked enabled
+syslog.service                       masked enabled
+systemd-firstboot.service            masked enabled
+systemd-networkd-wait-online.service masked enabled
+x11-common.service                   masked enabled
+apt-daily-upgrade.timer              masked enabled
+apt-daily.timer                      masked enabled
+dpkg-db-backup.timer                 masked enabled
+e2scrub_all.timer                    masked enabled
+man-db.timer                         masked enabled
+
+== enabled
+armbian-ramlog.service               enabled enabled
+console-setup.service                enabled enabled
+dmesg.service                        enabled enabled
+e2scrub_reap.service                 enabled enabled
+fake-hwclock-load.service            enabled enabled
+fake-hwclock-save.service            enabled enabled
+getty@.service                       enabled enabled
+iwd.service                          enabled enabled
+keyboard-setup.service               enabled enabled
+netplan-configure.service            enabled enabled
+NetworkManager-dispatcher.service    enabled enabled
+NetworkManager-wait-online.service   enabled enabled
+NetworkManager.service               enabled enabled
+pedal-tune.service                   enabled enabled
+rtpi-validate.service                enabled enabled
+setvtrgb.service                     enabled enabled
+sshd-keygen.service                  enabled enabled
+systemd-network-generator.service    enabled enabled
+systemd-networkd.service             enabled enabled
+systemd-pstore.service               enabled enabled
+systemd-resolved.service             enabled enabled
+systemd-timesyncd.service            enabled enabled
+wpa_supplicant.service               enabled enabled
+ssh.socket                           enabled enabled
+systemd-networkd-resolve-hook.socket enabled enabled
+systemd-networkd-varlink.socket      enabled enabled
+systemd-networkd.socket              enabled enabled
+systemd-resolved-monitor.socket      enabled enabled
+systemd-resolved-varlink.socket      enabled enabled
+remote-fs.target                     enabled enabled
+fake-hwclock-save.timer              enabled enabled
+fstrim.timer                         enabled enabled
+logrotate.timer                      enabled enabled
+
+== running
+dbus.service               loaded active running D-Bus System Message Bus
+getty@tty1.service         loaded active running Getty on tty1
+iwd.service                loaded active running Wireless service
+netplan-wpa-wlan0.service  loaded active running WPA supplicant for netplan wlan0
+NetworkManager.service     loaded active running Network Manager
+serial-getty@ttyS2.service loaded active running Serial Getty on ttyS2
+ssh.service                loaded active running OpenBSD Secure Shell server
+systemd-journald.service   loaded active running Journal Service
+systemd-logind.service     loaded active running User Login Management
+systemd-networkd.service   loaded active running Network Management
+systemd-resolved.service   loaded active running Network Name Resolution
+systemd-timesyncd.service  loaded active running Network Time Synchronization
+systemd-udevd.service      loaded active running Rule-based Manager for Device Events and Files
+user@1000.service          loaded active running User Manager for UID 1000
+wpa_supplicant.service     loaded active running WPA supplicant
+
+== timers
+Fri 2026-09-25 12:00:00 BST    10min Fri 2026-09-25 11:00:02 BST  49min ago fake-hwclock-save.timer      fake-hwclock-save.service
+Fri 2026-09-25 14:05:55 BST 2h 16min Thu 2026-09-24 14:05:55 BST    21h ago systemd-tmpfiles-clean.timer systemd-tmpfiles-clean.service
+Sat 2026-09-26 00:39:43 BST      12h Fri 2026-09-25 00:08:42 BST    11h ago logrotate.timer              logrotate.service
+Mon 2026-09-28 01:15:50 BST   2 days Mon 2026-09-21 00:44:40 BST 4 days ago fstrim.timer                 fstrim.service
+-                                  - -                                    - apt-daily-upgrade.timer      -
+-                                  - -                                    - apt-daily.timer              -
+-                                  - Fri 2026-09-25 00:00:04 BST    11h ago dpkg-db-backup.timer         -
+-                                  - Sun 2026-09-20 03:10:56 BST 5 days ago e2scrub_all.timer            -
+-                                  - -                                    - man-db.timer                 -
+
+== sysctl
+vm.swappiness = 60
+vm.stat_interval = 10
+vm.dirty_ratio = 20
+vm.dirty_background_ratio = 10
+kernel.sched_rt_runtime_us = 1000000
+
+== limits
+==> /etc/security/limits.d/10-coredump-debian.conf <==
+*               soft    core            0
+root            soft    core            0
+*               hard    core            infinity
+root            hard    core            infinity
+
+==> /etc/security/limits.d/90-pedal-rt.conf <==
+# Realtime limits for the audio group. Without them a normal user is refused SCHED_FIFO and
+# mlockall: tib's defaults are rtprio 0 and an 8 MB memlock. A systemd service does not get
+# these (no pam_limits); namchaind's unit must set LimitRTPRIO and LimitMEMLOCK itself.
+@audio   -  rtprio    95
+@audio   -  memlock   unlimited
+# A backstop against a runaway SCHED_FIFO loop, not a latency setting: SIGXCPU after 200 ms of
+# realtime CPU without blocking, ~150 periods at 64 frames. Deliberately NOT
+# sched_rt_runtime_us=-1, which removes the kernel's only escape from such a loop.
+@audio   -  rttime    200000
+
+== pedal-manifest
+mask apt-daily.service
+mask apt-daily.timer
+mask apt-daily-upgrade.service
+mask apt-daily-upgrade.timer
+mask man-db.timer
+mask armbian-hardware-monitor.service
+mask armbian-led-state.service
+mask armbian-hardware-optimize.service
+mask armbian-zram-config.service
+mask systemd-networkd-wait-online.service
+mask rsyslog.service
+mask cron.service
+saved /etc/security/limits.d/audio.conf
+file /etc/pedal/masked-units
+file /etc/pedal/tune.conf
+file /etc/security/limits.d/90-pedal-rt.conf
+file /etc/sysctl.d/90-pedal.conf
+file /etc/systemd/journald.conf.d/10-pedal.conf
+file /etc/systemd/system/pedal-rt.slice
+file /etc/systemd/system/pedal-tune.service
+file /etc/systemd/system/system.slice.d/10-pedal-cpuset.conf
+file /etc/systemd/system/user.slice.d/10-pedal-cpuset.conf
+file /usr/local/bin/pedal-rt
+file /usr/local/sbin/pedal-device
+file /usr/local/sbin/pedal-tune
+mask dpkg-db-backup.timer
+mask e2scrub_all.timer
+mask e2scrub_all.service
+file /etc/pedal/applied
+
+== host-slim-manifest
+none (taken over by pedal-device)

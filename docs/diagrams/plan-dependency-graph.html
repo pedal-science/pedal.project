@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pedal Plan Graph</title>
+<style>
+:root{--bg:#f6f4ef;--ink:#1d1d1f;--muted:#5b5b60;--line:#6b6b73;
+--done:#1f8a4c;--doneFill:#dff3e6;--next:#d9591a;--nextFill:#ffe7d6;
+--todo:#3a3a42;--todoFill:#ffffff;--mile:#1b3fa0;--mileFill:#dfe7ff;--lane:#00000008;--laneInk:#00000055}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16161a;--ink:#f1f1f3;--muted:#a9a9b2;--line:#9a9aa6;
+--done:#4fd08a;--doneFill:#143322;--next:#ff8a4c;--nextFill:#3d2211;--todo:#c9c9d2;--todoFill:#23232a;--mile:#8fb0ff;--mileFill:#17224a;--lane:#ffffff08;--laneInk:#ffffff40}}
+:root[data-theme="dark"]{--bg:#16161a;--ink:#f1f1f3;--muted:#a9a9b2;--line:#9a9aa6;
+--done:#4fd08a;--doneFill:#143322;--next:#ff8a4c;--nextFill:#3d2211;--todo:#c9c9d2;--todoFill:#23232a;--mile:#8fb0ff;--mileFill:#17224a;--lane:#ffffff08;--laneInk:#ffffff40}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.4 system-ui,-apple-system,sans-serif}
+header{padding:20px 16px 8px}
+h1{margin:0 0 6px;font-size:28px}
+.legend{display:flex;flex-wrap:wrap;gap:18px;font-weight:700;font-size:16px}
+.sw{display:inline-block;width:22px;height:16px;border-radius:4px;border:3px solid;vertical-align:-3px;margin-right:6px}
+.wrap{overflow-x:auto;padding:8px 16px 24px}
+svg text{font-family:system-ui,-apple-system,sans-serif}
+</style></head><body>
+<header><h1>Pedal plan — dependency graph</h1>
+<div class="legend">
+<span><i class="sw" style="background:var(--doneFill);border-color:var(--done)"></i>Done</span>
+<span><i class="sw" style="background:var(--nextFill);border-color:var(--next)"></i>Next up</span>
+<span><i class="sw" style="background:var(--todoFill);border-color:var(--todo)"></i>To do</span>
+<span><i class="sw" style="background:var(--mileFill);border-color:var(--mile)"></i>Milestone / goal</span>
+</div></header>
+<div class="wrap"><svg id="g"></svg></div>
+<script>
+const W=220,H=66,CW=280,RH=84,PX=40,PY=20;
+// id: [col,row,state,label line1, line2]
+const N={
+ docs:[0,0,'done','0.1–0.3 Docs, handoff','& diagram agree'],
+ park:[0,1,'done','0.4–0.5 Work parked,','ljoss renamed'],
+ neon:[0,2,'done','0.6 NEON build','committed'],
+ agent:[0,3,'done','0.7 Agent setup',''],
+ devtib:[0,4,'done','devices/tib','config as code'],
+ byname:[0,5,'done','1.1 Open devices','by name'],
+ cab:[0,6,'done','1.2 Amp + cab IR','fits on tib'],
+ wm:[0,8,'done','WM8960 board','in hand (stock)'],
+ scripts:[1,1,'todo','0.8 status, tib-lock','(deploy-engine done)'],
+ rerun:[1,5,'done','A2 + cab on piv','p99 15% at q64'],
+ inspect:[1,8,'todo','2a.1 Inspect board','jumpers, silkscreen'],
+ parts:[1,11,'todo','Order CPC basket','Pico 2, parts'],
+ deploy:[2,2,'done','1.3 namchaind','on piv'],
+ tibdown:[0,7,'done','tib down:','piv stands in'],
+ wire:[2,8,'todo','2a.2 Wire codec','stock, to header'],
+ boards:[2,11,'todo','3.1 Pico: blink,','UART echo'],
+ library:[3,1,'done','1.4 Library','on piv'],
+ resume:[3,3,'done','1.6 Resume','at power-up'],
+ dtree:[3,8,'todo','2a.3 Device tree','WM8960 card (rtpi)'],
+ service:[3,12,'todo','3.2 Design','pedal service'],
+ ljoss:[4,1,'next','1.5 ljoss → piv','edit live'],
+ measure:[4,3,'next','1.7 Measure','rig.apply, boot'],
+ mixer:[4,8,'todo','2a.4 Mixer state','as code'],
+ tibuart:[4,10,'todo','3.4 UART1 on tib','(rtpi)'],
+ proto:[4,12,'todo','3.3 UART','protocol'],
+ soak:[5,2,'todo','1.8 Hour soak','with WiFi editing'],
+ cmeas:[5,8,'todo','2a.5 Measure codec','FR, noise, THD'],
+ fw:[5,11,'todo','3.5 Firmware v1','footswitch, MIDI'],
+ models:[5,13,'todo','3.8 Models held','ready to switch'],
+ target:[6,2,'mile','FIRST TARGET','Play through piv'],
+ csoak:[6,7,'todo','2a.6 Hour soak','on the codec'],
+ review:[6,9,'todo','2b.1–2 Review design,','settle values'],
+ relay:[6,11,'todo','3.6 Bypass relay',''],
+ display:[6,13,'todo','3.7 Display + encoder','(low priority)'],
+ buffer:[7,9,'todo','2b.3 Build buffer','& output stage'],
+ p3:[7,12,'mile','PHASE 3 DONE','Footswitch/MIDI rigs'],
+ modify:[8,8,'todo','2c Modify codec','& compare'],
+ p2:[9,8,'mile','PHASE 2 DONE','Guitar → codec → amp'],
+ p4:[10,7,'todo','Phase 4 Enclosure,','power, hardening'],
+ goal:[11,7,'mile','THE PEDAL','gig-ready'],
+};
+const E=[['docs','scripts'],['park','scripts'],['neon','scripts'],['agent','scripts'],
+['scripts','deploy'],['devtib','deploy'],['byname','deploy'],['tibdown','rerun'],['tibdown','deploy'],['rerun','deploy'],
+['deploy','library'],['deploy','resume'],['deploy','ljoss'],['library','ljoss'],['deploy','measure'],['library','measure'],
+['ljoss','soak'],['cab','soak'],['rerun','soak'],['soak','target'],['resume','target'],
+['wm','inspect'],['inspect','wire'],['wire','dtree'],['dtree','mixer'],['mixer','cmeas'],['deploy','cmeas'],
+['cmeas','csoak'],['cmeas','review'],['review','buffer'],['parts','buffer'],['csoak','modify'],['buffer','modify'],['modify','p2'],
+['parts','boards'],['resume','service'],['service','proto'],['dtree','tibuart'],['boards','fw'],['proto','fw'],['tibuart','fw'],
+['fw','relay'],['fw','display'],['measure','models'],['relay','p3'],['models','p3'],['target','p3'],
+['target','p4'],['p2','p4'],['p3','p4'],['p4','goal']];
+const cols=12,rows=14,SW=PX*2+(cols-1)*CW+W,SH=PY*2+(rows-1)*RH+H+30;
+const g=document.getElementById('g');g.setAttribute('width',SW);g.setAttribute('height',SH);g.setAttribute('viewBox',`0 0 ${SW} ${SH}`);
+const pos=k=>{const[c,r]=N[k];return{x:PX+c*CW,y:PY+30+r*RH}};
+let s=`<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--line)"/></marker></defs>`;
+[['Phase 0–1 · software on tib',0,6],['Phase 2 · codec & analogue',7,10],['Phase 3 · control surface & service',10.6,13]].forEach(([t,a,b])=>{
+ const y=PY+30+a*RH-12,h=(b-a)*RH+H+24;
+ s+=`<rect x="10" y="${y}" width="${SW-20}" height="${h}" rx="14" fill="var(--lane)"/><text x="${SW-30}" y="${y+30}" text-anchor="end" font-size="22" font-weight="800" fill="var(--laneInk)">${t}</text>`});
+s+=`<text x="${PX}" y="${PY+14}" font-size="20" font-weight="800" fill="var(--done)">◀ DONE</text><text x="${SW-PX}" y="${PY+14}" text-anchor="end" font-size="20" font-weight="800" fill="var(--mile)">GOAL ▶</text>`;
+E.forEach(([a,b])=>{const p=pos(a),q=pos(b),x1=p.x+W,y1=p.y+H/2,x2=q.x-4,y2=q.y+H/2,m=(x2-x1)*0.5;
+ s+=`<path d="M${x1},${y1} C${x1+m},${y1} ${x2-m},${y2} ${x2},${y2}" fill="none" stroke="var(--line)" stroke-width="3" opacity=".75" marker-end="url(#a)"/>`});
+const C={done:['--done','--doneFill'],next:['--next','--nextFill'],todo:['--todo','--todoFill'],mile:['--mile','--mileFill']};
+for(const k in N){const[, ,st,l1,l2]=N[k],p=pos(k),[b,f]=C[st];
+ s+=`<rect x="${p.x}" y="${p.y}" width="${W}" height="${H}" rx="12" fill="var(${f})" stroke="var(${b})" stroke-width="${st==='mile'?5:3.5}"/>`;
+ const cx=p.x+W/2;
+ if(l2){s+=`<text x="${cx}" y="${p.y+28}" text-anchor="middle" font-size="18" font-weight="800" fill="var(--ink)">${st==='done'?'✓ ':''}${l1}</text><text x="${cx}" y="${p.y+51}" text-anchor="middle" font-size="16" font-weight="600" fill="var(--ink)">${l2}</text>`}
+ else s+=`<text x="${cx}" y="${p.y+40}" text-anchor="middle" font-size="18" font-weight="800" fill="var(--ink)">${st==='done'?'✓ ':''}${l1}</text>`}
+g.innerHTML=s;
+</script></body></html>

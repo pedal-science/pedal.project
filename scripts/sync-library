@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# scripts/sync-library [--host piv] [--dry-run] — copy the model and IR library to the pedal host.
+#
+#   ~/Documents/Audio/NAM  ->  /var/lib/pedal/library/models   (namchaind's models_root)
+#   ~/Documents/Audio/IRs  ->  /var/lib/pedal/library/irs      (namchaind's irs_root)
+#
+# No conversion: nc.cab.ir resamples 44.1 and 96 kHz IRs itself. The trees keep their folders, so a
+# model's id is its path under the root without the extension (namchain docs/assets.md). Files
+# removed on the Mac are removed on the host. Rigs are the host's own and are never touched.
+# Asks namchaind to rescan afterwards if it is running.
+set -euo pipefail
+
+HOST=piv
+DRY=()
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --dry-run) DRY=(--dry-run) ;;
+    -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+SRC="$HOME/Documents/Audio"
+DEST=/var/lib/pedal/library
+SSH=(ssh -o BatchMode=yes -o ConnectTimeout=10 "$HOST")
+
+"${SSH[@]}" "sudo install -d -o \$(id -u) -g \$(id -g) $DEST $DEST/models $DEST/irs $DEST/rigs"
+# The rigs directory is written by pedal-resume (root); the library folders are ours.
+"${SSH[@]}" "sudo chown root:root $DEST/rigs"
+
+RSYNC=(rsync -rt --delete --delete-excluded --itemize-changes "${DRY[@]}"
+       --exclude .DS_Store --include '*/' --include '*.nam' --include '*.wav' --exclude '*')
+"${RSYNC[@]}" "$SRC/NAM/" "$HOST:$DEST/models/" | grep -v '^\.' || true
+"${RSYNC[@]}" "$SRC/IRs/" "$HOST:$DEST/irs/" | grep -v '^\.' | tail -5 || true
+
+if [[ ${#DRY[@]} -eq 0 ]] && "${SSH[@]}" systemctl is-active -q namchaind.service; then
+  "${SSH[@]}" "sudo /opt/namchain/current/bin/namchainctl --compact assets --refresh" | head -c 400; echo
+fi
+"${SSH[@]}" "printf 'models: %s files, irs: %s files, %s\n' \$(find $DEST/models -type f | wc -l) \$(find $DEST/irs -type f | wc -l) \"\$(du -sh $DEST | cut -f1)\""

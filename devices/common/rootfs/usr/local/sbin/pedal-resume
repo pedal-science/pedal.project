@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """pedal-resume — the pedal service, v0: come back after a power cycle with the rig you left.
 
-    pedal-resume run    watch namchaind; whenever the rig's generation changes, save the
-                        document it is running as <rigs_root>/last.json (pedal-resume.service)
+    pedal-resume run    watch namchaind; whenever the document it is running changes, save it
+                        as <rigs_root>/last.json (pedal-resume.service)
     pedal-resume seed   before namchaind starts: if there is no last.json yet, copy the default
                         rig there (namchaind's ExecStartPre)
 
@@ -82,7 +82,9 @@ def run():
             saved = json.load(f)
     except (OSError, ValueError):
         pass
-    seen_gen, changed_at, down = None, None, False
+    # Compare documents, not generations: a smooth parameter change (a knob) leaves the
+    # generation where it was.
+    seen, changed_at, down = None, None, False
     while True:
         try:
             rig = get()
@@ -98,8 +100,8 @@ def run():
             log("engine reachable")
             down = False
         gen, doc = rig.get("generation"), rig.get("document")
-        if gen != seen_gen:
-            seen_gen, changed_at = gen, time.monotonic()
+        if doc != seen:
+            seen, changed_at = doc, time.monotonic()
         elif changed_at is not None and time.monotonic() - changed_at >= SETTLE_S:
             changed_at = None
             # An engine with no rig (started silent) has nothing worth resuming.
