@@ -27,8 +27,10 @@ piv is a Raspberry Pi 500 (Cortex-A76, 4 cores, **aarch64**). Checked 2026-09-25
 - Ubuntu kernel `7.0.0-1017-raspi-realtime`, **PREEMPT_RT**.
 - Cores **2–3 isolated** (`isolcpus=managed_irq,domain,2-3 nohz_full=2-3 rcu_nocbs=2-3`,
   `irqaffinity=0-1`). `tib` isolated only core 3.
-- No SSL 2+ attached yet. ALSA shows only Dummy, Loopback and two HDMI cards.
-- No `/etc/namchain` and no `namchaind` installed.
+- SSL 2+ attached 2026-09-26 as card id `II`, through a hub on the xHCI controller whose interrupt
+  is `xhci-hcd:usb4`. Root storage is on the other one (`usb2`). rtpi-audio-tune now finds the
+  controller from the interface's USB id (rtpi `04b8a98`); before that fix it was pinning the
+  disk's interrupt to core 2.
 
 What this changes:
 
@@ -199,7 +201,7 @@ Small and first, because every later phase deploys from it.
 
 ## Phase 1 — Play through tib
 
-On piv until `tib` returns (see the stand-in section). Steps 1 and 2 were done on `tib`; step 2's
+On piv until vip arrives (see [The Core host moves to a Pi 5](#the-core-host-moves-to-a-pi-5)). Steps 1 and 2 were done on `tib`; step 2's
 numbers need re-measuring on piv.
 
 1. **Open devices by name** (namchain). `alsa_raw` resolves `hw:CARD=<id>` or `hw:<id>,<dev>`
@@ -470,7 +472,7 @@ exactly this: think about them now, fix them after the higher-priority work.
 | Plain-text token, no TLS | Trusted LAN | A tunnel, or TLS in the service, if it ever leaves the LAN |
 | `tib` is out of production | `about.md`: reuse what you have | namchain already builds and tests for aarch64, so a Pi 4/5-class board is the replacement path. A Pi Zero 2 W hasn't been measured, and A2-Full already uses about 58% of a Cortex-A17 core, which is faster per clock than the Zero's in-order A53 |
 | Everything lives on one SD card | — | Overlayroot plus a data partition (Phase 4) |
-| `nc.cab.ir` is back on the core's `nam::Linear` (2026-09-26): every partition multiply lands in one callback. On piv that's p99 15% for A2 + cab at q64; on `tib` it was 62% for the cab alone at 8192 taps | You deprecated the AudioDSPTools fork that spread the work | Spread the multiplies inside namchain, or upstream a partitioned convolver to the NAM core or sdatkinson/AudioDSPTools. Needed before `tib` comes back, or for q32 |
+| `nc.cab.ir` is back on the core's `nam::Linear` (2026-09-26): every partition multiply lands in one callback. On piv that's p99 15% for A2 + cab at q64; on `tib` it was 62% for the cab alone at 8192 taps | You deprecated the AudioDSPTools fork that spread the work | Spread the multiplies inside namchain, or upstream a partitioned convolver to the NAM core or sdatkinson/AudioDSPTools. Needed for q32, or if vip's soak shows the tail is too close at q64 |
 
 ## Open questions
 
