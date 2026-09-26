@@ -279,8 +279,10 @@ numbers need re-measuring on piv.
    `last.prev.json`. `namchaind` starts `last.json`, and an `ExecStartPre` seeds it from
    `/etc/pedal/default-rig.json` on first boot. Tested across a `namchaind` restart and a reboot
    of piv (2026-09-26): it came back on the saved rig (the −2 dB tone edit), running, 0 xruns,
-   with every `devices/piv` check green and the audio interrupt pinned. A reboot, not pulled
-   power; the SD-card question is Phase 4's.
+   with every `devices/piv` check green and the audio interrupt pinned. Then a hardware reboot
+   (power pulled): the same again, with `last.json` intact and valid, and the rig running 13.9 s
+   after the kernel started. piv's root is a USB SATA SSD, not an SD card, so this says nothing
+   yet about vip's storage; that stays Phase 4's.
    First number for step 7: the rig was published and the render thread running **13.2 s** after
    the kernel started (userspace reached multi-user at 25 s; firmware and bootloader time before
    the kernel not counted).
