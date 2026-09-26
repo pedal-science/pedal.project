@@ -277,8 +277,13 @@ numbers need re-measuring on piv.
    after the rig stops changing, so a knob drag is one write, to
    `/var/lib/pedal/library/rigs/last.json`, atomically, and keeps the previous one as
    `last.prev.json`. `namchaind` starts `last.json`, and an `ExecStartPre` seeds it from
-   `/etc/pedal/default-rig.json` on first boot. Tested across a `namchaind` restart; not yet
-   across a real power cycle.
+   `/etc/pedal/default-rig.json` on first boot. Tested across a `namchaind` restart and a reboot
+   of piv (2026-09-26): it came back on the saved rig (the −2 dB tone edit), running, 0 xruns,
+   with every `devices/piv` check green and the audio interrupt pinned. A reboot, not pulled
+   power; the SD-card question is Phase 4's.
+   First number for step 7: the rig was published and the render thread running **13.2 s** after
+   the kernel started (userspace reached multi-user at 25 s; firmware and bootloader time before
+   the kernel not counted).
 7. **Measure what D3 needs:**
    - how long `rig.apply` takes on `tib`, from the command to hearing the new rig, with its NAM
      and IR
@@ -508,7 +513,5 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 ## Next session starts with
 
 Phase 1 on piv. Steps 3, 4 and 6 are done (2026-09-26).
-1. Power-cycle piv and check it plays `last.json` with nothing connected. That also puts the
-   masked units into effect, since masking doesn't stop anything already running.
-2. Step 5: ljoss → piv. It needs piv's token and an address (mDNS or a DHCP reservation).
-3. Step 7, then the step 8 soak at q64.
+1. Step 5: ljoss → piv. It needs piv's token and an address (mDNS or a DHCP reservation).
+2. Step 7 (the rest of it), then the step 8 soak at q64.
