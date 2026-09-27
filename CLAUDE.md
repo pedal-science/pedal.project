@@ -86,3 +86,5 @@ with the draw.io CLI and read that, or ask.
   It doesn't take the lock: the soak runs it mid-measurement on purpose.
 - `scripts/components-lock [--host piv] [--check]`: write `components.lock` from what the host is
   running (deploy and apply do this), or compare them. Commit the file with the change.
+
+Cursor and the DeepSeek harness read [AGENTS.md](AGENTS.md); Claude Code reads this file.

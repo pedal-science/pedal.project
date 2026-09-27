@@ -99,6 +99,14 @@ Rollback on `tib` is the previous symlink. For the kernel it is `rtpi`'s known-g
   `CLAUDE.md` that is just `@AGENTS.md`. Cursor and the DeepSeek harness read the former, and
   Claude Code reads the latter. Each ends with one line pointing here for system context.
   `namchain`'s points into its `plan.md` at "How to resume" rather than the whole file.
+  `pedal.project` itself has both too (2026-09-27): its `CLAUDE.md` stays the canonical brief,
+  and its `AGENTS.md` carries the session start, commands, constraints and working rules for
+  Cursor/DeepSeek agents.
+- **`pedal.project` has two checkouts on the Mac.** The one these docs name,
+  `~/code.local/pedal.project` (Claude Code's), and a second for Cursor/DeepSeek sessions (e.g.
+  `~/cursor-projects/pedal.project`). Pull the session's checkout to `origin/main` before
+  starting, push only when asked, and check the other checkout's uncommitted work before touching
+  the same files.
 - **Two agents on one repo** each get a git worktree, so neither sees or clobbers the other's
   uncommitted work.
 - **Every session starts with `scripts/status`**, which reports each repo on each host (branch,
