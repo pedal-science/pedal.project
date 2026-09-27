@@ -417,7 +417,7 @@ Filled in as we go.
 | ADC noise, input shorted (µV, A-weighted; dBFS) | **17 µV A-weighted, −93.5 dBFS(A)**; 24 µV / −90.6 dBFS unweighted 20 Hz–20 kHz; no hum. With the SSL connected: −77 dBFS, a 90 Hz comb from the SSL/piv ground loop | 2026-09-27 |
 | ADC THD at −1 dBFS | THD −72 dB, THD+N −68 dB at −0.7 dBFS; THD −76 dB at −8.7 dBFS (1 kHz, headphone B). The first run's −53 dB was a bad joint plus out 4's source impedance | 2026-09-27 |
 | ADC frequency response (−3 dB points) | from headphone B at −15 dBFS: flat to 5 kHz (−0.1 dB), −1.0 dB at 15 kHz, −1.7 dB at 20 kHz; SSL loop −0.06 dB at 20 kHz. Out 4 (≈2 kΩ source) gave −3 dB at ≈1.5 kHz | 2026-09-27 |
-| DAC full scale (V rms at the fixture) | | |
-| DAC noise and THD | | |
-| Round-trip latency | | |
+| DAC full scale (V rms at the fixture) | ≈0.45 V rms (±10%) at HPL, Headphone 0 dB (121), via 100 µF + 100 Ω into SSL in 2 and 1 MΩ; flat 20 Hz–20 kHz within 0.1 dB | 2026-09-27 |
+| DAC noise and THD | THD −80 to −82 dB from 0 to −3 dBFS (1 kHz). Noise ≤ −76.5 dBFS(A) (≤ 67 µV): an upper bound, set by the SSL/piv ground loop (90 Hz comb, 50 Hz, a 16 kHz line), not the DAC | 2026-09-27 |
+| Round-trip latency | converter path (DAC → HPL → LIN1 → ADC, buffering removed) **55–57 frames, 1.15–1.18 ms**; raw at q64 ×6 periods 185 fr (3.85 ms), ×4 periods 183 fr (3.81 ms). namchain-latency, loop via the fixture into socket A | 2026-09-27 |
 | Hour-long soak | **clean**: 21:01–22:01, namchaind on hw:wm8960 (2 in/2 out), q64 × 6 periods, GVT52 + ORNG 412 cab; 2 702 221 blocks (750/s, none missing), 0 xruns, 0 guard trips, 0 render errors, 0 device lost; CPU 35–39 °C. LIN1 shorted, SSL unplugged | 2026-09-27 |
