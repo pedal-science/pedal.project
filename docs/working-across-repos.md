@@ -110,6 +110,6 @@ Rollback on `tib` is the previous symlink. For the kernel it is `rtpi`'s known-g
 |---|---|
 | `scripts/status` | The table above, in one screen |
 | `scripts/tib-lock` | `flock` around a command on `tib`. Every soak, benchmark and deploy goes through it |
-| `scripts/deploy-engine` | Sync a `namchain` tree (a commit, or the working tree marked dirty) to a *dedicated* build directory on piv, never the dev checkout. Build armv7-NEON, run the qemu tests, install on `tib` into a versioned directory, write the manifest, restart |
+| `scripts/deploy-engine` | Build a `namchain` commit in a *dedicated* build directory on the Core host, never the dev checkout. Run the tests, install into a versioned directory, write the manifest, restart. Exists, piv only; the armv7-NEON cross build for `tib` went with `tib` |
 | `devices/tib/` | The appliance configuration and its idempotent apply/backup scripts |
 | `components.lock` | The component commits that make up what `tib` is running, written by the deploy |

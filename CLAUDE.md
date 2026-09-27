@@ -73,4 +73,9 @@ with the draw.io CLI and read that, or ask.
 
 ## Commands
 
-<!-- Added in Phase 0 step 8: scripts/status, scripts/tib-lock, scripts/deploy-engine. -->
+- `scripts/deploy-engine [--host piv] [--commit <rev>] [--no-tests]`: build namchain from a
+  commit on the Core host and install it. piv only for now.
+- `scripts/sync-library [--host piv] [--dry-run]`: copy the model and IR library to the Core host.
+
+`scripts/status`, `scripts/tib-lock` and `components.lock` are planned (Phase 0 step 8) and don't
+exist yet.

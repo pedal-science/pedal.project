@@ -193,7 +193,10 @@ Small and first, because every later phase deploys from it.
    - `AGENTS.md` plus a one-line `CLAUDE.md` in namchain, rtpi and ljoss.
    - Check whether Claude Code reads `CLAUDE.md` from extra directories.
 8. **Scripts here:** `scripts/status`, `scripts/tib-lock`, `scripts/deploy-engine` and
-   `components.lock`, as specified in the repo doc.
+   `components.lock`, as specified in the repo doc. Partly done: `scripts/deploy-engine` exists
+   (piv only, native aarch64; tib's cross build went with tib), as does `scripts/sync-library`.
+   `scripts/status`, `scripts/tib-lock` and `components.lock` are still to write; the lock guards
+   the Core host now, not `tib`.
 
 **Done when:**
 - `scripts/status` shows every repo clean, or deliberately on a named branch, on every host.
