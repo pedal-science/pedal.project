@@ -394,7 +394,7 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      supply, so at 9 V with the drafted 4.5 V bias, input peaks above +1 V distort. Biased at about
      2.75 V, it has roughly ±2.5 V. The OPA2197, which is rail-to-rail, gets about ±3 V at a 3 V
      bias before its input stage changes over, and it keeps working beyond that.
-   - **Keep the 47 nF shunts.** The board's own 100 Ω already isolates the op-amp from them, so the
+   - ~~**Keep the 47 nF shunts.**~~ Overturned by the review below: they distort. The board's own 100 Ω already isolates the op-amp from them, so the
      draft's extra 100 Ω isn't needed and the corner stays at 34 kHz. The 4.7 nF swap only
      mattered for an unbuffered, high-impedance source.
    - **The output level works.** HP_L and HP_R reach 1 Vrms at full scale. That's hot for an amp's
@@ -402,14 +402,48 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    - **AVDD draws about 5–8 mA** (the datasheet's playback figures), so a TO-92 78L33 is plenty.
      There's a simpler option for 2c too: feed the board's VIN from a 78L05 on the 9 V side. AVDD
      then comes off `tib`'s supply with no cutting, and the board's own LDO becomes a second stage.
-2. **Settle the values.** The parts are already in the basket, including the OPA2197 (CPC doesn't
-   sell the OPA1642). [docs/bom.md](docs/bom.md) describes a provisional input stage built on these
-   findings: ×1 on Inst, a 680 kΩ / 330 kΩ pad on Line, and a 2.9 V bias. If 2a's measurements move
-   any of that, only resistor values change.
+   **Review against 2a (2026-09-27).** Measured on piv; numbers in
+   [docs/codec-bringup-2a.md](docs/codec-bringup-2a.md#results), datasheet v4.2.
+   - **Full scale is 1.0 V rms, in and out, as the datasheet says.** The meter's 0.81 V (input) and
+     0.45 V (output) were its 200 V range failing at low volts. Codec out → fixture → LIN1 loses
+     only 0.4 dB, so the two full scales agree, and the input noise, −93.5 dBFS(A) shorted, matches
+     the datasheet's 94 dB SNR. So ~21 µV A-weighted at the pin.
+   - **×1 on Inst stands**: 1.4 V peak at the jack is full scale. **Headroom for hot pickups is a
+     mixer setting, not a part**: the PGA goes below 0 dB (to −17.25 dB), so −3 dB gives 2 V peak
+     and −6 dB 2.8 V peak, which is about where the OPA2197 runs out of swing below its 2.9 V bias.
+     Each dB of it costs a dB of noise at the jack. Start at 0 dB and move it only if a guitar clips.
+   - **The Line pad and the 2.9 V bias stand.** The pad is passive ahead of the follower, so the
+     op-amp never sees more than 1.4 V peak.
+   - **The 47 nF shunts distort. Overturned: replace them.** They're ceramic, and their value moves
+     with voltage. Measured through LIN1 with a ~200 Ω source, THD rises 6 dB per octave: −78 dB at
+     100 Hz, −65 dB at 1 kHz, −58 dB at 4 kHz, against the datasheet's −89. The worse the source
+     impedance, the worse it gets (a 12 Ω source gave −72 dB at 1 kHz). Behind the buffer the board's
+     own 100 Ω is still in series, so expect about −71 dB at 1 kHz. **Fix in 2c:** swap LIN1's
+     shunt (top row, column 4) for a film capacitor. 47 nF PET keeps the 34 kHz corner; 4.7 nF
+     would do too. Both are in the drawer. Measure before and after with the codec's own loop.
+   - **Source impedance matters for response too**: SSL out 4 (~2 kΩ) put −3 dB at 1.5 kHz. The
+     buffer's output is near 0 Ω, so the corner stays at 34 kHz (−0.3 dB at 20 kHz). No extra 100 Ω.
+   - **Output level: 1.0 V rms at full scale, confirmed.** DAC THD −81 dB, flat within 0.1 dB.
+     Right for a line input, hot for an amp's front end; `namchaind`'s output gain sets it.
+     The output stage (10 µF bipolar, 100 Ω, 1 MΩ) stands; into 10 kΩ its corner is 1.6 Hz.
+   - **The LDO's noise isn't the limit yet.** With the board's own LDO fed from piv's 5 V, input
+     noise is at the datasheet figure. 2c's 78L05 trial is to beat the enclosure, not the bench.
+   - **Grounding is the bigger risk.** Sharing ground with the SSL through piv put a 90 Hz comb at
+     −86 dBFS, 7 dB over the codec's own floor. In the pedal: one star, one path from piv's ground
+     to it (the header GND), and nothing else that joins the two supplies.
+   - **RINPUT1 stays reserved** (D5). Its input resistance is 49 kΩ at 0 dB PGA, 3 kΩ at +30 dB, and
+     the mixer keeps it unrouted.
+   - Also measured: the converters' round trip is 55–57 samples (1.16 ms).
+2. **Settle the values.** Done 2026-09-27: the provisional values in
+   [docs/bom.md](docs/bom.md) stand unchanged (×1 Inst, 680 kΩ / 330 kΩ Line pad, 2.9 V bias,
+   10 µF / 100 Ω / 1 MΩ out). Two additions: hot-pickup headroom through the PGA in the mixer
+   file, and the film replacement for LIN1's 47 nF in 2c.
 3. **Build the buffer and the output stage** on stripboard, powered from a Cioks outlet through the
    LDO.
 
 **2c. Modify and compare.**
+- Replace LIN1's 47 nF ceramic shunt with a film capacitor (2b finding), and measure THD against
+  frequency before and after.
 - First try the option that needs no cutting: VIN from a 78L05 on the 9 V side.
 - If that isn't enough, cut AVDD-ISO and fit the external LDO, open SPKVDD and disconnect VIN.
 - Measure against 2a, and keep what measurably helps.

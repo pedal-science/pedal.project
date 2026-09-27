@@ -10,9 +10,8 @@ Add. Where a part waits on a decision, the **Status** column says which one.
 | **later** | Not designed yet, so there's no part to buy |
 
 Some quantities are CPC's minimum order rather than what the build needs. The notes say where.
-The analogue values are provisional until the Phase 2b review
-([plan](../plan.md#phase-2--the-codec-and-the-analogue-stages)) has 2a's measurements. If it moves
-them, only resistor values change.
+The analogue values were settled by the Phase 2b review on 2026-09-27
+([plan](../plan.md#phase-2--the-codec-and-the-analogue-stages)), against 2a's measurements.
 
 ## Already on the bench
 
@@ -73,7 +72,7 @@ depends on the receiver's 3.3 V supply.
 | Single-core screened cable, 1.6 mm, 100 m reel | CBBR4177 | 1 | 7.29 | basket | For the high-impedance run from the input jack to the buffer |
 | Input jack | — | — | — | basket | One of the five Neutrik jacks under Building |
 
-### The input stage these parts make (provisional)
+### The input stage these parts make
 
 This follows the 2b early findings: unity gain for an instrument, a pad for Line, and a bias point in
 the middle of the op-amp's input range.
@@ -82,12 +81,13 @@ the middle of the op-amp's input range.
   input sees about 1 MΩ in either switch position.
 - The Inst/Line switch connects one half of the OPA2197, wired as a follower, to A (Inst, ×1) or to
   B (Line, ×0.33, −9.7 dB). Its output goes to the WM8960 board's LINPUT1 pad. The board's own
-  100 Ω, 47 nF and 1 µF isolate it and block the DC.
+  100 Ω, 47 nF and 1 µF isolate it and block the DC. The 47 nF is ceramic and distorts; 2c swaps
+  LIN1's for film (plan 2b).
 - The bias is about 2.9 V: two 10 kΩ in series from the filtered 9 V (after the 1N5817, 100 Ω and
   100 µF), and one 10 kΩ to ground with 10 µF across it. The op-amp runs from the same filtered
   9 V, with 100 nF at its supply pins. The unused half is a follower tied to the bias.
 - With the codec's PGA at 0 dB, full scale at the jack is about 1.4 V peak on Inst and 4.3 V peak on
-  Line.
+  Line. For hotter pickups, lower the PGA in the mixer file: −6 dB gives 2.8 V peak on Inst.
 - Wire the input jack's tip switch contact to ground. With nothing plugged in, the input then sits at
   0 V, which keeps it quiet and stops the pop when you plug in.
 
