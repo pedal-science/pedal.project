@@ -1,0 +1,12 @@
+[Unit]
+Description=Pedal: load the WM8960 codec overlay and apply its mixer state
+Documentation=file:/usr/local/sbin/pedal-codec
+Before=namchaind.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/pedal-codec
+
+[Install]
+WantedBy=multi-user.target

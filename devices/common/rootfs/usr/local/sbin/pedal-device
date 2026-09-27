@@ -89,16 +89,21 @@ install_tree() {
   done < <(cd "$root" && find . -type f | sed "s|^\./||" | sort)
 }
 
+# A line "user:<unit>" masks a per-user unit for every user (systemctl --global); anything else is
+# a system unit.
+sc() { if [[ $1 == user:* ]]; then echo "systemctl --global"; else echo systemctl; fi; }
+unit_exists() { local u=${1#user:}; if [[ $1 == user:* ]]; then [[ -n $(find /usr/lib/systemd/user /etc/systemd/user -name "$u" 2>/dev/null) ]]; else systemctl cat "$u" >/dev/null 2>&1; fi; }
+
 mask_units() {
   local u st
   while IFS= read -r u; do
-    systemctl cat "$u" >/dev/null 2>&1 || { echo "  absent    $u"; continue; }
-    st=$(systemctl is-enabled "$u" 2>/dev/null || true)
+    unit_exists "$u" || { echo "  absent    $u"; continue; }
+    st=$($(sc "$u") is-enabled "${u#user:}" 2>/dev/null || true)
     if [[ $st == masked ]]; then
       recorded "mask $u" || echo "  masked by someone else, left alone: $u"
       continue
     fi
-    run systemctl mask "$u" >/dev/null
+    run $(sc "$u") mask "${u#user:}" >/dev/null
     record "mask $u"
     echo "  masked    $u"
   done < <(units)
@@ -127,6 +132,11 @@ activate() {
   # namchaind itself is installed and enabled by scripts/deploy-engine, with its binaries.
   run systemctl enable pedal-resume.service
   run systemctl restart --no-block pedal-resume.service
+  # Host-specific: only hosts with the codec wired ship this unit.
+  if [[ -e /etc/systemd/system/pedal-codec.service ]]; then
+    run systemctl enable pedal-codec.service
+    run systemctl restart pedal-codec.service
+  fi
 }
 
 do_apply() {
@@ -151,9 +161,10 @@ do_revert() {
   [[ -r $MANIFEST ]] || { say "nothing to revert: no $MANIFEST"; exit 0; }
   systemctl cat pedal-tune.service >/dev/null 2>&1 && run systemctl disable --now pedal-tune.service
   systemctl cat pedal-resume.service >/dev/null 2>&1 && run systemctl disable --now pedal-resume.service
+  systemctl cat pedal-codec.service >/dev/null 2>&1 && run systemctl disable pedal-codec.service
   while read -r kind what; do
     case $kind in
-      mask) run systemctl unmask "$what" >/dev/null; echo "  unmasked  $what" ;;
+      mask) run $(sc "$what") unmask "${what#user:}" >/dev/null; echo "  unmasked  $what" ;;
       file) run rm -f "$what"; echo "  removed   $what" ;;
     esac
   done < "$MANIFEST"
@@ -182,8 +193,8 @@ do_status() {
   local u st n=0
   if [[ -r /etc/pedal/masked-units ]]; then
     while IFS= read -r u; do
-      systemctl cat "$u" >/dev/null 2>&1 || continue
-      st=$(systemctl is-enabled "$u" 2>/dev/null || true)
+      unit_exists "$u" || continue
+      st=$($(sc "$u") is-enabled "${u#user:}" 2>/dev/null || true)
       if [[ $st == masked ]]; then n=$((n+1)); else printf '  FAIL  %-34s %s (want masked)\n' "$u" "$st"; fi
     done < <(units)
     printf '  ok    %-34s %s\n' "masked units" "$n"

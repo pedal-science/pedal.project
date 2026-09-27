@@ -38,6 +38,16 @@ NetworkManager-wait-online.service
 # Logging: the journal, in RAM, is enough.
 rsyslog.service
 sysstat.service
+# The desktop: piv boots to text. Masked so nothing can start the login screen.
+sddm.service
+# Per-user audio, masked for every user ("user:" = systemctl --global). It starts with any login,
+# SSH included, grabs every sound card and rewrites their mixers. namchaind uses ALSA directly.
+user:pipewire.socket
+user:pipewire.service
+user:pipewire-pulse.socket
+user:pipewire-pulse.service
+user:wireplumber.service
+user:filter-chain.service
 #
 # Deliberately NOT masked:
 #   avahi-daemon       host-slim masked it, but it is what makes piv.local resolve for ljoss,

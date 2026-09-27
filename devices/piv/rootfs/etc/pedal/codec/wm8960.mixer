@@ -1,0 +1,43 @@
+# WM8960 mixer state, fed to `amixer -c wm8960 -s` by pedal-codec at boot.
+# docs/codec-bringup-2a.md stage 7. Numbers are raw register steps; the dB is in the comment.
+
+# Off, always: ALC pumps on guitar dynamics, and 3D and the noise gate colour the signal.
+sset 'ALC Function' Off
+sset '3D' 0 off
+sset 'Noise Gate' off
+
+# Input: LINPUT1 only -> PGA at 0 dB -> boost at 0 dB -> ADC at 0 dB.
+# The boost stage is noisier than the PGA, so gain goes in the PGA if it's ever needed.
+sset 'Left Boost Mixer LINPUT1' on
+sset 'Left Boost Mixer LINPUT2' off
+sset 'Left Boost Mixer LINPUT3' off
+sset 'Left Input Boost Mixer LINPUT1' 0
+sset 'Left Input Mixer Boost' on
+# RINPUT1 is reserved for the mic (D5); the right side stays unrouted until then.
+sset 'Right Boost Mixer RINPUT1' off
+sset 'Right Boost Mixer RINPUT2' off
+sset 'Right Boost Mixer RINPUT3' off
+sset 'Right Input Mixer Boost' off
+sset 'Capture' 23 cap
+sset 'ADC PCM' 195
+# This control is the ADCHPD bit: "off" leaves the ADC's DC-blocking high-pass filter enabled.
+sset 'ADC High Pass Filter' off
+
+# Output: DAC -> output mixers -> HP_L/HP_R. No analogue bypass paths.
+sset 'Playback' 255
+sset 'PCM Playback -6dB' off
+sset 'DAC Mono Mix' Stereo
+sset 'Left Output Mixer PCM' on
+sset 'Right Output Mixer PCM' on
+sset 'Left Output Mixer Boost Bypass' off
+sset 'Right Output Mixer Boost Bypass' off
+sset 'Left Output Mixer LINPUT3' off
+sset 'Right Output Mixer RINPUT3' off
+# 121 = 0 dB, 115 = -6 dB: moderate for headphones, fine for the output fixture.
+sset 'Headphone' 115
+
+# Speaker amp and OUT3 off. DAPM keeps them powered down (no speaker widget in the overlay);
+# these keep them silent if that ever changes.
+sset 'Speaker' 0
+sset 'Mono Output Mixer Left' off
+sset 'Mono Output Mixer Right' off

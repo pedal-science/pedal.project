@@ -1,0 +1,2 @@
+  installed /etc/wireplumber/wireplumber.conf.d/50-pedal-ignore-codec.conf
+pedal-device: done. Manifest: /var/lib/pedal/manifest

@@ -1,0 +1,78 @@
+// SparkFun WM8960 breakout on piv's header, codec as I2S clock master.
+//
+// Unlike the stock wm8960-soundcard overlay, the Pi's I2S is the clock
+// consumer: the codec runs from the board's own 24 MHz oscillator (MCLK is
+// not on the header) and drives BCLK and DACLRC. The Pi has one frame clock,
+// so ADCLRC is left unconnected and the ADC shares DACLRC (wlf,shared-lrclk).
+// Wiring: docs/codec-bringup-2a.md, stage 4.
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "brcm,bcm2712";
+
+	fragment@0 {
+		target = <&i2s_clk_consumer>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@1 {
+		target-path = "/";
+		__overlay__ {
+			wm8960_mclk: wm8960_mclk {
+				compatible = "fixed-clock";
+				#clock-cells = <0>;
+				clock-frequency = <24000000>;
+			};
+		};
+	};
+
+	fragment@2 {
+		target = <&i2c1>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+
+			wm8960: wm8960@1a {
+				compatible = "wlf,wm8960";
+				reg = <0x1a>;
+				#sound-dai-cells = <0>;
+				clocks = <&wm8960_mclk>;
+				clock-names = "mclk";
+				wlf,shared-lrclk;
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <&sound>;
+		__overlay__ {
+			compatible = "simple-audio-card";
+			simple-audio-card,format = "i2s";
+			simple-audio-card,name = "wm8960";
+			simple-audio-card,bitclock-master = <&codec_dai>;
+			simple-audio-card,frame-master = <&codec_dai>;
+			// No speaker widget, so DAPM never powers the class-D amp.
+			simple-audio-card,widgets =
+				"Line", "Line In",
+				"Headphone", "Headphone Jack";
+			simple-audio-card,routing =
+				"LINPUT1", "Line In",
+				"Headphone Jack", "HP_L",
+				"Headphone Jack", "HP_R";
+			status = "okay";
+
+			simple-audio-card,cpu {
+				sound-dai = <&i2s_clk_consumer>;
+			};
+
+			codec_dai: simple-audio-card,codec {
+				sound-dai = <&wm8960>;
+				system-clock-frequency = <24000000>;
+			};
+		};
+	};
+};

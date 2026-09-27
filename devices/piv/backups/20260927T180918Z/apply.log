@@ -1,0 +1,7 @@
+  installed /etc/pedal/codec/wm8960-codec-master.dts
+  installed /etc/pedal/codec/wm8960.mixer
+  installed /etc/systemd/system/pedal-codec.service
+  installed /usr/local/sbin/pedal-codec
+  installed /usr/local/sbin/pedal-device
+Created symlink '/etc/systemd/system/multi-user.target.wants/pedal-codec.service' → '/etc/systemd/system/pedal-codec.service'.
+pedal-device: done. Manifest: /var/lib/pedal/manifest

@@ -25,15 +25,15 @@ and the overlay and mixer state carry over too.
 | Soldering iron and solder | yes | 2 | |
 | Breadboard | yes | 8 | For the jack sockets and the output fixture. The codec board doesn't go in it |
 | **Multimeter** with continuity, resistance, DC volts and AC volts | ? | 1, 3, 5, 6, 8 | Essential. A **Hz** range helps in stage 6 but isn't needed |
-| **2.54 mm pin header**, 2 × 16 pins | in the order (CN21901) | 2 | Both rows on the board have **16** pins. If the strip lying beside the board in `references/wm8960-photos/top.jpeg` is yours, you can start now |
+| **2.54 mm pin header**, 2 × 16 pins | yes | 2 | Both rows on the board have **16** pins. If the strip lying beside the board in `references/wm8960-photos/top.jpeg` is yours, you can start now |
 | Female-to-female jumper leads, about 12 | yes | 4 | piv's header to the codec board. Short ones, 10–20 cm |
-| Female-to-male jumper leads, about 6 | ? | 8 | From codec pins into the breadboard. Without them, push a short piece of header into the breadboard and use female-to-female leads |
+| Female-to-male jumper leads, about 6 | yes | 8 | From codec pins into the breadboard. Without them, push a short piece of header into the breadboard and use female-to-female leads |
 | Two 6.35 mm jack sockets, with short wires soldered on so they sit in the breadboard | yes (the basic open-frame ones) | 8 | Socket A takes the signal from the SSL. Socket B takes the signal back to it |
-| **TRS** jack-to-jack cable | ? | 8 | SSL out 4 → socket A. TRS, so the SSL's cold (ring) output isn't shorted to ground |
-| **TS** (mono, guitar) cable | surely | 8 | Socket B → SSL input 2. TS on purpose: in the SSL's balanced input it ties the ring to ground, which is the right way to feed it an unbalanced signal |
+| **TRS** jack-to-jack cable | yes | 8 | SSL out 4 → socket A. TRS, so the SSL's cold (ring) output isn't shorted to ground |
+| **TS** (mono, guitar) cable | yes| 8 | Socket B → SSL input 2. TS on purpose: in the SSL's balanced input it ties the ring to ground, which is the right way to feed it an unbalanced signal |
 | 2 × 10 µF capacitor, 2 × 100 Ω, 2 × 1 MΩ | **in the order** | 8b, 9 | The output fixture. Any electrolytic ≥ 10 µF rated ≥ 10 V will do, fitted with **+ towards the codec**. Any resistor of 47–220 Ω for the 100 Ω, and 100 kΩ–1 MΩ for the bleed |
-| Headphones | ? | 8c (optional) | A first listen before the parts arrive |
-| Nice to have | | | Flux, desoldering braid, side cutters for the header strip, Blu-Tack to hold the header square while you solder, a magnifier (or phone camera) to inspect joints. An oscilloscope isn't needed |
+| Headphones | yes | 8c (optional) | A first listen before the parts arrive |
+| Nice to have | yes, flux, desoldering braid, side cutters, blu-tack (I have put the header in the breadboard and put the WM8960 on its short pins | | Flux, desoldering braid, side cutters for the header strip, Blu-Tack to hold the header square while you solder, a magnifier (or phone camera) to inspect joints. An oscilloscope isn't needed |
 
 ### What can you do before the order arrives?
 
@@ -74,17 +74,30 @@ BCLK, DLRC … is on the left, and LIN1, HPL, OUT3 … is on the right.
 
 ### 1.1 Nothing is shorted
 
-- [ ] Resistance from **VIN** to **GND**. A reading that starts low and climbs is capacitors
+- [x] Resistance from **VIN** to **GND**. A reading that starts low and climbs is capacitors
       charging, which is normal. Wait for it to settle.
-- [ ] **3V3** to **GND**, the same way.
-- [ ] **AVDD** (right-hand row) to **GND**, the same way.
+
+Result: infinite
+
+- [x] **3V3** to **GND**, the same way.
+
+Result: infinite
+
+- [x] **AVDD** (right-hand row) to **GND**, the same way.
+
+Result: infinite
 
 Anything that stays under about 50 Ω means don't power it up.
 
 ### 1.2 SPKVDD jumper (confirms the photo)
 
-- [ ] Continuity **SPKVDD** ↔ **VIN**: expect a **steady beep**. It's bridged to VIN.
-- [ ] Continuity **SPKVDD** ↔ **3V3**: expect **none**.
+- [x] Continuity **SPKVDD** ↔ **VIN**: expect a **steady beep**. It's bridged to VIN.
+
+Result: Steady beep.
+
+- [x] Continuity **SPKVDD** ↔ **3V3**: expect **none**.
+
+Result: None.
 
 ### 1.3 Map the input components (LINPUT1 first)
 
@@ -96,17 +109,27 @@ physical parts belong to which input**, because 2b or 2c may swap a 47 nF.
 A tip on beeps: a meter beeps briefly while it charges a capacitor. Count only **steady** beeps.
 
 For **LIN1**:
-- [ ] Continuity from the **LIN1** pad to each end of each resistor in the middle row. One end of
+- [x] Continuity from the **LIN1** pad to each end of each resistor in the middle row. One end of
       one resistor beeps steadily. Note its column.
-- [ ] Resistance across that resistor: expect **about 100 Ω**. Measured in circuit, it may read a
+- [x] Resistance across that resistor: expect **about 100 Ω**. Measured in circuit, it may read a
       little different.
-- [ ] From that resistor's **other** end, find which capacitors it has continuity with: one in the
+- [x] From that resistor's **other** end, find which capacitors it has continuity with: one in the
       top row and one in the bottom row. Note both.
-- [ ] Of those two capacitors, the one whose far end beeps to **GND** is the **47 nF shunt**. The
+- [x] Of those two capacitors, the one whose far end beeps to **GND** is the **47 nF shunt**. The
       other is the **1 µF coupling** capacitor.
+
+Result: LIN1: Goes with resistor 4. Goes with capacitors 4 and 4. top capacitor's far end beeps to GND.
+
+Result: No resistance found across resistor 4 - I just see 0 on my meter. Continuity test beeps and shows a reading of 100 - but I don't know what that means.
+
 
 Then, if you have the patience, do **RIN1** next (it's reserved for the mic, D5), and after that the
 other four.
+
+Result: RIN1: Goes with resistor 3. Goes with capacitors 3 and 3. top capacitor's far end beeps to GND.
+
+
+Result: No resistance found across resistor 3, as with 4.
 
 > **▶ Tell Claude:** the 1.1 readings, 1.2's results, and for each input you mapped:
 > "resistor column n, shunt top/bottom column m, coupling top/bottom column k". Claude updates the
@@ -142,10 +165,10 @@ in one row, even pins in the other, pin 1 = 3.3 V, pin 2 = 5 V**. Check which en
 measuring before you trust a diagram. A slip of a meter probe between the 5 V pins and a GPIO can
 kill the Pi, so:
 
-- [ ] piv powered, nothing connected to the header.
-- [ ] Push a female jumper onto a corner pin and measure DC volts **at the lead's other end** against
+- [x] piv powered, nothing connected to the header.
+- [x] Push a female jumper onto a corner pin and measure DC volts **at the lead's other end** against
       a GND pin, reached through another lead. **Don't probe the header itself.**
-- [ ] Find the corner where one row reads **3.3 V** and its neighbour in the other row reads **5 V**.
+- [x] Find the corner where one row reads **3.3 V** and its neighbour in the other row reads **5 V**.
       That's pins 1 and 2. Pin 4 is also 5 V and pin 6 is GND.
 
 The pins we use:
@@ -243,10 +266,15 @@ Claude writes a small overlay instead:
 - only the widgets in use: a line in on LINPUT1 and headphones on HP_L/HP_R. No speaker, so ALSA's
   power management never switches the class-D amplifier on.
 
-The overlay goes in `devices/piv/`. Which repo owns vip's boot configuration is still open in the
-plan, and this is a data point for it. Claude tries it at runtime with `dtoverlay` first, so no
-reboot is needed, then adds it to `config.txt`. To undo it, remove that line. If piv ever failed to
-boot because of it, the line can be removed on the Mac from piv's SSD.
+**As done (2026-09-27):** the overlay is `devices/piv/rootfs/etc/pedal/codec/wm8960-codec-master.dts`.
+It is **not** in `config.txt`. `pedal-codec.service` compiles it and loads it with `dtoverlay` at
+boot, before `namchaind`, then applies the mixer state. The reasons:
+- it lives in the device tree that `devices/piv/apply` installs and `pedal-device revert` undoes
+- kernel updates replace `/boot/firmware/current/overlays`, and they can't remove it
+- it can't stop piv booting.
+
+The `wlf,gpio-cfg` property was left out: ADCLRC isn't wired, so what the codec drives on it doesn't
+matter. The WirePlumber rule in stage 7 is also needed.
 
 **Your part: the clock check.** While Claude runs a recording:
 - [ ] DC volts on **BCLK** and on **DLRC**, each against GND. **About 1.6 V** means it's toggling (a
@@ -262,12 +290,18 @@ boot because of it, the line can be removed on the Mac from piv's SSD.
 
 ## Stage 7: mixer state as code (plan 2a.4). Claude
 
-Kept in `devices/piv/` and applied by its `apply` script, like the rest of piv's state:
+Kept in `devices/piv/rootfs/etc/pedal/codec/wm8960.mixer` and applied by `pedal-codec` at boot:
 - ALC **off**, 3D **off**, speaker outputs **off**, OUT3 **off**
 - LINPUT1 → input PGA at 0 dB → boost at 0 dB → ADC. The boost stages are noisier than the PGA
 - DAC → output mixer → HP_L and HP_R, at a moderate headphone volume.
 
 Nothing for you to do.
+
+**As found:** the desktop's WirePlumber opened the new card after boot and overwrote the mixer, with
+Capture at +30 dB and Headphone muted. `devices/piv/rootfs/etc/wireplumber/wireplumber.conf.d/50-pedal-ignore-codec.conf`
+disables the card for WirePlumber. It matches by `device.name`, because `alsa.card_name` didn't
+match. `pedal-codec` also waits for udev and runs `alsactl store`, so udev's own restore writes the
+same values.
 
 ---
 
@@ -371,13 +405,13 @@ Filled in as we go.
 
 | What | Value | Date |
 |---|---|---|
-| VIN / 3V3 / AVDD resistance to GND | | |
-| SPKVDD → VIN confirmed | | |
-| LINPUT1 parts (resistor / shunt / coupling position) | | |
-| RINPUT1 parts | | |
-| VIN / 3V3 / AVDD with power | | |
-| I2C address seen | | |
-| BCLK / DLRC | | |
+| VIN / 3V3 / AVDD resistance to GND | all open circuit (no shorts) | 2026-09-27 |
+| SPKVDD → VIN confirmed | yes; SPKVDD ↔ 3V3 open | 2026-09-27 |
+| LINPUT1 parts (resistor / shunt / coupling position) | column 4: resistor 4 (~100 Ω), shunt top 4, coupling bottom 4 | 2026-09-27 |
+| RINPUT1 parts | column 3: resistor 3 (~100 Ω), shunt top 3, coupling bottom 3 | 2026-09-27 |
+| VIN / 3V3 / AVDD with power | 5.0 / 3.28 / 3.27 V | 2026-09-27 |
+| I2C address seen | 0x1a only, on i2c-1 | 2026-09-27 |
+| BCLK / DLRC | 1.83 / 1.64 V DC (toggling); 48 kHz stereo capture confirmed by data rate | 2026-09-27 |
 | SSL out 4: V rms at a stated dBFS | | |
 | Codec input full scale (V rms at LIN1) | | |
 | ADC noise, input shorted (µV, A-weighted; dBFS) | | |

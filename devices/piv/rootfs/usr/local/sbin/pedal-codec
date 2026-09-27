@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# pedal-codec — bring up the WM8960 codec: load its overlay and apply its mixer state.
+#
+# The overlay is loaded at runtime rather than from config.txt, so it lives in this tree (and is
+# undone by `pedal-device revert`), survives kernel updates replacing the boot overlays, and can't
+# stop the host booting. Safe to re-run.
+set -euo pipefail
+
+dir=/etc/pedal/codec
+name=wm8960-codec-master
+card=wm8960
+
+if ! dtoverlay -l | grep -qw "$name"; then
+  tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+  dtc -q -@ -I dts -O dtb -o "$tmp/$name.dtbo" "$dir/$name.dts"
+  dtoverlay -d "$tmp" "$name"
+fi
+
+for _ in $(seq 50); do
+  [[ -e /proc/asound/$card ]] && break
+  sleep 0.1
+done
+[[ -e /proc/asound/$card ]] || { echo "pedal-codec: card $card did not appear" >&2; exit 1; }
+
+# A new card makes udev run `alsactl restore` on it from /var/lib/alsa/asound.state, racing
+# with us. Settle first, then save our state there too, so a late restore writes the same values.
+udevadm settle --timeout=10
+amixer -q -c "$card" -s < "$dir/wm8960.mixer"
+alsactl store "$card"
+echo "pedal-codec: $card up, mixer applied"

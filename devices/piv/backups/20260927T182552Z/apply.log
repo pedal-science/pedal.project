@@ -1,0 +1,17 @@
+  installed /etc/pedal/masked-units
+  installed /usr/local/sbin/pedal-device
+Created symlink '/etc/systemd/system/sddm.service' → '/dev/null'.
+  masked    sddm.service
+Created symlink '/etc/systemd/user/pipewire.socket' → '/dev/null'.
+  masked    user:pipewire.socket
+Created symlink '/etc/systemd/user/pipewire.service' → '/dev/null'.
+  masked    user:pipewire.service
+Created symlink '/etc/systemd/user/pipewire-pulse.socket' → '/dev/null'.
+  masked    user:pipewire-pulse.socket
+Created symlink '/etc/systemd/user/pipewire-pulse.service' → '/dev/null'.
+  masked    user:pipewire-pulse.service
+Created symlink '/etc/systemd/user/wireplumber.service' → '/dev/null'.
+  masked    user:wireplumber.service
+Created symlink '/etc/systemd/user/filter-chain.service' → '/dev/null'.
+  masked    user:filter-chain.service
+pedal-device: done. Manifest: /var/lib/pedal/manifest

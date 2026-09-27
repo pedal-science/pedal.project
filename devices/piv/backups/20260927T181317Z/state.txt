@@ -1,0 +1,499 @@
+
+== host
+Linux piv 7.0.0-1017-raspi-realtime #17-Ubuntu SMP PREEMPT_RT Fri Aug  7 17:41:11 UTC 2026 aarch64 GNU/Linux
+reboot=w coherent_pool=1M 8250.nr_uarts=1 pci=pcie_bus_safe numa_policy=interleave nvme.max_host_mem_size_mb=0  numa=fake=8 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=2C:CF:67:C4:D2:DD vc_mem.mem_base=0x3fc00000 vc_mem.mem_size=0x40000000  console=ttyAMA0,115200 multipath=off dwc_otg.lpm_enable=0 console=tty1 root=LABEL=writable rootfstype=ext4 rootwait fixrtc cfg80211.ieee80211_regdom=GB video=HDMI-A-1:1280x720@60D rd.shell=0 rd.emergency=reboot rd.retry=60 rd.timeout=90 panic=10 isolcpus=managed_irq,domain,2-3 nohz_full=2-3 rcu_nocbs=2-3 irqaffinity=0-1 skew_tick=1
+ 19:13:19 up 1 min,  1 user,  load average: 1.21, 0.56, 0.20
+
+== applied
+commit=42dd16a-dirty
+applied=2026-09-27T18:11:33Z
+
+== isolation
+isolated=2-3 nohz_full=2-3
+
+== cpufreq
+policy0 performance max=2400000 cur=2400000
+
+== thermal
+cpu-thermal 33100
+
+== cpusets
+machine.slice 0-1
+pedal.slice 0-3
+system.slice 0-1
+user.slice 0-1
+init.scope 0-1
+
+== interrupts
+           CPU0       CPU1       CPU2       CPU3       
+  9:          0          0          0          0    GICv2  25 Level     vgic
+ 11:          0          0          0          0    GICv2  30 Level     kvm guest ptimer
+ 12:          0          0          0          0    GICv2  27 Level     kvm guest vtimer
+ 13:      94758      50738         23         26    GICv2  26 Level     arch_timer
+ 15:       1332          0          0          0    GICv2  65 Level     107c013880.mailbox
+ 22:          0          0          0          0    GICv2 119 Level     DMA IRQ
+ 23:          0          0          0          0    GICv2 120 Level     DMA IRQ
+ 24:          0          0          0          0    GICv2 121 Level     DMA IRQ
+ 25:          0          0          0          0    GICv2 122 Level     DMA IRQ
+ 32:          0          0          0          0    GICv2  48 Level     arm-pmu
+ 33:          0          0          0          0    GICv2  49 Level     arm-pmu
+ 34:          0          0          0          0    GICv2  50 Level     arm-pmu
+ 35:          0          0          0          0    GICv2  51 Level     arm-pmu
+ 36:         15          0          0          0 interrupt-controller@7d508380   1 Level     107d508200.i2c
+ 37:          0          0          0          0 interrupt-controller@7d508380   2 Level     107d508280.i2c
+ 38:       2729          0          0          0    GICv2 308 Level     ttyS0
+ 40:          0          0          0          0    GICv2 105 Level     1000480000.usb, 1000480000.usb, dwc2_hsotg:usb1
+ 41:          0          0          0          0    GICv2 261 Level     PCIe PME, aerdrv, PCIe bwctrl
+109:          0          0          0          0 rp1_irq_chip   6 Level     eth0
+111:        496          0          0          0 rp1_irq_chip   8 Level     1f00074000.i2c
+122:          0          0          0          0 rp1_irq_chip  19 Level     1f00050000.spi
+128:          0          0          0          0 rp1_irq_chip  25 Level     uart-pl011
+134:      38825          0          0          0 rp1_irq_chip  31 Edge      xhci-hcd:usb2
+139:         40          0          0          0 rp1_irq_chip  36 Edge      xhci-hcd:usb4
+143:          0          0          0          0 rp1_irq_chip  40 Level     dw_axi_dmac_platform
+161:          4          0          0          0 rp1_irq_chip  58 Level     1f00008000.mailbox
+164:          0          0          0          0 107d508500.gpio  20 Edge      pwr_button
+165:          0          0          0          0    GICv2 150 Level     107d004000.spi
+166:          0          0          0          0    GICv2 305 Level     mmc0
+167:      15025          0          0          0    GICv2 306 Level     mmc1
+168:          0          0          0          0    GICv2 281 Level     v3d_core0
+169:          0          0          0          0    GICv2 282 Level     v3d_hub
+170:          0          0          0          0    GICv2 104 Level     pispbe
+171:          0          0          0          0    GICv2 130 Level     1000800000.codec
+172:         23          0          0          0 interrupt-controller@7c502000   2 Level     107c580000.hvs
+173:          0          0          0          0 interrupt-controller@7c502000   9 Level     107c580000.hvs
+174:          0          0          0          0 interrupt-controller@7c502000  16 Level     107c580000.hvs
+175:          0          0          0          0 interrupt-controller@7d510600   7 Level     vc4 hdmi hpd connected
+176:          0          0          0          0 interrupt-controller@7d510600   8 Level     vc4 hdmi hpd disconnected
+177:          0          0          0          0 interrupt-controller@7d510600   2 Level     vc4 hdmi cec rx
+178:          0          0          0          0 interrupt-controller@7d510600   1 Level     vc4 hdmi cec tx
+179:          0          0          0          0 interrupt-controller@7d510600  14 Level     vc4 hdmi hpd connected
+180:          0          0          0          0 interrupt-controller@7d510600  15 Level     vc4 hdmi hpd disconnected
+181:          0          0          0          0 interrupt-controller@7d510600  12 Level     vc4 hdmi cec rx
+182:          0          0          0          0 interrupt-controller@7d510600  11 Level     vc4 hdmi cec tx
+183:          0          0          0          0 interrupt-controller@7c502000   1 Level     107c500000.mop
+184:          0          0          0          0 interrupt-controller@7c502000   0 Level     107c501000.moplet
+185:         15          0          0          0    GICv2 133 Level     vc4 crtc
+186:          0          0          0          0    GICv2 142 Level     vc4 crtc
+IPI0:     13259      38851         66        307       Rescheduling interrupts
+IPI1:      2980       4446       1331       1329       Function call interrupts
+IPI2:         0          0          0          0       CPU stop interrupts
+IPI3:         0          0          0          0       CPU stop NMIs
+IPI4:         0          0          0          0       Timer broadcast interrupts
+IPI5:      4304       2015          3          8       IRQ work interrupts
+IPI6:         0          0          0          0       CPU backtrace interrupts
+IPI7:         0          0          0          0       KGDB roundup interrupts
+Err:          0
+
+== irq-affinity
+1 0-1
+10 0-1
+109 0-1
+11 0-1
+111 0-1
+12 0-1
+122 0-1
+128 0-1
+13 0-1
+134 0-1
+139 2
+14 0-1
+143 0-1
+15 0-1
+161 0-1
+164 0-1
+165 0-1
+166 0-1
+167 0-1
+168 0-1
+169 0-1
+170 0-1
+171 0-1
+172 0-1
+173 0-1
+174 0-1
+175 0-1
+176 0-1
+177 0-1
+178 0-1
+179 0-1
+180 0-1
+181 0-1
+182 0-1
+183 0-1
+184 0-1
+185 0-1
+186 0-1
+2 0-1
+22 0-1
+23 0-1
+24 0-1
+25 0-1
+3 0-1
+32 0
+33 1
+34 2
+35 3
+36 0-1
+37 0-1
+38 0-1
+4 0-1
+40 0-1
+41 0-1
+5 0-1
+6 0-1
+7 0-1
+8 0-1
+9 0-1
+
+== irq-threads
+     60  FF     50   0 irq/15-107c013880.mailbox
+    311  FF     50   0 irq/36-107d508200.i2c
+    312  FF     50   0 irq/37-107d508280.i2c
+    313  FF     50   0 irq/40-1000480000.usb
+    335  FF     50   0 irq/40-1000480000.usb
+    336  FF     50   0 irq/40-dwc2_hsotg:usb1
+    339  FF     50   0 irq/41-PCIe PME
+    340  FF     50   0 irq/41-aerdrv
+    341  FF     49   0 irq/41-s-aerdrv
+    342  FF     50   0 irq/41-PCIe bwctrl
+    343  FF     50   1 irq/164-pwr_button
+    344  FF     50   1 irq/161-1f00008000.mailbox
+    345  FF     50   0 irq/22-DMA IRQ
+    348  FF     50   0 irq/167-mmc1
+    349  FF     50   0 irq/23-DMA IRQ
+    350  FF     49   0 irq/167-s-mmc1
+    351  FF     50   0 irq/165-107d004000.spi
+    352  FF     50   0 irq/166-mmc0
+    353  FF     49   0 irq/166-s-mmc0
+    356  FF     50   0 irq/143-dw_axi_dmac_platform
+    362  FF     50   0 irq/109-eth%d
+    366  FF     50   1 irq/122-1f00050000.spi
+    368  FF     50   1 irq/111-1f00074000.i2c
+    370  FF     50   1 irq/134-xhci-hcd:usb2
+    371  FF     85   0 irq/139-xhci-hcd:usb4
+    528  FF     50   1 irq/128-uart-pl011
+    717  FF     50   0 irq/168-v3d_core0
+    719  FF     50   0 irq/169-v3d_hub
+    727  FF     50   0 irq/170-pispbe
+    732  FF     50   0 irq/171-1000800000.codec
+    733  FF     49   0 irq/171-s-1000800000.codec
+    735  FF     50   1 irq/172-107c580000.hvs
+    736  FF     50   1 irq/173-107c580000.hvs
+    737  FF     50   1 irq/174-107c580000.hvs
+    738  FF     50   1 irq/175-vc4 hdmi hpd connected
+    739  FF     50   1 irq/176-vc4 hdmi hpd disconnected
+    741  FF     50   1 irq/177-vc4 hdmi cec rx
+    742  FF     49   1 irq/177-s-vc4 hdmi cec rx
+    743  FF     50   1 irq/178-vc4 hdmi cec tx
+    744  FF     49   1 irq/178-s-vc4 hdmi cec tx
+    745  FF     50   0 irq/24-DMA IRQ
+    748  FF     50   1 irq/179-vc4 hdmi hpd connected
+    749  FF     50   1 irq/180-vc4 hdmi hpd disconnected
+    751  FF     50   1 irq/181-vc4 hdmi cec rx
+    752  FF     49   1 irq/181-s-vc4 hdmi cec rx
+    753  FF     50   1 irq/182-vc4 hdmi cec tx
+    754  FF     49   1 irq/182-s-vc4 hdmi cec tx
+    755  FF     50   0 irq/25-DMA IRQ
+    756  FF     50   0 irq/183-107c500000.mop
+    757  FF     50   0 irq/184-107c501000.moplet
+    758  FF     50   0 irq/185-vc4 crtc
+    759  FF     50   0 irq/186-vc4 crtc
+    773  FF     50   0 irq/38-ttyS0
+
+== masked
+alsa-utils.service                         masked enabled
+apport.service                             masked enabled
+apt-daily-upgrade.service                  masked enabled
+apt-daily.service                          masked enabled
+bluetooth.service                          masked enabled
+cloud-config.service                       masked enabled
+cloud-final.service                        masked enabled
+cloud-init-local.service                   masked enabled
+cloud-init-main.service                    masked enabled
+cloud-init-network.service                 masked enabled
+cryptdisks-early.service                   masked enabled
+cryptdisks.service                         masked enabled
+dbus-org.bluez.service                     masked enabled
+dbus-org.freedesktop.ModemManager1.service masked enabled
+fwupd.service                              masked enabled
+hwclock.service                            masked enabled
+iscsi.service                              masked enabled
+ModemManager.service                       masked enabled
+motd-news.service                          masked enabled
+multipathd.service                         masked enabled
+nbd-client.service                         masked enabled
+NetworkManager-wait-online.service         masked enabled
+open-iscsi.service                         masked enabled
+rsyslog.service                            masked enabled
+screen-cleanup.service                     masked enabled
+serial-getty@ttyAMA0.service               masked enabled
+snapd.apparmor.service                     masked enabled
+snapd.seeded.service                       masked enabled
+snapd.service                              masked enabled
+sudo.service                               masked enabled
+syslog.service                             masked enabled
+sysstat.service                            masked enabled
+ua-reboot-cmds.service                     masked enabled
+ubuntu-advantage.service                   masked enabled
+udisks2.service                            masked enabled
+unattended-upgrades.service                masked enabled
+x11-common.service                         masked enabled
+snapd.socket                               masked enabled
+apt-daily-upgrade.timer                    masked enabled
+apt-daily.timer                            masked enabled
+fwupd-refresh.timer                        masked enabled
+man-db.timer                               masked enabled
+motd-news.timer                            masked enabled
+
+== enabled
+snap-bare-5.mount                       enabled enabled
+snap-core24-2125.mount                  enabled enabled
+snap-firefox-8862.mount                 enabled enabled
+snap-gnome\x2d46\x2d2404-154.mount      enabled enabled
+snap-gtk\x2dcommon\x2dthemes-1535.mount enabled enabled
+snap-mesa\x2d2404-1836.mount            enabled enabled
+snap-snapd-27709.mount                  enabled enabled
+snap-snapd-27740.mount                  enabled enabled
+apport-autoreport.path                  enabled enabled
+sddm-backgrounds-cache.path             enabled enabled
+tpm-udev.path                           enabled enabled
+accounts-daemon.service                 enabled enabled
+apparmor.service                        enabled enabled
+blk-availability.service                enabled enabled
+console-setup.service                   enabled enabled
+containerd.service                      enabled enabled
+cron.service                            enabled enabled
+dmesg.service                           enabled enabled
+e2scrub_reap.service                    enabled enabled
+finalrd.service                         enabled enabled
+getty@.service                          enabled enabled
+keyboard-setup.service                  enabled enabled
+libvirt-guests.service                  enabled enabled
+libvirtd.service                        enabled enabled
+lm-sensors.service                      enabled enabled
+lvm2-monitor.service                    enabled enabled
+namchain-realtime-tune.service          enabled enabled
+namchaind.service                       enabled enabled
+netplan-configure.service               enabled enabled
+NetworkManager-dispatcher.service       enabled enabled
+NetworkManager.service                  enabled enabled
+nginx.service                           enabled enabled
+open-vm-tools.service                   enabled enabled
+pedal-codec.service                     enabled enabled
+pedal-resume.service                    enabled enabled
+pedal-tune.service                      enabled enabled
+piboot-try-reboot.service               enabled enabled
+piboot-try-validate.service             enabled enabled
+pollinate.service                       enabled enabled
+power-profiles-daemon.service           enabled enabled
+qemu-kvm.service                        enabled enabled
+rpi-eeprom-update.service               enabled enabled
+rsync.service                           enabled enabled
+rtpi-audio-tune.service                 enabled enabled
+sddm-backgrounds-cache.service          enabled enabled
+sddm.service                            enabled enabled
+secureboot-db.service                   enabled enabled
+setvtrgb.service                        enabled enabled
+smartmontools.service                   enabled enabled
+snapd.autoimport.service                enabled enabled
+snapd.core-fixup.service                enabled enabled
+snapd.recovery-chooser-trigger.service  enabled enabled
+snapd.system-shutdown.service           enabled enabled
+sshd-keygen.service                     enabled enabled
+systemd-pstore.service                  enabled enabled
+systemd-resolved.service                enabled enabled
+systemd-timesyncd.service               enabled enabled
+ubuntu-fan.service                      enabled enabled
+ufw.service                             enabled enabled
+vgauth.service                          enabled enabled
+virtlockd.service                       enabled enabled
+virtlogd.service                        enabled enabled
+wpa_supplicant.service                  enabled enabled
+system-xfs_scrub.slice                  enabled enabled
+apport-forward.socket                   enabled enabled
+cloud-init-hotplugd.socket              enabled enabled
+dm-event.socket                         enabled enabled
+iscsid.socket                           enabled enabled
+libvirtd-admin.socket                   enabled enabled
+libvirtd-ro.socket                      enabled enabled
+libvirtd.socket                         enabled enabled
+lvm2-lvmpolld.socket                    enabled enabled
+lxd-installer.socket                    enabled enabled
+multipathd.socket                       enabled enabled
+polkit-agent-helper.socket              enabled enabled
+ssh.socket                              enabled enabled
+systemd-resolved-monitor.socket         enabled enabled
+systemd-resolved-varlink.socket         enabled enabled
+uuidd.socket                            enabled enabled
+virtlockd-admin.socket                  enabled enabled
+virtlockd.socket                        enabled enabled
+virtlogd-admin.socket                   enabled enabled
+virtlogd.socket                         enabled enabled
+machines.target                         enabled enabled
+remote-fs.target                        enabled enabled
+apport-autoreport.timer                 enabled enabled
+certbot.timer                           enabled enabled
+dpkg-db-backup.timer                    enabled enabled
+e2scrub_all.timer                       enabled enabled
+fstrim.timer                            enabled enabled
+logrotate.timer                         enabled enabled
+mdcheck_continue.timer                  enabled enabled
+mdcheck_start.timer                     enabled enabled
+mdmonitor-oneshot.timer                 enabled enabled
+pg-backup.timer                         enabled enabled
+sddm-backgrounds-cache.timer            enabled enabled
+snapd.snap-repair.timer                 enabled enabled
+sysstat-collect.timer                   enabled enabled
+sysstat-rotate.timer                    enabled enabled
+sysstat-summary.timer                   enabled enabled
+ua-timer.timer                          enabled enabled
+update-notifier-download.timer          enabled enabled
+update-notifier-motd.timer              enabled enabled
+
+== running
+containerd.service        loaded active running containerd container runtime
+cron.service              loaded active running Regular background program processing daemon
+dbus.service              loaded active running D-Bus System Message Bus
+getty@tty1.service        loaded active running Getty on tty1
+libvirtd.service          loaded active running libvirt legacy monolithic daemon
+netplan-wpa-wlan0.service loaded active running WPA supplicant for netplan wlan0
+NetworkManager.service    loaded active running Network Manager
+nginx.service             loaded active running A high performance web server and a reverse proxy server
+pedal-resume.service      loaded active running Pedal: save the running rig so the pedal resumes it at power-up
+polkit.service            loaded active running Authorization Manager
+rsync.service             loaded active running fast remote file copy program daemon
+rtkit-daemon.service      loaded active running RealtimeKit Scheduling Policy Service
+smartmontools.service     loaded active running Self Monitoring and Reporting Technology (SMART) Daemon
+ssh.service               loaded active running OpenBSD Secure Shell server
+systemd-journald.service  loaded active running Journal Service
+systemd-logind.service    loaded active running User Login Management
+systemd-machined.service  loaded active running Virtual Machine and Container Registration Service
+systemd-networkd.service  loaded active running Network Management
+systemd-resolved.service  loaded active running Network Name Resolution
+systemd-timesyncd.service loaded active running Network Time Synchronization
+systemd-udevd.service     loaded active running Rule-based Manager for Device Events and Files
+user@1000.service         loaded active running User Manager for UID 1000
+virtlockd.service         loaded active running libvirt locking daemon
+virtlogd.service          loaded active running libvirt logging daemon
+wpa_supplicant.service    loaded active running WPA supplicant
+
+== timers
+Sun 2026-09-27 19:17:11 BST 3min 50s -                                 - update-notifier-download.timer update-notifier-download.service
+Sun 2026-09-27 19:17:39 BST 4min 18s Sun 2026-09-27 19:12:39 BST 41s ago sddm-backgrounds-cache.timer   sddm-backgrounds-cache.service
+Sun 2026-09-27 19:27:03 BST    13min -                                 - systemd-tmpfiles-clean.timer   systemd-tmpfiles-clean.service
+Sun 2026-09-27 20:42:53 BST 1h 29min Sun 2026-09-27 02:23:11 BST       - certbot.timer                  certbot.service
+Mon 2026-09-28 00:00:00 BST 4h 46min Sun 2026-09-27 00:00:02 BST       - dpkg-db-backup.timer           dpkg-db-backup.service
+Mon 2026-09-28 00:00:00 BST 4h 46min Sun 2026-09-27 00:00:02 BST       - pg-backup.timer                pg-backup.service
+Mon 2026-09-28 00:44:01 BST 5h 30min Sun 2026-09-27 00:56:50 BST       - logrotate.timer                logrotate.service
+Mon 2026-09-28 01:02:34 BST 5h 49min Mon 2026-09-21 01:01:34 BST       - fstrim.timer                   fstrim.service
+Sun 2026-10-04 03:10:45 BST   6 days Sun 2026-09-27 03:10:50 BST       - e2scrub_all.timer              e2scrub_all.service
+Sun 2026-10-04 07:43:41 BST   6 days Thu 2026-09-24 06:07:42 BST       - update-notifier-motd.timer     update-notifier-motd.service
+-                                  - -                                 - apport-autoreport.timer        apport-autoreport.service
+-                                  - -                                 - apt-daily-upgrade.timer        -
+-                                  - -                                 - apt-daily.timer                -
+-                                  - -                                 - fwupd-refresh.timer            -
+-                                  - -                                 - man-db.timer                   -
+-                                  - -                                 - motd-news.timer                -
+-                                  - -                                 - snapd.snap-repair.timer        snapd.snap-repair.service
+-                                  - -                                 - ua-timer.timer                 ua-timer.service
+
+== sysctl
+vm.swappiness = 60
+vm.stat_interval = 10
+vm.dirty_ratio = 20
+vm.dirty_background_ratio = 10
+kernel.sched_rt_runtime_us = 950000
+
+== limits
+==> /etc/security/limits.d/10-coredump-debian.conf <==
+*               soft    core            0
+root            soft    core            0
+*               hard    core            infinity
+root            hard    core            infinity
+
+==> /etc/security/limits.d/25-pw-rlimits.conf <==
+# This file was installed by PipeWire project for its libpipewire-module-rt.so
+
+# It is up to the distribution/user to create the @pipewire group and to add the
+# relevant users to the group.
+#
+# PipeWire will fall back to the RTKit DBus service when the user is not able to
+# acquire RT priorities with rlimits.
+#
+# If the group is not automatically created, the match rule will never be true
+# and this file will have no effect.
+#
+@pipewire   - rtprio  95
+@pipewire   - nice    -19
+@pipewire   - memlock 4194304
+
+==> /etc/security/limits.d/90-pedal-rt.conf <==
+# Realtime limits for the audio group. Without them a normal user is refused SCHED_FIFO and
+# mlockall: tib's defaults are rtprio 0 and an 8 MB memlock. A systemd service does not get
+# these (no pam_limits); namchaind's unit must set LimitRTPRIO and LimitMEMLOCK itself.
+@audio   -  rtprio    95
+@audio   -  memlock   unlimited
+# A backstop against a runaway SCHED_FIFO loop, not a latency setting: SIGXCPU after 200 ms of
+# realtime CPU without blocking, ~150 periods at 64 frames. Deliberately NOT
+# sched_rt_runtime_us=-1, which removes the kernel's only escape from such a loop.
+@audio   -  rttime    200000
+
+== pedal-manifest
+mask apt-daily.service
+mask apt-daily.timer
+mask apt-daily-upgrade.service
+mask apt-daily-upgrade.timer
+mask unattended-upgrades.service
+mask man-db.timer
+mask fwupd.service
+mask fwupd-refresh.timer
+mask cloud-init-local.service
+mask cloud-final.service
+mask cloud-config.service
+mask cloud-init-main.service
+mask cloud-init-network.service
+mask snapd.service
+mask snapd.socket
+mask snapd.seeded.service
+mask snapd.apparmor.service
+mask ModemManager.service
+mask bluetooth.service
+mask NetworkManager-wait-online.service
+mask motd-news.service
+mask motd-news.timer
+mask ubuntu-advantage.service
+mask ua-reboot-cmds.service
+mask apport.service
+mask rsyslog.service
+mask sysstat.service
+mask udisks2.service
+mask multipathd.service
+mask open-iscsi.service
+saved /etc/security/limits.d/99-namchain-audio.conf
+file /etc/namchain/namchaind.json
+file /etc/pedal/default-rig.json
+file /etc/pedal/masked-units
+file /etc/pedal/tune.conf
+file /etc/security/limits.d/90-pedal-rt.conf
+file /etc/sysctl.d/90-pedal.conf
+file /etc/systemd/journald.conf.d/10-pedal.conf
+file /etc/systemd/system/machine.slice.d/10-pedal-cpuset.conf
+file /etc/systemd/system/namchaind.service.d/10-pedal.conf
+file /etc/systemd/system/pedal-resume.service
+file /etc/systemd/system/pedal-rt.slice
+file /etc/systemd/system/pedal-tune.service
+file /etc/systemd/system/system.slice.d/10-pedal-cpuset.conf
+file /etc/systemd/system/user.slice.d/10-pedal-cpuset.conf
+file /usr/local/bin/pedal-rt
+file /usr/local/sbin/pedal-device
+file /usr/local/sbin/pedal-resume
+file /usr/local/sbin/pedal-tune
+file /etc/pedal/applied
+file /etc/pedal/codec/wm8960-codec-master.dts
+file /etc/pedal/codec/wm8960.mixer
+file /etc/systemd/system/pedal-codec.service
+file /usr/local/sbin/pedal-codec
+
+== host-slim-manifest
+none (taken over by pedal-device)
