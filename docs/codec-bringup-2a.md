@@ -412,12 +412,12 @@ Filled in as we go.
 | VIN / 3V3 / AVDD with power | 5.0 / 3.28 / 3.27 V | 2026-09-27 |
 | I2C address seen | 0x1a only, on i2c-1 | 2026-09-27 |
 | BCLK / DLRC | 1.83 / 1.64 V DC (toggling); 48 kHz stereo capture confirmed by data rate | 2026-09-27 |
-| SSL out 4: V rms at a stated dBFS | | |
-| Codec input full scale (V rms at LIN1) | | |
-| ADC noise, input shorted (µV, A-weighted; dBFS) | | |
-| ADC THD at −1 dBFS | | |
-| ADC frequency response (−3 dB points) | | |
+| SSL out 4: V rms at a stated dBFS | 1.5 V at −1 dBFS (±0.05, meter 200 V range), so 0 dBFS ≈ 1.7 V rms; 200 Hz | 2026-09-27 |
+| Codec input full scale (V rms at LIN1) | ≈0.81 V rms (±3%) at PGA 0 dB, 1 kHz, from SSL headphone B (low impedance). The earlier 1.06 V was out 4 sagging under load | 2026-09-27 |
+| ADC noise, input shorted (µV, A-weighted; dBFS) | **17 µV A-weighted, −93.5 dBFS(A)**; 24 µV / −90.6 dBFS unweighted 20 Hz–20 kHz; no hum. With the SSL connected: −77 dBFS, a 90 Hz comb from the SSL/piv ground loop | 2026-09-27 |
+| ADC THD at −1 dBFS | THD −72 dB, THD+N −68 dB at −0.7 dBFS; THD −76 dB at −8.7 dBFS (1 kHz, headphone B). The first run's −53 dB was a bad joint plus out 4's source impedance | 2026-09-27 |
+| ADC frequency response (−3 dB points) | from headphone B at −15 dBFS: flat to 5 kHz (−0.1 dB), −1.0 dB at 15 kHz, −1.7 dB at 20 kHz; SSL loop −0.06 dB at 20 kHz. Out 4 (≈2 kΩ source) gave −3 dB at ≈1.5 kHz | 2026-09-27 |
 | DAC full scale (V rms at the fixture) | | |
 | DAC noise and THD | | |
 | Round-trip latency | | |
-| Hour-long soak | | |
+| Hour-long soak | **clean**: 21:01–22:01, namchaind on hw:wm8960 (2 in/2 out), q64 × 6 periods, GVT52 + ORNG 412 cab; 2 702 221 blocks (750/s, none missing), 0 xruns, 0 guard trips, 0 render errors, 0 device lost; CPU 35–39 °C. LIN1 shorted, SSL unplugged | 2026-09-27 |

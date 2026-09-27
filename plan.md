@@ -454,6 +454,11 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    - Then no power, a crashed Pico and a booting `tib` all fail to bypass.
    - The Pico energises it only once the service reports audio ready.
    - A long press gives a panic bypass.
+   - Check for a pop at **power-off**. The relay drops to bypass within a few ms, but the codec's
+     output collapses at the same moment, and which wins decides whether it's audible. If it is: the
+     Pico watches its supply and drops the relay a little before the codec loses power.
+   - The output coupling cap must settle before the relay first engages. 10 µF into ~1 MΩ is
+     τ ≈ 10 s, inside the boot; 100 µF (τ ≈ 100 s) would still be charging and pop.
 7. **Display and encoder**, low priority per `about.md`. Check it has no onboard LDO before
    powering it (per `CLAUDE.md`).
 8. **Rigs ready for switching** (D10; namchain's M3). Required before 3.5: without it a footswitch
