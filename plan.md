@@ -192,11 +192,10 @@ Small and first, because every later phase deploys from it.
    - `.claude/settings.local.json` with the other checkouts as extra directories.
    - `AGENTS.md` plus a one-line `CLAUDE.md` in namchain, rtpi and ljoss.
    - Check whether Claude Code reads `CLAUDE.md` from extra directories.
-8. **Scripts here:** `scripts/status`, `scripts/tib-lock`, `scripts/deploy-engine` and
+8. **Scripts here:** `scripts/status`, `scripts/host-lock`, `scripts/deploy-engine` and
    `components.lock`, as specified in the repo doc. Partly done: `scripts/deploy-engine` exists
    (piv only, native aarch64; tib's cross build went with tib), as does `scripts/sync-library`.
-   `scripts/status`, `scripts/tib-lock` and `components.lock` are still to write; the lock guards
-   the Core host now, not `tib`.
+   `scripts/status`, `scripts/host-lock` and `components.lock` are still to write.
 
 **Done when:**
 - `scripts/status` shows every repo clean, or deliberately on a named branch, on every host.
@@ -321,7 +320,7 @@ numbers need re-measuring on piv.
      core 3 allowed, beside the render thread. The pedal's drop-in now keeps it on cores 0–1 at
      normal priority.
 8. **Soak it the way it will be used.** An hour through `namchaind` with an A2-Full + full-length
-   cab IR rig, holding the `tib` lock, with ljoss editing over WiFi and one library rsync in the
+   cab IR rig, holding the Core host's lock, with ljoss editing over WiFi and one library rsync in the
    middle.
    - Gate: 0 driver xruns, 0 deadline overruns and 0 guard trips, with the worst block inside
      namchain's ARMv7 bar of 90% of the deadline.

@@ -17,7 +17,7 @@ set -euo pipefail
 STATE=/var/lib/pedal
 MANIFEST=$STATE/manifest
 SAVED=$STATE/preexisting
-LOCK=/run/lock/$(hostname).lock  # the same lock scripts/tib-lock will take (tib.lock on tib)
+LOCK=/run/lock/$(hostname).lock  # the same lock scripts/host-lock will take (tib.lock on tib)
 
 # namchain's tools/soak/host-slim.sh configured tib and piv before this tree existed. apply takes
 # its place: it removes host-slim's files (saving them) and takes over the masks we share. The
