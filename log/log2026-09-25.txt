@@ -1,0 +1,8 @@
+13:35:20 	Error: failed to stat config.ini, err=2
+13:35:22 	Error: failed to stat config.ini, err=2
+13:35:24 	Error: failed to stat config.ini, err=2
+13:35:26 	Error: failed to stat config.ini, err=2
+13:35:28 	Error: failed to stat config.ini, err=2
+13:35:30 	Error: failed to stat config.ini, err=2
+13:35:30 	Error:RKU_Write failed, err=-1
+13:35:30 	Error: RKU_ReadChipInfo failed, err=-3

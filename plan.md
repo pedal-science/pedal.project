@@ -337,7 +337,12 @@ numbers need re-measuring on piv.
 
 ## Phase 2 — The codec and the analogue stages
 
-**2a. Stock bring-up.** The board is in hand, so this can overlap Phase 1.
+**2a. Stock bring-up.** The board is in hand, so this can overlap Phase 1. The bench walkthrough
+for piv is [docs/codec-bringup-2a.md](docs/codec-bringup-2a.md). Found while writing it
+(2026-09-27): piv's stock `wm8960-soundcard` overlay makes the Pi the clock master at 12.288 MHz,
+so it needs its own overlay (`i2s_clk_consumer`, 24 MHz MCLK). The header's I2C is I2C1 on GPIO2/3,
+and the Pi has one I2S frame clock, so DACLRC is wired, ADCLRC is left off, and the codec runs its
+ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
 1. **Inspect the board.**
    - ~~Jumper states: AVDD-ISO, SPKVDD.~~ Done 2026-09-26 from photos: stock (see the handoff).
      Confirm SPKVDD → VIN with a meter.

@@ -29,7 +29,7 @@ them, only resistor values change.
 | Raspberry Pi Pico 2 WH (Pico 2 W with headers) | SC21692 | 2 | 6.30 | The control surface, and one for experiments. The W keeps Pico WiFi possible (D2) |
 | Raspberry Pi Debug Probe | SC20014 | 1 | 10.00 | SWD flashing and debugging, and a USB-UART for testing the `tib` link |
 | 830-point breadboard with 140 pre-cut jumper wires (Pro Signal) | PC02882 | 2 | 4.24 | Prototyping, plus a spare |
-| 40-way 2.54 mm pin header strip (Multicomp Pro) | CN21901 | 2 | 0.93 | The WM8960 board's two rows (12 and 16 pins), and the RP2350 board |
+| 40-way 2.54 mm pin header strip (Multicomp Pro) | CN21901 | 2 | 0.93 | The WM8960 board's two rows (16 pins each), and the RP2350 board |
 | H11L1M optocoupler (onsemi, DIP-6) | SC17297 | 2 | 0.35 | MIDI in, plus a spare |
 | 5-pin 180° DIN panel socket (Deltron 650-0500) | CN00073 | 1 | 3.52 | MIDI in |
 | 1N4148 diodes, pack of 50 | SC07296 | 1 | 0.69 | MIDI in, the relay's flyback diode, clamps on the expression input |
@@ -131,7 +131,7 @@ the middle of the op-amp's input range.
 | 6.35 mm TRS jack, switched, plastic body and nut (Neutrik NMJ6HF-S) | CN26782 | 5 | 0.83 | basket | IN, OUT L, OUT R, expression, and a spare. Being plastic all round, the case never becomes a ground path. Fits a panel under 3 mm thick. On the outputs, wire the ring to ground, so a TRS cable into a balanced input picks up less hum. Later, the switches on the expression and OUT R jacks can tell the Pico whether a cable is in |
 | Stripboard, FR4, 100 × 160 mm (Kemo E005) | PC01603 | 2 | 3.98 | basket | Buffer and power on one, MIDI and the relay driver on the other |
 | 6-pin DIL socket | SC15351 | 10 | 0.17 | basket | For the H11L1M. CPC's minimum is ten |
-| 20-way 2.54 mm socket strip | CN14539 | 5 | 0.43 | basket | Seats the Pico (two strips) and the codec board (cut to 12 and 16), so either can be swapped out. CPC's minimum is five |
+| 20-way 2.54 mm socket strip | CN14539 | 5 | 0.43 | basket | Seats the Pico (two strips) and the codec board (two cut to 16), so either can be swapped out. CPC's minimum is five |
 | Hook-up wire, 7/0.2 stranded, 100 m, orange | CB21508 | 1 | 7.85 | basket | A second colour beside the black you have |
 | Standoffs and panel hardware | — | — | — | later | Chosen with the enclosure layout (Phase 4) |
 
