@@ -549,6 +549,11 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      - MicroPython starts faster but is weak at USB host and timing. Rust (Embassy) is excellent
        but a second new thing at once.
    - Blink, then echo over UART through the Debug Probe.
+   - Built 2026-09-28: `firmware/` holds the firmware (Pico 2 W, SDK 2.3.1, Arm GNU Toolchain
+     15.3.rel1; `firmware/build.sh` and `firmware/flash.sh`), and `firmware/tools/echo-test.py`
+     runs the round trip through the Debug Probe's UART bridge (probe RX ← GP0/pin 1,
+     probe TX → GP1/pin 2, GND). Blink and the echo are flashed and running; the round trip
+     waits for the probe to be wired to the Pico.
 2. **Design the pedal service** (`docs/pedal-service.md`):
    - what it's responsible for
    - beside `namchaind` or in front of it for the app
@@ -562,6 +567,11 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    - Events: rig up/down/select, bank, CC value, bypass.
    - State back to the Pico: rig name, health, audio-ready.
    - Heartbeats both ways.
+   - Draft 1 written 2026-09-28: [docs/uart-protocol.md](docs/uart-protocol.md). The frame
+     (sync, type, length, CRC-16/CCITT-FALSE), the `HELLO`/`WELCOME` handshake and 1 s session
+     timer, the event kinds that footswitch and MIDI share, `ACK`/retry with dedupe, `STATE`
+     back, `PING`/`PONG`. It defers the relay-on-link-loss policy and the MIDI channel question
+     to step 2's failure-mode work.
 4. **The tib side.**
    - Enable a header UART in rtpi's device tree. The console is ttyS2 on pins 32/33; UART1 on
      pins 8/10 is the obvious one to use.

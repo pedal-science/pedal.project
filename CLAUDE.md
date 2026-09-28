@@ -86,5 +86,7 @@ with the draw.io CLI and read that, or ask.
   It doesn't take the lock: the soak runs it mid-measurement on purpose.
 - `scripts/components-lock [--host piv] [--check]`: write `components.lock` from what the host is
   running (deploy and apply do this), or compare them. Commit the file with the change.
+- `firmware/build.sh`, `firmware/flash.sh`, `firmware/tools/echo-test.py`: build, flash and
+  bench-test the Pico firmware (Pico 2 W; SDK 2.3.1 and Arm GNU Toolchain 15.3.rel1 in `~/pico/`).
 
 Cursor and the DeepSeek harness read [AGENTS.md](AGENTS.md); Claude Code reads this file.

@@ -42,6 +42,9 @@ what, which machines exist, and the rules against drift.
   deploy goes through it.
 - `scripts/components-lock [--host piv] [--check]`: write `components.lock` from what
   the host is running, or compare. Commit the file with the change.
+- `firmware/build.sh`, `firmware/flash.sh`, `firmware/tools/echo-test.py`: build, flash
+  and bench-test the Pico firmware (Pico 2 W; SDK 2.3.1 and Arm GNU Toolchain 15.3.rel1
+  under `~/pico/`).
 - Write evidence into a repo's `bench-results/`, never `/tmp`.
 
 ## Constraints — ask before violating any of these
@@ -77,9 +80,11 @@ what, which machines exist, and the rules against drift.
 ## Where things are
 
 - `plan.md` — the plan and its history; start at "Next session starts with".
+- `firmware/` — the Pico firmware; [docs/uart-protocol.md](docs/uart-protocol.md) is the
+  Pico ↔ Core host contract.
 - `docs/`: `working-across-repos.md` (repos, machines, rules), `hardware-handoff.md`
   (schematic findings and reasoning), `codec-bringup-2a.md` (the 2a bench walkthrough),
-  `rig-switch-strategies.md`, `bom.md`.
+  `rig-switch-strategies.md`, `uart-protocol.md`, `bom.md`.
 - `devices/<host>/rootfs/` — the Core host's configuration as code.
 - `docs/diagrams/` — draw.io, two layers. The small squares on the connections layer
   are routing junctions, **not components**. Don't break the formatting; if it's
