@@ -29,7 +29,10 @@
 #define LINK_TX_PIN 0
 #define LINK_RX_PIN 1
 
-#define FW_VERSION "0.1"
+// The build stamps the commit (CMakeLists.txt); a build outside git says so.
+#ifndef PEDAL_FW_VERSION
+#define PEDAL_FW_VERSION "unknown"
+#endif
 
 static void link_setup(void) {
     uart_init(LINK_UART, LINK_BAUD);
@@ -79,9 +82,9 @@ int main(void) {
 
     // No relay, MIDI, display or expression jack is wired yet, and no
     // footswitches: the capabilities are honest until step 5 fills them in.
-    proto_init(link_send, 0x0000, FW_VERSION);
-    printf("fw: protocol %u.%u on UART0 GP%d/GP%d at %u baud\n", PROTO_VERSION_MAJOR,
-           PROTO_VERSION_MINOR, LINK_TX_PIN, LINK_RX_PIN, LINK_BAUD);
+    proto_init(link_send, 0x0000, PEDAL_FW_VERSION);
+    printf("fw: %s, protocol %u.%u on UART0 GP%d/GP%d at %u baud\n", PEDAL_FW_VERSION,
+           PROTO_VERSION_MAJOR, PROTO_VERSION_MINOR, LINK_TX_PIN, LINK_RX_PIN, LINK_BAUD);
 
     absolute_time_t next_beat = make_timeout_time_ms(5000);
 

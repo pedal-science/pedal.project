@@ -182,55 +182,60 @@ void proto_init(proto_send_fn send, uint16_t board_caps, const char *version) {
     session_up = false;
 }
 
-void proto_on_byte(uint8_t byte) {
-    static uint8_t state = 0;
-    static uint8_t type, len, index, crc_lo;
-    static uint8_t payload[PROTO_MAX_PAYLOAD];
+// The bytes of the frame being assembled. After a bad length or a bad CRC the parser rescans
+// them from the byte after the first sync byte (docs/uart-protocol.md, Framing), so a corrupted
+// len cannot swallow the good frames behind it. A frame is never longer than this, so the
+// buffer never holds more than one frame's worth.
+static uint8_t rx[4 + PROTO_MAX_PAYLOAD + 2];
+static size_t rx_len;
 
-    switch (state) {
-        case 0:
-            state = (byte == PROTO_SYNC0) ? 1 : 0;
-            break;
-        case 1:
-            state = (byte == PROTO_SYNC1) ? 2 : (byte == PROTO_SYNC0 ? 1 : 0);
-            break;
-        case 2:
-            type = byte;
-            state = 3;
-            break;
-        case 3:
-            len = byte;
-            index = 0;
-            state = (len > PROTO_MAX_PAYLOAD) ? 0 : (len ? 4 : 5);
-            break;
-        case 4:
-            payload[index++] = byte;
-            if (index == len) {
-                state = 5;
-            }
-            break;
-        case 5:
-            crc_lo = byte;
-            state = 6;
-            break;
-        case 6: {
-            uint16_t want = (uint16_t)(crc_lo | ((uint16_t)byte << 8));
-            uint8_t check[PROTO_MAX_PAYLOAD + 2];
-            check[0] = type;
-            check[1] = len;
-            memcpy(&check[2], payload, len);
-            if (crc16(check, (size_t)len + 2) == want) {
-                handle_frame(type, payload, len);
-            } else {
-                frames_bad++;
-                printf("proto: bad crc (type 0x%02x len %u)\n", (unsigned)type, (unsigned)len);
-            }
-            state = 0;
-            break;
+static void rx_drop(size_t n) {
+    memmove(rx, rx + n, rx_len - n);
+    rx_len -= n;
+}
+
+void proto_on_byte(uint8_t byte) {
+    if (rx_len == sizeof(rx)) {
+        rx_drop(1);  // cannot happen: a frame is dealt with once it is complete
+    }
+    rx[rx_len++] = byte;
+
+    for (;;) {
+        // Skip to a sync pair, keeping a first sync byte that may be the start of one.
+        size_t start = 0;
+        while (start < rx_len && !(rx[start] == PROTO_SYNC0 &&
+                                   (start + 1 == rx_len || rx[start + 1] == PROTO_SYNC1))) {
+            start++;
         }
-        default:
-            state = 0;
-            break;
+        if (start > 0) {
+            rx_drop(start);
+        }
+        if (rx_len < 4) {
+            return;
+        }
+
+        uint8_t type = rx[2];
+        uint8_t len = rx[3];
+        if (len > PROTO_MAX_PAYLOAD) {
+            frames_bad++;
+            printf("proto: bad length %u (type 0x%02x)\n", (unsigned)len, (unsigned)type);
+            rx_drop(1);
+            continue;
+        }
+        size_t total = 4u + len + 2u;
+        if (rx_len < total) {
+            return;
+        }
+
+        uint16_t want = (uint16_t)(rx[4 + len] | ((uint16_t)rx[5 + len] << 8));
+        if (crc16(&rx[2], (size_t)len + 2) == want) {
+            handle_frame(type, &rx[4], len);
+            rx_drop(total);
+        } else {
+            frames_bad++;
+            printf("proto: bad crc (type 0x%02x len %u)\n", (unsigned)type, (unsigned)len);
+            rx_drop(1);
+        }
     }
 }
 
@@ -261,6 +266,13 @@ void proto_tick(uint32_t ms) {
     if ((int32_t)(now_ms - last_rx_ms) > (int32_t)LINK_DOWN_MS) {
         session_up = false;
         next_hello_ms = now_ms + HELLO_EVERY_MS;
+        // An event still pending goes with the session: sent after a reconnect, a press would act
+        // seconds after it was made (docs/uart-protocol.md, Reliability).
+        if (ev.pending) {
+            ev.pending = false;
+            events_lost++;
+            printf("proto: event %u dropped with the link\n", (unsigned)ev.seq);
+        }
         printf("proto: link down\n");
         return;
     }

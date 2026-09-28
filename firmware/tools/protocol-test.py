@@ -240,6 +240,14 @@ def main():
     checks.check("STATE printed on the console",
                  console.wait_line("name='Ampeg VT-40 + cab'", 2.0))
 
+    # 3b. Resync: a header whose length swallows the start of a good STATE must not cost the
+    # STATE. The parser has to rescan from the byte after the bad frame's first sync byte
+    # (docs/uart-protocol.md, Framing); one that carries on from the next byte loses it.
+    good = make_frame(STATE, bytes([0x04 | 0x01, 1, 0, 4]) + b"resync ok")
+    os.write(probe.fd, SYNC + bytes([STATE, 8]) + good)
+    checks.check("a good frame behind a bad length survives (resync)",
+                 console.wait_line("name='resync ok'", 2.0))
+
     # 4. EVENT, with the first ACK deliberately dropped.
     console.write(b"e")
     frame = probe.next(timeout=2.0, types={EVENT})

@@ -9,6 +9,13 @@ if(NOT PICO_SDK_PATH)
     set(PICO_SDK_PATH "$ENV{HOME}/pico/pico-sdk")
 endif()
 
+# The control surface board, committed here: Pico 2 W (plan Shopping). It has to be set before
+# the SDK is imported, which is where the SDK reads it and picks the platform from it; set any
+# later, a plain configure would build for the default board, an RP2040 Pico.
+if(NOT PICO_BOARD)
+    set(PICO_BOARD pico2_w)
+endif()
+
 include(${PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 
 project(pedal-firmware C CXX ASM)
@@ -17,15 +24,24 @@ set(CMAKE_CXX_STANDARD 17)
 
 pico_sdk_init()
 
-# The control surface board, committed here: Pico 2 W (plan Shopping).
-if(NOT PICO_BOARD)
-    set(PICO_BOARD pico2_w)
-endif()
-
 add_executable(pedal-firmware
     src/main.c
     src/protocol.c
 )
+
+# The firmware carries the commit it was built from, "-dirty" if the tree was
+# (docs/working-across-repos.md, rule 5); HELLO sends it as fw_version. It is read at configure
+# time, and build.sh configures on every build, so it follows the tree.
+execute_process(
+    COMMAND git describe --always --dirty --abbrev=7
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    OUTPUT_VARIABLE PEDAL_FW_VERSION
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    ERROR_QUIET)
+if(NOT PEDAL_FW_VERSION)
+    set(PEDAL_FW_VERSION "unknown")
+endif()
+target_compile_definitions(pedal-firmware PRIVATE PEDAL_FW_VERSION="${PEDAL_FW_VERSION}")
 
 # Build step 1's byte echo instead of the protocol, for tools/echo-test.py.
 option(FW_ECHO "Build the UART echo (step 1) instead of the protocol firmware" OFF)
