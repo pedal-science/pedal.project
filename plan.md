@@ -28,7 +28,8 @@ piv is a Raspberry Pi 500 (Cortex-A76, 4 cores, **aarch64**). Checked 2026-09-25
 - Cores **2–3 isolated** (`isolcpus=managed_irq,domain,2-3 nohz_full=2-3 rcu_nocbs=2-3`,
   `irqaffinity=0-1`). `tib` isolated only core 3.
 - SSL 2+ attached 2026-09-26 as card id `II`, through a hub on the xHCI controller whose interrupt
-  is `xhci-hcd:usb4`. Root storage is on the other one (`usb2`). rtpi-audio-tune now finds the
+  is `xhci-hcd:usb4`. Since 2026-09-28 it's direct, on a new cable, in the USB 2.0 port
+  (`xhci-hcd:usb2`, with the SSD): the old cable corrupted packets (Phase 1 step 5, "Pops"). Root storage is on the other one (`usb2`). rtpi-audio-tune now finds the
   controller from the interface's USB id (rtpi `04b8a98`); before that fix it was pinning the
   disk's interrupt to core 2.
 
@@ -292,6 +293,24 @@ numbers need re-measuring on piv.
    - Fixed on the way: ljoss re-rendered forever once connected, at 100% of a core, and cancelled
      every send (ljoss `b8cf180`).
    - For step 8, the rig needs an amp-only model plus a full-length cab IR, as specified.
+   - **Pops, 2026-09-28: a bad USB cable.** Tiny pops through piv, none with the SSL on the Mac.
+     namchain `980ef47` added `engine.record` (every capture and playback period to WAV) and the
+     output queue's drops and insertions to `engine.status`. With an empty rig, out 1 equalled
+     in 1 on every frame, but the SSL's loopback (capture in 3 = out 1 as received) matched out 1
+     only at a delay that stepped, mostly by −6 frames, with no xrun anywhere.
+     - It was the same with `aplay`/`arecord` and `namchaind` stopped, so not the engine. Slips:
+       one per 72 s through the powered hub, one per 3 s direct, one per 1.4 s on the USB 2.0
+       port. `lowlatency=0` made no difference, and period 128 only cut them by two thirds.
+     - usbmon (`tcpdump -i usbmonN -s 0`) settled it. The kernel copied both directions exactly,
+       but IN packets arrived empty with −71 (`EPROTO`, corrupted on the wire): each lost 6 frames
+       of all 8 inputs, the guitar included, which namchaind then played. ALSA, namchaind and
+       `dmesg` report none of it. Power was fine (5 A supply, not throttled, EXT5V 5.10 V).
+     - A new cable, same port: 0 `EPROTO` and 0 slips in 180 s on the wire, and 0 in 790 s
+       through `namchaind`. No pops heard. The −18 (`EXDEV`) packets are only the URBs cancelled
+       at stream stop.
+     - The check, for next time: `wire-test.sh` and `wire.py` in `scripts/usb-audio/`. The SSL is
+       now on piv's USB 2.0 port, which shares its xHCI controller with the root SSD (both
+       interrupts are on core 2 at FIFO 85).
 6. **Resume at power-up (pedal service v0).**
    - A small process polls `engine.status`. When the generation changes, it saves `rig.get`'s
      document atomically into the rig library.
