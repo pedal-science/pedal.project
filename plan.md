@@ -28,8 +28,8 @@ piv is a Raspberry Pi 500 (Cortex-A76, 4 cores, **aarch64**). Checked 2026-09-25
 - Cores **2–3 isolated** (`isolcpus=managed_irq,domain,2-3 nohz_full=2-3 rcu_nocbs=2-3`,
   `irqaffinity=0-1`). `tib` isolated only core 3.
 - SSL 2+ attached 2026-09-26 as card id `II`, through a hub on the xHCI controller whose interrupt
-  is `xhci-hcd:usb4`. Since 2026-09-28 it's direct, on a new cable, in the USB 2.0 port
-  (`xhci-hcd:usb2`, with the SSD): the old cable corrupted packets (Phase 1 step 5, "Pops"). Root storage is on the other one (`usb2`). rtpi-audio-tune now finds the
+  is `xhci-hcd:usb4`. Since 2026-09-28 it's direct on that controller's USB 3.0 port, on a new
+  cable: the old cable corrupted packets (Phase 1 step 5, "Pops"). Root storage is on the other one (`usb2`). rtpi-audio-tune now finds the
   controller from the interface's USB id (rtpi `04b8a98`); before that fix it was pinning the
   disk's interrupt to core 2.
 
@@ -308,9 +308,9 @@ numbers need re-measuring on piv.
      - A new cable, same port: 0 `EPROTO` and 0 slips in 180 s on the wire, and 0 in 790 s
        through `namchaind`. No pops heard. The −18 (`EXDEV`) packets are only the URBs cancelled
        at stream stop.
-     - The check, for next time: `wire-test.sh` and `wire.py` in `scripts/usb-audio/`. The SSL is
-       now on piv's USB 2.0 port, which shares its xHCI controller with the root SSD (both
-       interrupts are on core 2 at FIFO 85).
+     - The check, for next time: `wire-test.sh` and `wire.py` in `scripts/usb-audio/`.
+     - The SSL then went back to its first port (`xhci-hcd:usb4`, the controller without the
+       root SSD) on the new cable: 0 slips and 0 `EPROTO` in 180 s on the wire.
 6. **Resume at power-up (pedal service v0).**
    - A small process polls `engine.status`. When the generation changes, it saves `rig.get`'s
      document atomically into the rig library.
