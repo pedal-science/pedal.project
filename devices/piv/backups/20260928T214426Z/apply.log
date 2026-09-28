@@ -1,0 +1,6 @@
+  installed /etc/systemd/system/pedal-wifi.service
+  installed /usr/local/sbin/pedal-device
+  installed /usr/local/sbin/pedal-wifi
+Created symlink '/etc/systemd/system/sys-subsystem-net-devices-wlan0.device.wants/pedal-wifi.service' → '/etc/systemd/system/pedal-wifi.service'.
+Unit /etc/systemd/system/pedal-wifi.service is added as a dependency to a non-existent unit sys-subsystem-net-devices-wlan0.device.
+pedal-device: done. Manifest: /var/lib/pedal/manifest
