@@ -1,6 +1,6 @@
 # tib — appliance configuration
 
-## Status: retired, but working again (2026-09-28)
+## Status: retired; worked again briefly on 2026-09-28, then failed again
 
 `tib` was retired on 2026-09-26 after it stopped working on 2026-09-25. It showed nothing on HDMI,
 and in maskrom mode it accepted Rockchip's loader over USB, then stopped responding before the
@@ -23,7 +23,19 @@ RAM, but nothing so far has made it fail again. It stays retired: the Core host 
 
 **Soak under load**, started 12:36 BST, 4 h: `memtester 1200M` plus `stress-ng` on all four cores
 (core 3's worker in `pedal-rt.slice`), as transient units `soak-mem`, `soak-cpu` and `soak-cpu3`
-logging to `/var/tmp/soak/`. Result: pending.
+logging to `/var/tmp/soak/`. Watcher log: [logs/20260928-soak-watch.log](logs/20260928-soak-watch.log).
+
+**Result: thermal shutdown after 23 min, then dead again.** memtester found no errors. The CPU
+climbed from 68 °C to 88 °C (the clock throttling between 1008 and 1704 MHz), and at 12:59:43
+the kernel hit the 90 °C critical trip: `HARDWARE PROTECTION shutdown (Temperature too high)`.
+It came back at 13:00 (`Reset cause: WDOG`) and answered ssh for five minutes, idle, at 1800 MHz:
+the 1416 MHz cap wasn't in force after that boot. At 13:06 it went through a power-on reset,
+reached `Starting kernel ...`, and never got to a login or answered ssh again. Later power
+cycles didn't bring it back, and work on it has stopped, possibly for good.
+
+What this does and doesn't show: with no heatsink or fan worth the name, this board can't hold
+four cores under load, so thermal shutdown is expected, not a fault. The failure after it fits
+the earlier pattern (heat or power, not RAM contents), but nothing here names the part.
 
 **Serial console with the Raspberry Pi Debug Probe.** Its UART port on the header: probe RX to
 pin 32 (tib's TX), GND to pin 34, and probe TX left off, because reading is all that's needed
