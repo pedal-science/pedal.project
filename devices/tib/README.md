@@ -1,5 +1,40 @@
 # tib — appliance configuration
 
+## Status: retired, but working again (2026-09-28)
+
+`tib` was retired on 2026-09-26 after it stopped working on 2026-09-25. It showed nothing on HDMI,
+and in maskrom mode it accepted Rockchip's loader over USB, then stopped responding before the
+loader got as far as reading the card: the RAM setup stage. RAM or power were the suspects.
+
+On 2026-09-28 it booted again while its 5 V was being measured: about 4 V at switch-on, rising
+quickly to 5 V. Around 20 cold boots followed, 10 s apart, and it came up every time. The three
+captured on the serial console ([logs/20260928-console.log](logs/20260928-console.log)) are
+identical to within milliseconds:
+
+| Stage | After the first console line |
+|---|---|
+| U-Boot TPL (RAM set up), `Reset cause: POR`, `DRAM: 2 GiB`, `PMIC: RK808` | 0 s |
+| `rtpi: booting slot: known-good` | 3.1 s |
+| `Starting kernel ...` | 4.7 s |
+| `tinkerboard login:` | 31.7 s |
+
+**The cause is unknown.** It recovered without a repair, which points at power rather than the
+RAM, but nothing so far has made it fail again. It stays retired: the Core host is piv, then vip.
+
+**Soak under load**, started 12:36 BST, 4 h: `memtester 1200M` plus `stress-ng` on all four cores
+(core 3's worker in `pedal-rt.slice`), as transient units `soak-mem`, `soak-cpu` and `soak-cpu3`
+logging to `/var/tmp/soak/`. Result: pending.
+
+**Serial console with the Raspberry Pi Debug Probe.** Its UART port on the header: probe RX to
+pin 32 (tib's TX), GND to pin 34, and probe TX left off, because reading is all that's needed
+and an unpowered `tib` shouldn't be fed through its RX pin. 115200 8N1, `/dev/cu.usbmodem*` on
+the Mac. **The probe needs firmware 2.3.1 or later**: with 1.01, as shipped, its UART stopped
+passing data each time `tib` lost power, until the probe was unplugged.
+
+**Seen in passing:** booting the known-good slot, U-Boot can't find `/boot/dtb-good/overlay/`,
+so the `i2c1 i2c4 spi2 spidev2 uart1 uart2` overlays in `armbianEnv.txt` aren't applied. That's
+rtpi's slot layout, and doesn't matter while `tib` is retired.
+
 Everything on `tib` above the kernel that makes it a pedal rather than a general-purpose
 Armbian box (rule 7 in [working-across-repos](../../docs/working-across-repos.md)). The kernel,
 its command line and the boot slots are `rtpi`'s; the engine and its protocol are `namchain`'s.

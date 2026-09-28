@@ -1,0 +1,323 @@
+11:26:30.530 probe-wiring-test 11:26:30
+11:57:59.467 [capture] start /dev/cu.usbmodem102
+11:59:17.540 [capture] read error: [Errno 6] Device not configured; reopening
+11:59:35.144 probe-wiring-test-4 11:59:35
+11:59:57.064 '\x00' [partial]
+12:04:06.479 [capture] start /dev/cu.usbmodem102
+12:07:12.185 [capture] read error: [Errno 6] Device not configured; reopening
+12:08:37.118 probe-wiring-test-7 12:08:37
+12:08:59.141 '\x00' [partial]
+12:10:42.861 [capture] read error: [Errno 6] Device not configured; reopening
+12:11:29.648 probe-wiring-test-9 12:11:29
+12:11:42.642 '\x00' [partial]
+12:11:54.499 
+12:11:54.507 U-Boot TPL 2026.04_armbian-2026.04-S88dc-Pb430-He07f-V7329-B5da4-R448a (Jul 24 2026 - 14:14:58)
+12:11:54.514 Trying to boot from BOOTROM
+12:11:54.516 Returning to boot ROM...
+12:11:54.558 
+12:11:54.566 U-Boot SPL 2026.04_armbian-2026.04-S88dc-Pb430-He07f-V7329-B5da4-R448a (Jul 24 2026 - 14:14:58 +0000)
+12:11:54.570 Trying to boot from MMC2
+12:11:54.655 ## Checking hash(es) for config conf-1 ... OK
+12:11:54.776 ## Checking hash(es) for Image firmware-1 ... crc32+ OK
+12:11:54.797 ## Checking hash(es) for Image fdt-1 ... crc32+ OK
+12:11:55.002 
+12:11:55.003 
+12:11:55.011 U-Boot 2026.04_armbian-2026.04-S88dc-Pb430-He07f-V7329-B5da4-R448a (Jul 24 2026 - 14:14:58 +0000)
+12:11:55.011 
+12:11:55.067 SoC: Rockchip rk3288
+12:11:55.068 Reset cause: POR
+12:11:55.073 Model: Rockchip RK3288 Asus Tinker Board S
+12:11:55.100 DRAM:  2 GiB
+12:11:55.143 PMIC:  RK808 
+12:11:55.222 Core:  224 devices, 27 uclasses, devicetree: separate
+12:11:55.240 MMC:   mmc@ff0c0000: 1, mmc@ff0d0000: 2, mmc@ff0f0000: 0
+12:11:55.329 Loading Environment from MMC... Reading from MMC(1)... OK
+12:11:55.931 In:    serial,usbkbd
+12:11:55.934 Out:   serial,vidconsole
+12:11:55.935 Err:   serial,vidconsole
+12:11:56.059 Net:   eth0: ethernet@ff290000
+12:11:56.060 '\x1b[?25h'
+12:11:57.067 '\x1b[2K\rHit any key to stop autoboot: 1\x1b[2K\rHit any key to stop autoboot: 0'
+12:11:57.195 '\x1b7\x1b[r\x1b[999;999H\x1b[6n\x1b8Card did not respond to voltage select! : -110'
+12:11:57.216 Card did not respond to voltage select! : -110
+12:11:57.222 Cannot persist EFI variables without system partition
+12:11:57.525 ** Booting bootflow '<NULL>' with efi_mgr
+12:11:57.531 Loading Boot0000 'mmc 1' failed
+12:11:57.534 EFI boot manager: Cannot load any image
+12:11:57.536 Boot failed (err=-14)
+12:11:57.557 ** Booting bootflow 'mmc@ff0c0000.bootdev.part_1' with script
+12:11:57.559 Boot script loaded from mmc 1
+12:11:57.571 237 bytes read in 2 ms (115.2 KiB/s)
+12:11:57.577 rtpi: booting slot: known-good  (/boot/zImage-good)
+12:11:58.133 12598524 bytes read in 548 ms (21.9 MiB/s)
+12:11:58.618 10992528 bytes read in 479 ms (21.9 MiB/s)
+12:11:58.634 41832 bytes read in 9 ms (4.4 MiB/s)
+12:11:58.635 Working FDT set to 1e00000
+12:11:58.647 Failed to load '/boot/dtb-good/overlay/rockchip-i2c1.dtbo'
+12:11:58.659 Failed to load '/boot/dtb-good/overlay/rockchip-i2c4.dtbo'
+12:11:58.670 Failed to load '/boot/dtb-good/overlay/rockchip-spi2.dtbo'
+12:11:58.682 Failed to load '/boot/dtb-good/overlay/rockchip-spidev2.dtbo'
+12:11:58.693 Failed to load '/boot/dtb-good/overlay/rockchip-uart1.dtbo'
+12:11:58.705 Failed to load '/boot/dtb-good/overlay/rockchip-uart2.dtbo'
+12:11:58.716 Failed to load '/boot/dtb-good/overlay/rockchip-fixup.scr'
+12:11:58.726 Kernel image @ 0x2000000 [ 0x000000 - 0xa7bb90 ]
+12:11:58.730 ## Loading init Ramdisk from Legacy Image at 21000000 ...
+12:11:58.732    Image Name:   uInitrd
+12:11:58.738    Image Type:   ARM Linux RAMDisk Image (gzip compressed)
+12:11:58.742    Data Size:    12598460 Bytes = 12 MiB
+12:11:58.743    Load Address: 00000000
+12:11:58.746    Entry Point:  00000000
+12:11:58.957    Verifying Checksum ... OK
+12:11:58.962 ## Flattened Device Tree blob at 01e00000
+12:11:58.966    Booting using the fdt blob at 0x1e00000
+12:11:58.967 Working FDT set to 1e00000
+12:11:58.981    Loading Ramdisk to 0f3fc000, end 0ffffcbc ... OK
+12:11:58.988    Loading Device Tree to 0f389000, end 0f3fbfff ... OK
+12:11:58.989 Working FDT set to f389000
+12:11:58.992 [image_setup_libfdt] called
+12:11:58.998 [image_setup_libfdt] calling fdt_fixup_ethernet
+12:11:59.001 [fdt_fixup_ethernet] called
+12:11:59.008 [fdt_fixup_ethernet] alias #0: name='ethernet0', path='/ethernet@ff290000'
+12:11:59.016 [fdt_fixup_ethernet] env var for alias 'ethernet0' is 'ethaddr', value='58:11:22:e3:15:5c'
+12:11:59.024 [fdt_fixup_ethernet] Patching node '/ethernet@ff290000' (offset 10528) with MAC 58:11:22:e3:15:5c
+12:11:59.031 [fdt_fixup_ethernet] alias #1: name='gpio0', path='/pinctrl/gpio@ff750000'
+12:11:59.037 [fdt_fixup_ethernet] alias #2: name='gpio1', path='/pinctrl/gpio@ff780000'
+12:11:59.044 [fdt_fixup_ethernet] alias #3: name='gpio2', path='/pinctrl/gpio@ff790000'
+12:11:59.051 [fdt_fixup_ethernet] alias #4: name='gpio3', path='/pinctrl/gpio@ff7a0000'
+12:11:59.058 [fdt_fixup_ethernet] alias #5: name='gpio4', path='/pinctrl/gpio@ff7b0000'
+12:11:59.064 [fdt_fixup_ethernet] alias #6: name='gpio5', path='/pinctrl/gpio@ff7c0000'
+12:11:59.071 [fdt_fixup_ethernet] alias #7: name='gpio6', path='/pinctrl/gpio@ff7d0000'
+12:11:59.077 [fdt_fixup_ethernet] alias #8: name='gpio7', path='/pinctrl/gpio@ff7e0000'
+12:11:59.083 [fdt_fixup_ethernet] alias #9: name='gpio8', path='/pinctrl/gpio@ff7f0000'
+12:11:59.090 [fdt_fixup_ethernet] alias #10: name='i2c0', path='/i2c@ff650000'
+12:11:59.096 [fdt_fixup_ethernet] alias #11: name='i2c1', path='/i2c@ff140000'
+12:11:59.101 [fdt_fixup_ethernet] alias #12: name='i2c2', path='/i2c@ff660000'
+12:11:59.108 [fdt_fixup_ethernet] alias #13: name='i2c3', path='/i2c@ff150000'
+12:11:59.113 [fdt_fixup_ethernet] alias #14: name='i2c4', path='/i2c@ff160000'
+12:11:59.118 [fdt_fixup_ethernet] alias #15: name='i2c5', path='/i2c@ff170000'
+12:11:59.125 [fdt_fixup_ethernet] alias #16: name='serial0', path='/serial@ff180000'
+12:11:59.131 [fdt_fixup_ethernet] alias #17: name='serial1', path='/serial@ff190000'
+12:11:59.137 [fdt_fixup_ethernet] alias #18: name='serial2', path='/serial@ff690000'
+12:11:59.144 [fdt_fixup_ethernet] alias #19: name='serial3', path='/serial@ff1b0000'
+12:11:59.151 [fdt_fixup_ethernet] alias #20: name='serial4', path='/serial@ff1c0000'
+12:11:59.156 [fdt_fixup_ethernet] alias #21: name='spi0', path='/spi@ff110000'
+12:11:59.162 [fdt_fixup_ethernet] alias #22: name='spi1', path='/spi@ff120000'
+12:11:59.167 [fdt_fixup_ethernet] alias #23: name='spi2', path='/spi@ff130000'
+12:11:59.175 [fdt_fixup_ethernet] SUMMARY: aliases found=24, attempted=1, skipped=0, patched=1
+12:11:59.179 [image_setup_libfdt] calling ft_system_setup
+12:11:59.181 
+12:11:59.182 Starting kernel ...
+12:11:59.183 
+12:12:25.152 '\x1b[!p\x1b]104\x1b\\\x1b[0m\x1b[?7h\x1b[1G\x1b[0J\x1b[6n\x1b[32766;32766H\x1b[6n\x1b[!p\x1b]104\x1b\\\x1b[0m\x1b[?7h\x1b[1G\x1b[0J\x1b[6n\x1b[32766;32766H\x1b[6n\x1b]3008;start=77bb52056c984946aa9a6940bd040947;user=root;hostname=tinkerboard;machineid=9c21b50eadc94b7ead6894ab9387fee9;bootid=3'
+12:12:25.155 Armbian 26.8.3 resolute ttyS2 
+12:12:25.155 
+12:12:26.158 'tinkerboard login: ' [partial]
+12:12:46.361 '\x00' [partial]
+12:12:55.139 
+12:12:55.147 U-Boot TPL 2026.04_armbian-2026.04-S88dc-Pb430-He07f-V7329-B5da4-R448a (Jul 24 2026 - 14:14:58)
+12:12:55.154 Trying to boot from BOOTROM
+12:12:55.157 Returning to boot ROM...
+12:12:55.197 
+12:12:55.207 U-Boot SPL 2026.04_armbian-2026.04-S88dc-Pb430-He07f-V7329-B5da4-R448a (Jul 24 2026 - 14:14:58 +0000)
+12:12:55.211 Trying to boot from MMC2
+12:12:55.294 ## Checking hash(es) for config conf-1 ... OK
+12:12:55.417 ## Checking hash(es) for Image firmware-1 ... crc32+ OK
+12:12:55.439 ## Checking hash(es) for Image fdt-1 ... crc32+ OK
+12:12:55.646 
+12:12:55.647 
+12:12:55.655 U-Boot 2026.04_armbian-2026.04-S88dc-Pb430-He07f-V7329-B5da4-R448a (Jul 24 2026 - 14:14:58 +0000)
+12:12:55.655 
+12:12:55.713 SoC: Rockchip rk3288
+12:12:55.714 Reset cause: POR
+12:12:55.718 Model: Rockchip RK3288 Asus Tinker Board S
+12:12:55.745 DRAM:  2 GiB
+12:12:55.788 PMIC:  RK808 
+12:12:55.868 Core:  224 devices, 27 uclasses, devicetree: separate
+12:12:55.886 MMC:   mmc@ff0c0000: 1, mmc@ff0d0000: 2, mmc@ff0f0000: 0
+12:12:55.975 Loading Environment from MMC... Reading from MMC(1)... OK
+12:12:56.577 In:    serial,usbkbd
+12:12:56.580 Out:   serial,vidconsole
+12:12:56.581 Err:   serial,vidconsole
+12:12:56.705 Net:   eth0: ethernet@ff290000
+12:12:56.707 '\x1b[?25h'
+12:12:57.712 '\x1b[2K\rHit any key to stop autoboot: 1\x1b[2K\rHit any key to stop autoboot: 0'
+12:12:57.840 '\x1b7\x1b[r\x1b[999;999H\x1b[6n\x1b8Card did not respond to voltage select! : -110'
+12:12:57.863 Card did not respond to voltage select! : -110
+12:12:57.867 Cannot persist EFI variables without system partition
+12:12:58.171 ** Booting bootflow '<NULL>' with efi_mgr
+12:12:58.177 Loading Boot0000 'mmc 1' failed
+12:12:58.179 EFI boot manager: Cannot load any image
+12:12:58.182 Boot failed (err=-14)
+12:12:58.202 ** Booting bootflow 'mmc@ff0c0000.bootdev.part_1' with script
+12:12:58.205 Boot script loaded from mmc 1
+12:12:58.217 237 bytes read in 2 ms (115.2 KiB/s)
+12:12:58.222 rtpi: booting slot: known-good  (/boot/zImage-good)
+12:12:58.779 12598524 bytes read in 548 ms (21.9 MiB/s)
+12:12:59.263 10992528 bytes read in 479 ms (21.9 MiB/s)
+12:12:59.279 41832 bytes read in 9 ms (4.4 MiB/s)
+12:12:59.281 Working FDT set to 1e00000
+12:12:59.293 Failed to load '/boot/dtb-good/overlay/rockchip-i2c1.dtbo'
+12:12:59.304 Failed to load '/boot/dtb-good/overlay/rockchip-i2c4.dtbo'
+12:12:59.316 Failed to load '/boot/dtb-good/overlay/rockchip-spi2.dtbo'
+12:12:59.327 Failed to load '/boot/dtb-good/overlay/rockchip-spidev2.dtbo'
+12:12:59.339 Failed to load '/boot/dtb-good/overlay/rockchip-uart1.dtbo'
+12:12:59.350 Failed to load '/boot/dtb-good/overlay/rockchip-uart2.dtbo'
+12:12:59.362 Failed to load '/boot/dtb-good/overlay/rockchip-fixup.scr'
+12:12:59.370 Kernel image @ 0x2000000 [ 0x000000 - 0xa7bb90 ]
+12:12:59.375 ## Loading init Ramdisk from Legacy Image at 21000000 ...
+12:12:59.378    Image Name:   uInitrd
+12:12:59.384    Image Type:   ARM Linux RAMDisk Image (gzip compressed)
+12:12:59.386    Data Size:    12598460 Bytes = 12 MiB
+12:12:59.389    Load Address: 00000000
+12:12:59.392    Entry Point:  00000000
+12:12:59.602    Verifying Checksum ... OK
+12:12:59.606 ## Flattened Device Tree blob at 01e00000
+12:12:59.610    Booting using the fdt blob at 0x1e00000
+12:12:59.613 Working FDT set to 1e00000
+12:12:59.627    Loading Ramdisk to 0f3fc000, end 0ffffcbc ... OK
+12:12:59.632    Loading Device Tree to 0f389000, end 0f3fbfff ... OK
+12:12:59.635 Working FDT set to f389000
+12:12:59.637 [image_setup_libfdt] called
+12:12:59.644 [image_setup_libfdt] calling fdt_fixup_ethernet
+12:12:59.645 [fdt_fixup_ethernet] called
+12:12:59.652 [fdt_fixup_ethernet] alias #0: name='ethernet0', path='/ethernet@ff290000'
+12:12:59.661 [fdt_fixup_ethernet] env var for alias 'ethernet0' is 'ethaddr', value='58:11:22:e3:15:5c'
+12:12:59.670 [fdt_fixup_ethernet] Patching node '/ethernet@ff290000' (offset 10528) with MAC 58:11:22:e3:15:5c
+12:12:59.677 [fdt_fixup_ethernet] alias #1: name='gpio0', path='/pinctrl/gpio@ff750000'
+12:12:59.683 [fdt_fixup_ethernet] alias #2: name='gpio1', path='/pinctrl/gpio@ff780000'
+12:12:59.690 [fdt_fixup_ethernet] alias #3: name='gpio2', path='/pinctrl/gpio@ff790000'
+12:12:59.697 [fdt_fixup_ethernet] alias #4: name='gpio3', path='/pinctrl/gpio@ff7a0000'
+12:12:59.702 [fdt_fixup_ethernet] alias #5: name='gpio4', path='/pinctrl/gpio@ff7b0000'
+12:12:59.709 [fdt_fixup_ethernet] alias #6: name='gpio5', path='/pinctrl/gpio@ff7c0000'
+12:12:59.716 [fdt_fixup_ethernet] alias #7: name='gpio6', path='/pinctrl/gpio@ff7d0000'
+12:12:59.722 [fdt_fixup_ethernet] alias #8: name='gpio7', path='/pinctrl/gpio@ff7e0000'
+12:12:59.729 [fdt_fixup_ethernet] alias #9: name='gpio8', path='/pinctrl/gpio@ff7f0000'
+12:12:59.734 [fdt_fixup_ethernet] alias #10: name='i2c0', path='/i2c@ff650000'
+12:12:59.741 [fdt_fixup_ethernet] alias #11: name='i2c1', path='/i2c@ff140000'
+12:12:59.747 [fdt_fixup_ethernet] alias #12: name='i2c2', path='/i2c@ff660000'
+12:12:59.752 [fdt_fixup_ethernet] alias #13: name='i2c3', path='/i2c@ff150000'
+12:12:59.757 [fdt_fixup_ethernet] alias #14: name='i2c4', path='/i2c@ff160000'
+12:12:59.764 [fdt_fixup_ethernet] alias #15: name='i2c5', path='/i2c@ff170000'
+12:12:59.770 [fdt_fixup_ethernet] alias #16: name='serial0', path='/serial@ff180000'
+12:12:59.776 [fdt_fixup_ethernet] alias #17: name='serial1', path='/serial@ff190000'
+12:12:59.783 [fdt_fixup_ethernet] alias #18: name='serial2', path='/serial@ff690000'
+12:12:59.789 [fdt_fixup_ethernet] alias #19: name='serial3', path='/serial@ff1b0000'
+12:12:59.795 [fdt_fixup_ethernet] alias #20: name='serial4', path='/serial@ff1c0000'
+12:12:59.801 [fdt_fixup_ethernet] alias #21: name='spi0', path='/spi@ff110000'
+12:12:59.807 [fdt_fixup_ethernet] alias #22: name='spi1', path='/spi@ff120000'
+12:12:59.813 [fdt_fixup_ethernet] alias #23: name='spi2', path='/spi@ff130000'
+12:12:59.819 [fdt_fixup_ethernet] SUMMARY: aliases found=24, attempted=1, skipped=0, patched=1
+12:12:59.824 [image_setup_libfdt] calling ft_system_setup
+12:12:59.826 
+12:12:59.828 Starting kernel ...
+12:12:59.828 
+12:13:26.014 '\x1b[!p\x1b]104\x1b\\\x1b[0m\x1b[?7h\x1b[1G\x1b[0J\x1b[6n\x1b[32766;32766H\x1b[6n\x1b[!p\x1b]104\x1b\\\x1b[0m\x1b[?7h\x1b[1G\x1b[0J\x1b[6n\x1b[32766;32766H\x1b[6n\x1b]3008;start=a0d58cf192f84533be91f7fdfe65697a;user=root;hostname=tinkerboard;machineid=9c21b50eadc94b7ead6894ab9387fee9;bootid=051230bea2924d19ab85104f17105a68;pid=777;pidfdid=777;comm=(agetty'
+12:13:26.016 Armbian 26.8.3 resolute ttyS2 
+12:13:26.016 
+12:13:27.024 'tinkerboard login: ' [partial]
+12:15:04.959 '\x00' [partial]
+12:15:11.965 
+12:15:11.973 U-Boot TPL 2026.04_armbian-2026.04-S88dc-Pb430-He07f-V7329-B5da4-R448a (Jul 24 2026 - 14:14:58)
+12:15:11.980 Trying to boot from BOOTROM
+12:15:11.982 Returning to boot ROM...
+12:15:12.023 
+12:15:12.033 U-Boot SPL 2026.04_armbian-2026.04-S88dc-Pb430-He07f-V7329-B5da4-R448a (Jul 24 2026 - 14:14:58 +0000)
+12:15:12.037 Trying to boot from MMC2
+12:15:12.120 ## Checking hash(es) for config conf-1 ... OK
+12:15:12.242 ## Checking hash(es) for Image firmware-1 ... crc32+ OK
+12:15:12.264 ## Checking hash(es) for Image fdt-1 ... crc32+ OK
+12:15:12.469 
+12:15:12.470 
+12:15:12.477 U-Boot 2026.04_armbian-2026.04-S88dc-Pb430-He07f-V7329-B5da4-R448a (Jul 24 2026 - 14:14:58 +0000)
+12:15:12.477 
+12:15:12.532 SoC: Rockchip rk3288
+12:15:12.535 Reset cause: POR
+12:15:12.537 Model: Rockchip RK3288 Asus Tinker Board S
+12:15:12.565 DRAM:  2 GiB
+12:15:12.609 PMIC:  RK808 
+12:15:12.687 Core:  224 devices, 27 uclasses, devicetree: separate
+12:15:12.705 MMC:   mmc@ff0c0000: 1, mmc@ff0d0000: 2, mmc@ff0f0000: 0
+12:15:12.795 Loading Environment from MMC... Reading from MMC(1)... OK
+12:15:13.397 In:    serial,usbkbd
+12:15:13.399 Out:   serial,vidconsole
+12:15:13.401 Err:   serial,vidconsole
+12:15:13.526 Net:   eth0: ethernet@ff290000
+12:15:13.526 '\x1b[?25h'
+12:15:14.537 '\x1b[2K\rHit any key to stop autoboot: 1\x1b[2K\rHit any key to stop autoboot: 0'
+12:15:14.661 '\x1b7\x1b[r\x1b[999;999H\x1b[6n\x1b8Card did not respond to voltage select! : -110'
+12:15:14.682 Card did not respond to voltage select! : -110
+12:15:14.688 Cannot persist EFI variables without system partition
+12:15:14.992 ** Booting bootflow '<NULL>' with efi_mgr
+12:15:14.996 Loading Boot0000 'mmc 1' failed
+12:15:15.000 EFI boot manager: Cannot load any image
+12:15:15.001 Boot failed (err=-14)
+12:15:15.021 ** Booting bootflow 'mmc@ff0c0000.bootdev.part_1' with script
+12:15:15.025 Boot script loaded from mmc 1
+12:15:15.036 237 bytes read in 2 ms (115.2 KiB/s)
+12:15:15.042 rtpi: booting slot: known-good  (/boot/zImage-good)
+12:15:15.598 12598524 bytes read in 548 ms (21.9 MiB/s)
+12:15:16.082 10992528 bytes read in 479 ms (21.9 MiB/s)
+12:15:16.099 41832 bytes read in 9 ms (4.4 MiB/s)
+12:15:16.101 Working FDT set to 1e00000
+12:15:16.113 Failed to load '/boot/dtb-good/overlay/rockchip-i2c1.dtbo'
+12:15:16.124 Failed to load '/boot/dtb-good/overlay/rockchip-i2c4.dtbo'
+12:15:16.135 Failed to load '/boot/dtb-good/overlay/rockchip-spi2.dtbo'
+12:15:16.147 Failed to load '/boot/dtb-good/overlay/rockchip-spidev2.dtbo'
+12:15:16.159 Failed to load '/boot/dtb-good/overlay/rockchip-uart1.dtbo'
+12:15:16.170 Failed to load '/boot/dtb-good/overlay/rockchip-uart2.dtbo'
+12:15:16.182 Failed to load '/boot/dtb-good/overlay/rockchip-fixup.scr'
+12:15:16.190 Kernel image @ 0x2000000 [ 0x000000 - 0xa7bb90 ]
+12:15:16.196 ## Loading init Ramdisk from Legacy Image at 21000000 ...
+12:15:16.198    Image Name:   uInitrd
+12:15:16.203    Image Type:   ARM Linux RAMDisk Image (gzip compressed)
+12:15:16.207    Data Size:    12598460 Bytes = 12 MiB
+12:15:16.209    Load Address: 00000000
+12:15:16.212    Entry Point:  00000000
+12:15:16.423    Verifying Checksum ... OK
+12:15:16.427 ## Flattened Device Tree blob at 01e00000
+12:15:16.431    Booting using the fdt blob at 0x1e00000
+12:15:16.433 Working FDT set to 1e00000
+12:15:16.447    Loading Ramdisk to 0f3fc000, end 0ffffcbc ... OK
+12:15:16.452    Loading Device Tree to 0f389000, end 0f3fbfff ... OK
+12:15:16.455 Working FDT set to f389000
+12:15:16.458 [image_setup_libfdt] called
+12:15:16.465 [image_setup_libfdt] calling fdt_fixup_ethernet
+12:15:16.466 [fdt_fixup_ethernet] called
+12:15:16.473 [fdt_fixup_ethernet] alias #0: name='ethernet0', path='/ethernet@ff290000'
+12:15:16.481 [fdt_fixup_ethernet] env var for alias 'ethernet0' is 'ethaddr', value='58:11:22:e3:15:5c'
+12:15:16.490 [fdt_fixup_ethernet] Patching node '/ethernet@ff290000' (offset 10528) with MAC 58:11:22:e3:15:5c
+12:15:16.504 [fdt_fixup_ethernet] alias #1: name='gpio0', path='/pinctrl/gpio@ff750000'
+12:15:16.505 [fdt_fixup_ethernet] alias #2: name='gpio1', path='/pinctrl/gpio@ff780000'
+12:15:16.513 [fdt_fixup_ethernet] alias #3: name='gpio2', path='/pinctrl/gpio@ff790000'
+12:15:16.516 [fdt_fixup_ethernet] alias #4: name='gpio3', path='/pinctrl/gpio@ff7a0000'
+12:15:16.523 [fdt_fixup_ethernet] alias #5: name='gpio4', path='/pinctrl/gpio@ff7b0000'
+12:15:16.529 [fdt_fixup_ethernet] alias #6: name='gpio5', path='/pinctrl/gpio@ff7c0000'
+12:15:16.536 [fdt_fixup_ethernet] alias #7: name='gpio6', path='/pinctrl/gpio@ff7d0000'
+12:15:16.543 [fdt_fixup_ethernet] alias #8: name='gpio7', path='/pinctrl/gpio@ff7e0000'
+12:15:16.550 [fdt_fixup_ethernet] alias #9: name='gpio8', path='/pinctrl/gpio@ff7f0000'
+12:15:16.555 [fdt_fixup_ethernet] alias #10: name='i2c0', path='/i2c@ff650000'
+12:15:16.560 [fdt_fixup_ethernet] alias #11: name='i2c1', path='/i2c@ff140000'
+12:15:16.567 [fdt_fixup_ethernet] alias #12: name='i2c2', path='/i2c@ff660000'
+12:15:16.573 [fdt_fixup_ethernet] alias #13: name='i2c3', path='/i2c@ff150000'
+12:15:16.578 [fdt_fixup_ethernet] alias #14: name='i2c4', path='/i2c@ff160000'
+12:15:16.585 [fdt_fixup_ethernet] alias #15: name='i2c5', path='/i2c@ff170000'
+12:15:16.590 [fdt_fixup_ethernet] alias #16: name='serial0', path='/serial@ff180000'
+12:15:16.597 [fdt_fixup_ethernet] alias #17: name='serial1', path='/serial@ff190000'
+12:15:16.604 [fdt_fixup_ethernet] alias #18: name='serial2', path='/serial@ff690000'
+12:15:16.609 [fdt_fixup_ethernet] alias #19: name='serial3', path='/serial@ff1b0000'
+12:15:16.616 [fdt_fixup_ethernet] alias #20: name='serial4', path='/serial@ff1c0000'
+12:15:16.621 [fdt_fixup_ethernet] alias #21: name='spi0', path='/spi@ff110000'
+12:15:16.628 [fdt_fixup_ethernet] alias #22: name='spi1', path='/spi@ff120000'
+12:15:16.633 [fdt_fixup_ethernet] alias #23: name='spi2', path='/spi@ff130000'
+12:15:16.640 [fdt_fixup_ethernet] SUMMARY: aliases found=24, attempted=1, skipped=0, patched=1
+12:15:16.644 [image_setup_libfdt] calling ft_system_setup
+12:15:16.647 
+12:15:16.648 Starting kernel ...
+12:15:16.648 
+12:15:42.432 '\x1b[!p\x1b]104\x1b\\\x1b[0m\x1b[?7h\x1b[1G\x1b[0J\x1b[6n\x1b[32766;32766H\x1b[6n\x1b[!p\x1b]104\x1b\\\x1b[0m\x1b[?7h\x1b[1G\x1b[0J\x1b[6n\x1b[32766;32766H\x1b[6n\x1b]3008;start=4f0f8280962e42c6b8e617141191de48;user=root;hostname=tinkerboard;machineid=9c21b50eadc94b7ead6894ab9387fee9;bootid=48d2192224444e6d9c3028f9b1db38da;pid=764;pidfdid=764;comm=(agetty'
+12:15:42.434 Armbian 26.8.3 resolute ttyS2 
+12:15:42.434 
+12:15:43.439 'tinkerboard login: ' [partial]
+12:16:57.157 '\x00' [partial]
+12:19:02.593 [capture] read error: [Errno 6] Device not configured; reopening
+12:30:01.881 probe-wiring-test-10 12:30:01
