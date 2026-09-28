@@ -1,0 +1,26 @@
+Pico <-> Debug Probe UART echo (plan Phase 3 step 1)
+2026-09-28. Mac, Pico 2 W (firmware in firmware/, SDK 2.3.1, Arm GNU 15.3.rel1)
+and Raspberry Pi Debug Probe, firmware 2.3.1.
+
+Wiring: the probe's U port, with the 0.1-inch header (female) cable.
+  probe RX  (yellow) <- Pico GP0 (physical pin 1)
+  probe TX  (orange) -> Pico GP1 (physical pin 2)
+  probe GND (black)  <-> Pico GND (physical pin 3)
+
+Ports on the Mac: probe UART /dev/cu.usbmodem1102, Pico console /dev/cu.usbmodem1301.
+
+firmware/tools/echo-test.py:
+
+    /dev/cu.usbmodem1102: echoed
+        echo-test-1790609238
+    /dev/cu.usbmodem1301: no echo      (the Pico's USB console, as designed)
+
+1024 bytes of patterned data ((i * 37 + 11) & 0xFF), sent and returned
+byte-identical in 0.091 s. The Pico echoes each byte as it arrives, so the two
+directions overlap: that 0.091 s is one pass at 115200, not two.
+
+The Pico's own counter agrees to the byte: "echo: up 110 s, 1047 bytes"
+= 1 boot glitch + 22 (test script, probe port) + 1024.
+
+Note: the probe's device node is not stable across re-enumeration. echo-test.py
+finds it by function -- it is the port that echoes -- rather than by name.

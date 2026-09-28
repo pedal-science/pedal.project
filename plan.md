@@ -552,8 +552,8 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    - Built 2026-09-28: `firmware/` holds the firmware (Pico 2 W, SDK 2.3.1, Arm GNU Toolchain
      15.3.rel1; `firmware/build.sh` and `firmware/flash.sh`), and `firmware/tools/echo-test.py`
      runs the round trip through the Debug Probe's UART bridge (probe RX ← GP0/pin 1,
-     probe TX → GP1/pin 2, GND). Blink and the echo are flashed and running; the round trip
-     waits for the probe to be wired to the Pico.
+     probe TX → GP1/pin 2, GND). Blink and the echo are flashed and running, and the round trip
+     is confirmed on the bench, byte-for-byte (`bench-results/2026-09-28-pico-uart-echo.txt`).
 2. **Design the pedal service** (`docs/pedal-service.md`):
    - what it's responsible for
    - beside `namchaind` or in front of it for the app
