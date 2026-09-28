@@ -1,6 +1,7 @@
 # Rig edits: a proposed design change
 
-**Proposed** by you on 2026-09-28. It isn't a decision yet, and nothing has been built.
+**Proposed** by you on 2026-09-28. It isn't a decision yet, and nothing has been built. Claude's
+comments on it are at the end, for you to answer.
 
 It is meant to:
 - optimise traffic to namchain
@@ -65,3 +66,110 @@ This describes ljoss at `b8cf180` and namchain at `abe1f34`.
   a parameter that no node type declares. Versions would need a change to namchain's protocol. The
   protocol belongs to namchain, so under `docs/working-across-repos.md` rule 2 the change is
   specified there first.
+
+## Claude's comments, 2026-09-28
+
+These are Claude's arguments, not part of the proposal, for you to accept, change or reject. Each
+is numbered so it can be answered on its own.
+
+### The soak failure
+
+**C1. The engine half already exists.** A micro edit maps onto `rig.patch` `set_param`, namchain's
+smooth path, and every continuous parameter ljoss maps can take that path (see "Where it starts
+from"). So the proposal would remove most of soak 1's 182 transitions, without any change to
+namchain.
+
+**C2. The proposal alone wouldn't have got soak 1 through the gate.**
+- Some of the edits in the heavy stretch (27.6–29.1 min) were probably model, IR or block changes.
+  Those rebuild under any design.
+- At q64, a rebuild of a rig above ~45% p99 overruns, whoever sends it.
+- Fixing that needs namchain to admit or refuse a rebuild by its cost, or to make rebuilds cheaper
+  (namchain's `docs/transitions.md`, "What is next", item 1). D10's rig switches need the same.
+
+**C3. It gains more than traffic.**
+- **Sound:** every knob move sent as a whole document reloads the amp model and restarts it from
+  NAM's silence prewarm, which E1 found sounds wrong for 170–340 ms. A ramped change leaves the
+  model running.
+- **Feel:** today a slider drag isn't heard until it pauses for 250 ms. A rate-limited stream is
+  heard while the knob turns.
+
+### Points to settle in the proposal
+
+**C4. Choose how to send an edit by what the engine does with the parameter, not by the kind of
+control.**
+- A bypass toggle, a model or IR pick and a cut slope are each one control, but each one rebuilds
+  the chain.
+- Stream only the parameters that `engine.schema` marks `rampable`, and send the rest once, on
+  release. ljoss doesn't fetch the schema yet.
+- Streaming a control that rebuilds at 100 Hz would be far worse than today.
+
+**C5. Keep sending the whole document for structural edits.** A structural edit adds, removes or
+moves a block, or changes a model, IR, slope or bypass.
+- They're rare, and each costs a rebuild whichever way it's sent.
+- Sending the whole document keeps the conversion from ljoss's tree to namchain's graph in one
+  place (`DocumentEncoder`). The alternative is turning each tree edit into graph ops.
+- The bytes on the wire aren't the problem; the engine's work per message is.
+
+The edit is still one entry in ljoss's history; only how it's sent differs.
+
+**C6. Match the rate limit to the ramp.**
+- namchain ramps each change over the node's `ramp_ms` (5 ms by default). A new value picks up from
+  wherever a running ramp has got to.
+- With a 10 ms limit, a drag becomes 5 ms of movement then 5 ms of holding: a staircase. Either
+  make the ramp at least as long as the interval (10–20 ms for streamed parameters), or limit sends
+  to one every 20–30 ms.
+- Always send the final value when the finger lifts.
+- Send any waiting micro edit before a structural one, so the engine gets them in order.
+
+**C7. A merged history entry keeps the first edit's "from" value.**
+- Undo needs the value from before the drag began, so only the entry's "to" value should be
+  replaced.
+- As written, two drags of the same knob a minute apart also become one undo step. Ending the merge
+  when the finger lifts, or after a pause, is the usual alternative. That one is a UX call.
+
+**C8. Undo is itself an edit.** It goes down the same path as any other edit, so undoing a knob move
+is a ramp rather than a rebuild. A structural edit has to record enough to reverse it: a removed
+block's full state, or a moved block's old position.
+
+**C9. The version belongs on ljoss's block, not on each engine node.**
+- An amp is two engine nodes (`nc.nam` and `fx.amp.tonestack`), and a parallel section is two more
+  (`nc.split` and `nc.mix`). The nodes from one block share one element id.
+- The block is what ljoss edits, and namchain already carries its id unchanged as `element`.
+- So one version per element keeps both sides counting the same thing.
+
+### Versions
+
+**C10. namchain has to store and report the versions**, which is the protocol change noted in
+"Where it starts from".
+- The rig version could go in `engine.status`, which ljoss already polls twice a second, and the
+  element versions in `rig.get`.
+- The rig version changes on every edit, micro ones included, so one comparison says whether
+  anything differs.
+
+**C11. A returned version shows that namchain received an edit, not that the two sides agree.**
+- It proves namchain got ljoss's latest edit, in order. It doesn't prove namchain's state equals
+  ljoss's.
+- `rig.get` already returns namchain's copy of the document to compare against, and sending that
+  copy back changes nothing.
+- The two checks catch different bugs.
+
+**C12. The biggest benefit isn't only for development.**
+- D3 and D4 bring a second writer: the pedal service changing rigs from the footswitches, and later
+  MIDI CCs or an expression pedal streaming a parameter (the mapping row in `plan.md`'s debt
+  register).
+- ljoss's rule when it connects is "my document wins" (`EngineSession.open`). That's what replaced
+  the spec rig in soak 1, and at a gig it would silently undo the rig the player chose on the
+  pedal.
+- Versions let ljoss see that the device changed without it. For that, every writer has to create
+  a new version when it changes something, not only ljoss.
+- Whether ljoss then follows the device or asks is a Phase 3 decision.
+
+### Direction and order
+
+**C13. The direction is right. The order I'd build it in:**
+1. ljoss streams rampable parameters as `rig.patch` messages. This is small, and needs no protocol
+   change.
+2. History and undo in ljoss.
+3. Versions, with namchain's protocol change, once there is a second writer.
+
+Separately, namchain needs a way to handle rebuilds of heavy rigs (C2).
