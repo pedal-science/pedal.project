@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """Round-trip test for the Pico's link UART, through the Debug Probe.
 
-Wiring: probe RX <- Pico GP0 (physical pin 1), probe TX -> Pico GP1 (pin 2),
-GND <-> GND (pin 3).
+Wiring — the probe's U port, with the 0.1-inch header (female) cable:
+    probe RX  yellow  <- Pico GP0 (physical pin 1)
+    probe TX  orange  -> Pico GP1 (physical pin 2)
+    probe GND black   <-> Pico GND (physical pin 3)
+(Orange is the probe's output — TX/SC. Yellow is its input — RX/SD. The male
+cable is for a breadboard; the JST-SH-to-JST-SH one is for the D port's SWD.)
 
 The probe's UART bridge appears on the Mac as /dev/cu.usbmodemNNN. The script
 tries every usbmodem port that is not the Pico's own console (the firmware does
@@ -88,8 +92,9 @@ def main():
         print()
         print("Nothing echoed. Check that:")
         print("  - the echo firmware is running (heartbeat on the Pico's own port),")
-        print("  - probe RX <- Pico GP0 (pin 1), probe TX -> Pico GP1 (pin 2),")
-        print("  - GND <-> GND (pin 3).")
+        print("  - probe RX (yellow) <- Pico GP0 (pin 1),")
+        print("  - probe TX (orange) -> Pico GP1 (pin 2),")
+        print("  - probe GND (black) <-> Pico GND (pin 3).")
         return 1
     return 0
 

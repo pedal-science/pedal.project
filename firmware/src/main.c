@@ -6,9 +6,11 @@
 // relay, LEDs, and the protocol in docs/uart-protocol.md.
 //
 // The link is UART0 on GP0 (TX) and GP1 (RX) while it is on the bench. The
-// Debug Probe's UART bridge is the other end: probe RX <- GP0, probe TX -> GP1,
-// GND <-> GND. USB stdio stays on for the heartbeat, so the console proves the
-// board is alive without a UART peer.
+// Debug Probe's UART bridge is the other end, on its U port with the 0.1-inch
+// header (female) cable: probe RX (yellow) <- GP0/pin 1, probe TX (orange) ->
+// GP1/pin 2, GND (black) <-> pin 3. Orange is the probe's output; yellow its
+// input. USB stdio stays on for the heartbeat, so the console proves the board
+// is alive without a UART peer.
 
 #include <stdio.h>
 
