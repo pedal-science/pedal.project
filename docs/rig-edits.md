@@ -1,7 +1,10 @@
 # Rig edits: a proposed design change
 
 **Proposed** by you on 2026-09-28. It isn't a decision yet, and nothing has been built. Claude's
-comments on it are at the end, for you to answer.
+comments on it follow the proposal, and your answers to them are at the end.
+
+**Under way:** step 1 of C13 (ljoss streams rampable parameters), on the current protocol. History
+and undo, the tree-to-graph conversion and versions wait.
 
 It is meant to:
 - optimise traffic to namchain
@@ -173,3 +176,59 @@ block's full state, or a moved block's old position.
 3. Versions, with namchain's protocol change, once there is a second writer.
 
 Separately, namchain needs a way to handle rebuilds of heavy rigs (C2).
+
+## Your answers, 2026-09-28
+
+Your replies to Claude's comments, as you wrote them. Each is labelled with the comment it answers.
+
+**C2.** "It wouldn't have passed this soak on its own." Yes, I understand. I deliberately attempted
+to cause namchain to struggle, to exercise it. I always want to see where things fail, to
+understand them. I didn't expect namchain to hold up, necessarily, though I did expect to see some
+overruns. I also don't expect to be able to solve for all of the reasons why we might put namchain
+under too much pressure all at once, because there are many ways in which it can be, so it'll take
+quite a lot of work for us to get to a point where the design and implementation are good enough.
+
+**C4.** "Decide how to send an edit by what the engine does with it, not by the kind of control." I
+agree. I do think that a bypass should be sent as a micro edit. In my mind, it can be logically
+represented in our rig data as boolean, implemented as - effectively - a ramp of a master 'mix' for
+a node from 0 to full or vice versa, and - though it's not exactly the same as a 'mix' parameter
+with a numeric value in terms of model representation or how it's represented in the UI - it can be
+dealt with similarly by the engine. I'd love to hear your further thoughts on it as I've likely
+missed some important reason[s] why that may not / can not work.
+
+**C5.** "Keep sending whole rigs for structural edits":
+
+1. Why do they _need_ to cost a rebuild? Adding an item to a linked list data structure doesn't
+   require recreating the entire list. Moving it to another position doesn't, deleting doesn't... I
+   know that chains aren't _just_ linked lists, but why can't we treat them similarly? The
+   operations that can be performed on rigs are constrained by what a user can do through the
+   interface they're using. Switching rigs is, of course, likely to result in more changing than
+   doesn't, and needs to be treated as an atomic operation in its own right. It's a level above a
+   'macro' Edit (moving a node) - but still it's a single Edit if I stick to my domain language
+   here - with quite different semantics from macro and micro.
+2. "Sending the whole rig keeps the conversion from ljoss's tree to namchain's graph in one place".
+   That sounds right to me, yes. I'd like to revisit that decision about tree -> graph conversion
+   and discuss it in detail. I was happy for it to be taken earlier in the project as it let us
+   move forwards but I'd like to go back to the basic assumptions and reasoning which brought about
+   the decision and re-validate.
+3. "The number of bytes sent isn't the problem; the work namchain does per message is" Yes, I
+   understood this already. Agreed.
+
+**C7.** "A merged history entry should keep the first "from" value" Agree, good call!
+
+**C8.** "Undo is itself an edit." It is indeed. I've implemented undo & redo a few times and moving
+edits between undo and redo stacks is part of the fun.
+
+**C10.** "UUIDs work as opaque tokens, but namchain has nowhere to keep them." As a general
+principle, when we're making data structures that have keys and values, unrecognised keys should
+simply be ignored, to allow design and testing flexibility. When we revisit the tree -> graph we
+will also need to revisit protocol, so we can cover that.
+
+**C11.** "A returned UUID shows that namchain received your last edit, in order. It doesn't show
+namchain's state matches yours." Correct. I don't have much logical reasoning to back up my thinking
+about how they could help us with state checking, so let's ignore the state checking angle for now.
+
+**C2 and C13, on heavy rigs.** And yes, namchain needing a way to handle 'rebuilds of heavy rigs':
+Can we express that as namchain needing a way to handle the issue of having to have lots of
+processing-intensive models running in parallel while making a transition? Does that express what
+you said in a logical way or is it different entirely / in part?
