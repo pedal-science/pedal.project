@@ -375,8 +375,10 @@ numbers need re-measuring on piv.
      past the deadline (worst 1.87 ms, 140%) and 18 past 90%, all in five 10 s windows at
      28–29 min with 3–7 transitions each; the other 64 windows with transitions had none.
      - Every ljoss edit arrived as a structural transition (182 transitions, 0 `params_applied`),
-       each dual-rendering the rig for the fade. ljoss sends the whole document (`rig.apply`)
+       each dual-rendering the rig for the fade. ljoss sent the whole document (`rig.apply`)
        250 ms after the last change. A proposed change is in [docs/rig-edits.md](docs/rig-edits.md).
+       Its first step is in ljoss `462e678`: a knob the engine ramps is now streamed as
+       `rig.patch` ramps.
      - The spec rig (GVT52 G5 as A2-Full, high shelf, ORNG 421v-CNT) ran only for the first
        2.6 min. This entry first said ~28 min, and was corrected the same day. Then ljoss connected
        and applied its own rigs for the rest of the hour: "New Rig 2" almost throughout, "Crunch
@@ -401,6 +403,9 @@ numbers need re-measuring on piv.
      - `sync-library`'s rsync ran, then its `namchainctl assets --refresh` failed with "the daemon
        closed the connection" (1,538 IRs; the reply is probably over the message cap), which
        stops the script before its summary.
+       - Since then, `engine.schema` fails the same way, because it lists the IRs as options.
+       - ljoss fetches both replies when it connects, so it can't stay connected to piv, and the
+         soak can't be re-run with ljoss editing, until this is fixed.
      - Tools: `namchaind`'s new `engine.status` `render` object (every block against its deadline),
        and `scripts/soak/` (monitor, summary, events).
    - Once 3.8 exists, the soak also switches rigs: a switch every few seconds through a bank, with

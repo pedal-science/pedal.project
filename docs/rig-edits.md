@@ -3,8 +3,18 @@
 **Proposed** by you on 2026-09-28. It isn't a decision yet, and nothing has been built. Claude's
 comments on it follow the proposal, and your answers to them are at the end.
 
-**Under way:** step 1 of C13 (ljoss streams rampable parameters), on the current protocol. History
-and undo, the tree-to-graph conversion and versions wait.
+**Done:** step 1 of C13, in ljoss `462e678`, on the current protocol.
+- A knob whose parameter the engine ramps is streamed as `rig.patch` `set_param`: at most every
+  10 ms, one patch in flight, and the last value always sent.
+- Everything else is still sent as a whole document after 250 ms.
+- Checked against a local `namchaind`: a 2 s drag of three knobs was 804 ramps and no rebuilds.
+  ljoss's `docs/ENGINE.md`, "Sending an edit", has the details.
+
+**Not on piv yet.** `namchaind` there closes the connection on `engine.assets` and
+`engine.schema`: with 1,538 IRs, both replies are over the 1 MiB message cap. ljoss fetches both
+when it connects, so it can't stay connected until that's fixed.
+
+History and undo, the tree-to-graph conversion and versions wait.
 
 It is meant to:
 - optimise traffic to namchain
@@ -121,6 +131,10 @@ The edit is still one entry in ljoss's history; only how it's sent differs.
 - With a 10 ms limit, a drag becomes 5 ms of movement then 5 ms of holding: a staircase. Either
   make the ramp at least as long as the interval (10–20 ms for streamed parameters), or limit sends
   to one every 20–30 ms.
+- *Correction, 2026-09-28:* the second option doesn't remove the staircase. With a 5 ms ramp, a
+  longer interval only makes the holds longer. Only a ramp at least as long as the interval makes
+  the movement continuous. Step 1 sends at most every 10 ms, as you proposed, and leaves namchain's
+  ramps at 5 ms.
 - Always send the final value when the finger lifts.
 - Send any waiting micro edit before a structural one, so the engine gets them in order.
 
