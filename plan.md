@@ -279,6 +279,19 @@ numbers need re-measuring on piv.
 5. **ljoss → tib.**
    - Point ljoss's Hardware settings at `tib`, and run `Tools/check-device.sh` against it.
    - Play an amp + cab + EQ + delay rig and edit it live.
+
+   Done on piv 2026-09-28, through the SSL 2+ (`namchaind` moved back from the WM8960 for this,
+   `e8d8413`: the codec has no buffer or output stage yet).
+   - ljoss reaches piv as `piv.fritz.box` (the router's DNS follows DHCP; avahi isn't needed).
+     The token is in ljoss's keychain entry, and in `~/.config/pedal/piv.token` for
+     `check-device.sh`, which passed: authenticated, the rig audible after one poll, 0 xruns.
+   - A rig of a NAM amp + cab capture (Ampeg VT-40, `gear_type: amp_cab`, so no IR), tone stack,
+     EQ and delay, played from a guitar loop into SSL input 1 and edited live from ljoss: it
+     sounds right, and 40-odd edits went through with 0 xruns.
+   - The SSL's Monitor Mix must be fully on playback, or the dry input masks the rig.
+   - Fixed on the way: ljoss re-rendered forever once connected, at 100% of a core, and cancelled
+     every send (ljoss `b8cf180`).
+   - For step 8, the rig needs an amp-only model plus a full-length cab IR, as specified.
 6. **Resume at power-up (pedal service v0).**
    - A small process polls `engine.status`. When the generation changes, it saves `rig.get`'s
      document atomically into the rig library.
@@ -694,6 +707,7 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
-Phase 1 on piv. Steps 3, 4 and 6 are done (2026-09-26).
-1. Step 5: ljoss → piv. It needs piv's token and an address (mDNS or a DHCP reservation).
-2. Step 7 (the rest of it), then the step 8 soak at q64.
+Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot time.
+1. The step 8 soak at q64: an amp-only A2-Full plus a full-length IR, ljoss editing over WiFi,
+   one `scripts/sync-library` in the middle, under `scripts/host-lock`.
+2. Then the same soak with only the rsync, to isolate WiFi's cost.
