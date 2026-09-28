@@ -1,10 +1,12 @@
 # The Pico ↔ Core host UART protocol
 
-**Status:** draft 1, 2026-09-28. This is the contract for plan Phase 3 step 3, and it is kept
-here because both ends live here: the Pico firmware (`firmware/`) and the pedal service
-(Phase 3.2). The Core-side port is Phase 3 step 4 (a header UART, Console on ttyS2 32/33,
-UART1 on pins 8/10); the port is not part of this contract. Engine control is not here either —
-that is namchain's protocol 2 over TCP, and the pedal service speaks it.
+**Status:** draft 2, proposed 2026-09-28 in Claude's review (U1–U8, at the end). Draft 1 is what
+the firmware and `firmware/tools/protocol-test.py` speak today; they move to draft 2 once it is
+agreed, and the bench loopback runs again. This is the contract for plan Phase 3 step 3, and it
+is kept here because both ends live here: the Pico firmware (`firmware/`) and the pedal service
+(Phase 3.2). The Core-side port is Phase 3 step 4 (see Transport); the port is not part of this
+contract. Engine control is not here either — that is namchain's protocol 2 over TCP, and the
+pedal service speaks it.
 
 ## What the link carries, and what it never carries
 
@@ -33,8 +35,13 @@ journal.
   this line changes.
 - Pico side, on the bench: UART0, **GP0 = TX, GP1 = RX**. The panel wiring is step 5's business.
   RX is pulled up, because a floating RX invents bytes.
-- Byte order: little-endian for multi-byte integers. Strings are UTF-8, not NUL-terminated;
-  the length comes from the frame.
+- Core host side: a UART on the 40-pin header that carries **nothing but this link**: no kernel
+  console, no getty, no SysRq. On piv, header pins 8/10 are `ttyAMA0`, and its kernel console is
+  there (`console=ttyAMA0,115200`), so step 4 either moves the console or takes another UART. A
+  console would put boot messages on the Pico's RX, and a Pico that resets holds its TX low,
+  which a console reads as a break: the start of a SysRq. Both ends are 3.3 V.
+- Byte order: little-endian for multi-byte integers. A string is a `str8`: one length byte, then
+  that many bytes of UTF-8, not NUL-terminated.
 
 ## Framing
 
@@ -49,8 +56,9 @@ journal.
   harmless.
 - `len` is 0–64. A longer payload is a protocol error (drop the frame).
 - `crc` is **CRC-16/CCITT-FALSE** (polynomial 0x1021, init 0xFFFF, not reflected, no final xor)
-  over `type` and `payload`, sent little-endian. Check value: `"123456789"` → `0x29B1`.
-  Both ends must agree on this; it is the one thing worth a test vector.
+  over `type`, `len` and `payload`, sent little-endian. Check value: `"123456789"` → `0x29B1`.
+  Both ends must agree on this; it is the one thing worth a test vector. (Draft 1 said "over
+  `type` and `payload`"; both implementations have always included `len`, which protects it.)
 - Resync: after a bad CRC or a bad length, resume scanning for the sync pair at the byte after
   the first sync byte. A frame is dropped silently — validity is the only acknowledgement at
   this layer.
@@ -69,34 +77,41 @@ hunts:
 
 `HELLO` and `WELCOME` both carry `version_major` and `version_minor`. Same major is required. A
 different major is a protocol error: the Core sends `ERROR` and stops talking; the Pico shows a
-fault, keeps its local controls, and keeps the relay where it is. A newer minor is fine: unknown
-message types are ignored, and unknown bytes at the end of a payload are ignored.
+fault and keeps its local controls, and with no session the relay follows the link-down rule. A
+newer minor is fine: unknown message types are ignored, and unknown bytes at the end of a
+payload are ignored.
 
 ## Messages
 
 | Type | Name | Direction | Payload |
 |---|---|---|---|
-| 0x01 | `HELLO` | Pico → Core | `ver_major`, `ver_minor`, `caps` u16 LE, `fw_version` string |
-| 0x02 | `WELCOME` | Core → Pico | `ver_major`, `ver_minor`, `heartbeat_ms` u16 LE, `service_version` string |
+| 0x01 | `HELLO` | Pico → Core | `ver_major`, `ver_minor`, `caps` u16 LE, `fw_version` str8 |
+| 0x02 | `WELCOME` | Core → Pico | `ver_major`, `ver_minor`, `heartbeat_ms` u16 LE, `service_version` str8 |
 | 0x03 | `EVENT` | Pico → Core | `seq`, `source`, `kind`, `a`, `b` |
 | 0x04 | `ACK` | Core → Pico | `seq` |
-| 0x05 | `STATE` | Core → Pico | `flags`, `rig_index` i8, `bank_index` i8, `bank_size` u8, `rig_name` string |
+| 0x05 | `STATE` | Core → Pico | `flags`, `rig_index` i8, `bank_index` i8, `bank_size` u8, `rig_name` str8 |
 | 0x06 | `PING` | either | `nonce` |
 | 0x07 | `PONG` | either | `nonce` |
-| 0x08 | `ERROR` | Core → Pico | `code`, `text` string |
+| 0x08 | `ERROR` | Core → Pico | `code`, `text` str8 |
 | 0x09 | `LOG` | Pico → Core | reserved |
 | 0x0A | `CFG` | Core → Pico | reserved |
 | other | — | — | ignore |
 
-Version 1.0 is this document.
+Version 1.0 is this document. Nothing outside the bench speaks draft 1, so draft 2's changes
+keep the number.
 
 `caps` bits: 0 relay, 1 MIDI DIN in, 2 display, 3 expression jack, 4–7 footswitch count
 (0–15). The service uses them to refuse a mapping the board cannot honour instead of silently
 doing nothing.
 
-`STATE.flags`: bit 0 `audio_ready`, bit 1 `engine_bypass`, bits 2–3 `health` (0 unknown, 1 ok,
+`fw_version` is `git describe --always --dirty` of the tree the firmware was built from
+(`working-across-repos.md`, rule 5).
+
+`STATE.flags`: bit 0 `audio_ready`, bit 1 `engine_muted` (the engine's `engine.mute`; draft 1
+called it `engine_bypass`, but the relay is the only bypass), bits 2–3 `health` (0 unknown, 1 ok,
 2 degraded, 3 fault). `rig_index` is -1 when the service has no rig. `rig_name` is truncated to
-48 bytes on a UTF-8 boundary. A receiver ignores any trailing bytes, so `STATE` can grow.
+48 bytes on a UTF-8 boundary. Every string is a `str8`, so any message can grow at its end: a
+receiver ignores trailing bytes.
 
 ### EVENT kinds
 
@@ -119,9 +134,16 @@ doing nothing.
 footswitch and from MIDI is the same message**; `source` exists for diagnostics and for the
 MIDI-learn UI, and the service's mapping tables key on `kind`, never on `source`.
 
-Raw MIDI arrives as `cc`/`pc` because the mapping (PC → rig, CC → parameter) is the pedal
-service's table, not the Pico's — that is what makes USB MIDI a firmware-only change later
-(debt register).
+Raw MIDI arrives as `cc`/`pc` because the mapping (a trigger → an action) is the pedal service's
+table, not the Pico's — that is what makes USB MIDI a firmware-only change later (debt register).
+
+**Footswitches send what a MIDI controller would** (proposed in draft 2, U8; yours to choose).
+Footswitches 1–3 send `cc` 80, 81 and 82, the general-purpose switch controllers, with `b` 127
+on press and 0 on release. The service's map turns every `cc` and `pc` into an action
+(`pedal-service.md`); by default 80 is `rig_down`, 81 `rig_up`, and 82 is the assignable one. A
+press on the pedal and the same controller from the MIDI Commander are then the same message,
+byte for byte apart from `source`. The semantic kinds stay for what only the Pico can say: the
+panel's choices (step 7), and `bypass_set` for the panic bypass, whose long press stays local.
 
 Kind 0x12 exists only while the expression-jack debt entry survives.
 
@@ -129,32 +151,43 @@ Kind 0x12 exists only while the expression-jack debt entry survives.
 
 Events are the only thing here that is not idempotent, so:
 
-- The Pico keeps each `EVENT` until it is `ACK`ed. If no `ACK` arrives within 20 ms, it sends
-  the event again, up to 5 times, then drops it and counts a lost event.
-- The Core **dedupes on `seq`** over the last 8 sequence numbers: a repeat is `ACK`ed again and
-  not re-applied. A lost ACK therefore cannot double-step a rig.
+- **One `EVENT` is in flight at a time.** The Pico keeps it until it is `ACK`ed. If no `ACK`
+  arrives within 20 ms, it sends the same frame again, up to 5 times, then drops it and counts a
+  lost event. With one in flight, events arrive in the order they happened; with several, a
+  retransmitted one could land after a later one (`bypass_set` 1 after a 0, an old `cc` value
+  after a new one).
+- **Behind it, the Pico queues** in order, 16 deep. When the queue is full, a new value for a
+  controller already waiting in it (`cc` *n*, `expression` *n*) replaces the waiting one, since
+  the newest value is the one that matters; anything else is dropped and counted. The firmware
+  today refuses a new event while one is pending, which is enough for the bench's console; the
+  queue comes with step 5, with the switches and MIDI.
+- The Core **dedupes on `seq`**: a repeat of the last `seq` it applied is `ACK`ed again and not
+  re-applied, so a lost `ACK` cannot double-step a rig. **The dedupe belongs to the session**: the
+  Core forgets it when it sends `WELCOME`, because a Pico that reboots starts its `seq` again.
+- **An `EVENT` still unacknowledged when the session drops is dropped** and counted lost. It is
+  not sent after the reconnect: a press must not act seconds after it was made.
 - `STATE` is idempotent. The Core sends it on every change, at least once a second, and after
   any `EVENT` — so the Pico converges after a link flap without any request. It is never
   acknowledged.
-- Events do not queue on the Pico: presses are sent as they happen, and supersession is the
-  service's rule (D10: one switch in flight, a newer request replaces the pending one).
+- Supersession is the service's rule, not the link's (D10: one switch in flight, a newer request
+  replaces the pending one). The link keeps order; the service decides what a burst means.
 
 ## Failure and safety
 
-- **Link down** (1 s without a valid frame): the Pico shows it (LED/display, steps 5 and 7) and
-  **leaves the relay where it is**. A broken link is not evidence that audio is broken, and
-  cutting a working audio path is the worse failure.
+- **Link down** (1 s without a valid frame): the Pico shows it (LED/display, steps 5 and 7). What
+  the relay does then is the pedal service's relay rule (`pedal-service.md`), proposed and yours
+  to decide: bypass once the link has been down for 5 s, longer than a service restart, so a
+  service crash never clicks the relay but a hung or rebooting Core host doesn't hold the pedal
+  silent. Draft 1's "leave the relay where it is" is kept there as the alternative.
 - **Boot and power loss**: the relay's de-energised state is bypass (step 6); the Pico energises
   it only after a `STATE` with `audio_ready`. That is a physical rule, not a protocol one, and it
-  survives a dead Pico, dead service and a booting Core host.
+  survives a dead Pico and a dead service. A Core host that reboots while the Pico stays powered
+  is the link-down rule's case.
 - **Panic bypass** (long press) is a Pico-local action; it is also sent as `bypass_set` so the
   service and the display agree.
 - **Service down must never mean audio down** (D4): the service is not in the audio path, so this
   link dying cannot stop the engine. What the Pico loses without a service is rig switching, not
   sound.
-- The relay/link-loss policy above is the recommendation; the *decisions* around failure modes
-  are step 2's (`docs/pedal-service.md`): **the relay stays where it is on link loss**, and
-  `audio_ready` energises it at boot only.
 
 ## Timing
 
@@ -164,7 +197,7 @@ At 115200, 10 bits per byte:
 |---|---|---|
 | `ACK`, `PING`, `PONG` | 7 | 0.6 ms |
 | `EVENT` | 10 | 0.9 ms |
-| `STATE`, 24-character rig name | 34 | 3.0 ms |
+| `STATE`, 24-character rig name | 35 | 3.0 ms |
 | longest possible | 70 | 6.1 ms |
 
 Events add under a millisecond to D10's 50 ms; that budget belongs to the service and the
@@ -193,3 +226,52 @@ engine. Heartbeats at 250 ms with nothing else happening are about 0.4% of the l
   still a test script until the service is built (design: `docs/pedal-service.md`, its v1).
   Evidence:
   `bench-results/2026-09-28-pico-protocol-loopback.txt`.
+- It also sends a frame header whose length swallows the start of a good `STATE`, and checks
+  that the `STATE` still arrives (Resync, U3). The firmware before U3's fix fails that check.
+
+## Claude's review, 2026-09-28
+
+Checked against both ends as built (`firmware/src/protocol.c`, `firmware/tools/protocol-test.py`),
+against the Core hosts, and against the pedal service's design. The shape is right, and draft 2
+keeps it: a sync pair and a CRC, a versioned handshake that tolerates a newer minor, heartbeats
+both ways, acknowledged events with a provenance byte, idempotent `STATE`, and nothing on the
+wire but frames. The bench evidence is good: exact, and honest about what it doesn't cover.
+What changed:
+
+**U1. The CRC covers `len`.** Draft 1 said "over `type` and `payload`"; both ends have always
+included `len`, and should, since it protects the length. Text only; no wire change.
+
+**U2. A string at the end of a payload stopped `STATE` growing.** The name ran to the end of the
+frame, so a field added after it would read as part of the name, while the session rules
+promise that trailing bytes are ignored. Every string is now a `str8`. This is the one wire
+change, and nothing outside the bench speaks draft 1.
+
+**U3. The firmware didn't resync as the text says.** After a bad length or CRC it carried on from
+the next byte instead of rescanning from the byte after the first sync byte, so one corrupted
+`len` swallowed the good frames behind it. `protocol-test.py`'s decoder does it right, and said
+it mirrored the firmware. Fixed in the firmware on this branch (compile-checked, not flashed),
+with a bench check that fails on the firmware before the fix.
+
+**U4. Several events in flight could arrive out of order.** Draft 1 said presses go "as they
+happen", while the firmware keeps one in flight and refuses the rest. With retransmission,
+several in flight can land out of order. Draft 2: one in flight, and a queue behind it.
+
+**U5. Dedupe across a Pico reboot.** The Pico's `seq` starts again at 0; a Core that remembered
+the last few from before would acknowledge new events and drop them. The dedupe now belongs to
+the session. And an event pending when the link drops is dropped rather than applied late: the
+firmware resumed retrying it after the reconnect (fixed on this branch).
+
+**U6. The Core-side port was `tib`'s.** On piv, header pins 8/10 are `ttyAMA0`, which carries the
+kernel console. The link's UART must carry nothing else; plan 3.4 now says so.
+
+**U7. `engine_bypass` was the engine's mute.** Renamed `engine_muted`, so "bypass" means one
+thing: the relay.
+
+**U8. Footswitch and MIDI messages weren't identical.** `CLAUDE.md` asks for identical UART
+messages, and the handoff wanted them to converge in the Pico. Draft 1's footswitches sent
+`rig_up` while a MIDI "next" button could only arrive as `cc` or `pc`, so the two met nowhere
+unless the service's map could turn a `cc` into `rig_up`. Proposed, **yours to choose**: the
+footswitches send what a MIDI controller would (`cc` 80–82), and the service's map, which D4
+gives the service, turns every trigger into an action. The other way to make it true is for
+the Pico to translate MIDI into the semantic kinds with a map the service sends over `CFG`: two
+places that must agree, where this has one.
