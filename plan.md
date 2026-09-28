@@ -369,6 +369,23 @@ numbers need re-measuring on piv.
      namchain's ARMv7 bar of 90% of the deadline.
    - Separately: the same soak with only an rsync running, so WiFi's cost, if it has one, is
      isolated.
+   - **First run, 2026-09-28 (namchain `abe1f34`, q64): FAIL, and not to spec.** 60 min, the
+     SSL direct on its first port, looping guitar, ljoss editing, `sync-library` at 30 min. 0 driver
+     xruns, 0 guard trips, 0 queue drops or insertions, 36–41 °C, never throttled. But 7 blocks
+     past the deadline (worst 1.87 ms, 140%) and 18 past 90%, all in five 10 s windows at
+     28–29 min with 3–7 transitions each; the other 64 windows with transitions had none.
+     - Every ljoss edit arrived as a structural transition (182 transitions, 0 `params_applied`),
+       each dual-rendering the rig for the fade.
+     - The rig was the spec (GVT52 G5 as A2-Full, high shelf, ORNG 421v-CNT) until ~28 min, then
+       ljoss switched to a VT-40 amp_cab rig with no IR. Load per 5 min: p99 15–16% on the spec
+       rig without edits, 23–38% with them, 7% on the VT-40.
+     - The render thread took 705 minor page faults (0 major) over the hour. Unconfirmed as the
+       cause of the spikes: `mlockall(MCL_CURRENT)` doesn't cover a plan built later.
+     - `sync-library`'s rsync ran, then its `namchainctl assets --refresh` failed with "the daemon
+       closed the connection" (1,538 IRs; the reply is probably over the message cap), which
+       stops the script before its summary.
+     - Tools: `namchaind`'s new `engine.status` `render` object (every block against its deadline),
+       and `scripts/soak/` (monitor, summary, events).
    - Once 3.8 exists, the soak also switches rigs: a switch every few seconds through a bank, with
      the same gates plus D10's: each switch ≤ 50 ms and no click in the output (namchain's glitch
      detector on the captured output).
