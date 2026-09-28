@@ -24,7 +24,14 @@ endif()
 
 add_executable(pedal-firmware
     src/main.c
+    src/protocol.c
 )
+
+# Build step 1's byte echo instead of the protocol, for tools/echo-test.py.
+option(FW_ECHO "Build the UART echo (step 1) instead of the protocol firmware" OFF)
+if(FW_ECHO)
+    target_compile_definitions(pedal-firmware PRIVATE PEDAL_FW_ECHO=1)
+endif()
 
 # pico_cyw43_arch_none: the W board's LED, no lwIP/WiFi (D2: the Pico's link is UART).
 target_link_libraries(pedal-firmware

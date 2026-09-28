@@ -1,0 +1,39 @@
+Pico link protocol: frame-level loopback (plan Phase 3 step 3)
+2026-09-28. Mac, Pico 2 W + Raspberry Pi Debug Probe. Firmware in firmware/
+(protocol 1.0), exercised by firmware/tools/protocol-test.py, which plays the
+service side over the probe's UART bridge and types 'e' on the Pico's USB
+console to make the firmware send an EVENT.
+
+    probe:   /dev/cu.usbmodem1102
+    console: /dev/cu.usbmodem1301
+
+    PASS HELLO received
+          v1.0 caps=0x0000 firmware='0.1'
+    PASS HELLO is version 1.x -- major=1
+    PASS session up on the Pico
+    PASS Pico PING received
+          pico ping nonce=1, pong sent
+    PASS our PING answered -- payload=b'Z'
+    PASS STATE printed on the console
+    PASS EVENT received after the console trigger
+          event seq=0 source=bench kind=rig_up
+    PASS EVENT is rig_up from the bench
+    PASS unacknowledged EVENT retransmitted -- retry seq=0
+    PASS retransmit noted on the console
+    PASS no further copies after the ACK
+          proto: frames ok=5 bad=0 events lost=0 session=1 rig=2 name='Ampeg VT-40 + cab'
+    PASS no events lost
+    PASS Pico drops the session and hunts again
+    PASS link down noted on the console
+    PASS session back up
+
+    all checks passed
+
+What it proves: framing both ways, the HELLO/WELCOME session, PING/PONG both
+ways, STATE parsed on the Pico, an EVENT whose ACK is deliberately dropped
+(retransmitted 20 ms later with the same seq, then no further copies once
+ACKed), and the 1 s link-down: HELLO hunting resumes and the session comes back.
+
+Not covered: dedupe lives in the service and is not exercised here (the test
+ACKs once); the service itself does not exist until step 2; footswitches, MIDI,
+the relay and LEDs are step 5. caps=0x0000 is honest -- none of them are wired.

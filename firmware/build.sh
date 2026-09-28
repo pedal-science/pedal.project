@@ -3,6 +3,9 @@
 #
 # Pins, for the record (plan Phase 3, step 1):
 #   SDK 2.3.1, Arm GNU Toolchain 15.3.rel1, board pico2_w.
+#
+# FW_ECHO=1 builds step 1's byte echo instead of the protocol firmware, for
+# firmware/tools/echo-test.py.
 set -e
 cd "$(dirname "$0")"
 
@@ -14,6 +17,12 @@ export PATH
 PICO_SDK_PATH="${PICO_SDK_PATH:-$HOME/pico/pico-sdk}"
 export PICO_SDK_PATH
 
-cmake -S . -B build -G Ninja -DPICO_BOARD=pico2_w
+if [ "${FW_ECHO:-0}" = "1" ]; then
+    ECHO_OPT=ON
+else
+    ECHO_OPT=OFF
+fi
+
+cmake -S . -B build -G Ninja -DPICO_BOARD=pico2_w -DFW_ECHO="$ECHO_OPT"
 cmake --build build
 ls -l build/pedal-firmware.uf2

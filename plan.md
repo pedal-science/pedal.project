@@ -572,6 +572,10 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      timer, the event kinds that footswitch and MIDI share, `ACK`/retry with dedupe, `STATE`
      back, `PING`/`PONG`. It defers the relay-on-link-loss policy and the MIDI channel question
      to step 2's failure-mode work.
+   - The firmware implements it (`firmware/src/protocol.c`) and the frame-level loopback passes
+     on the bench, retransmit and link-down included (`firmware/tools/protocol-test.py`;
+     `bench-results/2026-09-28-pico-protocol-loopback.txt`). The service end is a test script
+     until step 2.
 4. **The tib side.**
    - Enable a header UART in rtpi's device tree. The console is ttyS2 on pins 32/33; UART1 on
      pins 8/10 is the obvious one to use.

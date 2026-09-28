@@ -42,9 +42,9 @@ what, which machines exist, and the rules against drift.
   deploy goes through it.
 - `scripts/components-lock [--host piv] [--check]`: write `components.lock` from what
   the host is running, or compare. Commit the file with the change.
-- `firmware/build.sh`, `firmware/flash.sh`, `firmware/tools/echo-test.py`: build, flash
-  and bench-test the Pico firmware (Pico 2 W; SDK 2.3.1 and Arm GNU Toolchain 15.3.rel1
-  under `~/pico/`).
+- `firmware/build.sh`, `firmware/flash.sh`, `firmware/tools/{echo,protocol}-test.py`: build,
+  flash and bench-test the Pico firmware (Pico 2 W; SDK 2.3.1 and Arm GNU Toolchain 15.3.rel1
+  under `~/pico/`). `FW_ECHO=1` builds step 1's echo for the echo test.
 - Write evidence into a repo's `bench-results/`, never `/tmp`.
 
 ## Constraints — ask before violating any of these

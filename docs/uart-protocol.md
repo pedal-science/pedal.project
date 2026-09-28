@@ -182,7 +182,11 @@ engine. Heartbeats at 250 ms with nothing else happening are about 0.4% of the l
 
 ## Testing
 
-- `firmware/tools/echo-test.py` proves the UART and the wiring now (step 1).
-- The next tool is a frame-level loopback over the Debug Probe's UART bridge: speak
-  `HELLO`/`WELCOME`/`PING`/`EVENT`/`ACK`/`STATE` against the firmware before step 4 and 5 need
-  it. It belongs in `firmware/tools/` too.
+- `firmware/tools/echo-test.py` proved the UART and the wiring (step 1). It needs
+  `FW_ECHO=1 firmware/build.sh`. Evidence: `bench-results/2026-09-28-pico-uart-echo.txt`.
+- `firmware/tools/protocol-test.py` is the frame-level loopback: it plays the service side
+  over the Debug Probe and checks the session, heartbeats both ways, an EVENT whose ACK is
+  deliberately dropped (retransmit, then no further copies), STATE, and link-down recovery.
+  The firmware implements this document today (`firmware/src/protocol.c`); the service end is
+  still a test script until step 2. Evidence:
+  `bench-results/2026-09-28-pico-protocol-loopback.txt`.
