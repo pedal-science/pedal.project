@@ -46,13 +46,15 @@ fi
 holder="$(id -un)@$(hostname -s) pid $$ since $(date -u +%FT%TZ): $*"
 [[ -n $WAIT ]] && how="-w $WAIT" || how="-n"
 
-# On the host: take the lock, record the holder, say so, then keep it while heartbeats arrive.
-# EOF (the command finished) or 30 s of silence (the Mac went away) ends it.
+# On the host: take the lock, record the holder (sent on stdin, so it never appears in ps where
+# a busy check's pgrep would match it), say so, then keep it while heartbeats arrive. EOF (the
+# command finished) or 30 s of silence (the Mac went away) ends it.
 remote=$(cat <<EOF
+IFS= read -r holder
 exec 9>>$LOCK
 if ! flock $how 9; then echo "busy \$(cat $LOCK)"; exit 1; fi
 truncate -s 0 $LOCK
-printf '%s\n' $(printf %q "$holder") >&9
+printf '%s\n' "\$holder" >&9
 echo locked
 while IFS= read -r -t 30 _; do :; done
 truncate -s 0 $LOCK
@@ -65,6 +67,7 @@ hold_pid=$HOLD_PID
 # ours wouldn't send the EOF that releases the lock.
 exec {to_host}>&"${HOLD[1]}" {from_host}<&"${HOLD[0]}"
 eval "exec ${HOLD[1]}>&- ${HOLD[0]}<&-"
+printf '%s\n' "$holder" >&"$to_host"
 
 reply=
 IFS= read -r reply <&"$from_host" || true
