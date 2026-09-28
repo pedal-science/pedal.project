@@ -73,9 +73,16 @@ with the draw.io CLI and read that, or ask.
 
 ## Commands
 
+- `scripts/status [--host piv] [--no-fetch]`: every repo on the Mac and piv, the Core host's lock,
+  what `namchaind` reports, and whether `components.lock` and the deployed engine and devices tree
+  are current. Start every session with it.
+- `scripts/host-lock [--host piv] [--wait <s>] -- <command>`: run a command on the Mac while holding
+  the Core host's lock. `--who` says who holds it. Every soak and benchmark goes through it
+  (`scripts/host-lock -- ssh piv '...'`). `deploy-engine` and `devices/<host>/apply` take it
+  themselves.
 - `scripts/deploy-engine [--host piv] [--commit <rev>] [--no-tests]`: build namchain from a
   commit on the Core host and install it. piv only for now.
 - `scripts/sync-library [--host piv] [--dry-run]`: copy the model and IR library to the Core host.
-
-`scripts/status`, `scripts/host-lock` and `components.lock` are planned (Phase 0 step 8) and don't
-exist yet.
+  It doesn't take the lock: the soak runs it mid-measurement on purpose.
+- `scripts/components-lock [--host piv] [--check]`: write `components.lock` from what the host is
+  running (deploy and apply do this), or compare them. Commit the file with the change.

@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+# scripts/status [--host piv] [--no-fetch] — where every repo and the Core host stand, in one screen.
+#
+# Repos: each checkout on the Mac and on the build/Core hosts, with its branch, HEAD, ahead/behind
+# its upstream (after a fetch, unless --no-fetch) and uncommitted files. Core host: who holds its
+# lock, what namchaind reports, whether components.lock matches it, and whether the engine or the
+# devices/ tree has moved on since it was deployed. Run it at the start of every session.
+set -euo pipefail
+
+HOST=piv
+FETCH=1
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --no-fetch) FETCH=0 ;;
+    -h|--help) sed -n '2,7p' "$0"; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SCRIPTS="$ROOT/scripts"
+SSH_OPTS=(-o BatchMode=yes -o ConnectTimeout=5)
+on() { local h=$1; shift; ssh "${SSH_OPTS[@]}" "$h" "$@"; }
+head_() { printf '\n\033[1m%s\033[0m\n' "$*"; }
+bad()  { printf '  \033[1;31m%s\033[0m\n' "$*"; }
+good() { printf '  \033[1;32m%s\033[0m\n' "$*"; }
+note() { printf '  %s\n' "$*"; }
+
+# One line per checkout: name, branch, head, ahead/behind, dirty. Runs here and on the hosts, so it
+# takes "name=path" arguments and relies on nothing but git.
+REPORT=$(cat <<'EOF'
+fetch=$1; shift
+export GIT_SSH_COMMAND="ssh -o BatchMode=yes -o ConnectTimeout=5"
+if [[ $fetch == 1 ]]; then
+  for spec in "$@"; do
+    p=${spec#*=}; p=${p/#\~/$HOME}
+    [[ -d $p/.git ]] && git -C "$p" fetch -q 2>/dev/null &
+  done
+  wait
+fi
+for spec in "$@"; do
+  name=${spec%%=*}; p=${spec#*=}; p=${p/#\~/$HOME}
+  if [[ ! -d $p/.git ]]; then printf '%s\t-\t-\t-\tmissing\n' "$name"; continue; fi
+  branch=$(git -C "$p" symbolic-ref -q --short HEAD || echo detached)
+  head=$(git -C "$p" rev-parse --short=7 HEAD)
+  ab=-
+  if up=$(git -C "$p" rev-parse -q --abbrev-ref '@{upstream}' 2>/dev/null); then
+    read -r behind ahead < <(git -C "$p" rev-list --left-right --count "$up...HEAD")
+    ab="+$ahead -$behind"
+    [[ $ahead == 0 && $behind == 0 ]] && ab="= $up"
+  fi
+  dirty=$(git -C "$p" status --porcelain | wc -l | tr -d ' ')
+  [[ $dirty == 0 ]] && dirty=clean || dirty="$dirty dirty"
+  printf '%s\t%s\t%s\t%s\t%s\n' "$name" "$branch" "$head" "$ab" "$dirty"
+done
+EOF
+)
+
+MAC_REPOS=(pedal.project="$ROOT" namchain=~/code.local/namchain ljoss=~/code.local/ljoss
+           rtpi=~/code.local/rtpi NAMBench=~/code.local/NAMBench)
+# piv is also the build host: its dev checkouts, and deploy-engine's build tree (detached by design).
+PIV_REPOS=('namchain=~/code.local/namchain' 'ljoss=~/code.local/ljoss' 'rtpi=~/code.local/rtpi'
+           'NAMBench=~/NAMBench' 'build tree=~/pedal-build/namchain')
+
+rows() { sed "s/^/$1"$'\t'"/"; }
+{
+  printf 'host\trepo\tbranch\thead\tupstream\ttree\n'
+  bash -c "$REPORT" _ "$FETCH" "${MAC_REPOS[@]}" | rows mac &
+  if on piv true 2>/dev/null; then
+    on piv "bash -c $(printf %q "$REPORT") _ $FETCH ${PIV_REPOS[*]@Q}" | rows piv &
+  else
+    printf 'piv\t-\t-\t-\t-\tunreachable\n'
+  fi
+  wait
+} | column -t -s $'\t' | sed '1{s/^/\x1b[1m/;s/$/\x1b[0m/;}'
+
+head_ "Core host: $HOST"
+if ! on "$HOST" true 2>/dev/null; then
+  bad "unreachable"
+  exit 0
+fi
+
+holder=$("$SCRIPTS/host-lock" --host "$HOST" --who)
+[[ $holder == free ]] && note "lock: free" || bad "lock: $holder"
+
+if json=$(on "$HOST" "systemctl is-active -q namchaind.service && sudo -n /opt/namchain/current/bin/namchainctl --compact status" 2>/dev/null); then
+  summary=$(jq -r '.status | "\(.state), \(.health), \(.device), \(.sample_rate) Hz / \(.period_size), xruns \(.xruns), guard trips \(.guard_trips), rig \(.rig | split("/") | last)" + (if (.issues|length) > 0 then ", issues: \(.issues|tostring)" else "" end)' <<<"$json")
+  if jq -e '.status | .state == "running" and .health == "ok" and .xruns == 0 and .guard_trips == 0' <<<"$json" >/dev/null; then
+    good "namchaind: $summary"
+  else
+    bad "namchaind: $summary"
+  fi
+else
+  bad "namchaind: not running"
+fi
+
+if diffs=$("$SCRIPTS/components-lock" --host "$HOST" --check 2>&1); then
+  note "components.lock: matches the host"
+else
+  bad "components.lock: differs from the host"; printf '%s\n' "$diffs" | sed 's/^/  /'
+fi
+
+# Has anything been committed that the host doesn't have yet?
+lock_val() { sed -n "s/^$1=//p" "$ROOT/components.lock" 2>/dev/null; }
+engine=$(on "$HOST" "sed -n 's/^commit=//p' /opt/namchain/current/MANIFEST" 2>/dev/null || true)
+if [[ -n $engine ]] && git -C ~/code.local/namchain cat-file -e "$engine" 2>/dev/null; then
+  n=$(git -C ~/code.local/namchain rev-list --count "$engine..origin/main")
+  (( n == 0 )) && note "engine: ${engine:0:7}, origin/main" \
+               || note "engine: ${engine:0:7}, $n commit(s) behind origin/main (scripts/deploy-engine)"
+fi
+applied=$(on "$HOST" "sed -n 's/^commit=//p' /etc/pedal/applied" 2>/dev/null || true)
+if [[ -n $applied && -d $ROOT/devices/$HOST ]]; then
+  last=$(git -C "$ROOT" log -1 --format=%h -- devices/common "devices/$HOST" ":!devices/$HOST/backups")
+  if git -C "$ROOT" merge-base --is-ancestor "$last" "${applied%-dirty}" 2>/dev/null; then
+    note "devices/$HOST: applied $applied, nothing newer committed"
+  else
+    note "devices/$HOST: applied $applied, but $last changed it since (devices/$HOST/apply)"
+  fi
+  [[ $applied == *-dirty ]] && note "  (applied from uncommitted changes; check they were committed)"
+fi

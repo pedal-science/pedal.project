@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+# scripts/host-lock [--host piv] [--wait <seconds>] -- <command> [args...]
+# scripts/host-lock [--host piv] --who
+#
+# Runs <command> on the Mac while holding the Core host's lock (rule 8: one measurement at a
+# time). The lock is a flock on the host, /run/lock/pedal-host.lock, held by an ssh session for as
+# long as the command runs; the lock file says who holds it and for what. To run something on the
+# host, make the command an ssh: scripts/host-lock -- ssh piv 'namchain-soak ...'.
+#
+# Without --wait it fails at once if the lock is held, and says by whom. --who prints the holder
+# (or "free") and exits 0 either way. The command sees PEDAL_HOST_LOCK=<host>, and a host-lock
+# inside it for the same host just runs its command, so scripts that lock themselves (deploy-engine,
+# devices/*/apply) nest. If the Mac sleeps or the network drops, the host lets go within 30 s.
+set -euo pipefail
+
+HOST=piv
+WAIT=
+WHO=0
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --wait) WAIT=$2; shift ;;
+    --who) WHO=1 ;;
+    --) shift; break ;;
+    -h|--help) sed -n '2,14p' "$0"; exit 0 ;;
+    *) break ;;
+  esac
+  shift
+done
+
+LOCK=/run/lock/pedal-host.lock
+SSH=(ssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 "$HOST")
+
+if (( WHO )); then
+  # If the lock can be taken, whatever the file says is left over from an earlier holder.
+  "${SSH[@]}" "touch $LOCK 2>/dev/null; if flock -n $LOCK true; then echo free; else cat $LOCK; fi"
+  exit 0
+fi
+
+[[ $# -gt 0 ]] || { echo "host-lock: no command (see --help)" >&2; exit 2; }
+
+if [[ ${PEDAL_HOST_LOCK:-} == "$HOST" ]]; then
+  exec "$@"
+fi
+
+holder="$(id -un)@$(hostname -s) pid $$ since $(date -u +%FT%TZ): $*"
+[[ -n $WAIT ]] && how="-w $WAIT" || how="-n"
+
+# On the host: take the lock, record the holder, say so, then keep it while heartbeats arrive.
+# EOF (the command finished) or 30 s of silence (the Mac went away) ends it.
+remote=$(cat <<EOF
+exec 9>>$LOCK
+if ! flock $how 9; then echo "busy \$(cat $LOCK)"; exit 1; fi
+truncate -s 0 $LOCK
+printf '%s\n' $(printf %q "$holder") >&9
+echo locked
+while IFS= read -r -t 30 _; do :; done
+truncate -s 0 $LOCK
+EOF
+)
+
+coproc HOLD { "${SSH[@]}" "bash -c $(printf %q "$remote")"; }
+hold_pid=$HOLD_PID
+# Own copies, because bash unsets HOLD when the coproc exits. The originals must go, or closing
+# ours wouldn't send the EOF that releases the lock.
+exec {to_host}>&"${HOLD[1]}" {from_host}<&"${HOLD[0]}"
+eval "exec ${HOLD[1]}>&- ${HOLD[0]}<&-"
+
+reply=
+IFS= read -r reply <&"$from_host" || true
+if [[ $reply != locked ]]; then
+  exec {to_host}>&-
+  wait "$hold_pid" 2>/dev/null || true
+  if [[ $reply == busy* ]]; then
+    echo "host-lock: $HOST is locked by ${reply#busy }" >&2
+  else
+    echo "host-lock: could not take $HOST's lock${reply:+: $reply}" >&2
+  fi
+  exit 1
+fi
+
+( exec {to_host}>&- {from_host}<&-; while sleep 10 >/dev/null; do echo; done ) >&"$to_host" 2>/dev/null &
+beat_pid=$!
+release() {
+  kill "$beat_pid" 2>/dev/null || true
+  wait "$beat_pid" 2>/dev/null || true
+  exec {to_host}>&-
+  wait "$hold_pid" 2>/dev/null || true
+}
+trap release EXIT
+
+rc=0
+# The lock's own descriptors are close-on-exec, so the command can't hold the lock open by
+# accident after this script is gone.
+PEDAL_HOST_LOCK=$HOST "$@" {to_host}>&- {from_host}<&- || rc=$?
+exit "$rc"

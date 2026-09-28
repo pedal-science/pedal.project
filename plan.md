@@ -193,9 +193,20 @@ Small and first, because every later phase deploys from it.
    - `AGENTS.md` plus a one-line `CLAUDE.md` in namchain, rtpi and ljoss.
    - Check whether Claude Code reads `CLAUDE.md` from extra directories.
 8. **Scripts here:** `scripts/status`, `scripts/host-lock`, `scripts/deploy-engine` and
-   `components.lock`, as specified in the repo doc. Partly done: `scripts/deploy-engine` exists
-   (piv only, native aarch64; tib's cross build went with tib), as does `scripts/sync-library`.
-   `scripts/status`, `scripts/host-lock` and `components.lock` are still to write.
+   `components.lock`, as specified in the repo doc. Done 2026-09-28. `scripts/deploy-engine`
+   (piv only, native aarch64; tib's cross build went with tib) and `scripts/sync-library` came
+   first.
+   - `scripts/host-lock` holds a `flock` on the host (`/run/lock/pedal-host.lock`) through an ssh
+     session with a heartbeat, so a sleeping Mac or a dropped network lets go within 30 s. The lock
+     file names the holder. `deploy-engine` and `apply` take it; `sync-library` deliberately doesn't,
+     because step 8's soak runs it in the middle.
+   - `components.lock` is written by `scripts/components-lock` from the host itself (the binary
+     `namchaind` is actually running, and `/etc/pedal/applied`), with no timestamps, so it only
+     changes when a component does.
+   - `scripts/status` fetches and reports every checkout on the Mac and piv, then the Core host.
+     First run: piv's dev checkouts are 1–11 commits behind (they aren't what runs; the build tree
+     is), the engine is 3 commits behind namchain's `origin/main`, and `devices/piv` was last
+     applied from a dirty tree (`c23c053-dirty`, committed as `56c7dae`).
 
 **Done when:**
 - `scripts/status` shows every repo clean, or deliberately on a named branch, on every host.

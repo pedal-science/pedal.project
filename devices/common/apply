@@ -2,9 +2,10 @@
 # devices/<host>/apply [--dry-run] — put devices/common/rootfs and devices/<host>/rootfs on the
 # host and bring them into force. The host's own file wins where both have one.
 #
-# Backs up first, refuses while a measurement or the engine is running, stages the tree in
-# /var/tmp, runs pedal-device on the board (which records everything it does, for revert), then
-# checks the result. Re-running it is safe: files that already match are left alone.
+# Takes the host's lock (scripts/host-lock), backs up first, refuses while a measurement or the
+# engine is running, stages the tree in /var/tmp, runs pedal-device on the board (which records
+# everything it does, for revert), checks the result and updates components.lock. Re-running it is
+# safe: files that already match are left alone.
 #
 # To undo:  ssh <host> sudo pedal-device revert
 
@@ -13,12 +14,16 @@ source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 dry=""
 case ${1:-} in
   --dry-run) dry=--dry-run ;;
-  -h|--help) sed -n '2,10p' "$0"; exit 0 ;;
+  -h|--help) sed -n '2,11p' "$0"; exit 0 ;;
   "") ;;
   *) die "unknown argument: $1" ;;
 esac
 
 require_dev
+SCRIPTS_DIR="$(cd "$DEV_DIR/../../scripts" && pwd)"
+if [[ -z $dry && ${PEDAL_HOST_LOCK:-} != "$DEV_HOST" ]]; then
+  exec "$SCRIPTS_DIR/host-lock" --host "$DEV_HOST" -- "$0" "$@"
+fi
 commit=$(tree_commit)
 [[ $commit == *-dirty ]] && warn "devices/$DEV_NAME has uncommitted changes; $DEV_HOST will record $commit"
 
@@ -56,4 +61,5 @@ dev "rm -rf '$stage'"
 
 if [[ -z $dry ]]; then
   "$DEV_DIR/check" | tee "$backup_dir/check-after.txt"
+  "$SCRIPTS_DIR/components-lock" --host "$DEV_HOST"
 fi

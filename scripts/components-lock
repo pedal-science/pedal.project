@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# scripts/components-lock [--host piv] [--check] — record what the Core host is running in
+# components.lock (rule 5), or with --check, compare the file with the host and exit 1 if they differ.
+#
+# It reads the host, not the Mac: the board, the kernel, namchain's commit from the MANIFEST of the
+# binary namchaind is running (the installed one if it isn't running), and the devices/ tree commit
+# from /etc/pedal/applied. scripts/deploy-engine and devices/<host>/apply write it after each change;
+# commit it with the change. No timestamps, so an unchanged host leaves the file unchanged.
+set -euo pipefail
+
+HOST=piv
+CHECK=0
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --check) CHECK=1 ;;
+    -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+LOCKFILE="$(cd "$(dirname "$0")/.." && pwd)/components.lock"
+SSH=(ssh -o BatchMode=yes -o ConnectTimeout=10 "$HOST")
+
+live=$("${SSH[@]}" bash -s <<'REMOTE'
+set -euo pipefail
+dir=/opt/namchain/current
+if pid=$(pidof namchaind 2>/dev/null); then
+  dir=$(dirname "$(dirname "$(sudo -n readlink -f "/proc/${pid%% *}/exe")")")
+fi
+manifest() { sed -n "s/^$1=//p" "$dir/MANIFEST" 2>/dev/null; }
+printf 'host=%s\n' "$(hostname)"
+printf 'board=%s\n' "$(tr -d '\0' < /proc/device-tree/model)"
+printf 'kernel=%s\n' "$(uname -r)"
+printf 'namchain=%s\n' "$(manifest commit)"
+printf 'devices=%s\n' "$(sed -n 's/^commit=//p' /etc/pedal/applied 2>/dev/null)"
+REMOTE
+)
+
+body="# What the Core host runs. Written by scripts/components-lock, which scripts/deploy-engine and
+# devices/<host>/apply call; scripts/status compares it with the host. Commit it with the change.
+$live"
+
+if (( CHECK )); then
+  [[ -f $LOCKFILE ]] || { echo "components.lock: missing" >&2; exit 1; }
+  if ! diff <(grep -v '^#' "$LOCKFILE") <(printf '%s\n' "$live") >/dev/null; then
+    diff <(grep -v '^#' "$LOCKFILE") <(printf '%s\n' "$live") | sed -n 's/^< /  lock: /p; s/^> /  host: /p' >&2
+    exit 1
+  fi
+  exit 0
+fi
+
+printf '%s\n' "$body" > "$LOCKFILE"
+if git -C "$(dirname "$LOCKFILE")" diff --quiet -- components.lock 2>/dev/null \
+   && git -C "$(dirname "$LOCKFILE")" ls-files --error-unmatch components.lock >/dev/null 2>&1; then
+  echo "components.lock: unchanged" >&2
+else
+  echo "components.lock: updated, commit it with the change" >&2
+fi

@@ -1,0 +1,7 @@
+# What the Core host runs. Written by scripts/components-lock, which scripts/deploy-engine and
+# devices/<host>/apply call; scripts/status compares it with the host. Commit it with the change.
+host=piv
+board=Raspberry Pi 500 Rev 1.0
+kernel=7.0.0-1017-raspi-realtime
+namchain=04a1fc86d6bdb3573b42fed6922fc16cccb13ba7
+devices=c23c053-dirty

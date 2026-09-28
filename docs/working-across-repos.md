@@ -108,8 +108,8 @@ Rollback on `tib` is the previous symlink. For the kernel it is `rtpi`'s known-g
 
 | Tool | Does |
 |---|---|
-| `scripts/status` | The table above, in one screen |
-| `scripts/host-lock` | `flock` around a command on the Core host. Every soak, benchmark and deploy goes through it |
+| `scripts/status` | The table above, in one screen. Exists: repos on the Mac and piv, the lock, `namchaind`'s status, and whether `components.lock`, the engine and `devices/` are current |
+| `scripts/host-lock` | `flock` on the Core host, held from the Mac for as long as a command runs. Every soak, benchmark and deploy goes through it. Exists; `deploy-engine` and `devices/<host>/apply` take it themselves, and a nested call for the same host just runs its command |
 | `scripts/deploy-engine` | Build a `namchain` commit in a *dedicated* build directory on the Core host, never the dev checkout. Run the tests, install into a versioned directory, write the manifest, restart. Exists, piv only; the armv7-NEON cross build for `tib` went with `tib` |
 | `devices/tib/` | The appliance configuration and its idempotent apply/backup scripts |
-| `components.lock` | The component commits that make up what `tib` is running, written by the deploy |
+| `components.lock` | The component commits that make up what the Core host is running (board, kernel, namchain, the `devices/` tree), written by `scripts/components-lock` after every deploy and apply. Exists |
