@@ -375,12 +375,29 @@ numbers need re-measuring on piv.
      past the deadline (worst 1.87 ms, 140%) and 18 past 90%, all in five 10 s windows at
      28–29 min with 3–7 transitions each; the other 64 windows with transitions had none.
      - Every ljoss edit arrived as a structural transition (182 transitions, 0 `params_applied`),
-       each dual-rendering the rig for the fade.
-     - The rig was the spec (GVT52 G5 as A2-Full, high shelf, ORNG 421v-CNT) until ~28 min, then
-       ljoss switched to a VT-40 amp_cab rig with no IR. Load per 5 min: p99 15–16% on the spec
-       rig without edits, 23–38% with them, 7% on the VT-40.
-     - The render thread took 705 minor page faults (0 major) over the hour. Unconfirmed as the
-       cause of the spikes: `mlockall(MCL_CURRENT)` doesn't cover a plan built later.
+       each dual-rendering the rig for the fade. ljoss sends the whole document (`rig.apply`)
+       250 ms after the last change. A proposed change is in [docs/rig-edits.md](docs/rig-edits.md).
+     - The spec rig (GVT52 G5 as A2-Full, high shelf, ORNG 421v-CNT) ran only for the first
+       2.6 min. This entry first said ~28 min, and was corrected the same day. Then ljoss connected
+       and applied its own rigs for the rest of the hour: "New Rig 2" almost throughout, "Crunch
+       Lead" at 13–14 min, and "New Rig 3" briefly at 2.6 and 27.4 min. `engine.status` names the
+       rig but not its models, so only the load shows what each held:
+       - p99 7–8% at first;
+       - 16% by 13 min, like the spec rig;
+       - 7–8% from 29 min to the end, on the VT-40 amp_cab rig with no IR that was left loaded.
+     - **The overruns came from running two plans of a heavy rig at once.**
+       - From 27.6 to 29.1 min, "New Rig 2" ran at p50 ~30% and p99 39–52% on its own, three to
+         four times the spec rig's load. No fade stayed open.
+       - A transition renders both plans for the 5 ms fade, and twice a p99 of ~50% is the
+         deadline. The five windows with blocks past 90% held 22 transitions.
+       - Twice the spec rig's p99 is ~32%. So this run shows nothing against the spec rig. It does
+         show that at q64 a structural edit overruns on a rig above ~45% p99, whoever sends it.
+         namchain has no admission control yet (its `docs/transitions.md`, "What is next").
+     - The render thread took 705 minor page faults (0 major) over the hour. They aren't needed to
+       explain the overruns. Their cause is still open: `mlockall(MCL_CURRENT)` doesn't cover a plan
+       built later.
+     - To re-run it to spec, the spec rig has to be the rig open in ljoss. ljoss applies its own
+       document when it connects, which is what replaced the spec rig this time.
      - `sync-library`'s rsync ran, then its `namchainctl assets --refresh` failed with "the daemon
        closed the connection" (1,538 IRs; the reply is probably over the message cap), which
        stops the script before its summary.
