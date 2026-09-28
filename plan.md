@@ -317,6 +317,8 @@ numbers need re-measuring on piv.
    - `namchaind` starts that document at boot. It already compiles and prewarms a startup rig
      before the clock starts.
    - Whether the service stays beside `namchaind` or later fronts it for the app is left to 3.2.
+     Decided 2026-09-28: **beside**; the app keeps its direct connection
+     ([docs/pedal-service.md](docs/pedal-service.md)).
 
    Done on piv 2026-09-26: `pedal-resume` (`devices/common`). It compares documents, not
    generations, because a knob change (`set`) leaves the generation where it was. It saves 2 s
@@ -562,6 +564,17 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    - the event vocabulary where footswitch and MIDI meet
    - security (the same token model)
    - failure modes: the service being down must never mean audio is down.
+   - Designed 2026-09-28: [docs/pedal-service.md](docs/pedal-service.md). **Beside** `namchaind`
+     — the app keeps protocol 2 directly, and the service is a second client, not a gateway. It
+     owns the library on the pedal, the bank, resume (v0's behaviour, one writer), uploads
+     (atomic, ids, a model's declared rate must be 48 kHz), the mapping tables and the Pico
+     link; it asks namchain for the ready set and the switch once 3.8's calls exist. Two
+     listeners on one token: the engine's 47810 and the service's HTTP 47820, reached by the
+     service over TCP loopback because `engine.assets`/`engine.schema` replies outgrow a Unix
+     datagram. It settles what 3.3 deferred: **the relay stays where it is on link loss**, and
+     `audio_ready` energises it at boot only; the **MIDI channel is ignored** until a second
+     controller wants the reserved `CFG`. Implementation is staged in the doc: v1 with 3.4 (link
+     and resume), v2 with 3.5 (uploads), v3 with 3.8 (warm switching).
 3. **UART protocol**, the contract kept here.
    - Framed, checksummed and versioned.
    - Events: rig up/down/select, bank, CC value, bypass.
@@ -742,7 +755,7 @@ exactly this: think about them now, fix them after the higher-priority work.
 | No resampler: models and IRs must already be at 48 kHz | Phase 1 converts IRs on the way to the device | Convert on upload in the pedal service, or resample at load in namchain (the NAM plugin resamples IRs at load) |
 | One instrument input | D5 | A mic stage on RINPUT1, and a decision on phantom power (a DC-DC converter beside the ADC) |
 | WM8960 replaces HDMI audio on the one I2S controller | Nothing uses HDMI audio | None needed. A second codec would mean TDM or USB |
-| No way to upload from the app yet | D4 | The pedal service's upload API. ljoss gets a "send to pedal" action |
+| No way to upload from the app yet | D4 | The pedal service's upload API. ljoss gets a "send to pedal" action. Designed 2026-09-28: `docs/pedal-service.md` |
 | The app needs the home network | Phase 1 happens at home | The pedal as its own access point (check whether `tib`'s WiFi chip can run AP mode), or a phone hotspot |
 | No discovery: the host is typed in | — | mDNS from the pedal service |
 | Plain-text token, no TLS | Trusted LAN | A tunnel, or TLS in the service, if it ever leaves the LAN |
@@ -756,7 +769,8 @@ exactly this: think about them now, fix them after the higher-priority work.
 These don't block Phase 0 or 1.
 
 - **Pedal service:** beside `namchaind` (the app keeps its direct connection) or in front of it
-  (one endpoint and one token for the app, one extra hop for knob streams)? Decided in 3.2.
+  (one endpoint and one token for the app, one extra hop for knob streams)? Decided in 3.2:
+  beside ([docs/pedal-service.md](docs/pedal-service.md)).
 - **Where data lives on `tib`:** namchain's default is `/etc/namchain`. `/var/lib/...` is more
   conventional for user data. Decided with the overlayroot design.
 - **Rig designers for other platforms** (`about.md`): the engine protocol is where any second

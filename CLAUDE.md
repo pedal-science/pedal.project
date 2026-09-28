@@ -28,7 +28,7 @@ Which repo owns what, the machines, and the rules against drift:
   controls only and never carries rigs or models (D2).
 - A **pedal service** in this repo, beside `namchaind`, owns the rig library, resume
   at power-up, uploads, and the footswitch/MIDI mapping. namchain stays a generic
-  engine (D4).
+  engine (D4). Designed 2026-09-28: [docs/pedal-service.md](docs/pedal-service.md).
 
 ## Hard constraints — ask before violating any of these
 

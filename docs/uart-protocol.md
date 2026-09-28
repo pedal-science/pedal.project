@@ -153,7 +153,8 @@ Events are the only thing here that is not idempotent, so:
   link dying cannot stop the engine. What the Pico loses without a service is rig switching, not
   sound.
 - The relay/link-loss policy above is the recommendation; the *decisions* around failure modes
-  are step 2's (`docs/pedal-service.md`).
+  are step 2's (`docs/pedal-service.md`): **the relay stays where it is on link loss**, and
+  `audio_ready` energises it at boot only.
 
 ## Timing
 
@@ -173,7 +174,8 @@ engine. Heartbeats at 250 ms with nothing else happening are about 0.4% of the l
 
 - The baud rate, if step 4 measures that 115200 is too slow (it will not be, for events).
 - MIDI channel: `cc`/`pc` ignore it today (one controller). A second controller needs a field,
-  and a minor version bump.
+  and a minor version bump. **Settled 2026-09-28** (`docs/pedal-service.md`): ignored for now;
+  the reserved `CFG` carries a channel filter when a second controller makes it matter.
 - 14-bit CC and expression: 7 bits today; the Commander's expression sends CC11/CC4, which is
   fine. The pedal's own jack would want more resolution if it survives the debt register.
 - `LOG` and `CFG` bodies are reserved, not specified.
@@ -188,5 +190,6 @@ engine. Heartbeats at 250 ms with nothing else happening are about 0.4% of the l
   over the Debug Probe and checks the session, heartbeats both ways, an EVENT whose ACK is
   deliberately dropped (retransmit, then no further copies), STATE, and link-down recovery.
   The firmware implements this document today (`firmware/src/protocol.c`); the service end is
-  still a test script until step 2. Evidence:
+  still a test script until the service is built (design: `docs/pedal-service.md`, its v1).
+  Evidence:
   `bench-results/2026-09-28-pico-protocol-loopback.txt`.

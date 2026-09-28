@@ -84,7 +84,8 @@ what, which machines exist, and the rules against drift.
   Pico ↔ Core host contract.
 - `docs/`: `working-across-repos.md` (repos, machines, rules), `hardware-handoff.md`
   (schematic findings and reasoning), `codec-bringup-2a.md` (the 2a bench walkthrough),
-  `rig-switch-strategies.md`, `uart-protocol.md`, `bom.md`.
+  `rig-switch-strategies.md`, `uart-protocol.md`, `pedal-service.md` (the service's design: what
+  it owns, storage, uploads, the mapping, failure modes), `bom.md`.
 - `devices/<host>/rootfs/` — the Core host's configuration as code.
 - `docs/diagrams/` — draw.io, two layers. The small squares on the connections layer
   are routing junctions, **not components**. Don't break the formatting; if it's
