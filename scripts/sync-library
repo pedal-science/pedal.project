@@ -36,6 +36,12 @@ RSYNC=(rsync -rt --delete --delete-excluded --itemize-changes "${DRY[@]}"
 "${RSYNC[@]}" "$SRC/IRs/" "$HOST:$DEST/irs/" | grep -v '^\.' | tail -5 || true
 
 if [[ ${#DRY[@]} -eq 0 ]] && "${SSH[@]}" systemctl is-active -q namchaind.service; then
-  "${SSH[@]}" "sudo /opt/namchain/current/bin/namchainctl --compact assets --refresh" | head -c 400; echo
+  # Over TCP to the host itself rather than the Unix socket. The Unix socket carries a reply as one
+  # datagram, and the library's listing is far bigger than one can be (namchain docs/daemon.md, "Two
+  # transports"). namchainctl reads the token from the host's own file, so it never leaves the host.
+  # The listing itself is about a megabyte, so only the counts are shown, from engine.status.
+  "${SSH[@]}" "sudo /opt/namchain/current/bin/namchainctl --host 127.0.0.1 --token-file /etc/namchain/token --quiet assets --refresh"
+  "${SSH[@]}" "sudo /opt/namchain/current/bin/namchainctl --compact status" |
+    python3 -c 'import json, sys; a = json.load(sys.stdin)["status"]["assets"]; print("namchaind: %d models, %d IRs (scan %d)" % (a["models"], a["irs"], a["scan"]))'
 fi
 "${SSH[@]}" "printf 'models: %s files, irs: %s files, %s\n' \$(find $DEST/models -type f | wc -l) \$(find $DEST/irs -type f | wc -l) \"\$(du -sh $DEST | cut -f1)\""

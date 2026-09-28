@@ -10,9 +10,13 @@ comments on it follow the proposal, and your answers to them are at the end.
 - Checked against a local `namchaind`: a 2 s drag of three knobs was 804 ramps and no rebuilds.
   ljoss's `docs/ENGINE.md`, "Sending an edit", has the details.
 
-**Not on piv yet.** `namchaind` there closes the connection on `engine.assets` and
-`engine.schema`: with 1,538 IRs, both replies are over the 1 MiB message cap. ljoss fetches both
-when it connects, so it can't stay connected until that's fixed.
+**On piv, not yet tried with ljoss.** namchain `503aac9`, deployed, gives replies their own
+16 MiB limit, and ljoss `6ae4563` reads replies that large.
+
+This section first said ljoss couldn't connect to piv, and that was wrong. Over TCP, which ljoss
+uses, both replies were under the old 1 MiB limit. With 1,538 IRs, `engine.assets` is 1,016,823
+bytes, 97% of it, and `engine.schema` is 808,492. Only the Unix socket failed, which is how
+namchainctl and `sync-library` reach the daemon.
 
 History and undo, the tree-to-graph conversion and versions wait.
 

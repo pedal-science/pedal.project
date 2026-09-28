@@ -403,9 +403,14 @@ numbers need re-measuring on piv.
      - `sync-library`'s rsync ran, then its `namchainctl assets --refresh` failed with "the daemon
        closed the connection" (1,538 IRs; the reply is probably over the message cap), which
        stops the script before its summary.
-       - Since then, `engine.schema` fails the same way, because it lists the IRs as options.
-       - ljoss fetches both replies when it connects, so it can't stay connected to piv, and the
-         soak can't be re-run with ljoss editing, until this is fixed.
+       - `engine.schema` failed the same way, because it lists the IRs as options. Both failed only
+         on the Unix socket, where a reply is one datagram, of at most about 208 KiB. Over TCP both
+         fitted under the old 1 MiB limit: `engine.assets` at 1,016,823 bytes (97%), and
+         `engine.schema` at 808,492. So ljoss, which uses TCP, could still connect. An earlier
+         version of this note said it couldn't.
+       - Fixed the same day. namchain `503aac9` gives replies a 16 MiB limit of their own, and
+         ljoss `6ae4563` reads them. `sync-library` now refreshes over TCP to the host itself: exit
+         0, then 52 models and 1,538 IRs.
      - Tools: `namchaind`'s new `engine.status` `render` object (every block against its deadline),
        and `scripts/soak/` (monitor, summary, events).
    - Once 3.8 exists, the soak also switches rigs: a switch every few seconds through a bank, with
