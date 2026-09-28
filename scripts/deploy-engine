@@ -77,7 +77,7 @@ sudo systemctl enable -q namchaind.service
 sudo systemctl restart namchaind.service
 sleep 3
 systemctl is-active namchaind.service
-/opt/namchain/current/bin/namchainctl --compact status 2>&1 | head -c 600; echo
+sudo -n /opt/namchain/current/bin/namchainctl --compact status 2>&1 | head -c 600; echo
 echo "installed $commit"
 REMOTE
 "$(dirname "$0")/components-lock" --host "$HOST"
