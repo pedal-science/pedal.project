@@ -137,6 +137,12 @@ activate() {
     run systemctl enable pedal-codec.service
     run systemctl restart pedal-codec.service
   fi
+  # The unit follows wlan0, so it is only started where there is one: elsewhere the start would
+  # wait for a device that never comes.
+  run systemctl enable pedal-wifi.service
+  if [[ -e /sys/class/net/wlan0 ]]; then
+    run systemctl restart pedal-wifi.service
+  fi
 }
 
 do_apply() {
@@ -162,6 +168,8 @@ do_revert() {
   systemctl cat pedal-tune.service >/dev/null 2>&1 && run systemctl disable --now pedal-tune.service
   systemctl cat pedal-resume.service >/dev/null 2>&1 && run systemctl disable --now pedal-resume.service
   systemctl cat pedal-codec.service >/dev/null 2>&1 && run systemctl disable pedal-codec.service
+  # Stopped while its helper is still installed: stopping it turns power saving back on.
+  systemctl cat pedal-wifi.service >/dev/null 2>&1 && run systemctl disable --now pedal-wifi.service
   while read -r kind what; do
     case $kind in
       mask) run $(sc "$what") unmask "${what#user:}" >/dev/null; echo "  unmasked  $what" ;;
@@ -190,17 +198,23 @@ do_revert() {
 
 do_status() {
   [[ -r /etc/pedal/applied ]] && cat /etc/pedal/applied || echo "commit=<not applied>"
-  local u st n=0
+  local u st n=0 bad=0 wifi
   if [[ -r /etc/pedal/masked-units ]]; then
     while IFS= read -r u; do
       unit_exists "$u" || continue
       st=$($(sc "$u") is-enabled "${u#user:}" 2>/dev/null || true)
-      if [[ $st == masked ]]; then n=$((n+1)); else printf '  FAIL  %-34s %s (want masked)\n' "$u" "$st"; fi
+      if [[ $st == masked ]]; then n=$((n+1)); else printf '  FAIL  %-34s %s (want masked)\n' "$u" "$st"; bad=1; fi
     done < <(units)
     printf '  ok    %-34s %s\n' "masked units" "$n"
   fi
+  if [[ -e /sys/class/net/wlan0 && -x /usr/local/sbin/pedal-wifi ]]; then
+    wifi=$(/usr/local/sbin/pedal-wifi status wlan0 2>&1 || true)
+    if [[ $wifi == "wlan0: power saving off" ]]; then printf '  ok    %-34s %s\n' "wlan0 power saving" "off"
+    else printf '  FAIL  %-34s %s (want off)\n' "wlan0 power saving" "${wifi#wlan0: power saving }"; bad=1; fi
+  fi
   printf '  --    %-34s %s\n' "pedal-tune.service" "$(systemctl is-enabled pedal-tune.service 2>/dev/null) / $(systemctl is-active pedal-tune.service 2>/dev/null)"
-  [[ -x /usr/local/sbin/pedal-tune ]] && /usr/local/sbin/pedal-tune check
+  [[ -x /usr/local/sbin/pedal-tune ]] && /usr/local/sbin/pedal-tune check || bad=1
+  return $bad
 }
 
 [[ $(id -u) -eq 0 ]] || { say "run as root"; exit 2; }

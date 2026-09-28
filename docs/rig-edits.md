@@ -10,8 +10,25 @@ comments on it follow the proposal, and your answers to them are at the end.
 - Checked against a local `namchaind`: a 2 s drag of three knobs was 804 ramps and no rebuilds.
   ljoss's `docs/ENGINE.md`, "Sending an edit", has the details.
 
-**On piv, not yet tried with ljoss.** namchain `503aac9`, deployed, gives replies their own
-16 MiB limit, and ljoss `6ae4563` reads replies that large.
+**On piv with ljoss, 2026-09-28.** namchain `503aac9` gives replies their own 16 MiB limit,
+ljoss `6ae4563` reads replies that large, and ljoss `ba50ad2` connects by itself. Watched from
+the device while you edited "Ambient Wash" and "Crunch Lead" (22:17–22:37, polling
+`engine.status` and `rig.get` five times a second):
+- Every knob streamed: 178 ramps, no rebuilds. That was the tone stack's bass, mid and treble,
+  a gain, the cab's low and high cut, and the delay's time, feedback and mix.
+- The five rebuilds were all structural: a NAM model changed, an amp added twice, an amp
+  removed, and a switch of rig.
+- 0 xruns, and no block past 90% of the deadline. The worst took 66%, against 43% when the watch
+  began; `engine.status` doesn't say when.
+- At most 13 ramps landed in one ~260 ms poll, about 50 a second.
+- The WiFi round trip, Mac to piv, is about 6 ms at the median. Tails of 40–420 ms show on the
+  way to the router too, from both ends, so they belong to the network, not to piv. piv's WiFi
+  power saving (the kernel's default) made no difference on or off, with pings every 200 ms or
+  every second. It is off now anyway, set by hand, and `pedal-wifi.service` in `devices/common`
+  keeps it off once the tree is next applied.
+- **Debt.** With one patch in flight, a stall like that holds a moving knob, and the value it
+  jumps to then ramps over namchain's 5 ms. Not heard yet. If it is, ramp over the time since
+  the last value (capped), or let a second patch go before the first is answered.
 
 This section first said ljoss couldn't connect to piv, and that was wrong. Over TCP, which ljoss
 uses, both replies were under the old 1 MiB limit. With 1,538 IRs, `engine.assets` is 1,016,823

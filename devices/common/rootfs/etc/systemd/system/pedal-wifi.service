@@ -1,0 +1,17 @@
+[Unit]
+Description=Pedal: WiFi power saving off on wlan0
+Documentation=file:/usr/local/sbin/pedal-wifi
+# The kernel turns power saving on each time the interface is created, so this follows wlan0:
+# started when it appears, stopped when it goes.
+BindsTo=sys-subsystem-net-devices-wlan0.device
+After=sys-subsystem-net-devices-wlan0.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/pedal-wifi off wlan0
+# Stopping it, as `pedal-device revert` does, gives the kernel's default back.
+ExecStop=-/usr/local/sbin/pedal-wifi on wlan0
+
+[Install]
+WantedBy=sys-subsystem-net-devices-wlan0.device

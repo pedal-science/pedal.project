@@ -1,0 +1,131 @@
+#!/usr/bin/env python3
+"""pedal-wifi — WiFi power saving on the pedal host: say what it is, or turn it off or on.
+
+    pedal-wifi [status|off|on] [interface]      (default: status wlan0)
+
+With power saving on, the radio dozes between beacons and the access point holds anything sent
+to the host until it wakes. On piv that made ljoss's round trip 20-45 ms, against 2-27 ms the
+other way. ljoss sends a knob's next value when the last one has been answered, so that wait
+decides how often a moving knob is heard.
+
+The kernel turns it on for every WiFi interface (CONFIG_CFG80211_DEFAULT_PS=y), and nothing that
+manages wlan0 turns it off: netplan's networkd renderer has no setting for it, and
+NetworkManager's wifi.powersave only applies to devices NetworkManager manages. `iw` is not
+installed, so this speaks nl80211 itself. The setting holds until the interface is re-created;
+pedal-wifi.service applies it each time wlan0 appears.
+"""
+import errno
+import os
+import socket
+import struct
+import sys
+
+NETLINK_GENERIC = 16
+NLM_F_REQUEST = 0x1
+NLM_F_ACK = 0x4
+NLMSG_ERROR = 0x2
+GENL_ID_CTRL = 0x10
+CTRL_CMD_GETFAMILY = 3
+CTRL_ATTR_FAMILY_ID = 1
+CTRL_ATTR_FAMILY_NAME = 2
+
+# linux/nl80211.h, checked against the headers on piv (2026-09-28).
+NL80211_CMD_SET_POWER_SAVE = 61
+NL80211_CMD_GET_POWER_SAVE = 62
+NL80211_ATTR_IFINDEX = 3
+NL80211_ATTR_PS_STATE = 93
+NL80211_PS_DISABLED = 0
+NL80211_PS_ENABLED = 1
+
+
+def attr(kind, payload):
+    length = 4 + len(payload)
+    return struct.pack("=HH", length, kind) + payload + b"\0" * (-length % 4)
+
+
+def attrs(data):
+    found = {}
+    while len(data) >= 4:
+        length, kind = struct.unpack_from("=HH", data)
+        if length < 4:
+            break
+        found[kind & 0x3FFF] = data[4:length]  # without the nested and byte-order flags
+        data = data[(length + 3) & ~3:]
+    return found
+
+
+class GenericNetlink:
+    def __init__(self):
+        self.sock = socket.socket(socket.AF_NETLINK, socket.SOCK_RAW, NETLINK_GENERIC)
+        self.sock.bind((0, 0))
+        self.seq = 0
+
+    def call(self, family, cmd, payload):
+        """One request, answered by its replies and then an acknowledgement."""
+        self.seq += 1
+        body = struct.pack("=BBH", cmd, 1, 0) + payload
+        self.sock.send(struct.pack("=IHHII", 16 + len(body), family,
+                                   NLM_F_REQUEST | NLM_F_ACK, self.seq, 0) + body)
+        replies = []
+        while True:
+            data = self.sock.recv(65536)
+            while len(data) >= 16:
+                length, kind, _, seq, _ = struct.unpack_from("=IHHII", data)
+                if length < 16:
+                    break
+                message, data = data[16:length], data[(length + 3) & ~3:]
+                if seq != self.seq:
+                    continue
+                if kind == NLMSG_ERROR:
+                    error = -struct.unpack_from("=i", message)[0]
+                    if error:
+                        raise OSError(error, os.strerror(error))
+                    return replies
+                replies.append(attrs(message[4:]))
+
+    def family(self, name):
+        reply = self.call(GENL_ID_CTRL, CTRL_CMD_GETFAMILY,
+                          attr(CTRL_ATTR_FAMILY_NAME, name.encode() + b"\0"))
+        return struct.unpack_from("=H", reply[0][CTRL_ATTR_FAMILY_ID])[0]
+
+
+def main(argv):
+    action = argv[1] if len(argv) > 1 else "status"
+    interface = argv[2] if len(argv) > 2 else "wlan0"
+    if action not in ("status", "off", "on") or len(argv) > 3:
+        print("usage: " + __doc__.split("\n\n")[1].strip(), file=sys.stderr)
+        return 2
+    try:
+        index = attr(NL80211_ATTR_IFINDEX, struct.pack("=I", socket.if_nametoindex(interface)))
+    except OSError:
+        print("pedal-wifi: there is no %s" % interface, file=sys.stderr)
+        return 1
+
+    netlink = GenericNetlink()
+    nl80211 = netlink.family("nl80211")
+    try:
+        if action != "status":
+            wanted = NL80211_PS_ENABLED if action == "on" else NL80211_PS_DISABLED
+            netlink.call(nl80211, NL80211_CMD_SET_POWER_SAVE,
+                         index + attr(NL80211_ATTR_PS_STATE, struct.pack("=I", wanted)))
+        reply = netlink.call(nl80211, NL80211_CMD_GET_POWER_SAVE, index)
+    except OSError as error:
+        if error.errno != errno.ENODEV:
+            raise
+        print("pedal-wifi: %s is not a WiFi interface" % interface, file=sys.stderr)
+        return 1
+    state = struct.unpack_from("=I", reply[0][NL80211_ATTR_PS_STATE])[0]
+    print("%s: power saving %s" % (interface, "on" if state == NL80211_PS_ENABLED else "off"))
+    if action != "status" and state != wanted:
+        print("pedal-wifi: asked for %s and the driver kept it %s"
+              % (action, "on" if state == NL80211_PS_ENABLED else "off"), file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        sys.exit(main(sys.argv))
+    except OSError as error:
+        print("pedal-wifi: %s" % error.strerror, file=sys.stderr)
+        sys.exit(1)
