@@ -112,7 +112,8 @@ if [[ -n $engine ]] && git -C ~/code.local/namchain cat-file -e "$engine" 2>/dev
 fi
 applied=$(on "$HOST" "sed -n 's/^commit=//p' /etc/pedal/applied" 2>/dev/null || true)
 if [[ -n $applied && -d $ROOT/devices/$HOST ]]; then
-  last=$(git -C "$ROOT" log -1 --format=%h -- devices/common "devices/$HOST" ":!devices/$HOST/backups")
+  # Only the rootfs trees go on the host; the apply scripts themselves run on the Mac.
+  last=$(git -C "$ROOT" log -1 --format=%h -- devices/common/rootfs "devices/$HOST/rootfs")
   if git -C "$ROOT" merge-base --is-ancestor "$last" "${applied%-dirty}" 2>/dev/null; then
     note "devices/$HOST: applied $applied, nothing newer committed"
   else
