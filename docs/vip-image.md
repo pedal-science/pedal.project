@@ -4,8 +4,10 @@
 from nothing: one command on the Mac builds everything and writes a blank SD card, and the card
 boots vip straight onto the network. It also covers how vip keeps itself reachable when a
 kernel, a command line or its own root filesystem is broken. Your decisions of 2026-09-29 are
-recorded at the end. **Step 1 is done** (2026-09-29): the spike card proved the layout on vip,
-unchanged; results in `bench-results/vip-spike/results.md`.
+recorded at the end. **Steps 1 and 2 are done** (2026-09-29): the spike card proved the layout
+on vip, and rtpi's `vip-boot` ran every path on it (`bench-results/vip-spike/`). Step 2 changed
+the slots, below: two fixed slots `a/` and `b/` and a pointer file, where this plan had
+`current/`, `new/` and `old/`.
 
 It settles the open question in `plan.md` ("which repo owns vip's kernel and boot
 configuration") as proposed below, under [Who owns what](#who-owns-what).
@@ -82,7 +84,7 @@ GPT, so partitions carry labels and there's no four-primary limit. The Pi 5 boot
 | # | Label | Type | Size | Holds |
 |---|---|---|---|---|
 | 1 | `bootsel` | FAT32 | 64 MB | `autoboot.txt` only, plus the boot counter and the last fallback reason. Both roots can write it |
-| 2 | `pedal-boot` | FAT32 | 512 MB | The pedal's `config.txt`, and kernel slots `current/`, `new/`, `old/`, each with its kernel, initramfs, DTBs, overlays and `cmdline.txt` |
+| 2 | `pedal-boot` | FAT32 | 512 MB | The pedal's `config.txt`, `profile.txt` and `tryboot.txt`, and kernel slots `a/` and `b/`, each with its kernel, initramfs, DTBs, overlays, `cmdline-tuned.txt` and `cmdline-loose.txt` |
 | 3 | `rescue-boot` | FAT32 | 256 MB | The rescue kernel, initramfs, DTBs and `config.txt` |
 | 4 | `rescue` | ext4 | 1.5 GB | The rescue root. Mounted read-only, `/var` and `/tmp` on tmpfs |
 | 5 | `pedal` | ext4 | 3 GB | The pedal root |
@@ -103,18 +105,31 @@ reset or a power cut returns to the default. With `tryboot_a_b=1`, the flag sele
 partition in `autoboot.txt`, and `[tryboot]` sections in that partition's `config.txt` also apply.
 That's what piv uses today, one level down.
 
-One tool, `vip-boot`, is the only thing that writes `autoboot.txt` and the `[tryboot]` sections.
-It arms a one-shot by writing the `[tryboot]` blocks for what you asked for, then reboots with the
-flag. The `[all]` default changes only on promotion or when you ask for a new default.
+One tool, `vip-boot` (rtpi, `devices/vip/usr/local/sbin/vip-boot`), is the only thing that writes
+the boot selection. The pedal's `config.txt` is written once and never again; it includes two
+small files that `vip-boot` rewrites:
+
+```
+[all]       include profile.txt     os_prefix=a/ and cmdline=cmdline-tuned.txt: the default
+[tryboot]   include tryboot.txt     what the next one-shot changes, e.g. os_prefix=b/
+```
+
+Kernels live in two fixed slots, `a/` and `b/`. `profile.txt` names the active one; the other
+holds the previous kernel, or a candidate while one is tried. Promoting a candidate is one
+rewrite of `profile.txt`, not a rename of directories, so at no moment does the card lack a
+kernel to boot. Every file `vip-boot` changes on FAT (`autoboot.txt`, `profile.txt`,
+`tryboot.txt`, the counter) is rewritten in place at the same length, inside one sector, so a
+power cut mid-write leaves the old sector or the new one. Tested on vip with the spike
+(`include` under `[tryboot]` applies; a later `os_prefix` wins).
 
 | You want | Command | What boots | Afterwards |
 |---|---|---|---|
-| Normal | power on | pedal-boot `current/`, tuned | — |
-| Try a kernel | `vip-boot try-kernel <rel>` | pedal-boot `new/` once | validate passes → promote `new/` → `current/` → `old/`. Anything else → `current/` again, and `new/` is marked bad |
-| Try new boot arguments | `vip-boot try-args '<args>'` | `new/` with the same kernel and the new command line | the same as a kernel |
-| One loose boot | `vip-boot loose` | `current/`, loose profile | next boot is tuned |
+| Normal | power on | the active slot, default profile (tuned) | — |
+| Try a kernel | `vip-boot try-kernel <rel>` | the spare slot once | validate passes → it becomes the active slot, and the other keeps the previous kernel. Anything else → the active slot again, and the candidate is marked bad |
+| Try new boot arguments | `vip-boot try-args '<args>'` | the spare slot with the same kernel and the new tuned arguments | the same as a kernel |
+| One loose boot | `vip-boot loose` | the active slot, loose profile | next boot is tuned |
 | Loose until told otherwise | `vip-boot default loose` | loose every boot | `vip-boot default tuned` |
-| Rescue once | `vip-boot rescue` | rescue-boot | next boot is the pedal |
+| Rescue once | `vip-boot rescue` (`reboot "3"`: no flag, nothing written) | rescue-boot | next boot is the pedal |
 | Stay in rescue | `vip-boot rescue --stay` (or from rescue: `vip-boot stay`) | rescue every boot | `vip-boot default pedal` from rescue |
 
 ### Falling back without being asked
@@ -275,6 +290,14 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
    `systemd-timesyncd`, and `systemctl reboot --reboot-argument=…` in `vip-boot`.
 2. **rtpi:** `devices/vip/device.env`, and `vip-boot` with its validate hook, the counter and
    the fallback, written for an image-built host. Unit-test the state logic off the board.
+
+   **Done, 2026-09-29.** `tests/vip-boot` (30 tests), and every path run on vip with the spike
+   (`bench-results/vip-spike/vip-boot.md`), which found four bugs the tests couldn't: the
+   initramfs counter ran before the card's partitions appeared, validation queued two minutes
+   behind `network-online.target`, tools missing from the initramfs, and a loose boot with no
+   `pedal-maint.target` would strand vip. For step 3: `pedal-maint.target`, and
+   `RequiredForOnline=no` on `eth0`. For step 4: `ca-certificates` in both roots, and room for
+   dracut on the pedal root.
 3. **pedal.project:** `devices/vip/` from `devices/piv/`, not copied blind (no docker or libvirt
    notes, the Pi 5's interrupt layout, 1 GB), and `pedal-device apply --offline` for the image.
 4. **The build:** the container, both roots, namchain, the image, the manifest. Done when
