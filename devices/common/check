@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # devices/<host>/check — is the host running exactly this tree, and is it all in force? Read-only.
 #
-# Compares every file under both rootfs/ trees with the copy on the host, then runs
+# Compares every file under both rootfs/ trees with the copy on the host, checks that the packages
+# in devices/<host>/packages (if it has one) are installed, then runs
 # `pedal-device status`, which checks the masks, the clock, the cpusets, the audio interrupt and what may run on core 3.
 # Exits non-zero on any difference.
 
@@ -20,6 +21,17 @@ while read -r sum path; do
   elif [[ $theirs != "$sum" ]]; then printf '  FAIL  %-50s differs from the repo\n' "$path"; bad=1
   else printf '  ok    %s\n' "$path"; fi
 done <<< "$local_sums"
+
+if [[ -f $DEV_DIR/packages ]]; then
+  log "packages: devices/$DEV_NAME/packages on $DEV_HOST"
+  pkgs=$(grep -v -e '^#' -e '^[[:space:]]*$' "$DEV_DIR/packages" | tr '\n' ' ')
+  installed=$(dev "dpkg-query -W -f='\${Package} \${db:Status-Abbrev}\n' $pkgs 2>/dev/null" || true)
+  for p in $pkgs; do
+    if awk -v p="$p" '$1 == p && $2 == "ii" { f = 1 } END { exit !f }' <<< "$installed"; then
+      printf '  ok    %s\n' "$p"
+    else printf '  FAIL  %-50s not installed on %s\n' "$p" "$DEV_HOST"; bad=1; fi
+  done
+fi
 
 log "state on $DEV_HOST"
 dev "sudo -n /usr/local/sbin/pedal-device status" || bad=1

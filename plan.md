@@ -837,6 +837,7 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
   - the Inst/Line switch and the Line pad's resistors, at provisional values; screened cable and
     hook-up wire.
 - **Not designed yet:** the 5 V input, the mic stage, cooling and the enclosure hardware.
+| piv's `/usr/local` still holds the rest of a raspberrypi/utils `make install` from 2026-09-06, recorded nowhere. It shadows packaged `pinctrl`, `vcgencmd`, `vclog`, `vcmailbox`, `dtmerge`, `ovmerge`, `kdtc`, `eep*`, `otpset` and `libgpiolib`, and adds tools no package has (`piotest` and the other PIO tests, `rpi-eeprom-ab`, `libpio`, `librpieepromab`). Its `dtoverlay` family was removed 2026-09-29 for `raspi-utils-dt` (listed in `devices/piv/packages`; the files are in `devices/piv/backups/20260929T220039Z/`) | Nothing in the pedal uses the rest; piv is a stand-in | Remove the shadowing copies after checking the packaged ones do the same, and list whatever is kept in `devices/piv/`. vip is built from packages (`docs/vip-image.md`), so it doesn't inherit this |
 
 ## Next session starts with
 

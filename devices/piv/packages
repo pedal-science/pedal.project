@@ -1,0 +1,7 @@
+# Packages piv must have installed; devices/piv/check fails if any is missing. One per line.
+# apply doesn't install them: install with apt, then `apt-mark manual` so no autoremove takes them.
+
+# pedal-codec: dtoverlay (and libdtovl0), dtc, and amixer/alsactl.
+raspi-utils-dt
+device-tree-compiler
+alsa-utils
