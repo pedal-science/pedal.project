@@ -3,8 +3,8 @@
 **Status:** plan, 2026-09-29. vip (Raspberry Pi 5, 1 GB) has arrived. This covers how vip is made
 from nothing: one command on the Mac builds everything and writes a blank SD card, and the card
 boots vip straight onto the network. It also covers how vip keeps itself reachable when a
-kernel, a command line or its own root filesystem is broken. The choices marked **yours** are
-listed at the end. Nothing is built yet.
+kernel, a command line or its own root filesystem is broken. Your decisions of 2026-09-29 are
+recorded at the end. Nothing is built yet.
 
 It settles the open question in `plan.md` ("which repo owns vip's kernel and boot
 configuration") as proposed below, under [Who owns what](#who-owns-what).
@@ -89,8 +89,8 @@ GPT, so partitions carry labels and there's no four-primary limit. The Pi 5 boot
 
 The image is about 6 GB and fits the 8 GB card; the data partition grows to fill the card on first
 boot (`systemd-repart`). The library is 15 MB today, so size isn't a constraint either way.
-**Proposed:** vip runs from the 32 GB card, for headroom and wear levelling, and the 8 GB card is
-made by the same command as the spare (**yours**). The data partition is there from day one
+**Decided:** vip runs from the 32 GB card, for headroom and wear levelling. The 8 GB card can be
+made by the same command as a spare. The data partition is there from day one
 because it's the one thing that's hard to add later. Phase 4's read-only pedal root and a second
 pedal root for A/B updates can come later: they need `pedal-data` to exist, and nothing else.
 
@@ -147,8 +147,14 @@ default pedal that plays with no network is healthy.
 straight into it, the kernel console goes there (`ttyAMA10`), and `BOOT_UART=1` in the EEPROM
 adds the bootloader's own output. That gives a remote read of a failed boot and, for Phase 1
 step 7, the firmware time that piv couldn't measure. It also frees pins 8/10 (`ttyAMA0`) for the
-Pico link, which is Phase 3 step 4's open question. The basket has one Debug Probe, and the
-Pico bench uses it too, so a second probe or an FTDI cable may be worth adding (**yours**).
+Pico link, which is Phase 3 step 4's open question. **Decided:** the probe stays on the Pico for
+now. The image sets the console up on the header anyway, so moving the probe over is a plug-in
+job if vip ever needs it. Until then a boot that fails before the network needs HDMI and a
+keyboard.
+
+**Wired Ethernet.** There's none near vip today, so WiFi is the way in, and both roots depend on
+it. Both also bring up `eth0` with DHCP when a cable is present: moving vip onto a cable is the
+rescue path if its WiFi configuration is ever what broke.
 
 ## The build
 
@@ -156,7 +162,7 @@ Everything runs in colima on the Mac. The M2 is arm64, so the container runs aar
 natively, with no qemu and no emulation. Nothing needs loop devices or a privileged container:
 
 - **Roots:** `mmdebstrap --variant=minbase` from `snapshot.ubuntu.com` at a pinned timestamp, so
-  the same inputs give the same packages. Ubuntu 26.04 `resolute` (**yours**; see the end), with
+  the same inputs give the same packages. Ubuntu 26.04 `resolute` (decided), with
   `resolute-updates` for the 7.0.0-1017 kernels. `SOURCE_DATE_EPOCH` is set from the pinned
   snapshot.
 - **Customisation** happens in mmdebstrap hooks: user `rik`, the hostname, fstab by label, the
@@ -183,11 +189,26 @@ natively, with no qemu and no emulation. Nothing needs loop devices or a privile
   (committed): every input commit, the snapshot, the package list with versions, and the image's
   hash. `components.lock` is written from vip after first boot, as for piv.
 
-**Secrets never enter git.** The WiFi PSK, the `namchaind` token and the SSH host keys live in
-`~/.config/pedal/vip/` (mode 600). The first run asks for what's missing and generates the host
-keys once. Keeping the host keys means a reflashed vip is the same machine to `ssh`, with no
-`known_hosts` warning. `authorized_keys` comes from the 1Password agent (`ssh-add -L`). Where the
-PSK and token come from is **yours**: see the end.
+**Secrets never enter git, and live in 1Password.** `make-card` reads them with `op read` at
+build time and writes them straight into the roots as the files the services already expect,
+mode 600, root-owned: the WiFi connection in both roots, and `/etc/namchain/token` in the pedal
+root. They never pass through a file on the Mac. The items:
+
+| 1Password item (names to settle in step 4) | Goes to |
+|---|---|
+| WiFi SSID and PSK | the WiFi connection in both roots |
+| `namchaind` token: **piv's**, so ljoss connects to vip unchanged | `/etc/namchain/token` |
+| vip's SSH host keys, generated once by the first run and stored back | `/etc/ssh/ssh_host_*` in both roots |
+
+Keeping the host keys means a reflashed vip is the same machine to `ssh`, with no `known_hosts`
+warning. `authorized_keys` comes from the 1Password agent (`ssh-add -L`). The build stops early if
+`op` isn't signed in, before any time is spent.
+
+Reusing piv's token needs one step in 4: copy it from piv into 1Password, piped straight from
+`ssh piv sudo cat /etc/namchain/token` into `op`, never shown. It also changes a rule:
+`namchaind`'s drop-in and deploy-engine say the token is made on the host and never leaves it.
+From now on it's made once, kept in 1Password, and installed by the image. deploy-engine still
+makes one if a host has none.
 
 ### Writing the card
 
@@ -240,7 +261,7 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
    - vip's EEPROM boots a GPT card and honours `autoboot.txt` with `tryboot_a_b=1` and
      `boot_partition`.
    - `[tryboot]` in the selected partition's `config.txt` still applies with a partition switch.
-   - The debug UART on the Debug Probe shows the bootloader and the kernel.
+   - The spike boots onto WiFi from a connection file written at build time.
 
    Done when all three are seen and the EEPROM version is recorded. If one fails, the layout
    changes here, before anything is built on it.
@@ -274,20 +295,15 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
 Later, not now: the read-only pedal root and a second pedal root for A/B updates (Phase 4),
 using `pedal-data` and the same `vip-boot` candidate path.
 
-## Yours to decide
+## Decided, 2026-09-29
 
-1. **The base.** Proposed: **Ubuntu 26.04 `resolute`**, minimal, with `linux-raspi-realtime`.
-   It's the kernel every piv number was measured on, and it's already PREEMPT_RT. The
-   alternative is Raspberry Pi OS Lite (trixie): a smaller, better-supported Pi userland, but its
-   kernel isn't RT, so vip would start on an rtpi-built kernel (`piv-vendor-rt`) and piv's
-   measurements wouldn't carry over directly.
-2. **Secrets.** Where the WiFi PSK and the `namchaind` token come from: a file in
-   `~/.config/pedal/vip/` that the first run asks for (proposed), or 1Password through `op`. And
-   whether vip reuses piv's token, so ljoss connects unchanged, or gets its own.
-3. **Cards.** 32 GB in vip, and the 8 GB made as the spare (proposed)?
-4. **The Debug Probe.** Permanently on vip's UART header, with a second probe or an FTDI cable
-   for the Pico bench?
-5. **Ethernet.** Is there a cable near vip? Both roots bring up `eth0` if there is, and it's a
-   second way in while WiFi is being worked on.
-6. **The plan's next item** is the step 8 soak on piv. Run it on piv as planned, or wait and run
-   it on vip once step 5 is done, since vip is the machine that matters?
+| # | Question | Decision |
+|---|---|---|
+| 1 | The base | **Ubuntu 26.04 `resolute`**, minimal, with `linux-raspi-realtime`: the kernel every piv number was measured on. Raspberry Pi OS Lite would have meant an rtpi-built kernel from the start |
+| 2 | Secrets | **1Password**, read with `op` at build time and written into the roots as runtime files. vip **reuses piv's `namchaind` token** |
+| 3 | Cards | **32 GB** in vip. The 8 GB can be the spare |
+| 4 | The Debug Probe | **Stays on the Pico** for now. The console is set up on vip's header, so moving it is easy |
+| 5 | Ethernet | **None near vip.** WiFi is the way in; moving vip onto a cable is the rescue path |
+
+Still open: whether the plan's next item, the Phase 1 step 8 soak, runs on piv as planned or
+waits for vip.
