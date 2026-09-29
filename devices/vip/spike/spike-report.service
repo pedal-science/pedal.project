@@ -1,0 +1,10 @@
+[Unit]
+Description=Log which partition and slot this boot came from
+After=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/spike-report --log
+
+[Install]
+WantedBy=multi-user.target
