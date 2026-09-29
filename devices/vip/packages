@@ -1,0 +1,40 @@
+# The pedal root's packages, beyond mmdebstrap's minbase: read by the image build (step 4 of
+# docs/vip-image.md), from the pinned snapshot, without recommends. What each is for:
+
+# The kernel: Ubuntu's RT flavour (rtpi devices/vip/device.env, PEDAL_KERNEL), and the Pi 5's
+# WiFi firmware.
+linux-image-7.0.0-1017-raspi-realtime
+linux-modules-7.0.0-1017-raspi-realtime
+linux-firmware-raspi
+wireless-regdb
+
+# Booting and the boot selection (rtpi's vip-boot: python3, dracut, the FAT tools).
+systemd
+systemd-sysv
+systemd-resolved
+systemd-timesyncd
+udev
+dbus
+dracut-core
+python3-minimal
+dosfstools
+e2fsprogs
+
+# Reaching it.
+openssh-server
+sudo
+wpasupplicant
+iproute2
+iputils-ping
+ca-certificates
+
+# The codec (pedal-codec) and the engine's tools (alsa-utils: amixer, alsactl, arecord).
+raspi-utils-dt
+device-tree-compiler
+alsa-utils
+
+# pedal-tune, pedal-device, pedal-resume.
+procps
+util-linux
+kmod
+less

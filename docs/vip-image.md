@@ -300,6 +300,15 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
    dracut on the pedal root.
 3. **pedal.project:** `devices/vip/` from `devices/piv/`, not copied blind (no docker or libvirt
    notes, the Pi 5's interrupt layout, 1 GB), and `pedal-device apply --offline` for the image.
+
+   **Done, 2026-09-29.** `devices/vip/`: `namchaind` on the WM8960 (2 in, 2 out; the codec is
+   wired to vip, `bench-results/vip-spike/codec.md`), `pedal-tune` pinning the codec's interrupt
+   (`dw_axi_dmac_platform`, the RP1's DMA) to core 2 itself, a short mask list, networkd and
+   wpa_supplicant with `eth0` not required for online, keys-only sshd, `pedal-maint.target`, and
+   `devices/vip/packages`, the pedal root's package list for step 4. The codec files moved to
+   `devices/common` (both Pi hosts). `pedal-device apply --root <dir>` applies offline, with the
+   root's own systemctl; `devices/vip/test-offline-apply` builds a root from the package list and
+   checks the result. The step's plan said `--offline`; it's `--root`, since it needs the root.
 4. **The build:** the container, both roots, namchain, the image, the manifest. Done when
    `make-card --image-only` produces an image from pinned inputs, and a second run with the same
    pins produces the same package list and file tree.

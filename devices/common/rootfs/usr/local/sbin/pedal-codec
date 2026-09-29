@@ -3,14 +3,18 @@
 #
 # The overlay is loaded at runtime rather than from config.txt, so it lives in this tree (and is
 # undone by `pedal-device revert`), survives kernel updates replacing the boot overlays, and can't
-# stop the host booting. Safe to re-run.
+# stop the host booting. Safe to re-run. Needs dtc (device-tree-compiler) and dtoverlay
+# (raspi-utils-dt).
 set -euo pipefail
 
 dir=/etc/pedal/codec
 name=wm8960-codec-master
 card=wm8960
 
-if ! dtoverlay -l | grep -qw "$name"; then
+# Loaded already? Ask configfs, where dtoverlay puts it as <index>_<name> (0_wm8960-codec-master).
+# `dtoverlay -l` needs the boot partition's overlays/ directory, which vip's kernel slots don't
+# have (bench-results/vip-spike/codec.md).
+if ! compgen -G "/sys/kernel/config/device-tree/overlays/*_$name" >/dev/null; then
   tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
   dtc -q -@ -I dts -O dtb -o "$tmp/$name.dtbo" "$dir/$name.dts"
   dtoverlay -d "$tmp" "$name"

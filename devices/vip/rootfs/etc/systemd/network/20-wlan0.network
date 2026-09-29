@@ -1,0 +1,8 @@
+# WiFi, the way in: there's no cable near vip. wpa_supplicant@wlan0 joins the network; its
+# configuration holds the key, so the image build writes it from 1Password and it isn't in this
+# tree. The names are wlan0 and eth0 because every command line carries net.ifnames=0.
+[Match]
+Name=wlan0
+
+[Network]
+DHCP=yes

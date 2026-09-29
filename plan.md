@@ -823,9 +823,12 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 **vip** (arrived): `docs/vip-image.md` step 1 is done, the spike card proved the boot layout on
 vip unchanged (`bench-results/vip-spike/results.md`). Step 2 is done too: rtpi's `vip-boot`,
-tested off the board and on vip (`bench-results/vip-spike/vip-boot.md`). Next is step 3,
-`devices/vip/`. The spike card is still in vip, on WiFi as `vip-spike`, converted to `vip-boot`'s
-layout.
+tested off the board and on vip (`bench-results/vip-spike/vip-boot.md`). Step 3 is done:
+`devices/vip/`, with `namchaind` on the WM8960, which is wired to vip and comes up as clock master
+(`bench-results/vip-spike/codec.md`). Next is step 4, the image build. The spike card is still in
+vip, on WiFi as `vip-spike`, on `vip-boot`'s layout, with `pedal-codec` running.
+piv: its tree lost the codec files to `devices/common` (same paths) and `pedal-codec` changed, so
+`devices/piv/check` reports `pedal-codec` as differing until the next `devices/piv/apply`.
 
 Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot time.
 1. The step 8 soak at q64: an amp-only A2-Full plus a full-length IR, ljoss editing over WiFi,
