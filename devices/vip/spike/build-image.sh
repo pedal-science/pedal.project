@@ -83,6 +83,11 @@ unset WIFI_SSID WIFI_PSK
 ln -sf /run/systemd/resolve/stub-resolv.conf "$ROOT/etc/resolv.conf"
 chroot "$ROOT" systemctl enable systemd-networkd systemd-resolved wpa_supplicant@wlan0 ssh
 
+log "serial console: root autologin on ttyAMA10 (spike only: needs the Debug Probe in hand)"
+mkdir -p "$ROOT/etc/systemd/system/serial-getty@ttyAMA10.service.d"
+printf '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin root --keep-baud 115200 %%I $TERM\n' \
+  > "$ROOT/etc/systemd/system/serial-getty@ttyAMA10.service.d/10-autologin.conf"
+
 log "watchdog at 14 s, as on piv"
 mkdir -p "$ROOT/etc/systemd/system.conf.d"
 printf '[Manager]\nRuntimeWatchdogSec=14\nRebootWatchdogSec=2min\n' \
