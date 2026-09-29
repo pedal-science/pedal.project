@@ -67,6 +67,9 @@ What this changes:
 
 **Open:** which repo owns vip's kernel and boot configuration. piv runs Ubuntu's
 `raspi-realtime` kernel, not rtpi's. `tib`'s last config backup stays in `devices/tib/backups/`.
+**Proposed 2026-09-29** in [docs/vip-image.md](docs/vip-image.md), with how vip is built (one
+command on the Mac writes a blank card), its rescue and pedal roots, and the fallbacks. It has
+six choices for you at the end.
 
 ## Where things stand
 

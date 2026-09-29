@@ -117,7 +117,8 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
 - `docs/`: `working-across-repos.md` (repos, machines, rules), `hardware-handoff.md`
   (schematic findings and reasoning), `codec-bringup-2a.md` (the 2a bench walkthrough),
   `rig-switch-strategies.md`, `uart-protocol.md`, `pedal-service.md` (the service's design: what
-  it owns, storage, uploads, the mapping, failure modes), `bom.md`.
+  it owns, storage, uploads, the mapping, failure modes), `vip-image.md` (building vip's card,
+  its rescue and pedal roots, boot fallback), `bom.md`.
 - `devices/<host>/rootfs/` — the Core host's configuration as code.
 - `docs/diagrams/` — draw.io, two layers: blocks and connections. The small squares on the
   connection layer are routing junctions, **not components**. When reasoning about the
