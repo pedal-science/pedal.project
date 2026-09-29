@@ -6,7 +6,7 @@
 # The guards are rtpi's restore-sd-on-mac.sh's: external, removable, physical disks only; not
 # the disk the Mac booted from; the card must hold the image; you type the confirmation word
 # (default: the image's host, from the file name's first word) before anything is written.
-# Then it writes to the raw node, reads the written length back, compares hashes and ejects.
+# Then it writes to the raw node and reads it back in the same open, compares hashes and ejects.
 # Needs sudo for the raw device.
 
 set -euo pipefail
@@ -62,17 +62,40 @@ log "hashing the image"
 IMG_SHA=$(shasum -a 256 "$IMAGE" | cut -d' ' -f1)
 diskutil unmountDisk "$DISK" >/dev/null
 RAW=${DISK/disk/rdisk}
-log "writing to $RAW"
-sudo dd if="$IMAGE" of="$RAW" bs=4m status=progress
-sync
-
-log "reading back $IMG_BYTES bytes"
-diskutil unmountDisk "$DISK" >/dev/null 2>&1 || true
-BLOCKS=$(( IMG_BYTES / 4194304 )); TAIL=$(( IMG_BYTES % 4194304 ))
-(( TAIL % 512 == 0 )) || die "image length is not a whole number of sectors"
-CARD_SHA=$( { sudo dd if="$RAW" bs=4m count=$BLOCKS status=none
-              (( TAIL == 0 )) || sudo dd if="$RAW" bs=512 skip=$(( BLOCKS * 8192 )) count=$(( TAIL / 512 )) status=none
-            } | shasum -a 256 | cut -d' ' -f1)
+# Write and read back through ONE open of the raw device. When a writer closes the whole disk,
+# macOS rescans it and mounts any FAT partitions it finds, writing .fseventsd onto them, so a
+# read-back after a separate dd compares against a card macOS has already changed.
+log "writing to $RAW, then reading it back"
+CARD_SHA=$(sudo /usr/bin/python3 - "$IMAGE" "$RAW" <<'PY'
+import hashlib, os, sys, time
+image, raw = sys.argv[1], sys.argv[2]
+size, chunk = os.path.getsize(image), 4 << 20
+fd = os.open(raw, os.O_RDWR)
+def progress(what, done, t0):
+    sys.stderr.write(f"\r   {what} {done >> 20} / {size >> 20} MiB, {done / max(time.time() - t0, 1e-3) / 1e6:.0f} MB/s ")
+try:
+    t0, done = time.time(), 0
+    with open(image, "rb") as f:
+        while buf := f.read(chunk):
+            if len(buf) % 512:
+                buf += b"\0" * (512 - len(buf) % 512)
+            os.write(fd, buf); done += len(buf)
+            if done % (64 << 20) == 0: progress("wrote", done, t0)
+    os.fsync(fd); progress("wrote", size, t0); sys.stderr.write("\n")
+    os.lseek(fd, 0, os.SEEK_SET)
+    h, left, t0 = hashlib.sha256(), size, time.time()
+    while left:
+        buf = os.read(fd, min(chunk, (left + 511) // 512 * 512))
+        if not buf: raise SystemExit("short read from the card")
+        h.update(buf[:left]); left -= min(len(buf), left)
+        if (size - left) % (64 << 20) == 0: progress("read ", size - left, t0)
+    progress("read ", size, t0); sys.stderr.write("\n")
+    print(h.hexdigest())
+finally:
+    os.close(fd)
+PY
+)
 [[ $CARD_SHA == "$IMG_SHA" ]] || die "read-back hash differs: card $CARD_SHA, image $IMG_SHA"
 ok "card matches the image ($IMG_SHA)"
+# macOS may now mount the FAT partitions and add .fseventsd to them. Harmless to the Pi.
 diskutil eject "$DISK" >/dev/null && ok "ejected: the card can come out"
