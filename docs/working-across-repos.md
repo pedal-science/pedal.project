@@ -12,7 +12,7 @@ rather than a rule.
 
 | Repo (GitHub `rikkus/…`) | Checkout on the Mac | Owns |
 |---|---|---|
-| `pedal.project` | `~/code.local/pedal.project` | The pedal as a system: goal, hardware design, diagrams, decisions, plan. Later: `tib`'s appliance configuration, the Pico firmware, and the `tib`-side control bridge |
+| `pedal.project` | `~/code.local/pedal.project` | The pedal as a system: goal, hardware design, diagrams, decisions, plan. The Core host's appliance configuration (`devices/`), the Pico firmware (`firmware/`), and next, the pedal service beside `namchaind` |
 | `namchain` | `~/code.local/namchain` | The engine library, `namchaind`, `namchainctl`, the soak and bench tools, and **the control protocol** (protocol 2) |
 | `ljoss` | `~/code.local/ljoss` | The rig designer (macOS/iOS), including flattening the rig tree into an engine graph |
 | `rtpi` | `~/code.local/rtpi` | `tib`'s kernel, the boot-slot safety net, RT tuning, and so any **device-tree** change such as the WM8960 sound card |
@@ -41,7 +41,8 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
    here and nowhere else. Component repos *link* to it. A copy is a fork that nobody maintains.
 2. **A contract lives with whoever implements it, and consumers link to it.** The engine protocol is
    `namchain`'s (`docs/daemon.md`, `docs/ui-integration-plan.md` §1), and `ljoss/docs/ENGINE.md`
-   already follows this rule. The Pico ↔ `tib` UART protocol will live here, beside both ends.
+   already follows this rule. The Pico ↔ Core host UART protocol lives here
+   (`docs/uart-protocol.md`), beside both ends.
 3. **Work in the repo that owns the change.** Cross-cutting sessions start here, with the other
    repos added as extra directories (below). A session that is deep in one component starts in that
    component's repo.
@@ -77,7 +78,7 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 | App (`ljoss`) | Xcode on the Mac → run against a local `namchaind` (CoreAudio backend) or against `tib` over WiFi → `Tools/check-device.sh` for the handshake and `audible_generation` |
 | Kernel, device tree (`rtpi`) | Build in colima on the Mac → stage as the candidate slot → one-shot try-boot on `tib` → promote with `tib-freeze-good` |
 | DSP research (`NAMBench`) | Fork branch → upstream PR, plus either a patch or pin in `namchain/vendor` or a port into one of `namchain`'s own nodes → `namchain`'s golden, parity or tolerance tests prove the swap |
-| Pico firmware (planned) | Build on the Mac with the Pico SDK → flash (UF2 or a debug probe) → test against the `tib` bridge over the UART |
+| Pico firmware (`firmware/`) | `firmware/build.sh` on the Mac (Pico SDK 2.3.1, Arm GNU 15.3.rel1) → `firmware/flash.sh` (picotool, or the UF2 volume) → the bench tests through the Debug Probe (`firmware/tools/`) → later, the pedal service over the Core host's UART |
 
 Rollback on `tib` is the previous symlink. For the kernel it is `rtpi`'s known-good slot.
 
@@ -99,9 +100,9 @@ Rollback on `tib` is the previous symlink. For the kernel it is `rtpi`'s known-g
   `CLAUDE.md` that is just `@AGENTS.md`. Cursor and the DeepSeek harness read the former, and
   Claude Code reads the latter. Each ends with one line pointing here for system context.
   `namchain`'s points into its `plan.md` at "How to resume" rather than the whole file.
-  `pedal.project` itself has both too (2026-09-27): its `CLAUDE.md` stays the canonical brief,
-  and its `AGENTS.md` carries the session start, commands, constraints and working rules for
-  Cursor/DeepSeek agents.
+  `pedal.project` is the same since 2026-09-29: its `AGENTS.md` is canonical and its `CLAUDE.md`
+  imports it and `docs/hardware-handoff.md`. The 2026-09-27 split, with two briefs, drifted
+  within a day. This is the rule for all of the owner's work, not just these repos.
 - **`pedal.project` has two checkouts on the Mac.** The one these docs name,
   `~/code.local/pedal.project` (Claude Code's), and a second for Cursor/DeepSeek sessions (e.g.
   `~/cursor-projects/pedal.project`). Pull the session's checkout to `origin/main` before

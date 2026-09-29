@@ -564,17 +564,20 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    - the event vocabulary where footswitch and MIDI meet
    - security (the same token model)
    - failure modes: the service being down must never mean audio is down.
-   - Designed 2026-09-28: [docs/pedal-service.md](docs/pedal-service.md). **Beside** `namchaind`
-     — the app keeps protocol 2 directly, and the service is a second client, not a gateway. It
-     owns the library on the pedal, the bank, resume (v0's behaviour, one writer), uploads
-     (atomic, ids, a model's declared rate must be 48 kHz), the mapping tables and the Pico
-     link; it asks namchain for the ready set and the switch once 3.8's calls exist. Two
-     listeners on one token: the engine's 47810 and the service's HTTP 47820, reached by the
-     service over TCP loopback because `engine.assets`/`engine.schema` replies outgrow a Unix
-     datagram. It settles what 3.3 deferred: **the relay stays where it is on link loss**, and
-     `audio_ready` energises it at boot only; the **MIDI channel is ignored** until a second
-     controller wants the reserved `CFG`. Implementation is staged in the doc: v1 with 3.4 (link
-     and resume), v2 with 3.5 (uploads), v3 with 3.8 (warm switching).
+   - Designed 2026-09-28: [docs/pedal-service.md](docs/pedal-service.md), and reviewed by Claude
+     the same day (R1–R15, at the end of the doc). **Beside** `namchaind`, as D4 has it — the
+     app keeps protocol 2 directly, and the service is a second client, not a gateway. It owns
+     the library on the pedal, the bank, resume (v0's behaviour, one writer), uploads (atomic,
+     ids, a model's declared rate must be 48 kHz), the mapping tables and the Pico link; it asks
+     namchain for the ready set and the switch once 3.8's calls exist. Two listeners on one
+     token: the engine's 47810 and the service's HTTP 47820, reached by the service over TCP
+     loopback because `engine.assets`/`engine.schema` replies outgrow a Unix datagram. The **MIDI
+     channel is ignored** until a second controller wants the reserved `CFG`.
+   - Staged to follow D10 (R1): v1 with 3.4 (the link and resume; switching on the bench only),
+     v2 with 3.8 (the ready set, and switching for real), v3 when uploads get a step.
+   - **Open, yours:** the relay rule (R4; proposed: bypass after 5 s without the link or 2 s
+     without `audio_ready`), ljoss on connect (R6, `docs/rig-edits.md` C12), and who owns the
+     switching budget, namchain or the service (R14).
 3. **UART protocol**, the contract kept here.
    - Framed, checksummed and versioned.
    - Events: rig up/down/select, bank, CC value, bypass.
@@ -589,18 +592,35 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      on the bench, retransmit and link-down included (`firmware/tools/protocol-test.py`;
      `bench-results/2026-09-28-pico-protocol-loopback.txt`). The service end is a test script
      until step 2.
-4. **The tib side.**
-   - Enable a header UART in rtpi's device tree. The console is ttyS2 on pins 32/33; UART1 on
-     pins 8/10 is the obvious one to use.
-   - The pedal service reads it.
+   - Draft 2, proposed in Claude's review of 2026-09-28 (U1–U8 in the doc): the CRC's text
+     corrected, strings length-prefixed, one `EVENT` in flight with a queue behind it, dedupe
+     per session, `engine_bypass` renamed `engine_muted`, and (U8, yours) footswitches sending
+     `cc` 80–82 so footswitch and MIDI messages are identical. The firmware's resync now does
+     what the text says (compile-checked; `protocol-test.py` has a check for it, to run on the
+     bench).
+4. **The Core host side** (`tib`'s UART1 went with `tib`).
+   - A UART on the Pi's 40-pin header that carries nothing but the link: no kernel console, no
+     getty, no SysRq. On piv, pins 8/10 are `ttyAMA0`, and its kernel console is there
+     (`console=ttyAMA0,115200` in its command line, 2026-09-28 backup). Either move the console,
+     or give the link another RP1 UART through a `config.txt` overlay (the Pi 5's `uart2-pi5` to
+     `uart4-pi5`; check Ubuntu's image has them). `devices/<host>/` owns whichever it is.
+   - The pedal service reads it (its v1).
 5. **Firmware v1.**
    - Three footswitches, with 100 nF at each switch, debounce and long-press.
    - DIN MIDI in: optocoupler, UART RX at 31 250 baud.
    - Status LEDs.
    - Everything else goes over the UART.
+   - First, move the link's UART receive from the polled main loop to an interrupt filling a ring
+     buffer. The RP2350's RX FIFO is 32 bytes (under 3 ms at 115200), so a display redraw or a
+     burst of MIDI in the loop can overflow it.
 6. **Bypass relay.** Choose a relay whose **de-energised** state is bypass.
    - Then no power, a crashed Pico and a booting `tib` all fail to bypass.
    - The Pico energises it only once the service reports audio ready.
+   - When it drops back to bypass after boot is `docs/pedal-service.md`'s relay rule, open (R4).
+     The Pico and the Core host share the 5 V input, so the Pico stays powered through a Core
+     host reboot or hang; the proposal (bypass after 5 s without the link, or 2 s without
+     `audio_ready`) is what keeps "a booting `tib`" failing to bypass then too. Set its times on
+     the bench, and check what a hung Core host puts out: silence, or a repeating buffer.
    - A long press gives a panic bypass.
    - Check for a pop at **power-off**. The relay drops to bypass within a few ms, but the codec's
      output collapses at the same moment, and which wins decides whether it's audible. If it is: the
@@ -752,10 +772,10 @@ exactly this: think about them now, fix them after the higher-priority work.
 | Only program and control changes get mapped at first | Enough to change rigs | A mapping table in the pedal service: PC → rig, CC → parameter (streamed only when `engine.schema` marks it rampable), bank select, notes |
 | Mono engine: pan and stereo effects are refused. Two chains give dual mono | namchain decision: declare and refuse | namchain's stereo work, when a stereo effect is actually wanted. The outputs are already two channels |
 | The whole rig renders on one core (core 3), and A2-Full alone takes ~58% of it | namchain renders single-threaded. Parallel rendering is its M4, off by default | Two chains on two isolated cores: isolate core 2 too, and admit namchain's parallel mode only once it passes soak and glitch tests. A2-Lite, or slimmed models, where a rig is too big |
-| No resampler: models and IRs must already be at 48 kHz | Phase 1 converts IRs on the way to the device | Convert on upload in the pedal service, or resample at load in namchain (the NAM plugin resamples IRs at load) |
+| No resampler for models: a NAM model must already be at 48 kHz | IRs no longer need one: `nc.cab.ir` resamples 44.1 and 96 kHz (Phase 1.2) | Resample at load in namchain, or convert on upload in the pedal service. Until then its upload API refuses a model that declares another rate (`docs/pedal-service.md`) |
 | One instrument input | D5 | A mic stage on RINPUT1, and a decision on phantom power (a DC-DC converter beside the ADC) |
 | WM8960 replaces HDMI audio on the one I2S controller | Nothing uses HDMI audio | None needed. A second codec would mean TDM or USB |
-| No way to upload from the app yet | D4 | The pedal service's upload API. ljoss gets a "send to pedal" action. Designed 2026-09-28: `docs/pedal-service.md` |
+| No way to upload from the app yet | D4 | The pedal service's upload API. ljoss gets a "send to pedal" action. Designed 2026-09-28: `docs/pedal-service.md`, its v3, which has no plan step yet. `sync-library` moves onto the API then: its `rsync --delete` would remove uploads |
 | The app needs the home network | Phase 1 happens at home | The pedal as its own access point (check whether `tib`'s WiFi chip can run AP mode), or a phone hotspot |
 | No discovery: the host is typed in | — | mDNS from the pedal service |
 | Plain-text token, no TLS | Trusted LAN | A tunnel, or TLS in the service, if it ever leaves the LAN |

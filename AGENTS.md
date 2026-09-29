@@ -1,18 +1,31 @@
 # Pedal Project
 
 The pedal as a system. This repo owns the goal, the hardware design, the diagrams, the
-decisions and the plan, plus the Core host's configuration as code (`devices/<host>/`).
-Later it will also own the Pico firmware and the Core-side control bridge. The engine
-(`namchain`), the rig designer (`ljoss`), the kernel (`rtpi`) and DSP research
+decisions and the plan, plus the Core host's configuration as code (`devices/<host>/`) and
+the Pico firmware (`firmware/`). The pedal service beside `namchaind` will live here too
+(`docs/pedal-service.md`). The engine (`namchain`), the rig designer (`ljoss`), the kernel (`rtpi`) and DSP research
 (`NAMBench`) are separate repos; `docs/working-across-repos.md` says which repo owns
 what, which machines exist, and the rules against drift.
+
+This file is canonical for every agent. `CLAUDE.md` only imports it (and
+`docs/hardware-handoff.md`); change this file, not that one.
+
+**Core host** (the board that runs the DSP, "Core" in `about.md`):
+- **`tib`** (ASUS Tinker Board, RK3288, armhf) is **retired** as of 2026-09-26. It stopped
+  working on 2026-09-25. Its numbers, `devices/tib/` and its backups stay as history.
+- **`piv`** (Raspberry Pi 500, aarch64) stands in until `vip` arrives.
+- **`vip`** (Raspberry Pi 5, 1 GB, aarch64) is on order and becomes the Core target when
+  it arrives.
+
+Older docs and plan phases say "`tib`"; read that as "the Core host". Full hardware context,
+schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-handoff.md).
 
 ## How to start a session
 
 - **Sync this checkout first.** Pull it to `origin/main` before doing anything. Pushes
   happen only when the owner asks for one; work stays local until then.
 - **There are two checkouts on the Mac.** The docs name `~/code.local/pedal.project`
-  (Claude Code's); Cursor/DeepSeek sessions run from another (this one). Before
+  (Claude Code's); Cursor/DeepSeek sessions run from `~/cursor-projects/pedal.project`. Before
   touching a file, check the other checkout's uncommitted work so you don't clobber it.
   Two agents on one repo each get a git worktree.
 - **Read the plan's "Next session starts with"** (`plan.md`) — it names the exact next
@@ -47,6 +60,17 @@ what, which machines exist, and the rules against drift.
   under `~/pico/`). `FW_ECHO=1` builds step 1's echo for the echo test.
 - Write evidence into a repo's `bench-results/`, never `/tmp`.
 
+## Architecture
+
+- `namchaind` (from namchain) renders the rig and drives ALSA directly (`alsa_raw`).
+  No JACK, PipeWire or LV2.
+- ljoss talks to `namchaind` on the Core host directly over WiFi. The Pico handles physical
+  controls only and never carries rigs or models (D2).
+- A **pedal service** in this repo, beside `namchaind`, owns the rig library, resume
+  at power-up, uploads, and the footswitch/MIDI mapping. namchain stays a generic
+  engine (D4). Designed 2026-09-28, with review points open:
+  [docs/pedal-service.md](docs/pedal-service.md).
+
 ## Constraints — ask before violating any of these
 
 - The Core host is a **Raspberry Pi 5-class board, aarch64** (BCM2712, Cortex-A76).
@@ -61,6 +85,14 @@ what, which machines exist, and the rules against drift.
 - Footswitch and MIDI events produce **identical** UART messages.
 - Codec ALC and 3D enhancement stay **off**.
 - `namchaind` drives ALSA directly (`alsa_raw`). No JACK, PipeWire or LV2.
+
+**Planned codec modifications (D8).** The SparkFun WM8960 board is in hand and **stock**. It
+is brought up stock first, then modified and measured before and after (plan Phase 2c).
+Candidates: AVDD-ISO cut with an external LDO, SPKVDD open, VIN disconnected — or, first,
+VIN fed from a 78L05 on the 9 V side, which needs no cutting.
+
+**Check before first power-up:** the display module (ST7789 + EC11) has no onboard LDO, then
+run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V tolerant.
 
 ## Working rules (`docs/working-across-repos.md`)
 
@@ -87,19 +119,19 @@ what, which machines exist, and the rules against drift.
   `rig-switch-strategies.md`, `uart-protocol.md`, `pedal-service.md` (the service's design: what
   it owns, storage, uploads, the mapping, failure modes), `bom.md`.
 - `devices/<host>/rootfs/` — the Core host's configuration as code.
-- `docs/diagrams/` — draw.io, two layers. The small squares on the connections layer
-  are routing junctions, **not components**. Don't break the formatting; if it's
-  confusing, render it to an image with the draw.io CLI and read that, or ask.
+- `docs/diagrams/` — draw.io, two layers: blocks and connections. The small squares on the
+  connection layer are routing junctions, **not components**. When reasoning about the
+  diagram, check that edges still have `source`/`target` set and that no junction joins two
+  distinct nets, but treat the connections as being to the blocks under the small squares on
+  the blocks layer, not to the squares themselves. It's drawn this way to attach connections
+  at arbitrary positions on blocks and keep them horizontal or vertical; if there's a better
+  way, discuss. Don't break the formatting. If it's confusing, render it to an image with the
+  draw.io CLI and read that, or ask.
 
 ## Current state
 
-Phase 1 on piv: steps 3–6 are done and 7 except firmware boot time; next is the step 8
-hour soak at q64, then the same soak with only the rsync. Phase 2a is measured
-(`docs/codec-bringup-2a.md`), 2b's design review is done, and 2c (the film shunt, the
-78L05 trial) comes after the soak. Phase 3 is where the Pico comes in: step 1 is Pico 2
-plus the official Pico SDK on the Mac — blink, then echo over UART through the Debug
-Probe. `tib` booted again on 2026-09-28 (cause unknown) but stays retired; piv is the
-Core host (`devices/tib/README.md`).
+`plan.md`'s "Next session starts with" is the one record of where things are. It isn't
+repeated here, so it can't go stale here.
 
 System context: this is the repo the component repos' `AGENTS.md` files point back to.
-For the pedal as a whole, start here, with `CLAUDE.md` and `docs/working-across-repos.md`.
+For the pedal as a whole, start here and with `docs/working-across-repos.md`.
