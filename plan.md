@@ -418,6 +418,25 @@ numbers need re-measuring on piv.
          0, then 52 models and 1,538 IRs.
      - Tools: `namchaind`'s new `engine.status` `render` object (every block against its deadline),
        and `scripts/soak/` (monitor, summary, events).
+   - **Repeatable from 2026-09-29.** A soak no longer needs someone editing in ljoss.
+     - namchain `b28e86b` records what a client sends (`namchain-session-record`, a proxy ljoss
+       connects through) and replays it on the same timing (`namchain-session-replay`), as
+       described in its `docs/sessions.md`.
+     - `scripts/soak/soak-replay SESSION --duration 3600 --sync-library-at 1800` runs step 8: it
+       loops the session from the Mac, over WiFi as ljoss would, while `soak-monitor.sh` samples
+       the host, all under the host's lock. The evidence goes to `bench-results/`.
+     - Soak 1's edits can't be replayed: its monitor saved `engine.status` every 10 s and nothing
+       of what ljoss sent, and piv's journal (RAM only) went at the 2026-09-29 reboot.
+     - The ljoss session of 22:17–22:37 that evening (`docs/rig-edits.md`) is rebuilt as
+       `scripts/soak/sessions/2026-09-28-ljoss.session.jsonl`, by the script beside it:
+       - It starts from the rigs ljoss saved and walks its watch log
+         (`bench-results/2026-09-28-ljoss-edits-watch.log`) back from them.
+       - The result is 5 rebuilds and 178 ramped knob patches over 20 minutes, the counts the
+         watch saw.
+       - It checks that each half ends on the rig ljoss saved.
+       - Replayed against a local `namchaind`: all 178 patches were smooth, with no errors.
+       - The script's docstring lists what is approximate.
+     - Record the next real editing session through the proxy, and that becomes the reference.
    - Once 3.8 exists, the soak also switches rigs: a switch every few seconds through a bank, with
      the same gates plus D10's: each switch ≤ 50 ms and no click in the output (namchain's glitch
      detector on the captured output).

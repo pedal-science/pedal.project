@@ -1,0 +1,83 @@
+{
+  "chains" : [
+    {
+      "connections" : [
+        {
+          "from" : "in",
+          "from_port" : 0,
+          "to" : "208FAC11-C0C6-4540-965A-AA8EA51558AB-gain",
+          "to_port" : 0
+        },
+        {
+          "from" : "208FAC11-C0C6-4540-965A-AA8EA51558AB-gain",
+          "from_port" : 0,
+          "to" : "49A791A4-E2AD-4E7F-B2E2-CE156993E14A-nam",
+          "to_port" : 0
+        },
+        {
+          "from" : "49A791A4-E2AD-4E7F-B2E2-CE156993E14A-nam",
+          "from_port" : 0,
+          "to" : "49A791A4-E2AD-4E7F-B2E2-CE156993E14A-tone",
+          "to_port" : 0
+        },
+        {
+          "from" : "49A791A4-E2AD-4E7F-B2E2-CE156993E14A-tone",
+          "from_port" : 0,
+          "to" : "0C5379D7-E784-4503-8395-36B1E35E8BDA-delay",
+          "to_port" : 0
+        },
+        {
+          "from" : "0C5379D7-E784-4503-8395-36B1E35E8BDA-delay",
+          "from_port" : 0,
+          "to" : "out",
+          "to_port" : 0
+        }
+      ],
+      "id" : "A358C9F4-9DD4-48E7-B12E-A0C69ED4E157",
+      "input_channel" : 0,
+      "name" : "Guitar",
+      "nodes" : [
+        {
+          "element" : "5976AD1D-F963-4DD0-8294-D1C8933D48DA",
+          "id" : "in",
+          "type" : "nc.input"
+        },
+        {
+          "element" : "208FAC11-C0C6-4540-965A-AA8EA51558AB",
+          "gain_db" : 15.57299270072992,
+          "id" : "208FAC11-C0C6-4540-965A-AA8EA51558AB-gain",
+          "type" : "nc.gain"
+        },
+        {
+          "element" : "49A791A4-E2AD-4E7F-B2E2-CE156993E14A",
+          "id" : "49A791A4-E2AD-4E7F-B2E2-CE156993E14A-nam",
+          "model" : "Ampeg SVT Classic with 6x10/Ampeg SVT - Gain 10 Ultra Lo and Hi MD 421",
+          "type" : "nc.nam"
+        },
+        {
+          "bass" : 0,
+          "element" : "49A791A4-E2AD-4E7F-B2E2-CE156993E14A",
+          "id" : "49A791A4-E2AD-4E7F-B2E2-CE156993E14A-tone",
+          "mid" : 2.8713503649635017,
+          "treble" : 2.4000000000000004,
+          "type" : "fx.amp.tonestack"
+        },
+        {
+          "element" : "0C5379D7-E784-4503-8395-36B1E35E8BDA",
+          "feedback" : 0.12960652372262768,
+          "id" : "0C5379D7-E784-4503-8395-36B1E35E8BDA-delay",
+          "mix" : 0.6701224148418493,
+          "time" : 150.22449057177616,
+          "type" : "fx.delay.feedback"
+        },
+        {
+          "element" : "9BE39FF0-600B-4AD8-959D-54C7E5B2CEB5",
+          "id" : "out",
+          "type" : "nc.output"
+        }
+      ],
+      "output_channel" : 0
+    }
+  ],
+  "name" : "Crunch Lead"
+}

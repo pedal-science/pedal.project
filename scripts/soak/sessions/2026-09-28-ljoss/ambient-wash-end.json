@@ -1,0 +1,136 @@
+{
+  "chains" : [
+    {
+      "connections" : [
+        {
+          "from" : "in",
+          "from_port" : 0,
+          "to" : "8C185869-615E-46FD-97BF-D44BF61592A0-gain",
+          "to_port" : 0
+        },
+        {
+          "from" : "8C185869-615E-46FD-97BF-D44BF61592A0-gain",
+          "from_port" : 0,
+          "to" : "A78A22A3-BE2E-4107-84DA-E821E012CB7C-nam",
+          "to_port" : 0
+        },
+        {
+          "from" : "A78A22A3-BE2E-4107-84DA-E821E012CB7C-nam",
+          "from_port" : 0,
+          "to" : "A78A22A3-BE2E-4107-84DA-E821E012CB7C-tone",
+          "to_port" : 0
+        },
+        {
+          "from" : "A78A22A3-BE2E-4107-84DA-E821E012CB7C-tone",
+          "from_port" : 0,
+          "to" : "84C25CC1-9F73-4405-B909-D7680A590E74-cab",
+          "to_port" : 0
+        },
+        {
+          "from" : "84C25CC1-9F73-4405-B909-D7680A590E74-cab",
+          "from_port" : 0,
+          "to" : "C17CAC37-6DDD-47BE-85B3-0F1414365F7A-delay",
+          "to_port" : 0
+        },
+        {
+          "from" : "C17CAC37-6DDD-47BE-85B3-0F1414365F7A-delay",
+          "from_port" : 0,
+          "to" : "out",
+          "to_port" : 0
+        }
+      ],
+      "id" : "A4449832-1FAB-4580-8705-2ACDF0943521",
+      "input_channel" : 0,
+      "name" : "Guitar",
+      "nodes" : [
+        {
+          "element" : "6685771E-D970-44D4-99C2-F73861280A5D",
+          "id" : "in",
+          "type" : "nc.input"
+        },
+        {
+          "element" : "8C185869-615E-46FD-97BF-D44BF61592A0",
+          "gain_db" : 2.8640510948905096,
+          "id" : "8C185869-615E-46FD-97BF-D44BF61592A0-gain",
+          "type" : "nc.gain"
+        },
+        {
+          "element" : "A78A22A3-BE2E-4107-84DA-E821E012CB7C",
+          "id" : "A78A22A3-BE2E-4107-84DA-E821E012CB7C-nam",
+          "model" : "Ampeg SVT Classic with 6x10/Ampeg SVT - SM75",
+          "type" : "nc.nam"
+        },
+        {
+          "bass" : 2.906934306569342,
+          "element" : "A78A22A3-BE2E-4107-84DA-E821E012CB7C",
+          "id" : "A78A22A3-BE2E-4107-84DA-E821E012CB7C-tone",
+          "mid" : 1.3202554744525536,
+          "treble" : -2.6734489051094865,
+          "type" : "fx.amp.tonestack"
+        },
+        {
+          "element" : "84C25CC1-9F73-4405-B909-D7680A590E74",
+          "high_cut" : 10450.159671532847,
+          "id" : "84C25CC1-9F73-4405-B909-D7680A590E74-cab",
+          "ir" : "Ampeg 4x10/York Audio AMPG 410 HS v1.01/44.1k (Kemper, etc.)/Mixes/YA AMPG 410 HS Mix 08",
+          "level_db" : 0,
+          "low_cut" : 125.47749391727493,
+          "type" : "fx.cab.ir"
+        },
+        {
+          "element" : "C17CAC37-6DDD-47BE-85B3-0F1414365F7A",
+          "feedback" : 0.20291875760340633,
+          "id" : "C17CAC37-6DDD-47BE-85B3-0F1414365F7A-delay",
+          "mix" : 0.7894578771289539,
+          "time" : 344.57649026763994,
+          "type" : "fx.delay.feedback"
+        },
+        {
+          "element" : "34D0B4F8-38CF-44AF-9D76-CFD73D91F7E4",
+          "id" : "out",
+          "type" : "nc.output"
+        }
+      ],
+      "output_channel" : 0
+    },
+    {
+      "connections" : [
+        {
+          "from" : "in",
+          "from_port" : 0,
+          "to" : "769B7D4C-01FE-4996-B190-F2C160176671-level",
+          "to_port" : 0
+        },
+        {
+          "from" : "769B7D4C-01FE-4996-B190-F2C160176671-level",
+          "from_port" : 0,
+          "to" : "out",
+          "to_port" : 0
+        }
+      ],
+      "id" : "11A41186-1D74-4204-A37B-8432C2D2B8D4",
+      "input_channel" : 1,
+      "name" : "Vocal",
+      "nodes" : [
+        {
+          "element" : "6748E98B-C07D-4960-9D10-2E401C996E49",
+          "id" : "in",
+          "type" : "nc.input"
+        },
+        {
+          "element" : "769B7D4C-01FE-4996-B190-F2C160176671",
+          "gain_db" : -14.482664233576642,
+          "id" : "769B7D4C-01FE-4996-B190-F2C160176671-level",
+          "type" : "nc.gain"
+        },
+        {
+          "element" : "769B7D4C-01FE-4996-B190-F2C160176671",
+          "id" : "out",
+          "type" : "nc.output"
+        }
+      ],
+      "output_channel" : 1
+    }
+  ],
+  "name" : "Ambient Wash"
+}
