@@ -210,17 +210,23 @@ the one privilege is `CAP_SYS_ADMIN`, for mmdebstrap to mount `/proc` in the roo
 **Secrets never enter git, and live in 1Password.** `make-card` reads them with `op read` at
 build time and writes them straight into the roots as the files the services already expect,
 mode 600, root-owned: the WiFi connection in both roots, and `/etc/namchain/token` in the pedal
-root. They never pass through a file on the Mac. The items:
+root. They never pass through a file on the Mac.
 
-| 1Password item (names to settle in step 4) | Goes to |
-|---|---|
-| WiFi SSID and PSK | the WiFi connection in both roots |
-| `namchaind` token: **piv's**, so ljoss connects to vip unchanged | `/etc/namchain/token` |
-| vip's SSH host keys, generated once by the first run and stored back | `/etc/ssh/ssh_host_*` in both roots |
+**Where (settled 2026-09-29):** the 1Password vault **`fx`**, read by the service account `fx`.
+Its token is in the Mac's login keychain, item label `fx` (service
+`1password-fx-vault-service-account`); `make-card` passes it to `op` as
+`OP_SERVICE_ACCOUNT_TOKEN`, in memory, so the build needs neither the desktop app nor a sign-in.
+The account sees only `fx`. The items:
+
+| 1Password item in `fx` | Fields | Goes to |
+|---|---|---|
+| `wifi` (Wireless Router) | `network name`, `wireless network password` (the passphrase) | the WiFi connection in both roots |
+| `namchaind` token: **piv's**, so ljoss connects to vip unchanged (not there yet) | | `/etc/namchain/token` |
+| vip's SSH host keys, generated once by the first run and stored back (not there yet) | | `/etc/ssh/ssh_host_*` in both roots |
 
 Keeping the host keys means a reflashed vip is the same machine to `ssh`, with no `known_hosts`
 warning. `authorized_keys` comes from the 1Password agent (`ssh-add -L`). The build stops early if
-`op` isn't signed in, before any time is spent.
+the token can't read `fx`, before any time is spent.
 
 Reusing piv's token needs one step in 4: copy it from piv into 1Password, piped straight from
 `ssh piv sudo cat /etc/namchain/token` into `op`, never shown. It also changes a rule:
