@@ -221,7 +221,7 @@ The account sees only `fx`. The items:
 | 1Password item in `fx` | Fields | Goes to |
 |---|---|---|
 | `wifi` (Wireless Router) | `network name`, `wireless network password` (the passphrase) | the WiFi connection in both roots |
-| `namchaind` token: **piv's**, so ljoss connects to vip unchanged (not there yet) | | `/etc/namchain/token` |
+| `namchaind` (Password): **piv's** token, copied 2026-09-29, so ljoss connects to vip unchanged | `password` (64 characters) | `/etc/namchain/token` |
 | vip's SSH host keys, generated once by the first run and stored back (not there yet) | | `/etc/ssh/ssh_host_*` in both roots |
 
 Keeping the host keys means a reflashed vip is the same machine to `ssh`, with no `known_hosts`
