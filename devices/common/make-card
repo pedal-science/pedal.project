@@ -54,7 +54,7 @@ if (( DO_LOCK )); then
   snap=$(lock_get snapshot)
   {
     echo "# What devices/$HOST/make-card builds from (docs/vip-image.md). --lock rewrites the commits;"
-    echo "# the snapshot changes by hand, deliberately."
+    echo "# the snapshot changes by hand, deliberately. Check namchain is the engine you mean."
     echo "snapshot=${snap:?no snapshot in $LOCK}"
     for k in pedal rtpi namchain; do echo "$k=$(git -C "${REPOS[$k]}" rev-parse HEAD)"; done
   } > "$LOCK.new"
