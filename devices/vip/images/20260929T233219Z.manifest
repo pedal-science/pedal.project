@@ -1,0 +1,32 @@
+host vip
+pedal 82bec673cb9215a1b4c14179e389566d60134bd9
+rtpi 217ca9bf04ce5492b388171dd3b5c5c2de9c44af
+namchain 503aac92037df7aa6eece69e259b64154d499200
+snapshot 20260929T000000Z
+pedal-kernel 7.0.0-1017-raspi-realtime
+rescue-kernel 7.0.0-1017-raspi
+image-bytes 6193938432
+image-sha256 9719226b26347858304b5c8d3268cadda1fd03d9ade5f45ae0af307efe017295
+packages-pedal 3cfda4a6505fa4435f63b3e34946fef9e203e4aa6891d4d32b51acab62c5a274 174
+packages-rescue 2a8e1fb602e3153f423d4216c17db52c846f42dfa6ca182e914232c0ed6a0fb1 159
+tree-bootsel d830ae76729198ca9159797406c8b35bc110ccd4ecf64c2d4a6ad8d7263bb394 4
+tree-pedal-boot d4251048fe2fa68c214ad4356661f5cbcee8b97062951b3842efa4de56957e59 392
+tree-rescue-boot 0c9fbfe5c0309a0972ea1ea343287fcd28d486881d0d99478df70f93d59669af 384
+tree-rescue f0d39839015bc7b5b1ab988f6e1527cf26be32ee14d4dfc5fced8de9b5c21610 21484
+tree-pedal edb6d2ae71f863aab7d867e280df1a5f7225764ead2742de386820991882b76c 24022
+tree-pedal-data 5a29c6d49c68a3d7cb478ab4c5db6160fc8aa8beaf58d40ad45484bb99023530 4
+--- sfdisk
+label: gpt
+label-id: 2CB2937F-0A15-52C6-9F8C-1C0379F6523B
+device: vip.img
+unit: sectors
+first-lba: 2048
+last-lba: 12097502
+sector-size: 512
+
+vip.img1 : start=        2048, size=      131072, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=A053EFEC-0910-5338-8917-480E9A267B21, name="bootsel"
+vip.img2 : start=      133120, size=     1048576, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=98E3FE32-4130-56EC-AE3C-45A0FC72B337, name="pedal-boot"
+vip.img3 : start=     1181696, size=      524288, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=C7B254D8-7283-5832-8278-561635E17D45, name="rescue-boot"
+vip.img4 : start=     1705984, size=     3145728, type=B921B045-1DF0-41C3-AF44-4C6F280D3FAE, uuid=ADA57533-8C8B-506A-B37A-4A28B43C0587, name="rescue"
+vip.img5 : start=     4851712, size=     6291456, type=B921B045-1DF0-41C3-AF44-4C6F280D3FAE, uuid=3B34BD9D-6EF7-5751-8932-003E1C7AE819, name="pedal"
+vip.img6 : start=    11143168, size=      952320, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=0B72A613-89A6-53BF-B195-74F207639741, name="pedal-data"

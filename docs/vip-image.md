@@ -4,7 +4,7 @@
 from nothing: one command on the Mac builds everything and writes a blank SD card, and the card
 boots vip straight onto the network. It also covers how vip keeps itself reachable when a
 kernel, a command line or its own root filesystem is broken. Your decisions of 2026-09-29 are
-recorded at the end. **Steps 1 and 2 are done** (2026-09-29): the spike card proved the layout
+recorded at the end. **Steps 1 to 4 are done** (2026-09-29/30): the spike card proved the layout
 on vip, and rtpi's `vip-boot` ran every path on it (`bench-results/vip-spike/`). Step 2 changed
 the slots, below: two fixed slots `a/` and `b/` and a pointer file, where this plan had
 `current/`, `new/` and `old/`.
@@ -183,10 +183,10 @@ the one privilege is `CAP_SYS_ADMIN`, for mmdebstrap to mount `/proc` in the roo
   the same inputs give the same packages. Ubuntu 26.04 `resolute` (decided), with
   `resolute-updates` for the 7.0.0-1017 kernels. `SOURCE_DATE_EPOCH` is set from the pinned
   snapshot.
-- **Customisation** happens in mmdebstrap hooks: user `rik`, the hostname, fstab by label, the
-  network, the watchdog drop-ins, the dracut safety arguments, the SSH host keys and the secrets.
-  Then, for the pedal root:
-  - `pedal-device apply --offline` installs `devices/common` + `devices/vip`, enables units and
+- **Customisation** happens in the root after mmdebstrap (`devices/common/image/build-image`):
+  user `rik`, the hostname, fstab by label, the network, mDNS (`vip.local`), the watchdog
+  drop-ins, the SSH host key and the secrets. Then, for the pedal root:
+  - `pedal-device apply --root` installs `devices/common` + `devices/vip`, enables units and
     masks units without starting anything. So the image is exactly "fresh + apply", and apply
     stays the one source for the configuration.
   - `namchaind` goes into `/opt/namchain/<commit>/` with its manifest, as deploy-engine does.
@@ -251,7 +251,7 @@ confirmation).
 
 - `config.txt` for pedal-boot: `arm_64bit`, the watchdog on, `dtparam=audio=off` (no HDMI audio
   card), no `vc4-kms-v3d` (display off on the pedal, following distro-slimming's point about the
-  GPU's memory traffic), a small CMA, the kernel console on `ttyAMA10`. The WM8960 overlay stays
+  GPU's memory traffic), the kernel console on `ttyAMA10`. The WM8960 overlay stays
   loaded at runtime by `pedal-codec`, as on piv.
 - rescue-boot keeps the KMS driver, so the HDMI console works with a keyboard.
 - `cfg80211.ieee80211_regdom=GB`, the dracut arguments (`rd.shell=0 rd.emergency=reboot
@@ -318,6 +318,30 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
 4. **The build:** the container, both roots, namchain, the image, the manifest. Done when
    `make-card --image-only` produces an image from pinned inputs, and a second run with the same
    pins produces the same package list and file tree.
+
+   **Done, 2026-09-30.** `devices/vip/make-card` (`devices/common/make-card`, container side
+   `devices/common/image/build-image`), pinned by `devices/vip/image.lock`: snapshot
+   20260929T000000Z, rtpi 217ca9b, namchain 503aac9 (what piv runs; its HEAD isn't pushed).
+   Two runs from the lock (`devices/vip/images/20260929T232637Z.manifest` and `…233219Z`) gave
+   the same packages (174 pedal, 159 rescue), the same file trees, and a **bit-identical image**
+   (sha256 `9719226b…`): fixed filesystem and partition UUIDs, `SOURCE_DATE_EPOCH` on every file,
+   dracut `--reproducible`. About six minutes a run; 5.8 GB, 1.5 GB of it data. namchain's five
+   test suites pass in the container. What it does beyond the plan above, or differently:
+   - One SSH host key, ed25519, made by the first run as a 1Password SSH Key item
+     (`fx/vip-ssh-host`) and read with `?ssh-format=openssh`; `HostKey` names it, `sshd-keygen`
+     is masked and `ssh.socket` disabled (sshd runs as `ssh.service`, which validate follows).
+   - mDNS by resolved on both roots, so `ssh vip.local` works without the router's DNS.
+   - The roots are GPT type root-arm64 and pedal-data generic Linux, so `systemd-repart`
+     (`/etc/repart.d/50-pedal-data.conf`) matches pedal-data alone and grows it on first boot;
+     fstab's `x-systemd.growfs` grows the filesystem.
+   - Rescue: read-only root with tmpfs on `/tmp`, `/var/tmp`, `/var/log`, `/var/lib/systemd` and
+     `/var/lib/sudo`, a volatile journal, root autologin on HDMI and the UART header (no
+     passwords exist; whoever holds the board holds the card), and a prompt that says rescue.
+   - The golden-reference test's own build runs `make -j` unbounded and ran colima's 6 GB out of
+     memory; the build makes it first at `-j2`.
+   - **Debt:** `pedal-device`'s manifest (`/var/lib/pedal/manifest`) lives on pedal-data with the
+     library, so restoring the pedal root from its image keeps the old manifest. Step 7 should
+     move it into the root (`/var/lib/pedal-device`), or rewrite it on restore.
 5. **The card:** done when a blank card goes into vip, vip powers on, and without any other step
    `ssh vip` works, `devices/vip/check` is green, `namchaind` is running the default rig, and
    `components.lock` matches the manifest.
