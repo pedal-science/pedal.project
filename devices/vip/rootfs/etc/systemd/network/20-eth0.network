@@ -4,6 +4,7 @@ Name=eth0
 
 [Network]
 DHCP=yes
+MulticastDNS=yes
 
 [Link]
 # Without a cable, eth0 would hold network-online.target for its two-minute timeout.

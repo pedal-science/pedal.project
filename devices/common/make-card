@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+# devices/<host>/make-card — build a Pi host's card image on the Mac and write it to a blank card.
+#
+#   devices/vip/make-card [--image-only] [--disk /dev/diskN] [--dev]
+#   devices/vip/make-card --lock          pin image.lock to the three repos' HEADs
+#
+# docs/vip-image.md is the design. Everything is built in colima's aarch64 container
+# (devices/common/image): namchain from its commit, tested; the pedal root and the rescue root
+# from the Ubuntu snapshot; the boot partitions by rtpi's vip-boot; one GPT image. The inputs are
+# exported with `git archive` at the commits in devices/<host>/image.lock, never taken from a
+# working tree: --dev takes the working trees instead, uncommitted changes and all, and marks the
+# image -dirty.
+#
+# Secrets come from 1Password (image.env names the vault and items), read with the service
+# account's token from the login keychain, and go to the container on stdin: never a file on the
+# Mac, never shown. The first build makes the host's SSH key item.
+#
+# Output: build/<host>/<stamp>/ (gitignored): the image, its manifest, the package lists and the
+# file trees. The manifest is also copied to devices/<host>/images/<stamp>.manifest, to commit.
+# Then, unless --image-only, devices/common/write-card writes the card (it asks first).
+
+set -euo pipefail
+log() { printf '\033[1;34m==>\033[0m %s\n' "$*" >&2; }
+die() { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
+
+HERE=$(cd "$(dirname "$0")" && pwd)          # devices/<host>, through the link
+HOST=$(basename "$HERE")
+REPO=$(git -C "$HERE" rev-parse --show-toplevel)
+COMMON=$REPO/devices/common
+RTPI_REPO=${RTPI_REPO:-$HOME/code.local/rtpi}
+NAMCHAIN_REPO=${NAMCHAIN_REPO:-$HOME/code.local/namchain}
+LOCK=$HERE/image.lock
+
+IMAGE_ONLY=0; DISK=(); DEV=0; DO_LOCK=0
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --image-only) IMAGE_ONLY=1 ;;
+    --disk) DISK=(--disk "$2"); shift ;;
+    --dev) DEV=1 ;;
+    --lock) DO_LOCK=1 ;;
+    -h|--help) sed -n '2,21p' "$0"; exit 0 ;;
+    *) die "unknown argument: $1" ;;
+  esac
+  shift
+done
+[[ -f $HERE/image.env ]] || die "no $HERE/image.env: $HOST isn't built from an image"
+# shellcheck disable=SC1091
+source "$HERE/image.env"
+
+declare -A REPOS=([pedal]=$REPO [rtpi]=$RTPI_REPO [namchain]=$NAMCHAIN_REPO)
+lock_get() { sed -n "s/^$1=//p" "$LOCK"; }
+
+if (( DO_LOCK )); then
+  snap=$(lock_get snapshot)
+  {
+    echo "# What devices/$HOST/make-card builds from (docs/vip-image.md). --lock rewrites the commits;"
+    echo "# the snapshot changes by hand, deliberately."
+    echo "snapshot=${snap:?no snapshot in $LOCK}"
+    for k in pedal rtpi namchain; do echo "$k=$(git -C "${REPOS[$k]}" rev-parse HEAD)"; done
+  } > "$LOCK.new"
+  mv "$LOCK.new" "$LOCK"
+  cat "$LOCK"; exit 0
+fi
+
+# ------------------------------------------------------------------ checks, before any time is spent
+docker info >/dev/null 2>&1 || die "no docker: start colima (colima start --arch aarch64 --vm-type vz)"
+[[ $(docker info --format '{{.Architecture}}') == aarch64 ]] || die "the docker host is not aarch64"
+command -v op >/dev/null || die "no op (1Password CLI)"
+OP_SERVICE_ACCOUNT_TOKEN=$(security find-generic-password -l "$OP_KEYCHAIN_LABEL" -w 2>/dev/null) \
+  || die "no keychain item '$OP_KEYCHAIN_LABEL' with the 1Password service account token"
+export OP_SERVICE_ACCOUNT_TOKEN
+op vault get "$OP_VAULT" >/dev/null 2>&1 || die "the service account can't read vault $OP_VAULT"
+for item in "$WIFI_ITEM" "$TOKEN_ITEM"; do
+  op item get "$item" --vault "$OP_VAULT" >/dev/null 2>&1 || die "no item '$item' in vault $OP_VAULT"
+done
+if ! op item get "$HOST_KEY_ITEM" --vault "$OP_VAULT" >/dev/null 2>&1; then
+  log "first build for $HOST: making its SSH host key in 1Password ($OP_VAULT/$HOST_KEY_ITEM)"
+  op item create --vault "$OP_VAULT" --category "SSH Key" --title "$HOST_KEY_ITEM" \
+    --ssh-generate-key ed25519 "notesPlain=$HOST's SSH host key: both roots of its card (devices/$HOST/make-card)." >/dev/null
+fi
+AUTH_KEYS=$(ssh-add -L 2>/dev/null) && [[ -n $AUTH_KEYS ]] || die "ssh-add -L gave no keys (is the 1Password SSH agent running?)"
+
+# ------------------------------------------------------------------ inputs
+declare -A PIN
+if (( DEV )); then
+  for k in pedal rtpi namchain; do PIN[$k]=$(git -C "${REPOS[$k]}" rev-parse HEAD); done
+  PIN[snapshot]=$(lock_get snapshot)
+else
+  [[ -f $LOCK ]] || die "no $LOCK: run --lock, commit it, or build with --dev"
+  for k in snapshot pedal rtpi namchain; do PIN[$k]=$(lock_get "$k"); [[ -n ${PIN[$k]} ]] || die "no $k in $LOCK"; done
+fi
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+# --dev: each repo with uncommitted changes is marked -dirty, and so is the image.
+DIRTY=""
+declare -A MARK=([pedal]="" [rtpi]="" [namchain]="")
+if (( DEV )); then
+  for k in pedal rtpi namchain; do
+    [[ -z $(git -C "${REPOS[$k]}" status --porcelain --ignore-submodules=none) ]] || { MARK[$k]=-dirty; DIRTY=-dirty; }
+  done
+fi
+STAMP=$STAMP$DIRTY
+OUT=$REPO/build/$HOST/$STAMP
+IN=$OUT/in
+mkdir -p "$IN"
+
+# export <repo> <commit or "worktree"> <dest>: the tree at that commit, submodules included
+# (at the commits their parent records), and nothing ignored or untracked.
+export_tree() {
+  local repo=$1 rev=$2 dest=$3
+  mkdir -p "$dest"
+  if [[ $rev == worktree ]]; then
+    # Tracked and untracked-but-not-ignored files that exist (a deleted tracked file is gone).
+    git -C "$repo" ls-files -z -c -o --exclude-standard \
+      | while IFS= read -r -d '' f; do [[ -e $repo/$f || -L $repo/$f ]] && printf '%s\0' "$f"; done \
+      | tar -C "$repo" --null -T - --no-recursion -cf - | tar -xf - -C "$dest"
+    rev=HEAD
+  else
+    git -C "$repo" archive "$rev" | tar -xf - -C "$dest"
+  fi
+  git -C "$repo" ls-tree -r "$rev" | awk '$2 == "commit" {print $3, $4}' | while read -r sha path; do
+    [[ -e $repo/$path/.git ]] || die "$repo: submodule $path isn't checked out"
+    export_tree "$repo/$path" "$sha" "$dest/$path"
+  done
+}
+if (( DEV )); then log "inputs: the working trees (--dev)"; else log "inputs: image.lock"; fi
+for k in pedal rtpi namchain; do
+  if (( DEV )); then export_tree "${REPOS[$k]}" worktree "$IN/$k"
+  else
+    git -C "${REPOS[$k]}" cat-file -e "${PIN[$k]}^{commit}" 2>/dev/null || die "$k: no commit ${PIN[$k]} in ${REPOS[$k]}"
+    export_tree "${REPOS[$k]}" "${PIN[$k]}" "$IN/$k"
+  fi
+  printf '    %-9s %s\n' "$k" "${PIN[$k]:0:12}${MARK[$k]}" >&2
+  PIN[$k]=${PIN[$k]}${MARK[$k]}
+done
+find "$IN" -name .DS_Store -delete
+{ for k in snapshot pedal rtpi namchain; do echo "$k=${PIN[$k]}"; done; } > "$IN/inputs"
+printf '%s\n' "$AUTH_KEYS" > "$IN/authorized_keys"
+
+# ------------------------------------------------------------------ build
+log "container (snapshot ${PIN[snapshot]})"
+TAG=pedal-build:${PIN[snapshot]}
+docker build -q -t "$TAG" --build-arg SNAPSHOT="${PIN[snapshot]}" "$IN/pedal/devices/common/image" >/dev/null
+
+secrets() {
+  op read "op://$OP_VAULT/$WIFI_ITEM/network name"
+  op read "op://$OP_VAULT/$WIFI_ITEM/wireless network password"
+  op read "op://$OP_VAULT/$TOKEN_ITEM/password"
+  op read "op://$OP_VAULT/$HOST_KEY_ITEM/private key?ssh-format=openssh"
+}
+log "image (about 15 minutes: namchain's build and tests, two roots, the filesystems)"
+# mmdebstrap and the build's chroots mount /proc, /sys and /dev in the roots they build, which
+# needs CAP_SYS_ADMIN. Nothing else does: no loop devices, no --privileged.
+secrets | docker run --rm -i \
+  --cap-add SYS_ADMIN --security-opt apparmor=unconfined --security-opt seccomp=unconfined \
+  -e HOST="$HOST" -v "$IN:/in:ro" -v "$OUT:/out" \
+  "$TAG" /in/pedal/devices/common/image/build-image
+rm -rf "$IN"
+
+mkdir -p "$HERE/images"
+cp "$OUT/manifest" "$HERE/images/$STAMP.manifest"
+log "built: $OUT/$HOST.img"
+log "manifest: devices/$HOST/images/$STAMP.manifest"
+(( IMAGE_ONLY )) && exit 0
+exec "$COMMON/write-card" --image "$OUT/$HOST.img" "${DISK[@]}"

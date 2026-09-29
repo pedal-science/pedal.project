@@ -19,6 +19,8 @@ dracut-core
 python3-minimal
 dosfstools
 e2fsprogs
+# pedal-data grows to fill the card on first boot.
+systemd-repart
 
 # Reaching it.
 openssh-server
