@@ -14,4 +14,4 @@ else
   arg="0 tryboot"
 fi
 echo "rebooting with \"$arg\""
-systemctl reboot "$arg"
+systemctl reboot --reboot-argument="$arg"

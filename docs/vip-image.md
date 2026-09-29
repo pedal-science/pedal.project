@@ -4,7 +4,8 @@
 from nothing: one command on the Mac builds everything and writes a blank SD card, and the card
 boots vip straight onto the network. It also covers how vip keeps itself reachable when a
 kernel, a command line or its own root filesystem is broken. Your decisions of 2026-09-29 are
-recorded at the end. Nothing is built yet.
+recorded at the end. **Step 1 is done** (2026-09-29): the spike card proved the layout on vip,
+unchanged; results in `bench-results/vip-spike/results.md`.
 
 It settles the open question in `plan.md` ("which repo owns vip's kernel and boot
 configuration") as proposed below, under [Who owns what](#who-owns-what).
@@ -159,7 +160,9 @@ rescue path if its WiFi configuration is ever what broke.
 ## The build
 
 Everything runs in colima on the Mac. The M2 is arm64, so the container runs aarch64 Ubuntu
-natively, with no qemu and no emulation. Nothing needs loop devices or a privileged container:
+natively, with no qemu and no emulation. Nothing needs loop devices or a `--privileged` container;
+the one privilege is `CAP_SYS_ADMIN`, for mmdebstrap to mount `/proc` in the root it builds
+(the spike, `devices/vip/spike/build`, does exactly this):
 
 - **Roots:** `mmdebstrap --variant=minbase` from `snapshot.ubuntu.com` at a pinned timestamp, so
   the same inputs give the same packages. Ubuntu 26.04 `resolute` (decided), with
@@ -265,6 +268,11 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
 
    Done when all three are seen and the EEPROM version is recorded. If one fails, the layout
    changes here, before anything is built on it.
+
+   **Done, 2026-09-29.** All three seen, and a fourth: `reboot "<N>"` boots partition N once
+   with no flag and no write, which suits `vip-boot rescue`. EEPROM 2026-05-11. What the image
+   needed: `net.ifnames=0` (else `wlan0` is `wld0`), a 64-hex WiFi key written unquoted,
+   `systemd-timesyncd`, and `systemctl reboot --reboot-argument=…` in `vip-boot`.
 2. **rtpi:** `devices/vip/device.env`, and `vip-boot` with its validate hook, the counter and
    the fallback, written for an image-built host. Unit-test the state logic off the board.
 3. **pedal.project:** `devices/vip/` from `devices/piv/`, not copied blind (no docker or libvirt

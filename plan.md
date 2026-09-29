@@ -821,6 +821,10 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**vip** (arrived): `docs/vip-image.md` step 1 is done, the spike card proved the boot layout on
+vip unchanged (`bench-results/vip-spike/results.md`). Next there is step 2, rtpi's `vip-boot`, and
+step 3, `devices/vip/`. The spike card is still in vip, on WiFi as `vip-spike`.
+
 Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot time.
 1. The step 8 soak at q64: an amp-only A2-Full plus a full-length IR, ljoss editing over WiFi,
    one `scripts/sync-library` in the middle, under `scripts/host-lock`.

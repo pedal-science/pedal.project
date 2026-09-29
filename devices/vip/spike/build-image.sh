@@ -31,7 +31,7 @@ rm -rf "$W"; mkdir -p "$W"
 log "root: resolute minbase from the $SNAPSHOT snapshot"
 PKGS=(
   systemd systemd-sysv systemd-resolved udev dbus kmod iproute2 iputils-ping less
-  openssh-server sudo wpasupplicant wireless-regdb
+  openssh-server sudo wpasupplicant wireless-regdb systemd-timesyncd
   dracut-core dosfstools e2fsprogs
   "linux-image-$KVER" "linux-modules-$KVER" linux-firmware-raspi
 )
@@ -75,7 +75,11 @@ done
   echo 'ctrl_interface=DIR=/run/wpa_supplicant GROUP=netdev'
   echo 'country=GB'
   echo 'network={'
-  printf '  ssid="%s"\n  psk="%s"\n' "$WIFI_SSID" "$WIFI_PSK"
+  printf '  ssid="%s"\n' "$WIFI_SSID"
+  # netplan keeps the key hashed, as 64 hex digits, and wpa_supplicant takes that form only
+  # unquoted: quoted, it is a passphrase, too long, and the error message prints it.
+  if [[ $WIFI_PSK =~ ^[0-9a-fA-F]{64}$ ]]; then printf '  psk=%s\n' "$WIFI_PSK"
+  else printf '  psk="%s"\n' "$WIFI_PSK"; fi
   echo '}'
 } > "$ROOT/etc/wpa_supplicant/wpa_supplicant-wlan0.conf"
 chmod 600 "$ROOT/etc/wpa_supplicant/wpa_supplicant-wlan0.conf"
@@ -99,7 +103,9 @@ chroot "$ROOT" systemctl enable spike-report
 
 log "boot partitions"
 # The one command line, with the markers appended per slot.
-BASE_CMDLINE="console=ttyAMA10,115200 console=tty1 root=LABEL=spike-root rootfstype=ext4 rootwait fixrtc cfg80211.ieee80211_regdom=GB rd.shell=0 rd.emergency=reboot rd.retry=60 rd.timeout=90 panic=10"
+# net.ifnames=0 keeps wlan0 and eth0: without it udev renames them wld0 and end0, and every
+# unit and script written for wlan0 waits for a device that never appears.
+BASE_CMDLINE="net.ifnames=0 console=ttyAMA10,115200 console=tty1 root=LABEL=spike-root rootfstype=ext4 rootwait fixrtc cfg80211.ieee80211_regdom=GB rd.shell=0 rd.emergency=reboot rd.retry=60 rd.timeout=90 panic=10"
 FW=$ROOT/usr/lib/firmware/$KVER/device-tree
 [[ -d $FW ]] || die "no device tree at $FW"
 slot() {  # slot <dir> <part> <slot>
