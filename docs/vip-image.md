@@ -4,7 +4,7 @@
 from nothing: one command on the Mac builds everything and writes a blank SD card, and the card
 boots vip straight onto the network. It also covers how vip keeps itself reachable when a
 kernel, a command line or its own root filesystem is broken. Your decisions of 2026-09-29 are
-recorded at the end. **Steps 1 to 5 are done** (2026-09-29/30): the spike card proved the layout
+recorded at the end. **Steps 1 to 6 are done** (2026-09-29/30): the spike card proved the layout
 on vip, and rtpi's `vip-boot` ran every path on it (`bench-results/vip-spike/`). Step 2 changed
 the slots, below: two fixed slots `a/` and `b/` and a pointer file, where this plan had
 `current/`, `new/` and `old/`.
@@ -363,6 +363,16 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
      rescue by itself after three boots, and `vip-reimage pedal` from rescue puts it back;
    - no network at all: the pedal plays and stays in the pedal root;
    - power pulled during boot, and during a rig save.
+
+   **Done, 2026-09-30** (`bench-results/vip-card/fallbacks.md`), everything passing in the end.
+   Found and fixed on the way: the loose profile locked everyone out (`pedal-maint.target` lacked
+   `systemd-user-sessions`); `vip-boot status` crashed on rescue's read-only root; OpenSSH 10
+   penalised the Mac for waiting on a boot (local networks are now exempt); and a pedal root that
+   hung or dropped to emergency mode would never have rebooted, so the counter never moved. Now
+   emergency and rescue mode reboot, and **`vip-boot deadline`** reboots a pedal boot that hasn't
+   cleared the counter in five minutes (never one that reached the engine). A hanging root reached
+   rescue by itself in 16.5 min, a broken fstab in 6.5; `vip-reimage pedal` (rtpi) restored it from
+   pedal-data in about 10. Rig saves and the boot counter survived power pulls.
 7. **Reimage from the Mac, without touching the card:** `make-card --remote` streams a new
    pedal root to vip while it's in rescue, then boots it as a candidate. After this, reproducing
    vip is one command even when it's sealed in the enclosure.

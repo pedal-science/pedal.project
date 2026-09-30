@@ -846,8 +846,11 @@ tested off the board and on vip (`bench-results/vip-spike/vip-boot.md`). Step 3 
 `devices/vip/`, with `namchaind` on the WM8960, which is wired to vip and comes up as clock master
 (`bench-results/vip-spike/codec.md`). Steps 4 and 5 are done: `devices/vip/make-card` builds the card from `devices/vip/image.lock`
 (bit-identically), and vip boots from a blank card onto WiFi, playing, `check` green
-(`bench-results/vip-card/results.md`). vip is on the third card, library synced. Next is step 6,
-rehearsing every fallback on vip. namchain f422dd0 plays a missing model or IR as a bypass, and
+(`bench-results/vip-card/results.md`). Step 6 is done: every fallback rehearsed on vip, all
+passing after four fixes (`bench-results/vip-card/fallbacks.md`). vip runs image 20260930T151625Z
+plus rtpi's `vip-boot deadline`, installed by hand for the rehearsal; image 20260930T201543Z
+carries it, so the next card is the image's again. Next is step 7: `make-card --remote`, reimaging
+vip from the Mac through rescue. namchain f422dd0 plays a missing model or IR as a bypass, and
 ljoss 5da4ea6 marks the block.
 
 **Testing happens on vip for now** (decided 2026-09-30), until it's a working pedal that shouldn't
