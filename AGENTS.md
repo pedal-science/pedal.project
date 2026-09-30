@@ -13,9 +13,11 @@ This file is canonical for every agent. `CLAUDE.md` only imports it (and
 **Core host** (the board that runs the DSP, "Core" in `about.md`):
 - **`tib`** (ASUS Tinker Board, RK3288, armhf) is **retired** as of 2026-09-26. It stopped
   working on 2026-09-25. Its numbers, `devices/tib/` and its backups stay as history.
-- **`piv`** (Raspberry Pi 500, aarch64) stands in until `vip` arrives.
-- **`vip`** (Raspberry Pi 5, 1 GB, aarch64) is on order and becomes the Core target when
-  it arrives.
+- **`vip`** (Raspberry Pi 5, 1 GB, aarch64) **is the Core host** (from 2026-10-01). It's built
+  from an image (`devices/vip/make-card`), has no compiler, and is where testing happens until
+  it's a working pedal nobody should disrupt; then the test hardware is chosen again.
+- **`piv`** (Raspberry Pi 500, aarch64) stood in until vip arrived. It isn't updated meanwhile
+  (namchain 503aac9; `devices/piv/check` shows known differences) and keeps its dev checkouts.
 
 Older docs and plan phases say "`tib`"; read that as "the Core host". Full hardware context,
 schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-handoff.md).
@@ -31,18 +33,18 @@ schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-hando
 - **Read the plan's "Next session starts with"** (`plan.md`) — it names the exact next
   steps and what changed last.
 - **Check the machines.** Run `scripts/status`: every repo on the Mac and piv, who holds
-  the Core host's lock, what `namchaind` reports, and whether `components.lock` and the
-  deployed engine and `devices/` tree are current. piv is the Core host stand-in: ask
-  before touching its hardware or starting anything heavy on it (it is quiet and
-  shared, rule 8).
+  the Core host's lock, what `namchaind` reports, and whether `devices/<host>/components.lock`
+  and the deployed engine and `devices/` tree are current. Every script defaults to vip
+  (`--host piv` for piv). Ask before touching either board's hardware or starting anything
+  heavy on it (quiet and shared, rule 8).
 
 ## Commands
 
-- `scripts/deploy-engine [--host piv] [--commit <rev>] [--no-tests]`: build a namchain
-  commit in a dedicated tree on the Core host (never the dev checkout), run the tests,
-  install into `/opt/namchain/<commit>/`, swap `current`, write the manifest, restart
-  `namchaind`. piv only for now.
-- `scripts/sync-library [--host piv] [--dry-run]`: mirror `~/Documents/Audio/NAM` and
+- `scripts/deploy-engine [--host vip] [--commit <rev>] [--no-tests]`: build a namchain
+  commit and run its tests (for vip on the Mac, in the image build's container,
+  `devices/common/image/build-namchain`; piv builds in a dedicated tree of its own), install
+  into `/opt/namchain/<commit>/`, swap `current`, write the manifest, restart `namchaind`.
+- `scripts/sync-library [--host vip] [--dry-run]`: mirror `~/Documents/Audio/NAM` and
   `IRs` into `/var/lib/pedal/library/{models,irs}` on the Core host, and ask
   `namchaind` to rescan. Rigs on the host are never touched.
 - `devices/<host>/{apply,check,backup}` (symlinks into `devices/common/`): the Core
@@ -57,14 +59,14 @@ schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-hando
   `--remote` writes no card: it puts the new pedal root on the running vip through its rescue
   root, tries it once, and makes it the default only once the engine stays up
   (`--remote --previous --image <build dir>` goes back to the root before).
-- `scripts/status [--host piv] [--no-fetch]`: every repo on the Mac and piv, the Core
-  host's lock, `namchaind`'s status, and whether `components.lock`, the engine and
+- `scripts/status [--host vip] [--no-fetch]`: every repo on the Mac and piv, the Core
+  host's lock, `namchaind`'s status, and whether `devices/<host>/components.lock`, the engine and
   `devices/` are current. Start every session with it.
-- `scripts/host-lock [--host piv] [--wait <s>] -- <command>`: run a command while
+- `scripts/host-lock [--host vip] [--wait <s>] -- <command>`: run a command while
   holding the Core host's lock; `--who` says who holds it. Every soak, benchmark and
   deploy goes through it.
-- `scripts/components-lock [--host piv] [--check]`: write `components.lock` from what
-  the host is running, or compare. Commit the file with the change.
+- `scripts/components-lock [--host vip] [--check]`: write `devices/<host>/components.lock`
+  from what the host is running, or compare. Commit the file with the change.
 - `firmware/build.sh`, `firmware/flash.sh`, `firmware/tools/{echo,protocol}-test.py`: build,
   flash and bench-test the Pico firmware (Pico 2 W; SDK 2.3.1 and Arm GNU Toolchain 15.3.rel1
   under `~/pico/`). `FW_ECHO=1` builds step 1's echo for the echo test.
@@ -116,8 +118,8 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
 - **Nothing runs on the Core host from a state nobody recorded.** Deploys go through
   `scripts/deploy-engine`; every binary carries its commit; `devices/<host>/` owns all
   other state.
-- **The Core host is quiet and shared.** No builds on piv during a soak or while
-  playing; only one measurement at a time; leave no processes behind.
+- **The Core host is quiet and shared.** No builds on it during a soak or while playing (vip
+  never builds anything); only one measurement at a time; leave no processes behind.
 
 ## Where things are
 

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Runs INSIDE the build container. Builds and tests namchain the way the Core host runs it: Release,
+# the given flags, the planar NEON kernels required, then its test suites. The image build
+# (build-image) and scripts/deploy-engine --host vip both use this, so the engine on a card and the
+# engine deployed later are built the same way.
+#
+#   build-namchain <source dir> <cxxflags> <log dir> [--no-tests]
+#
+# Builds in <source dir>/build. Logs: namchain-{configure,build,ref,test}.log in <log dir>.
+set -euo pipefail
+die() { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
+SRC=${1:?}; FLAGS=${2:?}; LOGS=${3:?}; TESTS=1; [[ ${4:-} == --no-tests ]] && TESTS=0
+mkdir -p "$LOGS"
+cd "$SRC"
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_CXX_FLAGS=$FLAGS" \
+  -DNAMCHAIN_BUILD_TESTS=ON -DNAMCHAIN_BUILD_TOOLS=ON > "$LOGS/namchain-configure.log" 2>&1 \
+  || { tail -30 "$LOGS/namchain-configure.log" >&2; exit 1; }
+grep -q 'A2 planar NEON:  ON' "$LOGS/namchain-configure.log" || die "planar NEON kernels are off"
+cmake --build build -j"$(nproc)" > "$LOGS/namchain-build.log" 2>&1 || { tail -40 "$LOGS/namchain-build.log" >&2; exit 1; }
+(( TESTS )) || exit 0
+# The golden test builds the vendored core's own render tool on first run, with an unbounded
+# `make -j` that runs the container out of memory (colima has 6 GB). Build it first, the same way
+# at -j2, so the test finds it made.
+cmake -S vendor/NeuralAmpModelerCore -B build/namcore-ref -DCMAKE_BUILD_TYPE=Release > "$LOGS/namchain-ref.log" 2>&1 \
+  && cmake --build build/namcore-ref --target render -j2 >> "$LOGS/namchain-ref.log" 2>&1 \
+  || { tail -30 "$LOGS/namchain-ref.log" >&2; exit 1; }
+# Serially, as on piv: under -j one timing test fails from contention, not a defect.
+(cd build && ctest --output-on-failure > "$LOGS/namchain-test.log" 2>&1) || { tail -60 "$LOGS/namchain-test.log" >&2; exit 1; }
+tail -3 "$LOGS/namchain-test.log" | sed 's/^/    /' >&2

@@ -4,7 +4,7 @@
 #
 # Takes the host's lock (scripts/host-lock), backs up first, refuses while a measurement or the
 # engine is running, stages the tree in /var/tmp, runs pedal-device on the board (which records
-# everything it does, for revert), checks the result and updates components.lock. Re-running it is
+# everything it does, for revert), checks the result and updates devices/<host>/components.lock. Re-running it is
 # safe: files that already match are left alone.
 #
 # To undo:  ssh <host> sudo pedal-device revert

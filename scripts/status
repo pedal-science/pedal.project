@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# scripts/status [--host piv] [--no-fetch] — where every repo and the Core host stand, in one screen.
+# scripts/status [--host vip] [--no-fetch] — where every repo and the Core host stand, in one screen.
 #
 # Repos: each checkout on the Mac and on the build/Core hosts, with its branch, HEAD, ahead/behind
 # its upstream (after a fetch, unless --no-fetch) and uncommitted files. Core host: who holds its
-# lock, what namchaind reports, whether components.lock matches it, and whether the engine or the
+# lock, what namchaind reports, whether devices/<host>/components.lock matches it, and whether the engine or the
 # devices/ tree has moved on since it was deployed. Run it at the start of every session.
 set -euo pipefail
 
-HOST=piv
+HOST=vip
 FETCH=1
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -97,13 +97,12 @@ else
 fi
 
 if diffs=$("$SCRIPTS/components-lock" --host "$HOST" --check 2>&1); then
-  note "components.lock: matches the host"
+  note "devices/$HOST/components.lock: matches the host"
 else
-  bad "components.lock: differs from the host"; printf '%s\n' "$diffs" | sed 's/^/  /'
+  bad "devices/$HOST/components.lock: differs from the host"; printf '%s\n' "$diffs" | sed 's/^/  /'
 fi
 
 # Has anything been committed that the host doesn't have yet?
-lock_val() { sed -n "s/^$1=//p" "$ROOT/components.lock" 2>/dev/null; }
 engine=$(on "$HOST" "sed -n 's/^commit=//p' /opt/namchain/current/MANIFEST" 2>/dev/null || true)
 if [[ -n $engine ]] && git -C ~/code.local/namchain cat-file -e "$engine" 2>/dev/null; then
   n=$(git -C ~/code.local/namchain rev-list --count "$engine..origin/main")

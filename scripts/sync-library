@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/sync-library [--host piv] [--dry-run] — copy the model and IR library to the pedal host.
+# scripts/sync-library [--host vip] [--dry-run] — copy the model and IR library to the pedal host.
 #
 #   ~/Documents/Audio/NAM  ->  /var/lib/pedal/library/models   (namchaind's models_root)
 #   ~/Documents/Audio/IRs  ->  /var/lib/pedal/library/irs      (namchaind's irs_root)
@@ -10,7 +10,7 @@
 # Asks namchaind to rescan afterwards if it is running.
 set -euo pipefail
 
-HOST=piv
+HOST=vip
 DRY=()
 while [[ $# -gt 0 ]]; do
   case $1 in

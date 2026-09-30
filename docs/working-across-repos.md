@@ -31,8 +31,8 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 | Host | Role | Notes |
 |---|---|---|
 | **M2** (MacBook Air) | Where editing and agent sessions happen, and where every deploy is started. Xcode, macOS builds of the engine | Holds every repo |
-| **piv** (Pi 500, aarch64) | **Core host stand-in until vip arrives.** Otherwise the ARM build host: native aarch64, armv7 cross-compiler (GCC 15.2), `qemu-arm-static` for running armv7 tests | Allowed to be busy or down, so every build that runs on it also needs a fallback (colima on the Mac, which `rtpi` already uses) |
-| **vip** (Pi 5, 1 GB, aarch64) | The Core target from its arrival (ordered 2026-09-26), and nothing else | Same rules `tib` had: no compiler, everything arrives built |
+| **vip** (Pi 5, 1 GB, aarch64) | **The Core host** (from 2026-10-01), and nothing else. Built from an image (`devices/vip/make-card`, `docs/vip-image.md`); where testing happens until it's a pedal nobody should disrupt | Same rules `tib` had: no compiler, everything arrives built (the engine in colima on the Mac, `scripts/deploy-engine`) |
+| **piv** (Pi 500, aarch64) | Stood in as the Core host until vip arrived; not updated meanwhile. The ARM build host: native aarch64, armv7 cross-compiler (GCC 15.2), `qemu-arm-static` for running armv7 tests | Allowed to be busy or down, so every build that runs on it also needs a fallback (colima on the Mac, which `rtpi` and vip's image already use) |
 | ~~**tib**~~ (Tinker Board S, armv7) | **Retired 2026-09-26** (stopped working 2026-09-25). "`tib`" in the rules below now means the Core host | History only: `devices/tib/` and its backups |
 
 ## The rules
@@ -74,9 +74,9 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 
 | Change | Loop |
 |---|---|
-| Engine (`namchain`) | Build and unit-test on the Mac → push a branch → piv builds armv7-NEON and runs the tests under qemu → deploy to `tib` into a versioned directory, swap a symlink, restart the unit → check with `namchainctl` / `ljoss` → soak if it touches the render path |
-| App (`ljoss`) | Xcode on the Mac → run against a local `namchaind` (CoreAudio backend) or against `tib` over WiFi → `Tools/check-device.sh` for the handshake and `audible_generation` |
-| Kernel, device tree (`rtpi`) | Build in colima on the Mac → stage as the candidate slot → one-shot try-boot on `tib` → promote with `tib-freeze-good` |
+| Engine (`namchain`) | Build and unit-test on the Mac → push → `scripts/deploy-engine` builds it in colima as vip's image does, runs the tests, installs into a versioned directory on vip, swaps a symlink, restarts the unit → check with `namchainctl` / `ljoss` → soak if it touches the render path. A new card or `make-card --remote` pins it in `devices/vip/image.lock` |
+| App (`ljoss`) | Xcode on the Mac → run against a local `namchaind` (CoreAudio backend) or against vip over WiFi → `Tools/check-device.sh` for the handshake and `audible_generation` |
+| Kernel, device tree (`rtpi`) | A kernel package in the pedal root → `vip-boot try-kernel` stages it in the spare slot and boots it once → `vip-boot-validate` promotes it or it rolls back (`bench-results/vip-card/fallbacks.md`); rtpi's boot files reach vip through its image (`make-card`, `--remote`) |
 | DSP research (`NAMBench`) | Fork branch → upstream PR, plus either a patch or pin in `namchain/vendor` or a port into one of `namchain`'s own nodes → `namchain`'s golden, parity or tolerance tests prove the swap |
 | Pico firmware (`firmware/`) | `firmware/build.sh` on the Mac (Pico SDK 2.3.1, Arm GNU 15.3.rel1) → `firmware/flash.sh` (picotool, or the UF2 volume) → the bench tests through the Debug Probe (`firmware/tools/`) → later, the pedal service over the Core host's UART |
 
@@ -117,8 +117,8 @@ Rollback on `tib` is the previous symlink. For the kernel it is `rtpi`'s known-g
 
 | Tool | Does |
 |---|---|
-| `scripts/status` | The table above, in one screen. Exists: repos on the Mac and piv, the lock, `namchaind`'s status, and whether `components.lock`, the engine and `devices/` are current |
+| `scripts/status` | The table above, in one screen. Exists: repos on the Mac and piv, the lock, `namchaind`'s status, and whether `devices/<host>/components.lock`, the engine and `devices/` are current |
 | `scripts/host-lock` | `flock` on the Core host, held from the Mac for as long as a command runs. Every soak, benchmark and deploy goes through it. Exists; `deploy-engine` and `devices/<host>/apply` take it themselves, and a nested call for the same host just runs its command |
-| `scripts/deploy-engine` | Build a `namchain` commit in a *dedicated* build directory on the Core host, never the dev checkout. Run the tests, install into a versioned directory, write the manifest, restart. Exists, piv only; the armv7-NEON cross build for `tib` went with `tib` |
+| `scripts/deploy-engine` | Build a `namchain` commit, never from a dev checkout: for vip in colima on the Mac, exactly as its image builds it; for piv in a dedicated tree on piv. Run the tests, install into a versioned directory, write the manifest, restart. Exists; the armv7-NEON cross build for `tib` went with `tib` |
 | `devices/tib/` | The appliance configuration and its idempotent apply/backup scripts |
-| `components.lock` | The component commits that make up what the Core host is running (board, kernel, namchain, the `devices/` tree), written by `scripts/components-lock` after every deploy and apply. Exists |
+| `devices/<host>/components.lock` | The component commits that make up what a Core host is running (board, kernel, namchain, the `devices/` tree), written by `scripts/components-lock` after every deploy and apply. Exists |

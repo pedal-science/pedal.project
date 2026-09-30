@@ -8,7 +8,7 @@ something is unverified it says so.
 
 ## Current status
 
-> **`tib` is retired (2026-09-26); the Core host is a Pi 5** (piv now, vip soon). Where this
+> **`tib` is retired (2026-09-26); the Core host is a Pi 5**: vip, from 2026-10-01 (piv stood in until then). Where this
 > doc says `tib`, read "the Core host". The RK3288-specific parts (the device tree, the one I2S
 > controller, UART1 on pins 8/10, and "What not to assume") are superseded. The Pi's header
 > equivalents still need to be worked out.
@@ -28,7 +28,7 @@ something is unverified it says so.
 
 | Part | Notes |
 |---|---|
-| Core host | **vip**, a Raspberry Pi 5 (1 GB, BCM2712, aarch64), on order. **piv** (Pi 500, same SoC) stands in until it arrives. `tib` (ASUS Tinker Board, RK3288, armhf) was the original Core and is **retired** (2026-09-26) |
+| Core host | **vip**, a Raspberry Pi 5 (1 GB, BCM2712, aarch64), the Core host since 2026-10-01, with the WM8960 wired to it. **piv** (Pi 500, same SoC) stood in until then. `tib` (ASUS Tinker Board, RK3288, armhf) was the original Core and is **retired** (2026-09-26) |
 | Codec | SparkFun WM8960 Audio Codec Breakout, schematic v1.0 (Eagle 9.4.2, Jan 2023). Retired product — consider a spare. |
 | Control MCU | Raspberry Pi Pico 2 (ordering). An RP2350-USB-A is due, but its 15 GPIO are short of the ~18 needed, so it's for experiments |
 | Display | 2.4" ST7789 320×240 SPI module with EC11 encoder + tactile button, board V1.2 (in hand) |

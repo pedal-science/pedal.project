@@ -54,23 +54,7 @@ PEDAL=$W/pedal; RESCUE=$W/rescue; DATA=$W/data
 NC_COMMIT=${PIN[namchain]}; NC_SHORT=${NC_COMMIT:0:7}
 log "namchain $NC_SHORT: build and test (Release, $NAMCHAIN_CXXFLAGS)"
 cp -a "$IN/namchain" "$W/namchain-src"
-(
-  cd "$W/namchain-src"
-  cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_CXX_FLAGS=$NAMCHAIN_CXXFLAGS" \
-    -DNAMCHAIN_BUILD_TESTS=ON -DNAMCHAIN_BUILD_TOOLS=ON > "$W/namchain-configure.log" 2>&1 \
-    || { tail -30 "$W/namchain-configure.log" >&2; exit 1; }
-  grep -q 'A2 planar NEON:  ON' "$W/namchain-configure.log" || die "planar NEON kernels are off"
-  cmake --build build -j"$(nproc)" > "$W/namchain-build.log" 2>&1 || { tail -40 "$W/namchain-build.log" >&2; exit 1; }
-  # The golden test builds the vendored core's own render tool on first run, with an unbounded
-  # `make -j` that runs the container out of memory (colima has 6 GB). Build it first, the same
-  # way at -j2, so the test finds it made.
-  cmake -S vendor/NeuralAmpModelerCore -B build/namcore-ref -DCMAKE_BUILD_TYPE=Release > "$W/namchain-ref.log" 2>&1 \
-    && cmake --build build/namcore-ref --target render -j2 >> "$W/namchain-ref.log" 2>&1 \
-    || { tail -30 "$W/namchain-ref.log" >&2; exit 1; }
-  # Serially, as deploy-engine: under -j one timing test fails from contention, not a defect.
-  (cd build && ctest --output-on-failure > "$W/namchain-test.log" 2>&1) || { tail -60 "$W/namchain-test.log" >&2; exit 1; }
-  tail -3 "$W/namchain-test.log" | sed 's/^/    /' >&2
-)
+"$IN/pedal/devices/common/image/build-namchain" "$W/namchain-src" "$NAMCHAIN_CXXFLAGS" "$W"
 cp "$W/namchain-configure.log" "$W/namchain-test.log" "$OUT/"
 
 # ------------------------------------------------------------------ roots

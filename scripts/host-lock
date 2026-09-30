@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# scripts/host-lock [--host piv] [--wait <seconds>] -- <command> [args...]
-# scripts/host-lock [--host piv] --who
+# scripts/host-lock [--host vip] [--wait <seconds>] -- <command> [args...]
+# scripts/host-lock [--host vip] --who
 #
 # Runs <command> on the Mac while holding the Core host's lock (rule 8: one measurement at a
 # time). The lock is a flock on the host, /run/lock/pedal-host.lock, held by an ssh session for as
@@ -13,7 +13,7 @@
 # devices/*/apply) nest. If the Mac sleeps or the network drops, the host lets go within 30 s.
 set -euo pipefail
 
-HOST=piv
+HOST=vip
 WAIT=
 WHO=0
 while [[ $# -gt 0 ]]; do

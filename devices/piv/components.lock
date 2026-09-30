@@ -1,4 +1,4 @@
-# What the Core host runs. Written by scripts/components-lock, which scripts/deploy-engine and
+# What piv runs. Written by scripts/components-lock, which scripts/deploy-engine and
 # devices/<host>/apply call; scripts/status compares it with the host. Commit it with the change.
 host=piv
 board=Raspberry Pi 500 Rev 1.0
