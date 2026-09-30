@@ -339,6 +339,8 @@ mkext4 "$PEDAL" "$PEDAL_ROOT_LABEL" "$PEDAL_ROOT_MB" "$W/p5.img"
 zstd -q -T0 -10 "$W/p5.img" -o "$DATA/images/pedal-root.ext4.zst"
 sha256sum "$W/p5.img" | sed "s|$W/p5.img|pedal-root.ext4|" > "$DATA/images/pedal-root.ext4.sha256"
 touch -h -d "@$SOURCE_DATE_EPOCH" "$DATA/images" "$DATA/images"/*
+# Also beside the card image: make-card --remote sends it to a running vip.
+cp "$DATA/images/pedal-root.ext4.zst" "$DATA/images/pedal-root.ext4.sha256" "$OUT/"
 tree "$DATA" "$OUT/tree-pedal-data.txt"
 DATA_MB=$(( $(du -sm "$DATA" | cut -f1) * 12 / 10 + 128 ))
 mkext4 "$DATA" pedal-data "$DATA_MB" "$W/p6.img"

@@ -1,0 +1,113 @@
+#!/usr/bin/env bash
+# devices/common/image/remote <build dir> <host> [--previous] — put a built pedal root on a running
+# vip, through its rescue root, without touching the card. make-card --remote runs this.
+#
+# docs/vip-image.md step 7. The pedal root is tried as a candidate: rescue is made the default
+# first, so whatever the new root does (hang, crash, no network), vip lands back in rescue by itself
+# (vip-boot deadline, vip-guard), where this can be run again. Only a root that comes up, runs the
+# engine and passes the same validation as a kernel candidate is made the default.
+#
+#   1. vip to rescue, rescue the default
+#   2. the image's own rtpi tools (vip-boot, vip-reimage, device.env) to rescue's /run: rescue's
+#      root is read-only, and its tools are whatever its card was written with
+#   3. the image to pedal-data (vip-reimage receive: checked against its hash before it replaces
+#      anything; the one there becomes the previous one)
+#   4. written over the pedal root (vip-reimage pedal --keep-default)
+#   5. the pedal booted once (vip-boot try-pedal), then checked: the image's commit, namchaind
+#      running, vip-boot-validate; then `vip-boot default pedal`
+#
+# --previous skips 3 and writes the image that was there before the last one received: the way back
+# from a new root that didn't come up. The build dir is still needed, for the tools.
+
+set -euo pipefail
+log() { printf '\033[1;34m==>\033[0m %s\n' "$*" >&2; }
+die() { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
+ok()  { printf '\033[1;32m[✓]\033[0m %s\n' "$*" >&2; }
+
+OUT=${1:?usage: remote <build dir> <host> [--previous]}; HOST=${2:?usage: remote <build dir> <host> [--previous]}
+PREVIOUS=0; [[ ${3:-} == --previous ]] && PREVIOUS=1
+TOOLS=$OUT/rescue-tools
+IMG=$OUT/pedal-root.ext4.zst
+for f in "$TOOLS/vip-boot" "$TOOLS/vip-reimage" "$TOOLS/device.env" "$OUT/manifest"; do
+  [[ -f $f ]] || die "$OUT has no ${f#"$OUT"/}: build it with make-card (--image-only)"
+done
+(( PREVIOUS )) || [[ -f $IMG && -f $OUT/pedal-root.ext4.sha256 ]] || die "$OUT has no pedal root image"
+want_commit=$(awk '$1 == "pedal" {print $2}' "$OUT/manifest")
+want_kernel=$(awk '$1 == "pedal-kernel" {print $2}' "$OUT/manifest")
+SHA=$( (( PREVIOUS )) || awk '{print $1}' "$OUT/pedal-root.ext4.sha256")
+
+SSH=(ssh -o BatchMode=yes -o ConnectTimeout=8 "$HOST")
+R=/run/vip-remote
+RB=(sudo "$R/vip-boot" --env "$R/device.env")
+RI=(sudo "$R/vip-reimage" --env "$R/device.env")
+root_now() { "${SSH[@]}" 'grep -o "vipboot.root=[a-z]*" /proc/cmdline | cut -d= -f2' 2>/dev/null || true; }
+# wait_root <root> <seconds>: until vip answers on that root; the other root answering is a failure.
+wait_root() {
+  local t0=$SECONDS r
+  sleep 15
+  while (( SECONDS - t0 < $2 )); do
+    r=$(root_now)
+    [[ $r == "$1" ]] && return 0
+    [[ -n $r && $r != "$1" ]] && { log "vip came up on $r, not $1"; return 1; }
+    sleep 5
+  done
+  log "vip didn't answer on $1 within $2 s"; return 1
+}
+
+r=$(root_now); [[ -n $r ]] || die "$HOST doesn't answer"
+if [[ $r == pedal ]]; then
+  running=$("${SSH[@]}" "uname -r")
+  [[ $running == "$want_kernel" ]] || die "vip runs $running and the image $want_kernel: a kernel change goes through vip-boot try-kernel, not a new root (yet)"
+  log "vip to rescue, rescue the default"
+  "${SSH[@]}" "sudo vip-boot rescue --stay" >/dev/null 2>&1 || true
+  wait_root rescue 300 || die "vip didn't reach rescue"
+else
+  log "vip is in rescue: making it the default"
+  "${SSH[@]}" "sudo vip-boot stay" >/dev/null
+fi
+ok "vip is in rescue, and rescue is the default"
+
+log "the image's rtpi tools to rescue's $R"
+"${SSH[@]}" "sudo install -d -o \$(id -u) $R"
+scp -q -o BatchMode=yes "$TOOLS/vip-boot" "$TOOLS/vip-reimage" "$TOOLS/device.env" "$HOST:$R/"
+"${SSH[@]}" "chmod 755 $R/vip-boot $R/vip-reimage"
+
+# reimage <args> [< stdin]: vip-reimage on rescue, its own lines shown, and a failure said plainly.
+reimage() {
+  local out
+  if ! out=$("${SSH[@]}" "${RI[*]} $*" 2>&1); then
+    printf '%s\n' "$out" | tail -5 >&2
+    die "vip-reimage $1 failed: vip is in rescue, rescue the default; run this again"
+  fi
+  printf '%s\n' "$out" | grep '^vip-reimage' >&2 || true
+}
+if (( PREVIOUS )); then
+  log "writing the previous image over the pedal root"
+  reimage pedal --previous --keep-default < /dev/null
+else
+  log "sending the image ($(du -h "$IMG" | cut -f1)) to pedal-data"
+  reimage receive "$SHA" < "$IMG"
+  log "writing it over the pedal root"
+  reimage pedal --keep-default < /dev/null
+fi
+
+log "booting the new pedal root once"
+"${SSH[@]}" "${RB[*]} try-pedal" >/dev/null 2>&1 || true
+if ! wait_root pedal 720; then
+  die "the new pedal root didn't come up: vip is back in rescue. $( ((PREVIOUS)) || echo "Back to the previous root: make-card --remote --previous --image $OUT")"
+fi
+
+log "checking it"
+commit=$("${SSH[@]}" "sed -n 's/^commit=//p' /etc/pedal-image")
+if (( ! PREVIOUS )) && [[ $commit != "$want_commit" ]]; then
+  die "vip booted pedal commit $commit, not the image's $want_commit: left rescue the default"
+fi
+for i in $(seq 1 24); do
+  "${SSH[@]}" "systemctl is-active -q namchaind" && break
+  sleep 5
+done
+"${SSH[@]}" "systemctl is-active -q namchaind" || die "namchaind isn't running on the new root: left rescue the default; a reboot returns to rescue"
+"${SSH[@]}" "sudo /usr/local/libexec/vip-boot-validate \$(uname -r)" 2>&1 | tail -1 >&2 \
+  || die "the new root failed validation: left rescue the default; a reboot returns to rescue"
+"${SSH[@]}" "sudo vip-boot default pedal" >/dev/null
+ok "the new pedal root is running and the default: pedal $commit, $("${SSH[@]}" uname -r)"
