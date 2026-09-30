@@ -847,10 +847,13 @@ tested off the board and on vip (`bench-results/vip-spike/vip-boot.md`). Step 3 
 (`bench-results/vip-spike/codec.md`). Steps 4 and 5 are done: `devices/vip/make-card` builds the card from `devices/vip/image.lock`
 (bit-identically), and vip boots from a blank card onto WiFi, playing, `check` green
 (`bench-results/vip-card/results.md`). vip is on the third card, library synced. Next is step 6,
-rehearsing every fallback on vip. Not pushed: this branch, namchain b28e86b and f422dd0 (missing
-assets play as bypasses), ljoss 5da4ea6, rtpi's vip commits. piv still runs namchain 503aac9.
-piv: its codec files moved to `devices/common` (same paths), and `pedal-codec` and `pedal-device`
-changed, so `devices/piv/check` reports those two as differing until the next `devices/piv/apply`.
+rehearsing every fallback on vip. namchain f422dd0 plays a missing model or IR as a bypass, and
+ljoss 5da4ea6 marks the block.
+
+**Testing happens on vip for now** (decided 2026-09-30), until it's a working pedal that shouldn't
+be disrupted; then the test hardware gets chosen again. piv isn't updated meanwhile: it stays on
+namchain 503aac9, and `devices/piv/check` reports `pedal-codec` and `pedal-device` as differing
+(they moved to `devices/common` and changed). The piv phases below wait on that choice.
 
 Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot time.
 1. The step 8 soak at q64: an amp-only A2-Full plus a full-length IR, ljoss editing over WiFi,
