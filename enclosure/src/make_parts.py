@@ -354,6 +354,55 @@ def board_a():
     s.save("board_a")
 
 
+def board1():
+    """Board 1 as laid out in stripboard/board1.py (the bench build): the 9 V supply, the
+    buffer and the output stage. Parts are placed from that file's hole list, so this model
+    follows the layout it checks."""
+    sys.path.insert(0, os.path.join(HERE, "..", "..", "stripboard"))
+    import board1 as B1
+    errs = B1.check()
+    if errs:
+        raise SystemExit("board1 layout: " + "; ".join(errs))
+    bd = dict(name="board1", cols=B1.W, rows=B1.H)
+    b = stripboard(bd, B1.CUTS)
+    models = {
+        "r": ("Resistor_THT", "R_Axial_DIN0207_L6.3mm_D2.5mm_P{}_Horizontal"),
+        "d": ("Diode_THT", "D_DO-41_SOD81_P{}_Horizontal"),
+        "film": ("Capacitor_THT", "C_Rect_L7.2mm_W2.5mm_P5.00mm_FKS2_FKP2_MKS2_MKP2"),
+        "cer": ("Capacitor_THT", "C_Disc_D3.0mm_W1.6mm_P2.50mm"),
+        "el6.3": ("Capacitor_THT", "CP_Radial_D6.3mm_P2.50mm"),
+        "el5": ("Capacitor_THT", "CP_Radial_D5.0mm_P2.50mm"),
+        "bipolar": ("Capacitor_THT", "C_Radial_D6.3mm_H11.0mm_P2.50mm"),
+        "dip8": ("Package_DIP", "DIP-8_W7.62mm_Socket"),
+    }
+    pitch = {4: "10.16mm", 5: "12.70mm"}
+    for ref, (kind, val, leads) in B1.PARTS.items():
+        holes = [h for h, _ in leads]
+        if kind == "d":
+            holes = holes[::-1]                    # KiCad's pad 1 is the cathode
+        if "bipolar" in val:
+            kind = "bipolar"
+        lib, name = models[kind]
+        if "{}" in name:
+            (x1, y1), (x2, y2) = holes[:2]
+            name = name.format(pitch[abs(x2 - x1) + abs(y2 - y1)])
+        # Pad 1 sits on the footprint's origin: put it on the first hole, then turn the part
+        # until pad 2 (or, for the socket, pin 8) lands on its hole.
+        target = holes[-1] if kind == "dip8" else holes[1]
+        f = fp(b, lib, name, *g(*holes[0]))
+        want = g(*target)
+        for rot in (0, 90, 180, 270):
+            f.SetOrientationDegrees(rot)
+            pad = next(p for p in f.Pads() if p.GetNumber() == ("8" if kind == "dip8" else "2"))
+            px, py = pcbnew.ToMM(pad.GetPosition().x), pcbnew.ToMM(pad.GetPosition().y)
+            if abs(px - want[0]) < 0.6 and abs(py - want[1]) < 0.6:
+                break
+        else:
+            raise SystemExit(f"board1: {ref} ({name}) doesn't fit holes {holes}")
+    save_export(b, "board1", soldermask=False, silkscreen=False, finish="None")
+    meta["board1"] = dict(bd, links=B1.LINKS, pads={k: v[0] for k, v in B1.PADS.items()})
+
+
 # ---- SparkFun WM8960 breakout -------------------------------------------------------------
 
 CODEC_W, CODEC_H = 25.4, 40.64

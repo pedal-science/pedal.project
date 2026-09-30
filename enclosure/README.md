@@ -101,5 +101,6 @@ screen image, builds `pedal.blend` and renders all seven cameras (about half an 
 | `src/make_parts.py` | KiCad boards to GLB (runs in KiCad's Python) |
 | `src/make_screen.py` | The display's image |
 | `src/build_scene.py` | Builds `pedal.blend`: `bl_pedal.py` (assembly, wiring), `bl_enclosure.py`, `bl_parts.py`, `bl_wires.py`, `bl_scene.py` (floor, lamps, cameras), `bl_util.py` |
+| `src/build_board1.py` | Builds `stripboard/board1.blend` and its renders: board 1 alone, from `stripboard/board1.py` (`make_parts.py board1` first) |
 | `src/render.py` | Renders cameras: `blender -b pedal.blend -P src/render.py -- [--samples N] [--scale %] [CAM_...]` |
 | `src/preview_part.py`, `src/debug_view.py` | Dev views of one part or one pedal under plain light |

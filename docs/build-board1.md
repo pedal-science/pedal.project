@@ -89,6 +89,18 @@ Cuts: (14, 1), (19, 1), (29, 1), (38, 1); (15, 2), (19, 2), (24, 2); (12, 3), (1
 | OUT-L | (35, 8) | OUT L jack tip |
 | OUT-R | (35, 12) | OUT R jack tip |
 
+### What it looks like built
+
+Rendered from `stripboard/board1.blend`, which is built from the same layout file (it isn't in git;
+make it with `make_parts.py board1` in KiCad's Python, then
+`blender -b --factory-startup -P enclosure/src/build_board1.py` from `enclosure/`). The flying
+leads are drawn short and in arbitrary colours.
+
+![Board 1, built](../stripboard/renders/board1-3quarter.png)
+
+More views: [plan](../stripboard/renders/board1-plan.png), [low](../stripboard/renders/board1-low.png),
+[copper side](../stripboard/renders/board1-copper.png).
+
 ---
 
 ## Rules for the whole build
