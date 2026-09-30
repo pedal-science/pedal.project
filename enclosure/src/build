@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Rebuilds enclosure/pedal.blend and its renders from scratch.
+#   src/build              everything: downloads, boards, screen, scene, renders
+#   src/build --no-render  stop after writing pedal.blend
+# Needs Blender 5.2 (blender on PATH) and KiCad 10 in /Applications.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+KPY=/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/3.9/bin/python3
+
+src/fetch-assets
+if [[ ! -d assets/rpi5 ]]; then
+  unzip -o -q assets/rpi5-step.zip -d assets/rpi5
+fi
+"$KPY" -u src/make_parts.py 2>&1 | grep -v "create wxApp"
+blender -b --factory-startup --python-exit-code 1 -P src/make_screen.py > /dev/null
+blender -b --factory-startup --python-exit-code 1 -P src/build_scene.py | grep -E "^SAVED"
+if [[ "${1:-}" != "--no-render" ]]; then
+  blender -b pedal.blend --python-exit-code 1 -P src/render.py -- --samples 256 | grep -E "^RENDERED"
+fi

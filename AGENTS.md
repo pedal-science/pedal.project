@@ -120,6 +120,8 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
   it owns, storage, uploads, the mapping, failure modes), `vip-image.md` (building vip's card,
   its rescue and pedal roots, boot fallback), `bom.md`.
 - `devices/<host>/rootfs/` — the Core host's configuration as code.
+- `enclosure/` — a Blender model of the pedal in its 1590XX (parts, layout, wiring) and its
+  renders; `enclosure/README.md` says what's approximate and how to rebuild it.
 - `docs/diagrams/` — draw.io, two layers: blocks and connections. The small squares on the
   connection layer are routing junctions, **not components**. When reasoning about the
   diagram, check that edges still have `source`/`target` set and that no junction joins two

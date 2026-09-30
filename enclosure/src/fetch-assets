@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Downloads the two third-party assets the model uses into enclosure/assets/.
+# Everything else is built from KiCad's bundled 3D library or modelled in Blender.
+set -euo pipefail
+cd "$(dirname "$0")/../assets"
+
+# Raspberry Pi 5, official STEP (with silkscreen graphics), from Raspberry Pi's product portal.
+PI5_URL="https://pip-assets.raspberrypi.com/categories/892-raspberry-pi-5/documents/RP-010082-CA-1-rpi-5%203D%20STEP%20-%20With%20Graphics%20large%20file.zip"
+if [[ ! -f rpi5-step.zip ]]; then
+  curl -fL --retry 3 -o rpi5-step.zip "$PI5_URL"
+fi
+
+# Poly Haven "Wood Floor" (CC0), 4K: colour, OpenGL normal and roughness.
+for map in diff nor_gl rough; do
+  f="textures/wood_floor_${map}_4k.jpg"
+  [[ -f "$f" ]] || curl -fL --retry 3 -o "$f" \
+    "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/4k/wood_floor/wood_floor_${map}_4k.jpg"
+done
+ls -la . textures
