@@ -1,0 +1,114 @@
+22:17:08.843 watching 'Ambient Wash': generation 23, 114 ramps so far, 22 transitions, 0 xruns, worst block 43%
+22:17:12.341 REBUILD generation 23 -> 24 | Ambient Wash
+         chains[Guitar].nodes[nc.nam#F7795F].model: "000 Unsorted/ORNG-V30-e609-Center" -> "Ampeg GVT52 - Channel 2/AMPEG_CH 2 NEUTRAL G7"
+22:17:25.946 REBUILD generation 24 -> 25 | Ambient Wash
+         chains[Guitar].connections: changed (6 -> 8 items)
+         chains[Guitar].nodes: added nc.nam#A78A22 {"model": "Ampeg SVT Classic with 6x10/Ampeg SVT - SM75"}
+         chains[Guitar].nodes: added fx.amp.tonestack#A78A22 {"bass": 0.0, "mid": 0.0, "treble": 2.4000000000000004}
+22:17:28.052 +1 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.amp.tonestack#A78A22].bass: 0 -> -0.01414
+22:17:28.315 +3 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.amp.tonestack#A78A22].bass: -0.01414 -> 2.907
+22:17:28.582 +1 ramps | Ambient Wash
+22:17:29.303 +2 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.amp.tonestack#A78A22].mid: 0 -> 1.24
+22:17:29.561 +1 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.amp.tonestack#A78A22].mid: 1.24 -> 1.32
+22:17:30.749 +4 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.amp.tonestack#A78A22].treble: 2.4 -> -1.096
+22:17:31.012 +2 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.amp.tonestack#A78A22].treble: -1.096 -> -2.673
+22:17:31.286 +1 ramps | Ambient Wash
+22:17:36.429 REBUILD generation 25 -> 26 | Ambient Wash
+         chains[Guitar].connections: changed (8 -> 6 items)
+         chains[Guitar].nodes: removed nc.nam#F7795F
+         chains[Guitar].nodes: removed fx.amp.tonestack#F7795F
+22:17:47.046 +4 ramps | Ambient Wash
+         chains[Guitar].nodes[nc.gain#8C1858].gain_db: 6.472 -> 19.91
+22:17:47.305 +12 ramps | Ambient Wash
+         chains[Guitar].nodes[nc.gain#8C1858].gain_db: 19.91 -> 23.23
+22:17:50.098 +5 ramps | Ambient Wash
+         chains[Guitar].nodes[nc.gain#8C1858].gain_db: 23.23 -> 18.64
+22:17:50.358 +4 ramps | Ambient Wash
+         chains[Guitar].nodes[nc.gain#8C1858].gain_db: 18.64 -> 17.68
+22:17:50.615 +3 ramps | Ambient Wash
+         chains[Guitar].nodes[nc.gain#8C1858].gain_db: 17.68 -> 16.44
+22:17:50.874 +1 ramps | Ambient Wash
+22:18:07.942 +3 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.cab.ir#84C25C].low_cut: 80 -> 125.5
+22:18:08.431 +1 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.cab.ir#84C25C].high_cut: 5496 -> 5486
+22:18:08.689 +4 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.cab.ir#84C25C].high_cut: 5486 -> 1.018e+04
+22:18:08.949 +1 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.cab.ir#84C25C].high_cut: 1.018e+04 -> 1.045e+04
+22:18:11.732 +3 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].time: 620 -> 715.2
+22:18:11.990 +8 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].time: 715.2 -> 789.9
+22:18:15.010 +3 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].feedback: 0.6188 -> 0.3237
+22:18:15.271 +2 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].feedback: 0.3237 -> 0.2893
+22:18:15.758 +5 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].feedback: 0.2893 -> 0.2408
+22:18:16.018 +2 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].feedback: 0.2408 -> 0.2398
+22:18:16.277 +5 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].feedback: 0.2398 -> 0.2027
+22:18:17.476 +3 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].feedback: 0.2027 -> 0.2328
+22:18:17.738 +1 ramps | Ambient Wash
+22:18:18.692 +4 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].mix: 0.8094 -> 0.6542
+22:18:18.952 +4 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].mix: 0.6542 -> 0.6385
+22:19:12.830 +2 ramps | Ambient Wash
+         chains[Guitar].nodes[nc.gain#8C1858].gain_db: 16.44 -> 16.42
+22:19:13.090 +13 ramps | Ambient Wash
+         chains[Guitar].nodes[nc.gain#8C1858].gain_db: 16.42 -> 4.599
+22:19:13.348 +4 ramps | Ambient Wash
+         chains[Guitar].nodes[nc.gain#8C1858].gain_db: 4.599 -> 4.323
+22:19:13.840 +10 ramps | Ambient Wash
+         chains[Guitar].nodes[nc.gain#8C1858].gain_db: 4.323 -> -5.655
+22:19:14.099 +5 ramps | Ambient Wash
+         chains[Guitar].nodes[nc.gain#8C1858].gain_db: -5.655 -> -6.164
+22:19:22.200 +2 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].time: 789.9 -> 787.4
+22:19:22.459 +3 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].time: 787.4 -> 397.8
+22:19:22.715 +2 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].time: 397.8 -> 344.6
+22:19:23.435 +1 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].feedback: 0.2328 -> 0.2316
+22:19:23.699 +1 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].feedback: 0.2316 -> 0.2029
+22:19:25.124 +6 ramps | Ambient Wash
+         chains[Guitar].nodes[fx.delay.feedback#C17CAC].mix: 0.6385 -> 0.7895
+22:19:25.384 +2 ramps | Ambient Wash
+22:19:28.413 +3 ramps | Ambient Wash
+         chains[Guitar].nodes[nc.gain#8C1858].gain_db: -6.164 -> -1.738
+22:19:28.674 +3 ramps | Ambient Wash
+         chains[Guitar].nodes[nc.gain#8C1858].gain_db: -1.738 -> 2.864
+22:36:45.931 REBUILD generation 26 -> 27 | Crunch Lead
+         chains: removed Guitar
+         chains: removed Vocal
+         chains: added Guitar {"connections": [{"from": "in", "from_port": 0, "to": "208FAC11-C0C...
+         name: "Ambient Wash" -> "Crunch Lead"
+22:36:56.378 REBUILD generation 27 -> 28 | Crunch Lead
+         chains[Guitar].connections: changed (3 -> 5 items)
+         chains[Guitar].nodes: added nc.nam#49A791 {"model": "Ampeg SVT Classic with 6x10/Ampeg SVT - Gain 10 Ultra Lo...
+         chains[Guitar].nodes: added fx.amp.tonestack#49A791 {"bass": 0.0, "mid": 0.0, "treble": 2.4000000000000004}
+22:37:02.193 +3 ramps | Crunch Lead
+         chains[Guitar].nodes[fx.amp.tonestack#49A791].mid: 0 -> 2.818
+22:37:02.455 +2 ramps | Crunch Lead
+         chains[Guitar].nodes[fx.amp.tonestack#49A791].mid: 2.818 -> 2.871
+22:37:06.656 +7 ramps | Crunch Lead
+         chains[Guitar].nodes[nc.gain#208FAC].gain_db: 22.93 -> 9.508
+22:37:06.919 +3 ramps | Crunch Lead
+         chains[Guitar].nodes[nc.gain#208FAC].gain_db: 9.508 -> 9.479
+22:37:07.424 +9 ramps | Crunch Lead
+         chains[Guitar].nodes[nc.gain#208FAC].gain_db: 9.479 -> 15.29
+22:37:07.686 +4 ramps | Crunch Lead
+         chains[Guitar].nodes[nc.gain#208FAC].gain_db: 15.29 -> 15.57
+22:37:09.063 done: generation 28, 292 ramps, 27 transitions, 0 xruns

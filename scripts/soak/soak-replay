@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# scripts/soak/soak-replay SESSION [--host piv] [--duration 3600] [--sync-library-at SECONDS]
+#                          [--label NAME] [--speed 1] [--writes-only]
+#
+# Plan Phase 1 step 8's soak, made repeatable: replay a recorded ljoss session against the
+# Core host's namchaind from this Mac (so over WiFi, as ljoss edits), looping it for --duration,
+# while soak-monitor.sh samples engine.status on the host. Everything runs under the host's lock.
+# With --sync-library-at, scripts/sync-library runs once at that many seconds in, as step 8 asks.
+#
+# Sessions come from namchain's tools/session/namchain-session-record (ljoss pointed through it),
+# or scripts/soak/sessions/. The replay tool is taken from $NAMCHAIN_DIR (~/code.local/namchain),
+# and its commit is recorded.
+#
+# Evidence goes to bench-results/<date>-<label>.{env,replay.json,replay.jsonl,monitor.jsonl,
+# summary.txt}: the gate from soak-summary.py, and which slow blocks fell beside a transition
+# from soak-events.py.
+set -euo pipefail
+
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO="$(cd "$HERE/../.." && pwd)"
+NAMCHAIN_DIR="${NAMCHAIN_DIR:-$HOME/code.local/namchain}"
+REPLAY="$NAMCHAIN_DIR/tools/session/namchain-session-replay"
+
+HOST=piv
+DURATION=3600
+SYNC_AT=
+LABEL=
+EXTRA=()
+[[ $# -gt 0 && $1 != -* ]] || { sed -n '2,17p' "$0"; exit 2; }
+SESSION=$(cd "$(dirname "$1")" && pwd)/$(basename "$1"); shift
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --duration) DURATION=$2; shift ;;
+    --sync-library-at) SYNC_AT=$2; shift ;;
+    --label) LABEL=$2; shift ;;
+    --speed) EXTRA+=(--speed "$2"); shift ;;
+    --writes-only) EXTRA+=(--writes-only) ;;
+    -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
+    *) echo "soak-replay: unknown argument: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+[[ -x $REPLAY ]] || { echo "soak-replay: no $REPLAY (set NAMCHAIN_DIR)" >&2; exit 2; }
+[[ -f $SESSION ]] || { echo "soak-replay: no session $SESSION" >&2; exit 2; }
+
+if [[ ${PEDAL_HOST_LOCK:-} != "$HOST" ]]; then
+  exec "$REPO/scripts/host-lock" --host "$HOST" -- "$0" "$SESSION" --host "$HOST" \
+    --duration "$DURATION" ${SYNC_AT:+--sync-library-at "$SYNC_AT"} ${LABEL:+--label "$LABEL"} "${EXTRA[@]}"
+fi
+
+SSH=(ssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 "$HOST")
+stamp=$(date -u +%Y%m%dT%H%M%SZ)
+LABEL=${LABEL:-soak-replay-$(basename "$SESSION" .session.jsonl)-$HOST}
+out="$REPO/bench-results/$(date +%F)-$LABEL"
+remote=/var/lib/pedal/soak/$LABEL-$stamp.jsonl
+
+nc_commit=$(git -C "$NAMCHAIN_DIR" rev-parse --short HEAD)
+[[ -z $(git -C "$NAMCHAIN_DIR" status --porcelain -- tools/session) ]] || nc_commit="$nc_commit-dirty"
+{
+  printf 'session     %s\n' "${SESSION#"$REPO"/}"
+  printf 'host        %s\n' "$HOST"
+  printf 'duration    %s\n' "$DURATION"
+  printf 'sync_at     %s\n' "${SYNC_AT:-none}"
+  printf 'replay      namchain %s tools/session\n' "$nc_commit"
+  printf 'pedal       %s\n' "$(git -C "$REPO" rev-parse --short HEAD)"
+  printf 'engine      %s\n' "$("${SSH[@]}" 'readlink /opt/namchain/current' 2>/dev/null || echo '?')"
+  printf 'start       %s\n' "$(date -Iseconds)"
+  printf 'throttled   %s\n' "$("${SSH[@]}" 'vcgencmd get_throttled' 2>/dev/null || echo '?')"
+  printf 'temp        %s\n' "$("${SSH[@]}" 'vcgencmd measure_temp' 2>/dev/null || echo '?')"
+} > "$out.env"
+
+# The monitor runs on the host for the replay's length plus a margin for the starting rig.
+"${SSH[@]}" "sudo mkdir -p /var/lib/pedal/soak && sudo sh -s -- '$remote' $((DURATION + 30)) 10" \
+  < "$HERE/soak-monitor.sh" &
+monitor=$!
+# Stopped early, leave nothing running on the host (rule 8).
+trap 'kill $monitor 2>/dev/null || true; "${SSH[@]}" "sudo pkill -f \"sh -s -- $remote\"" 2>/dev/null || true' EXIT
+
+if [[ -n $SYNC_AT ]]; then
+  ( sleep "$SYNC_AT"; "$REPO/scripts/sync-library" --host "$HOST" > "$out.sync-library.log" 2>&1 \
+      || echo "sync-library failed; see $out.sync-library.log" >&2 ) &
+fi
+
+set +e
+"$REPLAY" "$SESSION" --host "$HOST" \
+  --token-command "ssh -o BatchMode=yes $HOST sudo -n cat /etc/namchain/token" \
+  --duration "$DURATION" --summary "$out.replay.json" --log "$out.replay.jsonl" "${EXTRA[@]}"
+replay_rc=$?
+set -e
+printf 'end         %s\nreplay_exit %s\n' "$(date -Iseconds)" "$replay_rc" >> "$out.env"
+
+wait "$monitor" || true
+trap - EXIT
+"${SSH[@]}" "sudo cat '$remote'" > "$out.monitor.jsonl"
+{
+  echo "== soak-summary.py"; python3 "$HERE/soak-summary.py" "$out.monitor.jsonl" || true
+  echo; echo "== soak-events.py"; python3 "$HERE/soak-events.py" "$out.monitor.jsonl" || true
+} | tee "$out.summary.txt"
+echo "evidence: ${out#"$REPO"/}.*" >&2
+exit "$replay_rc"

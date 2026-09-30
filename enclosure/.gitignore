@@ -1,0 +1,4 @@
+assets/
+*.blend1
+__pycache__/
+pedal.blend
