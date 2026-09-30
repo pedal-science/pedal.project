@@ -1,6 +1,7 @@
 # Enclosure model
 
-A Blender model of the pedal built into a Hammond 1590XX, shown twice on a wooden floor:
+A Blender model of the pedal built into a 1590DD-size box (188 x 119 x 37.5 mm), shown twice on
+a wooden floor:
 closed, and with the top face taken off so the insides show. The parts that mount on the top
 face (footswitches, display module, knob, LEDs, toggle) stay where they mount in both.
 
@@ -9,7 +10,8 @@ Open `pedal.blend` in Blender 5.2 or later. It's self-contained, with textures p
 
 ## Renders
 
-`renders/`, 1920 x 1080, Cycles:
+`renders/`, 1920 x 1080, Cycles. They show the earlier 1590XX layout until they are rendered
+again from the current `pedal.blend`:
 
 | File | Shows |
 |---|---|
@@ -17,30 +19,30 @@ Open `pedal.blend` in Blender 5.2 or later. It's self-contained, with textures p
 | `2_overhead.png` | Top down, closed beside open: the layout |
 | `3_inside.png` | Into the open pedal: Pi 5, display, wiring |
 | `4_face.png` | The closed pedal's face: stripe, screen, knob, toggle |
-| `5_rear.png` | The rear: MIDI, 9 V and 5 V in, jacks on the sides |
+| `5_rear.png` | The rear: every connector |
 | `6_wide.png` | The set: the floor lamps around the pedals |
-| `7_boards.png` | Behind the display: the codec and the Pico |
+| `7_boards.png` | The codec board and the Pi |
 
 ## What's in it
 
-- **Enclosure.** Hammond's 1590XX drawing: 145.2 x 121.2 x 39.3 mm, drafted walls, a 3 mm
-  fillet into the top face, lid-screw bosses in the corners, and a lipped base plate on four
-  rubber feet. Black textured powder coat, with an orange band (y 53 to 107 mm) across the top
-  and down both sides. Bare metal inside.
+- **Enclosure.** 188 x 119 x 37.5 mm, drafted walls, a 3 mm fillet into the top face, lid-screw
+  bosses in the corners, and a lipped base plate on four rubber feet. Black textured powder
+  coat, with an orange band (y 53 to 106 mm) across the top and down both sides. Bare metal
+  inside. Tayda's 33 mm-high 1590DD was tried first; see below for why it wasn't enough.
 - **Top face.** The display window (black bezel, acrylic behind it), the EC11 knob and push
-  button, Inst/Line toggle, four LEDs in panel clips, and three footswitches **52 mm** apart.
-  70 mm doesn't fit: the outer switches would sit in the side walls.
-- **Walls.** OUT L and OUT R on the left, IN and EXP on the right, MIDI, 9 V and 5 V (USB-C)
-  on the rear.
-- **Inside.** The Pi 5 on 3 mm standoffs under the footswitches. Behind it, under the
-  display, two stripboards on 5 mm standoffs: board A (buffer on a SOIC adapter, bias, power,
-  output stage, the SparkFun WM8960 in socket strips) and board B (the Pico 2 WH in socket
-  strips, MIDI in, the bypass relay and its driver).
+  button, Inst/Line toggle, four LEDs in panel clips, and three footswitches **69 mm** apart.
+- **Rear.** Everything: OUT L and OUT R at the left, 5 V (USB-C), MIDI and 9 V in the middle,
+  EXP and IN at the right (left and right as the player sees them).
+- **Inside.** The Pi 5 on 3 mm standoffs at the front middle, under the middle footswitch. Either
+  side of it, on 3 mm standoffs: board B at the left (the Pico 2 WH in socket strips, MIDI in,
+  the bypass relay and its driver) and board A at the right (buffer on a SOIC adapter, bias,
+  power, output stage, the SparkFun WM8960 in socket strips).
 - **Wiring.** Dupont leads on the Pi's header for I2S, I2C, UART and 5 V; USB-C 5 V into the
-  header; a split rainbow ribbon from the display to board B; footswitch, LED and expression
-  wires in a tied loom along the front of the boards, with 100 nF across each footswitch; twisted
-  pairs for the outputs and MIDI; screened cable from the input jack; and the sleeves, 9 V return
-  and board ground meeting at a star point on board A's corner.
+  header; a split rainbow ribbon from the display, arched over the Pico, to board B; footswitch
+  and LED wires in a tied loom just behind the footswitches, with 100 nF across each footswitch;
+  expression and MIDI along the rear behind the boards; twisted pairs for the outputs; screened
+  cable from the input jack; and the sleeves, 9 V return and board ground meeting at a star point
+  on board A's front corner.
 
 Positions for all of it live in `src/layout.py`.
 
@@ -64,17 +66,20 @@ The parts are close, not exact.
 
 ## What the model says about the layout
 
-None of this has been checked against hardware.
+None of this has been checked against hardware. `src/layout.py` has the positions; the parts'
+meshes don't intersect except where they should touch (checked in Blender).
 
-- **The Pi 5 fits under the footswitches.** The switch tags end about 5 mm above its tallest
-  parts there. Its USB and Ethernet stack has to be at the right-hand end to clear the right
-  footswitch.
-- **The EC11 sets the display's height.** The encoder's 6.5 mm body puts the display board
-  6.6 mm under the panel, so the glass sits about 3 mm below the window.
-- **The rear connectors have to sit high to clear the boards.** DIN is at z 25.5 mm, USB-C at
-  29.5 mm and DC at 25 mm. The DC socket also had to move right of centre (x 76 mm) to clear the
-  Pico and the display board.
-- **Seen from above, the display module hides most of both stripboards.**
+- **The height is the constraint.** At 33 mm (Tayda's 1590DD) the Dupont housings on the Pi's
+  header reached the display board and the MIDI socket had nowhere to go, and the other gaps were
+  0.5 to 2.5 mm. At 37.5 mm it all fits with room for wiring, but there's still no room for a Pi
+  cooler under the middle footswitch: a low heatsink is the most that could go there.
+- **The Pi sits under the middle footswitch.** Its USB and Ethernet stack has to sit between the
+  middle and right footswitches, and the switch's tags sit over the bare middle of the board,
+  clear of the tall parts along the HDMI edge.
+- **Board B's standoffs have to move one hole in** (column 1, not 0), and board A's to column
+  16: at the board edge they would land on the lid's lip.
+- **The LEDs' legs are trimmed short**, so the Pico can sit under the left LED.
+- **The rear connectors sit at z 16 mm**, so the DIN socket clears the display board above it.
 
 ## Rebuilding
 

@@ -33,7 +33,7 @@ for v in views:
     cam.data.dof.use_dof = False
     if v == "top":
         cam.data.type = "ORTHO"
-        cam.data.ortho_scale = 0.165
+        cam.data.ortho_scale = 0.205
         cam.location = c + Vector((0, 0, 0.5))
         cam.rotation_euler = (0, 0, 0)
         sc.render.resolution_x, sc.render.resolution_y = 1600, 1400

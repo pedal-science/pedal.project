@@ -46,6 +46,14 @@ class Holes:
         self.meta = {"a": meta["board_a"], "b": meta["board_b"]}
         self.used = {k: {tuple(h) for h in v["blocked"]} for k, v in self.meta.items()}
         self.used["b"] |= {(c, r) for c in range(9, 15) for r in range(20)}   # under the Pico
+        for k, v in self.meta.items():                                       # under the screw heads
+            self.used[k] |= {(c + dc, r + dr) for c, r in v["standoffs"] for dc in (-1, 0, 1) for dr in (-1, 0, 1)}
+
+    def exact(self, board, c, r):
+        """A hole reserved for this lead (the ribbon's column on board B)."""
+        self.used[board].add((c, r))
+        x, y = L.hole(self.meta[board], c, r)
+        return Vector((x, y, L.BOARD_TOP))
 
     def take(self, board, c, r):
         bd = self.meta[board]
@@ -192,10 +200,11 @@ def build(M):
                                                              chamfer=0.25))
             fix.add(M.zinc, lambda bm, x=x, y=y: BP.pan_screw(bm, 3.0, L.BOARD_TOP + (0.9 if (key, c, r) == ("a", 0, 19)
                                                                                      else 0.0), x=x, y=y))
-    # Star ground: two solder tags under the screw at board A's front-left corner.
+    # Star ground: two solder tags under the screw at board A's front-left corner, pointing
+    # forward, clear of the Pi.
     sx, sy = L.hole(L.BOARD_A, 0, 19)
     star = Vector((sx, sy, L.BOARD_TOP))
-    for k, ang in enumerate((200.0, 250.0)):
+    for k, ang in enumerate((340.0, 300.0)):
         def tag(bm, ang=ang, k=k):
             z0 = L.BOARD_TOP + k * 0.45
             BP.washer(bm, 3.2, 1.6, z0, z0 + 0.4)
@@ -205,15 +214,13 @@ def build(M):
         fix.add(M.tin, tag, smooth=False)
     fix.obj(common, bevel=0.1, seg=1)
     star_tags = [star + Vector((math.cos(math.radians(a)), math.sin(math.radians(a)), 0)) * 6.8 +
-                 Vector((0, 0, 0.2 + k * 0.45)) for k, a in enumerate((200.0, 250.0))]
+                 Vector((0, 0, 0.2 + k * 0.45)) for k, a in enumerate((340.0, 300.0))]
 
     # ---- Printed labels ---------------------------------------------------------------
-    for name, (wall, s, z) in L.JACKS.items():
-        text = {"OUT_L": "OUT L", "OUT_R": "OUT R", "IN": "IN", "EXP": "EXP"}[name]
-        label(common, ink_black, text, wall_basis(wall, s, z + 11.5), size=3.4)
-    label(common, ink_white, "5V", wall_basis("rear", L.USBC[0], L.USBC[1] - 7.5), size=3.2)
-    label(common, ink_white, "9V", wall_basis("rear", L.DC9V[0], L.DC9V[1] - 10.5), size=3.2)
-    label(common, ink_white, "MIDI", wall_basis("rear", L.MIDI[0], L.MIDI[1] - 13.5), size=3.2)
+    rear = [(n.replace("_", " "), s) for n, (_, s, _) in L.JACKS.items()]
+    rear += [("5V", L.USBC[0]), ("MIDI", L.MIDI[0]), ("9V", L.DC9V[0])]
+    for text, s in rear:
+        label(common, ink_white, text, wall_basis("rear", s, L.REAR_LABEL_Z), size=3.2)
     top = Matrix.Translation((0, 0, H))
     tx, ty = L.TOGGLE
     label(closed_only, ink_black, "INST", top @ Matrix.Translation((tx - 7.5, ty + 11.0, 0)), size=2.6)
@@ -246,56 +253,65 @@ def screen_material():
 # ---- Wiring ------------------------------------------------------------------------------------
 
 def wiring(M, coll, fsw, leds, tog, jacks, din, dc, usb, star_tags):
+    """Every route below is laid out for layout.py's positions: the Pi at the front middle,
+    board B at the left, board A at the right, all the connectors on the rear. Two shared
+    paths: the front loom (y 38, between the footswitches and their LEDs, high under the top face)
+    and the rear run (y 94.8, between the boards' rear edges and the connectors' tags)."""
     W = Wiring(U.collection("Pedal_Wiring", coll), M)
     holes = Holes()
     up, down = Vector((0, 0, 1)), Vector((0, 0, -1))
-    inward = {"left": Vector((1, 0, 0)), "right": Vector((-1, 0, 0)), "rear": Vector((0, -1, 0))}
+    rear_in = Vector((0, -1, 0))
+    LOOM_Y, LOOM_Z = 38.0, 25.0
+    REAR_Y = 94.8
 
-    # Dupont housings on the Pi header, and the leads from them.
     def dup(n):
+        """Dupont housing on the Pi's header; returns where its lead leaves the top."""
         return W.dupont(pi_pin(n), PI_PIN_BASE)
 
-    # 5 V in: USB-C pads to header pins 2 (5 V) and 6 (GND), 20 AWG.
+    # 5 V in: USB-C pads forward under the display to header pins 2 (5 V) and 6 (GND), 20 AWG.
     for pad, pin, col, dx in (("VBUS", 2, "red", 0.0), ("GND", 6, "black", 1.8)):
         p = world(usb, usb["pads"][pad])
         top = dup(pin)
-        W.run(f"W_usb_{pad}", col, p, (0, -0.35, -1), [
-            (p.x + dx, p.y - 7, 26.6), (38.5 + dx, 98, 26.6), (35.5 + dx, 76, 26.6), (33.5 + dx, 64.5, 26.3),
-            (top.x, top.y + 1.5, top.z + 3.5)], top, up, r=0.78, s_kind="pad", e_kind="dupont", lead=2.0)
+        W.run(f"W_usb_{pad}", col, p, (0, -1, -0.2), [
+            (p.x - 1 + dx, p.y - 8, 15.5), (58.5 + dx, REAR_Y, 16.0), (57.5 + dx, 75, 22.5),
+            (top.x, top.y + 3.5, 25.0)], top, (0, 0.3, 1), r=0.78, s_kind="pad", e_kind="dupont", lead=0.8)
 
-    # Pi 5 V (pin 4) to the Pico's VSYS diode; UART and ground to the Pico's socket strip.
-    for pin, target, col in ((4, (0, 18), "red"), (8, (7, 19), "yellow"), (10, (7, 18), "green"),
-                             (14, (6, 18), "black")):
+    # Pi 5 V (pin 4), UART and ground to board B's front corner: forward over the Pi, then left
+    # in front of the Pico.
+    for k, (pin, target, col) in enumerate(((4, (6, 18), "red"), (8, (7, 19), "yellow"), (10, (7, 18), "green"),
+                                            (14, (5, 16), "black"))):
         top = dup(pin)
         h = holes.take("b", *target)
-        mid = (top + h) / 2
-        W.run(f"W_pi{pin}", col, top, up, [(top.x, top.y + 1.0, top.z + 3.2), (mid.x, mid.y + 1.5, top.z + 2.2),
-                                           (h.x, h.y - 0.5, h.z + 9.0)], h, up, s_kind="dupont", lead=1.5)
+        W.run(f"W_pi{pin}", col, top, (0, -0.4, 1), [(top.x - 1, top.y - 6, 21.0), (top.x - 6, 44.0, 19.0 + 0.5 * k),
+                                                     (40.0, 39.8 + 0.4 * k, 17.0 + 0.4 * k), (21.5, 40.0 + 0.4 * k, 15.5),
+                                                     (h.x + 0.5, h.y - 1.0, h.z + 6.0)], h, up, s_kind="dupont", lead=1.2)
 
-    # Pi to codec: I2S, I2C, 3V3 and ground, down beside the codec to its left strips.
+    # Pi to codec: I2S, I2C, 3V3 and ground, back off the header, right under the display and
+    # down beside the codec's left socket strip.
     leads = [(1, 10, "orange"), (3, 9, "blue"), (5, 8, "purple"), (12, 3, "white"), (35, 4, "grey"),
              (38, 7, "brown"), (40, 5, "pink"), (39, 11, "black")]
     for k, (pin, row, col) in enumerate(leads):
         top = dup(pin)
         h = holes.take("a", 0, row)
-        if top.x < 60:
-            via = [(top.x, top.y + 1.0, top.z + 2.4), (top.x + 8, 68 + k * 0.9, 25.6 + 0.35 * (k % 3)),
-                   (62 + k * 0.4, h.y - 7, 25.7), (71.2 - 0.3 * k, h.y - 3, 20.5)]
-        else:
-            via = [(top.x, top.y + 1.2, top.z + 2.2), (73.2 - 0.5 * (k - 4), 66.0, 24.0), (72.4, h.y - 5, 17.5)]
-        W.run(f"W_codec_{pin}", col, top, up, via + [(h.x, h.y, h.z + 6.5)], h, up, s_kind="dupont", lead=1.2)
+        y = 64.5 + 0.9 * k
+        W.run(f"W_codec_{pin}", col, top, (0, 0.3, 1), [(top.x + 0.3, top.y + 3.0, 24.6), (top.x + 4, y, 23.0),
+                                                        (118.0, y + 0.3, 22.6 - 0.15 * k), (133.0, h.y - 2.0, 19.5),
+                                                        (h.x - 1.2, h.y, h.z + 6.5)], h, up, s_kind="dupont", lead=0.8)
 
-    # Display leads: a split rainbow ribbon from the module's pads straight down to board B.
+    # Display leads: a split rainbow ribbon from the module's pads, arched over the Pico, down
+    # to board B's column 1.
     for i in range(12):
         pu, pv = L.DISP["pads_x"], L.DISP["pads_y0"] + i * L.P
         pad = Vector((*L.disp_to_enc(pu, pv), DISP_Z))
-        h = holes.take("b", 1, 8 + i)
+        h = holes.exact("b", 1, 6 + i)
         jit = ((i * 37) % 7 - 3) * 0.12
-        W.run(f"W_disp_{i}", RIBBON[i], pad, down, [(pad.x + 0.8, pad.y + jit, pad.z - 7.5),
-                                                  (h.x - 0.6, h.y + jit, h.z + 8.5)], h, up,
-              r=0.5, s_kind="pad", lead=2.5)
+        W.run(f"W_disp_{i}", RIBBON[i], pad, down, [(pad.x - 1.5, pad.y + jit, pad.z - 2.2),
+                                                  (36.0, (pad.y + h.y) / 2 + jit, 24.8),
+                                                  (h.x + 3.0, h.y + jit, 17.5)], h, up,
+              r=0.5, s_kind="pad", lead=1.2)
 
-    # Footswitches: common and normally-open tags to board B, 100 nF across each.
+    # Footswitches: common and normally-open tags, with 100 nF across each. A goes straight
+    # back to board B; B and C rise into the front loom and run left along it.
     for i, sw in enumerate(fsw):
         com = world(sw, (0.0, 3.3, sw["tags"][0][2]))
         no = world(sw, (5.2, 3.3, sw["tags"][0][2]))
@@ -304,109 +320,117 @@ def wiring(M, coll, fsw, leds, tog, jacks, din, dc, usb, star_tags):
         for t in (com, no):
             W.cylinder(M.tin, cap_c, t + Vector((0, 0, 0.8)), 0.22, seg=8)
         for tag, col, j in ((no, "orange", 0), (com, "black", 1)):
-            h = holes.take("b", 0, 15 + 2 * i + j - 4 * (i == 2))
-            name = f"W_fs{i}_{j}"
+            h = holes.take("b", *[(0, 16 + j), (0, 14 + j), (0, 12 + j)][i])
             if i == 0:
-                via = [(tag.x - 1.5, tag.y + 8, 9.0 + j), (19.5 + j, 42, 7.0 + j), (21.0 + j, 60, 7.0 + j),
-                       (24.2, h.y - 2, 9.5 + j * 0.8)]
+                via = [(tag.x - 1.0, 39.5, 13.5 + j), (12.0, 40.8 + 0.6 * j, 13.5 + j),
+                       (h.x + 0.3, h.y - 0.3, h.z + 7.5 + j)]
             else:
-                x0 = tag.x - 2.0
-                via = [(x0, tag.y + 9, 11.0 + j), (x0 - 0.5, 52, 10.5 + j), (x0 - 1.5, 62.4, 10.4 + j * 0.9),
-                       (x0 - 6, 63.3 + j * 0.3, 10.4 + j * 0.9)]
-                via += [(49.0 - 0.6 * i - j * 0.5, 63.4 + j * 0.3, 10.8 + j * 0.9), (40.0, 63.2, 11.5),
-                        (27.5, 63.2 + 0.4 * j, 12.0), (26.0, h.y - 2, 10.5)]
-            W.run(name, col, tag, (0, 0.3, -1), via, h, up, s_kind="tag", lead=2.0)
+                z = LOOM_Z - 0.8 + 0.7 * j + 0.4 * i
+                via = [(tag.x - 1.0, 35.5, 13.0 + j), (tag.x - 4.0, LOOM_Y + 0.4 * j, z - 1.5),
+                       (tag.x - 12.0, LOOM_Y + 0.3 * j, z), (30.0, LOOM_Y + 0.3 * j, z),
+                       (21.0, LOOM_Y + 0.8 + 0.3 * j, z - 3), (h.x + 0.3, h.y - 0.3, h.z + 8.5)]
+            W.run(f"W_fs{i}_{j}", col, tag, (0, 1, -0.15), via, h, up, s_kind="tag", lead=2.0)
 
-    # LEDs: legs spliced to wires under heat shrink, then to board B.
+    # LEDs: legs spliced to wires under heat shrink, then to board B, the outer ones along the
+    # front loom.
     for i, led in enumerate(leds):
         for j, (leg, col) in enumerate(zip(led["legs"], ("orange", "black"))):
             p = world(led, leg)
-            W.cylinder(M.heatshrink, p + Vector((0, 0, 3.2)), p - Vector((0, 0, 4.0)), 0.95, seg=16)
-            h = holes.take("b", 0, [6, 8, 10, 13][i] + j)
-            if i == 3:
-                via = [(p.x, p.y, p.z - 6), (p.x + 6, p.y + 0.5, 19.5), (24.0, h.y, 16.0)]
+            W.cylinder(M.heatshrink, p + Vector((0, 0, 2.5)), p - Vector((0, 0, 3.5)), 0.95, seg=16)
+            h = holes.take("b", *[(6 + j, 16), (0, 10 + j), (0, 6 + j), (0, 8 + j)][i])
+            if i == 3:                                  # the ready LED, over board B
+                via = [(p.x - 1.5, p.y - 2, 18.0), (h.x + 1.0, h.y + 1.5, 12.5)]
+                s_dir = down
             elif i == 0:
-                via = [(p.x, p.y, p.z - 7), (p.x - 0.5, p.y + 6, 11.0), (21.5 + j, 60, 7.5 + j), (24.8, h.y - 2, 10.0)]
+                via = [(21.5, LOOM_Y + 2.5, 21.0), (h.x + 0.3, h.y - 0.3, h.z + 8.5)]
+                s_dir = Vector((0, -1, -0.3))
             else:
-                x0 = p.x - 2.5
-                via = [(p.x, p.y, p.z - 6), (x0, 55, 12.0 + j * 0.6), (x0 - 2, 62.6, 11.2 + j * 0.9),
-                       (x0 - 8, 63.0, 11.2 + j * 0.9), (40.0, 62.9, 12.2 + j * 0.5), (27.5, 62.9, 12.6),
-                       (26.0, h.y - 2, 11.0)]
-            W.run(f"W_led{i}_{j}", col, p - Vector((0, 0, 3.5)), down, via, h, up, s_kind="free", lead=2.5)
+                z = LOOM_Z + 0.3 + 0.6 * j
+                via = [(p.x - 2.0, LOOM_Y + 0.6, z), (30.0, LOOM_Y + 0.6, z),
+                       (21.0, LOOM_Y + 1.2, z - 3), (h.x + 0.3, h.y - 0.3, h.z + 8.5)]
+                s_dir = Vector((0, -1, -0.3))
+            W.run(f"W_led{i}_{j}", col, p - Vector((0, 0, 3.0)), s_dir, via, h, up, s_kind="free", lead=1.5)
 
-    # Expression jack: tip, ring and sleeve to board B along the front loom.
+    # Expression jack: tip, ring and sleeve along the rear run, behind the Pico, to board B.
     ej = jacks["EXP"]
     for k, (tag, col) in enumerate((("T", "orange"), ("R", "white"), ("S", "black"))):
         p = world(ej, ej["tags"][tag])
-        h = holes.take("b", 7, 15 + k)
-        via = [(118.5, p.y - 3, 13.5 + k * 0.7), (116.0, 63.6, 12.6 + 0.7 * k), (80.0, 63.7, 12.9 + 0.7 * k),
-               (52.0, 63.5, 13.2 + 0.6 * k), (47.2, h.y - 3, 12.0)]
-        W.run(f"W_exp_{tag}", col, p, inward["right"], via, h, up, s_kind="tag", lead=2.5)
+        h = holes.take("b", 7, 2 + k)
+        z = 18.0 + 0.4 * k
+        via = [(p.x - 1.0, REAR_Y + 0.3, p.z + 3.0), (p.x - 6.0, REAR_Y - 0.5, z), (100.0, REAR_Y - 0.3, z),
+               (56.0, REAR_Y - 0.5, z), (48.0, 88.5 - k, 23.5), (30.0, 87.0 - k, 25.5),
+               (h.x - 0.4, h.y + 0.3, 17.0)]
+        W.run(f"W_exp_{tag}", col, p, rear_in, via, h, up, s_kind="tag", lead=2.0)
 
-    # Input: screened cable from the tip to the buffer; sleeve to the star ground; tip switch
-    # linked to the sleeve.
+    # Input: screened cable from the tip to the buffer; the tip switch linked to the sleeve.
     ij = jacks["IN"]
     t = world(ij, ij["tags"]["T"])
     h = holes.take("a", 17, 2)
-    W.run("W_in_screened", "sheath", t, inward["right"], [(119.5, t.y + 1.5, 17.5), (h.x + 0.5, h.y - 1, h.z + 7)],
-          h, up, r=1.35, s_kind="tag", lead=2.5)
+    W.run("W_in_screened", "sheath", t, (0.6, -1, 0), [(t.x + 3.5, REAR_Y - 0.5, 15.0), (175.0, 91.0, 18.5),
+                                                  (h.x - 0.5, h.y + 1.0, h.z + 8)],
+          h, up, r=1.35, s_kind="tag", lead=2.0)
     W.cylinder(M.braid, h + Vector((0, 0, 2.2)), h + Vector((0, 0, 3.4)), 1.25, seg=20)
     ts, sl = world(ij, ij["tags"]["TS"]), world(ij, ij["tags"]["S"])
-    W.run("W_in_link", "black", ts, inward["right"], [(ts.x - 3, (ts.y + sl.y) / 2, (ts.z + sl.z) / 2)], sl,
-          inward["right"], r=0.5, s_kind="tag", e_kind="tag", lead=1.5)
+    W.run("W_in_link", "black", ts, rear_in, [((ts.x + sl.x) / 2 - 1.5, ts.y - 3, (ts.z + sl.z) / 2)], sl,
+          rear_in, r=0.5, s_kind="tag", e_kind="tag", lead=1.5)
 
-    # Inst / Line toggle to the buffer's pad taps.
+    # Inst / Line toggle down to the buffer's gain taps, just in front of the op-amp.
     for k, key in enumerate(("A", "C", "B")):
         p = world(tog, tog["tags"][key])
-        h = holes.take("a", 17, 6 + k)
-        W.run(f"W_tog_{key}", "orange", p, (0, 0, -1),
-              [(p.x - 2, p.y + 3 + k, 13.0 + k * 0.5), (120.5, h.y - 1, 12.5 + k * 0.5)], h, up, s_kind="tag", lead=2.0)
+        h = holes.take("a", *[(14, 8), (15, 8), (17, 8)][k])
+        W.run(f"W_tog_{key}", "orange", p, down, [(p.x + 0.5, 69.3, 11.5), (h.x, h.y - 1.0, h.z + 3.5)],
+              h, up, s_kind="tag", lead=1.5)
 
     # 9 V: centre pin to the reverse-polarity diode, sleeve to the star ground.
     p = world(dc, dc["tags"]["PIN"])
     h = holes.take("a", 1, 0)
-    W.run("W_dc_pin", "red", p, inward["rear"], [(p.x - 1.5, p.y - 3, p.z - 4), (h.x + 0.5, h.y + 1, h.z + 7)], h, up,
-          s_kind="tag", lead=2.0)
+    W.run("W_dc_pin", "red", p, rear_in, [(p.x + 3.0, REAR_Y, 14.0), (h.x - 3.0, REAR_Y - 0.3, 14.0),
+                                          (h.x, h.y + 1.0, h.z + 6)], h, up, s_kind="tag", lead=2.0)
     p = world(dc, dc["tags"]["SLEEVE"])
-    W.run("W_dc_gnd", "black", p, inward["rear"], [(p.x - 3.5, p.y - 4, 22.0), (70.4, 95.0, 18.5), (70.3, 75.0, 14.0),
-                                                   (star_tags[0] + Vector((0.5, 3.0, 5.0)))], star_tags[0], up,
-          s_kind="tag", e_kind="tag", lead=2.0)
+    W.run("W_dc_gnd", "black", p, rear_in, [(p.x + 1.0, REAR_Y, 17.5), (137.0, REAR_Y, 19.5), (137.4, 80.0, 23.5),
+                                            (138.0, 52.0, 23.5), star_tags[0] + Vector((0.5, -1.5, 5.0))],
+          star_tags[0], up, s_kind="tag", e_kind="tag", lead=2.0)
 
-    # MIDI in: DIN pins 4 and 5 as a twisted pair over the boards to the opto on board B.
+    # MIDI in: DIN pins 4 and 5 as a twisted pair along the rear run to the opto on board B.
     p4, p5 = world(din, din["pins"]["2"]), world(din, din["pins"]["4"])
-    h4, h5 = holes.take("b", 0, 1), holes.take("b", 0, 2)
+    h4, h5 = holes.take("b", 0, 2), holes.take("b", 0, 3)
     mid = (p4 + p5) / 2
-    cl = W.twisted("W_midi", ("orange", "black"), [mid, mid + Vector((0, -4, 0.5)), (100, 96, 24.4), (75, 96.5, 24.4),
-                                                   (50, 98.5, 24.4), (33, 103.5, 23.0), (28.8, 108.5, 16.5),
-                                                   ((h4 + h5) / 2 + Vector((0, 0, 7)))], r=0.55)
+    cl = W.twisted("W_midi", ("orange", "black"), [mid + Vector((0, -4.5, 1.0)), mid + Vector((0, -7.0, 0.0)), (80, REAR_Y, 12.0),
+                                                   (50, REAR_Y - 0.2, 12.0), (12, REAR_Y - 0.1, 12.0),
+                                                   ((h4 + h5) / 2 + Vector((1.5, 2.0, 6.5)))], r=0.55)
     for pin_p, h in ((p4, h4), (p5, h5)):
         W.run("W_midi_end", "orange" if pin_p is p4 else "black", cl[-1], down, [((cl[-1] + h) / 2 + Vector((0, 0, 1.5)))],
               h, up, r=0.55, s_kind="free", lead=0.8)
-        W.run("W_midi_start", "orange" if pin_p is p4 else "black", pin_p, inward["rear"], [], cl[0], -inward["rear"],
+        W.run("W_midi_start", "orange" if pin_p is p4 else "black", pin_p, rear_in, [], cl[0], -rear_in,
               r=0.55, s_kind="tag", e_kind="free", lead=1.0)
 
-    # Outputs: twisted pairs from the output resistors, along the front loom, to the left-wall jacks.
-    for k, (name, row) in enumerate((("OUT_L", 17), ("OUT_R", 18))):
+    # Outputs: twisted pairs from the output resistors, up over the codec, left along the front
+    # loom, back over board B and down to the jacks at the rear left. The sleeves also return
+    # to the star ground.
+    for k, (name, col) in enumerate((("OUT_L", 16), ("OUT_R", 17))):
         jk = jacks[name]
         t, s = world(jk, jk["tags"]["T"]), world(jk, jk["tags"]["S"])
-        h = holes.take("a", 16, row)
-        z = 15.5 + 1.4 * k
+        h = holes.take("a", col, 17)
+        z = 28.5 + 1.3 * k
         start = h + Vector((0, 0, 5.5))
-        cl = W.twisted(f"W_{name}", ("orange", "black"), [start, (h.x, 64.4, z - 2), (95.0, 63.9, z - 2.5),
-                                                        (60.0, 63.9, z - 2), (30.0, 63.8, z - 1),
-                                                        (24.2, 66.0 + 4 * k, z), (24.0, (t.y + s.y) / 2, z + 0.5)],
+        end = Vector(((t.x + s.x) / 2, 90.5, 24.0 + k))
+        cl = W.twisted(f"W_{name}", ("orange", "black"), [start, (h.x - 3.5, LOOM_Y + 1.5, z - 2),
+                                                        (140.0, LOOM_Y - 0.6, z), (90.0, LOOM_Y - 0.6, z),
+                                                        (33.0 + 3 * k, LOOM_Y - 0.4, z), (32.0 + 3 * k, 60.0, z),
+                                                        (30.0 + 3 * k, 85.0, z - 1.0), end],
                        r=0.58, pitch=10.0)
         W.run(f"W_{name}_hole", "orange", start, down, [], h, up, r=0.58, s_kind="free", lead=1.0)
-        W.run(f"W_{name}_T", "orange", t, inward["left"], [(t.x + 2.5, t.y, t.z)], cl[-1], (0, 0, 1), r=0.58,
+        W.run(f"W_{name}_T", "orange", t, rear_in, [(t.x, t.y - 3.0, t.z + 1.5), (t.x + 1.0, 94.2, 21.0)], cl[-1],
+              (0, 1, 0.3), r=0.58,
               s_kind="tag", e_kind="free", lead=1.5)
-        W.run(f"W_{name}_S", "black", s, inward["left"], [(s.x + 2.5, s.y, s.z)], cl[-1], (0, 0, 1), r=0.58,
+        W.run(f"W_{name}_S", "black", s, rear_in, [(s.x, s.y - 2.5, s.z - 1)], cl[-1], (0, 1, -0.3), r=0.58,
               s_kind="tag", e_kind="free", lead=1.5)
-        # Sleeve returns to the star ground.
-        W.run(f"W_{name}_gnd", "black", s + Vector((0.8, 0, -1.2)), (1, 0, 0),
-              [(26.5, 63.0, 9.5 + k), (60.0, 63.0, 9.5 + k), (70.0, 63.8, 9.8), (star_tags[1] + Vector((-1.5, -2.5, 5)))],
+        W.run(f"W_{name}_gnd", "black", s + Vector((0.8, -0.5, -1.2)), rear_in,
+              [(31.5 + 3 * k, 80.0, 29.0), (31.5 + 3 * k, LOOM_Y + 0.5, 29.2), (90.0, LOOM_Y + 1.2, 28.5 - 0.8 * k),
+               (138.0, LOOM_Y + 1.0, 22.0), (star_tags[1] + Vector((0.5, -1.5, 5)))],
               star_tags[1], up, r=0.55, s_kind="free", e_kind="tag", lead=2.0)
 
     # Cable ties on the front loom.
-    for x in (36.0, 58.0, 88.0, 110.0):
-        W.tie((x, 63.5, 11.8), (1, 0, 0), 2.1)
+    for x in (40.0, 70.0, 115.0, 140.0):
+        W.tie((x, LOOM_Y, LOOM_Z + 1.0), (1, 0, 0), 2.6)
     W.finish()

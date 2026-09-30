@@ -282,14 +282,14 @@ def board_b():
     cuts += [(c, r) for r in range(0, 3) for c in (4, 5)]             # under the H11L1M
     cuts += [(c, r) for r in range(7, 12) for c in (3, 4)]            # under the relay
     s = Strip(bd, cuts)
-    for h in [(0, 0), (0, 19), (12, 0), (12, 19)]:
+    for h in [(1, 0), (1, 19), (12, 0), (12, 19)]:              # col 0 would sit on the lid's lip
         s.standoff(*h)
     # Pico 2 WH (KiCad's Pico WH model, same outline) seated in two 1x20 socket strips.
     s.place("pico_l", "Connector_PinSocket_2.54mm", "PinSocket_1x20_P2.54mm_Vertical", 8, 0)
     s.place("pico_r", "Connector_PinSocket_2.54mm", "PinSocket_1x20_P2.54mm_Vertical", 15, 0)
     fp(s.b, "Module", "RaspberryPi_Pico_Common_THT", *g(8, 0),
        show=lambda f: f.endswith("RaspberryPi_Pico_WH.step"), offset=(0, 0, 8.5))
-    s.block([(1, r) for r in range(8, 20)], "ribbon")                  # display leads land here
+    s.block([(1, r) for r in range(6, 18)], "ribbon")                  # display leads land here
     # MIDI in: H11L1M in a DIP-6 socket, 220R, 1N4148, 1k pull-up, 100n.
     ic = "${KICAD10_3DMODEL_DIR}/Package_DIP.3dshapes/DIP-6_W7.62mm.step"
     s.place("h11l1", "Package_DIP", "DIP-6_W7.62mm_Socket", 3, 0, extra_models=[(ic, (0, 0, 3.0), (1, 1, 1), (0, 0, 0))])
@@ -320,7 +320,7 @@ def board_a():
     cuts = [(c, r) for r in range(2, 18) for c in (5, 6)]             # between the codec's rows
     cuts += [(c, r) for r in range(4, 8) for c in (14, 15)]           # under the op-amp
     s = Strip(bd, cuts)
-    for h in [(0, 0), (17, 0), (0, 19), (17, 19)]:
+    for h in [(0, 0), (16, 0), (0, 19), (16, 19)]:              # col 17 would sit on the lid's lip
         s.standoff(*h)
     # Codec seat: rows 2..17 in columns 1 and 10 (22.86 mm apart). The board itself hides
     # the holes between.

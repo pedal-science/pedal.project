@@ -1,4 +1,4 @@
-"""The Hammond 1590XX body and lid, drilled for this pedal, with its paint. Millimetres,
+"""The 1590DD-size body and lid, drilled for this pedal, with its paint. Millimetres,
 enclosure coordinates from layout.py."""
 import math
 

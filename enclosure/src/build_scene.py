@@ -108,7 +108,7 @@ def main():
              focus=win)
     S.camera(cams, "CAM_5_Rear", (0.34, 0.5, 0.2), (0.0, 0.02, 0.02), lens=50, fstop=8.0, focus=op + Vector((0, 0.05, 0)))
     S.camera(cams, "CAM_6_Wide", (0.22, -1.28, 0.4), (-0.05, 0.04, 0.1), lens=32, fstop=8.0, focus=tgt)["exposure"] = 0.0
-    S.camera(cams, "CAM_7_Boards", enc((78, 200, 245), "open"), enc((74, 104, 12), "open"), lens=50, fstop=8.0)
+    S.camera(cams, "CAM_7_Boards", enc((215, -75, 200), "open"), enc((140, 62, 12), "open"), lens=45, fstop=8.0)
     bpy.context.scene.camera = bpy.data.objects["CAM_1_Hero"]
 
     for img in bpy.data.images:

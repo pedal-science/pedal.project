@@ -12,6 +12,7 @@ import bpy
 from mathutils import Matrix
 
 import bl_util as U
+import layout as L
 
 
 class MB:
@@ -147,7 +148,7 @@ def footswitch(name, coll, M, panel=2.6):
 
 # ---- Neutrik NMJ6HF-S jack --------------------------------------------------------------------
 
-def jack(name, coll, M, wall=2.3):
+def jack(name, coll, M, wall=L.ENC["wall"]):
     mb = MB(name)
     zb = -wall
     mb.add(M.black_plastic, lambda bm: lathe(bm, thread(5.5, zb, 7.0, pitch=1.0, depth=0.35, bore=3.25), seg=48))
@@ -176,7 +177,7 @@ def jack(name, coll, M, wall=2.3):
 
 # ---- DIN 5-pin 180 degree socket (Deltron 650-0500) -------------------------------------------
 
-def din(name, coll, M, wall=2.3):
+def din(name, coll, M, wall=L.ENC["wall"]):
     mb = MB(name)
     zb = -wall
     # Nickel shell: body inside the wall, threaded nose through it, lip at the mouth.
@@ -202,7 +203,7 @@ def din(name, coll, M, wall=2.3):
 
 # ---- 2.1 mm DC socket (Cliff FC681445), insulated, panel mount --------------------------------
 
-def dc_socket(name, coll, M, wall=2.3):
+def dc_socket(name, coll, M, wall=L.ENC["wall"]):
     mb = MB(name)
     zb = -wall
     mb.add(M.black_plastic, lambda bm: lathe(bm, thread(5.6, zb, 5.2, pitch=0.9, depth=0.3, bore=3.1), seg=48))
@@ -221,7 +222,7 @@ def dc_socket(name, coll, M, wall=2.3):
 
 # ---- USB-C panel socket (5 V in) ------------------------------------------------------------
 
-def usbc_socket(name, coll, M, wall=2.3):
+def usbc_socket(name, coll, M, wall=L.ENC["wall"]):
     mb = MB(name)
     zb = -wall
     mb.add(M.steel, lambda bm: U.extrude_poly(bm, U.rounded_rect_pts(8.94, 3.26, 1.63, seg=10), zb - 7.5, -0.3))
@@ -275,10 +276,10 @@ def led(name, coll, M, lens_mat, panel=2.6):
                             for a in range(10, 91, 10)] + \
            [(2.45, zb - 3.6), (2.85, zb - 3.6), (2.85, zb - 4.6), (0.0, zb - 4.6)]
     mb.add(lens_mat, lambda bm: lathe(bm, dome, seg=40))
-    for x in (-1.27, 1.27):
-        mb.add(M.tin, lambda bm, x=x: U.box(bm, x - 0.25, -0.25, zb - 13.0, x + 0.25, 0.25, zb - 4.6), smooth=False)
+    for x in (-1.27, 1.27):                                     # legs trimmed short
+        mb.add(M.tin, lambda bm, x=x: U.box(bm, x - 0.25, -0.25, zb - 8.6, x + 0.25, 0.25, zb - 4.6), smooth=False)
     o = mb.obj(coll, bevel=0.12, seg=2)
-    o["legs"] = [(-1.27, 0, zb - 12.5), (1.27, 0, zb - 12.5)]
+    o["legs"] = [(-1.27, 0, zb - 8.1), (1.27, 0, zb - 8.1)]
     return o
 
 
