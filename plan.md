@@ -824,7 +824,8 @@ These don't block Phase 0 or 1.
 
 Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs/bom.md).
 
-- **In the CPC basket, not yet ordered (2026-09-24, 41 lines, £117.19 ex VAT):**
+- **Ordered from CPC (41 lines, £117.19 ex VAT). As of 2026-09-30 everything has arrived except the
+  OPA2197:**
   - 2 × Pico 2 WH and the Debug Probe
   - two breadboards (one a spare) and header strips. You already have jumper leads, including the
     female-to-female ones for the WM8960 bring-up.
@@ -832,8 +833,9 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
   - the MIDI-in parts. The BOM gives the circuit and its values.
   - everything else that doesn't wait on a decision: the output stage (which 2a's measurements
     need too), power, the relay and its driver, footswitches, LEDs, sockets and stripboard
-  - the op-amp: 2 × OPA2197 on SOIC-to-DIP adapters. It's on back order until 4 Oct, so CPC may
-    send it separately.
+  - the op-amp: 2 × OPA2197 on SOIC-to-DIP adapters. **Not arrived:** back-ordered until 4 Oct,
+    and CPC is sending it separately. The adapters and sockets are here, so everything around it
+    can be built first.
   - the Inst/Line switch and the Line pad's resistors, at provisional values; screened cable and
     hook-up wire.
 - **Not designed yet:** the 5 V input, the mic stage, cooling and the enclosure hardware.

@@ -20,7 +20,8 @@ something is unverified it says so.
 - Performance risk is therefore **closed**. Remaining work is physical build and
   bring-up, not DSP optimisation.
 - In hand: piv (standing in as the Core host), the WM8960 board (stock, inspected 2026-09-26), the display module.
-  Due: RP2350-USB-A. In the basket: 2 × Pico 2 WH and a Debug Probe. See
+  Due: RP2350-USB-A. The CPC order (2 × Pico 2 WH, the Debug Probe and the build parts) has
+  arrived, except the OPA2197, back-ordered until 4 Oct. See
   [bom.md](bom.md) and `plan.md`.
 
 ## Hardware
