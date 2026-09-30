@@ -437,6 +437,16 @@ numbers need re-measuring on piv.
        - Replayed against a local `namchaind`: all 178 patches were smooth, with no errors.
        - The script's docstring lists what is approximate.
      - Record the next real editing session through the proxy, and that becomes the reference.
+     - **Run on piv 2026-09-30, 15:37–16:37: PASS.** namchain `d4fb8e5`, the SSL 2+ at q64.
+       - The session went round 3 times: 18 rebuilds, 511 knob patches (all smooth), 30 mutes and
+         7,190 status polls, from the Mac over WiFi. Nothing was refused and every request was answered.
+       - `scripts/sync-library` ran at 30 min.
+       - Driver xruns 0, deadline overruns 0, guard trips 0, blocks over 90% 0, device lost 0.
+       - Load was p50 8%, p99 24% and p99.9 36%. The worst block was 85% (1,134 µs of 1,333 µs).
+         No interval with a transition had a block over 90%.
+       - Replies: `rig.patch` p99 20 ms, `rig.apply` max 51 ms. Temperature 35.6–40.6 °C, never
+         throttled.
+       - Evidence: `bench-results/2026-09-30-soak-replay-2026-09-28-ljoss-piv.*`.
    - Once 3.8 exists, the soak also switches rigs: a switch every few seconds through a bank, with
      the same gates plus D10's: each switch ≤ 50 ms and no click in the output (namchain's glitch
      detector on the captured output).
@@ -550,7 +560,9 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    10 µF / 100 Ω / 1 MΩ out). Two additions: hot-pickup headroom through the PGA in the mixer
    file, and the film replacement for LIN1's 47 nF in 2c.
 3. **Build the buffer and the output stage** on stripboard, powered from a Cioks outlet through the
-   LDO.
+   LDO. The bench walkthrough is [docs/build-board1.md](docs/build-board1.md) (2026-09-30), and the
+   layout, checked against the netlist, is `stripboard/board1.py`. Everything but the op-amp can be
+   built now, since it plugs into a socket.
 
 **2c. Modify and compare.**
 - Replace LIN1's 47 nF ceramic shunt with a film capacitor (2b finding), and measure THD against
@@ -824,7 +836,8 @@ These don't block Phase 0 or 1.
 
 Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs/bom.md).
 
-- **In the CPC basket, not yet ordered (2026-09-24, 41 lines, £117.19 ex VAT):**
+- **Ordered from CPC (41 lines, £117.19 ex VAT). As of 2026-09-30 everything has arrived except the
+  OPA2197:**
   - 2 × Pico 2 WH and the Debug Probe
   - two breadboards (one a spare) and header strips. You already have jumper leads, including the
     female-to-female ones for the WM8960 bring-up.
@@ -832,8 +845,9 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
   - the MIDI-in parts. The BOM gives the circuit and its values.
   - everything else that doesn't wait on a decision: the output stage (which 2a's measurements
     need too), power, the relay and its driver, footswitches, LEDs, sockets and stripboard
-  - the op-amp: 2 × OPA2197 on SOIC-to-DIP adapters. It's on back order until 4 Oct, so CPC may
-    send it separately.
+  - the op-amp: 2 × OPA2197 on SOIC-to-DIP adapters. **Not arrived:** back-ordered until 4 Oct,
+    and CPC is sending it separately. The adapters and sockets are here, so everything around it
+    can be built first.
   - the Inst/Line switch and the Line pad's resistors, at provisional values; screened cable and
     hook-up wire.
 - **Not designed yet:** the 5 V input, the mic stage, cooling and the enclosure hardware.
@@ -854,11 +868,20 @@ vip from the Mac through rescue. namchain f422dd0 plays a missing model or IR as
 ljoss 5da4ea6 marks the block.
 
 **Testing happens on vip for now** (decided 2026-09-30), until it's a working pedal that shouldn't
-be disrupted; then the test hardware gets chosen again. piv isn't updated meanwhile: it stays on
-namchain 503aac9, and `devices/piv/check` reports `pedal-codec` and `pedal-device` as differing
+be disrupted; then the test hardware gets chosen again. piv isn't updated meanwhile, except that it
+runs namchain d4fb8e5 since the 2026-09-30 step 8 soak (Rik asked for it); and `devices/piv/check` reports `pedal-codec` and `pedal-device` as differing
 (they moved to `devices/common` and changed). The piv phases below wait on that choice.
 
 Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot time.
-1. The step 8 soak at q64: an amp-only A2-Full plus a full-length IR, ljoss editing over WiFi,
-   one `scripts/sync-library` in the middle, under `scripts/host-lock`.
-2. Then the same soak with only the rsync, to isolate WiFi's cost.
+1. ~~The step 8 soak at q64~~: done 2026-09-30 with `scripts/soak/soak-replay` and the rebuilt
+   ljoss session, PASS (step 8 in Phase 1 has the numbers).
+2. ~~Then the same soak with only the rsync, to isolate WiFi's cost~~: done 2026-09-30, 18:50–19:50,
+   `scripts/soak/soak-replay --idle --sync-library-at 1800`: no edits, one `sync-library` at 30 min
+   over home WiFi (the library was already in sync, so mostly rsync comparing file lists). PASS.
+   | piv, Crunch Lead, q64, d4fb8e5 | load p50 / p99 / p99.9 | worst block | blocks ≥ 30% |
+   |---|---|---|---|
+   | idle, no edits or sync (16:52, `soak-idle-piv`) | 6% / 16% / 20% | 36% | 37 |
+   | sync only (`soak-sync-only-piv`) | 6% / 17% / 20% | 34% | 8 |
+   | ljoss session replayed, plus sync (`soak-replay-…`) | 8% / 24% / 36% | 85% | ~13,000 |
+   All three: 0 xruns, overruns, guard trips. The sync costs nothing measurable; the tail is the edits'
+   (rebuilds and ramps), not WiFi's.

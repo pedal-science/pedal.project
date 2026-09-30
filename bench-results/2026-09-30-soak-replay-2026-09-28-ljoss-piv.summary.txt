@@ -1,0 +1,15 @@
+== soak-summary.py
+363 samples over 60.6 min (0 without an answer from namchaind)
+rig Crunch Lead, period 64, deadline 1333.3 us
+blocks 2726688 (timed 2726688)
+load: p50 8%, p99 24%, p99.9 36%, worst bucket 85%
+worst block: 1133.9 us (85.0%), during the soak
+tail: {30: 1861, 31: 1574, 32: 1287, 33: 920, 34: 777, 35: 614, 36: 493, 37: 565, 38: 339, 39: 313, 40: 257, 41: 195, 42: 177, 43: 126, 44: 107, 45: 87, 46: 70, 47: 57, 48: 48, 49: 46, 50: 36, 51: 35, 52: 26, 53: 20, 54: 19, 55: 15, 56: 13, 57: 10, 58: 10, 59: 4, 60: 10, 61: 4, 62: 7, 63: 8, 64: 3, 65: 6, 66: 2, 67: 2, 68: 3, 70: 1, 72: 1, 79: 2, 83: 1, 85: 1}
+temperature 35.6..40.6 C, throttled flags seen: ['0x0']
+edits: generation 1 -> 19, params_applied +559, transitions +18, max TCP connections seen 1
+queue: drops +0, insertions +0, capture bursts +0
+gate: driver xruns 0, deadline overruns 0, guard trips 0, blocks over 90% 0, render errors 0, device lost 0
+PASS
+
+== soak-events.py
+intervals with a block over 90%: {'with a transition': 0, 'without': 0}; intervals with any transition: 16
