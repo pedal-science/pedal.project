@@ -83,7 +83,7 @@ nc_commit=$(git -C "$NAMCHAIN_DIR" rev-parse --short HEAD)
   printf 'host        %s\n' "$HOST"
   printf 'duration    %s\n' "$DURATION"
   printf 'sync_at     %s\n' "${SYNC_AT:-none}"
-  printf 'replay      %s\n' "${IDLE:+none}${IDLE:-namchain $nc_commit tools/session}"
+  printf 'replay      %s\n' "$([[ -n $IDLE ]] && echo none || echo "namchain $nc_commit tools/session")"
   printf 'pedal       %s\n' "$(git -C "$REPO" rev-parse --short HEAD)"
   printf 'engine      %s\n' "$("${SSH[@]}" 'readlink /opt/namchain/current' 2>/dev/null || echo '?')"
   printf 'start       %s\n' "$(date -Iseconds)"

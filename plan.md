@@ -872,4 +872,13 @@ runs namchain d4fb8e5 since the 2026-09-30 step 8 soak (Rik asked for it); and `
 Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot time.
 1. ~~The step 8 soak at q64~~: done 2026-09-30 with `scripts/soak/soak-replay` and the rebuilt
    ljoss session, PASS (step 8 in Phase 1 has the numbers).
-2. Then the same soak with only the rsync, to isolate WiFi's cost.
+2. ~~Then the same soak with only the rsync, to isolate WiFi's cost~~: done 2026-09-30, 18:50–19:50,
+   `scripts/soak/soak-replay --idle --sync-library-at 1800`: no edits, one `sync-library` at 30 min
+   over home WiFi (the library was already in sync, so mostly rsync comparing file lists). PASS.
+   | piv, Crunch Lead, q64, d4fb8e5 | load p50 / p99 / p99.9 | worst block | blocks ≥ 30% |
+   |---|---|---|---|
+   | idle, no edits or sync (16:52, `soak-idle-piv`) | 6% / 16% / 20% | 36% | 37 |
+   | sync only (`soak-sync-only-piv`) | 6% / 17% / 20% | 34% | 8 |
+   | ljoss session replayed, plus sync (`soak-replay-…`) | 8% / 24% / 36% | 85% | ~13,000 |
+   All three: 0 xruns, overruns, guard trips. The sync costs nothing measurable; the tail is the edits'
+   (rebuilds and ramps), not WiFi's.
