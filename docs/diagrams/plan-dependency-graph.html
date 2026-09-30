@@ -37,25 +37,27 @@ const N={
  devtib:[0,4,'done','tib config as code','devices/tib (now history)'],
  byname:[0,5,'done','1.1 Open devices by name','hw:CARD=II'],
  cab:[0,6,'done','1.2 Make an amp + cab','rig fit (on tib)'],
- tibdown:[0,7,'done','tib retired:','piv stands in, vip next'],
+ tibdown:[0,7,'done','tib retired:','piv stands in; vip arrived'],
  wm:[0,8,'done','WM8960 board','received, stock'],
  scripts:[1,1,'done','0.8 Scripts here','status, host-lock, lock file'],
  rerun:[1,5,'done','Re-measure on piv','A2 + cab: p99 15%'],
  inspect:[1,8,'done','2a.1 Inspect the board','no shorts; inputs mapped'],
- parts:[1,11,'done','Order the CPC basket','ordered, not arrived yet'],
+ parts:[1,11,'done','CPC parts arrived','all but the op-amp'],
+ opamp:[6,10,'todo','OPA2197IDR from CPC','back-ordered to 4 Oct'],
+ vip:[1,7,'todo','vip: build its card','docs/vip-image.md'],
  deploy:[2,2,'done','1.3 Deploy','namchaind on piv'],
  wire:[2,8,'done','2a.2 Wire it stock','to piv; 0x1a on I2C'],
- boards:[2,11,'todo','3.1 Boards and tools','Pico: blink, UART echo'],
+ boards:[2,11,'done','3.1 Boards and tools','Pico blink, UART echo'],
  library:[3,1,'done','1.4 Library on the pedal','53 models, 1,538 IRs'],
  resume:[3,3,'done','1.6 Resume at power-up','pedal service v0'],
  dtree:[3,8,'done','2a.3 Device tree','codec master, 48 kHz'],
- service:[3,12,'todo','3.2 Design the','pedal service'],
+ service:[3,12,'done','3.2 Pedal service designed','R4, R6, R14 open'],
  ljoss:[4,1,'done','1.5 ljoss → Core host','edited live on piv'],
  measure:[4,3,'next','1.7 Measure what D3 needs','cold switch 33 ms; boot left'],
  mixer:[4,8,'done','2a.4 Mixer state','as code, at boot'],
  tibuart:[4,10,'todo','3.4 The Core host side','header UART for the Pico'],
- proto:[4,12,'todo','3.3 UART protocol','framed, versioned'],
- soak:[5,2,'todo','1.8 Soak it the way','it will be used (1 h)'],
+ proto:[4,12,'next','3.3 UART protocol','draft 2 proposed; U8 open'],
+ soak:[5,2,'next','1.8 Soak it the way','it will be used (1 h)'],
  cmeas:[5,8,'done','2a.5 Measure the codec','1 V FS, −93.5 dBFS(A)'],
  fw:[6,11,'todo','3.5 Firmware v1','footswitches, MIDI in'],
  models:[5,13,'todo','3.8 Rigs ready to switch','≤ 50 ms, no click (D10)'],
@@ -70,6 +72,7 @@ const N={
  p3:[8,12,'mile','PHASE 3 DONE','Footswitches step rigs'],
  modify:[8,8,'todo','2c Modify and compare','the codec board'],
  p2:[9,8,'mile','PHASE 2 DONE','Guitar → codec → amp'],
+ encl:[9,10,'done','Enclosure modelled','1590DD, in Blender'],
  p4:[10,7,'todo','Phase 4 Enclosure,','power and hardening'],
  goal:[11,7,'mile','THE PEDAL','gig-ready'],
 };
@@ -78,7 +81,7 @@ const E=[['docs','scripts'],['park','scripts'],['neon','scripts'],['agent','scri
 ['deploy','library'],['deploy','resume'],['deploy','ljoss'],['library','ljoss'],['deploy','measure'],['library','measure'],
 ['ljoss','soak'],['cab','soak'],['rerun','soak'],['soak','target'],['resume','target'],
 ['wm','inspect'],['inspect','wire'],['wire','dtree'],['dtree','mixer'],['mixer','cmeas'],['deploy','cmeas'],
-['cmeas','csoak'],['cmeas','review'],['review','buffer'],['parts','buffer'],['csoak','modify'],['buffer','modify'],['modify','p2'],
+['cmeas','csoak'],['cmeas','review'],['review','buffer'],['parts','buffer'],['opamp','buffer'],['tibdown','vip'],['vip','p4'],['encl','p4'],['csoak','modify'],['buffer','modify'],['modify','p2'],
 ['parts','boards'],['resume','service'],['service','proto'],['dtree','tibuart'],['boards','fw'],['proto','fw'],['tibuart','fw'],
 ['fw','relay'],['fw','display'],['measure','models'],['e1','e2'],['e2','models'],['models','fw'],['service','models'],['relay','p3'],['models','p3'],['target','p3'],
 ['target','p4'],['p2','p4'],['p3','p4'],['p4','goal']];
@@ -86,7 +89,7 @@ const cols=12,rows=14,SW=PX*2+(cols-1)*CW+W,SH=PY*2+(rows-1)*RH+H+30;
 const g=document.getElementById('g');g.setAttribute('width',SW);g.setAttribute('height',SH);g.setAttribute('viewBox',`0 0 ${SW} ${SH}`);
 const pos=k=>{const[c,r]=N[k];return{x:PX+c*CW,y:PY+30+r*RH}};
 let s=`<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--line)"/></marker></defs>`;
-[['Phase 0–1 · software on tib',0,6],['Phase 2 · codec & analogue',7,10],['Phase 3 · control surface & service',10.6,13]].forEach(([t,a,b])=>{
+[['Phase 0–1 · software on the Core host',0,6],['Phase 2 · codec & analogue',7,10],['Phase 3 · control surface & service',10.6,13]].forEach(([t,a,b])=>{
  const y=PY+30+a*RH-12,h=(b-a)*RH+H+24;
  s+=`<rect x="10" y="${y}" width="${SW-20}" height="${h}" rx="14" fill="var(--lane)"/><text x="${SW-30}" y="${y+30}" text-anchor="end" font-size="22" font-weight="800" fill="var(--laneInk)">${t}</text>`});
 s+=`<text x="${PX}" y="${PY+14}" font-size="20" font-weight="800" fill="var(--done)">◀ DONE</text><text x="${SW-PX}" y="${PY+14}" text-anchor="end" font-size="20" font-weight="800" fill="var(--mile)">GOAL ▶</text>`;
