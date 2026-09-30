@@ -41,3 +41,14 @@ Fixed in the build: machine-id empty, `systemd-firstboot` masked in both roots. 
   `devices/vip/packages` for the next image). The library went over with tar through ssh. The
   Mac's copy is in iCloud Drive and mostly evicted, so the 1,901 IRs came down from iCloud first:
   slow (about a minute for 60 files).
+
+## Decided, 2026-09-30
+
+- **The card doesn't carry the library.** It's synced after first boot (`scripts/sync-library
+  --host vip`); `rsync` is in the next image for it.
+- **A missing model or IR plays as a bypass**, and ljoss shows the block as not configured.
+  namchain f422dd0: the block is stood in for by `nc.bypass` on the compiled copy, reported as an
+  `asset_missing` issue keyed by the block's element, and a library rescan (what `sync-library`
+  sends) republishes the rig so the block comes in by itself. ljoss 5da4ea6 draws it. So a fresh
+  card boots to a running engine playing the default rig's blocks as bypasses, `pedal-guard`
+  clears, and the sync brings the rig in.
