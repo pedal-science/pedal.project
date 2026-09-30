@@ -4,7 +4,7 @@
 from nothing: one command on the Mac builds everything and writes a blank SD card, and the card
 boots vip straight onto the network. It also covers how vip keeps itself reachable when a
 kernel, a command line or its own root filesystem is broken. Your decisions of 2026-09-29 are
-recorded at the end. **Steps 1 to 4 are done** (2026-09-29/30): the spike card proved the layout
+recorded at the end. **Steps 1 to 5 are done** (2026-09-29/30): the spike card proved the layout
 on vip, and rtpi's `vip-boot` ran every path on it (`bench-results/vip-spike/`). Step 2 changed
 the slots, below: two fixed slots `a/` and `b/` and a pointer file, where this plan had
 `current/`, `new/` and `old/`.
@@ -345,6 +345,14 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
 5. **The card:** done when a blank card goes into vip, vip powers on, and without any other step
    `ssh vip` works, `devices/vip/check` is green, `namchaind` is running the default rig, and
    `components.lock` matches the manifest.
+
+   **Done, 2026-09-30**, on the third card (`bench-results/vip-card/results.md`). The first hung at
+   `systemd-firstboot` (machine-id `uninitialized`); the second needed the library the card
+   doesn't carry, so namchain now plays a block whose model or IR is missing as a bypass and
+   ljoss marks it (f422dd0, 5da4ea6). A fresh card boots playing the default rig's blocks as
+   bypasses, and `sync-library --host vip` brings the rig in without a restart. `pedal-tune
+   check` learned that the RP1's interrupt chip reports no effective affinity. Left for step 8:
+   `components.lock` holds one host, piv, and `devices/vip/apply` overwrites it.
 6. **Rehearse every fallback on vip**, as rtpi did on piv, and record the results in
    `bench-results/`:
    - a kernel candidate that passes, and one that can't find its root;

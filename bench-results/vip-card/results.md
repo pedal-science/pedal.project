@@ -52,3 +52,12 @@ Fixed in the build: machine-id empty, `systemd-firstboot` masked in both roots. 
   sends) republishes the rig so the block comes in by itself. ljoss 5da4ea6 draws it. So a fresh
   card boots to a running engine playing the default rig's blocks as bypasses, `pedal-guard`
   clears, and the sync brings the rig in.
+
+## The third card (image 20260930T135950Z): step 5 passes
+
+Written blank and booted with nothing else done: `ssh vip` works, the system is `running` with no
+failed units, `namchaind` is active playing the default rig with both blocks stood in as bypasses
+(`asset_missing` for the amp and the cab, health `warn`), and `pedal-guard` cleared (0 of 3). Then
+`scripts/sync-library --host vip` (rsync now in the image): namchaind rescanned and republished by
+itself ("library rescanned: 0 assets still missing", generation 2), health `ok`, no issues, 52
+models and 1,538 IRs, and `devices/vip/check` green. `components.lock` stays piv's until step 8.
