@@ -243,7 +243,7 @@ tmpfs          /var/lib/systemd   tmpfs  mode=0755,nosuid,nodev 0 0
 tmpfs          /var/lib/sudo      tmpfs  mode=0711,nosuid,nodev 0 0
 LABEL=$BOOTSEL_LABEL     $BOOTSEL_MOUNT      vfat  defaults,noauto,nofail  0 0
 EOF
-install -d "$RESCUE/mnt/pedal" "$RESCUE/mnt/pedal-data" "$RESCUE/mnt/pedal-boot"
+install -d "$RESCUE/mnt/pedal" "$RESCUE/mnt/pedal-data" "$RESCUE/mnt/pedal-boot" "$RESCUE$PEDAL_BOOT_MOUNT"
 # Restoring the pedal root from its image on pedal-data (rtpi).
 install -D -m 755 "$RTPI_DEV/usr/local/sbin/vip-reimage" "$RESCUE/usr/local/sbin/vip-reimage"
 install -D -m 644 /dev/stdin "$RESCUE/etc/systemd/journald.conf.d/10-rescue.conf" <<'EOF'
