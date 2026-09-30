@@ -437,6 +437,16 @@ numbers need re-measuring on piv.
        - Replayed against a local `namchaind`: all 178 patches were smooth, with no errors.
        - The script's docstring lists what is approximate.
      - Record the next real editing session through the proxy, and that becomes the reference.
+     - **Run on piv 2026-09-30, 15:37–16:37: PASS.** namchain `d4fb8e5`, the SSL 2+ at q64.
+       - The session went round 3 times: 18 rebuilds, 511 knob patches (all smooth), 30 mutes and
+         7,190 status polls, from the Mac over WiFi. Nothing was refused and every request was answered.
+       - `scripts/sync-library` ran at 30 min.
+       - Driver xruns 0, deadline overruns 0, guard trips 0, blocks over 90% 0, device lost 0.
+       - Load was p50 8%, p99 24% and p99.9 36%. The worst block was 85% (1,134 µs of 1,333 µs).
+         No interval with a transition had a block over 90%.
+       - Replies: `rig.patch` p99 20 ms, `rig.apply` max 51 ms. Temperature 35.6–40.6 °C, never
+         throttled.
+       - Evidence: `bench-results/2026-09-30-soak-replay-2026-09-28-ljoss-piv.*`.
    - Once 3.8 exists, the soak also switches rigs: a switch every few seconds through a bank, with
      the same gates plus D10's: each switch ≤ 50 ms and no click in the output (namchain's glitch
      detector on the captured output).
@@ -855,11 +865,11 @@ rehearsing every fallback on vip. namchain f422dd0 plays a missing model or IR a
 ljoss 5da4ea6 marks the block.
 
 **Testing happens on vip for now** (decided 2026-09-30), until it's a working pedal that shouldn't
-be disrupted; then the test hardware gets chosen again. piv isn't updated meanwhile: it stays on
-namchain 503aac9, and `devices/piv/check` reports `pedal-codec` and `pedal-device` as differing
+be disrupted; then the test hardware gets chosen again. piv isn't updated meanwhile, except that it
+runs namchain d4fb8e5 since the 2026-09-30 step 8 soak (Rik asked for it); and `devices/piv/check` reports `pedal-codec` and `pedal-device` as differing
 (they moved to `devices/common` and changed). The piv phases below wait on that choice.
 
 Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot time.
-1. The step 8 soak at q64: an amp-only A2-Full plus a full-length IR, ljoss editing over WiFi,
-   one `scripts/sync-library` in the middle, under `scripts/host-lock`.
+1. ~~The step 8 soak at q64~~: done 2026-09-30 with `scripts/soak/soak-replay` and the rebuilt
+   ljoss session, PASS (step 8 in Phase 1 has the numbers).
 2. Then the same soak with only the rsync, to isolate WiFi's cost.

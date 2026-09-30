@@ -66,8 +66,8 @@ nc_commit=$(git -C "$NAMCHAIN_DIR" rev-parse --short HEAD)
   printf 'pedal       %s\n' "$(git -C "$REPO" rev-parse --short HEAD)"
   printf 'engine      %s\n' "$("${SSH[@]}" 'readlink /opt/namchain/current' 2>/dev/null || echo '?')"
   printf 'start       %s\n' "$(date -Iseconds)"
-  printf 'throttled   %s\n' "$("${SSH[@]}" 'vcgencmd get_throttled' 2>/dev/null || echo '?')"
-  printf 'temp        %s\n' "$("${SSH[@]}" 'vcgencmd measure_temp' 2>/dev/null || echo '?')"
+  printf 'throttled   %s\n' "$("${SSH[@]}" 'sudo -n vcgencmd get_throttled' 2>/dev/null || echo '?')"
+  printf 'temp        %s\n' "$("${SSH[@]}" 'sudo -n vcgencmd measure_temp' 2>/dev/null || echo '?')"
 } > "$out.env"
 
 # The monitor runs on the host for the replay's length plus a margin for the starting rig.
