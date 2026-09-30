@@ -1,0 +1,3 @@
+  installed /usr/local/sbin/pedal-tune
+Unit /etc/systemd/system/pedal-wifi.service is added as a dependency to a non-existent unit sys-subsystem-net-devices-wlan0.device.
+pedal-device: done. Manifest: /var/lib/pedal/manifest

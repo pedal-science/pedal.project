@@ -29,6 +29,8 @@ wpasupplicant
 iproute2
 iputils-ping
 ca-certificates
+# scripts/sync-library copies the model and IR library with it.
+rsync
 
 # The codec (pedal-codec) and the engine's tools (alsa-utils: amixer, alsactl, arecord).
 raspi-utils-dt
