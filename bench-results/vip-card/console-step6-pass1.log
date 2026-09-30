@@ -1,0 +1,2133 @@
+\[0m[?7h[1G2766H[6n[  187.7Restarting syste
+  1.07 Rease VERSION:66f6/05/11 TIME: 12MFG_VER: 1
+  1.06 partition 0 bIMESTAMP=1778492e1d boardrev aESET: 00000003 P
+  1.09 POWER_OAIT_FOR_POWER_BU-reset 0
+  1.094015
+  1.10 SFD1.10 RP1_BOOT c27
+CIEx1: PWR 0 DET part 00000000 reset_info 00000 reset-event 00000000 rtc 6abd2337 alarm 00000000 enabled 0
+  1.12 uSD volta  1.127
+  1.12 Initink 1 total-size  1.13 memsys_in 0x80015ff0: 7050 size-gbit:8 part-config:0
+  1.61 RP1 FW: load 0
+  1.63 RP1_BOOT chip  2.39 RP1 FW80 OTP boardreva a
+  2.80 Customer key hash 000000000000000000000000000000000
+  2.81 VC-JT 2.83 RP1_BOOT c927
+  3.53 Pe4:00000001
+  3.53 RP1_CHIP_INFO 20001927
+
+ 11 TIME: 12:20:02
+  3.54 MFG_VOTMODE: 0x06 pats BUILD_TIMESTboardrev a04171 xef4015
+  3.55 v1.5
+  3.55 P M.2 PCIe HAT not detected.
+  3.56 usb_pd_init st  3.53.57 xHC0 ver: 2000a HCC: 0240fC0 ver: 272 HCS:0f1 07ff000a HCC: 0240fe6d
+  3 slots 64 intrs 4
+I-STOP
+  3.60 S: 03000440 140000f1 07ff000a H 3.61 USBSTS 1
+: 272 HCS: 03000fe6d
+  3.61 xHC1 ports 3 slot rc-cap PDO objec  3.62 Current 5000 mA
+  3.62 
+  3.63 USB-PD: src-cap PDO ob
+  3.63 Current 5000 mA
+  3.6mV
+  3.64 USB-PD: src-cap PDO 77
+  3.64 Current 3750 mA
+  3.64 Voltage 120B-PD: src-cap PDO object4 0x000urrent 3000 mA
+15000 mV
+  3.65 USB-PD: src-cax000640e1
+  3.6ge 20000 mV
+70 SD_OC: 0
+  3
+ 200000000 CTL0: 0x00800000 BUSal: 390625 HZ d0 delay: 276
+: 200000000 CTLUS: 400000 Hz acstatus: 0x1fff0  40 [280]
+CID: 00035344534b33324
+CSD: 400e0032d SD: bus-width: 4 spec: 2 SCR: 00000
+: 200000000 CTL0S: 50000000 Hz a00 delay: 2
+  4.44 MBR: 0x0000pe: 0xee
+  4.40,       0 type       0 type: : 0x00000000,  0
+  4.62 Trying partition: 0
+  4.46 GPT 7f931c0379f6523b 00f num-partitions 128 entry-sizeirst 0
+  4.47 GPT partition: 0 ebd0a0a2-b9e5-2699c7 000000800..0000207ff
+  ID bootable-part type: 32 lba: 2048 'mkfs.fat' clusters 129022 (1)
+  4.49 rscluster 2 sector 4.50 FAT32 clu4.04 Read autoboot.txt bytes       65 hnd 0x3
+  4.50 Select partition rsts 0 C(boot_partitio.51 GPT 7f93b220379f6523b 000000001 003b723ff num-partitions 128 entry-size 1d0a0a2-b9e5-4439c7 000000800..3 Matched GUID x 0 want partitPT partition: 1 433-87c0-68b6b72..0001207ff
+  4D bootable-part-ition 1
+  4.51 33120 'mkfs.fat' clusters 130812c 32 fat-sectorscluster 2 secto  4.56 FAT32 cl 4.68 Read conf  845 hnd 0x430rofile.txt bytex430d
+  4.57 [.upd not foundcurrent_enable urrent 5000
+4.90 Read b/bcm2 bytes    78655 .59 dt-match: cerrypi,5-model-m2712
+  4.59 dble: brcm,bcm27cm2712
+:00:00:04.61654 logging
+  4.1xt bytes      8 4.23 Read /pro    128 hnd 0x4 /tryboot.txt bd 0x430e
+  4.6632386:0: board71 otp a04171
+ fig.txt bytes   0c
+  4.42 Read tes      128 hnd.64 MESS:00:00:tial voltage 80
+00:00:04.850023S pred 8733 873  4.85 MESS:00:vpred 873 mV +0:00:04.857835:0idle: 0 avs: 113x00000000)
+SS:00:00:04.871  4.88887011:0: SelectI0/2 hotplug 0 m89 MESS:00:00:04ct resolution H max_mode 2
+'b/initrd.img' to 0x00000000 offset 0x0
+  7.15 Readtes 52779657 hn 0:07.330930:0: initramfs (initr 0x2bdaa000 (si 7.33 MESS:00:02-rpi-5-b.dtb'
+'b/bcm2712-rpi-5000000 offset 0  7.2-rpi-5-b.dtb bytes    78655 hn  7.86 Read rlay_map.dtb byt 0x8718
+  7.lays/bcm2712d0.d363 hnd 0x8531
+: Loaded overlay  7.44 PCIEx1: PWR 0 DET_WAKE   7.55 Read /      845 hnd 0x430c
+  7.57 R bytes      128 hnd 0x430d
+  7.46 MESS:00:00:07.461604:0: dtpon
+ /b/cmdline-tun  339 hnd 0x871c
+  7.50 MESS:0: Read command line from file d.txt':
+  7.51 15209:0: 'root=Lifnames=0 consol00 console=tty1  rootwait fixrtcd.shell=0 rd.emrd.retry=60 rd.t=10 isolcpus=man,2-3 
+:00:07.636256:0 0
+0: Enabling ear.65 BMD "armstu found
+  7.60 tub8-2712.bin'  'b/vmlinuz' toet 0x200000
+ bytes 14707602  9.5113425:0: Device0x2bd96400 (siz51 PCI1 reset
+ reset
+53 set_reboot_oret_reboot_arg1 0
+  9.54 USB-OT:00:00:09.58052 9580 ms
+SS:00:00:09.5860 -> 00000480
+  :09.587892:0: 000080
+  9.59 MES05:0: 00000034: 9.59 MESS:00:00:000038: -> 00100S:00:00:09.60203-> 00100080
+
+:  BL31: v2.6(release):v2.6-240ilt : 12:55:13, [ ting Linux on p00000000 [0x414000000] Linux version 7.0.0-1020-raspi-realtimearm64-062) (aarccc (Ubuntu 15.2.0-16ubuntu1) 15U Binutils for 0-Ubuntu SMP PRspi-realtime 7.0000] KASLR ena000] random: cr   0.000000] Machine model: Raspberry Pi 5 Mod    0.000000] Maption 'numa'
+[ i: UEFI not found.
+[    0.000000] Reserved memory: created CMA memory pool at 0x000000003bc00] OF: reserved shared-dma-pool
+[    0.000000536 KiB) map reusable linux,cma] OF: reserved n-reusable atf@0
+[    0.000000] OF: reserved mem: 0x000000003KiB) nomap non-reusable nvram@0
+[    0.000000fffff]
+[    0.000000] NODE_DAT0x3b9b123f]
+[ i: probing for .000000] psci: Pd in firmware.
+psci: Using stafunction IDs
+[ci: MIGRATE_INFrted.
+[    0.0 Calling Conven0.000000] Zone .000000]   DMA  000000000000-0x0]
+[    0.000000pty
+[    0.000000]   Normal   0000] Movable zch node
+[    0memory node rang00]   node   0: 00000000-0x00000    0.000000]   0x00000000000800bfffff]
+[    0. setup node 0 [000000-0x000000  0.000000] On node 0, zone DMA unavailable ran000] percpu: Embcpu s106416 r81976
+[    0.0000T I-cache on CP0] CPU featuresualization Host  0.000000] CPUted: Spectre-v4re-BHB
+[    0.0ures: kernel pagon forced ON by KASLR
+[    0.000000] CPU featuKernel page tablTI)
+[    0.000s: detected: Broken broadcast TLBI completiont fully self-synchronizing
+[  ernatives: applyatives
+[    0.ommand line: repool=1M 8250.nr_policy=interleat_mem_size_mb=0 dth=640 bcm2708_ bcm2708_fb.fbdefb.fbswap=1 numheap.max_order=_policy=interleaddr=98:FE:54:1em_base=0x3fc00ize=0x40000000  console=ttyAMA1e=tty1 rootfstyp1.ieee80211_regdeboot rd.retry= panic=10 isolcdomain,2-3 nohzcbs=2-3 irqaffick=1 vipboot.ro.slot=b vipboot
+[    0.000000]  default policy interleave:0'
+MA IOMMU NUMA derridden to 'in  0.000000] Unkand line parameill be passed t[    0.000000] printk: log buffata: 131072 + 50000] Dentry cache hash table e76 bytes, linea0] Inode-cache r: 7, 524288 byt   0.000000] Fal Node 0: 0 
+[  lt 1 zonelists, ng on.  Total p   0.000000] Po[    0.000000] tack:all(zero), heap free:off4, Order=0-3, Ms=4, Nodes=1
+[race: allocatinin 202 pages
+[race: allocated4 groups
+[    ic Preempt: lazy] rcu: Preemptib RCU implementat0000] rcu: 	RCUs from NR_CPUS==4.
+[    0.000riority boostinlay 500 ms.
+[ : 	RCU_SOFTIRQ  to rcuc kthrea000] 	No expedit (rcu_normal_aft 0.000000] 	Tramof Tasks RCU ena00000] 	Rude vaCU enabled.
+[ acing variant oled.
+[    0.00 of scheduler-enlistment delay is 100 jiffies. rcu: Adjustingu_fanout_leaf=16, nr_cpu_ids=4and lim to 1 rc=1 rcu_task_cpuks Rude: Settin lim to 1 rcu_task_cb_adjust=1 s=4.
+[    0.000000] NR_IRQS: 6qs: 0
+[    0.00handler: gic_handle_irq
+[    0sing split EOI/D
+[    0.000000] ticks CPUs: 2-3.] rcu: 	Offload rom CPUs: 2-3. Setting srcu_st
+[    0.000000iffies: mask: 0cles: 0xfffffff 1911260446275000000] arch_timernning at 54.00MH 0.000000] clocks_counter: mask:ff max_cycles: 0xc743ce346, max_idle_ns: 440795 0.000000] schelution 18ns, wra6511102ns
+[    le: colour dummy[    0.000147] nabled
+[    0.ing delay loop ng timer frequenoMIPS (lpj=540004] pid_max: def0.000347] landloing.
+[    0.000ming mindful.
+ppArmor: AppArm[    0.000473] ation reserved: e hash table ener: 2, 16384 bytes, linear)
+[ ash table entri, linear)
+[   Finished mounti608] rcu: Hierarlementation.
+[ -delay instance0.001913] Timererarchy levels;ode level
+[   ervices will not be available.
+[    0.002621]s ...
+[    0.00PIPT I-cache on 2948] CPU1: Booocessor 0x0000083] Detected PIPT I-cache on CPU2
+[    0.003328] CPU2: Bootedssor 0x00000002] Detected PIPT  CPU3: Booted sor 0x0000000300[    0.003734] s1 node, 4 CPUs
+SMP: Total of 4 processors acti CPU(s) started at EL2
+[    0.003744] CPU features: detected:746] CPU featurta cache clean required for I/D  0.003748] CPU ted: Common not tions
+[    0.00res: detected: ns
+[    0.0037: detected: Dat Point of Persi03753] CPU featRCpc load-acquire (LDAPR)
+[  features: detecinstructions
+[U features: detd Access NeverCPU features: d
+[    0.003757] etected: RAS Ext
+[    0.003759] etected: XNX
+[ U features: detected: Speculative Store Bypassi
+[    0.003811]pplying system-s
+[    0.00572 detected: Hardanagement on CP5810] Memory: 85available (18240K kernel code, erved, 65536K cm   0.006065] dev294] Enabled cp1rt
+[    0.00929 0.009536] posile entries: 2048 (order: 5, 819r)
+[    0.0095able entries: 1 on 1 NUMA node linear).
+[   dule region forFULL
+[    0.010103] 0 pages inLT usage
+[    4 pages in range
+[    0.010511]  or invalid.
+[ T: Registered PTE protocol fam55] DMA: preallGFP_KERNEL|GFP_mic allocations audit: initialbsys (disabled)] audit: type=20lized audit_enabled=0 res=1
+[ ermal_sys: Regisovernor 'fair_shys: Registered t 'bang_bang'
+[ ermal_sys: Registered thermal g014] thermal_syermal governor    0.012029] cpernor ladder
+[uidle: using go  0.012149] hw-d 6 breakpoint t registers.
+[ ID allocator ini2768 entries
+[    0.012437] Se UART driver
+[soc@107c000000/iller@7fff9000: F cycle(s) with /soc@107c000000/cm2835-mbox 107c013880.mailbox:d
+[    0.01352rial: ttyAMA10 at MMIO 0x107d00 base_baud = 0) 
+[    0.013578]e [ttyAMA10] ena0950] raspberryp107c000000:firmo firmware from0:02, variant s021811] raspberc@107c000000:firmware: Firmware000000000000000831] HugeTLB: reiB page size, prages
+[    0.064 KiB vmemmap can 1.00 GiB page
+[    0.064835] ered 32.0 MiB palocated 0 pages HugeTLB: 0 KiB freed for a 32.0TLB: registered ize, pre-allocat  0.064838] Hugemap can be freed page
+[    0.06registered 64.0pre-allocated 0 pages
+[    0.0 0 KiB vmemmap c
+[    0.067101MA legacy API ma=0x1
+[    0.06ault domain typ    0.067856] iommu: DMA domain TLB invalidatit mode
+[    0.bsystem initiali992] usbcore: resbfs
+[    0.07egistered new ihub
+[    0.072egistered new device driver usbxPPS API ver. 1   0.072035] pps_ver. 5.3.6 - Cop7 Rodolfo Giometti <giometti@li[    1.51412 1001100000.mmc: invalid resour[    4.706soc@107c000000:termine number ng driver.
+[   708_fb soc@107c000000:fb: probe2708_fb failed [    6.1lay: WARNING: meoccur if overlay removed, prope000120000/rp1/i
+[    6.186877]ARNING: memory lif overlay removed, property: /0000/rp1/i2c@740ls
+[    6.18688 WARNING: memoryr if overlay rem /axi/pcie@100014000/#size-cells] OF: overlay: leak will occurved, property: 0000/rp1/i2c@74 6.186891] OF: : memory leak wrlay removed, p07c000000/sound/compatible
+[   overlay: WARNINerlay removed, 07c000000/sound 6.186895] OF: o: memory leak wioperty: /soc@10simple-audio-car186897] OF: overemory leak will y removed, property: /soc@107c0le-audio-card,b[    6.186906] RNING: memory lef overlay removed, property: /sund/simple-audio-card,frame-mas908] OF: overlayry leak will ocemoved, property: /soc@107c0000-audio-card,widg910] OF: overlayry leak will occ: /soc@107c0000audio-card,routing
+[    6.186ry leak will occemoved, property00/sound/status[!p]104\[06n[32766;32766[7h[1G[0J[6nne2af5e90b428cbcfser=root;hostnam=729d48f5fcb44a980;bootid=f90999f1c3f48627;pid9;comm=(agetty)ial-getty@ttyAM219cfb4349b6a281616D65\
+Ubuntu 26.04.1 0
+
+vip login: \[0m[?7h[1G32766H[6n[   19.Restarting syst'0 tryboot'
+.05 RPi: BOOTSYSN:66f33f7e DATE:E: 12:20:02
+  1
+  1.05 BOOTMODE: 0x06 partition 0 build-ts BU78498402 serialev a04171 stc 1056624
+  1.06 A003 PM_RSTS 0000WER_OFF_ON_HALT:ER_BUTTON 0 powe 1.07 EEPROM ID 0xef4015
+  1.0am v1.5
+  1.08 RP1_BO0001927
+09 PCIEx1: PWR 1.09 part 000000000001
+  1.09t 00000000 rtc 6abd2354 alarm 0oltage 3.3V
+  IG: 07
+  1.10 IAM rank 1 total-art: 0 (0x07 0x0ys_init: 0 8Gbit: 7056
+  1.11 DDR 4267 Mbps dumode:0 size-gbit0
+ RP1 FW: load 0 chip ID: 0x200  2.37 RP1 FW: load 1
+oardrev a04171 .78 Customer ke0000000000000000000000000000000000000000
+  2.7  2.14 TRYBOOT
+01927
+
+ 3.48 TRYBOOT
+t
+  3.46 PCI2 r  3.51 PCIe s000001
+  3.51 R001927
+
+  3.51R release VERSIO: 2026/05/11 TIM3.52 MFG_VER: 1E: 0x06 partitiILD_TIMESTAMP=1 d6062e1d boardEEPROM ID 0xef40 v1.5 Param v1.5: PWR 0 DET_WAKEPCIe HAT not det  3.55 usb3
+  3.55 USB_P  3.56 XHCxHC0 ver: 272 HC000f1 0HCC: 0240fe6d
+ 
+  3.57 xHC0 ver: 272 HCS: 03000440 140000f1 0HC0 ports 3 slotP
+  3.59 xHC1 000440 140000f1240fe6d
+  3.599 xHC1 ver: 27240000f1 07ff000
+  3.60 xHC1 ports 3 slots 64   3.61080191f4
+  3.6A
+  3.61 Voltacap PDO object2 .61 Current 5000tage 9000 mV
+ c-cap PDO objec 3.62 Current 3oltage 12000 mV
+  3.63 USB-PD:ject4 0x0004b12ct 3000 mA
+  3.6 mV
+  3.64 USB- object5 0x00064rent 2250 mA
+ 000 mV
+ 0
+  3.92 Bootrder f4
+  4.20 SD0 CTL0: 0x00800Hz actual: 3906256) status: 0x276
+  4.21 000 CTL0: 0x00800 Hz actual: 390 (256) status: 0: 276
+R c0ff8000 [274534b333247802e4400e0032db790000
+  4.40 SD: b: 2 SCR: 0x0235
+1 SD HOST: 2000800f04 BUS: 500v: 4 (2) status:ay: 2
+  4.42 MB2333951 type: 0x 0x00000000,    
+  4.43 MBR: 0x00000000,        4.43 MBR: 0x00 type: 0x00
+  4ition: 0
+  4.440ac6529f8c1c03791 003b723ff num-entry-size 128 p
+  4.45 GPT pa0a2-b9e5-4433-8 000000800..000atched GUID boo want partition 32 lba: 2048 'SEL    ' cluste 4.47 rsc 32 faoot dir clusterFAT32 clusters ead autoboot.tx hnd 0x3
+  4.8DE
+  4.48 Seles 0 C(boot_partconfig 0 resultg partition: 23b22c150ac6529f800000001 003b723first 0
+  4.50 GPT partition: 4433-87c0-68b6b0..0000207ff
+ ID bootable-parrtition 1
+  4.5: 1 ebd0a0a2-b9e6b72699c7 000020
+  4.52 Matched art-idx 1 want p.33 type: 32 lbafat' ' PEDAL-BOO0812 (8)
+  4.53tors 1024 root ctors 0 entries2
+  4.50 Read config.txt bytes430c
+  4.52 Read profile.txt bnd 0x430d
+  4.5txt bytes      1  4.56 [sdcard]t found
+  4.64_enable default000
+ead a/bcm2712-rp    78655 hnd 0x-match: compati,5-model-b matc
+  4.58 dt-matcrcm,bcm2712 mat
+ 4.60 MESS:00:00** Restart loggi /config.txt byt 0x430c
+  4.09 xt bytes      12oot.txt bytes  30e
+  4.61 MESS9:0: board: boardrev a04171 otp a04171
+  4.24  hnd 0x430c
+  le.txt bytes   d
+  4.33 Read es      128 hnd.64 MESS:00:00:04.640645:0: Ini000 temp 50469  4.84 MESS:0: avs_2712: AV00 temp 51019
+0:04.844632:0: 
+  4.84 MESS:00: over-voltage i600 delta: 0 (0x  4.86 MESS:00:00:04.8628uffer_swap 1
+ MESS:00:00:04.8 resolution HDMIax_mode 2
+  4.8.882046:0: SelecMI1/2 hotplug 0.88 Loading 'a/initrd.img' to 0t 0x0
+d a/initrd.img bnd 0x9524
+.30 MESS:00:00:0tramfs (initrd.x2bdb7000 (size.30 MESS:00:00:_file 'bcm2712-/bcm2712-rpi-5-b0000 offset 0x100
+  7.23 Read a/bcm2712-rpi   78655 hnd 0xc  7rlays/overlay_ma 5971 hnd 0xc952  7.57ys/bcm2712d0.dtb3 hnd 0xc876
+ 7.37 MESS:00:0oaded overlay '  R 0 DET_WAKE 0
+nfig.txt bytes  30c
+  7.20 Readytes      128 hn4 Read /tryboot.128 hnd 0x430e
+00:07.428633:0:og=on
+7.73 Read /a/cmbytes      339 hnd 0xca16
+  7.47 MESS:00:00:0d command line f
+  7.48 MESS:0: 'root=LABEL=p=0 console=ttyAole=tty1 rootfstype=ext4 rootwait fixrtc cfg80gdom=GB rd.shely=reboot rd.retr=90 panic=10 isolcpus=managed_irq,domain,2-3 
+  7.6.603789:0: RPM 0  77.622804:0: Enahdog
+  7.62 BM.bin" not found: 'a/armstub8-23 Loading 'a/vm0000 offset 0x2  8.49 Reads 14703885 hnd 0  9.48 MESS:00:00:09.481014loaded to 0x2bdb26)
+  9.48 PC  9.49 PCI2 reset  9.50 set
+  9.50 set_reb:09.548109:0: Starting OS 9548 00:09.553630:0: 00000040: -> 00000480
+  9.55 M: -> 00100080
+  9.56 MESS:00:00:09.560191:0: 00080
+  9.56 M4904:0: 00000038  9.56 MESS:00:00000003c: -> 001NOTICE:  BL5bc492
+NOTICE:  BL31: Built :  2024
+ Booting Linux 0x0000000000 [0  0.000000] Linu-1017-raspi-reals03-arm64-107) (nu-gcc (Ubuntu 1d (GNU Binutils 6) #17-Ubuntu SMi Aug  7 17:41:1ntu 7.0.0-1017.1e 7.0.12)
+[    enabled
+[    0.000000] random: crng init don] Machine model1
+[    0.000000ly option 'numa'] efi: UEFI not000000] Reserved CMA memory po3bc00000, size 00000] OF: reselized node linu-pool
+[    0.000000] OF: reser00003bc00000..0xx,cma
+[    0.00ved mem: 0x0000000000000007fffp non-reusable 0000] OF: reser0003fd23440..0x (0 KiB) nomap am@0
+[    0.00ing a node at [m000000-0x0000000  0.000000] NODE_DATA(0) allocac00-0x3b9b123f] psci: probing hod from DT.
+[    0.000000] psected in firmwa00] psci: Using0.2 function ID] psci: MIGRATEupported.
+[   : SMC Calling Co[    0.000000] Z   0.000000]   D0000000000000000ffff]
+[    0.00  empty
+[    0.l   empty
+[   le zone start f   0.000000] Earanges
+[    0. 0: [mem 0x0000000000000000-0x0]
+[    0.000000mem 0x000000000003fbfffff]
+[ tmem setup node0000000000-0x00
+[    0.000000] DMA: 1024 page ranges
+[    0: Embedded 56 pa r8192 d115152 u000000] Detectedn CPU0
+[    0.0ures: detected: Host Extensions CPU features: e-v4
+[    0.00es: detected: S 0.000000] CPU  page table iso by KASLR
+[   features: detect table isolation.000000] CPU fea: SSBS not fullyzing
+[    0.000es: applying boo
+[    0.000000] line: reboot=w  8250.nr_uarts=afe numa_policy.max_host_mem_s_fb.fbwidth=640ight=480 bcm2708_fb.fbdepth=16 bcm2708_fb.fbsw system_heap.ma_dma_numa_policyc95xx.macaddr=98 vc_mem.mem_basemem.mem_size=0x4ABEL=pedal net.ie=ttyAMA10,11520rootfstype=ext4  cfg80211.ieee80d.shell=0 rd.emd.retry=60 rd.t10 isolcpus=man2-3 nohz_full=2 irqaffinity=0-pboot.root=peda vipboot.profil.000000] mempolit policy overridave:0'
+[    0.0U NUMA default n to 'interleav000] Unknown kee parameters "fpassed to user space.
+[    0.0log buffer data1072 + 557056 =    0.000000] D table entries:8, 1048576 byte 0.000000] Inodle entries: 65524288 bytes, linear)
+[    0.00rder for Node 0nelists, mobilit Total pages: 260000] Policy zo000000] mem autl(zero), heap alloc:off, heap f.000000] SLUB: Hr=0-3, MinObjectdes=1
+[    0.0llocating 51432pages
+[    0.0llocated 202 pas
+[    0.00000mpt: lazy
+[    Preemptible hierplementation.
+[cu: 	RCU restricting CPUs from r_cpu_ids=4.
+[ u: 	RCU priority boosting: prio ms.
+[    0.000000] rcu: 	RCU_SOFTIRQ process   0.000000] 	Normal_after_boot00] 	Trampoline s RCU enabled.
+	Rude variant oled.
+[    0.00ariant of Tasks    0.000000] red value of schnt delay is 100 0.000000] rcu: Ary for rcu_fanoupu_ids=4
+[    0sks: Setting shi to 1 rcu_task_c
+[    0.000000]: Setting shift  1 rcu_task_cb_ak_cpu_ids=4.
+[    0.000000] NR_IRQS: 64, nr_ircated irqs: 0
+oot IRQ handler
+[    0.000000it EOI/Deactiva000000] NO_HZ: Us: 2-3.
+[    Offload RCU cals: 2-3.
+[    0.cu_init: Settingzes based on con0.000000] arch_t00MHz (phys).
+locksource: arcmask: 0xffffffffes: 0xc743ce346,40795203123 ns
+sched_clock: 56 bits at 54MHz, , wraps every 4398046511102ns
+onsole: colour 25
+[    0.0001acy console [tty  0.000190] Calioop (skipped), v using timer fr BogoMIPS (lpj=54000)
+[    0.0minimum: 301
+[andlock: Up and becoming mindful.
+[    0.00047pArmor initializ71] AppArmor: Apmediation reserv enabled
+[    e entries: 2048 4 bytes, linear)] Mountpoint-cantries: 2048 (oytes, linear)
+[    0.000749] Vunting rootfs on.001600] rcu: Hi implementation.se no-delay inst[    0.001894] T 1 hierarchy levels; 8 childrenossnode level
+FI services wil602] smp: Bring CPUs ...
+[   ted PIPT I-cach0.002921] CPU1:y processor 0x0fd0b1]
+[    0.d PIPT I-cache o003295] CPU2: Boprocessor 0x0000000200 [0x414fd626] Detected PPU3
+[    0.003ed secondary pro0300 [0x414fd0b16] smp: Brought Us
+[    0.00370f 4 processors  0.003701] CPU:ted at EL2
+[   features: detec Support
+[    0atures: detectedean to the PoU n I/D coherence
+] CPU features:n not Private t   0.003710] CPUcted: CRC32 inst0.003710] CPU fed: Data cache cl Persistence
+[ U features: dete-acquire (LDAPR)] CPU features:tomic instructi16] CPU featurevileged Access 3717] CPU featuMUv3
+[    0.00res: detected: RAS Extension Su3719] CPU featuNX
+[    0.0037: detected: Speypassing Safe (03772] alternatiystem-wide alter.005689] CPU fea: Hardware dirty on CPU0-3
+[   ry: 855632K/1044(18240K kernel ta, 11828K roda755K bss, 1155536K cma-reserve7] devtmpfs: in0.009422] Enablsupport
+[    0d setend support] clocksource: jxffffffff max_cyf, max_idle_ns: 0 ns
+[    0.00s hash table ener: 5, 81920 by   0.009651] funtries: 1024 (6NUMA nodes, totr).
+[    0.010region forced byLE_REGION_FULL
+0 pages in rangage
+[    0.010145] 513744 pages in range for 0.010556] DMI nnvalid.
+[    0.gistered PF_NETLINK/PF_ROUTE protocol family
+[MA: preallocatedERNEL|GFP_DMA pollocations
+[    0.011652] audi netlink subsys   0.011754] audidit(0.010:1): st res=1
+[    0._sys: Registeredor 'fair_share' thermal_sys: Rel governor 'bang011918] thermal_ thermal govern[    0.011918] istered thermalspace'
+[    0. using governor.011935] cpuidler menu
+[    0.0point: found 6 b watchpoint regi012079] ASID allsed with 32768 e012325] Serial: driver
+[    07c000000/interrfff9000: Fixed (s) with /soc@17fff9000
+[    5-mbox 107c0138box enabled
+[ d001000.serial:O 0x107d001000 baud = 0) is a   0.013424] prinyAMA10] enabled raspberrypi-fir00000:firmware: 05-11T11:20:02,d
+[    0.01873firmware soc@107c000000:firmwar is 66f33f7e0000000000000000
+ugeTLB: registee size, pre-all[    0.066792] vmemmap can be f GiB page
+[    LB: registered 3ze, pre-allocat 0.066795] Hugeap can be freedpage
+[    0.06egistered 2.00 re-allocated 0 [   91.059203
+  1.04 RPi: BOOTSYS release VERSION:66f33f7e DATE: 2026/05/11 TIME: 12:20:02
+  1.05 MFG_VER: 1
+  1.05 BOOTMODE: 0x06 partition 0 buiESTAMP=1778498401d boardrev a041T: 00000003 PM_T_FOR_POWER_BUTTEPROM ID 0xef40v1.5 Param v1.508 RP1_BOOT chip
+x1: PWR 0 DET_Wrt 00000000 reset_info 00000000000 rtc 6abd23b enabled 0
+  1 3.3V
+RAM_CONFIG: 07(0x07 0x07)
+  : 0 8Gbit MCB 0
+  1.11 DDR 4267 Mbps dual-rank-config:0
+  1.61D: 0x20001927
+.37 RP1 FW: loa key hash 00000000000000000000 2.78 VC-JTAG un  2.81
+t
+  3.46 PCI2 reset
+scan 00001de4:00RP1_CHIP_INFO 20ON:66f33f7e DATE: 2026/05/11 TIME: 12:20:02
+  3.51 MFG_VER: 1
+  3.52 BOOTMODE: 0x06 partition 0 build-ts BUILD_TIMESTAMP=1778498402 seriaEEPROM ID 0xef4 v1.5 Param v1.: PWR 0 DET_WAKPCIe HAT not de_pd_init status 3
+  3.54 USB_PCS: 03000440 140
+  3.56 xHC0 ve7ff000a HCC: 02ts 64 intrs 4
+OP
+  3.58 xHC1 3000440 140000f10240fe6d
+  3.5959 xHC1 ver: 272140000f1 07ff000
+  3.59 xHC1 pointrs 4
+0 USB-PD: src-cax080191f4
+  3.6mA
+  3.60 Volta.61 USB-PD: src- 0x0002d1f4
+  30 mA
+  3.61 Vol 3.61 USB-PD: st3 0x0003c177
+Voltage 12000 mV: src-cap PDO obc
+  3.63 Curren63 Voltage 15000-PD: src-cap PDO40e1
+  3.64 Cur 3.64 Voltage 2  3.68 SD_OC: 0de: SD (01) orde  4.20 SD HOST: 200000000 C BUS: 400000 Hz HZ div: 512 (256HOST: 2000000000 BUS: 400000 H HZ div: 512 (2fff0000 delay: 2  4802e45382401a4790000edc87f800SD: bus-width: x02358447 0x000  4.41 SD HOST: 200000000 CTL0: 50000000 Hz aHZ div: 4 (2) s0 delay: 2
+  4pe: 0xee
+  4.42 0x00
+  4.42 M       0 type: 0: 0x00000000,   0
+  4.36 Trying  4.43 GPT 7f93bf num-partitions 128 entry-sizerst 0
+  4.44 G ebd0a0a2-b9e5-42699c7 000000800..0000207ff
+  ition 0
+  4.61048 'mkfs.fat' (1)
+  4.46 rsc 1009 root dir cluster 2 sectors 4.47 FAT32 clus4.78 Read autoboot.txt bytes     4.48 Select pC(boot_partitioig 0 result 2
+rtition: 2
+  4.49 GPT 7f93b22c379f6523b 00000um-partitions 18 pentry 2 firsd0a0a2-b9e5-44339c7 000000800..00 Matched GUID bx 0 want partitiT partition: 1 ebd0a0a2-b9e5-44699c7 000020800..0001207ff
+  4 bootable-part-idx 1 want partitype: 32 lba: 133120 'mkfs.fat' ' PEDAL-BOOT '  (8)
+  4.53 rscs 0 entries 0
+sters 130812
+ g.txt bytes    rofile.txt bytesx430d
+  4.54 [s.upd not found
+  4.52 usb_max_current_enable default 0 max-cu  412-rpi-5-b.dtb nd 0x84fd
+  4.patible: raspbe match: brcm,bcm2712
+  4.57 dtle: brcm,bcm271logging
+  4.93 Read /config.tx0d
+  4.02 Read tes      128 hnd606568:0: board:4.12 Read /confc
+  4.16 Read /es      128 hnd 0x430d
+  4..623805:0: Initial voltage 800  4.82 MESS:00: avs_2712: AVS00 temp 46073
+ 0:04.827795:0: v
+  4.83 MESS:00: over-voltage i00000000)
+56:0: FB framebu  4.86 61179:0: Select 0/2 hotplug 0 ma6 MESS:00:00:04.t resolution HDmax_mode 2
+/initrd.img' to 0x00000000 offs  7.89 Read b/initrd.img bytes  7..304892:0: initg) loaded to 0xx3255a89)
+  7..310192:0: dtb_i-5-b.dtb'
+  7bcm2712-rpi-5-b.000 offset 0x100
+ead b/bcm2712-r    78655 hnd 0  7.60 Read /b/o   5971 hnd 0x8  7.69 Recm2712d0.dtbo bnd 0x8531
+38 MESS:00:00:07.383233:0: Load  7.42 PCIEx1: PWR 0 DET_WAKE 0
+g.txt bytes      845 hnd 0x430c
+  7.31 Read /profile.txt bytes      128 hnd 0x430d
+  7.43 M394:0: dtparam: watchdog=on
+mdline-tuned.tx hnd 0x871c
+  07.481795:0: Redline-tuned.txt':
+  7.48 MESS:00:00:07.489003:pedal net.ifnames=0 console=ttyt=90 panic=10 isirq,domain,2-3   7.7.610053:0: RPM   07.629068:0: Enchdog
+  7.63 B2.bin" not founn: 'b/armstub8-63 Loading 'b/vmlinuz' to 0x00200000
+d b/vmlinuz byte0x4414
+00:00:09.487211 loaded to 0x2bd3b26)
+  9.49 PC t
+boot_arg1 0
+  9connect
+ 9.55 MESS:00:0tarting OS 9554  9.55 MESS:00: 00000040: -> 001678:0: 00000030: -> 00100080
+  9.56 MESS:00:00:09.566390:0: 1103:0: 0000003  9.57 MESS:00:NOTICE:  BLe):v2.6-240-gfc4  BL31: Built : 4 2024
+000000] Booting Linux on physic000 [0x414fd0b1] Linux versioni-realtime (bui062) (aarch64-luntu 15.2.0-16u GNU ld (GNU Binu) 2.46) #20-Ubu_RT Fri Sep 11 11020.20-raspi-realtime 7.0.14)
+[    0.000000]
+[    0.000000] it done
+[    0. model: Raspberr0.000000] Malforn 'numa'
+[    0Reserved memory000000003bc00000, size 64 MiB
+F: reserved memompatible id sha[    0.000000mem: 0x000000003536 KiB) map rea
+[    0.000000mem: 0x0000000002 KiB) nomap no
+[    0.000000fd23440..0x000000003fd2347d (0 reusable nvram@0] NUMA: Faking ax000000000000000fffff]
+[cated [mem 0x3b9acc00-0x3b9b123f]
+[    0.00000g for conduit mesci: PSCIv1.1 dare.
+[    0.00ng standard PSCIIDs
+[    0.000000] psci: MIGRATE_INFO_TYPE not   0.000000] pscConvention v1.2 Zone ranges:
+ DMA      [mem 00-0x000000003fbfffff]
+[    0.    empty
+[    mal   empty
+[  for each node
+Early memory nod0.000000]   node00000000000000-0000]   node   0: [mem 0x000000000003fbfffff]
+000000003fbfffff0] On node 0, zoble ranges
+[   pu: Embedded 56 16 r8192 d114768ed PIPT I-cache0.000000] CPU features: detected: Virtualization Host Extensio0] CPU featurestre-v4
+[    0.000000] CPU feat Spectre-BHB
+[U features: kersolation forced   0.000000] CPcted: Kernel paon (KPTI)
+[    0.000000] CPU ed: Broken broaetion
+[    0.0res: detected: SSBS not fully self-synchronizi0] alternatives    0.000000] Kne: reboot=w coherent_pool=1M 8250.nr_uarts=1 pci=pcie_bus_safnterleave nvme.max_host_mem_sizb.fbwidth=640 bht=480 bcm2708_m2708_fb.fbswap=1 numa=fake=4 sorder=0 iommu_dnterleave smsc9E:54:15:25:8B vx3fc00000 vc_me00000  root=LABames=0 console=otfstype=ext4 rofg80211.ieee802shell=0 rd.emerretry=60 rd.tim rcu_nocbs=2-3 ivipboot.slot=b vtuned
+[    0.000000] mempolicylicy overridden to 'interleave:0'
+[    0.00000el command line rtc", will be pa000] printk: log buffer data + meta data: 1310able entries: 1 1048576 bytes,.000000] Inode- (order: 7, 524r)
+[    0.0000er for Node 0: 0] Built 1 zonegrouping on.  Tinit: stack:all(zero), heap alloc:off, heap free:off
+[    0.0align=64, Order=s=1
+[    0.000000] ftrace: allntries in 202 pages
+[    0.000
+[    0.000000]t: lazy
+[    0.eemptible hierar  0.000000] rcuing CPUs from NRcpu_ids=4.
+[    	RCU priority bty 1 delay 500 m00] rcu: 	RCU_SOFTIRQ processin 0.000000] 	No expedited grace mal_after_boot).
+[    0.000000ude variant of d.
+[    0.0000CU enabled.
+[  : RCU calculated value of sched000000] rcu: Adjusting geometryleaf=16, nr_cpu00000] RCU Tasks: Setting shift to 2 and lim tSetting shift to rcu_task_cb_adj 0.000000] NR_IRQS: 64, nr_irqsted irqs: 0
+[    0.000000] Root IRQ handler: [    0.000000]  EOI/Deactivate0000] NO_HZ: Full dynticks CPUs000000] rcu: 	Oacks from CPUs: 2-3.
+[    0.000000] rcu: srcurcu_struct sizes based on conte000000] clocksoufffffff, max_id6275000 ns
+[    0.000000] arch clocksource: arch_sys_counter: mask: 0xffffffles: 0xc743ce34440795203123 ns] sched_clock: 5, resolution 18ns, wraps every 
+[    0.000146] dummy device 80151] printk: lety1] enabled
+[    0.000189] Caed using timer frequency.. 108.00 BogoMIPS (lpj: default: 3276[    0.000339] ul.
+[    0.000ized
+[    0.000AppArmor secmark 0.000568] Moun8 (order: 2, 163r)
+[    0.00057ache hash table entries: 2048 (
+[    0.000752] VFS: Finished mounting rootfs on nullfs
+[    Hierarchical SRCn.
+[    0.00161ase no-delay ins
+[    0.001912] : 1 hierarchy levels; 8 childrecrossnode level
+[    0.002524] EFI services wiable.
+[    0.00ging up secondar  0.002904] Dethe on CPU1
+[  : Booted second14fd0b1]
+[    0ed PIPT I-cache .003327] CPU2: Booted secondar00000200 [0x41403654] Detected PIPT I-cache on CPU3
+[    0.0oted secondary p000300 [0x414fd0722] smp: BroughCPUs
+[    0.00 of 4 processorU: All CPU(s) st    0.003731] CPU features: detL0 Support
+[    0.003734] CPU features: detecclean to the Poor I/D coherence
+[    0.003736 detected: Commoranslations
+[  features: deteructions
+[    d: Data cache cl-acquire (LDAPR detected: LSE aons
+[    0.0037s: detected: PriNever
+[    0.00res: detected: 3745] CPU featuAS Extension Su3747] CPU featu48] CPU featuresBypassing Safe (03800] alternatinatives
+[    0tures: detected bit managementry: 855556K/104(18240K kernel code, 3142K rwdata, 8000K init, 4K reserved, 6550] devtmpfs: in 0.009300] Enabl.009305] Enable
+[    0.009530sh table entrie5, 81920 bytes, linear)
+[    A nodes, total 6
+[    0.010051]on forced by RANEGION_FULL
+[  ges in range for non-PLT usage range for PLT usage
+[    0.010464] DMI not p98] NET: RegistPF_ROUTE protoc0.011713] DMA: 4 KiB GFP_KERNE011772] audit: initializing netlink subsys (disabled)
+[    0.initialized aud=1
+[    0.0119: Registered thefair_share'
+[  rmal_sys: Registered thermal governor 'bang_bang'
+[    0.0120 Registered thetep_wise'
+[   mal_sys: Registeernor 'user_spacng governor lad24] cpuidle: using governor menu
+[    0.012138] hw-breakpoinchpoint registers.
+[    0.0121or initialised with 32768 entri29] Serial: AMB032] /soc@107c00controller@7fff9with /soc@107c0289] bcm2835-mbailbox: mailbox .013480] 107d001AMA10 at MMIO 0x107d001000 (irq = 16, base_baud1 rev3
+[    0.console [ttyAMA  0.019880] ras0:firmware: Atta[    1.433264]001100000.mmc: nvalid resource[    4.622650] bcm2708_00:fb: Unable to determine numbling driver.
+49] bcm2708_fb river bcm2708_fb failed with er[    6.142y: WARNING: memocur if overlay ry: /axi/pcie@10NING: memory leai/pcie@100012000/#address-cells OF: overlay: Wif overlay removaxi/pcie@10001200/#size-cellsRNING: memory leak will occur id, property: /a00/rp1/i2c@7400.142280] OF: ov memory leak willay removed, proc000000/sound/coerlay: WARNING:lay removed, proc000000/sound/simple-audio-card.142285] OF: ovememory leak willay removed, prop000000/sound/simname
+[    6.14y: WARNING: memcur if overlay y: /soc@107c000-audio-card,bit: overlay: WARNoverlay removed,d/simple-audio-r
+[    6.14230 leak will occuoved, property:udio-card,widget7] OF: overlay:  leak will occuroved, property:oved, property: /sound/status
+[?7h[1G[0J[6[6np]104\[0m[?7]fa0bb51e4709836aer=root;hostname729d48f5fcb44a910;bootid=6a3735819ed242f893815986;pidfdid=4264al-getty@ttyAMA1ationid=4f213e2f84b0e80c;type=16D65\26.04.1 LTS vip login: [0m[?7h[1G[0J[6n[32766;32766H[6n[g system with cot'
+RPi: BOOTSYS relf33f7e DATE: 2022:20:02
+  1.07 MFG_VER: 1
+  1TIMESTAMP=1778498402 serial d6062e1d boardrev a73
+  1.09 AON_RESET: 00000003 PM_RSTS 00000020
+  1.09 POWER_OFF_ON_HALT: 0 Wf4015
+  1.10 SFDP v1.5 Param vT_WAKE 0
+  1.11C reset-event 00000000 rtc 6abd000 enabled 0
+  1.12 SDRAM_CONFIG: 07
+  1.12 Initiank 1 total-size 0 (0x07 0x07)nit: 0 8Gbit MCB 0x80015ff0: 704267 Mbps dual-rank:0 byte-mode:0 size-gbit:8 part-config:0
+1 FW: load 0
+7
+2.40 RP1 FW: lo  2.80 O000000000000000nlocked
+OOT
+  2.83 RP1_
+ init
+  3.49 P  3.53 P4:00000001
+  3.53 RP1_CHIP_INF 3.54 RPi: BOOTLOADER release VOTMODE: 0x06 parts BUILD_TIMESTAstc 3550014
+  3.56 EEPROM ID 0SFDP v1.5 ParamIEx1: PWR 0 DETt detected.
+ usb_pd_init stSB_PD CONFIG 0   3.5.58 xHC0 ver: 27ff00 ver: 272 HCS:60 xHC0 ports 34
+I-STOP
+  3.61 xS: 03000440 140000f1 07ff000a H3.61 USBSTS 1
+440 140000f1 07fe6d
+  3.62 xHC1 ports 3 slotsc-cap PDO objec 3.63 Current 5oltage 5000 mVsrc-cap PDO object2 0x0002d1f4 5000 mA
+  3.6D: src-cap PDO object3 0x0003c1nt 3750 mA
+  30 mV
+  3.65 USO object4 0x0004b12c
+  3.66 Cu  3.66 Voltage 1p PDO object5 0x6 Current 2250 m  3.7D (01) order f4
+ 4.23 SD HOST: atus: 0x1fff0000  4.24 SD HOST: 0x00800f00 BUual: 390625 HZ tatus: 0x1fff00  4.42 OCR c0ff8000 [277]34b333247802e45382401a4
+CSD: 4edc87f800a404000
+  4.43 SD: bu 2 SCR: 0x02358  4.440000 CTL0: 0x0080000 Hz actual: : 4 (2) status: y: 2
+  4.45 MBR333951 type: 0xe0x00000000,       0 type: 0x00
+  4.46 MBR: 0x0 type: 0x00
+ 00000,       0 type: 0x00
+  4.tion: 0
+  4.47 ac6529f8c1c0379fartitions 128 eentry 2 first 0a2-b9e5-4433-87000000800..0000tched GUID bootable-part-idx 0 0
+  4.93 type: kfs.fat' ' BOOTSs 129022 (1)
+ oot dir cluster ries 0
+  4.50 FAT32 clusters 1E
+  4.51 Selec 0 C(boot_partionfig 0 result g partition: 2
+b22c150ac6529f8cf num-partitionirst 0
+  4.53 G ebd0a0a2-b9e5-42699c7 0000008004.54 Matched GU-idx 0 want par GPT partition:-4433-87c0-68b600..0001207ff
+UID bootable-partition 1
+  4.59 type: 32 lba:at' ' PEDAL-BOOT ' clusters 130ors 1024 root dir cluster 2 sec0
+  4.57 FAT32 
+  4.76 Read co30c
+  4.79 Read profile.txt by Read tryboot.t28 hnd 0x430e
+ pieeprom.upd notusb_max_current_0 max-current 5000
+  4.03 Read a/bcm2712-rpi   78655 hnd 0x10b01
+  4.60 dtle: raspberrypi: brcm,bcm2712
+  4.61 dt-match: compatible: bh: brcm,bcm27124.62 MESS:00:00:04.629496:0: *** Restart logging
+  4.31 Read /config.txt byt 0x430c
+  4.36 xt bytes      12oot.txt bytes  0e
+  4.64 MESS:0: board: boarRead /config.txt hnd 0x430c
+  le.txt bytes   d
+  4.60 Read es      128 hnd66 MESS:00:00:0ial voltage 800  4.86 MESS:00: avs_2712: AVS00 temp 48821
+0:04.871095:0: 
+  4.87 MESS:00 over-voltage i00 delta: 0 (0x  4.88 MES59:0: FB framebu  4.9004478:0: Selectax_mode 2
+  4.9.908515:0: SelecMI1/2 hotplug 0   4.93 Lo.img' to 0x00000  7.32img bytes 5277960 (size 0x3255a8:00:00:07.352836cm2712-rpi-5-b.dtb'
+  7.35 Loading 'a/bcm2712-dtb bytes    78
+ /a/overlays/ovetes     5971 hnd1 Read /a/overl  7.42 MESS:00:00:07.425616:0: Loaded overlay 'bcm2712d0'
+PWR 0 DET_WAKE 0
+  7.71 Read /      845 hnd 0ad /profile.txt bytes      128 hnd 0x430d
+  7t.txt bytes      128 hnd 0x430e
+  7.48 MESS:0hdog=on
+ 7.26 Read /a/cm bytes      367 hnd 0x10d20
+  :07.529152:0: Re from file 'a/cm':
+  7.53 MESS::0: 'root=LABEL=nsole=tty1 rootfwait fixrtc cfg8ll=0 rd.emergent=90 panic=10 isolcpus=managed_
+.65 MESS:00:00:0 0, max RPM 0
+:07.676433:0: Entchdog
+  7.67 B12.bin" not founen: 'a/armstub8-mlinuz' to 0x00200000
+ead a/vmlinuz bytes 14707602 hn  9.53 MESS:00:00:09.534705:0: Device tree loaded to 0x2bd96400 (size 0x13b42)
+  9.53 PCI1 reset
+  9.55 PCI2 reset
+  9.56 set_reboot_ordereboot_arg1 0
+   9.60 MESS:00 Starting OS 960:00:09.607323:00000480
+  9.6609172:0: 00000030: -> 00100080
+  9.61 MESS:0: 00000034: ->  MESS:00:00:09.38: -> 00100080:00:09.623310:0NOTICE:  BL31: v2.6(releac45bc492
+NOTICE:  BL31: Built   4 2024
+0.000000] Bootinical CPU 0x00000b1]
+[    0.000000] Linux versiaspi-realtime (b64-062) (aarch64(Ubuntu 15.2.0-1inutils for Ububuntu SMP PREEM 17:25:38 UTC 2.0-1020.20-raspi4)
+[    0.00000d
+[    0.000000init done
+[   ne model: Raspberry Pi 5 Model B Rev 1.1
+[   on 'numa'
+[    UEFI not found. Reserved memoryemory pool at 0x000000003bc0000
+[    0.000000] m: initialized ncompatible id sh[    0.000000] 03fbfffff (6553[    0.000000] O0000..0x0000000iB) nomap non-r[    0.000000] O: 0x000000003fd203fd2347d (0 KiBsable nvram@0
+[UMA: Faking a n00000000000000-ff]
+[    0.000m 0x3b9acc00-0x3b9b123f]
+[    0.000000] psci: probing for conduit method from0000] psci: PSCn firmware.
+[ rd PSCI v0.2 fun MIGRATE_INFO_Td.
+[    0.0000lling Conventio000000] Zone ran0000]   DMA     000000000-0x0000[    0.000000]  
+[    0.000000]ty
+[    0.00000 start for each0000] Early memm 0x000000000000007ffff]
+[    0.000000]   nod000000000080000-fff]
+[    0.00tup node 0 [mem000-0x000000003.000000] On node 0, zone DMA: 1available ranges] percpu: Embedd s106416 r8192 
+[    0.000000]-cache on CPU0CPU features: dization Host Ex.000000] CPU features: detected    0.000000] Cected: Spectre-00] CPU featureable isolation LR
+[    0.0000: detected: Kernel page table i
+[    0.000000detected: Broke completion
+[  features: detected: SSBS not fronizing
+[    0atives: applyingves
+[    0.000and line: rebool=1M 8250.nr_uaus_safe numa_ponvme.max_host_m2708_fb.fbwidthm2708_fb.fbdepthfbswap=1 numa=fp.max_order=0 ilicy=interleave5:8B vc_mem.mem_ vc_mem.mem_sizeot=LABEL=pedal nnsole=ttyAMA10,1ty1 rootfstype=eee80211_regdom=d.emergency=rebord.timeout=90 paain,2-3 nohz_fu=2-3 irqaffinit1 modprobe.blacipboot.root=ped=a vipboot.profi0.000000] mempollt policy overrieave:0'
+[    0. policy overriddve:0'
+[    0.00ernel command lifixrtc", will be space.
+[    0. log buffer data31072 + 557056 [    0.000000] Dentry cache has: 131072 (order:  0.000000] Inoble entries: 65536 (order: 7, near)
+[    0.0order for Node 0000] Built 1 zty grouping on.61120
+[    0.0one: DMA
+[    0to-init: stack:aalloc:off, heap 0.000000] SLUB:er=0-3, MinObjeodes=1
+[    0.allocating 51449 entries in 202000000] ftrace:ages with 4 grotation.
+[    0CU restricting S=16 to nr_cpu_ting: priority 1ved to rcuc kthreads.
+[    0.000000] 	No expedited grace per    0.000000] 	Tnt of Tasks RCU enabled.
+[    variant of Tasks RCU enabled.t of Tasks RCU e.000000] rcu: RCU calculated value of scheduleray is 100 jiffie00] rcu: Adjustf=16, nr_cpu_ids00] RCU Tasks: Setting shift to 2 and lim to 1 ust=1 rcu_task_cpu_ids=4.
+[   Tasks Rude: Settand lim to 1 rcu_task_cb_adjustids=4.
+[    0.4, preallocated irqs: 0
+[    00] NO_HZ: Full d-3.
+[    0.0000.
+[    0.000000] rcu: srcu_init: Setting srcused on contention.
+[    0.0000: jiffies: mask_cycles: 0xffffs: 1911260446275000 ns
+[    0.running at 54.0    0.000000] cl_sys_counter: ma: 0xc743ce346, max_idle_ns: 440795203123 ns
+[    0.000000] sits at 54MHz, resolution 18ns, wraps every 439   0.000140] Commy device 80x2] printk: legac] enabled
+[    rating delay loolue calculated uuency.. 108.00 B000)
+[    0.00efault: 32768 m
+[    0.000457]rmor initializediation reserved: ready to be enabled
+[    0.che hash table rder: 2, 16384 bytes, linear)
+Mountpoint-cacheries: 2048 (ordes, linear)
+[ : Finished mounullfs
+[    0.001604] rcu: Hiermplementation.
+rcu: 	Max phase ces is 400.
+[ er migration: 1s; 8 children psnode level
+[  services will .
+[    0.00262g up secondary C.002903] Detecteon CPU1
+[    0ooted secondary0000100 [0x414f3293] Detected  CPU2
+[    0.00ted secondary pr1]
+[    0.003665] Detected PIPT I-cache on CPU3
+[    0.003700] CPU3: Booted secondary processor 0x00000003
+[    0.003735p 1 node, 4 CPU9] SMP: Total ofctivated.
+[    ed at EL2
+[    0.003744] CPU fed: 32-bit EL0 S003745] CPU fea Data cache clet required for I/D coherence
+[    0.003747] Cected: Common nlations
+[    0atures: detected3749] CPU featuata cache clean to Point of Per0.003752] CPU fed: RCpc load-acqPU features: detected: LSE atom
+[    0.003754]etected: Privilr
+[    0.00375 detected: PMUv6] CPU features:Extension Suppor8] CPU features:
+[    0.003759] CPU features: dtive Store Bypassing Safe (SSB8] alternativesm-wide alternatives
+[    0.005es: detected: Hat management on 005804] Memory:K available (18, 3142K rwdata,8000K init, 756K bss, 115604K r[    0.006055] lized
+[    0.009301] Enabled port
+[    0.setend support posixtimers has: 2048 (order: 5linear)
+[    0.ash table entriebytes on 1 NUMA  KiB, linear).
+2G module regioOMIZE_MODULE_RE0.010043] 0 pag[    0.010044] 513744 pages in range for PLT us458] DMI not pr.
+[    0.01128ed PF_NETLINK/P.011691] DMA: preallocated 1024 KiB GFP_KERNEL|r atomic allocat1721] audit: innk subsys (disa1828] audit: ty010:1): state=initialized auditRegistered therir_share'
+[   al_sys: Registernor 'bang_bang] thermal_sys: al governor 'step_wise'
+[    l_sys: Registernor 'user_space'
+[    0.012013] cpuidle: usinr
+[    0.01201g governor menu
+[    0.012139] hw-breakpoint:r initialised wis
+[    0.012426PL011 UART driver
+[    0.013024] /soc@107c000000/interrupt-controller@7fff90ency cycle(s) with /soc@107c000ontroller@7fff9000
+[    0.0133lbox: mailbox e13507] 107d0010A10 at MMIO 0x1 16, base_baud rev3
+[    0.01nsole [ttyAMA100.018897] raspb soc@107c000000:hed to firmware nt start_cd
+[ pberrypi-firmwa0:firmware: Firf33f7e00000000000000000
+[    0B: registered 1.e, pre-allocatedp can be freed fage
+[    0.055gistered 32.0 Me-allocated 0 p825] HugeTLB: 0 32.0 MiB page
+HugeTLB: registege size, pre-ales
+[    0.0558iB vmemmap can     0.055828] Hued 64.0 KiB pagcated 0 pages
+ugeTLB: 0 KiB vmemmap can be frKiB page
+[    05-dma 1000010000.dma: DMA legacdmachans=0x1
+320] sdhci-brcmmc: error -EINVAL: invalid resource (null)
+[cm2708_fb soc@10able to determin. Disabling driv098] bcm2708_fb fb: probe with db failed with e[    5.108745] OFNG: memory leakur if overlay re: /axi/pcie@1000a4000/status
+[ : overlay: WARNING: memory leakoverlay removed,/pcie@1000120000#address-cells
+OF: overlay: WARf overlay removed, property: /a00/rp1/i2c@7400F: overlay: WARNk will occur if overlay removed/pcie@100012000/status
+[    5.rlay: WARNING: m occur if overlaerty: /soc@107c0patible
+[   verlay: WARNINGll occur if oveoperty: /soc@107c000000/sound/sd,format
+[    5.108783] OF: ov memory leak will occur if overperty: /soc@107,name
+[    5.1ay: WARNING: meccur if overlayty: /soc@107c00e-audio-card,bi    5.108788] OF: overlay: WARNk will occur if, property: /sond/simple-audioer
+[    5.1087 WARNING: memory leak will occu /soc@107c00000audio-card,widge92] OF: overlay:y leak will occur if overlay re /soc@107c00000audio-card,routi94] OF: overlayy leak will occmoved, property0/sound/status[!p]104\[0mn[32766;32766H[!p]104\[0m[[32766;32766H[]3008;start=bae40a23eb71f84e;user=root;hostnad=729d48f5fcb44a880;bootid=26f92f23186320306;pid108;comm=(agettyerial-getty@ttyAvocationid=b9e1d7d95a4782e26;ty6E616D65\untu 26.04.1 LT
+vip login: \[0m[?7h[1G32766H[6n[ oot: Restarting
+  1.06 RPi: BOOTSYS release VERTE: 2026/05/11 TIME: 12:20:02
+ 1
+  1.07 BOOTMtion 0 build-ts BUILD_TIMESTAMP8 AON_RESET: 000000020
+  1.08LT: 0 WAIT_FOR_ower-on-reset 0ID 0xef4015
+    1.10 RP1_BOOT chip ID: 0x20001927
+WR 0 DET_WAKE 0000000 reset_inf.10 PMIC reset-em 00000000 enabD voltage 3.3V
+  1.12 SDRAM_C2 Initialising al-size: 8Gbit 0x07)
+  1.12 mbit MCB 0x80015 dual-rank:0 bytbit:8 part-conf  1d 0
+20001927
+ RP1 FW: load 1  2.80 OTP bootrom a a
+  20000000000000000000000000000000000000000
+  2.8ked
+  2.83 RP0x20001927
+  3  3.48 PCI2 rese001
+  3.52 RP1927
+
+  3.53 Release VERSION:026/05/11 TIME: 12:20:02
+  3.50x06 partition _TIMESTAMP=1778062e1d boardrevROM ID 0xef4015.5 Param v1.5
+WR 0 DET_WAKE 0_init status 3
+  3.56 USB_PD CONFIG 0 43
+TOP
+  3.57 xHCf1 0772 HCS: 03000440 140000f1 07ff0d
+  3.59 xHC0 4 intrs 4
+.60 XHCI-STOP
+ 272 HCS: 03000f000a HCC: 0240: 03000440 140000f1 07ff000a HC  3.62 USO object1 0x080191f4
+  3.62 Cu  3.62 Voltage 5000 mV
+  3.63 PDO object2 0x0002d1f4
+  3.63 
+  3.63 Voltage3 USB-PD: src-cax0003c177
+  3.mA
+  3.64 Voltc-cap PDO object 3.65 Current 30oltage 15000 mVect5 0x000640e1 2250 mA
+  3.6mV
+.70 SD_OC: 0
+   SD (01) order f  4.22 SD HOST: 0x00800000 BUS: 400000 Hz actdiv: 512 (256) status: 0x1fff00  4.23 SD HOSL0: 0x00800f00 ctual: 390625 HZ div: 512 (256)0000 delay: 276  4.41 OCR c0ff8000 [272]
+CI33247802e4538244.42 SD: bus-wiCR: 0x02358447 0x00000000
+HOST: 2000000004 BUS: 500000000000 HZ div: 4 (2) status: 0x1fff0000 delay: 200000001,623339 4.44 MBR: 0x00000000,       0 type: 0x00
+  4.44 MBR: 0x00000,       0 typerying partitionb 000000001 003b723ff num-partitions 128 entry-size 128 pentry.46 GPT partiti9e5-4433-87c0-600800..0000207fd GUID bootable partition 0
+ fat' ' BOOTSEL  9022 (1)
+  4.48tors 1009 root ctors 0 entries 0
+  4.49 FAT32 clusters 12902utoboot.txt bytes       65 hnd ect partition rsts 0 C(boot_partition) 2 EEPROM3b22c150ac6529f000000001 003b72ze 128 pentry 2 first 0
+  4.51 0 ebd0a0a2-b9e5-4433-87c0-68b6b72699c7 0000008  4.52 Matched Grt-idx 0 want partition 1
+  4.0800..0001207ff GUID bootable-4.44 type: 32 lba: 133120 'mkfs.fat' ' PEDAL-BO dir cluster 2 ss 0
+  4.55 FAT312
+  4.61 Read s      845 hnd 0ead profile.txt hnd 0x430d
+  4.und
+  4.71 usbble default 0 m655 hnd 0x84fd
+  4.58 dt-matcaspberrypi,5-mo59 dt-match: comcm2712 match: br  4.60 09690:0: *** Res 4.12 Read /config.txt bytes   c
+  4.16 Read es      128 hnd Read /tryboot.t28 hnd 0x430e
+ 0:04.625532:0: ba04171 otp a0417/config.txt byte0x430c
+  4.35 Rt bytes      128  4.64 MESS:00:00:04.642782:0:e 800000 temp 47ESS:00:00:04.84: AVS pred 8733722
+  4.84 MESS81:0: over-volt 113300 delta: 0 (0x00000000)
+6 MESS:00:00:04.865031:0: FB fr:04.880152:0: Select resolutiong 0 max_mode 2
+  4.88 MESS:00:ug 0 max_mode 2
+  4.91 Loading 'b/initrd.img' to 0x00000000 offset 0x0
+  7.32 MESS:00 initramfs (inito 0x2bdaa000 (
+  7.32 MESS:00 dtb_file 'bcm2
+  7.33 Loadin00000000 offset   7712-rpi-5-b.dtbhnd 0x84fd
+d /b/overlays/ovytes     5971 hn.88 Read /b/overdtbo bytes     1  7.40 MESS:00: Loaded overlay 'bcm2712d0'
+PWR 0 DET_WAKE   7.48 Read /s      845 hnd 0 hnd 0x430d
+  707.454404:0: dtpon
+d /b/cmdline-tun   339 hnd 0x87100:00:07.500806: line from file MESS:00:00:07.508014:0: 'root=ifnames=0 conso00 console=tty1 rootfstype=ext4rd.shell=0 rd.emimeout=90 panicaged_irq,domain  7.62 MESS:00: RPM 0, max RP  7.64 MESS:0: Enabling early watchdog
+  7.65 BMD "armstufs_open: 'b/arms
+  7.65 Loadinset 0x200000
+5 Read b/vmlinuz bytes 14707602 hnd 0x4414
+06218:0: Device 0x2bd96400 (siz.51 PCI1 reset
+ reset
+53 set_reboot_oret_reboot_arg1 G disconnect
+:00:00:09.57331 9573 ms
+  9.57 ME35:0: 00000040:9.58 MESS:00:00000030: -> 0010S:00:00:09.58539.59 MESS:00:00:000038: -> 001022:0: 0000003c: NOTICelease):v2.6-24ilt : 12:55:13, [    0.000000] Booysical CPU 0x00fd0b1]
+[    0.0rsion 7.0.0-1020-raspi-realtimerm64-062) (aarcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0, GNU ld (GNU Binutils for EEMPT_RT Fri Sep 11 17:25:38 UT.0.0-1020.20-raspi-realtime 7.0.14)
+[    0.000000] KASLR enabled
+[    0.000000] random: crng init done
+[ pberry Pi 5 Model B Rev 1.1
+[ lformed early op: UEFI not foun00] Reserved memA memory pool at0000, size 64 Mi0] OF: reserved d node linux,cma] OF: reserved bc00000..0x0000536 KiB) map re
+[    0.000000mem: 0x00000000000000007ffff (51n-reusable atf@0] OF: reserved mKiB) nomap non-r
+[    0.000000x000000000000000fffff]
+[    0.0A(0) allocated [0x3b9b123f]
+[ i: probing for rom DT.
+[    0SCIv1.1 detecte[    0.000000] dard PSCI v0.2 function IDs
+[ ci: MIGRATE_INFrted.
+[    0.000000] psci: SMCtion v1.2
+[    ranges:
+[    0.    [mem 0x0000000000003fbfffff]]   DMA32    emempty
+[    0.00ch node
+[    0emory node rang0]   node   0: [mem 0x000000000000007ffff]
+[node   0: [mem 00-0x000000003fbfffff]
+[    0. setup node 0 [m003fbfffff]
+[  node 0, zone DMA unavailable ranedded 56 pages/2 d114768 u229300] Detected PIPU0
+[    0.00000ualization Host  0.000000] CPU features: detec
+[    0.000000detected: Spectre-BHB
+[    0.0ures: kernel pagon forced ON by 00000] CPU featule isolation (KPTI)
+[    0.000000] CPU features: detected: Bretected: SSBS not fully self-syernatives: applatives
+[    0.ommand line: reboot=w coherent__uarts=1 pci=pci_policy=interleat_mem_size_mb=0 dth=640 bcm2708_ bcm2708_fb.fbdepth=16 bcm2708_fb.fbswap=1 numheap.max_order=0 iommu_dma_numa_policy=interleaddr=98:FE:54:1em_base=0x3fc00000 vc_mem.mem_size=0x40000000 l net.ifnames=010,115200 consolpe=ext4 rootwait1.ieee80211_regd0 rd.emergency=reboot rd.retry=60 rd.timeout=90pus=managed_irq,_full=2-3 rcu_nonity=0-1 skew_tiot=pedal vipboot.slot=b vipbootmempolicy: NUMA overridden to '[    0.000000] Default policy ovterleave:0'
+[  nown kernel commters "fixrtc", o user space.
+[    0.000000] per data + meta d57056 = 688128 bhe hash table e(order: 8, 10485r)
+[    0.000000] Inode-cache es: 65536 (order: 7, 524288 byt   0.000000] Fal   0.000000] Bui mobility groupiages: 261120
+[ licy zone: DMA
+mem auto-init: stack:all(zero),, heap free:off
+[    0.000000]4, Order=0-3, MinObjects=0, CPU    0.000000] ftg 51449 entries     0.000000] f 202 pages with0.000000] Dynam] rcu: Preempti RCU implementation.
+[    0.00s from NR_CPUS=priority boosting: priority 1 d   0.000000] rcu: 	RCU_SOFTIRQ d to rcuc kthreads.
+[    0.000ed grace perioder_boot).
+[    0.000000] 	Trampoline variant of Tasks RCU en00000] 	Rude vaCU enabled.
+[    0.000000] 	Tf Tasks RCU ena0000] rcu: RCU calculated value of scheduler-eis 100 jiffies.] rcu: Adjustingcu_fanout_leaf=1 RCU Tasks: Setand lim to 1 rcu_task_cb_adjust_ids=4.
+[    0ks Rude: Settin lim to 1 rcu_trcu_task_cpu_id4, nr_irqs: 64, preallocated irqs: 0
+[    0.00handler: gic_ha.000000] GIC: Ueactivate mode
+[    0.000000] ticks CPUs: 2-3.
+[    0.000000RCU callbacks f
+[    0.000000] rcu: srcu_init:ruct sizes base
+[    0.000000iffies: mask: 0cles: 0xfffffff1911260446275000000] arch_timerz (phys).
+[   s_counter: mask: 0xffffffffffff0xc743ce346, max5203123 ns
+[  d_clock: 56 bitlution 18ns, wraps every 439804 0.000145] Consoy device 80x25printk: legacy nabled
+[    0.ing delay loop ng timer frequeoMIPS (lpj=54000)
+[    0.00019mum: 301
+[    ck: Up and runn0337] Yama: beco[    0.000453] Aor initialized
+[    0.000455] or secmark mediready to be ena0560] Mount-cache hash table ener: 2, 16384 by   0.000564] Moash table entri 2, 16384 bytes0.000734] VFS: g rootfs on nulchical SRCU imp   0.001590] rc-delay instance0.001894] Timererarchy levels;group; 1 crossn 0.002481] EFI st be available. smp: Bringing up secondary CPU2876] Detected 2925] CPU1: Booted secondary pr00100 [0x414fd0b1]
+[    0.0032T I-cache on CP304] CPU2: Bootcessor 0x0000000200 [0x414fd0b14] Detected PIPT3
+[    0.00367secondary processor 0x000000030
+[    0.003703]  1 node, 4 CPUs SMP: Total of ivated.
+[    0l CPU(s) starte0.003714] CPU fe03716] CPU featData cache clea/D coherence
+[ U features: deteations
+[    0.tures: detected:ions
+[    0.003es: detected: Dato Point of Pers.003723] CPU fea: RCpc load-acqu   0.003724] CPcted: LSE atomic instructions
+[    0.003725] CPU features: detected: Privileged Access Never] CPU features: 
+[    0.003727] CPU features: xtension Support
+[    0.003728detected: XNX
+PU features: deive Store Bypas
+[    0.003778 applying systemves
+[    0.0056s: detected: Har management on C05781] Memory: 8 available (1824 3142K rwdata, 000K init, 756Kcma-reserved)
+[    0.006045] dized
+[    0.00ort
+[    0.0092end support
+[    0.009442] po048 (order: 5, 8ear)
+[    0.009 table entries: 1024 (65536 bytes on 1 NUMA nodB, linear).
+[ orced by RANDOMIZE_MODULE_REGION_FULL
+[    0.009994] 0 pages -PLT usage
+[    0.009995] 5137ge for PLT usage[    0.011267] NET: Registered OUTE protocol falocated 1024 Ki_DMA pool for a1] audit: initisubsys (disabled)
+[    0.011802000 audit(0.010ialized audit_enthermal_sys: Registered thermalshare'
+[    0.[    0.011974] tistered thermal ys: Registered thermal governor 'user_space'
+puidle: using governor ladder
+[    0.012002] overnor menu
+[    0.012113] hw-breakpoint: fot and 4 watchpoi[    0.012140] Anitialised with [    0.012402] S11 UART driver/soc@107c000000 Fixed dependenc /soc@107c000000roller@7fff9000
+[    0.013293]7c013880.mailboled
+[    0.013491] 107d001000. at MMIO 0x107d) is a PL011 rev6] printk: consonabled
+[    0.0ypi-firmware somware: Attachedm 2026-05-11T11start_cd
+[    rrypi-firmware re hash is 66f3300000
+[    0.06registered 1.00 pre-allocated 0 64829] HugeTLB: 0 KiB vmemmap ca 1.00 GiB page] HugeTLB: regisllocated 0 page] HugeTLB: 0 Ki.0 MiB page
+[  eTLB: registeredsize, pre-allocmmap can be freed for a 2.00 MiB page
+[    0. registered 64. pre-allocated .064836] HugeTLB: 0 KiB vmemmapr a 64.0 KiB pa2] bcm2835-dma DMA legacy API s=0x1
+[    0.0fault domain tyed
+[    0.06605omain TLB invalidation policy:    0.068934] SCS[    1.508622] sdhci-brcmstb 1001100000.mmc:invalid resourc[    3.758555] b07c000000:fb: Unne number of FBs. Disabling dri1072] bcm2708_fbdriver bcm2708_rror -2
+[: overlay: WARNING: memory leak will occur if , property: /axi0/rp1/i2s@a4000/567436] OF: overemory leak will y removed, propi2c@74000/#addre4.568728] OF: ov memory leak willay removed, pre@1000120000/rprlay: WARNING:  occur if overlerty: /axi/pciei2c@74000/statu5] OF: overlay:  leak will occuroved, property: /sound/compatibl leak will occuoved, property:/sound/simple-audio-card,format] OF: overlay: Wleak will occurved, property: /soc@107c000000/sound/simple-au    4.568753] OING: memory leaoverlay removedc@107c000000/sou-card,bitclock-may: WARNING: meccur if overlayty: /soc@107c00e-audio-card,fr  4.568757] OF:G: memory leak erlay removed, 07c000000/soundrd,widgets
+[   overlay: WARNINwill occur if overlay removed, 07c000000/soundrd,routing
+[  overlay: WARNING: memory leak erlay removed, 07c000000/sound[!p][1G[0J[6n[327[!p]104[0J[6n[32766;3f4f23a7161f94a64;hostname=vip;machineid=729d48fd4845c5880;bootie0cbf06a4c6a5043a7e;pid=485;pidagetty);servicey@ttyAMA10.service;invocationidd495ea78f703e91601;type=service
+Ubuntu 26.0in:   18.911161] ieee80211 phy0: brtion_frame: Unkngory 0xa, actio[!p]104\[0m[?7h[1G[0J[6n[32766;32boot: Restartinmmand '0 tryboo
+  1.06 RPi: BOOTSYS ref33f7e DATE: 202:20:02
+  1.06.07 BOOTMODE: 0x06 partition 0 TIMESTAMP=17784962e1d boardrev a04171 stc 10706RESET: 00000003 WAIT_FOR_POWER_Bn-reset 0
+  1.0f4015
+  1.09 SFchip ID: 0x20001  1.10 PT_WAKE 0
+  1.10reset_info 00000C reset-event 024a0 alarm 0000  1.11 uSD volt SDRAM_CONFIG: 07
+  1.12 Initank 1 total-siz
+  1.12 memsys_iB 0x80015ff0: 704267 Mbps dual-rank:0 byte-mode  1.61 RP  1ip ID: 0x20001927
+: load 1
+79 OTP boardrev a04171 bootrom tomer key hash 000000000000000000000000000000AG unlocked
+TRYBOOT
+  2.83 
+  3.63 TPCI2 init
+  3.4  3.52 PCIe scan 00001de4:00000001
+  3.52 RP1_CHIPse VERSION:66f3305/11 TIME: 12:2G_VER: 1
+  3.54 partition 0 buESTAMP=177849841d boardrev a04
+  3.55 EEPROM aram v1.5
+  3.5 DET_WAKE 0
+  3
+  t status 3
+  3.G 0 43
+ 
+  3.57 xHC0 ve0440 140000f1 040fe6d
+  3.58 U xHC0 ver: 272 H0000f1 07ff000a   3.59 xHC0 porttrs 4
+ XHCI-STOP
+  3.60 xHC1 ver: 270a HCC: 0240fe6d
+  3.61 USBSTS 1
+  3.61 xHC1 3000440 140000f10240fe6d
+  3.61lots 64 intrs 4  3.62 USB-PD: src-cap PDO o4
+  3.62 Curre mV
+  3.63 USB- object2 0x0002drent 5000 mA
+  00 mV
+  3.63 USDO object3 0x000urrent 3750 mA12000 mV
+  3.6p PDO object4 05 Current 3000 ge 15000 mV
+  -cap PDO object3.66 Current 22ltage 20000 mV    3.07 Boot mod f4
+T: 200000000 CTUS: 400000 Hz aZ div: 512 (256)0000 delay: 276OST: 200000000  BUS: 400000 Hz6) status: 0x1ff6
+c0ff8000 [270]
+4b333247802e45380e0032db790000ed
+  4.42 SD: bus-2 SCR: 0x023584  4.43 00 CTL0: 0x008000 Hz actual: 54 (2) status: 0: 2
+  4.44 MBR:33951 type: 0xee  4.44 MBR: 0x00 type: 0x00
+  4pe: 0x00
+  4.5on: 0
+  4.45 G6529f8c1c0379f6003b723ff num-patry-size 128 pen  4.46 GPT parti2-b9e5-4433-87c000000800..000020le-part-idx 0 w
+  4.80 type: 32 lba: 2048 'mkL    ' clusters.48 rsc 32 fat-t dir cluster 2es 0
+  4.49 FA022
+  4.96 Reaytes       65 hRYBOOT_A_B_MODEpartition rsts ion) 2 EEPROM co
+  4.08 Trying  4.51 GPT 7f93b2c0379f6523b 0000 num-partitions 128 pentry 2 firT partition: 0 e33-87c0-68b6b72.0000207ff
+  4 bootable-part-tion 1
+  4.53  ebd0a0a2-b9e5-2699c7 000020804.54 Matched GU-idx 1 want par5 type: 32 lba: t' ' PEDAL-BOOT 12 (8)
+  4.55 rrs 1024 root dir cluster 2 sect
+  4.55 FAT32 c  4.62 Read config.txt bytes   0c
+  4.65 Read es      128 hndRead tryboot.tx hnd 0x430e
+  nable default 0 0
+ 78655 hnd 0x14atch: compatibl-model-b match:  4.59 dt-match:cm,bcm2712 match
+.61 MESS:00:00: Restart logginconfig.txt byteead /profile.txt hnd 0x430d
+  4rev a04171 otp abytes      845 hnd 0x430c
+  4.41 Read /profil
+  4.46 Read /ts      128 hnd 05 MESS:00:00:04.653470:0: Initi00 temp 48821
+: avs_2712: AVS 4.85 MESS:00:00red 873 mV +0
+0:04.861660:0: 000000)
+:00:00:04.87571fer_swap 1
+0832:0: Select resolution HDMI0_mode 2
+  4.89 MESS:00:00:04.8ax_mode 2
+  4.9itrd.img' to 0x00000000 offset   7.0img bytes 52770089 hnd 0x11b28  7.31 MES1:0: initramfs ded to 0x2bdac0S:00:00:07.32321bcm2712-rpi-5-b.ading 'a/bcm2712o 0x00000000 offset 0x100
+ 7.38 Read a/bcm2712-rpi-5-b.dt hnd 0x14e08
+ad /a/overlays/obytes     5971 hnd 0x14f61
+/a/overlays/bcm0x14e85
+  7.38387191:0: Loade12d0'
+ PCIEx1: PWR 0 D  7.345 hnd 0x430c
+ofile.txt bytes 430d
+  7.39 Reabytes      128 h.443883:0: dtpa
+ead /a/cmdline-     339 hnd 0xSS:00:00:07.490and line from f.49 MESS:00:00:0ot=LABEL=pedal nnsole=ttyAMA10,ty1 rootfstype=xrtc cfg80211.iGB rd.shell=0 rot rd.retry=60 =managed_irq,dom  7.61 MES6:0: RPM 0, max  7.63 ME002:0: Enabling 
+  7.64 BMD "arm not found
+  7.armstub8-2712.biding 'a/vmlinuz'offset 0x200000  9.49 MESS:00:00evice tree loade (size 0x13b26)set
+ PCI2 reset
+ot_order 0
+  9rg1 0
+  9.52 Ut
+ MESS:00:00:09.5ng OS 9563 ms
+6 MESS:00:00:09040: -> 00000480: 00000030: -> 575425:0: 000000
+  9.58 MESS:00: 00000038: -> 8 MESS:00:00:09.
+
+N6-240-gfc45bc49: Built : 12:55
+  0.000000] Bootysical CPU 0x00000000] Linux ve-raspi-realtimerm64-107) (aarcc (Ubuntu 15.2.2.0, GNU ld (GNbuntu) 2.46) #1EMPT_RT Fri AugC 2026 (Ubuntu 7.0.0-1017.17-ra0000] KASLR enab000] random: crng init done
+[ chine model: Rasel B Rev 1.1
+[ lformed early option 'numa'
+[    0.000000] efid.
+[    0.00000A memory pool atB
+[    0.00000mem: initialize, compatible id
+[    0.000000bc00000..0x0000536 KiB) map re
+[    0.000000] OF: reserved m0000000..0x000002 KiB) nomap non] OF: reserved mfd23440..0x00000eusable nvram@0 NUMA: Faking a000000000000000fffff]
+[    0.0A(0) allocated [0x3b9b123f]
+[  i: probing for crom DT.
+[    0SCIv1.1 detecte[    0.000000] dard PSCI v0.2    0.000000] ps_TYPE not suppo00000] psci: SMCtion v1.2
+[    000000]   DMA  00000000000-0x0
+[    0.000000pty
+[    0.0000empty
+[    0.00one start for ea.000000] Early memory node rang0]   node   0: 00000000-0x00000    0.000000]   0x00000000000800bfffff]
+[    0. setup node 0 [mem 0x0000000000  0.000000] On : 1024 pages inges
+[    0.000bedded 56 pages/92 d115152 u229300] Detected PIPT I-cache on CPU0
+[    0.00000: detected: Virt Extensions
+[  features: dete
+[    0.000000re-BHB
+[    0.000000] CPU feate table isolati KASLR
+[    0.0ures: detected: le isolation (KPs: detected: SSf-synchronizing
+[    0.000000]applying boot a  0.000000] Ker: reboot=w cohe0.nr_uarts=1 pcnuma_policy=int_host_mem_size_fbwidth=640 bcm=480 bcm2708_fb2708_fb.fbswap=1stem_heap.max_orerleave smsc95x54:15:25:8B vc_fc00000 vc_mem.000  root=LABELes=0 console=ttonsole=tty1 rootfstype=ext4 roo_regdom=GB rd.shncy=reboot rd.reut=90 panic=10 i_irq,domain,2-3 cu_nocbs=2-3 irqt.root=pedal vined
+[    0.000NUMA default poto 'interleave:0] DMA IOMMU NUMA default policy overridden to
+[    0.000000] command line pac", will be passe.
+[    0.00000buffer data + m + 557056 = 6880.000000] Dentr072 (order: 8, 100000] Inode-cantries: 65536 (8 bytes, linear)
+[    0.000000 for Node 0: 0  Built 1 zoneliouping on.  Tot
+[    0.000000DMA
+[    0.000000] mem auto-in:off, heap free:000] SLUB: HWali3, MinObjects=0,1
+[    0.00000ating 51432 ents
+[    0.00000ated 202 pages ynamic Preempt: 0000] rcu: Preeical RCU implementation.
+[    	RCU restricting CPUs from NR_C_ids=4.
+[    0CU priority boo 1 delay 500 ms.] rcu: 	RCU_SOFTmoved to rcuc kt.000000] 	No expriod (rcu_normal[    0.000000] ant of Tasks RC 0.000000] 	Rudks RCU enabled. 	Tracing variant of Tasks RCU 0.000000] rcu: alue of schedullay is 100 jiff000] rcu: Adjusor rcu_fanout_leds=4
+[    sks: Setting sh to 1 rcu_task_task_cpu_ids=4.: Setting shift  1 rcu_task_cb_ak_cpu_ids=4.
+[_IRQS: 64, nr_irqs: 64, preallocated irqs: 0
+oot IRQ handler
+[    0.000000it EOI/Deactiva.000000] NO_HZ: PUs: 2-3.
+[cu: 	Offload RCU CPUs: 2-3.
+[  : srcu_init: Set sizes based o    0.000000] atimer running at 54.00MHz (phys00] clocksource:er: mask: 0xffffcycles: 0xc743cs: 440795203123: 56 bits at 54M18ns, wraps everns
+[    0.0001our dummy devic000146] printk: Calibrating deld), value calculr frequency.. 10lpj=54000)
+[   max: default: 31
+[    0.00033and running.
+[ma: becoming mi00465] AppArmoralized
+[    0.r: AppArmor secmo be enabled
+[unt-cache hash 2048 (order: 2, near)
+[    0.000574] Mountpoin8 (order: 2, 163r)
+[    0.000751] VFS: Finished mounting rootf   0.001594] rcSRCU implementa phase no-delay 0.
+[    0.00190ion: 1 hierarchydren per group; el
+[    0.002515] EFI servicesailable.
+[    0ringing up secon[    0.002892] Dcache on CPU1
+[PU1: Booted sec 0x0000000100 [  0.003270] Dethe on CPU2
+[  : Booted second0000000200 [0x40.003650] Detected PIPT I-cache.003684] CPU3: 00000300 [0x414f03716] smp: Bro003722] SMP: Totors activated.CPU: All CPU(s)
+[    0.003726]etected: 32-bit    0.003728] CPected: Data cachPoU not requirednce
+[    0.0037s: detected: Com translations
+PU features: destructions
+[  features: detecclean to Point [    0.003735] etected: RCpc loPR)
+[    0.0037s: detected: LSEtions
+[    0.00res: detected: Privileged Acces.003738] CPU fea: PMUv3
+[    0.tures: detected:Support
+[    0.tures: detected3742] CPU featupeculative Stor (SSBS)
+[    0tives: applyingernatives
+[   features: detectrty bit manageme    0.005793] Memory: 855644K/1e (18240K kernewdata, 11828K rot, 755K bss, 11565536K cma-reser6056] devtmpfs: bled cp15_barri 0.009354] Enabort
+[    0.0094: jiffies: mask:_cycles: 0xfffffs: 1911260446275009506] posixtimentries: 2048 (bytes, linear)
+[    0.009570]le entries: 1024n 1 NUMA nodes, total 64 KiB, l010039] 2G modu by RANDOMIZE_ML
+[    0.01004010044] 513744 por PLT usage
+[ I not present or 0.011133] NET:ETLINK/PF_ROUTE
+[    0.011524ted 1024 KiB GF pool for atomi    0.011561] aing netlink subs[    0.011672] a audit(0.009:1):zed audit_enable 0.011927] therred thermal governor 'fair_shar30] thermal_sys:rmal governor 'b 0.011931] thermred thermal governor 'step_wise'
+[    0.01193Registered therer_space'
+[   nor ladder
+[    0.011963] cpuirnor menu
+[    d 4 watchpoint r 0.012122] ASID alised with 327 0.012374] SeriART driver
+[  @107c000000/intr@7fff9000: Fixcle(s) with /soterrupt-controll   0.013241] bcm2835-mbox 107c0ailbox enabled
+[    0.013422] al: ttyAMA10 at 00 (irq = 16, b a PL011 rev3
+rintk: console 30] raspberrypi-firmware soc@10e: Attached to 26-05-11T11:20:9787] raspberry107c000000:firmash is 66f33f7e0000000000000000] HugeTLB: registered 1.00 GiBallocated 0 pag3] HugeTLB: 0 Ke freed for a 1    0.044784] Hued 32.0 MiB pagecated 0 pages
+[emmap can be freed for a 32.0 MiB page
+[    0: registered 2.e, pre-allocated0.044788] HugeTLp can be freed fage
+] sdhci-brcmstb error -EINVAL: invalid resour[    3.656093] bcm2708_fb soc@10able to determi. Disabling drim2708_fb soc@10be with driver d with error -2[    l occur if overlay removed, proe@1000120000/rpus
+[    4.443985] OF: overlay:y leak will occuy: WARNING: memremoved, propert00120000/rp1/i2clls
+[    4.444ry leak will occemoved, property0120000/rp1/i2c@    4.444030] OING: memory leaoverlay removed@107c000000/sou    4.444032] ONING: memory lea overlay removed, property: /so will occur if 4.444046] OF: oll occur if overlay removed, pr8] OF: overlay:  leak will occuroved, property:/sound/simple-alay: WARNING: moccur if overlay removed, propele-audio-card,widgets
+[    4.emory leak will y removed, property: /soc@107c000000/sound/simpouting
+[    4.lay: WARNING: memory leak will occur if overlay removed, prope00000/sound/status
+[!p]104\[06n[32766;327667h[1G[0J[6n[nf919a82541ec8c8er=root;hostnam1ad2060d4845c5884b8e554ecba69dcf463;pidfdid=177;ervicename=seria0.service;invoca874644689fb9cdaervice\P+q6E616D65\
+Ubuntu 26.04.10
+
+vip loginm[?7h[1G[0J[6n[32766;32766  27.375490] reb system
+.06 RPi: BOOTSYN:66f33f7e DATEE: 12:20:02
+  
+  1.06 BOOTMODn 0 build-ts BU778498402 serialrev a04171 stc 1AON_RESET: 0000000020
+  1.08 PO: 0 WAIT_FOR_POWer-on-reset 0
+  0xef4015
+  1.0am v1.5
+OOT chip ID: 0x2  1.0 DET_WAKE 0
+ 000 reset_info  PMIC reset-eve6abd24c5 alarm  0
+  1.10 uSD  IG: 07
+  1.11 AM rank 1 totalart: 0 (0x07 0xys_init: 0 8GbiDDR 4267 Mbps dumode:0 size-gbit0
+0 RP1 FW: load 0  1.62 RP1_BOOT01927
+  2.7904171 bootrom amer key hash 00000000000000000000000000000000 unlocked
+  2ip ID: 0x20001927
+
+init
+  3.47 PCI  3.52 PCI:00000001
+  3.52 RP1_CHIP_INFO.52 RPi: BOOTLOSION:66f33f7e DATE: 2026/05/11
+  3.53 MFG_VERMODE: 0x06 part BUILD_TIMESTAMial d6062e1d bo54 EEPROM ID 0xeEx1: PWR 0 DET_.2 PCIe HAT not  3.55 tus 3
+  3.55 US3
+  3.57 57 xHC0 ver: 272140000f1 07a HCC: 0240fe6d1
+  3.58 xHC0  07ff000a HCC: 0 xHC0 ports 3 slots 64 intrs 4STOP
+  3.59 xHC 03000440 14000060 USBSTS 1
+  72 HCS: 030004400a HCC: 0240feports 3 slots 6  3cap PDO object1.62 Current 500tage 5000 mV
+ c-cap PDO objec 3.62 Current 5oltage 9000 mVsrc-cap PDO obj
+  3.63 Current3 Voltage 12000 PD: src-cap PDO 12c
+  3.64 Curr3.64 Voltage 150SB-PD: src-cap P0640e1
+  3.65 C
+  3.65 Voltage   3.70 SDoot mode: SD (0  4.20000 CTL0: 0x0000 Hz actual: 312 (256) status:ay: 276
+  4000000 CTL0: 0x0000 Hz actual:512 (256) statulay: 276
+OCR c0ff8000 [244534b333247802: 400e0032db7904000
+  4.40 SD:pec: 2 SCR: 0x0200
+.41 SD HOST: 2000800f04 BUS: 5l: 50000000 HZ us: 0x1fff0000 d MBR: 0x00000001 0xee
+  4.42 MB      0 type: 0x 0x00000000,    
+  4.43 MBR: 0x 0 type: 0x00
+ rtition: 0
+  4150ac6529f8c1c0001 003b723ff n8 entry-size 12 0
+  4.45 GPT 0a0a2-b9e5-4433c7 000000800..0 Matched GUID bootable-part-idxon 0
+  4.66 ty 'mkfs.fat' ' Bters 129022 (1)fat-sectors 100er 2 sectors 0 7 FAT32 cluster Read autoboot.65 hnd 0x3
+  4ition rsts 0 C(b2 EEPROM config tion: 2
+  4.49ac6529f8c1c0379 003b723ff num-ntry-size 128 p
+  4.50 GPT par0a2-b9e5-4433-87 000000800..0000atched GUID boot want partition artition: 1 ebd087c0-68b6b72699c01207ff
+  4.52 otable-part-idx n 1
+  4.29 typ0 'mkfs.fat' ' sters 130812 (8 fat-sectors 10ter 2 sectors 054 FAT32 cluste7 Read config.t5 hnd 0x430c
+  4.49 Read prof   128 hnd 0x43rd] pieeprom.up.57 usb_max_curnt 5000
+9 Read a/bcm271tes    78655 hn7 dt-match: comrypi,5-model-b 712
+  4.57 dt-e: brcm,bcm2712m2712
+00:00:04.595710:logging
+  4.98 t bytes      845 hnd 0x430c
+  le.txt bytes   d
+  4.07 Read es      128 hnd MESS:00:00:04.6 boardrev a041714.17 Read /confi  845 hnd 0x430cprofile.txt byte0x430d
+  4.6.628797:0: Init00 temp 49920
+  4.82 MESS:00:00:04.829176:0: avs_2712: AVS0 temp 49370
+ :04.832782:0: v  4.83 MESS:00:over-voltage id0 delta: 0 (0x0  4.85 MES3:0: FB framebu  4.86 MESS:00:00:04.86resolution HDMI0x_mode 2
+  4.87870201:0: SelectI1/2 hotplug 0 87 Loading 'a/i00000000 offset7 Read a/initrd.img bytes 52770089 hnd 0x11b28
+S:00:00:07.2932(initrd.img) lo00 (size 0x3253S:00:00:07.2985ading 'a/bcm271to 0x00000000 of m2712-rpi-5-b.dt5 hnd 0x14e08
+ad /a/overlays/overlay_map.dtb bytes     5971   7.48 Read2712d0.dtbo byt0x14e85
+6 MESS:00:00:07d overlay 'bcm2  7.40DET_WAKE 0
+08 Read /config845 hnd 0x430c      128 hnd 0xSS:00:00:07.414684:0: dtparam:   7.59 Read /339 hnd 0x15025
+  7.46 MESS:00:00:07.461512:0: Read command la/cmdline-tuned.ESS:00:00:07.468BEL=pedal net.if=ttyAMA10,115200ootfstype=ext4 rootwait fixrtc 11_regdom=GB rdrgency=reboot rdmeout=90 panic=1ged_irq,domain,2  7.58 MESS:00:RPM 0, max RPM   7.60 MESS:00:00:07.608789:0 watchdog
+  7.61 BMD "armstub8found
+  7.14 fsub8-2712.bin' 
+'a/vmlinuz' to 0t 0x200000
+ Read a/vmlinuz hnd 0x10d22
+  9.4667059:0: Device tree loaded to e 0x13b26)
+  9.  9.48 PCI249 set_reboot_oret_reboot_arg1 0G disconnect
+:00:00:09.534155:0: Starting OS  9.53 MES-> 00000480
+  9.54 MESS:00:00000030: -> 00100080
+  9.54 MES37:0: 00000034: 9.55 MESS:00:00:000038: -> 00100S:00:00:09.55566:  BL31: v2.6(r-gfc45bc492
+NODec  4 2024
+00000] Booting Ll CPU 0x00000000
+[    0.000000]7.0.0-1017-raspidd@bos03-arm64-nux-gnu-gcc (UbGNU ld (GNU Binu) 2.46) #17-Ubuntu SMP PREEMPT_:41:11 UTC 2026017.17-raspi-re[    0.000000] [    0.000ng init done
+[ chine model: Rasel B Rev 1.1
+[ ption 'numa'
+[ d.
+[    0.00memory: created  at 0x000000003 MiB
+[    0.00ed mem: initialized node linux,cma, compatible000] OF: reserve003bc00000..0x00(65536 KiB) mapcma
+[    0.000d mem: 0x0000000000000007ffff non-reusable at00] OF: reserve003fd23440..0x00(0 KiB) nomap nom@0
+[    0.0000g a node at [mem0000-0x0000000030.000000] NODE_d [mem 0x3b9acc[    0.000000] r conduit method from DT.
+[   ted in firmware0] psci: Using s.2 function IDs psci: MIGRATE_Ipported.
+[    0SMC Calling Conv   0.000000] Zone ranges:
+[   A      [mem 0x000x000000003fbfff000]   DMA32    00000]   Normal .000000] Movable each node
+[  y memory node r0000]   node   0000000000-0x00
+[    0.000000]m 0x000000000003fbfffff]
+[   mem setup node 0000000000-0x0000[    0.000000] ODMA: 1024 pages in unavailable 00000] percpu: Embedded 56 page8192 d115152 u2PIPT I-cache on 0000] CPU featurirtualization Ho[    0.000000] Ctected: Spectre00] CPU featurectre-BHB
+[    atures: kernel tion forced ON .000000] CPU fed: Kernel page t(KPTI)
+[    0.0ures: detected: self-synchronizi00] alternatives: applying boot    0.000000] Kine: reboot=w co8250.nr_uarts=1 fe numa_policy=imax_host_mem_sizfb.fbwidth=640 bfb.fbdepth=16 b=1 numa=fake=4 _order=0 iommu_d5xx.macaddr=98:c_mem.mem_base=m.mem_size=0x40names=0 console= console=tty1 roootwait fixrtc c11_regdom=GB rdgency=reboot rdeout=90 panic=10 isolcpus=manag-3 nohz_full=2-3irqaffinity=0-1 boot.root=pedal vipboot.profile=y: NUMA default NUMA default poto 'interleave:0] Unknown kernrtc", will be pace.
+[    0.00g buffer data +72 + 557056 = 6  0.000000] Dentry cache hash 31072 (order: 8 linear)
+[    cache hash tabl (order: 7, 524288 bytes, linea00] Fallback order for Node 0: 000] Built 1 zonelists, mobilitTotal pages: 26000] Policy zon000000] mem auto-init: stack:all(zero), heap alree:off
+[    0.Walign=64, Order=0-3, MinObjects=0, CPUs=4, Nodes=1
+[    0.00entries in 202 0000] ftrace: aes with 4 group] Dynamic Preemarchical RCU imp    0.000000] rcting CPUs from N_cpu_ids=4.
+[  boosting: prior ms.
+[    0.000SOFTIRQ processic kthreads.
+[   expedited grace.
+[    0.000000] 	Trampoline variant of Tasks[    0.000000] 	 Tasks RCU enabl000] 	Tracing vaRCU enabled.
+[u: RCU calculatduler-enlistmeniffies.
+[    0justing geometr_leaf=16, nr_cp.000000] RCU Tasto 1 rcu_task_cask_cpu_ids=4.RCU Tasks Rude:to 2 and lim to djust=1 rcu_task   0.000000] NR_qs: 64, prealloc    0.000000] Ro gic_handle_irq GIC: Using sple mode
+[    0.ull dynticks CP.000000] rcu: 	backs from CPUs000000] rcu: src srcu_struct siz.000000] arch_t running at 54.    0.000000] ch_sys_counter: mffffff max_cycle max_idle_ns: 44[    0.000000] sched_clock: 56 esolution 18ns,8046511102ns
+[    0.000142] Coummy device 80x7] printk: legacy console [tty1 0.000185] Calibop (skipped), vausing timer freqBogoMIPS (lpj=50189] pid_max: inimum: 301
+[    0.000344] launning.
+[    0ecoming mindful] AppArmor: Appd
+[    0.00048pArmor secmark med: ready to be .000585] Mount-c entries: 2048 ( bytes, linear)
+[    0.000590]he hash table ender: 2, 16384 byS: Finished mou nullfs
+[    0.erarchical SRCU 
+[    0.001615]e no-delay instaimer migration: 1 hierarchy levper group; 1 cr    0.002531] E not be availab33] smp: BringiCPUs ...
+[    0.002898] Detec on CPU1
+[    Booted secondar00000100 [0x41403285] Detected CPU2
+[    0.0oted secondary p000200 [0x414fd0647] Detected PIPU3
+[    0.0036d secondary proc300 [0x414fd0b1]
+[    0.003715s
+[    0.00372 4 processors a0.003722] CPU: ed at EL2
+[   eatures: detectSupport
+[    0.tures: detected:an to the PoU noI/D coherence
+PU features: deot Private tran.003730] CPU fed: CRC32 instrucres: detected:  to Point of Pe0.003735] CPU features: detectequire (LDAPR)
+PU features: detected: LSE atom
+[    0.003737]detected: Priviler
+[    0.003738] CPU featuresv3
+[    0.00373: detected: RAS rt
+[    0.00374: detected: XNX CPU features: dative Store BypS)
+[    0.0037: applying syst5696] CPU featurardware dirty bi CPU0-3
+[    0 855584K/104448240K kernel cod 11828K rodata,K bss, 115596K  cma-reserved)devtmpfs: initi009352] Enabled pport
+[    0.00etend support
+[locksource: jiffs: 0xffffffff, 1260446275000 n7] posixtimers hes: 2048 (order:, linear)
+[     hash table entr6 bytes on 1 NUM64 KiB, linear).] 2G module regNDOMIZE_MODULE_  0.010096] 0 por non-PLT usage] 513744 pages i usage
+[    0.0present or inval145] NET: Registcol family
+[    preallocated 10EL|GFP_DMA pool cations
+[    0.initializing net.011622] audit: (0.009:1): statedit_enabled=0 re789] thermal_sysermal governor '   0.011791] thovernor 'bang_ba793] thermal_sysermal governor '  0.011794] therered thermal governor 'user_spa807] cpuidle: using governor la811] cpuidle: unu
+[    0.0119t: found 6 breatchpoint registe940] ASID alloca with 32768 entr179] Serial: AMBiver
+[    0.01200000/interrupt-9000: Fixed dependency cycle(s)000000/interruptf9000
+[    0.01box 107c013880.m enabled
+[    01000.serial: ttx107d001000 (ird = 0) is a PL0013260] printk:10] enabled
+[ pberrypi-firmwaached to firmwariant start_cd
+raspberrypi-firm0000:firmware: F 66f33f7e00000000000000000
+[  TLB: registeredize, pre-alloca  0.064816] Hugmap can be free page
+[    0.0 registered 32.0 pre-allocated 0064818] HugeTLB:can be freed fore
+[    0.064820] HugeTLB: regi page size, pre-es
+[    0.06482iB vmemmap can b.00 MiB page
+[geTLB: register size, pre-allo    0.064822] Hemmap can be friB page
+[    0-dma 1000010000y API manager, dmu: Default domated
+[    0.08 domain TLB inv: strict mode
+[    1.504835 error -EINVAL:e (null)
+737158] bcm270800:fb: Unable tbling driver.
+[cm2708_fb soc@1obe with driver2
+ 4.445767] OF: : memory leak wrlay removed, pie@1000120000/ry: WARNING: memocur if overlay ry: /axi/pcie@100@74000/#address-45793] OF: overmory leak will  removed, property: /axi/pcie@12c@74000/#size-5797] OF: overlory leak will oremoved, proper00120000/rp1/i2
+[    4.445828] ak will occur id, property: /sund/compatible OF: overlay: WAeak will occur if overlay removoc@107c000000/so-card,format
+F: overlay: WARak will occur ifd, property: /sound/simple-audiooverlay: WARNINwill occur if overlay removed, 07c000000/soundter
+[    4.4458ry leak will occur if overlay removed, property00/sound/simple-e-master
+[    4erlay: WARNING: memory leak will occur if overlperty: /soc@107mple-audio-card.445840] OF: ovmemory leak wilay removed, proc000000/sound/si,routing
+[    4.445843] OF: ovmemory leak will occur if overlperty: /soc@107c[!p[1G[0J[6n[32[!p]104\[6n[32766;327]3008;start=a5bce56dcfc44ostname=vip;maccb44a91ad2060d47f0860f6dede4caa;pid=484;pidfdetty);servicenattyAMA10.service1c12525e0d40ba;type=service\
+TS vip ttyAMA10[!p]104\J[6n[32766;32766H[6n] reboot: Restarting system with command '0 tr
+  1.06 RPi: BOOTSYS ref33f7e DATE: 202:20:02
+  1.07 MFG_VER: 1
+  1build-ts BUILD_8402 serial d6004171 stc 10756ESET: 00000003 OFF_ON_HALT: 0 n-reset 0
+  1.0f4015
+  1.09 SF1.5
+ hip ID: 0x20001  1.10 PCIEx1: PWR 0 DE part 00000000 reset_info 00000C reset-event 000000 enabled 0
+  1.1207
+  1.12 Initiank 1 total-size: 8Gbit 0 part:
+  1.13 memsys_iB 0x80015ff0: 70ank:0 byte-mode  1.61 RP  1.63 RP1_BOOT ch7
+9 RP1 FW: load 1  2.80 OTP boardrev a04171 2.80 Customer ke00000000000000000000000000000080 VC-JTAG unlo  2.31 TRYBOOTT chip ID: 0x200
+
+  3.48 PCI2 ini  3.53 PCIe 0000001
+  3.53 0001927
+
+  3.5ER release VERSIME: 12:20:02
+ 
+  3.54 BOOTMOon 0 build-ts B778498402 serial d6062e1d boar3542576
+  3.55015
+  3.55 SFD5
+  3.55 PCIEx PCIe HAT not de  3.56 us 3
+  3.56 USB_  3.57 XHxHC0 ver: 272 H0000f1 07HCC: 0240fe6d
+ : 272 HCS: 0300ff000a HCC: 024HC0 ports 3 slot  3.60 XHCI-STOver: 272 HCS: 03 07ff000a HCC: 0 USBSTS 1
+  3.6 HCS: 03000440 1a HCC: 0240fe6drts 3 slots 64 intrs 4
+ USB-PD: src-ca080191f4
+  3.6A
+  3.63 Volta63 USB-PD: src-cap PDO object2 .63 Current 5000tage 9000 mV
+  c-cap PDO objec 3.64 Current 3oltage 12000 mV src-cap PDO ob
+  3.65 Curren5 Voltage 15000PD: src-cap PDO object5 0x00064rent 2250 mA
+  000 mV
+D_OC: 0
+  3.09   4.000000 CTL0: 0x00000 Hz actual: 512 (256) statulay: 276
+  00000000 CTL0: 0x00800f00 BUS: 400000 Hz actual: 390625 HZ div: 512 (256) status: 0x1fff0000 delay: 276
+8000 [281]
+CID:3247802e4538240132db790000edc87.43 SD: bus-widR: 0x02358447 0  4.44 SD H BUS: 50000000 000 HZ div: 4 (f0000 delay: 20000001,623339500000,       0 t45 MBR: 0x000000e: 0x00
+  4.45 ,       0 type:  0
+  4.46 GPT 79f8c1c0379f6523b723ff num-partitsize 128 pentry 47 GPT partition6b72699c7 00000
+  4.48 Matchedpart-idx 0 want partition 0
+  4.88 type: 32 lb ' clusters 129rsc 32 fat-sectr cluster 2 sec
+  4.50 FAT32 
+  4.05 Read autoboot.txt bytesx3
+  4.08 TRYB4.51 Select parboot_partition) 0 result 2
+  ition: 2
+  4.50ac6529f8c1c0371 003b723ff numentry-size 128 rtition: 0 ebd07c0-68b6b72699c0207ff
+  4.53 table-part-idx  1
+  4.54 GPT 0a0a2-b9e5-4433-87c0-68b6b72699001207ff
+  4.54ootable-part-idpe: 32 lba: 1331 PEDAL-BOOT ' cl8)
+  4.56 rsc 3024 root dir clu0 entries 0
+  4ers 130812
+  4.txt bytes      file.txt bytes  30d
+  4.78 Readtes      128 hnd 0x430e
+  4.58om.upd not founx_current_enablcurrent 5000
+m2712-rpi-5-b.d55 hnd 0x1910d
+: compatible: rael-b match: brcm,bcm2712
+  4.6atible: brcm,bcm2712 match: brcm,bcm2712
+ESS:00:00:04.62art logging
+    845 hnd 0x430c
+  4.31 Read /profile.txt bytes      128 hnd Read /tryboot.tx:04.640408:0: bo04171 otp a04171config.txt bytesx430c
+  4.50 Re bytes      128.55 Read /trybo  128 hnd 0x430S:00:00:04.6621ltage 800000 te  44.862559:0: avs66165:0: vpred 7 MESS:00:00:04 avs: 108300 del00)
+0:04.884418:0: wap 1
+0:00:04.899537:0: Select resolution HDMI0/2 hotplug 0 max_mod:00:00:04.90357de 2
+  4.91 Lo  7.11 Read b/initrd.im  7.32 MESS:0: initramfs (in to 0x2bdac000 
+  7.33 MESS:00: dtb_file 'bcmb'
+  7.33 Loadipi-5-b.dtb' to 0t 0x100
+47 Read b/bcm27ytes    78655 h  7.73 /overlay_map.dt1 hnd 0x19266
+ead /b/overlays/bcm2712d0.dtbo hnd 0x1918a
+  7.39 MESS:00:00aded overlay 'b  7 0 DET_WAKE 0
+ 7.42 Read /con   845 hnd 0x43/profile.txt by 0x430d
+  7.49xt bytes      1 7.45 MESS:00:0dtparam: watchdo  7.97 Runed.txt bytes 932a
+  7.49 ME28:0: Read command line from funed.txt':
+  77.507037:0: 'roet.ifnames=0 co15200 console=txrtc cfg80211.ieGB rd.shell=0 rdrd.timeout=90 pa=managed_irq,dom  7.62 MES9:0: RPM 0, max  7.64 ME104:0: Enabling 
+  7.65 BMD "arm not found
+  7.armstub8-2712.biding 'b/vmlinuz' to 0x00000000 
+8.74 Read b/vmli9.50 MESS:00:00:d to 0x2bd98400 
+  9.50 PCI1 res  9.52   9.53 set_reboo53 set_reboot_aB-OTG disconnec  9.57 72406:0: Startin  9.5577927:0: 00000
+  9.57 MESS:0: 00000030: ->  MESS:00:00:09.34: -> 00100080:00:09.589201:000100080
+  9.59593914:0: 000000
+
+NO.6(release):v2.
+NOTICE:  BL3113, Dec  4 2024[ oting Linux on p000000000 [0x414ersion 7.0.0-10e (buildd@bos03-arm64-107) (aargcc (Ubuntu 15.25.2.0, GNU ld (G Ubuntu) 2.46) #REEMPT_RT Fri Aug  7 17:41:11 U 7.0.0-1017.17-r.0.12)
+[    0.000000] KASLR en0000] random: crng init done
+achine model: Raspberry Pi 5 Model B Rev 1.1
+alformed early     0.000000] efi: UEFI not found.
+[    0.000emory: created CMA memory pool at 0x000000003bcMiB
+[    0.0000d mem: initializma, compatible i mem: 0x0000000000003fbfffff (65536 KiB) map rma
+[    0.00000 mem: 0x00000000000000007ffff (on-reusable atf3fd23440..0x000 KiB) nomap non0x0000000000000000-0x000000003f.000000] NODE_DA [mem 0x3b9acc00    0.000000] p from DT.
+[    
+[    0.000000] psci: Using st[    0.000000] FO_TYPE not sup000000] psci: Sntion v1.2
+[   ranges:
+[    0000000000000-0f]
+[    0.0000mpty
+[    0.00 empty
+[    0.zone start for 0.000000] Earlynges
+[    0.000: [mem 0x0000000000000007ffff]
+[    0.000000]  0x000000000008fbfffff]
+[    m setup node 0 0003fbfffff]
+[MA: 1024 pages in unavailable r0000] percpu: Embedded 56 pages192 d115152 u229000] Detected PPU0
+[    0.000s: detected: Vit Extensions
+[U features: detv4
+[    0.00000: detected: Spec.000000] CPU feaage table isolaty KASLR
+[    0.tures: detectedble isolation (0000] CPU featuSBS not fully sg
+[    0.00000 applying boot    0.000000] Kernel command lierent_pool=1M 8ci=pcie_bus_safterleave nvme.m_mb=0 bcm2708_fm2708_fb.fbheight=480 bcm2708_fm2708_fb.fbswap=1 numa=fake=4 system_heap.max_a_numa_policy=ixx.macaddr=98:F_mem.mem_base=0.mem_size=0x400ames=0 console=tconsole=tty1 roo1_regdom=GB rd.ency=reboot rd.out=90 panic=10d_irq,domain,2-3 nohz_full=2-3 rqaffinity=0-1 soot.root=pedal vipboot.profile=t0000] mempolicyn to 'interleave:0'
+[    0.000UMA default polo 'interleave:0'
+[    0.000000l command line ssed to user spa000] printk: logmeta data: 131078128 bytes
+[   ry cache hash t1072 (order: 8,linear)
+[    0ache hash table(order: 7, 5242)
+[    0.00000 
+[    0.00000ists, mobility tal pages: 26110] Policy zone:000] mem auto-iero), heap alloe:off
+[    0.00lign=64, Order=00, CPUs=4, Nodesges
+[    0.0000ocated 202 pages
+[    0.000000] emptible hierarchical RCU implementation.
+[    0.000000] rcu: 	RCU restricting CPUs from NR_	RCU priority boy 1 delay 500 ms.
+[    0.00000FTIRQ processing moved to rcuc kthreads.
+[    0.000000] 	No eeriod (rcu_norm
+[    0.000000]riant of Tasks R   0.000000] 	Ru.
+[    0.00000ant of Tasks RCU enabled.
+[   RCU calculatedler-enlistment fies.
+[    0.0eaf=16, nr_cpu_ids=4
+[    0.00: Setting shift 1 rcu_task_cb_k_cpu_ids=4.
+[etting shift to rcu_task_cb_adjupu_ids=4.
+[    0.000000] NR_IRQS: 64, nr_irqsed irqs: 0
+[   IRQ handler: gic_handle_irq
+[EOI/Deactivate 0000] NO_HZ: Ful: 2-3.
+[    0.0fload RCU callba2-3.
+[    0.000000] rcu: srcu_cu_struct sizestion.
+[    0.0er: cp15 timer r  0.000000] cloys_counter: masfff max_cycles:x_idle_ns: 4407  0.000000] scholution 18ns, w46511102ns
+[  ole: colour dummy device 80x25 printk: legacy console [tty1] .000191] Calibrating delay loope calculated usency.. 108.00 BogoMIPS (lpj=540fault: 32768 min 0.000342] landlock: Up and run00343] Yama: bec
+[    0.000470] AppArmor: AppAr
+[    0.000472]mor secmark mediation reserved:abled
+[    0.000579] Mount-cache hash table eder: 2, 16384 b    0.000583] Ms, linear)
+[    0.000759] VFS: Finished mounting rootfs on nu1592] rcu: Hieraplementation.
+[es is 400.
+[    0.001896] Timeierarchy levels  0.002501] EFI services will not be available.002862] Detected PIPT I-cache on CPU1
+[    0.002914] CPU1: Booted secondary processor 0x0000000100 [0x414fd0b1]
+[    0.003256] Detected PIPT I-cache on CPU2
+[    0.003301] CPU2: Booted secondary processor 0x0000000200 [0x414fd0b1]
+[    0.003623] Detected PIPT I-cache on CPU3
+[    0.003658] CPU3: Booted sor 0x0000000300 [0x414fd0b1]
+[    0.003691]  1 node, 4 CPUs
+[    0.003696].003701] CPU features: detected: 32-bit EL0 Support
+[    0.003703] CPU features: detected: D to the PoU not 07] CPU features: detected: Daire (LDAPR)
+[  ted: LSE atomic[    0.003712] Ced Access Never CPU features: detected: PMUv3
+[    0.003714] CPU features: tension Support
+[    0.003716]detected: XNX
+[ected: Speculatsing Safe (SSBS)] alternatives: es
+[    0.0056: detected: Harmanagement on C55588K/1044480K available (18240K kernel code, 3142K rwdata, 11828K rodata, 8bss, 115596K reserved, 65536K cma-reserved)
+[255] Enabled cp15_barrier supp  0.009398] clos: mask: 0xffff60446275000 ns posixtimers has: 2048 (order: 5009466] futex hs: 1024 (65536 bytes on 1 NUMA nodes, total 64
+[    0.009940] n forced by RANDGION_FULL
+[    es in range for [    0.009945] 513744 pages in sage
+[    0.010esent or invalid0] NET: RegisterF_ROUTE protocol.011371] DMA: preallocated 1024 KiB GFP_KERNEL|GFP_DMA pool for atomic alloca1403] audit: initializing netlink subsys (disabled)
+[    0.01pe=2000 audit(0.009:1): state=it_enabled=0 res=1
+[    0.011791] thermal_sys: ir_share'
+[    0.011794] thermred thermal gove'
+[    0.01179ep_wise'
+[    l_sys: Registered thermal governor 'user_space'
+[    0.01181er
+[    0.011821] cpuidle: usi] hw-breakpoint:oint and 4 watchpoint registers3] Serial: AMBA PL011 UART driver
+[    0.012827] /soc@107c000000/interrupt-controller@7fff900000/interrupt-controller@7fff914] bcm2835-mbonabled
+[    0.000.serial: ttyAM07d001000 (irq = 16, base_baud  rev3
+[    0.01onsole [ttyAMA10errypi-firmwarefirmware: Attacfrom 2026-05-11nt start_cd
+[    0.019888] rare soc@107c0000mware hash is 66f33f7e00000000000000000000000000000000
+[    0.044891] HugeTLB: registered 1.00 GiB page size, pre-allocated 0 pages
+[    0.044895] HugeTLB: 0 KiB vmemmap can be freed for a 1.00 GiB page
+[    1.43mstb 1001100000.mmc: error -EINVAL: invalid res[    3.678159] bcm2708_fb soc@107c0000 determine numbling driver.
+9] bcm2708_fb s: probe with dror -2
+OF: overlay: WARNING: memo will occur if o property: /axi/pcie@1000120000/rp1/i2s@a4000/s61018] OF: overlmory leak will  removed, prope000120000/rp1/is-cells
+[    5.161023] OF: ovl occur if overl161026] OF: overemory leak will y removed, prop1000120000/rp1/i2c@74000/status] OF: overlay: Wleak will occur ved, property: /sound/compatible
+[    5.161269] OF: overlay: leak will occurved, property: /soc@107c000000/dio-card,format OF: overlay: Weak will occur ed, property: /ound/simple-audING: memory leakoverlay removed,@107c000000/sound/simple-audio-ster
+[    5.161275] OF: overlaty: /soc@107c000e-audio-card,frame-master
+[   : memory leak will occur if oveoperty: /soc@10simple-audio-car 5.161279] OF: o: memory leak will occur if oveoperty: /soc@10d,routing
+[   : memory leak wirlay removed, property: /soc@10tatus
+0m[?7h[1G[0J6H[6n[!p[1G[0J[6n[3]39066124c8ab3adcc160bc70ebc;uservip;machineid=729d48f5fcb44a91a;bootid=245a5a3db51c67152;pid=461;pidfdid=4368;rvicename=seriationid=cc997872441f47a98515f3cee858f71b;type=se6D65\login: 0m[?7h[1G[0J6H[6n[   3: Restarting sy
+  1.06 RPase VERSION:66f3/05/11 TIME: 12:FG_VER: 1
+  1.0MESTAMP=1778498e1d boardrev a0
+  1.08 AON_RE_RSTS 00000020F_ON_HALT: 0 WATON 0 power-on-EEPROM ID 0xef4015
+  1.09 SFD5
+  1ip ID: 0x2000192  1.10 PCWAKE 0
+  1.10 set_info 000000reset-event 00000000 rtc 6abd2500 enabled 0
+  e 3.3V
+SDRAM_CONFIG: 07lising SDRAM ran 8Gbit 0 part: 0 1.12 memsys_ini0x80015ff0: 705667 Mbps dual-ra size-gbit:8 pa1 FW: load 0
+1.62 RP1_BOOT ch27
+  2.37 
+  2.78 OTP boardrev a04171 bootrom a a
+  2.78 Customer key00000000000000000000000000000000000000
+  2.79ed
+  2.81 RP1x20001927
+  3.3.46 PCI2 reset 3.51 PCIe scan HIP_INFO 200019: BOOTLOADER ref33f7e DATE: 20 MFG_VER: 1
+  3.52 BOOTMODE: 0 build-ts BUILD_a04171 stc 35247  3.53 SFDP v1.5 Param v1.5
+  R 0 DET_WAKE 0
+ HAT not detecteinit status 3
+ NFIG 0 43
+OP
+  3.56 xHC03000440 140000fff000a HCC:  USBSTS 1
+  3. HCS: 03000440 0a HCC: 0240fe6d
+  3.57 xHC0 pintrs 4
+58 XHCI-STOP
+  0 140000f1 07ff6d
+  3.59 USBS1 ver: 272 HCS:f1 07ff000a HCC60 xHC1 ports 3 4
+  3.60 USB- object1 0x08019rent 5000 mA
+  00 mV
+  3.61 USB-PD: src-cap P2d1f4
+  3.61 C PDO object3 0x0003c177
+  3.62A
+  3.62 Voltage 12000 mV
+  3cap PDO object4.63 Current 300tage 15000 mV
+rc-cap PDO obje2250 mA
+  3.64 Voltage 20000 m0
+  3.91 Boot der f4
+ HOST: 20000000000 BUS: 400000 H5 HZ div: 512 (276
+  4.21 S00 CTL0: 0x0080025 HZ div: 512  276
+0 OCR c0ff8000 [5344534b33324780SD: 400e0032db79: bus-width: 4 2358447 0x00000 0x00800f04 BUS: ual: 50000000 HZtus: 0x1fff0000 3 MBR: 0x0000000: 0xee
+  4.43 MBR: 0x00000000,0x00
+  4.43 MBR     0 type: 0x00x00000000,     artition: 0
+  c150ac6529f8c1c0001 003b723ff 128 entry-size 128 pentry 2 fir partition: 0 e3-87c0-68b6b7260000207ff
+  4.bootable-part-iion 0
+  4.71 type: 32 lba: 2048 'mkfs.fat' ' BOOTSEL    ' cl)
+  4.47 rsc 309 root dir clu entries 0
+  4rs 129022
+  4.  65 hnd 0x3
+  tition rsts 0 C( 2 EEPROM config4.96 Trying par9 GPT 7f93b22c19f6523b 0000000-partitions 1280
+  4.50 GPT pa7c0-68b6b72699c7 000000800..000Matched GUID bo0 want partitiopartition: 1 eb9c7 000020800..02 Matched GUID bx 1 want partiti20 'mkfs.fat' 'usters 130812 (32 fat-sectors 1uster 2 sectors 4.54 FAT32 clust.51 Read config.845 hnd 0x430c
+file.txt bytes  30d
+  4.55 [sdcpd not found
+ rrent_enable deent 5000
+73 Read b/bcm2712-rpi-5-b.dtb bytes    78655 hn57 dt-match: comrrypi,5-model-b match: brcm,bcmmatch: compatib2 match: brcm,bc  4.60 MESS::0: *** Restart  Read /config.tx5 hnd 0x430c
+  4.06 Read /prof   128 hnd 0x43/tryboot.txt by 0x430e
+  4.61 MESS:00:00:04.6 boardrev a04171 otp a04171
+    845 hnd 0x430profile.txt byt0x430d
+  4..633142:0: Init00 temp 47722
+0:00:04.833513:0 pred 8683 8683 4.83 MESS:00:0pred 868 mV +000:04.841325:0:00 delta: 0 (0x0  4.85 MESffer_swap 1
+MESS:00:00:04.8resolution HDMIx_mode 2
+  4.8874535:0: SelecI1/2 hotplug 0 max_mode 2
+  4.nitrd.img' to 0x  7rd.img bytes 5272d
+ESS:00:00:07.297s (initrd.img) loaded to 0x2bda3529)
+  7.30 M2997:0: dtb_file-b.dtb'
+  7.30 Loading 'b/bcm2712-rpi-5-b.dtb'cm2712-rpi-5-b.dtb bytes    78
+lays/overlay_ma5971 hnd 0x1926  7.53 Read /b/overl63 hnd 0x1918a  7.36 MESS:00: Loaded overlay  7.40 PCIEx1: 0
+config.txt bytex430c
+  7.15 R bytes      128.41 MESS:00:00:07.419571:0: dtpon
+  7.63 Reaed.txt bytes   :00:00:07.466056d line from fileed.txt':
+  7.47473264:0: 'root=.ifnames=0 cons200 console=tty4 rootwait fixr80211_regdom=GBmergency=reboottimeout=90 paninaged_irq,domai  7.59 MESS:00: RPM 0, max R  7.61 MESS:0: Enabling ea7.61 BMD "armstub8-2712.bin" no fs_open: 'b/armng 'b/vmlinuz' tfset 0x200000
+40 Read b/vmlinu5 hnd 0x15027
+  9.9.471567:0: Devito 0x2bd98400 (s
+  _order 0
+  9.491 0
+  9.49 USB-
+SS:00:00:09.538 OS 9538 ms
+MESS:00:00:09.540: -> 00000480
+  9.54 MESS:00:00:09.546035:0: 00000030: -> 000748:0: 0000003  9.55 MESS:00:00000038: -> 00: -> 00100080
+
+NOTICE:  BL31: v2.6(release):v2.6-NOTICE:  BL31: , Dec  4 2024
+oting Linux on p000000000 [0x414000000] Linux version 7.0.0-101 (buildd@bos03-ch64-linux-gnu-g.2.0, GNU ld (GNU Binutils for Ubuntu) 2.46) #17-Ubuntu SMP PREEMPT_RT Fri AuC 2026 (Ubuntu 0.12)
+[    0.00000] random: crng init done
+[    0.000000] Maspberry Pi 5 Mod    0.000000] Mption 'numa'
+[i: UEFI not fou00] Reserved meA memory pool a0000, size 64 M00] OF: reserveded node linux,cmd shared-dma-poo0] OF: reserved 3bc00000..0x00005536 KiB) map r0] OF: reserved 00000000..0x000012 KiB) nomap non-reusable atf@] OF: reserved  KiB) nomap non-0
+[    0.000000x0000000000000000-0x000000003fbfffff]
+[    0.-0x3b9b123f]
+[ ci: probing for conduit method .000000] psci:  psci: Using sta function IDs
+[    0.000000] pC Calling Conve  0.000000] Zone0.000000]   DMA 0000000000000-0xf]
+[    0.00000mpty
+[    0.000000000] Movable each node
+[     memory node ranges
+[    0.000 [mem 0x000000000000007ffff]
+  node   0: [mem0000-0x0000000030.000000] Initme[mem 0x0000000000003fbfffff]
+[  node 0, zone DMn unavailable r0000] percpu: Embedded 56 pages/cpu s106032 r8376
+[    0.000PU0
+[    0.0000s: detected: Vit Extensions
+[U features: det4
+[    0.00000 detected: Spectures: kernel paion forced ON by000000] CPU feable isolation (KPTI)
+[    0.000000] CPU featur] alternatives:alternatives
+[ rnel command linerent_pool=1M 82ci=pcie_bus_safe numa_policy=inrleave nvme.max_b=0 bcm2708_fb.f708_fb.fbheight=fbdepth=16 bcm2numa=fake=4 syser=0 iommu_dma_rleave smsc95xx4:15:25:8B vc_mc00000 vc_mem.m00  root=LABEL=s=0 console=ttynsole=tty1 rootfwait fixrtc cfg8regdom=GB rd.shecy=reboot rd.rett=90 panic=10 isirq,domain,2-3 nffinity=0-1 skew_tick=1 vipbootboot.slot=b vipo 'interleave:0'
+[    0.00000072 (order: 8, 10near)
+[    0.000000] Inode-cache hash table entries: 65536 (order: 7, 524288 ts, mobility grouping on.  Total pages: 261120
+[    0.000000]off, heap free:o00] SLUB: HWalign=64, Order=0-3, MinObjects=0, 
+[    0.000000] ftrace: alloca] ftrace: allocaith 4 groups
+[ namic Preempt: l000] rcu: Preempcal RCU implemen.000000] rcu: 	RCU restricting CPUs from NR_CPUS=16 to nr_cpu_ids=4.
+[    0.000000] rcu: 	RCting: priority 1
+[    0.000000] ved to rcuc kth000000] 	No expeiod (rcu_normal_    0.000000] 	Trampoline variaenabled.
+[     variant of Task	Tracing variannabled.
+[    0lue of scheduler-enlistment delay is 100 jiffie00] rcu: Adjust rcu_fanout_leaf=16, nr_cpu_ids=4
+[    0.0000rcu_task_cb_adjust=1 rcu_task_cpu_ids=4.
+[   ing shift to 2 _task_cb_adjust4, preallocated RQ handler: gic_  0.000000] GIC:I/Deactivate mod0] NO_HZ: Full d-3.
+[    0.000000] rcu: 	Offlo from CPUs: 2-30] rcu: srcu_ini_struct sizes ba00] arch_timer:ing at 54.00MHz (phys).
+[    ource: arch_sysf max_cycles: 0xidle_ns: 44079520.000000] schedat 54MHz, resolution 18ns, wrap511102ns
+[    0.000143] Consoldevice 80x25
+[intk: legacy cobled
+[    0.00ng delay loop (scalculated usingy.. 108.00 BogoM
+[    0.000197]lt: 32768 minimu000349] landlocg.
+[    0.0003ng mindful.
+[ Armor: AppArmor   0.000478] Apr secmark mediation reserved: red
+[    0.000594] Mount-cache ies: 2048 (orders, linear)
+[   h table entries2, 16384 bytes, s
+[    0.001607] rcu: Hierarchmentation.
+[   is 400.
+[    0igration: 1 hie children per ge level
+[    0vices will not     0.002611] s secondary CPUs 892] Detected PIPT I-cache on C46] CPU1: Boote100 [0x414fd0b1]] Detected PIPT
+[    0.003317econdary processor 0x0000000200Detected PIPT I-PU3: Booted sec0x414fd0b1]
+[ : Brought up 1 P: Total of 4 prPU(s) started at EL2
+[    0.003723] CPU features: detected: 3rt
+[    0.00372: detected: Data the PoU not reoherence
+[    d: Common not Pr27] CPU feature32 instructions] CPU features: cache clean to Pence
+[    0.003es: detected: RC (LDAPR)
+[    0.003732] CPU fed: LSE atomic in  0.003733] CPU Access Never
+[ected: PMUv3
+[ U features: detsion Support
+[U features: deted: Speculative    0.003788] alying system-wi
+[    0.005698]etected: Hardwa-3
+[    0.0057976K/1044480K available (18240K 8K rodata, 8000K init, 755K bssved, 65536K cma- 0.006058] devtmd
+[    0.009340barrier support
+[    0.009347] Enabled setend support
+[    0ource: jiffies: f max_cycles: 0xdle_ns: 19112604sixtimers hash t048 (order: 5, 81920 bytes, lin table entries: es on 1 NUMA nodB, linear).
+[ module region fZE_MODULE_REGIO10026] 0 pages -PLT usage
+[  744 pages in rane
+[    0.010372nt or invalid.
+[    0.011109] PF_NETLINK/PF_Rmily
+[    0.01llocated 1024 KiP_DMA pool for ans
+[    0.011542] audit: initisubsys (disable54] audit: type=9:1): state=initnabled=0 res=1
+thermal_sys: Reg governor 'fair__sys: Registeredistered thermal governor 'step_11910] thermal_thermal governo[    0.011939] overnor laddercpuidle: using governor menu
+w-breakpoint: fint registers.
+ASID allocator i 32768 entries
+Serial: AMBA PL /soc@107c000000/interrupt-cont Fixed dependen /soc@107c00000roller@7fff9000 bcm2835-mbox 1ox: mailbox enab443] 107d001000.0 at MMIO 0x107d6, base_baud = 0v3
+[    0.01350ole [ttyAMA10] rypi-firmware so to firmware fr start_cd
+[   errypi-firmwarefirmware: Firmw3f7e0000000000000000
+[    0.0 registered 1.00 pre-allocated 0044779] HugeTLB:r a 1.00 GiB pag1] HugeTLB: regi page size, pre-82] HugeTLB: 0 KiB vmemmap can 2.0 MiB page
+[    0.044783] Hued 2.00 MiB pagecated 0 pages
+ugeTLB: 0 KiB veed for a 2.00 .044785] HugeTL.0 KiB page siz 0 pages
+ 1.488960] sdhci-brcmstb 10011 -EINVAL: invalid resource (nul[    4.617302]107c000000:fb: ine number of Fiver.
+7136] bcm2708_fb:fb: probe with fb failed with [    lay removed, proe@1000120000/rp1us
+[    6.1487 WARNING: memorr if overlay re /axi/pcie@10004000/#address-c8781] OF: overlaory leak will occur if overlay removed, propert00120000/rp1/i2clls
+[    6.148784] OF: overlayry leak will occemoved, property leak will occur if overlay rem /soc@107c000000le
+[    6.1487 WARNING: memorr if overlay re /soc@107c000000/sound/simple-at
+[    6.14879WARNING: memory if overlay removed, property: /sound/simple-au[    6.148801] ONING: memory lea overlay removec@107c000000/sound/simple-audio48803] OF: overmory leak will  removed, prope0000/sound/simpame-master
+[   overlay: WARNINwill occur if ovproperty: /soc@1/simple-audio-ca overlay: WARNINwill occur if ovproperty: /soc@1/simple-audio-ca  6.148809] OF: G: memory leak erlay removed, 07c000000/sound[!p[1G[0J[6n[32766;32766H[6n04\[0m[?7h[6;32766H[6na64166991;user=rp;machineid=729dotid=b86941978391465388b59f31c4pidfdid=187;commcename=serial-grvice;invocatio466f80e041ff7c3ce\P+q6E616D6
+TS vip ttyAMA10[!p]104[0J[6n[32766;3 reboot: Restar
+SYS release VERATE: 2026/05/11 
+  1.07 MFG_VER:MODE: 0x06 partition 0 build-ts BUILD_TIMESTAMPrdrev a04171 st000003 PM_RSTS 0 POWER_OFF_ON_HPOWER_BUTTON 0 
+  1.09 EEPROM ID 0xef4015
+  _BOOT chip ID:  WR 0 DET_WAKE 0000000 reset_inf.11 PMIC reset-etc 6abd2558 alaled 0
+  1.12 uSD voltage 3.3V  1.12 SDRAM_C2 Initialising al-size: 8Gbit 0 part: 0 (0x07ff0: 7056
+  1. dual-rank:0 byte-mode:0 size-gig:0
+    1.63 RP1_B20001927
+39 RP1 FW: load boardrev a0417 2.80 Customer 000000000000000000000000000000ocked
+: 0x20001927
+ 3.46 PCI2 init  3.53 PCIe scan 00001de4:00000001
+  3.53 RP1_CHIP_INFO 200RPi: BOOTLOADER:66f33f7e DATE:.54 MFG_VER: 1
+: 0x06 partitionLD_TIMESTAMP=177ev a04171 stc 35v1.5 Param v1.5
+  3.55 PCIEx1: PWR 0 DET_WAKE CIe HAT not deteHC0 ver: 272 HCS00f1 07ff000a HCC: 0240fe6d
+   3.59 xHC0 ver:f000a HCC: 0240f0 ports 3 slots 64 intrs 4
+ 3.60 XHCI-STOPr: 272 HCS: 03000440 140000f1 00fe6d
+  3.61 U xHC1 ver: 272 HCS: 03000440 14HCC: 0240fe6d
+  3.62 xHC1 porttrs 4
+  3.62 USB-PD: src-cap 0191f4
+  3.63 
+  3.63 Voltage 5000 mV
+  3.63 USB-PD: src-cap PDO object2 0x0002d1f4
+  3.63 Current 5000 cap PDO object3.64 Current 3750 mA
+  3.64 Voltage 12000 mV
+  3.65 USB-PD: src-cap PDO object4 0x0004b12c
+  3.65 Current 3000 mA
+  3.65D: src-cap PDO oe1
+  3.66 Curre.66 Voltage 20000 mV
+0
+  3.11 Boot der f4
+ CTL0: 0x008000z actual: 39062fff0000 delay: 200 CTL0: 0x00800f00 BUS: 400000 Hz actual: 390625 HZ div: 512 (256) status: 0x1fff0000 delay:  4.42 OCR 
+CID: 00035344534b333247802e4530e0032db790000e
+  4.43 SD: bus2 SCR: 0x023584  4.43 000 CTL0: 0x00800000000 HZ div:x1fff0000 delay: 0x00000001,623e
+  4.45 MBR: 0  0 type: 0x00
+0000000,       04.45 MBR: 0x00002 Trying partition: 0
+  4.46 GPT 7f93b22c150aartitions 128 enntry 2 first 0
+  4.47 GPT partition: 0 ebd0a0a2-b9e5-4433-87c00000800..00002ched GUID bootaant partition 0
+  4.87 type: 32 lba: 2048 'mkfs.fat' ' BOOTS 129022 (1)
+  4.49 rsc 32 fat-ot dir cluster 2Select partitionpartition) 2 EEPsult 2
+  4.13 : 2
+  4.51 GPT 7f93b22c150ac6529f8c1c0379f652b723ff num-partitions 128 entryy 2 first 0
+  4.52 GPT partition: 0 ebd0a0a2-b8b6b72699c7 0000f
+  4.53 Matched GUID bootable-part-idx 0 wantion: 1 ebd0a0a2-b9e5-4433-87c0-68b6b72699c7 007ff
+  4.54 Matched GUID bootabnt partition 1
+  4.50 type: 32 lba: 133120 'mkfs.fat' ' PEDAL-BOOT ' clusters 130812 (8)
+ ries 0
+  4.56 F30812
+  4.68 Rext bytes      1 4.57 [sdcard] pieeprom.upd not found
+  4.78 _enable default 000
+  4.90 Read b/bcm2712-rpi-5-b.dtb bytes    78655 hnd 0x1910d
+  4.59 dt-5-model-b match  4.59 dt-match: compatible: brcm,bcm2712 match: brcm,bcm2712
+:04.616532:0: **0x430c
+  4.23 oot.txt bytes   0e
+  4.63 MESS: bytes      845 hnd 0x430c
+  4  128 hnd 0x430S:00:00:04.6496  404.850000:0: avs 8683 868300 tem MESS:00:00:04.853607:0: vpred  avs: 108300 del00)
+00:04.871875:0: swap 1
+0: Select resole 2
+  4.89 MESS:00:00:04.89102lution HDMI1/2 ode 2
+  4.89 Lo.img' to 0x00000
+ead b/initrd.img bytes 52770089  7.31 MESS:0itrd.img) loade(size 0x32535290:00:07.319550:0: dtb_file 'bcm2712-rpi-5-b.dtb'
+  7.32 Loadpi-5-b.dtb' to t 0x100
+35 Read b/bcm27nd 0x1910d
+  7.60 Read /b/overlays/ bytes     5971   7.69 Recm2712d0.dtbo bd 0x1918a
+  7.0 DET_WAKE 0
+7.29 Read /confi  845 hnd 0x430profile.txt bytes      128 hnd MESS:00:00:07.43  7.80 Read /b/t bytes      33  7.48 MESS:00:00:07.482603:0: e from file 'b/t':
+  7.48 MES1:0: 'root=LABEmes=0 console=tonsole=tty1 rootfstype=ext4 roog80211.ieee80211hell=0 rd.emergetry=60 rd.timeisolcpus=manage 
+7.61 MESS:00:00:07.610864:0: RP
+  7.62 MESS:00:00:07.629879:0: atchdog
+  7.63712.bin" not found
+  7.35 fs_o8-2712.bin' 
+  /vmlinuz' to 0x00x200000
+65:0: Device trbd98400 (size 0x13b26)
+  9.49 set
+set_reboot_orderreboot_arg1 0
+  9.51 USB-OTG disconnect
+  9.55 MESS:00: Starting OS 95  9.56 MESS:00: 00000040: ->6 MESS:00:00:090:00:09.567245:0: 00000034: -> 571958:0: 00000038: -> 00100080
+  9.57 MESS:0: 0000003c: -> NOTICE:  ase):v2.6-240-gfc45bc492
+NOTIC[    0.0000x on physical C[0x414fd0b1]
+inux version 7.0.0-1017-raspi-rx-gnu-gcc (Ubuntu 15.2.0-16ubunU ld (GNU Binutils for Ubuntu)  SMP PREEMPT_RT Fri Aug  7 17:41:11 UTC 2026 (7.17-raspi-real   0.000000] random: crng init 000] Machine moi 5 Model B Rev0000] Malformed uma'
+[    0.000000] efi: UEFI  0.000000] Reseated CMA memoryze 64 MiB
+[   itialized node linux,cma, compadma-pool
+[    00000003bc00000.ffff (65536 KiB)inux,cma
+[    served mem: 0x0.0x000000000007omap non-reusab   0.000000] OF: reserved mem: 440..0x000000003 nomap non-reusa   0.000000] NUe at [mem 0x0000000000000000-0x000000003fbfffff]
+[    0.000000] NODE_DATA(0) allocated [mem 9b123f]
+[    0.000000] psci: puit method from 000] psci: PSCIv firmware.
+[   d PSCI v0.2 func0.000000] psci: PE not supported0] psci: SMC Cal v1.2
+[    0.00es:
+[    0.000[mem 0x0000000000000000-0x000
+[    0.000000] ]   Normal   em00] Movable zon node
+[    0.0mory node rangesem 0x000000000000007ffff]
+[    0.000000]   no0000000000080000-0x000000003fbf0000] Initmem sm 0x0000000000003fbfffff]
+[    de 0, zone DMA: navailable range0] percpu: Embedu s106032 r8192 
+[    0.000000I-cache on CPU0lization Host Extensions
+[    0.000000] CPU f-BHB
+[    0.000table isolation forced ON by KASLR
+[    0.000000] CPU feature detected: SSBSsynchronizing
+[    0.000000] alternatives: appcie_bus_safe nu=0 bcm2708_fb.fbbdepth=16 bcm2708_fb.fbswap=1 numa=fake=4 system_heap.max_order=0 iommu_dma_num.mem_base=0x3fc00000 vc_mem.mem_size=0x40000000  root=LABEL=pedal net.ifnames=0 console=ttyAMA10,115200 console=tty1 rootfsit fixrtc cfg80211.ieee80211_re=reboot rd.retr=90 panic=10 isorq,domain,2-3 no_nocbs=2-3 irqaf_tick=1 vipboot.oot.slot=b vipbo0] mempolicy: NUMA default policy overridden to 'interleave:0'
+[    0.000000] DMA IOMMU NUMAoverridden to '    0.000000] Unknown kernel cometers "fixrtc", will be passed to user space.
+[    0.000000] printk: log buffer data + meta 557056 = 688128000000] Dentry cache hash table entries: 131072 (order: 8, 1048576 bytes, linries: 65536 (order: 7, 524288 b[    0.000000] Fallback order for Node 0: 0 
+[    0.000000] Bping on.  Total pages: 261120
+[    0.000000] Policy zone: DMA: stack:all(zeroff, heap free:of0] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=4, Nodes=1
+[    0.000000] ftrace: allocating 51432 entries in 202 pages
+[    0.000000] ftrace: allocated 202 pages with 4 groups
+[    0.000000] Dynzy
+[    0.000000] rcu: Preemptible hierarchical RCU implementation.
+[    0.000000] rcu: 	RPUs from NR_CPUS=16 to nr_cpu_ids=4.
+[    0.000000] rcu: 	RCU priority boosting: priority 1 delay 500 ms.
+[    0.000000] rcu: 	RCU_SOFTIRQ processing moved to rcuc kthreads.
+[    0.000000] 	No expedited grace period (rcu_normal_after_boot).
+[    0.000000] 	Trampoline variant of Tasks RCU enabled.] 	Rude variant abled.
+[    0. variant of Tas
+[    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 100 jiffies.
+[    0.000000] rcu: Adjusting geometry for rcu_fan_cpu_ids=4
+[    0.000000] RCU Tasks: Setting shift to 2 and lim to 1 rcu_task.
+[    0.00000e: Setting shift to 2 and lim _adjust=1 rcu_task_cpu_ids=4.
+[    0.000000] [    0.000000] Root IRQ handler: gic_handle_irq
+[    0.000000] GIC: Usircu: 	Offload RCU callbacks frou: srcu_init: Sct sizes based on contention.
+[    0.000000] arch_timer: cp15 timer running at 54.00MHz (phys).
+[    0.000000] clocksource: arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0xc743ce346, max_idle_ce 80x25
+[    0.000149] printk
+[    0.000188lay loop (skipp08.00 BogoMIPS (lpj=54000)
+[    0.000193] pid32768 minimum: 3 and running.
+[    0.000347] Y.000480] AppArmor: AppArmor initialized
+[    0.000482] AppArmor: AppArmor secreserved: ready [    0.000589] M table entries:nt-cache hash table entries: 20384 bytes, linefs on nullfs
+[    0.001610] rcu: Hierarchical SRCU implement instances is 4ldren per group;vel
+[    0.002s will not be andary CPUs ...
+[    0.002885]ache on CPU2
+[    0.003328] CPU2: Booted secondary processor 0x0000000200 [0x414fd0b1]
+[    0.003646] Detected PIPT I-cache on CPU3
+[    0.003680] CPU3: Booted secondary processor 0x0000000300 [0x414fd0b1]
+[    0.003713] smp: Brought up 1 node, 4 CPUs
+[    0.003717] SMP: Total of 4 processors activated.
+[    0.003718] CPU: All CPU(s) started at EL2
+[    0.003720] CPU features: detected: 32-bit EL0 S003722] CPU features: detected: Data cache cle    0.003725] Cected: Common nlations
+[    0.003726] CPU fea: CRC32 instrucata cache clean to Point of Persistence
+[    0.003730] CPU features: detected: RCpc load-acquire (LDAPR)
+[    0.003731] Cected: LSE atom
+[    0.003732]etected: Privilr
+[    0.00373: detected: PMUv4] CPU features:Extension Suppor6] CPU features:
+[    0.003737]etected: Speculssing Safe (SSB6] alternativesm-wide alternat5695] CPU featurt management on005790] Memory:K available (18 11828K rodata, reserved, 65536K
+[    0.006046] alized
+[    0.0cp15_barrier sup9350] Enabled se    0.009469] cies: mask: 0xffffffff max_cyclemax_idle_ns: 1911260446275000 ns
+[    0.009497] posixtimers hes: 2048 (order: 5, 81920 bytes0.009559] futex6 bytes on 1 NU.
+[    0.010022ion forced by RA] 513744 pages in range for PLT usage
+[    0.0present or invalid.
+[    0.011045] NET: Regist/PF_ROUTE protocol family
+[    0.011448] DMA:initializing netsabled)
+[    0.011597] audit: type=2000 audit(0.009:1): state=initialized audit_enabled=0 re840] thermal_sys: Registered thfair_share'
+[    0.011843] thevernor 'bang_baermal governor '  0.011845] thermal_sys: Regist865] cpuidle: using governor ladder
+[    0.011sing governor me03] hw-breakpoinrs.
+[    0.0120tor initialised with 32768 entrA PL011 UART driver
+[    0.012867] /soc@107c000000/interrupt- with /soc@107c0f9000
+[    0.013169] bcm2835-mailbox: mailbox enabled
+[    0.013346] 107d001000.serial: ttyAMA10 at MMIO 01 rev3
+[    0. console [ttyAMA10] enabled
+[ pberrypi-firmwaached to firmware from 2026-05-11T11:20:02, va[    0.019834] raspberrypi-firmware soc@107c000000:firmware: Firmware hash is000000000000000 1.00 GiB page seTLB: 0 KiB vmemd for a 1.00 GiB44780] HugeTLB: registered 32.0 MiB page size, pre-allocated 0 pages
+[    0.044781] HugeTLB: 0 KiB vmemmap  a 32.0 MiB pag] HugeTLB: registered 2.00 MiB page size, pre-es
+[    0.044783] HugeTLB: 0 K   0.044784] Hu[dhci-brcmstb 100ror -EINVAL: inv[    0000:fb: Unablember of FBs. Di
+[    4.546114]@107c000000:fb: er bcm2708_fb fa -2
+498] OF: overlay: WARNING: memoemoved, property: /axi/pcie@100@a4000/status
+F: overlay: WARk will occur if, property: /ax
+[    5.571544] OF: overlay: Weak will occur ed, property: /000/rp1/i2c@74000/#size-cellsOF: overlay: WAak will occur if overlay removexi/pcie@100012000/status
+[    5.571575] OF: overlay: WARNING: memory leak will occur if overperty: /soc@107verlay: WARNING:ll occur if overoperty: /soc@107imple-audio-card,format
+[    5erlay: WARNING: ay removed, pro000000/sound/siname
+[    5.571582] OF: overlory leak will oremoved, proper000/sound/simplclock-master
+[    5.571584] OING: memory lea@107c000000/sound/simple-audio-er
+[    5.5715 WARNING: memorr if overlay re /soc@107c000000/sound/simple-ats
+[    5.571588] OF: overlay: leak will occu /soc@107c00000udio-card,routi0] OF: overlay: WARNING: memoryr if overlay removed, property:0/sound/status
+[?7h[1G[0J[6[6n[1G[0J[6n[3]354fb1d4bf19ed16=root;hostname=9d48f5fcb44a91a2;pidfdid=4455;rvicename=seria.service;invocabb942d1be5f19c2rvice\P+q6E61
+Ubunvip login: [!p]104\[0mn[32766;32766H[  246.3Restarting system
+
+  1.07 R33f7e DATE: 202:20:02
+  1.07 MFG_VER: 1
+  1.06 partition 0 bIMESTAMP=17784982e1d boardrev a05
+  1.09 AON_REM_RSTS 00000020FF_ON_HALT: 0 W-reset 0
+  1.104015
+  1.10 SFD.5
+  1.11 RP1_BOOT ch  1.11 PC_WAKE 0
+  1.11  reset-event 00658 alarm 00000 1.12 uSD volta  1.13 lising SDRAM ra0 (0x07 0x07)
+it: 0 8Gbit MCB 0x80015ff0: 7056
+  1.14 DDR 4nk:0 byte-mode:rt-config:0
+  1.62 RP1  1.63 RP1_BOOT chip ID: 0x20001927  2.40 RP1 FW  200000000000000000
+  2.81 VC-JTAG unlocked
+ 2.83 RP1_BOOT 927
+2 init
+  3.49   3.53 de4:00000001
+  TLOADER release VERSION:66f33f711 TIME: 12:20:02
+  3.54 MFG_VOOTMODE: 0x06 p-ts BUILD_TIMES boardrev a04171 3.55 EEPROM ID 6 SFDP v1.5 ParaPCIEx1: PWR 0 DEot detected.
+57 usb_pd_init s USB_PD CONFIG 0  3.58 XHCI-STOP
+  3.58 xHC0 ver: 40 140000f1 07000a HCC: 0240feTS 1
+  3.59 xH0f1 07ff000a HCC slots 64 intrs  3.61 XHCxHC1 ver: 272 HC000f1 07ff000a H 3.61 USBSTS 1
+: 272 HCS: 03000ff000a HCC: 024C1 ports 3 slot t1 0x080191f4
+000 mA
+  3.63 
+  3.63 USB-PD:ect2 0x0002d1f4 5000 mA
+  3.6mV
+  3.64 USB-Pobject3 0x0003c1ent 3750 mA
+  300 mV
+  3.65 USB-PD: src-cap P4b12c
+  3.65 C  3.66 Voltage  USB-PD: src-cax000640e1
+  3.6mA
+  3.66 Volta  3.71 SD_ot mode: SD (01  4.23000 CTL0: 0x0080 Hz actual: 392 (256) status: y: 276
+  4.00000 CTL0: 0x0000 Hz actual: 12 (256) statusay: 276
+ 4.42 OCR c0ff800035344534b3334
+CSD: 400e0032db790000edc87f843 SD: bus-width: 4 spec: 2 SCR0000000
+ST: 200000000 CTBUS: 50000000 Hz00 HZ div: 4 (2)0000 delay: 2
+ type: 0xee
+  4000,       0 ty MBR: 0x0000000 0x00
+  4.46 Mx00
+  4.67 Try
+  4.47 GPT 7f8c1c0379f6523b ons 128 entry-si first 0
+  4.48 0 ebd0a0a2-b9e5-4433-87c0-68b6800..0000207ff
+GUID bootable-paartition 0
+  4.' ' BOOTSEL    ' clusters 12902sc 32 fat-sector cluster 2 sectors 0 entries 0usters 129022
+oboot.txt bytes 3
+  4.51 Select 0 C(boot_partition) 2 EEPROM c
+  4.19 Trying 4.52 GPT 7f93bc0379f6523b 000 num-partitions 128 pentry 2 fiPT partition: 0 ebd0a0a2-b9e5-4699c7 000000800D bootable-part-GPT partition: 4433-87c0-68b6b72699c7 0000208UID bootable-parrtition 1
+  4.5 133120 'mkfs.fat' ' PEDAL-BOOT12 (8)
+  4.56 rsc 32 fat-sectors 1024 root diors 0 entries 0
+  4.56 FAT32 clusters 130812nfig.txt bytes      845 hnd 0x430c
+  4.76 Readtes      128 hnd [sdcard] pieeprom.upd not founx_current_enablcurrent 5000
+m2712-rpi-5-b.d55 hnd 0x1910d
+: compatible: ra,bcm2712
+  4.6atible: brcm,bcm2712 match: brc  4.62 MESS:00:00:04.624.24 Read /config.txt bytes    
+  4.28 Read /s      128 hnd 0x430d
+  4.33 Read /tryboot.tx8 hnd 0x430e
+  :04.638095:0: bo04171 otp a04171config.txt bytesx430c
+  4.48 Re bytes      128 hnd 0x430d
+00:04.655352:0:  800000 temp 47722
+ESS:00:00:04.855: AVS pred 8733 72
+  4.85 MESS:00:00:04.859344 +0
+  4.86 MES9:0: over-volta113300 delta: 0  4.87877600:0: FB framebuffer_swap 1  04.892719:0: Select resolution  0 max_mode 2
+ 0:04.896755:0: Sn HDMI1/2 hotplu
+  4.90 Loading to 0x00000000 of  7.04 Read b/s 52770089 hnd 031 MESS:00:00:0ramfs (initrd.i0x3253529)
+  7._file 'bcm2712-r7.33 Loading 'b/bcm2712-rpi-5-b000 offset 0x100
+d b/bcm2712-rpi-5-b.dtb bytes  910d
+overlays/overlay9266
+erlays/bcm2712d  1363 hnd 0x191  7.38 MES9:0: Loaded ove
+x1: PWR 0 DET_WAKE 0
+ad /config.txt bytes      845 h7 Read /profile128 hnd 0x430d00:07.441698:0: dtparam: watchdRead /b/cmdline      339 hnd 0ESS:00:00:07.48mand line from tuned.txt':
+  07.495389:0: 'root=LABEL=pedal onsole=ttyAMA10,ext4 rootwait frd.emergency=reb rd.timeout=90 panic=10 isolcpus=managed_irq,doSS:00:00:07.6164x RPM 0
+ESS:00:00:07.63 early watchdogmstub8-2712.bin.41 fs_open: 'bin' 
+  7.64 Lo' to 0x00000000 offset 0x20000 linuz bytes 14703885 hnd 0x15027
+9.49 MESS:00:00evice tree loade (size 0x13b26)  9.50 PCI2 reset
+ot_order 0
+  9.51 set_reboot_arg1 0
+  9.52 U MESS:00:00:09.560704:0: Starti  9.56 MESS:00:00:09.566226:0: 00000040: -> 00000480
+  9.56 MESS:00: 00000030: -> 00100080
+  9.5572787:0: 000000: 00000038: -> 8 MESS:00:00:09.582213:0: 0000003c: -> 00100080OTICE:  BL31: v
+ Booting Linux 0x0000000000 [0  0.000000] Lins03-arm64-107) nu-gcc (Ubuntu 15.2.0-16ubuntu1for Ubuntu) 2.4P PREEMPT_RT Fr11 UTC 2026 (Ubuntu 7.0.0-1017.e 7.0.12)
+[    enabled
+[    : crng init don0] Machine model5 Model B Rev 1.0] Malformed ear'
+[    0.000000 found.
+[    0.000000] Reserved memory: created CMA memory pool at 0x000000003bc00000, size 64 MiB
+[    0.rved mem: initix,cma, compatiba-pool
+[    0.000000] OF: reserved mem: 0x000000003bc00000..0ap reusable linu00000] OF: reserved mem: 0x0000000000000000..0x000000000007fffatf@0
+[    0.000000] OF: reserved mem: 0x0000x000000003fd2347 non-reusable nv00000] NUMA: Faking a node at [mem 0x0000000000000000-0x000000003fbfffff]
+[ E_DATA(0) alloccc00-0x3b9b123f] psci: probing    0.000000] pstected in firmware.
+[    0.000v0.2 function IDs
+[    0.00000E_INFO_TYPE not supported.
+[  : SMC Calling C[    0.000000]     0.000000]   DMA      [mem 00-0x000000003fb0.000000]   Norm  0.000000] Movafor each node
+[arly memory node.000000]   node 0000000000000-0x000000000007ffff]
+[    0.0000[mem 0x000000000003fbfffff]
+[itmem setup nod00000000000-0x000000003fbfffff]] On node 0, zole ranges
+[    u: Embedded 56 p2 r8192 d115152 u229376
+[    0ed PIPT I-cache on CPU0
+[    0tures: detecteds
+[    0.000000re-v4
+[    0.0ures: detected:    0.000000] CPUel page table isON by KASLR
+[   features: deteceatures: detectely self-synchron00000] alternatioot alternatives] Kernel command coherent_pool=1M 8250.nr_uarts=1 pci=pcie_busy=interleave nvme.max_host_mem_size_mb=0 bcm270 bcm2708_fb.fb08_fb.fbdepth=1wap=1 numa=fakeax_order=0 iommy=interleave sm98:FE:54:15:25:8B vc_mem.mem_ba_mem.mem_size=0LABEL=pedal net200 console=tty1c cfg80211.ieeemergency=reboottimeout=90 paninaged_irq,domain,2-3 nohz_full=-3 irqaffinity=0vipboot.root=ped0.000000] mempolt policy overreave:0'
+[    0en to 'interlea0000] Unknown kne parameters "e passed to user log buffer dat31072 + 557056 [    0.000000] h table entries: 131072 (orderes, linear)
+[ de-cache hash table entries: 65536 (order: 7, 524288 bytes, liorder for Node 0: 0 
+[    0.0onelists, mobil  Total pages: 00000] Policy zto-init: stack:aalloc:off, heap 0.000000] SLUB:er=0-3, MinObjeodes=1
+[    0.000000] ftrace: 2 entries in 202000000] ftrace:ages with 4 gro00] Dynamic Pre 0.000000] rcu: Preemptible hierarchical RCU implementation.
+[    0.000000] icting CPUs from NR_CPUS=16 to nr_cpu_ids=4.
+[[    0.000000]RQ processing m000000] 	No expedited grace period (rcu_normal    0.000000] 	nt of Tasks RCU variant of Task
+[    0.000000]t of Tasks RCU enabled.
+[    0CU calculated var-enlistment deles.
+[    0.000ing geometry fof=16, nr_cpu_id00] RCU Tasks:  2 and lim to 1 rcu_task_cb_adjcpu_ids=4.
+[  Tasks Rude: Setand lim to 1 rc=1 rcu_task_cpu000000] NR_IRQS4, preallocatedRQ handler: gic: Using split EOde
+[    0.00000dynticks CPUs: 2-3.
+[    0.000000] rcu: 	Offload RCU callback.
+[    0.00000it: Setting srcuased on contenti000] arch_timer:ning at 54.00MHz0.000000] clock 0xffffffffffffff max_cycles: 0idle_ns: 4407950.000000] schedution 18ns, wra511102ns
+[    e: colour dummy    0.000154] ponsole [tty1] enabled
+[    0.0ng delay loop (calculated usinum: 301
+[    0k: Up and runni49] Yama: becom   0.000469] Ap initialized
+[r secmark mediation reserved: rled
+[    0.0005 hash table entrr: 2, 16384 byte  0.000587] Mounsh table entries2, 16384 bytes, linear)
+[    0inished mounting rootfs on null2] rcu: Hierarchical SRCU imple  0.001615] rcu:is 400.
+[    0migration: 1 hie8 children per gde level
+[    0be available.
+[    0.002615] smp: Bringing up ...
+[    0.002IPT I-cache on C941] CPU1: Bootecessor 0x0000000]
+[    0.003273] Detected PIPT2
+[    0.003317secondary proce0 [0x414fd0b1]Detected PIPT I[    0.003669] ondary processo[0x414fd0b1]
+[ p: Brought up 1 MP: Total of 4 pated.
+[    0.00CPU(s) started ares: detected: ort
+[    0.003714] CPU features: detected: Datquired for I/D coherence
+[    eatures: detecte717] CPU featur] CPU features:cache clean to Point of Persist3722] CPU featu0.003723] CPU fnstructions
+[    0.003724] CPU features: detected: Privileged[    0.003725] Ctected: PMUv3
+[ected: RAS Extension Support
+[PU features: de  0.003729] CPU features: detece Store Bypassinplying system-wi
+[    0.005705detected: Hardwnagement on CPU06] Memory: 85542K rwdata, 11828K rodata, 8000K init, 755K bsed
+[    0.009430] Enabled cp15_barrier support
+[    0.009435] Enabled setend support
+[    ource: jiffies:ff max_cycles: 0idle_ns: 1911260446275000 ns
+[    0.009592] poear)
+[    0.00 table entries:   0.010107] 2GIZE_MODULE_REGION_FULL
+[    0.n-PLT usage
+[ e
+[    0.010439] DMI not presROUTE protocol family
+[    0.0allocated 1024 KiB GFP_KERNEL|GFP_DMA pool for ons
+[    0.011573] audit: init07] audit: type=2000 audit(0.009:1): state=ini
+[    0.011943]gistered thermal governor 'faird thermal goversys: Registered thermal governor 'user_space'
+[    0.011981]governor ladder
+[    0.011991] governor menu
+nt and 4 watchpo
+[    0.012138] ASID allocator initialised wit
+[    0.012389] Serial: AMBA PL: Fixed dependeh /soc@107c0000troller@7fff900] bcm2835-mbox ox: mailbox enabled
+[    0.013419] 107d00100010 at MMIO 0x10716, base_baud = ev3
+[    0.0134enabled
+[    0rrypi-firmware soc@107c000000:firmware: Attached to firmware from 2026-05-11T11:20:02, variant start_cd
+[    0.020004] raspberrypi-firmware soc@107c000000:firmware: Firmware hash is 66fcan be freed foe
+[    0.04492istered 32.0 MiB-allocated 0 pag29] HugeTLB: 0 Kbe freed for a 3ugeTLB: registered 2.00 MiB page size, pre-allocated 0 pages
+reed for a 2.00 MiB page
+[    0.044932] HugeTL4.0 KiB page size, pre-allocate 0.044933] HugeTap can be freed for a 64.0 KiB page
+[    0.046a 1000010000.dmhans=0x1
+[    0.047030] iommu: Default domain main TLB invalitrict mode
+[   subsystem init050951] usbcorew interface driv0.050960] usbcorew interface dri: registered neLinuxPPS API ver. 1 registeredpps_core: Softwi@linux.it>
+[  MC: Ver: 3.0.0 NetLabel: Initializing
+[    0.061050] NetLab[    1.549389] sdhci-brcmstb 1001100000.mmc: error 4.611115] bcm2708_fb soc@107c0 to determine number of FBs. Disabling driver.
+[    4.611132] bcm2708_fb soc@107c000000:fb:er bcm2708_fb f -2
+   5.442885] OF:NG: memory leak verlay removed, pcie@1000120000tatus
+[    5.4ay: WARNING: memory leak will o removed, proper000120000/rp1/i2c@74000/#addres.448804] OF: ovememory leak willerty: /axi/pciei2c@74000/#sizelay: WARNING: moccur if overlarty: /axi/pcie@2c@74000/status
+[    5.448838ARNING: memory if overlay removed, property: /sound/compatible] OF: overlay:  if overlay remo/soc@107c000000/dio-card,format OF: overlay: Wif overlay removsoc@107c000000/sio-card,name
+[ : overlay: WARNIster
+[    5.44y: WARNING: memory leak will ocremoved, property: /soc@107c000000/sound/simple-audio-card,frame-master
+[    5.448852] OF: ill occur if overoperty: /soc@10d,widgets
+[    5.448854] OF: otatus
+p]104\[0m[?n[!p]104\[0m[?7h[1G[0]3008;st44288531d4d16f1hostname=vip;mafcb44a91ad2060d=d71f56a7b3484de7;pid=475;pidfagetty);servicename=serial-gettce;invocationid0b17bf66a18108ea8;type=service
+LTS vip ttyAMA10
+
+vip login: 0m[?7h[1G[0J6H[6nt: Restarting sy
+  1.066f33f7e DATE: 2012:20:02
+  1.071.07 BOOTMODE: 0 build-ts BUILD_98402 serial d60a04171 stc 1074 PM_RSTS 0000002_OFF_ON_HALT: 0 BUTTON 0 power-o09 EEPROM ID 0xef4015
+  1.09 SFDP v1.5 Param v  1.10 RP1_BOOT 1927
+PCIEx1: PWR 0 D0 part 000000000000
+  1.11 PMIC reset-event 0  1.1 07
+  1.12 Initialising SDRAM rank 1 total-sizinit: 0 8Gbit MC056
+  1.13 DDR rank:0 byte-mode  1.61 RP  1ip ID: 0x2000199 RP1 FW: load 1
+boardrev a04171 bootrom a a
+  00000000000000081 VC-JTAG unlocked
+  2.83 RP1_BOOT chip ID:
+3.46 PCI2 init
+  3.48 PCI2 reset
+n 00001de4:0000_CHIP_INFO 2000Pi: BOOTLOADER 66f33f7e DATE:  12:20:02
+  3. 0x06 partition D_TIMESTAMP=1776062e1d boardre2437
+  3.55 EE
+  3.55 SFDP v  3.55 PCIEx1: 
+  3.60 M.2 PCted.
+d_init status 3CONFIG 0 43
+STOP
+  3.57 xHC0 ver: 272 HCS:0f1 0C: 0240fe6d
+  3.58 USBSTS 1
+ 40 140000f1 07ffe6d
+  3.59 xHC64 intrs 4
+ 3.60 XHCI-STOPr: 272 HCS: 03007ff000a HCC: 024SBSTS 1
+  3.61 xHC1 ver: 272 HHCC: 0240fe6d
+ s 3 slots 64 in  3.62 UPDO object1 0x080191f4
+  3.62 
+  3.63 Voltage USB-PD: src-ca0002d1f4
+  3.6A
+  3.63 Volta64 USB-PD: src- 0x0003c177
+  30 mA
+  3.64 Vol  3.64 USB-PD: src-cap PDO obje  3.65 Current Voltage 15000 m1
+  3.66 Current 2250 mA
+  3.66 Voltage 2000  3.70 SD_OC: 0de: SD (01) ordOST: 200000000 CTL0: 0x008000006) status: 0x1ff6
+  4.23 SD00 BUS: 400000 5 HZ div: 512 (fff0000 delay: 276
+ OCR c0ff8000 [5344534b3332478004000
+  4.42 SD2358447 0x00000000
+ 00000000 CTL0: 50000000 Hz actual: 50000000 HZtus: 0x1fff0000 delay: 2
+  4.41,62333951 typeBR: 0x00000000,       0 type: 0: 0x00000000,   0
+  4.45 MBR:   0 type: 0x00artition: 0
+  c150ac6529f8c1c0001 003b723ff 28 entry-size 1t 0
+  4.47 GPT3-87c0-68b6b7260000207ff
+  4.bootable-part-iion 0
+  4.87 t8 'mkfs.fat' ' sters 129022 (1 fat-sectors 1009 root dir clus entries 0
+  4rs 129022
+  4..txt bytes     4.50 Select parboot_partition) 2 EEPROM config 0 result 2
+  1 GPT 7f93b22c159f6523b 00000000-partitions 128pentry 2 first 0
+  4.52 GPT partition: 0 ebd07c0-68b6b72699c7 000000800..000Matched GUID boo0 want partitionpartition: 1 ebd0a0a2-b9e5-44339c7 000020800..04 Matched GUID bon 1
+  4.50 ty20 'mkfs.fat' 'usters 130812 (024 root dir clu0 entries 0
+  4ers 130812
+  4845 hnd 0x430c
+  4.70 Read pro    128 hnd 0x430d
+  4.57 [sdcpd not found
+  rrent_enable def9 Read b/bcm271tes    78655 hnrrypi,5-model-b 2712
+  4.59 dt-match: compatib match: brcm,bc  4.61 MESS:0: *** Restart Read /config.tx hnd 0x430c
+     128 hnd 0x43tes      128 hnd 0x430e
+  4.63 boardrev a041714.37 Read /confi  845 hnd 0x430cprofile.txt byte64 MESS:00:00:04ial voltage 8000  4.84 MESS:00: avs_2712: AVS 4.85 MESS:00:0pred 873 mV +0 over-voltage id00 delta: 0 (0x0S:00:00:04.87153ffer_swap 1
+  4.88 0/2 hotplug 0 ma9 MESS:00:00:04.t resolution HDMmax_mode 2
+  4.nitrd.img' to 0x 0x0
+70089 hnd 0x15e  7.31 M842:0: initramfs (initrd.img) lESS:00:00:07.31-b.dtb'
+  7.32 Loading 'b/bcm2offset 0x100
+55 hnd 0x1910d  7.ays/overlay_map971 hnd 0x19266  7.69ys/bcm2712d0.dtb3 hnd 0x1918a
+00:07.383465:0: Loaded overlay 'bcm2712d0'
+WR 0 DET_WAKE 0  7.29 Read /c      845 hnd 0xhnd 0x430d
+  7.7.435623:0: dtparam: watchdog=o/b/cmdline-tune  339 hnd 0x193200:00:07.482105: line from file MESS:00:00:07.489313:0: 'root=Le=ttyAMA10,1152rootfstype=ext4rd.shell=0 rd.emrd.retry=60 rd.timeout=90 panic=10 isolcpus=managed_irq,domain  7.61 MESS:00 0
+0: Enabling early watchdog
+  7fs_open: 'b/arms
+  7.63 Loading 'b/vmlinuz' to 0x00000000 offset 0x200000
+6 Read b/vmlinuz bytes 14703885  9.48487573:0: Device tree loaded to  9.50 PCIet_reboot_arg1 TG disconnect
+  9.55 MES9:0: Starting O  9.56 ME190:0: 00000040: 9.56 MESS:00:000000030: -> 0010SS:00:00:09.5667 -> 00100080
+  :09.571464:0: 000080
+  9.57 ME77:0: 0000003c:NOTICOTICE:  BL31: Bu Dec  4 2024
+ 0.000000] Bootsical CPU 0x0000b1]
+[    0.00(buildd@bos03-ar64-linux-gnu-gcc-16ubuntu1) 15.2.0, GNU ld (GNU Binutils for U-Ubuntu SMP PRE 2026 (Ubuntu 7.pi-realtime 7.0.berry Pi 5 Modeion 'numa'
+[  : UEFI not foundry: created CMA memory pool at 000, size 64 MiBmem: initialized node linux,cma
+[    0.000000]em: 0x000000003b0003fbfffff (655sable linux,cma
+[    0.000000]em: 0x00000000000000007ffff (512
+[    0.000000]m: 0x000000003f0003fd2347d (0 K
+[    0.000000]000000000000000000000] NODE_DATAmem 0x3b9acc00-0  0.000000] psci: probing for com DT.
+[    0.CIv1.1 detected[    0.000000] punction IDs
+[ i: MIGRATE_INFOted.
+[    0.00Calling Convent0.000000] Zone ranges:
+[    0.   [mem 0x000000000003fbfffff]   DMA32    empty
+[    0.000000000] Movable zoch node
+[    0.emory node ranges
+[    0.00000mem 0x000000000000007ffff]
+[ ode   0: [mem 0x00000000000800fffff]
+[    0.em 0x0000000000000000-0x0000000 0.000000] On n 1024 pages in edded 56 pages/cpu s106032 r819 I-cache on CPU detected: VirtuExtensions
+[  
+[    0.000000] CPU features: detected: Spectrres: kernel page table isolatioKASLR
+[    0.00res: detected: Ke isolation (KPTI)
+[    0.000000] CPU featuresS not fully self
+[    0.000000] pplying boot alt 0.000000] Kernent_pool=1M 8250=pcie_bus_safe nrleave nvme.max_b=0 bcm2708_fb.f708_fb.fbheight=fbdepth=16 bcm2numa=fake=4 sysrleave smsc95xxem.mem_base=0x3fem_size=0x400000pedal net.ifnamesole=tty1 rootfwait fixrtc cfg8regdom=GB rd.shell=0 rd.emergenry=60 rd.timeouolcpus=managed_ohz_full=2-3 rcffinity=0-1 ske.root=pedal vip00] mempolicy: Nicy overridden t'
+[    0.00000A default polic'interleave:0'Unknown kernel command line par", will be passe.
+[    0.000000] printk: log buffer data + meta data: 131072  cache hash tabl72 (order: 8, 1000000] Inode-cacntries: 65536 (o bytes, linear) Fallback order Built 1 zonelists, mobility grol pages: 261120 Policy zone: DMA
+[    0.00000t: stack:all(zeroff, heap free:off
+[    0.0000gn=64, Order=0-3 CPUs=4, Nodes=1ting 51432 entries in 202 pages] ftrace: allocanamic Preempt: 000] rcu: Preemcal RCU impleme0.000000] rcu: 	 CPUs from NR_CP_ids=4.
+[    0.000000] rcu: 	RCU priority boosting: priority  rcu: 	RCU_SOFTIRQ processing mhreads.
+[    0.edited grace per 0.000000] 	Rude variant of Tasks RCU enabled.
+[    0.000000] 	Tracing varianenabled.
+[    0CU calculated vr-enlistment dees.
+[    0.000ing geometry fof=16, nr_cpu_ids=4
+[    0.000000] RCU Tasks: o 2 and lim to 1just=1 rcu_task_  0.000000] RCU ting shift to 2 =1 rcu_task_cpu64, preallocated irqs: 0
+[    RQ handler: gicC: Using split Eode
+[    0.0000 dynticks CPUs: 0000] rcu: 	Offlks from CPUs: 2-00] rcu: srcu_iu_struct sizes based on contention.
+[    0.00: cp15 timer running at 54.00MHz (phys).
+[    0.000000] clocks_counter: mask:ff max_cycles: 0_idle_ns: 44079d_clock: 56 bits at 54MHz, resolution 18ns, wra 0.000148] Consoy device 80x25
+onsole [tty1] e000190] Calibrating delay loop ng timer frequenoMIPS (lpj=540004] pid_max: defamum: 301
+[    0.000345] landlong.
+[    0.000346] Yama: becoming mindful.
+[    0.000464] AppArmor: AppArmo[    0.000466] Aor secmark mediation reserved: ready to be enab572] Mount-cacheries: 2048 (ordes, linear)
+[ ntpoint-cache h 2, 16384 bytes,0.000752] VFS: Fg rootfs on null11] rcu: Hierarementation.
+[ : 	Max phase no is 400.
+[    migration: 1 hi 8 children per group; 1 crossnode level
+[    0.002514] EFI s
+[    0.002614] p secondary CPUs ...
+[    0.00PIPT I-cache on ed secondary pr0100 [0x414fd0b1]
+[    0.00327T I-cache on CPU2
+[    0.00331secondary proce0 [0x414fd0b1] Detected PIPT I
+[    0.003674] r 0x0000000300 [0x414fd0b1]
+[ p: Brought up 1    0.003713] Srocessors activated.
+[    0.00CPU(s) started at EL2
+[    0.0res: detected: rt
+[    0.003718] CPU featurea cache clean tquired for I/D 0.003720] CPU fd: Common not Pions
+[    0.003C32 instruction] CPU features: cache clean to Point of Persis3725] CPU featuCpc load-acquir 0.003727] CPU features: detectnstructions
+[    0.003728] CPUcted: Privileged[    0.003729] tected: PMUv3
+[    0.003730] CPU features: detected: RAS t
+[    0.00373 detected: XNXetected: Speculassing Safe (SSBS: applying system-wide alternat708] CPU features: detected: Hat management on 005811] Memory: 855576K/104448040K kernel code 11828K rodata, K bss, 115596K r[    0.006079] lized
+[    0.0p15_barrier suptend support
+[ocksource: jifffffff max_cycleax_idle_ns: 191
+[    0.009538sh table entries: 2048 (order: linear)
+[    hash table entrA nodes, total 6
+[    0.010081] 2G module regiNDOMIZE_MODULE_R  0.010084] 0 par non-PLT usage 513744 pages inusage
+[    0.01resent or invali52] NET: Registered PF_NETLINK/0.011541] DMA: 4 KiB GFP_KERNEor atomic alloc11574] audit: ilink subsys (dis011684] audit: 0.009:1): state: Registered thermal governor '  0.011933] thermal_sys: Registvernor 'bang_ba34] thermal_sysrmal governor 'mal_sys: Registee'
+[    0.0119ing governor lad978] cpuidle: using governor met: found 6 breakchpoint registertor initialised with 32768 entr97] Serial: AMB981] /soc@107c00controller@7fff9ndency cycle(s) 00000/interrupt9000
+[    0.01ox 107c013880.menabled
+[    0000.serial: ttyAMA10 at MMIO 0xconsole [ttyAMA10] enabled
+[  e soc@107c000000:firmware: Attae from 2026-05-1iant start_cd
+aspberrypi-firm000:firmware: F 0.044561] HugeTLB: registered 1.00 GiB page sed 0 pages
+[    0.044564] Huge for a 1.00 GiB4565] HugeTLB: pages
+[    0.044566] HugeTLB: 0 KiB vmemmap can be freed for] HugeTLB: regiss
+[    0.044568] HugeTLB: 0 KiB vmemmap can beTLB: registered 64.0 KiB page size, pre-alloc   0.044570] Hummap can be freed for a 64.0 KiB page
+[    0.-dma 1000010000.dma: DMA legacyachans=0x1
+[    0.045508] iommin type: Transla511] iommu: DMA: strict mode
+[    0.060876] S 0.060927] usbconew interface drore: registereddriver hub
+[    0.060948] usbcer usb
+[    0.0er. 1 registeretware ver. 5.3. Giometti <giomeTP clock suppor    0.060997] ED.0
+7397] sdhci-brcource (null)
+ 3.735657] bcm2700000:fb: Unableumber of FBs. Di
+[    8_fb soc@107c00708_fb failed w[    5.316798] OF: overlay: WARNING: memory le overlay removexi/pcie@100012000/status
+[    verlay: WARNING:lay removed, pr1/i2c@74000/#address-cells
+[   overlay: WARNING: memory leak erlay removed, property: /axi/pcie@1000120000/size-cells
+[   overlay: WARNINGill occur if overlay removed, pie@1000120000/rtus
+[    5.332y: WARNING: memocur if overlay r00/sound/compat983] OF: overlaory leak will ocremoved, propertmat
+[    5.332985] OF: overlay: WARNING: memory leak will occemoved, propertyaudio-card,nameARNING: memory lif overlay removsoc@107c000000/sio-card,bitcloc.332990] OF: overlay: WARNING: memory leak wilay removed, pro000000/sound/siframe-master
+[    5.332992] OING: memory leak will occur if overlay removed, property: /socnd/simple-audio-card,widgets
+[F: overlay: WARNk will occur if , property: /soccard,routing
+[    5.332997] OF: overlay: WARN will occur if overlay removed, property: /soc[?7h[1G[0J[6n[6n[!p]104\[0m[?7h[1G[0J[6n6n60e8bd64a94a4da8user=root;hostnad=729d48f5fcb44a880;bootid=5d1ddb7573f95285b;pid7;comm=(agetty);ial-getty@ttyAMAcationid=a4e9c67c268998e03;type616D65\4.1 LTS vip ttyA[!p]104\[0m[?7h[1G[0J[6n[32766;327eboot: Restartiase VERSION:66f3/05/11 TIME: 12:FG_VER: 1
+  1.06 partition 0 bu02 serial d6062e1d boardrev a04171 stc 1054980SET: 00000003 PM_RSTS 00000020
+  1.06 POWER_OFIT_FOR_POWER_BUTreset 0
+  1.07 015
+  1.07 SFDP.08 RP1_BOOT ch7
+Ex1: PWR 0 DET_art 00000000 re00
+  1.09 PMIC reset-event 00000 enabled 0
+  e 3.3V
+SDRAM_CONFIG: 07lising SDRAM rank 1 total-size:t: 0 8Gbit MCB 
+  1.11 DDR 42k:0 byte-mode:0t-config:0
+FW: load 0
+1 RP1_BOOT chip 
+ FW: load 1
+ 2.78 OTP boardom a a
+  2.78 h 000000000000000000000000000000000
+  2.78 VC
+001927
+  3.44   3.5  3.51 RP1_CHIP
+  3.51 RPi: Bse VERSION:66f33f7e DATE: 2026/0:02
+  3.51 MF BOOTMODE: 0x06 partition 0 build-ts BUILD_TIM2 serial d6062e71 stc 3521327
+  3.53 EEPROM Iram v1.5
+  3.53 PCIEx1: PWR 0 DET_WAKE 0
+  3.39 M.2 PCIe HA
+  t status 3
+  3.  0440 140000f1 07ff000a HCC: 0240fe6d
+  3.56 USBSTS 1
+  3.56CS: 03000440 14HCC: 0240fe6d
+  3.57 xHC0 ports 3 slots 64 intrs 4
+ HCS: 03000440 140000f1 07ff000a HCC: 0240fe6d
+  3.59 USBSTSver: 272 HCS: 0
+  3.60 USB-PD: src-cap PDO ob mV
+  3.61 USB-3.61 Voltage 9000 mV
+  3.61 US USB-PD: src-ca3 Current 3000 ge 15000 mV
+  -cap PDO object5 0x000640e1
+  ltage 20000 mV  3.68 S01) order f4
+  4.000000 CTL0: 0x0lay: 276
+  0000000 CTL0: 0x00800f00 BUS: 400000 Hz actual: 390625 HZ divus: 0x1fff0000 8000 [281]
+CID3247802e453824032db790000edc87th: 4 spec: 2 SCx00000000
+OST: 200000000 f0000 delay: 2
+  4.42 MBR: 0x01 type: 0xee
+  00,       0 type: 0x00
+  4.43 0
+  4.44 GPT 79f8c1c0379f6523b723ff num-partitsize 128 pentry : 0 ebd0a0a2-b90800..0000207ff GUID bootable-part-idx 0 want at' ' BOOTSEL    ' clusters 129022 (1)
+  4.47 rsc 32 fat-sectr cluster 2 sec
+  4.47 FAT32 s       65 hnd 0ct partition rsts 0 C(boot_part 2
+  4.92 Trying partition: 2b22c150ac6529f80000001 003b723ff num-partitioe 128 pentry 2 0 ebd0a0a2-b9e5-4433-87c0-68b6b72699c7 00000080 4.51 Matched GUID bootable-part-idx 0 want partition 1
+  4.5 1 ebd0a0a2-b9e
+  4.52 Matched art-idx 1 want partition 1
+  4T ' clusters 13 rsc 32 fat-secir cluster 2 sectors 0 entries  clusters 13081onfig.txt bytes      845 hnd 0x430c
+  4.50 Reytes      128 hnd 0x430d
+  4.55 [sdcard] pieeprom.upd not found
+  4.57 usb_le default 0 ma  4.69 Read b/bcm2712-rpi-5-b.dtb bytes    78655 hnd 0x1910dcm,bcm2712
+  4.57 dt-match: corcm,bcm2712
+  4.5996028:0: *** Restart logging
+ fig.txt bytes      845 hnd 0x43/profile.txt bytes      128 hnd 0x430d
+  4.07xt bytes      128 hnd 0x430e
+ 0:04.611870:0: board: boardrev 71
+  4.17 Read 0x430c
+  4.22 Read /profile.tx  4.62 MESS:00: Initial voltage 800000 temp 4  4.82 MESS:00:00:04.82 873300 temp 475:0: vpred 873 mSS:00:00:04.837321:0: over-voltage idle: 0 avs: 113300 delta: 0 (0x00000000)  4.85 MESS:00:00:04.851379:0: FB f1
+ 4.86 MESS:00:00:04.866497:0: Select resolutiong 0 max_mode 2
+00:04.870534:0:on HDMI1/2 hotp
+  4.87 Loadin to 0x00000000   7.78 Read bes 52770089 hnd   7.29 MESS:00:00:07.293694:0: inimg) loaded to  0x3253529)
+  07.298995:0: dtrpi-5-b.dtb'
+ /bcm2712-rpi-5-b.dtb' to 0x00000000 offset 0x1  7.14 Re  7.39 Read /b  7.49 Read /b/overlays/bcm2712d0.dtbo bytes     1363 hnd 0x1918a
+SS:00:00:07.363erlay 'bcm2712d  7.40 PCIWAKE 0
+ead /config.txthnd 0x430c
+  7e.txt bytes    0:00:07.415487:0hdog=on
+ Read /b/cmdlins      339 hnd  MESS:00:00:07.4ommand line frome-tuned.txt':
+ 0:07.469180:0: 'l net.ifnames=0 0,115200 consolee=ext4 rootwait fixrtc cfg80211 rd.emergency=r0 rd.timeout=90domain,2-3 
+ESS:00:00:07.59ax RPM 0
+ MESS:00:00:07.6ng early watchdoarmstub8-2712.bi 7.14 fs_open: '.bin' 
+  7.61 L0 offset 0x2000  8.36 Read b/v703885 hnd 0x15027
+00:09.467412:0: ded to 0x2bd9840  9.4  9.49 set_re9.49 set_rebootUSB-OTG disconn  9.5.534509:0: Starting OS 9534 ms
+  9.54 MESS:00:00:09.540030:0: 00000040: -> 000004:00:00:09.541879:0: 00000030: -54 MESS:00:00:09.546592:0: 00000034: -> 00100080
+  9.55 MESS:00:00:09.551305:0: 00000038: -> 00100080
+  9.55 MESS:00:00:0003c: -> 00100080
+
+2.6-240-gfc45bc431: Built : 12:5[    0.000000]n physical CPU 414fd0b1]
+[   x version 7.0.0-time (buildd@bosaarch64-linux-gn5.2.0-16ubuntu1) (GNU Binutils f) #17-Ubuntu SM Aug  7 17:41:1tu 7.0.0-1017.10.000000] KASLR .000000] random: crng init done] Machine model:] Malformed earl
+[    0.000000] efi: UEFI not 00000] Reserved memory: createl at 0x000000004 MiB
+[    0.0ved mem: initia,cma, compatiblpool
+[    0.00ved mem: 0x00000000000003fbfffffp reusable linux0000] OF: reserv00000000000..0x0 (512 KiB) nomaptf@0
+[    0.00ed mem: 0x0000000000003fd2347d (0 KiB) nomap nam@0
+[    0.00ng a node at [m03fbfffff]
+[    0.000000] NODEed [mem 0x3b9ac psci: probing od from DT.
+[ i: PSCIv1.1 dete.
+[    0.0000standard PSCI v] psci: MIGRATE_INFO_TYPE not supported.
+[    SMC Calling Co    0.000000] Z  0.000000]   D000000000000000-0x000000003fbf0000]   DMA32    empty
+[    0.000000]   Normal   empty
+[    000000]   node  000000000000-0x000000000007ffffmem 0x0000000000080000-0x000000003fbfffff]
+[    0.000000] Initmem setup node 
+[    0.000000] On node 0, zone ranges
+[    0.000000] percpu:r8192 d115152 u229376
+[    0.000000] Detected PIPT I-cache o00000] CPU features: detected: Virtualization 
+[    0.000000] CPU features: detected: Spectre-v4
+[    0.00features: kernellation forced ON by KASLR
+[   eatures: detected: Kernel page table isolation: SSBS not fullyes: applying boot alternatives
+[    0.000000] line: reboot=w cize_mb=0 bcm2708 bcm2708_fb.fbhedma_numa_policy=interleave smsc:FE:54:15:25:8B=0x3fc00000 vc_0000000  root=LABEL=pedal net.ifnames=0 console=ttyAMA10,115200 console=tty1 rootwait fixrtcd.shell=0 rd.emergency=reboot rd.retry=60 rd.timeout=90 panic=10 isolcpus=man2-3 nohz_full=2-3 rcu_nocbs=2-31 skew_tick=1 vil vipboot.slot=b vipboot.profil.000000] mempolit policy overridden to 'interle00000] DMA IOMMolicy overridde:0'
+[    0.000rnel command linixrtc", will be space.
+[    0.0+ meta data: 13688128 bytes
+[entry cache hash table entries:8, 1048576 byte 0.000000] Inodle entries: 65536 (order: 7, 52ear)
+[    0.000000] Fallback o000] Built 1 zoy grouping on.  Total pages: 260000] Policy zon000000] mem autol(zero), heap a.000000] SLUB: Hr=0-3, MinObjectdes=1
+[    0.00 entries in 202 pages
+[    0.0llocated 202 pas
+[    0.00000pt: lazy
+[    0.000000] rcu: archical RCU implementation.
+[    0.000000] rting CPUs from _cpu_ids=4.
+[ : 	RCU priorityity 1 delay 500ing moved to rcu   0.000000] 	No expedited gracrmal_after_boot00] 	Trampoline s RCU enabled.
+	Rude variant ofled.
+[    0.000ariant of Tasks RCU enabled.
+[cu: RCU calculated value of scht delay is 100 .000000] rcu: Ay for rcu_fanouu_ids=4
+[    0sks: Setting shi to 1 rcu_task_c
+[    0.000000]to 2 and lim to 1 rcu_task_cb_adjust=1 rcu_tas   0.000000] NRqs: 64, preallo    0.000000] Root IRQ handler:
+[    0.000000]te mode
+[    0.Full dynticks CPUs: 2-3.
+[    Offload RCU cal: 2-3.
+[    0.000000] rcu: src srcu_struct sizes based on con0.000000] arch_tr running at 54.00MHz (phys).
+[    0.000000] clocksource: arch_sys_counter: mffffff max_cycle max_idle_ns: 44[    0.000000] bits at 54MHz, resolution 18ns,ummy device 80x2] printk: lega] enabled
+[   brating delay loalue calculated using timer frequency.. 108.00 BogoMIPS (lpj=5default: 32768 minimum: 301
+[    0.000340] landlock: Up and r.000342] Yama: becoming mindfulArmor initialized
+[    0.000468] AppArmor: AppArmor secmark med: ready to be .000577] Mount- entries: 2048 
+[    0.000582]he hash table entes, linear)
+[S: Finished mou nullfs
+[    0.erarchical SRCU  rcu: 	Max phasnces is 400.
+[    0.001903] Timer migration: ls; 8 children ossnode level
+[ not be availab17] smp: BringiCPUs ...
+[    ed PIPT I-cache0.002944] CPU1: Booted secondar00000100 [0x41403279] Detected CPU2
+[    0.0ted secondary p00200 [0x414fd0PT I-cache on Cd secondary pro] smp: Brought up 1 node, 4 CPUs
+[    0.00371f 4 processors a 0.003719] CPU: All CPU(s) started at EL2
+[    0.003723] CPU features: detecSupport
+[    0an to the PoU n[    0. Common not Private translation: detected: CRC32 instructions
+[    0.003729] etected: Data cache clean to Poce
+[    0.0037s: detected: RCptures: detected:tructions
+[    0.003735] CPU f features: detected: RAS Extension Support
+[   features: dete0.003739] CPU features: detected: Speculative Safe (SSBS)
+[ ying system-wide alternatives
+[    0.005701] tected: Hardware dirty bit management on CPU0-] Memory: 855556K/1044480K available (18240K kernel code, 3142K rwdata, 11828K rodata, 8000K  115596K reserveeserved)
+[    0.006039] devtmp Enabled cp15_b[    0.009286] upport
+[    0.rce: jiffies: m max_cycles: 0xfle_ns: 191126044  0.009446] posixtimers hash table entries: 204r)
+[    0.0094able entries: 1024 (65536 byte, linear).
+[   ced by RANDOMIZE_MODULE_REGION_FULL
+[    0.009973] 0 pages in range for non- 0.009975] 513744 pages in range for PLT usage    0.010960] NET: Registered PF_NETLINK/PF_ROUTE protocol fam327] DMA: preall GFP_KERNEL|GFP_DMA pool for atizing netlink subsys (disabled)
+[    0.011508000 audit(0.009:alized audit_enabled=0 res=1
+[ermal_sys: Registered thermal g11759] thermal_sys: Registered thermal governor    0.011761] th'user_space'
+[    0.011781] cpuidle: using governor ladder
+[    0.011787] c   0.011914] hw-breakpoint: fouand 4 watchpoinitialised with 32768 entries
+[1 UART driver
+[    0.012776] /soc@107c000000/i/soc@107c000000/oller@7fff9000
+bcm2835-mbox 107at MMIO 0x107d0 base_baud = 0) is a PL011 rev3e [ttyAMA10] en107c000000:firmto firmware from20:02, variant srypi-firmware srmware: Firmwar7e00000000000000000000000000000780] HugeTLB: riB page size, pn be freed for a 1.00 GiB page
+[    0.058784] ered 32.0 MiB page size, pre-al
+[    0.058785] vmemmap can be 0 MiB page
+[   TLB: registered ize, pre-alloca[    1.5039L: invalid reso bcm2708_fb soc@107c000000:fb: Unable to deterFBs. Disabling driver.
+[    4.h driver bcm2708_fb failed with[    5.463765] OF: overlay: Wleak will occur ved, property: /00/status
+[    5.463806] OF: overlay: WARNINGill occur if overoperty: /axi/pcp1/i2c@74000/#adNG: memory leak property: /axi//rp1/i2c@74000/#size-cells
+[  overlay: WARNINill occur if overlay removed, prp1/i2c@74000/stcur if overlay ty: /soc@107c000tible
+[    5.46ay: WARNING: memty: /soc@107c000000/sound/simplrmat
+[    5.463825] OF: overlay: WARNING: memocur if overlay ry: /soc@107c000000/sound/simpleved, property: /soc@107c000000/ memory leak wiimple-audio-carNING: memory leak will occur if overlay removec@107c000000/so-card,widgets
+[    5.463833] NING: memory leak will occur if overlay removed, property: /soc@107c000000/so-card,routing
+[    5.463835] NING: memory led, property: /sound/status
+66H[6n]104\[0m[?72766;32766H[6n3008;start=fc0ca98d13f54d32bbc2er=root;hostname729d48f5fcb44a910;bootid=2efd4d659cca9a0ab;pid=493;pidfdid=207;ervicename=seria0.service;invocationid=1f7e3b5169ea101a;type=s6D65\4.1 LTS vip ttyA[ 1970.10151ev mmcblk0, sectITE) flags 0x800o class 2
+[ 19fs (mmcblk0p5):sted (2)
+[ 197ng journal on device mmcblk0p5-8.
+[ 1970.1092ror when updatik0p5-8.
+[ 1970, sector 0 op 0x 0x800 phys_seg 
+[ 1970.122464]0p6): shut down[ 1970.122477] l on device mmcb0.122518] JBD2: updating journal mmcblk0p6-8.

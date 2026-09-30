@@ -1,8 +1,9 @@
 # vip's fallbacks rehearsed: docs/vip-image.md step 6, 2026-09-30
 
-On the card from image 20260930T135950Z (namchain f422dd0), with vip-boot as built, the Debug Probe
-on the UART header. Pass 1 is everything that doesn't break the pedal root on purpose; pass 2 (a
-broken pedal root reaching rescue by itself, vip-reimage, power pulled) needs the next image.
+Pass 1 on the card from image 20260930T135950Z (namchain f422dd0), pass 2 on 20260930T151625Z
+(rtpi 8601757: vip-reimage in rescue), the Debug Probe on the UART header. Pass 1 is everything
+that doesn't break the pedal root on purpose; pass 2 breaks it, restores it, and pulls the power.
+Console logs: `console-step6-pass1.log`, `console-step6-pass2.log`. **All pass.**
 
 ## Pass 1
 
@@ -37,4 +38,35 @@ Boots take 21-27 s to ssh.
   watchdog, and there's no root password. So the boot counter never moves and the fallback to
   rescue never comes. For pass 2: emergency and rescue mode reboot, and a boot that hasn't
   reached its target in five minutes reboots (rtpi 3c55314). (9) shows a boot with no network
-  reaches `multi-user.target`, so the timeout doesn't touch a pedal at a gig.
+  reaches `multi-user.target`, so the timeout doesn't touch a pedal at a gig. **Replaced in pass
+  2**, below: the timeout was the wrong test.
+
+## Pass 2
+
+The target timeouts were checked against the first test before running it, and were wrong: a
+unit that hangs *beside* the engine blocks `multi-user.target` while `namchaind` plays and
+`pedal-guard` clears the count, so the timeout would reboot a playing pedal every five minutes,
+for ever, and the count would never climb. **`vip-boot deadline`** (rtpi 91bb324) replaces them:
+five minutes into a pedal boot, if the boot counter still isn't cleared, it reboots so the boot
+counts; a boot that reached the engine is never touched, whatever else hangs. It sleeps before
+taking vip-boot's lock (held through the sleep, it would have blocked `pedal-guard` and rebooted a
+healthy pedal: a test covers it). It was installed on vip by hand from rtpi 91bb324 for these
+tests, and reinstalled after each `vip-reimage`; the next image carries it.
+
+| # | Did | Came back | Result |
+|---|---|---|---|
+| 10 | a healthy boot with the deadline | past 5 min uptime, count 0, the deadline exited without acting | **pass** |
+| 11 | a unit that hangs before `namchaind` | each boot rebooted by the deadline at 300 s with the reason written, count 1, 2, 3; the fourth boot's initramfs made rescue the default: **rescue in 16.5 min**, by itself (`step6-hang-watch.txt`) | **pass** |
+| 12 | `vip-reimage pedal` from rescue | checked the image's hash, wrote 3 GB to the pedal partition, read it back to the same hash, fsck clean, pedal the default; the pedal booted without the hang, playing, library intact on pedal-data | **pass** |
+| 13 | an fstab entry for a disk that isn't there | each boot waited 90 s for it, emergency mode rebooted 10 s later (the drop-in); **rescue in 6.5 min**, unreachable over the network meanwhile (`step6-fstab-watch.txt`) | **pass** |
+| 14 | `vip-reimage pedal --reboot` | as 12, and straight into the pedal | **pass** |
+| 15 | power pulled while pedal-resume was saving `last.json` every 3 s (two rigs applied in turn) | `last.json` whole and one of the two, no temp file left, resumed at boot; both filesystems clean (the root's orphan cleanup only) | **pass** |
+| 16 | power pulled at 5 s (in the firmware, before Linux) and at 15 s (after the kernel started), then left on | count 0 and the pedal default after the third boot; the bootsel files at their exact lengths (65, 16, 256 bytes); both FAT partitions check clean | **pass** |
+
+- The emergency drop-in's message goes to `/dev/console`, which is tty1 (HDMI), the last `console=`:
+  the serial console doesn't show it. The timing does (90 s + 10 s a boot, not 300 s).
+- `vip-reimage` takes about 10 minutes (two passes over the image to check it, then the write and
+  the read-back).
+- Debt: a restore puts back the image's pedal root, so anything applied since (here, the
+  deadline) has to be applied again. That's what `devices/vip/apply` is for; rtpi files, like the
+  deadline, have no such path to vip yet except the image.

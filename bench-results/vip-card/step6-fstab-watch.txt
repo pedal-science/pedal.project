@@ -1,0 +1,17 @@
++0s unreachable
++25s unreachable
++50s unreachable
++75s unreachable
++95s unreachable
++120s unreachable
++145s unreachable
++170s unreachable
++196s unreachable
++221s unreachable
++246s unreachable
++271s unreachable
++296s unreachable
++321s unreachable
++346s unreachable
++371s unreachable
++392s vipboot.root=rescue up=29s guard      0 of 3 unguarded boots last fall  vip-guard: 3 pedal boots in a row never reached pedal-guard; rescue made the default ; state=running

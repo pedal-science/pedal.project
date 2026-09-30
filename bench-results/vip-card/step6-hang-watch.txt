@@ -1,0 +1,17 @@
++10s unreachable
++72s vipboot.root=pedal up=66s guard      1 of 3 unguarded boots ; namchaind=inactive
++133s vipboot.root=pedal up=127s guard      1 of 3 unguarded boots ; namchaind=inactive
++193s vipboot.root=pedal up=188s guard      1 of 3 unguarded boots ; namchaind=inactive
++254s vipboot.root=pedal up=248s guard      1 of 3 unguarded boots ; namchaind=inactive
++324s unreachable
++385s vipboot.root=pedal up=65s guard      2 of 3 unguarded boots last fall  2026-09-30T19:35:41Z boot 1 of the pedal hadn't reached pedal-guard after 300 s: rebooted so it counts (rescue after 3) ; namchaind=inactive
++445s vipboot.root=pedal up=126s guard      2 of 3 unguarded boots last fall  2026-09-30T19:35:41Z boot 1 of the pedal hadn't reached pedal-guard after 300 s: rebooted so it counts (rescue after 3) ; namchaind=inactive
++506s vipboot.root=pedal up=187s guard      2 of 3 unguarded boots last fall  2026-09-30T19:35:41Z boot 1 of the pedal hadn't reached pedal-guard after 300 s: rebooted so it counts (rescue after 3) ; namchaind=inactive
++566s vipboot.root=pedal up=247s guard      2 of 3 unguarded boots last fall  2026-09-30T19:35:41Z boot 1 of the pedal hadn't reached pedal-guard after 300 s: rebooted so it counts (rescue after 3) ; namchaind=inactive
++631s unreachable
++692s vipboot.root=pedal up=58s guard      3 of 3 unguarded boots last fall  2026-09-30T19:40:56Z boot 2 of the pedal hadn't reached pedal-guard after 300 s: rebooted so it counts (rescue after 3) ; namchaind=inactive
++753s vipboot.root=pedal up=119s guard      3 of 3 unguarded boots last fall  2026-09-30T19:40:56Z boot 2 of the pedal hadn't reached pedal-guard after 300 s: rebooted so it counts (rescue after 3) ; namchaind=inactive
++813s vipboot.root=pedal up=179s guard      3 of 3 unguarded boots last fall  2026-09-30T19:40:56Z boot 2 of the pedal hadn't reached pedal-guard after 300 s: rebooted so it counts (rescue after 3) ; namchaind=inactive
++874s vipboot.root=pedal up=240s guard      3 of 3 unguarded boots last fall  2026-09-30T19:40:56Z boot 2 of the pedal hadn't reached pedal-guard after 300 s: rebooted so it counts (rescue after 3) ; namchaind=inactive
++935s vipboot.root=pedal up=301s guard      3 of 3 unguarded boots last fall  2026-09-30T19:40:56Z boot 2 of the pedal hadn't reached pedal-guard after 300 s: rebooted so it counts (rescue after 3) ; namchaind=inactive
++995s vipboot.root=rescue up=35s guard      0 of 3 unguarded boots last fall  vip-guard: 3 pedal boots in a row never reached pedal-guard; rescue made the default ; namchaind=inactive
