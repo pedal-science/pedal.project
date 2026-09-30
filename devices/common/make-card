@@ -65,6 +65,10 @@ fi
 # ------------------------------------------------------------------ checks, before any time is spent
 docker info >/dev/null 2>&1 || die "no docker: start colima (colima start --arch aarch64 --vm-type vz)"
 [[ $(docker info --format '{{.Architecture}}') == aarch64 ]] || die "the docker host is not aarch64"
+# A build writes about 10 GB inside colima, whose disk file on the Mac only shrinks when the VM
+# trims it; the first builds filled the Mac's disk (2026-09-30).
+free_gb=$(df -g "$REPO" | awk 'NR==2 {print $4}')
+(( free_gb >= 15 )) || die "only $free_gb GB free on the Mac: a build needs 15 (colima's disk grows while it runs)"
 command -v op >/dev/null || die "no op (1Password CLI)"
 OP_SERVICE_ACCOUNT_TOKEN=$(security find-generic-password -l "$OP_KEYCHAIN_LABEL" -w 2>/dev/null) \
   || die "no keychain item '$OP_KEYCHAIN_LABEL' with the 1Password service account token"
@@ -155,6 +159,8 @@ secrets | docker run --rm -i \
   -e HOST="$HOST" -v "$IN:/in:ro" -v "$OUT:/out" \
   "$TAG" /in/pedal/devices/common/image/build-image
 rm -rf "$IN"
+# Give the build's space inside colima back to the Mac.
+colima ssh -- sudo fstrim -a >/dev/null 2>&1 || true
 
 mkdir -p "$HERE/images"
 cp "$OUT/manifest" "$HERE/images/$STAMP.manifest"
