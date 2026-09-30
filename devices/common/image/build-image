@@ -186,9 +186,15 @@ Type=linux-generic
 Label=pedal-data
 EOF
 # rtpi: the boot counter in the initramfs, validation and settling of candidates, the guard.
+# The boot-finishing drop-ins make a boot that hangs or lands in emergency mode reboot, so the
+# initramfs counts it (step 6).
 for f in etc/dracut.conf.d/30-vip-guard.conf \
          etc/systemd/system/vip-boot-settle.service etc/systemd/system/vip-boot-validate.service \
-         etc/systemd/system/pedal-guard.service etc/systemd/system/pedal-guard-maint.service; do
+         etc/systemd/system/pedal-guard.service etc/systemd/system/pedal-guard-maint.service \
+         etc/systemd/system/emergency.service.d/10-vip-reboot.conf \
+         etc/systemd/system/rescue.service.d/10-vip-reboot.conf \
+         etc/systemd/system/multi-user.target.d/10-vip-boot-timeout.conf \
+         etc/systemd/system/pedal-maint.target.d/10-vip-boot-timeout.conf; do
   install -D -m 644 "$RTPI_DEV/$f" "$PEDAL/$f"
 done
 install -D -m 755 "$RTPI_DEV/usr/local/libexec/vip-boot-validate" "$PEDAL/usr/local/libexec/vip-boot-validate"
@@ -238,6 +244,8 @@ tmpfs          /var/lib/sudo      tmpfs  mode=0711,nosuid,nodev 0 0
 LABEL=$BOOTSEL_LABEL     $BOOTSEL_MOUNT      vfat  defaults,noauto,nofail  0 0
 EOF
 install -d "$RESCUE/mnt/pedal" "$RESCUE/mnt/pedal-data" "$RESCUE/mnt/pedal-boot"
+# Restoring the pedal root from its image on pedal-data (rtpi).
+install -D -m 755 "$RTPI_DEV/usr/local/sbin/vip-reimage" "$RESCUE/usr/local/sbin/vip-reimage"
 install -D -m 644 /dev/stdin "$RESCUE/etc/systemd/journald.conf.d/10-rescue.conf" <<'EOF'
 # The root is read-only: the journal lives in RAM.
 [Journal]

@@ -11,6 +11,9 @@ Documentation=file:/etc/pedal/tune.conf
 Requires=basic.target
 Wants=network.target systemd-networkd.service systemd-resolved.service wpa_supplicant@wlan0.service
 Wants=ssh.service systemd-timesyncd.service getty.target pedal-wifi.service
+# Removes /run/nologin. multi-user.target pulls it in; without it here, pam_nologin refuses every
+# login in the loose profile ("System is booting up"), so ssh answers and nobody gets in (step 6).
+Wants=systemd-user-sessions.service
 After=basic.target
 Conflicts=rescue.service rescue.target
 AllowIsolate=yes

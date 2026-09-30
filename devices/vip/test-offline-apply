@@ -65,6 +65,7 @@ done
 check "masks recorded for revert" 'grep -q "^mask apt-daily.timer$" $R/var/lib/pedal/manifest'
 check "tools pedal-* need are installed" 'for t in dtoverlay dtc amixer alsactl arecord chrt taskset flock ps python3 udevadm; do chroot $R sh -c "command -v $t" >/dev/null || { echo "    missing $t"; exit 1; }; done'
 check "pedal-maint.target leaves the engine out" '! grep -q "multi-user\|namchaind" <(grep -v "^#" $R/etc/systemd/system/pedal-maint.target)'
+check "pedal-maint.target lets users log in" 'grep -q "^Wants=.*systemd-user-sessions.service" $R/etc/systemd/system/pedal-maint.target'
 check "eth0 not required for online" 'grep -qx "RequiredForOnline=no" $R/etc/systemd/network/20-eth0.network'
 check "apply again changes nothing" 'before=$(cd $R && find etc usr/local var/lib/pedal -printf "%p %s %l\n" | sort | sha256sum); SOURCE_DATE_EPOCH=0 bash $S/rootfs/usr/local/sbin/pedal-device apply $S --root $R --commit test >/dev/null; after=$(cd $R && find etc usr/local var/lib/pedal -printf "%p %s %l\n" | sort | sha256sum); [[ $before == "$after" ]]'
 check "the running host is untouched" '[[ ! -e /var/lib/pedal && ! -e /etc/pedal ]]'
