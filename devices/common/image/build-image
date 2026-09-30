@@ -186,15 +186,14 @@ Type=linux-generic
 Label=pedal-data
 EOF
 # rtpi: the boot counter in the initramfs, validation and settling of candidates, the guard.
-# The boot-finishing drop-ins make a boot that hangs or lands in emergency mode reboot, so the
-# initramfs counts it (step 6).
+# A boot that lands in emergency mode, or never reaches the engine, reboots so the initramfs
+# counts it (step 6): the emergency and rescue drop-ins, and vip-boot-deadline.
 for f in etc/dracut.conf.d/30-vip-guard.conf \
          etc/systemd/system/vip-boot-settle.service etc/systemd/system/vip-boot-validate.service \
          etc/systemd/system/pedal-guard.service etc/systemd/system/pedal-guard-maint.service \
          etc/systemd/system/emergency.service.d/10-vip-reboot.conf \
          etc/systemd/system/rescue.service.d/10-vip-reboot.conf \
-         etc/systemd/system/multi-user.target.d/10-vip-boot-timeout.conf \
-         etc/systemd/system/pedal-maint.target.d/10-vip-boot-timeout.conf; do
+         etc/systemd/system/vip-boot-deadline.service; do
   install -D -m 644 "$RTPI_DEV/$f" "$PEDAL/$f"
 done
 install -D -m 755 "$RTPI_DEV/usr/local/libexec/vip-boot-validate" "$PEDAL/usr/local/libexec/vip-boot-validate"
@@ -223,7 +222,7 @@ mkdir -p "$S/rootfs"
 cp -a "$IN/pedal/devices/common/rootfs/." "$S/rootfs/"
 cp -a "$DEV/rootfs/." "$S/rootfs/"
 bash "$S/rootfs/usr/local/sbin/pedal-device" apply "$S" --root "$PEDAL" --commit "${PIN[pedal]:0:7}" >&2
-chroot "$PEDAL" systemctl enable -q namchaind vip-boot-settle vip-boot-validate pedal-guard pedal-guard-maint
+chroot "$PEDAL" systemctl enable -q namchaind vip-boot-settle vip-boot-validate pedal-guard pedal-guard-maint vip-boot-deadline
 
 log "pedal root: initramfs with vip-guard"
 initramfs "$PEDAL" "$PEDAL_KERNEL"
