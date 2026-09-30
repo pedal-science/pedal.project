@@ -249,7 +249,7 @@ confirmation).
 
 ### Pi 5 settings in the image
 
-- `config.txt` for pedal-boot: `arm_64bit`, the watchdog on, `dtparam=audio=off` (no HDMI audio
+- `config.txt` for pedal-boot: `arm_64bit`, the watchdog on (the Pi 5 firmware ignores `dtparam=audio`; no HDMI audio
   card), no `vc4-kms-v3d` (display off on the pedal, following distro-slimming's point about the
   GPU's memory traffic), the kernel console on `ttyAMA10`. The WM8960 overlay stays
   loaded at runtime by `pedal-codec`, as on piv.

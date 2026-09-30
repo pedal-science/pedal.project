@@ -102,8 +102,12 @@ common() {  # common <root> <kind>
   local r=$1 kind=$2
   echo "$HOSTNAME" > "$r/etc/hostname"
   printf '127.0.0.1 localhost\n127.0.1.1 %s\n' "$HOSTNAME" > "$r/etc/hosts"
-  # Made on first boot (the pedal), or each boot in /run (rescue, read-only).
-  echo uninitialized > "$r/etc/machine-id"
+  # Empty: systemd makes one at boot (committed on the pedal, in /run on read-only rescue). Not
+  # "uninitialized", which makes it a first boot: systemd-firstboot then waits on tty1 for a
+  # locale and a root password with the other consoles muted, and nothing after sysinit.target
+  # ever starts (vip's first card, 2026-09-30); and preset-all would re-enable units.
+  : > "$r/etc/machine-id"
+  chroot "$r" systemctl mask -q systemd-firstboot.service
 
   chroot "$r" useradd -m -s /bin/bash -G sudo "$USER_NAME"
   local uid; uid=$(chroot "$r" id -u "$USER_NAME")

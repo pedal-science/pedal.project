@@ -1,5 +1,5 @@
 # vip's pedal boot partition: appended to the config.txt that rtpi's vip-boot writes.
-# No HDMI audio card, and no KMS display driver: the pedal has no screen, and the GPU's memory
-# traffic is what namchain's docs/distro-slimming.md says to keep off the housekeeping cores.
-# The WM8960 overlay is loaded at runtime by pedal-codec, not here.
-dtparam=audio=off
+# Nothing yet. No KMS display driver (it isn't loaded, so there's no HDMI audio card either): the
+# pedal has no screen, and the GPU's memory traffic is what namchain's docs/distro-slimming.md
+# says to keep off the housekeeping cores. The Pi 5's firmware ignores dtparam=audio. The WM8960
+# overlay is loaded at runtime by pedal-codec, not here.
