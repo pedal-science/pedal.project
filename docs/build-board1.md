@@ -8,6 +8,11 @@ and photos, and runs the software on the Core host. Written 2026-09-30.
 where to stop and paste readings or a photo. If anything looks, smells or measures wrong, unplug and
 ask.
 
+**Order (decided 2026-10-01):** the circuit goes on the breadboard first
+([build-board1-breadboard.md](build-board1-breadboard.md)), and this soldered build follows once
+it has worked there. The stripboard is also practice for the enclosure's tighter board A. Phase 2's
+noise measurements are made on this board, not the breadboard.
+
 **What board 1 delivers.** Guitar → input jack → buffer → the codec board's LIN1, and the codec's
 HPL/HPR → output stage → OUT L and OUT R, powered from a Cioks outlet. With `namchaind` on the codec,
 that's Phase 2's "done when": guitar → buffer → WM8960 → `namchaind` → output stage → amp.
