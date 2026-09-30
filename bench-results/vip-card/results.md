@@ -61,3 +61,8 @@ failed units, `namchaind` is active playing the default rig with both blocks sto
 `scripts/sync-library --host vip` (rsync now in the image): namchaind rescanned and republished by
 itself ("library rescanned: 0 assets still missing", generation 2), health `ok`, no issues, 52
 models and 1,538 IRs, and `devices/vip/check` green. `components.lock` stays piv's until step 8.
+
+**A note on commit ids.** Image 20260930T135950Z and vip's `/etc/pedal-image` name pedal.project
+`ff0b74c`. That commit never reached origin: before the push, a 294 MB device backup (the pedal
+root's image, which `backup` then saved) was replaced in history by a slim copy, and the same
+change is now `747c220`: the same tree bar that one backup file. `image.lock` names `747c220`.
