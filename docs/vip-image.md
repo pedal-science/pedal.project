@@ -4,7 +4,7 @@
 from nothing: one command on the Mac builds everything and writes a blank SD card, and the card
 boots vip straight onto the network. It also covers how vip keeps itself reachable when a
 kernel, a command line or its own root filesystem is broken. Your decisions of 2026-09-29 are
-recorded at the end. **Steps 1 to 7 are done** (2026-09-29/30): the spike card proved the layout
+recorded at the end. **All eight steps are done** (2026-09-29 to 10-01): the spike card proved the layout
 on vip, and rtpi's `vip-boot` ran every path on it (`bench-results/vip-spike/`). Step 2 changed
 the slots, below: two fixed slots `a/` and `b/` and a pointer file, where this plan had
 `current/`, `new/` and `old/`.
@@ -388,6 +388,16 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
 8. **The move:** `--host vip` in `status`, `host-lock`, `deploy-engine`, `sync-library` and
    `components-lock`; `AGENTS.md`, `working-across-repos.md` and `plan.md` say vip is the Core
    host and piv goes back to being the build host; the SSL 2+ moves to vip.
+
+   **Done, 2026-10-01.** Every script defaults to vip (`--host piv` for piv). `components.lock`
+   is per host, `devices/<host>/components.lock`, so applying to one host doesn't rewrite
+   another's. `scripts/deploy-engine --host vip` builds namchain on the Mac in the image's
+   container (`devices/common/image/build-namchain`, shared with the image build, whose binaries
+   came out byte-identical after the change) and installs it; its first run found a test that
+   can't make a Unix socket in a directory shared from the Mac, so it builds inside the container.
+   `AGENTS.md`, `working-across-repos.md` and `hardware-handoff.md` say vip is the Core host;
+   testing happens on it for now, and piv isn't updated (`plan.md`). The SSL 2+ stays with piv:
+   vip plays through the WM8960.
 
 Later, not now: the read-only pedal root and a second pedal root for A/B updates (Phase 4),
 using `pedal-data` and the same `vip-boot` candidate path.

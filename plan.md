@@ -860,12 +860,13 @@ tested off the board and on vip (`bench-results/vip-spike/vip-boot.md`). Step 3 
 `devices/vip/`, with `namchaind` on the WM8960, which is wired to vip and comes up as clock master
 (`bench-results/vip-spike/codec.md`). Steps 4 and 5 are done: `devices/vip/make-card` builds the card from `devices/vip/image.lock`
 (bit-identically), and vip boots from a blank card onto WiFi, playing, `check` green
-(`bench-results/vip-card/results.md`). Steps 6 and 7 are done: every fallback rehearsed on vip (`bench-results/vip-card/fallbacks.md`),
-and `devices/vip/make-card --remote` reimages vip from the Mac through rescue, trying the new root
-as a candidate (`bench-results/vip-card/remote.md`). vip runs image 20260930T220004Z (pedal
-438a71f, rtpi bae26dc), put there by `--remote`. Next is step 8: `--host vip` in `scripts/`, and
-the docs saying vip is the Core host. namchain f422dd0 plays a missing model or IR as a bypass,
-and ljoss 5da4ea6 marks the block.
+(`bench-results/vip-card/results.md`). Steps 6 to 8 are done, so `docs/vip-image.md` is finished: every fallback rehearsed on vip
+(`bench-results/vip-card/fallbacks.md`), `devices/vip/make-card --remote` reimages vip from the Mac
+through rescue (`bench-results/vip-card/remote.md`), and **vip is the Core host**: every script
+defaults to it, `components.lock` is per host (`devices/<host>/components.lock`), and
+`scripts/deploy-engine` builds the engine for vip on the Mac. vip runs image 20260930T220004Z
+(pedal 438a71f, rtpi bae26dc) with namchain d4fb8e5 deployed by `deploy-engine`. namchain f422dd0
+plays a missing model or IR as a bypass, and ljoss 5da4ea6 marks the block.
 
 **Testing happens on vip for now** (decided 2026-09-30), until it's a working pedal that shouldn't
 be disrupted; then the test hardware gets chosen again. piv isn't updated meanwhile, except that it
