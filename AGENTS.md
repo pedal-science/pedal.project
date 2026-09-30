@@ -54,6 +54,9 @@ schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-hando
   `devices/vip/image.lock` (namchain built and tested there, both roots, the boot partitions),
   secrets from 1Password vault `fx`, then write a card. `--lock` pins the lock to HEADs; `--dev`
   builds the working trees and marks the image `-dirty`. `docs/vip-image.md` is the design.
+  `--remote` writes no card: it puts the new pedal root on the running vip through its rescue
+  root, tries it once, and makes it the default only once the engine stays up
+  (`--remote --previous --image <build dir>` goes back to the root before).
 - `scripts/status [--host piv] [--no-fetch]`: every repo on the Mac and piv, the Core
   host's lock, `namchaind`'s status, and whether `components.lock`, the engine and
   `devices/` are current. Start every session with it.

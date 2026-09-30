@@ -4,7 +4,7 @@
 from nothing: one command on the Mac builds everything and writes a blank SD card, and the card
 boots vip straight onto the network. It also covers how vip keeps itself reachable when a
 kernel, a command line or its own root filesystem is broken. Your decisions of 2026-09-29 are
-recorded at the end. **Steps 1 to 6 are done** (2026-09-29/30): the spike card proved the layout
+recorded at the end. **Steps 1 to 7 are done** (2026-09-29/30): the spike card proved the layout
 on vip, and rtpi's `vip-boot` ran every path on it (`bench-results/vip-spike/`). Step 2 changed
 the slots, below: two fixed slots `a/` and `b/` and a pointer file, where this plan had
 `current/`, `new/` and `old/`.
@@ -376,6 +376,15 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
 7. **Reimage from the Mac, without touching the card:** `make-card --remote` streams a new
    pedal root to vip while it's in rescue, then boots it as a candidate. After this, reproducing
    vip is one command even when it's sealed in the enclosure.
+
+   **Done, 2026-09-30** (`bench-results/vip-card/remote.md`). `make-card --remote` takes vip to
+   rescue (rescue the default), sends the image into pedal-data (checked, the old one kept as
+   previous), writes it over the pedal root, boots it once, and makes it the default only once the
+   engine stays up and `vip-boot-validate` passes: 16 minutes with the build. A broken root is
+   refused and falls back to rescue; `--remote --previous --image <dir>` put the good one back in 5.
+   That test found `pedal-guard` counting a restarting namchaind as up; now the engine must stay
+   up in one run for 10 s. Not covered: a kernel change (refused: `vip-boot try-kernel`'s job), and
+   the rescue root and boot partitions, which only a card write changes.
 8. **The move:** `--host vip` in `status`, `host-lock`, `deploy-engine`, `sync-library` and
    `components-lock`; `AGENTS.md`, `working-across-repos.md` and `plan.md` say vip is the Core
    host and piv goes back to being the build host; the SSL 2+ moves to vip.
