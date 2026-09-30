@@ -102,11 +102,15 @@ commit=$("${SSH[@]}" "sed -n 's/^commit=//p' /etc/pedal-image")
 if (( ! PREVIOUS )) && [[ $commit != "$want_commit" ]]; then
   die "vip booted pedal commit $commit, not the image's $want_commit: left rescue the default"
 fi
-for i in $(seq 1 24); do
-  "${SSH[@]}" "systemctl is-active -q namchaind" && break
-  sleep 5
+# Up, and staying up: active in the same run 10 s apart. A namchaind that fails and restarts every
+# second is `active` for a moment each time, which a single look can catch (step 7).
+run_of() { "${SSH[@]}" "systemctl show -p ActiveState -p InvocationID --value namchaind | tr '\n' ' '"; }
+stable=0
+for i in $(seq 1 12); do
+  a=$(run_of); sleep 10; b=$(run_of)
+  if [[ $a == active\ ?* && $a == "$b" ]]; then stable=1; break; fi
 done
-"${SSH[@]}" "systemctl is-active -q namchaind" || die "namchaind isn't running on the new root: left rescue the default; a reboot returns to rescue"
+(( stable )) || die "namchaind isn't staying up on the new root: left rescue the default; a reboot returns to rescue"
 "${SSH[@]}" "sudo /usr/local/libexec/vip-boot-validate \$(uname -r)" 2>&1 | tail -1 >&2 \
   || die "the new root failed validation: left rescue the default; a reboot returns to rescue"
 "${SSH[@]}" "sudo vip-boot default pedal" >/dev/null
