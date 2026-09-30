@@ -1,0 +1,17 @@
+#!/bin/bash
+# What booted: the markers on the command line, the bootloader's own account in the device
+# tree, and autoboot.txt as it stands. Every boot appends one line to /var/log/spike-boots.log.
+bl=/proc/device-tree/chosen/bootloader
+u32() { [[ -r $bl/$1 ]] && printf '%d' "0x$(od -An -tx1 "$bl/$1" | tr -d ' \n')" || echo '?'; }
+str() { [[ -r $bl/$1 ]] && tr -d '\0' < "$bl/$1" || echo '?'; }
+marks=$(tr ' ' '\n' < /proc/cmdline | grep '^spike\.' | tr '\n' ' ')
+line="$(date -u +%FT%TZ) ${marks}bl.partition=$(u32 partition) bl.tryboot=$(u32 tryboot) bl.boot-mode=$(u32 boot-mode)"
+if [[ ${1:-} == --log ]]; then echo "$line" >> /var/log/spike-boots.log; exit 0; fi
+echo "$line"
+echo "bootloader version $(str version), built $(date -u -d @"$(u32 build-timestamp)" +%F 2>/dev/null)"
+echo "kernel $(uname -r)"
+ip -brief addr | grep -v '^lo'
+if mount -o ro LABEL=BOOTSEL /boot/bootsel 2>/dev/null; then
+  echo "--- autoboot.txt"; cat /boot/bootsel/autoboot.txt; umount /boot/bootsel
+fi
+echo "--- history"; tail -n 20 /var/log/spike-boots.log 2>/dev/null

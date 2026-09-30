@@ -1,0 +1,24 @@
+# Units masked on vip, one per line. Mask, not disable: a disabled unit can still be started by a
+# socket, a timer or a dependency. Units that do not exist on the board are skipped.
+#
+# vip's pedal root is built from packages (docs/vip-image.md), so most of piv's list (desktop,
+# snapd, cloud-init, ModemManager, PipeWire) was never installed. What's left is maintenance that
+# wakes up on its own: updates and checks happen when you choose, not mid-gig.
+apt-daily.service
+apt-daily.timer
+apt-daily-upgrade.service
+apt-daily-upgrade.timer
+dpkg-db-backup.service
+dpkg-db-backup.timer
+e2scrub_all.service
+e2scrub_all.timer
+e2scrub_reap.service
+fstrim.service
+fstrim.timer
+motd-news.service
+motd-news.timer
+#
+# Deliberately NOT masked:
+#   systemd-timesyncd   vip has no RTC battery; without it the clock starts wherever it stopped.
+#   systemd-networkd, wpa_supplicant@wlan0, systemd-resolved
+#                       WiFi is the way in (no cable near vip).

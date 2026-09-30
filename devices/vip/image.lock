@@ -1,0 +1,6 @@
+# What devices/vip/make-card builds from (docs/vip-image.md). --lock rewrites the commits;
+# the snapshot changes by hand, deliberately. Check namchain is the engine you mean.
+snapshot=20260929T000000Z
+pedal=747c220ecff3594b3a02b81b9da57de9219753b9
+rtpi=217ca9bf04ce5492b388171dd3b5c5c2de9c44af
+namchain=f422dd0dddc76ee059180b8735d45bc5f784b348

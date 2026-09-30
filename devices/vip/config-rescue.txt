@@ -1,0 +1,4 @@
+# vip's rescue boot partition: appended to the config.txt that rtpi's vip-boot writes.
+# The KMS driver stays, so the HDMI console works with a keyboard.
+dtoverlay=vc4-kms-v3d
+disable_fw_kms_setup=1

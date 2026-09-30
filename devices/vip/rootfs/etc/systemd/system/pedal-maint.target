@@ -1,0 +1,16 @@
+# The loose profile's target: `vip-boot loose` boots once with systemd.unit=pedal-maint.target,
+# `vip-boot default loose` every time (rtpi, devices/vip/device.env, LOOSE_ARGS).
+#
+# Everything needed to reach vip and work on it, and nothing that plays: not namchaind, not
+# pedal-tune, not pedal-codec, since those are wanted by multi-user.target, which this doesn't
+# pull in. vip-boot refuses a loose boot while this file is missing: without it systemd would drop
+# to emergency mode, with no network.
+[Unit]
+Description=Pedal maintenance: reachable, not playing (the loose profile)
+Documentation=file:/etc/pedal/tune.conf
+Requires=basic.target
+Wants=network.target systemd-networkd.service systemd-resolved.service wpa_supplicant@wlan0.service
+Wants=ssh.service systemd-timesyncd.service getty.target pedal-wifi.service
+After=basic.target
+Conflicts=rescue.service rescue.target
+AllowIsolate=yes

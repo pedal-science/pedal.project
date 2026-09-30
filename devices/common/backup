@@ -46,7 +46,9 @@ paths=(etc/pedal var/lib/pedal var/lib/namchain/host-slim
 existing=()
 for p in "${paths[@]}"; do [[ -e $p ]] && existing+=("$p"); done
 # The library (models, IRs, rigs) is data, synced from the Mac; the backup is configuration.
-sudo -n tar --exclude var/lib/pedal/library -cf - "${existing[@]}"
+# Not the library (it's synced from the Mac), and not vip's images/ (the pedal root's image on
+# pedal-data, for rescue: hundreds of MB, and made by the image build).
+sudo -n tar --exclude var/lib/pedal/library --exclude var/lib/pedal/images --exclude var/lib/pedal/lost+found -cf - "${existing[@]}"
 EOF
 
 ln -sfn "$(basename "$out")" "$DEV_DIR/backups/latest"

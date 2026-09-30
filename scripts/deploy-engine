@@ -5,7 +5,8 @@
 # Builds in a dedicated tree on the host (~/pedal-build/namchain), never the dev checkout, runs
 # the tests, installs into /opt/namchain/<commit>/, swaps /opt/namchain/current to it, installs
 # namchain's own unit (packaging/systemd/namchaind.service; devices/common adds the pedal's
-# drop-in), makes the TCP token if there is none, restarts namchaind and updates components.lock.
+# drop-in), makes the TCP token if there is none (normally it's installed from 1Password:
+# docs/vip-image.md), restarts namchaind and updates components.lock.
 # It holds the host's lock throughout (scripts/host-lock).
 #
 # piv only, for now: it builds natively for aarch64. tib's armv7-NEON build is a cross build on

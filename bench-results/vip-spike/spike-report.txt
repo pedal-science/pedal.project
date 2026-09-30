@@ -1,0 +1,29 @@
+2026-07-27T20:44:21Z spike.part=2 spike.slot=current bl.partition=2 bl.tryboot=0 bl.boot-mode=1
+bootloader version 66f33f7e651cf482a26fb2c931a7587bb14e71db, built 2026-05-11
+kernel 7.0.0-1017-raspi
+eth0             DOWN           
+wlan0            UP             192.168.178.23/24 metric 1024 2a02:8012:e384:0:9afe:54ff:fe15:258c/64 fd8a:c32:ee24:0:9afe:54ff:fe15:258c/64 fe80::9afe:54ff:fe15:258c/64 
+--- autoboot.txt
+[all]
+tryboot_a_b=1
+boot_partition=2
+
+[tryboot]
+boot_partition=2
+--- history
+2026-07-27T20:44:03Z spike.part=2 spike.slot=current bl.partition=2 bl.tryboot=0 bl.boot-mode=1
+2026-07-27T20:44:03Z spike.part=2 spike.slot=current bl.partition=2 bl.tryboot=0 bl.boot-mode=1
+2026-07-27T20:44:03Z spike.part=2 spike.slot=current bl.partition=2 bl.tryboot=0 bl.boot-mode=1
+2026-07-27T20:44:03Z spike.part=3 spike.slot=b bl.partition=3 bl.tryboot=1 bl.boot-mode=1
+2026-07-27T20:44:03Z spike.part=2 spike.slot=current bl.partition=2 bl.tryboot=0 bl.boot-mode=1
+2026-07-27T20:44:03Z spike.part=2 spike.slot=new bl.partition=2 bl.tryboot=1 bl.boot-mode=1
+2026-07-27T20:44:03Z spike.part=2 spike.slot=current bl.partition=2 bl.tryboot=0 bl.boot-mode=1
+2026-07-27T20:44:03Z spike.part=3 spike.slot=a bl.partition=3 bl.tryboot=0 bl.boot-mode=1
+2026-07-27T20:44:03Z spike.part=2 spike.slot=current bl.partition=2 bl.tryboot=0 bl.boot-mode=1
+--- free
+               total        used        free      shared  buff/cache   available
+Mem:             965         184         768           0          79         780
+Swap:              0           0           0
+--- df
+/dev/mmcblk0p4  845M  476M  309M  61% /
+--- failed units

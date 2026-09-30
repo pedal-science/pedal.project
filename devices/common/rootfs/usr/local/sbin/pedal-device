@@ -2,7 +2,7 @@
 # pedal-device — install, check and remove the pedal host's appliance configuration. Runs on the
 # host, as root. The Mac side (devices/<host>/apply in pedal.project) stages the tree and calls this.
 #
-#   pedal-device apply <stage-dir> [--dry-run] [--commit <id>]
+#   pedal-device apply <stage-dir> [--dry-run] [--commit <id>] [--root <dir>]
 #   pedal-device revert [--dry-run]
 #   pedal-device status
 #
@@ -10,10 +10,19 @@
 # same path. Everything done is recorded in /var/lib/pedal/manifest, and revert undoes exactly
 # that list. A file that already existed and was not ours is saved first and put back on revert.
 #
+# --root <dir> applies to a root filesystem that isn't running: the image build's (vip's card,
+# docs/vip-image.md). Files go under <dir>, units are enabled and masked with systemctl --root,
+# and nothing is started, reloaded or set at runtime; the manifest inside <dir> names the paths
+# as the running host will see them, so revert works there later. The image is then exactly
+# "a fresh root + apply".
+#
 # It touches no package, no boot asset and no kernel setting: those are rtpi's.
 
 set -euo pipefail
 
+# ROOT is empty on a running host, or the image build's root with --root. Paths in the manifest
+# never include it.
+ROOT=""
 STATE=/var/lib/pedal
 MANIFEST=$STATE/manifest
 SAVED=$STATE/preexisting
@@ -30,14 +39,18 @@ ADOPT_FILES=(/etc/security/limits.d/audio.conf /etc/security/limits.d/99-namchai
 DRY=0
 say()  { echo "pedal-device: $*"; }
 run()  { if (( DRY )); then echo "  DRY   $*"; else "$@"; fi; }
-record() { (( DRY )) || grep -qxF "$1" "$MANIFEST" 2>/dev/null || echo "$1" >> "$MANIFEST"; }
-recorded() { grep -qxF "$1" "$MANIFEST" 2>/dev/null; }
+record() { (( DRY )) || grep -qxF "$1" "$ROOT$MANIFEST" 2>/dev/null || echo "$1" >> "$ROOT$MANIFEST"; }
+recorded() { grep -qxF "$1" "$ROOT$MANIFEST" 2>/dev/null; }
+offline() { [[ -n $ROOT ]]; }
+# systemctl, or the root's own systemctl run in it when applying offline: that is the systemd the
+# host will boot, and the build container may have none.
+sctl() { if offline; then chroot "$ROOT" systemctl "$@"; else systemctl "$@"; fi; }
 
 save_preexisting() {   # save a file that is not ours before replacing or removing it
   local f=$1
-  [[ -e $f ]] || return 0
+  [[ -e $ROOT$f ]] || return 0
   recorded "file $f" && return 0
-  run install -D -m 0644 "$f" "$SAVED$f"
+  run install -D -m 0644 "$ROOT$f" "$ROOT$SAVED$f"
   record "saved $f"
 }
 
@@ -80,10 +93,10 @@ install_tree() {
   local root=$1 rel dst mode
   while IFS= read -r rel; do
     dst=/${rel#./}
-    if [[ -e $dst ]] && cmp -s "$root/$rel" "$dst"; then record "file $dst"; continue; fi
+    if [[ -e $ROOT$dst ]] && cmp -s "$root/$rel" "$ROOT$dst"; then record "file $dst"; continue; fi
     save_preexisting "$dst"
     case $dst in */bin/*|*/sbin/*) mode=0755 ;; *) mode=0644 ;; esac
-    run install -D -m "$mode" -o root -g root "$root/$rel" "$dst"
+    run install -D -m "$mode" -o root -g root "$root/$rel" "$ROOT$dst"
     record "file $dst"
     echo "  installed $dst"
   done < <(cd "$root" && find . -type f | sed "s|^\./||" | sort)
@@ -91,8 +104,13 @@ install_tree() {
 
 # A line "user:<unit>" masks a per-user unit for every user (systemctl --global); anything else is
 # a system unit.
-sc() { if [[ $1 == user:* ]]; then echo "systemctl --global"; else echo systemctl; fi; }
-unit_exists() { local u=${1#user:}; if [[ $1 == user:* ]]; then [[ -n $(find /usr/lib/systemd/user /etc/systemd/user -name "$u" 2>/dev/null) ]]; else systemctl cat "$u" >/dev/null 2>&1; fi; }
+sc() { if [[ $1 == user:* ]]; then echo "sctl --global"; else echo sctl; fi; }
+unit_exists() {
+  local u=${1#user:}
+  if [[ $1 == user:* ]]; then [[ -n $(find "$ROOT/usr/lib/systemd/user" "$ROOT/etc/systemd/user" -name "$u" 2>/dev/null) ]]
+  elif offline; then [[ -n $(find "$ROOT/usr/lib/systemd/system" "$ROOT/lib/systemd/system" "$ROOT/etc/systemd/system" -maxdepth 1 -name "$u" 2>/dev/null) ]]
+  else systemctl cat "$u" >/dev/null 2>&1; fi
+}
 
 mask_units() {
   local u st
@@ -109,7 +127,17 @@ mask_units() {
   done < <(units)
   # A masked timer whose service is also masked reports result=resources in systemctl --failed.
   # It cannot fire, so clear the noise rather than let it hide a real failure later.
-  run systemctl reset-failed >/dev/null 2>&1 || true
+  offline || run systemctl reset-failed >/dev/null 2>&1 || true
+}
+
+# The image build: enable what apply would enable, start nothing. The first boot brings it into force.
+activate_offline() {
+  local u
+  for u in pedal-tune.service pedal-resume.service pedal-codec.service pedal-wifi.service; do
+    [[ -e $ROOT/etc/systemd/system/$u ]] || continue
+    run sctl enable "$u" >/dev/null 2>&1
+    echo "  enabled   $u"
+  done
 }
 
 activate() {
@@ -132,7 +160,7 @@ activate() {
   # namchaind itself is installed and enabled by scripts/deploy-engine, with its binaries.
   run systemctl enable pedal-resume.service
   run systemctl restart --no-block pedal-resume.service
-  # Host-specific: only hosts with the codec wired ship this unit.
+  # Every Pi host ships this unit; it fails, harmlessly, where no codec is wired.
   if [[ -e /etc/systemd/system/pedal-codec.service ]]; then
     run systemctl enable pedal-codec.service
     run systemctl restart pedal-codec.service
@@ -150,16 +178,18 @@ do_apply() {
   [[ -d $stage/rootfs ]] || { say "no rootfs/ in $stage"; exit 2; }
   UNITS_FILE=$stage/rootfs/etc/pedal/masked-units
   (( DRY )) && say "DRY RUN: nothing will change"
-  run mkdir -p "$STATE"; (( DRY )) || touch "$MANIFEST"
-  adopt
+  offline && say "offline: applying to $ROOT, starting nothing"
+  run mkdir -p "$ROOT$STATE"; (( DRY )) || touch "$ROOT$MANIFEST"
+  offline || adopt
   install_tree "$stage/rootfs"
   mask_units
-  activate "$stage/rootfs/etc/pedal/tune.conf"
+  if offline; then activate_offline; else activate "$stage/rootfs/etc/pedal/tune.conf"; fi
   if (( ! DRY )); then
-    printf 'commit=%s\napplied=%s\n' "$commit" "$(date -u +%FT%TZ)" > /etc/pedal/applied
+    # SOURCE_DATE_EPOCH, when the image build sets it, keeps the image reproducible.
+    printf 'commit=%s\napplied=%s\n' "$commit" "$(date -u ${SOURCE_DATE_EPOCH:+-d @$SOURCE_DATE_EPOCH} +%FT%TZ)" > "$ROOT/etc/pedal/applied"
     record "file /etc/pedal/applied"
   fi
-  say "done. Manifest: $MANIFEST"
+  say "done. Manifest: $ROOT$MANIFEST"
 }
 
 do_revert() {
@@ -224,11 +254,17 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     --dry-run) DRY=1 ;;
     --commit) commit=$2; shift ;;
+    --root) ROOT=$(cd "$2" && pwd); [[ $ROOT != / ]] || ROOT=""; shift ;;
     *) stage=$1 ;;
   esac
   shift
 done
 
+if offline; then
+  [[ $cmd == apply ]] || { say "--root is for apply only"; exit 2; }
+  do_apply "${stage:?usage: pedal-device apply <stage-dir> --root <dir>}" "$commit"
+  exit 0
+fi
 exec 9> "$LOCK"
 case $cmd in
   apply)  flock -n 9 || { say "$(hostname) is locked by another job ($LOCK)"; exit 3; }
@@ -236,5 +272,5 @@ case $cmd in
   revert) flock -n 9 || { say "$(hostname) is locked by another job ($LOCK)"; exit 3; }
           do_revert ;;
   status) do_status ;;
-  *) sed -n '2,13p' "$0"; exit 2 ;;
+  *) sed -n '2,19p' "$0"; exit 2 ;;
 esac

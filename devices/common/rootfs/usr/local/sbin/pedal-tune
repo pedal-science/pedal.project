@@ -126,7 +126,13 @@ check() {
   local irqs; irqs=$(audio_irqs)
   [[ -n $irqs ]] || fail "interrupt" "none matches"
   for irq in $irqs; do
-    [[ -n $AUDIO_IRQ_CPU ]] && expect "IRQ $irq affinity" "$(cat "/proc/irq/$irq/effective_affinity_list" 2>/dev/null || cat "/proc/irq/$irq/smp_affinity_list")" "$AUDIO_IRQ_CPU"
+    # The effective affinity where the chip reports one; the RP1's chained chip (vip's codec DMA)
+    # leaves it empty, so fall back to the requested one.
+    if [[ -n $AUDIO_IRQ_CPU ]]; then
+      local aff; aff=$(cat "/proc/irq/$irq/effective_affinity_list" 2>/dev/null)
+      [[ -n $aff ]] || aff=$(cat "/proc/irq/$irq/smp_affinity_list")
+      expect "IRQ $irq affinity" "$aff" "$AUDIO_IRQ_CPU"
+    fi
     for tid in $(irq_threads "$irq"); do
       expect "thread $(cat "/proc/$tid/comm") prio" "$(chrt -p "$tid" | awk '/priority/ {print $NF}')" "$AUDIO_IRQ_PRIO"
     done

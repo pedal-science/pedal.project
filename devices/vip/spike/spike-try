@@ -1,0 +1,17 @@
+#!/bin/bash
+# Arm a one-shot and reboot.
+#   spike-try <N>         point autoboot.txt's [tryboot] at partition N, then reboot "0 tryboot"
+#   spike-try --raw ARG   reboot with ARG as the reboot parameter, autoboot.txt untouched
+set -euo pipefail
+[[ $EUID -eq 0 ]] || exec sudo "$0" "$@"
+if [[ ${1:-} == --raw ]]; then arg=$2
+else
+  [[ ${1:-} =~ ^[0-9]+$ ]] || { echo "usage: spike-try <partition> | --raw '<reboot arg>'" >&2; exit 2; }
+  mount LABEL=BOOTSEL /boot/bootsel
+  printf '[all]\ntryboot_a_b=1\nboot_partition=2\n\n[tryboot]\nboot_partition=%s\n' "$1" \
+    > /boot/bootsel/autoboot.txt
+  sync; umount /boot/bootsel
+  arg="0 tryboot"
+fi
+echo "rebooting with \"$arg\""
+systemctl reboot --reboot-argument="$arg"

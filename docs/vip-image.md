@@ -4,7 +4,10 @@
 from nothing: one command on the Mac builds everything and writes a blank SD card, and the card
 boots vip straight onto the network. It also covers how vip keeps itself reachable when a
 kernel, a command line or its own root filesystem is broken. Your decisions of 2026-09-29 are
-recorded at the end. Nothing is built yet.
+recorded at the end. **Steps 1 to 5 are done** (2026-09-29/30): the spike card proved the layout
+on vip, and rtpi's `vip-boot` ran every path on it (`bench-results/vip-spike/`). Step 2 changed
+the slots, below: two fixed slots `a/` and `b/` and a pointer file, where this plan had
+`current/`, `new/` and `old/`.
 
 It settles the open question in `plan.md` ("which repo owns vip's kernel and boot
 configuration") as proposed below, under [Who owns what](#who-owns-what).
@@ -81,7 +84,7 @@ GPT, so partitions carry labels and there's no four-primary limit. The Pi 5 boot
 | # | Label | Type | Size | Holds |
 |---|---|---|---|---|
 | 1 | `bootsel` | FAT32 | 64 MB | `autoboot.txt` only, plus the boot counter and the last fallback reason. Both roots can write it |
-| 2 | `pedal-boot` | FAT32 | 512 MB | The pedal's `config.txt`, and kernel slots `current/`, `new/`, `old/`, each with its kernel, initramfs, DTBs, overlays and `cmdline.txt` |
+| 2 | `pedal-boot` | FAT32 | 512 MB | The pedal's `config.txt`, `profile.txt` and `tryboot.txt`, and kernel slots `a/` and `b/`, each with its kernel, initramfs, DTBs, overlays, `cmdline-tuned.txt` and `cmdline-loose.txt` |
 | 3 | `rescue-boot` | FAT32 | 256 MB | The rescue kernel, initramfs, DTBs and `config.txt` |
 | 4 | `rescue` | ext4 | 1.5 GB | The rescue root. Mounted read-only, `/var` and `/tmp` on tmpfs |
 | 5 | `pedal` | ext4 | 3 GB | The pedal root |
@@ -102,18 +105,31 @@ reset or a power cut returns to the default. With `tryboot_a_b=1`, the flag sele
 partition in `autoboot.txt`, and `[tryboot]` sections in that partition's `config.txt` also apply.
 That's what piv uses today, one level down.
 
-One tool, `vip-boot`, is the only thing that writes `autoboot.txt` and the `[tryboot]` sections.
-It arms a one-shot by writing the `[tryboot]` blocks for what you asked for, then reboots with the
-flag. The `[all]` default changes only on promotion or when you ask for a new default.
+One tool, `vip-boot` (rtpi, `devices/vip/usr/local/sbin/vip-boot`), is the only thing that writes
+the boot selection. The pedal's `config.txt` is written once and never again; it includes two
+small files that `vip-boot` rewrites:
+
+```
+[all]       include profile.txt     os_prefix=a/ and cmdline=cmdline-tuned.txt: the default
+[tryboot]   include tryboot.txt     what the next one-shot changes, e.g. os_prefix=b/
+```
+
+Kernels live in two fixed slots, `a/` and `b/`. `profile.txt` names the active one; the other
+holds the previous kernel, or a candidate while one is tried. Promoting a candidate is one
+rewrite of `profile.txt`, not a rename of directories, so at no moment does the card lack a
+kernel to boot. Every file `vip-boot` changes on FAT (`autoboot.txt`, `profile.txt`,
+`tryboot.txt`, the counter) is rewritten in place at the same length, inside one sector, so a
+power cut mid-write leaves the old sector or the new one. Tested on vip with the spike
+(`include` under `[tryboot]` applies; a later `os_prefix` wins).
 
 | You want | Command | What boots | Afterwards |
 |---|---|---|---|
-| Normal | power on | pedal-boot `current/`, tuned | — |
-| Try a kernel | `vip-boot try-kernel <rel>` | pedal-boot `new/` once | validate passes → promote `new/` → `current/` → `old/`. Anything else → `current/` again, and `new/` is marked bad |
-| Try new boot arguments | `vip-boot try-args '<args>'` | `new/` with the same kernel and the new command line | the same as a kernel |
-| One loose boot | `vip-boot loose` | `current/`, loose profile | next boot is tuned |
+| Normal | power on | the active slot, default profile (tuned) | — |
+| Try a kernel | `vip-boot try-kernel <rel>` | the spare slot once | validate passes → it becomes the active slot, and the other keeps the previous kernel. Anything else → the active slot again, and the candidate is marked bad |
+| Try new boot arguments | `vip-boot try-args '<args>'` | the spare slot with the same kernel and the new tuned arguments | the same as a kernel |
+| One loose boot | `vip-boot loose` | the active slot, loose profile | next boot is tuned |
 | Loose until told otherwise | `vip-boot default loose` | loose every boot | `vip-boot default tuned` |
-| Rescue once | `vip-boot rescue` | rescue-boot | next boot is the pedal |
+| Rescue once | `vip-boot rescue` (`reboot "3"`: no flag, nothing written) | rescue-boot | next boot is the pedal |
 | Stay in rescue | `vip-boot rescue --stay` (or from rescue: `vip-boot stay`) | rescue every boot | `vip-boot default pedal` from rescue |
 
 ### Falling back without being asked
@@ -159,16 +175,18 @@ rescue path if its WiFi configuration is ever what broke.
 ## The build
 
 Everything runs in colima on the Mac. The M2 is arm64, so the container runs aarch64 Ubuntu
-natively, with no qemu and no emulation. Nothing needs loop devices or a privileged container:
+natively, with no qemu and no emulation. Nothing needs loop devices or a `--privileged` container;
+the one privilege is `CAP_SYS_ADMIN`, for mmdebstrap to mount `/proc` in the root it builds
+(the spike, `devices/vip/spike/build`, does exactly this):
 
 - **Roots:** `mmdebstrap --variant=minbase` from `snapshot.ubuntu.com` at a pinned timestamp, so
   the same inputs give the same packages. Ubuntu 26.04 `resolute` (decided), with
   `resolute-updates` for the 7.0.0-1017 kernels. `SOURCE_DATE_EPOCH` is set from the pinned
   snapshot.
-- **Customisation** happens in mmdebstrap hooks: user `rik`, the hostname, fstab by label, the
-  network, the watchdog drop-ins, the dracut safety arguments, the SSH host keys and the secrets.
-  Then, for the pedal root:
-  - `pedal-device apply --offline` installs `devices/common` + `devices/vip`, enables units and
+- **Customisation** happens in the root after mmdebstrap (`devices/common/image/build-image`):
+  user `rik`, the hostname, fstab by label, the network, mDNS (`vip.local`), the watchdog
+  drop-ins, the SSH host key and the secrets. Then, for the pedal root:
+  - `pedal-device apply --root` installs `devices/common` + `devices/vip`, enables units and
     masks units without starting anything. So the image is exactly "fresh + apply", and apply
     stays the one source for the configuration.
   - `namchaind` goes into `/opt/namchain/<commit>/` with its manifest, as deploy-engine does.
@@ -192,17 +210,23 @@ natively, with no qemu and no emulation. Nothing needs loop devices or a privile
 **Secrets never enter git, and live in 1Password.** `make-card` reads them with `op read` at
 build time and writes them straight into the roots as the files the services already expect,
 mode 600, root-owned: the WiFi connection in both roots, and `/etc/namchain/token` in the pedal
-root. They never pass through a file on the Mac. The items:
+root. They never pass through a file on the Mac.
 
-| 1Password item (names to settle in step 4) | Goes to |
-|---|---|
-| WiFi SSID and PSK | the WiFi connection in both roots |
-| `namchaind` token: **piv's**, so ljoss connects to vip unchanged | `/etc/namchain/token` |
-| vip's SSH host keys, generated once by the first run and stored back | `/etc/ssh/ssh_host_*` in both roots |
+**Where (settled 2026-09-29):** the 1Password vault **`fx`**, read by the service account `fx`.
+Its token is in the Mac's login keychain, item label `fx` (service
+`1password-fx-vault-service-account`); `make-card` passes it to `op` as
+`OP_SERVICE_ACCOUNT_TOKEN`, in memory, so the build needs neither the desktop app nor a sign-in.
+The account sees only `fx`. The items:
+
+| 1Password item in `fx` | Fields | Goes to |
+|---|---|---|
+| `wifi` (Wireless Router) | `network name`, `wireless network password` (the passphrase) | the WiFi connection in both roots |
+| `namchaind` (Password): **piv's** token, copied 2026-09-29, so ljoss connects to vip unchanged | `password` (64 characters) | `/etc/namchain/token` |
+| vip's SSH host keys, generated once by the first run and stored back (not there yet) | | `/etc/ssh/ssh_host_*` in both roots |
 
 Keeping the host keys means a reflashed vip is the same machine to `ssh`, with no `known_hosts`
 warning. `authorized_keys` comes from the 1Password agent (`ssh-add -L`). The build stops early if
-`op` isn't signed in, before any time is spent.
+the token can't read `fx`, before any time is spent.
 
 Reusing piv's token needs one step in 4: copy it from piv into 1Password, piped straight from
 `ssh piv sudo cat /etc/namchain/token` into `op`, never shown. It also changes a rule:
@@ -225,9 +249,9 @@ confirmation).
 
 ### Pi 5 settings in the image
 
-- `config.txt` for pedal-boot: `arm_64bit`, the watchdog on, `dtparam=audio=off` (no HDMI audio
+- `config.txt` for pedal-boot: `arm_64bit`, the watchdog on (the Pi 5 firmware ignores `dtparam=audio`; no HDMI audio
   card), no `vc4-kms-v3d` (display off on the pedal, following distro-slimming's point about the
-  GPU's memory traffic), a small CMA, the kernel console on `ttyAMA10`. The WM8960 overlay stays
+  GPU's memory traffic), the kernel console on `ttyAMA10`. The WM8960 overlay stays
   loaded at runtime by `pedal-codec`, as on piv.
 - rescue-boot keeps the KMS driver, so the HDMI console works with a keyboard.
 - `cfg80211.ieee80211_regdom=GB`, the dracut arguments (`rd.shell=0 rd.emergency=reboot
@@ -265,16 +289,70 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
 
    Done when all three are seen and the EEPROM version is recorded. If one fails, the layout
    changes here, before anything is built on it.
+
+   **Done, 2026-09-29.** All three seen, and a fourth: `reboot "<N>"` boots partition N once
+   with no flag and no write, which suits `vip-boot rescue`. EEPROM 2026-05-11. What the image
+   needed: `net.ifnames=0` (else `wlan0` is `wld0`), a 64-hex WiFi key written unquoted,
+   `systemd-timesyncd`, and `systemctl reboot --reboot-argument=…` in `vip-boot`.
 2. **rtpi:** `devices/vip/device.env`, and `vip-boot` with its validate hook, the counter and
    the fallback, written for an image-built host. Unit-test the state logic off the board.
+
+   **Done, 2026-09-29.** `tests/vip-boot` (30 tests), and every path run on vip with the spike
+   (`bench-results/vip-spike/vip-boot.md`), which found four bugs the tests couldn't: the
+   initramfs counter ran before the card's partitions appeared, validation queued two minutes
+   behind `network-online.target`, tools missing from the initramfs, and a loose boot with no
+   `pedal-maint.target` would strand vip. For step 3: `pedal-maint.target`, and
+   `RequiredForOnline=no` on `eth0`. For step 4: `ca-certificates` in both roots, and room for
+   dracut on the pedal root.
 3. **pedal.project:** `devices/vip/` from `devices/piv/`, not copied blind (no docker or libvirt
    notes, the Pi 5's interrupt layout, 1 GB), and `pedal-device apply --offline` for the image.
+
+   **Done, 2026-09-29.** `devices/vip/`: `namchaind` on the WM8960 (2 in, 2 out; the codec is
+   wired to vip, `bench-results/vip-spike/codec.md`), `pedal-tune` pinning the codec's interrupt
+   (`dw_axi_dmac_platform`, the RP1's DMA) to core 2 itself, a short mask list, networkd and
+   wpa_supplicant with `eth0` not required for online, keys-only sshd, `pedal-maint.target`, and
+   `devices/vip/packages`, the pedal root's package list for step 4. The codec files moved to
+   `devices/common` (both Pi hosts). `pedal-device apply --root <dir>` applies offline, with the
+   root's own systemctl; `devices/vip/test-offline-apply` builds a root from the package list and
+   checks the result. The step's plan said `--offline`; it's `--root`, since it needs the root.
 4. **The build:** the container, both roots, namchain, the image, the manifest. Done when
    `make-card --image-only` produces an image from pinned inputs, and a second run with the same
    pins produces the same package list and file tree.
+
+   **Done, 2026-09-30.** `devices/vip/make-card` (`devices/common/make-card`, container side
+   `devices/common/image/build-image`), pinned by `devices/vip/image.lock`: snapshot
+   20260929T000000Z, rtpi 217ca9b, namchain 503aac9 (what piv runs; its HEAD isn't pushed).
+   Two runs from the lock (`devices/vip/images/20260929T232637Z.manifest` and `…233219Z`) gave
+   the same packages (174 pedal, 159 rescue), the same file trees, and a **bit-identical image**
+   (sha256 `9719226b…`): fixed filesystem and partition UUIDs, `SOURCE_DATE_EPOCH` on every file,
+   dracut `--reproducible`. About six minutes a run; 5.8 GB, 1.5 GB of it data. namchain's five
+   test suites pass in the container. What it does beyond the plan above, or differently:
+   - One SSH host key, ed25519, made by the first run as a 1Password SSH Key item
+     (`fx/vip-ssh-host`) and read with `?ssh-format=openssh`; `HostKey` names it, `sshd-keygen`
+     is masked and `ssh.socket` disabled (sshd runs as `ssh.service`, which validate follows).
+   - mDNS by resolved on both roots, so `ssh vip.local` works without the router's DNS.
+   - The roots are GPT type root-arm64 and pedal-data generic Linux, so `systemd-repart`
+     (`/etc/repart.d/50-pedal-data.conf`) matches pedal-data alone and grows it on first boot;
+     fstab's `x-systemd.growfs` grows the filesystem.
+   - Rescue: read-only root with tmpfs on `/tmp`, `/var/tmp`, `/var/log`, `/var/lib/systemd` and
+     `/var/lib/sudo`, a volatile journal, root autologin on HDMI and the UART header (no
+     passwords exist; whoever holds the board holds the card), and a prompt that says rescue.
+   - The golden-reference test's own build runs `make -j` unbounded and ran colima's 6 GB out of
+     memory; the build makes it first at `-j2`.
+   - **Debt:** `pedal-device`'s manifest (`/var/lib/pedal/manifest`) lives on pedal-data with the
+     library, so restoring the pedal root from its image keeps the old manifest. Step 7 should
+     move it into the root (`/var/lib/pedal-device`), or rewrite it on restore.
 5. **The card:** done when a blank card goes into vip, vip powers on, and without any other step
    `ssh vip` works, `devices/vip/check` is green, `namchaind` is running the default rig, and
    `components.lock` matches the manifest.
+
+   **Done, 2026-09-30**, on the third card (`bench-results/vip-card/results.md`). The first hung at
+   `systemd-firstboot` (machine-id `uninitialized`); the second needed the library the card
+   doesn't carry, so namchain now plays a block whose model or IR is missing as a bypass and
+   ljoss marks it (f422dd0, 5da4ea6). A fresh card boots playing the default rig's blocks as
+   bypasses, and `sync-library --host vip` brings the rig in without a restart. `pedal-tune
+   check` learned that the RP1's interrupt chip reports no effective affinity. Left for step 8:
+   `components.lock` holds one host, piv, and `devices/vip/apply` overwrites it.
 6. **Rehearse every fallback on vip**, as rtpi did on piv, and record the results in
    `bench-results/`:
    - a kernel candidate that passes, and one that can't find its root;

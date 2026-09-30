@@ -1,0 +1,39 @@
+# The rescue root's packages, beyond mmdebstrap's minbase: read by the image build
+# (docs/vip-image.md, "Two roots"), from the pinned snapshot, without recommends. Small and
+# rarely changed: it exists to be reachable when the pedal root isn't, and to repair it.
+
+# A different kernel from the pedal's: Ubuntu's plain flavour (rtpi devices/vip/device.env,
+# RESCUE_KERNEL), so a problem in one is never in both.
+linux-image-7.0.0-1017-raspi
+linux-modules-7.0.0-1017-raspi
+linux-firmware-raspi
+wireless-regdb
+
+# Booting, and changing the boot selection (rtpi's vip-boot).
+systemd
+systemd-sysv
+systemd-resolved
+systemd-timesyncd
+udev
+dbus
+dracut-core
+python3-minimal
+
+# Reaching it: WiFi, a cable, mDNS (resolved), sshd.
+openssh-server
+sudo
+wpasupplicant
+iproute2
+iputils-ping
+ca-certificates
+
+# Repairing the pedal root: check and mount its filesystems, edit, restore its image from
+# pedal-data (zstd), and see what's on the card.
+e2fsprogs
+dosfstools
+fdisk
+zstd
+util-linux
+procps
+kmod
+less

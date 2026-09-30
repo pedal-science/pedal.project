@@ -46,7 +46,14 @@ schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-hando
   `IRs` into `/var/lib/pedal/library/{models,irs}` on the Core host, and ask
   `namchaind` to rescan. Rigs on the host are never touched.
 - `devices/<host>/{apply,check,backup}` (symlinks into `devices/common/`): the Core
-  host's configuration as code. Run `backup` before changing anything.
+  host's configuration as code. Run `backup` before changing anything. `pedal-device apply <stage> --root
+  <dir>` applies the same tree to a root that isn't running (vip's image build);
+  `devices/vip/test-offline-apply` checks that in the build container.
+- `devices/vip/make-card [--image-only] [--disk /dev/diskN] [--dev]` (links to
+  `devices/common/make-card`): build vip's whole card in colima from the commits in
+  `devices/vip/image.lock` (namchain built and tested there, both roots, the boot partitions),
+  secrets from 1Password vault `fx`, then write a card. `--lock` pins the lock to HEADs; `--dev`
+  builds the working trees and marks the image `-dirty`. `docs/vip-image.md` is the design.
 - `scripts/status [--host piv] [--no-fetch]`: every repo on the Mac and piv, the Core
   host's lock, `namchaind`'s status, and whether `components.lock`, the engine and
   `devices/` are current. Start every session with it.

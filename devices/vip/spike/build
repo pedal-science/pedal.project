@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# Build the step 1 spike card image for vip, on the Mac, in colima. See README.md.
+#
+#   devices/vip/spike/build [--wifi-from piv|op:<item>]
+#
+# The WiFi SSID and PSK go straight from their source into the container's stdin: never
+# shown, never a file on the Mac (except inside the image itself, which is gitignored).
+# Default source is piv's netplan, since the spike predates the 1Password items.
+
+set -euo pipefail
+log() { printf '\033[1;34m==>\033[0m %s\n' "$*" >&2; }
+die() { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
+
+HERE=$(cd "$(dirname "$0")" && pwd)
+REPO=$(git -C "$HERE" rev-parse --show-toplevel)
+OUT=$REPO/build/vip-spike
+SNAPSHOT=20260929T000000Z
+WIFI=piv
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --wifi-from) WIFI=$2; shift 2 ;;
+    *) die "unknown argument: $1" ;;
+  esac
+done
+
+docker info >/dev/null 2>&1 || die "no docker: start colima (colima start --arch aarch64 --vm-type vz)"
+[[ $(docker info --format '{{.Architecture}}') == aarch64 ]] || die "the docker host is not aarch64"
+mkdir -p "$OUT"
+ssh-add -L > "$OUT/authorized_keys" 2>/dev/null && [[ -s $OUT/authorized_keys ]] \
+  || die "ssh-add -L gave no keys (is the 1Password SSH agent running?)"
+
+wifi() {
+  case $WIFI in
+    piv) ssh piv 'sudo python3 -c "
+import yaml, glob
+for f in sorted(glob.glob(\"/etc/netplan/*.yaml\")):
+    for ssid, ap in ((yaml.safe_load(open(f)).get(\"network\") or {}).get(\"wifis\") or {}).get(\"wlan0\", {}).get(\"access-points\", {}).items():
+        print(ssid); print(ap.get(\"auth\", {}).get(\"password\") or ap.get(\"password\")); raise SystemExit
+raise SystemExit(\"no wlan0 access point in piv netplan\")
+"' ;;
+    op:*) op read "op://${WIFI#op:}/network name" && op read "op://${WIFI#op:}/wireless network password" ;;
+    *) die "--wifi-from takes piv or op:<vault>/<item>" ;;
+  esac
+}
+
+log "container"
+docker build -q -t vip-build:spike --build-arg SNAPSHOT=$SNAPSHOT "$HERE" >/dev/null
+
+log "image (a few minutes)"
+# mmdebstrap's root mode mounts /proc, /sys and /dev in the root it builds, which needs
+# CAP_SYS_ADMIN in the container. Nothing else does: no loop devices, no --privileged.
+wifi | docker run --rm -i \
+  --cap-add SYS_ADMIN --security-opt apparmor=unconfined --security-opt seccomp=unconfined \
+  -e SNAPSHOT=$SNAPSHOT -e SPIKE_HOSTNAME=vip-spike \
+  -v "$HERE:/spike:ro" -v "$OUT/authorized_keys:/in/authorized_keys:ro" -v "$OUT:/out" \
+  vip-build:spike /spike/build-image.sh
+log "built: $OUT/spike.img"
