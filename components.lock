@@ -3,5 +3,5 @@
 host=piv
 board=Raspberry Pi 500 Rev 1.0
 kernel=7.0.0-1017-raspi-realtime
-namchain=503aac92037df7aa6eece69e259b64154d499200
+namchain=d4fb8e54089d5e2528a7265537af7ca35752cb6b
 devices=d5fb68d
