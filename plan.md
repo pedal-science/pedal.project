@@ -550,7 +550,9 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    10 µF / 100 Ω / 1 MΩ out). Two additions: hot-pickup headroom through the PGA in the mixer
    file, and the film replacement for LIN1's 47 nF in 2c.
 3. **Build the buffer and the output stage** on stripboard, powered from a Cioks outlet through the
-   LDO.
+   LDO. The bench walkthrough is [docs/build-board1.md](docs/build-board1.md) (2026-09-30), and the
+   layout, checked against the netlist, is `stripboard/board1.py`. Everything but the op-amp can be
+   built now, since it plugs into a socket.
 
 **2c. Modify and compare.**
 - Replace LIN1's 47 nF ceramic shunt with a film capacitor (2b finding), and measure THD against
