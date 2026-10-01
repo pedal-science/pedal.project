@@ -33,7 +33,7 @@ something is unverified it says so.
 | Control MCU | Raspberry Pi Pico 2 (ordering). An RP2350-USB-A is due, but its 15 GPIO are short of the ~18 needed, so it's for experiments |
 | Display | 2.4" ST7789 320×240 SPI module with EC11 encoder + tactile button, board V1.2 (in hand) |
 | Front end | Hi-Z buffer, to be built |
-| Power | Cioks DC7: 7 isolated outlets at 6 W each (660 mA @ 9 V); USB-A 1 A (Cioks' site may say 5 W) on v1, USB-C 15 W on v2; AUX 24 V @ 2 A |
+| Power | Cioks DC7 **v1** (in hand): 7 isolated outlets at 6 W each (660 mA @ 9 V); USB-A 1 A (Cioks' site may say 5 W); AUX 24 V @ 2 A. Raspberry Pi 45 W USB-C supply (in hand) for the Core host |
 
 **Topology: mono in, stereo out.** NAM input is mono; the chain may split into two
 channels running different kernels, and those are sometimes kept as stereo rather
@@ -179,8 +179,12 @@ enabled as a return path with nothing connected.
 
 Two inputs, deliberately:
 
-- **5 V / 3 A** for `tib` — own USB-C brick, or the DC7 v2's USB-C. The v1's USB-A
-  at 1 A is insufficient.
+- **5 V** for the Core host from the Raspberry Pi 45 W USB-C supply (5.1 V at 5 A by
+  USB PD), through a USB-C panel-mount extension into the Pi's own USB-C port, so the Pi
+  negotiates the current and keeps its input protection (decided 2026-10-01). The DC7 is
+  the v1, and its USB-A (1 A) is insufficient; it powers the MIDI Commander. The Pico takes
+  its 5 V from the Pi: a USB-A port or header pin 2, whichever stays live through a reboot
+  (`plan.md` 3.6). Parts and layout: `bom.md`, `plan.md` Phase 4.
 - **9 V centre-negative** from one isolated Cioks outlet → the buffer directly, and
   → a low-noise LDO → 3.3 V → AVDD.
 
@@ -188,6 +192,12 @@ The point is that the analogue supply never carries `tib`'s current. Hum comes f
 current in shared ground paths; this arrangement means the two meet only at the
 **star ground point**, where PSU 0 V, codec GND, buffer GND and jack sleeves are
 joined at one place.
+
+The case stays out of that scheme: plastic-bodied jacks, a DC socket that keeps 0 V off the
+case, and everything inside on **nylon** standoffs on a 3 mm FR4 plate screwed to the base
+(decided 2026-10-01). Metal standoffs would bond the Pi's grounded mounting holes, and the
+star tag's screw, to the case. Whether to bond the case to the star at one point, for
+shielding, is measured in Phase 4.
 
 A single-cable alternative exists — 24 V AUX at 2 A into an onboard buck for 5 V
 plus a linear regulator for 9 V — but it puts a 48 W-capable switcher inside the
@@ -301,9 +311,9 @@ Hardware-side work outstanding:
 - **Codec 3V3 source**: currently `tib`'s header. A second LDO off the 9 V would take
   the whole codec board — including the 24 MHz oscillator — off `tib`'s rails.
   Defensible addition; left out of the first pass.
-- **Pico power**: shown from `tib`, which means the control surface is dead during
-  boot. Its own 5 V would let it show a boot progress screen on the display and
-  hold the bypass relay — now more attractive since the display is in hand.
+- **Pico power**: from the Core host's 5 V (decided 2026-10-01, see Power). The Pico is
+  live whenever the supply is, so it can hold the bypass relay and show progress through
+  the Core host's boot, provided its 5 V stays on through a reboot (`plan.md` 3.6 tests it).
 - **Display module regulator** — see Control surface; blocks first power-up.
 - **Enclosure, panel layout, bypass relay circuit** — not yet designed. Panel must
   accommodate the display module's fixed screen/knob/button geometry, three

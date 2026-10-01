@@ -45,6 +45,9 @@ again from the current `pedal.blend`:
   expression and MIDI along the rear behind the boards; twisted pairs for the outputs; screened
   cable from the input jack; and the sleeves, 9 V return and board ground meeting at a star point
   on board A's front corner.
+- **Not yet updated for the 2026-10-01 decisions** (`plan.md` Phase 4): the 5 V comes in through a
+  USB-C panel extension into the Pi's own USB-C port, not to the header, and the Pi and boards
+  stand on nylon standoffs on a 3 mm FR4 plate, not brass ones on the base plate.
 
 Positions for all of it live in `src/layout.py`.
 

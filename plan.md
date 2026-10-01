@@ -655,10 +655,20 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    - The Pico energises it only once the service reports audio ready.
    - When it drops back to bypass after boot is `docs/pedal-service.md`'s relay rule, open (R4).
      The Pico and the Core host share the 5 V input, so the Pico stays powered through a Core
-     host reboot or hang; the proposal (bypass after 5 s without the link, or 2 s without
+     host reboot or hang (if the reboot test below holds); the proposal (bypass after 5 s without the link, or 2 s without
      `audio_ready`) is what keeps "a booting `tib`" failing to bypass then too. Set its times on
      the bench, and check what a hung Core host puts out: silence, or a repeating buffer.
    - A long press gives a panic bypass.
+   - **Does the Pico keep its power through a vip reboot? Test it before relying on it.** The
+     Pico takes 5 V from vip (Phase 4's power), in one of two ways:
+     1. A USB-A port to the Pico's micro-B. Simplest, and vip can reflash the Pico over it. But a
+        Pi switches its USB-A power, and may cut it during a reboot or at shutdown.
+     2. vip's header pin 2 through a 1N5817 into VSYS. The header's 5 V is more likely to stay
+        live while the supply is on.
+     Power the Pico each way with its LED blinking, then `sudo reboot` vip, and separately shut
+     it down. Watch whether the Pico restarts. Keep the first way that holds through both; if
+     neither does, the Pico restarting with vip is still safe (the relay drops to bypass), but
+     the relay rule above loses its "Pico stays up" case. Record the result here and in the BOM.
    - Check for a pop at **power-off**. The relay drops to bypass within a few ms, but the codec's
      output collapses at the same moment, and which wins decides whether it's audible. If it is: the
      Pico watches its supply and drops the relay a little before the codec loses power.
@@ -779,7 +789,29 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
   - MIDI DIN, 9 V, 5 V
   - a reserved mic position (D5)
   - the expression jack only if the debt entry below says so.
-- **Power:** 5 V / 3 A for `tib`, 9 V isolated for the analogue side, the star ground.
+- **Power** (decided 2026-10-01; parts in `docs/bom.md`):
+  - **5 V:** the Raspberry Pi 45 W USB-C supply into a USB-C panel-mount extension on the rear
+    panel, plugged into vip's own USB-C port. vip negotiates 5.1 V at 5 A and keeps its input
+    protection. Rejected: a bare USB-C socket wired to vip's header pins. It can only get 3 A, and
+    it bypasses vip's protection.
+  - **The layout must make room for the plug.** In today's model, vip's USB-C port is about 2 mm
+    from the front wall, and a right-angle plug needs about 8–10 mm. The likely fix: replace the
+    Dupont leads on vip's header with a 40-way ribbon to board A. The ribbon is low enough for the
+    header to sit under the display, so vip can move back 10–15 mm. Check the footswitch bodies
+    and the ribbon's fold in the model.
+  - **The Pico** takes its 5 V from vip, as 3.6's reboot test decides.
+  - **9 V** isolated for the analogue side, and the star ground.
+- **Mounting, and the case kept out of the ground scheme** (decided 2026-10-01):
+  - A 3 mm FR4 plate, cut to the inside of the box, is screwed to the base plate. vip and both
+    stripboards stand on **nylon** standoffs on the plate, held by nylon screws (countersunk from
+    under the plate). vip's mounting holes are grounded, and the star tag sits under a board
+    screw, so metal standoffs would join the grounds to the case and make a loop through it.
+  - The electronics come away with the base plate when the box opens. Leave enough slack in every
+    wire to the shell's connectors and controls to fold the base out beside the box.
+  - **Open: should the case be grounded?** Measure hum with the case floating, and bonded to the
+    star at that one point only, then keep the quieter.
+  - The plate costs 3 mm of height and removes the metal path for heat into the base. The heat
+    soak below covers that.
 - **Survive pulled power.** A read-only root (overlayroot) plus a small data partition for rigs and
   models, written atomically. A pedal gets unplugged mid-write, and today one SD card holds
   everything.
@@ -853,7 +885,9 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
     can be built first.
   - the Inst/Line switch and the Line pad's resistors, at provisional values; screened cable and
     hook-up wire.
-- **Not designed yet:** the 5 V input, the mic stage, cooling and the enclosure hardware.
+- **To buy** (decided 2026-10-01, Phase 4): the USB-C panel extension, the Pico's USB cable,
+  the FR4 mounting plate and nylon standoffs. See the BOM.
+- **Not designed yet:** the mic stage, cooling and the panel hardware.
 
 ## Next session starts with
 

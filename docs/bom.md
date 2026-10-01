@@ -9,6 +9,7 @@ Add. Where a part waits on a decision, the **Status** column says which one.
 | **in hand** | Arrived from CPC (as of 2026-09-30) |
 | **due** | Ordered, not arrived |
 | **later** | Not designed yet, so there's no part to buy |
+| **to buy** | Decided, not ordered yet. Not from CPC unless a code is given |
 
 Some quantities are CPC's minimum order rather than what the build needs. The notes say where.
 The analogue values were settled by the Phase 2b review on 2026-09-27
@@ -104,13 +105,15 @@ the middle of the op-amp's input range.
 | Part | CPC code | Qty | £ each | Status | Notes |
 |---|---|---|---|---|---|
 | 2.1 mm DC socket, panel mount (Cliff FC681445) | PL17192 | 1 | 1.60 | in hand | The 9 V input. Check that it keeps 0 V off a metal case, which the star ground depends on |
-| 1N5817 Schottky diode | SC07407 | 3 | 0.10 | in hand | Reverse-polarity protection on the 9 V, the diode into the Pico's VSYS, and a spare |
+| 1N5817 Schottky diode | SC07407 | 3 | 0.10 | in hand | Reverse-polarity protection on the 9 V, the diode into the Pico's VSYS if it's fed from vip's header, and a spare |
 | 100 µF 25 V electrolytic (Panasonic FR) | CA09947 | 10 | 0.11 | in hand | 9 V bulk capacitance, the buffer's RC filter. Sold in tens |
 | 10 µF 50 V electrolytic (Panasonic FC) | CA09903 | 10 | 0.18 | in hand | Decoupling for the bias and the regulators. Sold in tens |
 | L78L33ACZ, 3.3 V 100 mA (TO-92) | SC16361 | 2 | 0.26 | in hand | AVDD from the 9 V side in 2c. The second one could later take the whole codec board off `tib`'s rails |
 | L78L05ABZ, 5 V 100 mA (TO-92) | SC15743 | 5 | 0.21 | in hand | The option for 2c that needs no cutting: feed the board's VIN from the 9 V side. CPC's minimum is five |
 | M3 solder tags, pack of 100 | CN22127 | 1 | 0.83 | in hand | The star-ground point |
-| 5 V / 3 A input for `tib` and the Pico | — | — | — | later | Phase 4 |
+| Raspberry Pi 45 W USB-C power supply | — | 1 | — | in hand | vip's supply. It offers 5.1 V at 5 A by USB PD, which vip asks for itself. The DC7 v1's USB-A (1 A) isn't enough; it stays for the MIDI Commander |
+| USB-C panel-mount extension, female panel socket to male plug | — | 1 | — | to buy | The 5 V input on the rear panel, plugged into vip's own USB-C, so vip negotiates 5 A and keeps its input protection. It must be a full USB-C extension (all pins, not power-only or USB 2.0) rated 5 A ("100 W", e-marked), about 20–30 cm, ideally with a right-angle plug. Its mounting (two-screw flange or nut) sets the panel cut-out. The layout must leave room for the plug at vip's port (Phase 4) |
+| USB-A to micro-B cable, short, right-angle micro-B | — | 1 | — | to buy | The Pico's 5 V from one of vip's USB-A ports, and reflashing from vip if it carries data. Only if Phase 3.6's reboot test passes; otherwise vip's header pin 2 through a 1N5817 into VSYS |
 
 ## Control surface (Phase 3)
 
@@ -134,11 +137,12 @@ the middle of the op-amp's input range.
 | 6-pin DIL socket | SC15351 | 10 | 0.17 | in hand | For the H11L1M. CPC's minimum is ten |
 | 20-way 2.54 mm socket strip | CN14539 | 5 | 0.43 | in hand | Seats the Pico (two strips) and the codec board (two cut to 16), so either can be swapped out. CPC's minimum is five |
 | Hook-up wire, 7/0.2 stranded, 100 m, orange | CB21508 | 1 | 7.85 | in hand | A second colour beside the black you have |
-| Standoffs and panel hardware | — | — | — | later | Chosen with the enclosure layout (Phase 4) |
+| FR4 sheet, unclad, 3 mm, green, 200 × 300 mm | — | 1 | 15.89 inc VAT | to buy | The mounting plate: screwed to the base plate, with everything inside standing on it, so nothing electrical touches the case. FR4 because it's stiff and barely absorbs moisture. Choose the green FR4, not the yellow "3240". [AliExpress](https://www.aliexpress.com/item/1005005176647131.html), checked 2026-10-01 (sale price until 7 Oct); CPC and Farnell sell only 1.6 mm. Cut to about 175 × 105 mm with notches for the lid-screw bosses; the outline comes from the model |
+| Nylon standoffs and screws, M2.5 (vip) and M3 (stripboards) | — | — | — | to buy | Nylon, so vip's grounded mounting holes and the stripboards' screws can't connect anything to the case. Countersunk nylon screws from under the plate into female standoffs; heights chosen with the layout |
+| Panel hardware | — | — | — | later | Chosen with the enclosure layout (Phase 4) |
 
 ## Not designed yet
 
-- The 5 V input for `tib` and the Pico (Phase 4).
 - The mic stage (D5): the jack, a preamp or the codec's mic path, and whether to offer phantom power.
 - Cooling, if Phase 4's heat soak inside the enclosure calls for it.
 - Tools aren't listed here.
