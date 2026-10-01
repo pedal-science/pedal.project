@@ -886,3 +886,24 @@ Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot 
    | ljoss session replayed, plus sync (`soak-replay-…`) | 8% / 24% / 36% | 85% | ~13,000 |
    All three: 0 xruns, overruns, guard trips. The sync costs nothing measurable; the tail is the edits'
    (rebuilds and ramps), not WiFi's.
+3. **The same three soaks on vip, with the WM8960** (2026-10-01; namchain d4fb8e5, q64, vip's image
+   with the tuning as built: cores 2-3 isolated, the codec's DMA interrupt on core 2, 2.4 GHz).
+   `soak-monitor.sh` reads the thermal zone and the core clocks there (vip has no `vcgencmd`).
+   | vip, Crunch Lead, q64, d4fb8e5 | load p50 / p99 / p99.9 | worst block | blocks ≥ 30% | gate |
+   |---|---|---|---|---|
+   | idle, no edits or sync (`soak-idle-vip`) | 6% / 12% / 20% | 38% | 20 | PASS |
+   | sync only (`soak-sync-only-vip`) | 6% / 13% / 21% | 39% | 67 | PASS |
+   | ljoss session replayed, plus sync (`soak-replay-2026-09-28-ljoss-vip`) | 8% / 23% / 36% | **94%** | 9,981 | **FAIL** |
+   All three: 0 xruns, 0 overruns, 0 guard trips, no queue drops; 48-53 °C and every core at
+   2.4 GHz throughout, so vip doesn't throttle at its clock cap with no heatsink. The replay fails
+   on **two blocks past 90% (92% and 94%)**, both beside rig rebuilds 17 and 27 s into the second of
+   the session's three loops; the same rebuilds in the other two loops stayed under. So the same
+   load as piv's (p99 23% against 24%), and the same cause as soak 1's overruns: a structural edit
+   renders both plans for the fade, and at q64 a rebuild of these rigs lands near the line and
+   occasionally just over it (piv's worst was 85%). Not WiFi, not the sync, not the codec.
+   - Two runs didn't count: the first replay was cut 22 min in when the Mac's VPN connected with
+     local network sharing blocked, and the first sync-only hour lost its sync when the 1Password
+     SSH agent locked (it stands as the idle row).
+   - What to do about the rebuild peak is open: namchain's admission control for transitions
+     (`docs/transitions.md`, "What is next"), q128 for rigs this heavy, or ljoss sending fewer
+     rebuilds (`docs/rig-edits.md`).

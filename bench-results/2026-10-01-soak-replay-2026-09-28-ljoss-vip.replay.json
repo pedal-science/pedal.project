@@ -1,0 +1,57 @@
+{
+  "session": "2026-09-28-ljoss",
+  "source": "rebuilt",
+  "target": "vip:47810",
+  "speed": 1.0,
+  "writes_only": false,
+  "loops": 3,
+  "seconds": 3600.0,
+  "sent": {
+    "engine.mute": 30,
+    "engine.status": 7190,
+    "rig.apply": 18,
+    "rig.patch": 510
+  },
+  "answered": 7748,
+  "kinds": {
+    "smooth": 510
+  },
+  "errors": {},
+  "unanswered": 0,
+  "reply_ms": {
+    "engine.mute": {
+      "n": 30,
+      "p50": 39.29,
+      "p99": 50.48,
+      "max": 50.48
+    },
+    "engine.status": {
+      "n": 7190,
+      "p50": 13.29,
+      "p99": 62.09,
+      "max": 609.33
+    },
+    "rig.apply": {
+      "n": 18,
+      "p50": 35.97,
+      "p99": 53.3,
+      "max": 53.3
+    },
+    "rig.patch": {
+      "n": 510,
+      "p50": 9.54,
+      "p99": 103.58,
+      "max": 463.41
+    }
+  },
+  "send_lag_ms": {
+    "p50": 1.25,
+    "p99": 2.56,
+    "max": 9.81
+  },
+  "max_in_flight": 4,
+  "generations": [
+    12,
+    29
+  ]
+}
