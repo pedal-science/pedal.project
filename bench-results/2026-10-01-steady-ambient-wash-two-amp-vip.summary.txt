@@ -1,0 +1,23 @@
+== soak-summary.py
+64 samples over 10.6 min (0 without an answer from namchaind)
+rig Ambient Wash, period 64, deadline 1333.3 us
+blocks 474910 (timed 474910)
+load: p50 15%, p99 46%, p99.9 67%, worst bucket 98%
+worst block: 1318.4 us (98.9%), during the soak
+tail: {30: 344, 31: 446, 32: 486, 33: 637, 34: 544, 35: 507, 36: 478, 37: 441, 38: 358, 39: 410, 40: 367, 41: 343, 42: 305, 43: 251, 44: 220, 45: 183, 46: 257, 47: 245, 48: 281, 49: 268, 50: 335, 51: 245, 52: 247, 53: 244, 54: 287, 55: 264, 56: 236, 57: 229, 58: 224, 59: 183, 60: 176, 61: 121, 62: 110, 63: 106, 64: 90, 65: 68, 66: 67, 67: 72, 68: 55, 69: 54, 70: 52, 71: 51, 72: 18, 73: 27, 74: 22, 75: 18, 76: 27, 77: 29, 78: 20, 79: 12, 80: 8, 81: 7, 82: 14, 83: 3, 84: 5, 85: 6, 86: 1, 87: 2, 88: 2, 89: 1, 90: 3, 91: 1, 92: 1, 98: 2}
+temperature 49.6..52.9 C, throttled flags seen: ['n/a']
+slowest core clock seen: 2400 MHz (the cap holds every core at its maximum; below it is throttling)
+edits: generation 20 -> 21, params_applied +0, transitions +1, max TCP connections seen 1
+queue: drops +0, insertions +0, capture bursts +0
+gate: driver xruns 0, deadline overruns 0, guard trips 0, blocks over 90% 7, render errors 0, device lost 0
+FAIL
+
+== soak-events.py
+t+   10 s  over 90% +1  over deadline +0  transitions +1
+t+   20 s  over 90% +1  over deadline +0  transitions +0
+t+   31 s  over 90% +1  over deadline +0  transitions +0
+t+  121 s  over 90% +1  over deadline +0  transitions +0
+t+  131 s  over 90% +1  over deadline +0  transitions +0
+t+  161 s  over 90% +1  over deadline +0  transitions +0
+t+  201 s  over 90% +1  over deadline +0  transitions +0
+intervals with a block over 90%: {'with a transition': 1, 'without': 6}; intervals with any transition: 1

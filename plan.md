@@ -868,6 +868,13 @@ defaults to it, `components.lock` is per host (`devices/<host>/components.lock`)
 (pedal 438a71f, rtpi bae26dc) with namchain 974060c deployed by `deploy-engine` (local transitions, 2026-10-01). namchain f422dd0
 plays a missing model or IR as a bypass, and ljoss 5da4ea6 marks the block.
 
+**Rig edits** (`docs/rig-edits.md`, 2026-10-01): steps 1 and 2 are built, and `meta`. namchain
+`2b5584e` keeps a client's `meta` on the document, chains and nodes; `2e1a63a` ramps a bypass
+instead of rebuilding (feature `bypass_ramp`); ljoss `d57933d` needs no patch op for it. Neither
+namchain commit is deployed to vip yet (it runs 974060c): next, `scripts/deploy-engine` 2e1a63a,
+`scripts/components-lock`, and ljoss's `Tools/check-streaming.sh` against vip. Open: the two-amp
+Ambient Wash fails the gate on vip by itself at q64 (vip soak item 3, "Measured steady").
+
 **Testing happens on vip for now** (decided 2026-09-30), until it's a working pedal that shouldn't
 be disrupted; then the test hardware gets chosen again. piv isn't updated meanwhile, except that it
 runs namchain d4fb8e5 since the 2026-09-30 step 8 soak (Rik asked for it); and `devices/piv/check` reports `pedal-codec` and `pedal-device` as differing
@@ -924,6 +931,21 @@ Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot 
      10 s monitor interval holding the second amp's add / remove, per loop: 70/84%, 71/70%, 77/67%
      (soak 1: 92% and 94%). Ambient Wash's own intervals with no edit reach 40–67%; rig switches
      21–48%. The 84% interval holds the two-amp rig playing as well as the removal, which creates
-     nothing, so it is likely the two-amp rig's own peak; that rig was never measured steady on
-     vip, so "near the two-amp rig's own load" is likely but not shown. Offline numbers are in
-     namchain's `docs/transitions.md`, "Measured offline".
+     nothing, so it is likely the two-amp rig's own peak. Offline numbers are in namchain's
+     `docs/transitions.md`, "Measured offline".
+   - **Measured steady** (2026-10-01, 10 min each, no edits, namchain 974060c;
+     `scripts/soak/sessions/ambient-wash-{one,two}-amp-steady.session.jsonl`,
+     `steady-ambient-wash-{one,two}-amp-vip`):
+     | vip, Ambient Wash steady, q64 | load p50 / p99 / p99.9 | worst block | peak per 10 s interval | gate |
+     |---|---|---|---|---|
+     | one amp | 8% / 22% / 36% | 60% | 34–60%, median 48% | PASS |
+     | two amps | 15% / 46% / 67% | **98.9%** | 63–98%, median 79% | **FAIL** |
+     Both: 0 xruns, overruns, guard trips, queue drops; 49–53 °C, 2.4 GHz. So step 1 is done: the
+     second amp's add and remove (70–84%) sit at or below the two-amp rig's own load. But **the
+     two-amp rig fails the gate by itself**: 7 blocks over 90% in 10 minutes, 6 of them nowhere
+     near an edit, and 27 of 63 intervals peak at 80% or more. The replay soaks passed only because
+     they play it for a few seconds per loop. It is the heaviest rig in the session (two A2 amps,
+     the feedback delay, reverb); at q64 on vip it has no headroom. Not decided: q128 for such
+     rigs, admission control refusing them (step 3 in `docs/rig-edits.md`), or finding where its
+     peaks come from first (its median block is 15%, about 200 µs, and its worst 1.3 ms: the
+     trouble is the tail, not the mean).

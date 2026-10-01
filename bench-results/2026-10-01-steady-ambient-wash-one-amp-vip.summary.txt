@@ -1,0 +1,16 @@
+== soak-summary.py
+64 samples over 10.6 min (0 without an answer from namchaind)
+rig Ambient Wash, period 64, deadline 1333.3 us
+blocks 474740 (timed 474740)
+load: p50 8%, p99 22%, p99.9 36%, worst bucket 60%
+worst block during the soak: in the 60% bucket (the daemon's all-time worst, 1120.8 us, came before it)
+tail: {30: 276, 31: 277, 32: 212, 33: 179, 34: 115, 35: 89, 36: 81, 37: 70, 38: 52, 39: 47, 40: 38, 41: 34, 42: 29, 43: 19, 44: 19, 45: 21, 46: 21, 47: 10, 48: 10, 49: 12, 50: 14, 51: 7, 52: 6, 53: 7, 54: 4, 55: 3, 56: 2, 57: 2, 59: 1, 60: 1}
+temperature 49.0..51.8 C, throttled flags seen: ['n/a']
+slowest core clock seen: 2400 MHz (the cap holds every core at its maximum; below it is throttling)
+edits: generation 19 -> 20, params_applied +0, transitions +1, max TCP connections seen 1
+queue: drops +0, insertions +0, capture bursts +0
+gate: driver xruns 0, deadline overruns 0, guard trips 0, blocks over 90% 0, render errors 0, device lost 0
+PASS
+
+== soak-events.py
+intervals with a block over 90%: {'with a transition': 0, 'without': 0}; intervals with any transition: 1

@@ -448,7 +448,8 @@ mentioned.
    namchain works out what changed by node id.
 3. **Unknown keys go in `meta`.** The document, each chain and each node can carry a `meta` object
    that namchain keeps as written, returns from `rig.get` and never reads. Every other key is still
-   checked. Not built yet; versions will go there.
+   checked. Built: namchain `2b5584e` (protocol feature `meta`). A change to `meta` alone is not
+   an edit to the graph, so it keeps the generation. Versions will go there.
 
 ## Step 1 built, 2026-10-01
 
@@ -464,4 +465,27 @@ would be kept. namchain's `docs/transitions.md`, "Local transitions", has the ru
 - **On vip,** the same replay soak as before: **PASS**, worst block 84% (was 94%), none over 90%.
   12 of the 18 structural edits were local; the other 6 were rig switches. The details are in
   `plan.md`, vip soak item 3.
+- **Done-when met** (measured steady on vip, 2026-10-01): the second amp's add and remove peaked
+  at 70–84%, and the two-amp rig alone peaks at 63–98% per 10 s interval (median 79%). The same
+  measurement found that **the two-amp rig fails the gate by itself** at q64 on vip (7 blocks over
+  90% in 10 minutes, no edits). That is a load problem, not an edit problem; `plan.md`, vip soak
+  item 3, has the numbers and the open choice.
 
+
+## Step 2 built, 2026-10-01
+
+namchain `2e1a63a` (protocol feature `bypass_ramp`): a bypass is no longer a structural edit. The
+render thread crossfades the node between its output and its dry input, equal-power, over the fade
+length (5 ms), and a toggle mid-fade turns around from where it is. A patch or `rig.set` that only
+bypasses blocks keeps the generation and reports transitions of kind `ramps` with a `bypasses`
+count. Only nodes with one input and one output take the ramp; a bypass beside a structural edit
+still fades as part of that edit. namchain's `docs/transitions.md`, "Bypass", has the rules.
+
+- **ljoss needs no patch op.** It sends a bypass as the whole document, and namchain's
+  node-by-node comparison already turns that into a ramp, so a patch op would save bytes, not work.
+  ljoss `d57933d` says so in `EngineEdits.swift`, and its `CheckStreaming` tool expects no rebuild
+  from an engine with `bypass_ramp`: against `2e1a63a`, 804 ramps over a 201-step drag and a
+  bypass, 0 rebuilds.
+- **Debt:** a macro block (several nodes) fades node by node, each over its own fade, not as one
+  unit. All of them start in the same block, so nodes in series fade together, close to one fade
+  but not identical to it; fading by element is the remedy if that is ever heard.
