@@ -1,7 +1,8 @@
 # Rig edits: a proposed design change
 
-**Proposed** by you on 2026-09-28. It isn't a decision yet, and nothing has been built. Claude's
-comments on it follow the proposal, and your answers to them are at the end.
+**Proposed** by you on 2026-09-28. It isn't a decision yet. Claude's comments on it follow the
+proposal, then your answers to them. Claude's replies to those (2026-10-01) are at the end; they
+bring in the step 8 soak on vip and propose what to build next.
 
 **Done:** step 1 of C13, in ljoss `462e678`, on the current protocol.
 - A knob whose parameter the engine ramps is streamed as `rig.patch` `set_param`: at most every
@@ -267,3 +268,174 @@ about how they could help us with state checking, so let's ignore the state chec
 Can we express that as namchain needing a way to handle the issue of having to have lots of
 processing-intensive models running in parallel while making a transition? Does that express what
 you said in a logical way or is it different entirely / in part?
+
+## Claude's replies, 2026-10-01
+
+These reply to your answers, with what the step 8 soak on vip found (`plan.md`, "Next session
+starts with", item 3). Each is labelled with the answer it replies to. None of it is built.
+
+### What the vip soak adds
+
+The replayed session failed step 8's gate on vip by two blocks, at 93% and 92% of the deadline.
+Both were structural edits to Ambient Wash, in the second of the session's three loops:
+- 17 s into the loop, a second amp added after the first;
+- 27 s in, the first amp removed.
+
+The same two edits peaked at 47% and 71% in the first loop, and at 72% and 46% in the third.
+
+- Every knob in the session was already a ramp: 510 patches, all smooth. What's left per loop is
+  six structural edits:
+  - a model pick (3 s);
+  - the amp added (17 s) and the first one removed (27 s);
+  - a switch to Crunch Lead (19.6 min), and an amp added to it (19.8 min);
+  - the switch back to Ambient Wash as the loop starts again.
+- ljoss has no other way to send any of them. So "ljoss sends fewer rebuilds" comes down to your
+  question in C5: why does each one cost a rebuild?
+- Ambient Wash with one amp runs at p50 8%, and with the second amp at about 14%. During the fade
+  namchain runs both whole plans, so adding the amp briefly runs three amps, two cab IRs and two
+  delays.
+
+### Replies
+
+**C2 and C13, on heavy rigs.** Partly. There are two problems, and your wording describes the
+second.
+1. During a structural edit, namchain runs two whole copies of the chain, not only the part that
+   changed. Adding one amp to a one-amp rig runs three amps for the fade. That's C5 below, and
+   fixing it is what this soak needs.
+2. Some changes do need a lot running at once: switching between two heavy rigs, or swapping one
+   heavy model for another. namchain has to check before it starts whether the change fits in the
+   deadline. If it doesn't, the transition runs differently: a shorter fade, a staggered start, a
+   brief dip, or a refusal with a reason. That's admission control (namchain's
+   `docs/transitions.md`, "What is next", item 1).
+- "In parallel" here means inside one audio block, on one core: the two plans run one after the
+  other within 1.33 ms. Rendering the incoming plan on a second core would make it truly parallel;
+  vip's core 2 is isolated beside the render thread's core 3. It costs a hand-over between cores
+  every block, and this soak doesn't need it.
+
+**C4, bypass as a ramp.** It works, and namchain is closer to it than this doc said.
+- A bypassed node already keeps running, so its state stays warm, and its output is replaced by
+  its input (`docs/transitions.md`, "Bypass"). Only the switch is structural: the flag is part of
+  the graph, so flipping it compiles a new plan and fades the whole chain across.
+- In your version the plan keeps a wet/dry mix per block, and a bypass ramps it. There's no
+  compile, no second plan and nothing reloaded, and ljoss streams it like a knob.
+- Four things to settle on the way, none of which stops it:
+  - **A bypassed block still costs its CPU.** namchain keeps it running so that un-bypassing
+    doesn't start from stale state: a NAM model's history, or a delay's old echoes. The
+    alternative stops it while bypassed. On un-bypass it would run at mix 0 on the live input for a
+    short warm-up (a model's receptive field, tens of ms), then ramp in. That saves the CPU, but
+    un-bypass takes longer.
+  - **Trails.** Fading a delay's output cuts its echoes off. Pedals call the other behaviour
+    "trails": fade the input instead, and let the echoes ring out. It's a choice per block type,
+    and namchain has a placeholder for it (`tail_hold`).
+  - **One fade per block, not per node.** An amp is two nodes. namchain should fade the block as a
+    unit, from the block's input to its output, grouping its nodes by `element`. That's the same
+    unit as C9's versions.
+  - **Latency.** The dry and wet signals have to line up. Every node namchain has today is
+    zero-latency, so they do. A future node with latency (a look-ahead limiter, a linear-phase EQ)
+    needs its dry path delayed to match.
+
+**C5, point 1: why structural edits cost a rebuild.** They don't have to. Your linked-list
+intuition holds for the graph, which is cheap to edit. The cost is in what namchain does with the
+edited graph, and most of it can be avoided.
+- Today, once anything in a chain's graph changes, namchain compiles a new plan for the whole
+  chain, and **every node in it is created again** (`src/daemon/daemon.cpp`, where it compares the
+  chains):
+  - every NAM model and IR is read from its file again and reset to silence;
+  - every delay starts empty;
+  - then both plans run for the 5 ms fade.
+- So an edit to one block pays for all of them:
+  - the CPU of the fade, which is this soak's failure;
+  - the amps nobody touched restart from NAM's silence prewarm, which E1 found sounds wrong for
+    170–340 ms;
+  - the echoes in flight vanish at every structural edit. Ambient Wash's delay (345 ms, 79% mix)
+    should make that audible.
+- It was built that way because swapping whole, immutable plans is simple and safe. The render
+  thread never shares a node with the control thread, and a failed compile can't leave a chain
+  half changed.
+
+**Proposal: carry unchanged nodes across.** When namchain builds the new plan, a node whose id,
+type and settings haven't changed moves into it as the same object, state and all, instead of being
+created again. Only changed nodes are loaded and warmed, and the transition covers only what changed:
+
+| Edit | What runs during the fade (today: both whole plans) |
+|---|---|
+| Add a block | the chain, plus the new block fading in from its input, as un-bypass would |
+| Remove a block | the chain, with the block fading out to its input as bypass would; then it's dropped |
+| Pick a model or IR, or change a setting that can't ramp (a cut's slope) | the old and new block side by side; nothing else doubles |
+| Move a block | the stretch between its old and new places, rebuilt and crossfaded; blocks outside it carry over |
+| Switch rig | both whole plans, since nothing carries over; admission control keeps that safe |
+
+- For this soak: adding the second amp would run two amps, one cab and one delay, which is the rig
+  it's becoming. Removing it would be the same. The peak would be about the heavier rig's own load
+  (p50 14%) rather than the two rigs' loads added together.
+- What needs care:
+  - A node belongs to one plan at a time. The old plan stops running in the block where the new
+    one starts, and it mustn't free what it handed over.
+  - A carried-over node can't be prewarmed on the control thread, because the render thread is
+    still using it. Only new nodes are prewarmed, each on its own.
+  - The fade moves from the chain's output to wherever the change is. In a series chain that's the
+    stretch from the first changed node to the last. Each of ljoss's parallel sections has one way
+    in and one way out, so the same works per lane or section. Where namchain can't find such a
+    stretch, it falls back to today's whole-chain fade.
+- A whole document and a patch would then cost the same, because namchain works out what changed
+  by node id either way. ljoss can keep sending whole documents for structural edits (C5), and undo
+  and redo stay inside ljoss. How an edit is sent becomes a question of traffic only, which we
+  agree isn't the problem.
+
+**C5, point 2: the tree-to-graph conversion.** These are the assumptions behind it, as I
+understand them, and whether each still holds:
+1. **namchain stays a generic engine (D4).** It runs graphs of nodes and knows nothing of ljoss's
+   blocks, lanes and sections. That still holds. Two layers above nodes exist already: macros (an
+   amp's tone stack, a cab, a feedback delay), and `element`, which says which nodes make one block.
+2. **A graph can say anything ljoss's tree can.** True: series blocks and parallel lanes are a
+   narrow kind of graph. Nothing ljoss shows needs more, though a feedback loop or a side-chain
+   would.
+3. **One place converts.** ljoss's `DocumentEncoder` is the only code that knows how a tree becomes
+   a graph: an amp's two nodes, a lane at 0 dB having no gain node, a section's split and mix.
+   Sending edits as graph ops would need that knowledge twice, once for a whole rig and once per
+   kind of edit.
+4. **Edits travel as whole documents.** That was the cheap choice when nothing cared what an edit
+   cost. It's the assumption the rebuild cost hangs on, and with nodes carried across, the cost no
+   longer depends on it.
+
+The options:
+- **(a) Keep the conversion in ljoss.** ljoss sends whole graphs for structural edits, and namchain
+  compares them by node id and carries nodes across. This is the least change, and the conversion
+  stays in one place. namchain sees which nodes changed, not that you moved the delay before the
+  amp; because ids survive a move, that's enough.
+- **(b) ljoss sends graph ops per edit.** `rig.patch` already has `add_node`, `remove_node`,
+  `connect` and `rewire`. Messages get smaller, but the conversion is needed twice (point 3).
+- **(c) namchain takes the tree.** Blocks, lanes and sections become protocol objects, and edits
+  become tree ops ("insert this block in lane 2 at position 3"). The engine would know what the
+  user meant, and its patch vocabulary would match ljoss's. But namchain would then own one app's
+  editing model, against D4, and every other client (the pedal service, the tests, a future app)
+  would have to speak ljoss's tree.
+
+I'd take (a) now, and revisit it only if traffic, or namchain needing to know what the user meant,
+becomes the limit. That's your call.
+
+**C10, unknown keys.** namchain refuses unknown parameters on purpose. Before it did, a rig could
+say `"gainz": 3` and be published happily, which in a UI is a knob that does nothing (`lint_params`
+in `src/graph/plan.cpp`, and `docs/ljoss-comparison.md` §3.5). Both aims fit if a document has a
+place namchain never reads:
+- a `meta` object on the document, each chain and each node;
+- kept as written, and returned by `rig.get`;
+- every other key still checked.
+
+Versions would go there. Ignoring every unknown key also works, but then a mistyped parameter is
+silent. Either way it's a protocol change in namchain, so it waits for the protocol revisit you
+mentioned.
+
+### What I'd build, in order
+
+1. **namchain: carry unchanged nodes across a structural edit,** with the fade local to what
+   changed (C5, point 1).
+   - Tested offline first, with the glitch detector judging each edit. That needs structural ops
+     in its timeline (`docs/transitions.md`, "What is next", item 3).
+   - Then the same replay on vip. ljoss, the protocol and the recorded session stay as they are.
+   - Done when the replay passes step 8's gate, with the second amp's add and remove peaking near
+     the two-amp rig's own load.
+2. **namchain: bypass as a ramp per block** (C4), built on step 1. ljoss then streams a bypass as a
+   patch.
+3. **namchain: admission control** for what still runs two whole plans: rig switches, and D10.
+4. **ljoss: history and undo** (C13 step 2). Steps 1–3 don't affect it.

@@ -904,6 +904,11 @@ Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot 
    - Two runs didn't count: the first replay was cut 22 min in when the Mac's VPN connected with
      local network sharing blocked, and the first sync-only hour lost its sync when the 1Password
      SSH agent locked (it stands as the idle row).
-   - What to do about the rebuild peak is open: namchain's admission control for transitions
-     (`docs/transitions.md`, "What is next"), q128 for rigs this heavy, or ljoss sending fewer
-     rebuilds (`docs/rig-edits.md`).
+   - What to do about the rebuild peak: of admission control, q128, or ljoss sending fewer rebuilds,
+     you chose the last (2026-10-01). The two blocks were an amp added and an amp removed, and every
+     knob was already a ramp, so ljoss has nothing left it could send differently. The saving has
+     to come from namchain doing less per structural edit: it recreates every node of the chain
+     and runs both whole plans for the fade. `docs/rig-edits.md`, "Claude's replies, 2026-10-01",
+     proposes carrying unchanged nodes across, so that only the changed block fades. It also
+     answers C4 (bypass as a ramp), the tree-to-graph question and unknown keys. **Open, yours:**
+     whether to build it, and (a), (b) or (c) for the conversion.
