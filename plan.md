@@ -865,14 +865,15 @@ tested off the board and on vip (`bench-results/vip-spike/vip-boot.md`). Step 3 
 through rescue (`bench-results/vip-card/remote.md`), and **vip is the Core host**: every script
 defaults to it, `components.lock` is per host (`devices/<host>/components.lock`), and
 `scripts/deploy-engine` builds the engine for vip on the Mac. vip runs image 20260930T220004Z
-(pedal 438a71f, rtpi bae26dc) with namchain 974060c deployed by `deploy-engine` (local transitions, 2026-10-01). namchain f422dd0
+(pedal 438a71f, rtpi bae26dc) with namchain 2e1a63a deployed by `deploy-engine` (meta and bypass as a ramp, 2026-10-01). namchain f422dd0
 plays a missing model or IR as a bypass, and ljoss 5da4ea6 marks the block.
 
 **Rig edits** (`docs/rig-edits.md`, 2026-10-01): steps 1 and 2 are built, and `meta`. namchain
 `2b5584e` keeps a client's `meta` on the document, chains and nodes; `2e1a63a` ramps a bypass
-instead of rebuilding (feature `bypass_ramp`); ljoss `d57933d` needs no patch op for it. Neither
-namchain commit is deployed to vip yet (it runs 974060c): next, `scripts/deploy-engine` 2e1a63a,
-`scripts/components-lock`, and ljoss's `Tools/check-streaming.sh` against vip. Open: the two-amp
+instead of rebuilding (feature `bypass_ramp`); ljoss `d57933d` needs no patch op for it. 2e1a63a
+is deployed to vip, and ljoss's `Tools/check-streaming.sh` passes against it: a 201-step drag of
+three knobs as 580 ramps, a bypass with no rebuild
+(`bench-results/2026-10-01-check-streaming-vip-2e1a63a.txt`). Open: the two-amp
 Ambient Wash fails the gate on vip by itself at q64 (vip soak item 3, "Measured steady").
 
 **Testing happens on vip for now** (decided 2026-09-30), until it's a working pedal that shouldn't

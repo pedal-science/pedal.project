@@ -1,0 +1,5 @@
+applied    'Streaming', generation 2, 1 rebuild(s) so far
+drag       201 steps of three knobs: 580 ramps applied, 0 rebuild(s), 0 stale
+engine     gain_db 0.0, gain1 6.0, mix 0.6
+bypass     0 rebuild(s) (the engine ramps a bypass)
+OK
