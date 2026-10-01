@@ -132,6 +132,8 @@ six choices for you at the end.
 | D8 | Bring the codec up stock, then modify it, measuring before and after | proposed | `CLAUDE.md`'s "differs from stock" becomes "planned modifications" |
 | D9 | Work across repos as set out in `docs/working-across-repos.md` | proposed | Phase 0 |
 | D10 | Every rig one interaction away is held ready: the current bank (the 4–8 rigs the footswitches step through) plus any rig MIDI can jump to. A switch takes **≤ 50 ms** from footswitch or MIDI to the new sound, crossfaded, with **no dropout and no click** | you, 2026-09-26 | 3.8 is required, not optional, and comes before 3.5. namchain's M3 (warm start) moves onto the critical path. Whole rigs are held ready: compiled plans, loaded models and prepared IRs. vip's 1 GB bounds the bank. *How* each rig is kept ready is a tier (`docs/rig-switch-strategies.md`), set by experiments E1 and E2 |
+| D11 | The Core host runs the pedal's own Wi-Fi network; the Pico advertises over BLE and the phone joins with `NEHotspotConfigurationManager.joinAccessoryHotspot` | you, 2026-10-01 | Phase 5 ([docs/pairing.md](docs/pairing.md)). The pedal root retires its station config, the bench reaches the pedal over Ethernet, and neither `sftp` nor a typed address is needed for the app |
+| D12 | The first pairing gets an out-of-band code on the pedal's screen, before the pedal releases its BLE bundle. v1 pairs without it | you, 2026-10-01 | 3.7's display carries a security job, not only a nice one; the code is the Mac's way in too, and the QR stays the fallback |
 
 **On storage (D3).** The existing design already keeps models and IRs on the pedal, in
 `namchaind`'s `models_root` and `irs_root` on the SD card. D3 and D4 bring in the four things it
@@ -662,7 +664,8 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    - The output coupling cap must settle before the relay first engages. 10 µF into ~1 MΩ is
      τ ≈ 10 s, inside the boot; 100 µF (τ ≈ 100 s) would still be charging and pop.
 7. **Display and encoder**, low priority per `about.md`. Check it has no onboard LDO before
-   powering it (per `CLAUDE.md`).
+   powering it (per `CLAUDE.md`). It picks up a job with Phase 5 (D12): the pairing out-of-band
+   code, and on the same screen the QR that gets the Mac onto the pedal's network.
 8. **Rigs ready for switching** (D10; namchain's M3). Required before 3.5: without it a footswitch
    press stalls on the SD card, JSON parsing and prewarm, and then clicks.
    - The **ready set**: the current bank (4–8 rigs) plus any rig MIDI can jump to. Each one held
@@ -796,8 +799,12 @@ network", and it closes "no discovery: the host is typed in" with the same chang
 
 It does not depend on 3.5–3.8: the Pico work is BLE, a gesture and (later) the display, none of it on
 the audio path, and the Core host work is `devices/` and the service. It is aimed at vip, the Core
-host since 2026-09-30, and it touches nothing on the render path. When it starts is yours to choose.
-The five decisions the design asks for are at the end of the doc.
+host since 2026-09-30, and it touches nothing on the render path.
+
+**Decided 2026-10-01** (the doc has the detail): the Core host runs the access point and the Pico does
+BLE; the first pairing's out-of-band code rides on 3.7's display, so 3.7 now carries a security job
+as well. The rest of the design's decisions are proposals at the end of the doc. **Plan only for now:**
+the stages below wait for your go-ahead.
 
 Steps (each committed on its own, spikes first — the Apple half is the one part of this pedal that
 cannot be tested from a shell, and the design turns on what the spikes find):
@@ -830,8 +837,9 @@ cannot be tested from a shell, and the design turns on what the spikes find):
    page's pedal section, and the re-join on returning to the foreground. The Mac keeps the manual
    path.
 4. **Lifecycle** (with 3.7's display when it exists): remove and rotate on both sides, a second
-   phone, the pedal's own forget gesture, `backup` covering the cache, and the QR for the Mac and as
-   the out-of-band check.
+   phone, the pedal's own forget gesture, and `backup` covering the cache. The out-of-band code is
+   decided, so this is where 3.7 earns its place: the pedal shows a code and the app offers it back
+   before the pedal releases the bundle, with the QR for the Mac and as the fallback.
 5. **Soak it** as the doc stages it, with a rotation and a power cut in the middle.
 
 **Done when:**

@@ -196,22 +196,27 @@ Setup mode is the whole security boundary for a new phone, so it is explicit:
 - the Pico's LED/panel says "pairing" while it is open — so a phone that pairs by accident is visible,
   and the gesture is never a surprise.
 
-### The QR on the display (Phase 3.7, optional)
+### The screen: the out-of-band code, and the QR (with Phase 3.7)
 
-The display makes three things nicer, and none of them is on the critical path:
+The display does three jobs here. None is on the critical path, and the middle one is decided, so
+Phase 3.7 now carries a security job as well as a nice one:
 
 - **The Mac, and any non-iOS client.** A QR with the standard `WIFI:` payload is joined by the
   system Camera without ljoss; the display can also show the address, so the Mac's manual path needs
   no `ssh` to read the passphrase. (The token is still pasted or typed; it is already in the Mac's
   keychain today.)
-- **An out-of-band check for the first pairing.** The pedal shows a short code and the app asks for
-  it before it accepts the bundle; that closes the small window in which a stranger in BLE range
-  could race the owner's tap. Worth doing when the display exists, not worth blocking on.
+- **An out-of-band check for the first pairing** (decided 2026-10-01). The pedal shows a short code
+  for its setup window; the app asks the person to type it in, and offers it back to the pedal before
+  the pedal releases the bundle. That closes the window in which a stranger in BLE range could race
+  the owner's tap, and it is Bluetooth's numeric-comparison idea in the one place this pedal can do
+  it. Stage 4 settles the shape; the proposal is a code the app **writes to a characteristic** before
+  the bundle is served, rather than a comparison after the fact, so a stranger never sees the key at
+  all. It is also the code the QR would carry, and the QR stays for the Mac.
 - **A fallback.** If ASK misbehaves on some iOS, the QR plus `NEHotspotConfiguration.apply` plus a
   typed token is the path that always works.
 
 The QR is not in the bundle path (a 64-character token makes it unreadable at 240 px wide), and the
-screens' contents rotate with the passphrase, not with every boot.
+screen's contents rotate with the setup window and the passphrase, not with every boot.
 
 ### What each side must build
 
@@ -291,7 +296,7 @@ network; and the soak is clean.
 | The Core host is reimaged | It learns the record from the Pico; the app is unaffected |
 | The token is rotated | The app's first connection is refused; it re-reads the bundle over BLE and retries once, then says so |
 | The app is reinstalled | ASK's accessories may be gone; the app offers to pair again, and the pedal's stale bond is cleared by the pedal's gesture (the mismatched-keys case the SDK README warns about) |
-| A stray phone in setup mode | The pedal's LED/panel says pairing; the window is short; the QR code (stage 4) is the real fix |
+| A stray phone in setup mode | The pedal's LED/panel says pairing; the window is short; the code on the screen (stage 4, with the display) is the real fix |
 | Power is cut mid-rotation | The record is written before the generation is published, so the pedal comes back on one of the two, never on neither |
 
 ## Risks, honestly
@@ -322,17 +327,24 @@ network; and the soak is clean.
 - Whether a second *pedal* on one phone should be supported from the start (the app's record is a
   list, so it is nearly free) and how two pedals would be told apart in the picker.
 - The exact gesture for setup mode and for forget-all, which belongs with the panel work (3.5/3.7).
-- Whether the Pico as access point is worth revisiting after spike 0.1 measures the Core host's AP
-  properly. **Yours.**
-- Whether the QR's out-of-band code is worth the camera permission before the display exists. It is
-  not needed; it is the strongest answer to "how do I know this is my pedal?". **Yours.**
+- The exact out-of-band shape (a code written to a characteristic before the bundle is served, as
+  proposed, against a comparison afterwards) and whether it also appears as a QR. Stage 4, with 3.7.
 
-## The decisions this asks of you
+## Decided, 2026-10-01
+
+| # | Question | Decision |
+|---|---|---|
+| P1 | Who runs the access point? | **The Core host.** `hostapd` on vip; the Pico does BLE only. Reopened only if spike 0.1 shows the Core host's AP unusable, not merely slower |
+| P3 | Does the first pairing need an out-of-band check? | **Yes, with the display (Phase 3.7):** the pedal shows a code and the app must offer it back before the pedal releases its bundle. v1 pairs on the sheet and the setup gesture alone; the check is decided, not optional, and it waits for 3.7 |
+| — | When does it start? | **Plan only for now** (you, 2026-10-01). The stages above are for when you say go |
+
+Still proposed, and the design rests on them; say if you would rather not:
 
 | # | Question | Proposal |
 |---|---|---|
-| P1 | Who runs the access point? | **The Core host.** The Pico cannot route IP; the Pi's `hostapd` path is proven and already carries the app's traffic. The Pico keeps BLE |
-| P2 | How does the app learn the passphrase? | **Over BLE, from a protected characteristic, only in setup mode or to a bonded phone.** No QR, no typed code, nothing to photograph |
-| P3 | Does the first pairing need an out-of-band check? | **Not for v1.** The physical setup gesture and the short window are the boundary; the display's code is the upgrade when the display exists |
-| P4 | What happens to the pedal's home network? | **The pedal's own network replaces it.** The pedal root drops the station path; the bench uses Ethernet, and the rescue root keeps its station |
-| P5 | Does the app get the `namchaind` token over BLE? | **Yes**, in the same bundle, held in the Pico's RAM only. One secret for one appliance, no second credential and no typed token |
+| P2 | How does the app learn the passphrase? | Over BLE, from a protected characteristic, only in setup mode or to a bonded phone |
+| P4 | What happens to the pedal's home network? | The pedal's own network replaces it; the bench uses Ethernet, and the rescue root keeps its station |
+| P5 | Does the app get the `namchaind` token over BLE? | Yes, in the same bundle, held in the Pico's RAM only |
+
+With P3 decided, Phase 3.7's display is no longer only nice: it carries the out-of-band code and, with
+it, the Mac's way in. It is still not on the critical path, because a first pairing works without it.
