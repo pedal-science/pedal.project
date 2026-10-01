@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# scripts/soak/soak-replay SESSION [--host piv] [--duration 3600] [--sync-library-at SECONDS]
+# scripts/soak/soak-replay SESSION [--host vip] [--duration 3600] [--sync-library-at SECONDS]
 #                          [--label NAME] [--speed 1] [--writes-only]
-# scripts/soak/soak-replay --idle [--host piv] [--duration 3600] [--sync-library-at SECONDS] [--label NAME]
+# scripts/soak/soak-replay --idle [--host vip] [--duration 3600] [--sync-library-at SECONDS] [--label NAME]
 #
 # Plan Phase 1 step 8's soak, made repeatable: replay a recorded ljoss session against the
 # Core host's namchaind from this Mac (so over WiFi, as ljoss edits), looping it for --duration,
@@ -24,7 +24,7 @@ REPO="$(cd "$HERE/../.." && pwd)"
 NAMCHAIN_DIR="${NAMCHAIN_DIR:-$HOME/code.local/namchain}"
 REPLAY="$NAMCHAIN_DIR/tools/session/namchain-session-replay"
 
-HOST=piv
+HOST=vip
 DURATION=3600
 SYNC_AT=
 LABEL=
@@ -87,8 +87,9 @@ nc_commit=$(git -C "$NAMCHAIN_DIR" rev-parse --short HEAD)
   printf 'pedal       %s\n' "$(git -C "$REPO" rev-parse --short HEAD)"
   printf 'engine      %s\n' "$("${SSH[@]}" 'readlink /opt/namchain/current' 2>/dev/null || echo '?')"
   printf 'start       %s\n' "$(date -Iseconds)"
-  printf 'throttled   %s\n' "$("${SSH[@]}" 'sudo -n vcgencmd get_throttled' 2>/dev/null || echo '?')"
-  printf 'temp        %s\n' "$("${SSH[@]}" 'sudo -n vcgencmd measure_temp' 2>/dev/null || echo '?')"
+  printf 'throttled   %s\n' "$("${SSH[@]}" 'sudo -n vcgencmd get_throttled 2>/dev/null || echo "n/a; slowest core $(sort -n /sys/devices/system/cpu/cpufreq/policy*/scaling_cur_freq | head -1) kHz"' 2>/dev/null || echo '?')"
+  printf 'temp        %s\n' "$("${SSH[@]}" 'sudo -n vcgencmd measure_temp 2>/dev/null || awk "{printf \"temp=%.1f C\", \$1/1000}" /sys/class/thermal/thermal_zone0/temp' 2>/dev/null || echo '?')"
+  printf 'audio       %s\n' "$("${SSH[@]}" 'sed -n "s/.*\"device\": *\"\([^\"]*\)\".*/\1/p" /etc/namchain/namchaind.json' 2>/dev/null || echo '?')"
 } > "$out.env"
 
 # The monitor runs on the host for the replay's length plus a margin for the starting rig.

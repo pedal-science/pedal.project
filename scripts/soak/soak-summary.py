@@ -67,6 +67,9 @@ print("tail:", {p: window[p] for p in sorted(window) if p >= 30})
 temps = [r["temp_c"] for r in rows if isinstance(r.get("temp_c"), (int, float))]
 throttles = sorted({r.get("throttled") for r in rows})
 print(f"temperature {min(temps):.1f}..{max(temps):.1f} C, throttled flags seen: {throttles}")
+clocks = [r["min_khz"] for r in rows if isinstance(r.get("min_khz"), (int, float))]
+if clocks:
+    print(f"slowest core clock seen: {min(clocks) / 1000:.0f} MHz (the cap holds every core at its maximum; below it is throttling)")
 print(f"edits: generation {first['generation']} -> {last['generation']}, "
       f"params_applied +{delta('params_applied')}, transitions +{delta('transitions_started')}, "
       f"max TCP connections seen {max(r['engine']['status']['control']['tcp_connections'] for r in good)}")
