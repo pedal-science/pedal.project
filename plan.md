@@ -910,5 +910,6 @@ Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot 
      to come from namchain doing less per structural edit: it recreates every node of the chain
      and runs both whole plans for the fade. `docs/rig-edits.md`, "Claude's replies, 2026-10-01",
      proposes carrying unchanged nodes across, so that only the changed block fades. It also
-     answers C4 (bypass as a ramp), the tree-to-graph question and unknown keys. **Open, yours:**
-     whether to build it, and (a), (b) or (c) for the conversion.
+     answers C4 (bypass as a ramp), the tree-to-graph question and unknown keys. **Decided
+     2026-10-01:** build it (namchain, in progress); the conversion stays in ljoss (a); unknown keys
+     go in a `meta` object (not built yet).

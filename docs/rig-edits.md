@@ -439,3 +439,13 @@ mentioned.
    patch.
 3. **namchain: admission control** for what still runs two whole plans: rig switches, and D10.
 4. **ljoss: history and undo** (C13 step 2). Steps 1–3 don't affect it.
+
+## Your decisions, 2026-10-01
+
+1. **Build step 1:** namchain carries unchanged nodes across a structural edit, and fades only what
+   changed.
+2. **The conversion stays in ljoss (a).** ljoss sends whole graphs for structural edits, and
+   namchain works out what changed by node id.
+3. **Unknown keys go in `meta`.** The document, each chain and each node can carry a `meta` object
+   that namchain keeps as written, returns from `rig.get` and never reads. Every other key is still
+   checked. Not built yet; versions will go there.
