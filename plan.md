@@ -865,7 +865,7 @@ tested off the board and on vip (`bench-results/vip-spike/vip-boot.md`). Step 3 
 through rescue (`bench-results/vip-card/remote.md`), and **vip is the Core host**: every script
 defaults to it, `components.lock` is per host (`devices/<host>/components.lock`), and
 `scripts/deploy-engine` builds the engine for vip on the Mac. vip runs image 20260930T220004Z
-(pedal 438a71f, rtpi bae26dc) with namchain d4fb8e5 deployed by `deploy-engine`. namchain f422dd0
+(pedal 438a71f, rtpi bae26dc) with namchain 974060c deployed by `deploy-engine` (local transitions, 2026-10-01). namchain f422dd0
 plays a missing model or IR as a bypass, and ljoss 5da4ea6 marks the block.
 
 **Testing happens on vip for now** (decided 2026-09-30), until it's a working pedal that shouldn't
@@ -911,5 +911,19 @@ Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot 
      and runs both whole plans for the fade. `docs/rig-edits.md`, "Claude's replies, 2026-10-01",
      proposes carrying unchanged nodes across, so that only the changed block fades. It also
      answers C4 (bypass as a ramp), the tree-to-graph question and unknown keys. **Decided
-     2026-10-01:** build it (namchain, in progress); the conversion stays in ljoss (a); unknown keys
-     go in a `meta` object (not built yet).
+     2026-10-01:** build it; the conversion stays in ljoss (a); unknown keys go in a `meta` object
+     (not built yet).
+   - **Built and rerun, PASS** (2026-10-01, 20:33–21:34 UTC, namchain 974060c, `deploy-engine`; the
+     same session, sync at 30 min; `soak-replay-2026-09-28-ljoss-vip-local`):
+     | vip, Crunch Lead, q64, 974060c | load p50 / p99 / p99.9 | worst block | blocks ≥ 30% | gate |
+     |---|---|---|---|---|
+     | ljoss session replayed, plus sync | 8% / 20% / 34% | 84% | 7,850 | PASS |
+     18 structural edits: 12 local (each faded 1 or 2 inputs, kept 10–18 nodes), 6 crossfades (the
+     rig switches, which change the input or output node). `local_base_mismatches` 0; 0 xruns,
+     overruns, guard trips, queue drops; 48–52 °C, 2.4 GHz throughout. Highest block in each
+     10 s monitor interval holding the second amp's add / remove, per loop: 70/84%, 71/70%, 77/67%
+     (soak 1: 92% and 94%). Ambient Wash's own intervals with no edit reach 40–67%; rig switches
+     21–48%. The 84% interval holds the two-amp rig playing as well as the removal, which creates
+     nothing, so it is likely the two-amp rig's own peak; that rig was never measured steady on
+     vip, so "near the two-amp rig's own load" is likely but not shown. Offline numbers are in
+     namchain's `docs/transitions.md`, "Measured offline".

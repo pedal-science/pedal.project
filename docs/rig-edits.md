@@ -449,3 +449,19 @@ mentioned.
 3. **Unknown keys go in `meta`.** The document, each chain and each node can carry a `meta` object
    that namchain keeps as written, returns from `rig.get` and never reads. Every other key is still
    checked. Not built yet; versions will go there.
+
+## Step 1 built, 2026-10-01
+
+namchain `974060c`: a structural edit compares the two graphs node by node, keeps the instances
+(and state) of nodes that didn't change, and fades only the inputs whose driver changed. It falls
+back to the whole-chain crossfade when the input or output node changes, or nothing with state
+would be kept. namchain's `docs/transitions.md`, "Local transitions", has the rules.
+
+- **Offline** (`namchain-transition`, Mac, q64): adding the second amp to Ambient Wash ran at a
+  mean 52 µs during the fade against 83 µs for the crossfade, with the two-amp rig steady at 54 µs;
+  removing it, 52 against 82. All edits pass the detector's rules 1–3. A local edit also keeps
+  the 620 ms feedback delay's echoes, which the crossfade dropped.
+- **On vip,** the same replay soak as before: **PASS**, worst block 84% (was 94%), none over 90%.
+  12 of the 18 structural edits were local; the other 6 were rig switches. The details are in
+  `plan.md`, vip soak item 3.
+
