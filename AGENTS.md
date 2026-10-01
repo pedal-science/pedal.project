@@ -128,8 +128,10 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
   Pico ↔ Core host contract.
 - `docs/`: `working-across-repos.md` (repos, machines, rules), `hardware-handoff.md`
   (schematic findings and reasoning), `codec-bringup-2a.md` (the 2a bench walkthrough),
-  `build-board1.md` (the board 1 bench walkthrough), `rig-switch-strategies.md`, `uart-protocol.md`, `pedal-service.md` (the service's design: what
-  it owns, storage, uploads, the mapping, failure modes), `vip-image.md` (building vip's card,
+  `build-board1.md` (the board 1 bench walkthrough), `rig-switch-strategies.md`, `uart-protocol.md`,
+  `pedal-service.md` (the service's design: what it owns, storage, uploads, the mapping, failure
+  modes), `pairing.md` (BLE pairing, the pedal's own Wi-Fi network, and how ljoss joins it),
+  `vip-image.md` (building vip's card,
   its rescue and pedal roots, boot fallback), `bom.md`.
 - `stripboard/` — stripboard layouts as data; each script checks its layout against the netlist
   and draws it.
