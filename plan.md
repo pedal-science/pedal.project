@@ -917,7 +917,7 @@ Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot 
      same session, sync at 30 min; `soak-replay-2026-09-28-ljoss-vip-local`):
      | vip, Crunch Lead, q64, 974060c | load p50 / p99 / p99.9 | worst block | blocks ≥ 30% | gate |
      |---|---|---|---|---|
-     | ljoss session replayed, plus sync | 8% / 20% / 34% | 84% | 7,850 | PASS |
+     | ljoss session replayed, plus sync | 8% / 20% / 34% | 84% | 6,869 | PASS |
      18 structural edits: 12 local (each faded 1 or 2 inputs, kept 10–18 nodes), 6 crossfades (the
      rig switches, which change the input or output node). `local_base_mismatches` 0; 0 xruns,
      overruns, guard trips, queue drops; 48–52 °C, 2.4 GHz throughout. Highest block in each
