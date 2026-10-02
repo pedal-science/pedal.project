@@ -10,6 +10,42 @@ in the history): download it from the
 [`enclosure-1590dd` release](https://github.com/rikkus/pedal.project/releases/tag/enclosure-1590dd),
 or make it with `src/build --no-render`. It's self-contained, with textures packed.
 
+## Playing with the layout in 2D
+
+`layout.kicad_pcb` is the whole inside of the box seen from above, 1:1 in millimetres, as
+footprints you can drag around. It is a **layout sandbox**, not a schematic and not something to
+fabricate: no nets, no tracks. Open it in KiCad's PCB editor — that is all this file is for, so
+moving parts, measuring gaps and checking what fits against the 188 x 119 mm outline needs no
+other setup.
+
+The drawing is the enclosure's outside 188 x 119 mm with the boards, the Pi and the panel parts
+inside it, so a position's distance from the **top** of the drawing is its distance from the
+**rear** wall. The one thing it cannot carry is height: the rear-wall parts (OUT L/R, EXP, IN,
+MIDI, USB-C and 9 V) are all at z 16 in a row along the rear edge, and the display board hangs
+above board A. Anything about what fits *over* something else still needs the model.
+
+What is in it, all placed from `src/layout.py`, so it agrees with the model:
+
+- Both stripboards with their real holes, cut centres and the standoffs that fix them.
+- The Pi (`PI5`), the SparkFun codec on board A's socket strips (`CODEC`), the SOIC adapter
+  (`SOIC_ADAPTER`) and the display module (`DISPLAY`), each named **on the drawing** as well as
+  in the parts panel. The names are the modules' own reference fields, so they travel with the
+  part when you drag it: the Pi's outline is the rectangle labelled `PI5`, the left stripboard
+  is `BOARD_B` and the right is `BOARD_A`.
+- The top face: three footswitches, four LEDs, the Inst/Line toggle, the display window and the
+  stripe, on `Dwgs.User`.
+- `WINDOW` and `STRIPE` mark features of the top face; the four circles in the corners are the
+  lid-screw bosses.
+
+`docs/diagrams/layout-overview.svg` and its `.png` twin are the same drawing exported at 1:1
+for viewing without KiCad, made by `src/export-overview`.
+
+`make_layout.py` writes the `.kicad_pcb`, and **will not overwrite it once KiCad has saved it**
+unless run with `--force`: edit the `.kicad_pcb` freely. To push a layout you like back into the
+model, move the positions into `src/layout.py`, which is what the Blender build and the GLB
+exports read. The `.kicad_pro` is committed too, so it opens as a project; `.kicad_prl` is
+per-user and ignored.
+
 ## Renders
 
 `renders/`, 1920 x 1080, Cycles. They show the earlier 1590XX layout until they are rendered
@@ -102,6 +138,8 @@ screen image, builds `pedal.blend` and renders all seven cameras (about half an 
 | `src/layout.py` | Every position and dimension, shared by the rest |
 | `src/fetch-assets` | The two downloads, into `assets/` (gitignored) |
 | `src/make_parts.py` | KiCad boards to GLB (runs in KiCad's Python) |
+| `src/make_layout.py` | `layout.kicad_pcb`, the editable 2D layout (runs in KiCad's Python; `--force` to overwrite a saved one) |
+| `src/export-overview` | `docs/diagrams/layout-overview.svg` and `.png`, the drawing at 1:1 for viewing |
 | `src/make_screen.py` | The display's image |
 | `src/build_scene.py` | Builds `pedal.blend`: `bl_pedal.py` (assembly, wiring), `bl_enclosure.py`, `bl_parts.py`, `bl_wires.py`, `bl_scene.py` (floor, lamps, cameras), `bl_util.py` |
 | `src/build_board1.py` | Builds `stripboard/board1.blend` and its renders: board 1 alone, from `stripboard/board1.py` (`make_parts.py board1` first) |

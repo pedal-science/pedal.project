@@ -2,3 +2,9 @@ assets/
 *.blend1
 __pycache__/
 pedal.blend
+
+# KiCad's local preferences: per-user, not ours to commit. The .kicad_pro and the layout are.
+*.kicad_prl
+
+# KiCad keeps automatic snapshots of the layout here. Not ours to commit.
+.history/

@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+# Regenerates the overview drawing of enclosure/layout.kicad_pcb into docs/diagrams/.
+# The SVG is the real deliverable (vector, 1:1); the PNG is the same drawing rasterised
+# through headless Chrome so it previews in Markdown and in an editor.
+#
+#   enclosure/src/export-overview
+set -euo pipefail
+cd "$(dirname "$0")/../.."          # the repo root
+
+KPY=/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/3.9/bin/python3
+# KiCad's Python has pcbnew but no Pillow; the rasterising step needs Pillow for the crop.
+RPY=${RPY:-/Users/rik/.dsh/dsh-runtimes/dsh-primary-runtime/dependencies/python/bin/python3}
+"$RPY" -c "import PIL" 2>/dev/null || {
+  echo "export-overview: set RPY to a python3 with Pillow (the crop step needs it)" >&2
+  exit 1
+}
+SVG=docs/diagrams/layout-overview.svg
+PNG=docs/diagrams/layout-overview.png
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"; rm -f docs/diagrams/_shot.html' EXIT
+
+kicad-cli pcb export svg --mode-single -o "$SVG" --fit-page-to-board \
+  --exclude-drawing-sheet -l "Edge.Cuts,F.SilkS,Dwgs.User,F.Cu" \
+  enclosure/layout.kicad_pcb > /dev/null
+
+# KiCad fits the page to the copper, which clips the notes drawn around the board. Widen the
+# sheet by a margin, keeping the board itself at 1:1.
+"$KPY" - "$SVG" <<'PY'
+import re, sys
+p = sys.argv[1]
+src = open(p, encoding="utf-8").read()
+m = re.search(r'viewBox="([-\d.]+) ([-\d.]+) ([-\d.]+) ([-\d.]+)"', src)
+w, h = float(m.group(3)), float(m.group(4))
+MX = MY = 14.0
+end = src.index(">", src.index("<svg")) + 1
+head, body = src[:end], src[end:src.rindex("</svg>")]
+repl = {'viewBox': f'viewBox="{-MX} {-MY} {w + 2 * MX:.4f} {h + 2 * MY:.4f}"',
+        'width': f'width="{w + 2 * MX:.4f}mm"',
+        'height': f'height="{h + 2 * MY:.4f}mm"'}
+head = re.sub(r'\b(viewBox|width|height)="[^"]*"', lambda mm: repl[mm.group(1)], head)
+open(p, "w", encoding="utf-8").write(head + body + "</svg>\n")
+print(f"svg  {w + 2 * MX:.1f} x {h + 2 * MY:.1f} mm")
+PY
+
+cat > docs/diagrams/_shot.html <<HTML
+<!doctype html><meta charset="utf-8">
+<style>html,body{margin:0;background:#fff}img{display:block;width:2160px}</style>
+<img src="layout-overview.svg">
+HTML
+# Chrome takes a minute to start and then leaves its updater running, so bound it and move on.
+timeout 180 "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome" --headless \
+  --disable-gpu --no-sandbox --no-first-run --disable-background-networking \
+  --user-data-dir="$TMP/chrome" --hide-scrollbars \
+  --screenshot="$TMP/shot.png" --window-size=2160,1460 \
+  --default-background-color=FFFFFFFF docs/diagrams/_shot.html > /dev/null 2>&1 || true
+[[ -f "$TMP/shot.png" ]] || { echo "no screenshot from Chrome" >&2; exit 1; }
+
+"$RPY" - "$TMP/shot.png" "$PNG" <<'PY'
+import sys
+from PIL import Image, ImageChops
+im = Image.open(sys.argv[1]).convert("RGB")
+box = ImageChops.difference(im, Image.new("RGB", im.size, (255, 255, 255))).getbbox()
+if box:
+    im = im.crop((max(0, box[0] - 8), max(0, box[1] - 8),
+                  min(im.width, box[2] + 8), min(im.height, box[3] + 8)))
+im.save(sys.argv[2], optimize=True)
+print(f"png  {im.width} x {im.height}")
+PY
