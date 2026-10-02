@@ -271,37 +271,39 @@ heaviest rig is a single series chain. The measurement of what it does help is P
 Axis 2 is built only if Phase A says the heavy rig is a single parallel chain; its own flag, off by
 default.
 
-### Phase C — Shielding plumbing — **not done, and deliberately**
+### Phase C — Shielding plumbing — **measured, and nothing needed changing**
 
-piv already isolates cores 2–3, which is the whole render set for `render_threads: 2`, so **nothing had
-to change on piv to measure it**: `pedal-rt.slice` already allows 0–3 and the system/user slices are
-already confined to 0–1. What is *not* done:
+piv already isolates cores 2–3, which is the whole render set for `render_threads: 2`, so nothing had
+to change on piv to measure it: `pedal-rt.slice` already allows 0–3 and the system/user slices are
+already confined to 0–1.
 
-- **The audio IRQ on a render core.** With `render_threads: 2` on this host, core 2 renders *and*
-  carries the audio controller's interrupt. The plan's arm for it (move the IRQ to a housekeeping
-  core) could not be run because the SSL 2+ was not attached to piv, so there was no audio interrupt to
-  move. Open, and the first thing to do when piv carries the SSL again.
-- **`pedal-tune check` for N cores.** It verifies cores 2–3 are isolated and tickless, which is already
-  the right assertion for N = 2. An N > 2 configuration needs the five files in §4.1 changed together
-  (kernel command line, `ISOLATED_CPUS`, the two slice drop-ins, `pedal-rt.slice`) and the check
-  extended; that is work for whoever next needs more than two render cores, and nobody does yet.
+- **The audio IRQ on a render core — measured, and left alone.** The SSL 2+ is card `II` and its
+  controller's interrupt (irq 139) is parked on core 2, which renders with `render_threads: 2`. Moving
+  it to core 1 changed the worst block from 21.6% to 19.4% — within the noise of a 30 s arm, 0 driver
+  xruns either way. So the plan's fear was not borne out at this load and **the configuration stays as
+  it is**; the caveat, recorded in the report, is that this was measured with the render at ~7% of the
+  deadline.
+- **`pedal-tune check` for N cores — still open, and nobody needs it yet.** It verifies cores 2–3 are
+  isolated and tickless, which is the right assertion for N = 2. An N > 2 configuration needs the five
+  files in §4.1 changed together (kernel command line, `ISOLATED_CPUS`, the two slice drop-ins,
+  `pedal-rt.slice`) and the check extended.
 
 ### Phase D — Tests, benches, soak — **DONE 2026-10-02**
 
 - **Tests**, all in `namchain` and all passing: bit-identity of 2 threads against 1 (sample by sample),
   a 5-chain document over 3 participants, a structural transition under 2, the pool started from a
-  pinned caller, and the two config refusals. Full suite **310 cases / 2172 assertions** on the
-  multi-core cases under 4 cores; **TSan clean**; **RTSan clean** (clang-20, `-fsanitize=realtime`).
-- **Benchmarks**: the matrix in [the report](../bench-results/2026-10-02-multi-core-piv.md) — ten arms
-  over five documents, then four interference arms and a one-thread control under memory pressure, then
-  three live arms against a real PCM. The headline: two heavy chains p99 15% → 8% on two cores; the
-  series rig unchanged; under `stress-ng --vm` the one-thread render missed the deadline 4 times a
-  minute where the two-thread render did not.
-- **Not done: the edit-storm replay soak under `render_threads: 2`.** The soak harness drives
-  `namchaind` over its socket and would work unchanged, but the recorded ljoss session's rigs are the
-  ones on vip, and the pivot for this work was the benchmark matrix rather than a new hour-long soak.
-  It is the natural next step before this is promoted to vip, together with the thermal soak (these
-  arms are 60 s; a multi-core hour at temperature is not measured).
+  pinned caller, and the two config refusals. **TSan clean**; **RTSan clean** (clang-20,
+  `-fsanitize=realtime`). Evidence: `namchain/bench-results/2026-10-02-render-threads-piv.txt`.
+- **Benchmarks**: ten arms over five documents, four interference arms with a one-thread control under
+  memory pressure, four arms on the **real SSL 2+** (including the audio-IRQ move), and three on the
+  loopback card. The headline: two heavy chains p99 15% → 8%; the series rig unchanged; under
+  `stress-ng --vm` the one-thread render missed the deadline 4 times a minute where the two-thread
+  render did not; the pooled render on the SSL had **0 driver xruns**.
+- **The edit-storm soak is done**: the recorded ljoss session replayed for ten minutes per arm, one and
+  two threads, both clean — 0 overruns, 0 xruns, 0 guard trips, **0 `local_base_mismatches`**, 166 ramps
+  applied and none stale. The two arms match because that session's rig is the single series chain.
+- **Still outstanding: thermal.** These arms are 30–60 s; a multi-core hour at temperature, inside the
+  enclosure, on vip, is not measured.
 
 ### Phase E — Report — **DONE 2026-10-02**
 

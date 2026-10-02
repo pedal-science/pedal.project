@@ -124,21 +124,67 @@ Two caveats, both of which matter:
 
 ## Against a real device
 
-The SSL 2+ was not attached to piv, so these arms use the kernel's **loopback** card: a real
-full-duplex PCM with real period timing, which exercises `alsa_raw`'s open/read/write and the driver's
-own xrun counter, none of which the null backend touches. 20 s each, period 64, 6 periods.
+The SSL 2+ is card `II` on piv, and its controller's interrupt is irq 139 — which the device tree
+parks on **core 2**, a core that renders when `render_threads: 2`. These arms use the pedal's own
+interface settings (8 capture channels, 6 playback, period 64, 6 periods, the 4/2 output queue), 30 s
+each.
 
-| document | `render_threads` | cores | p50 | p99 | worst | over deadline | driver xruns |
-|---|---|---|---|---|---|---|---|
-| two heavy chains | 1 | 3 | 12% | 16% | 33.2% | 0 | 1 |
-| two heavy chains | 2 | 2,3 | 6% | 9% | 25.0% | 0 | 1 |
-| Ambient Wash (series chain) | 2 | 2,3 | 11% | 14% | 31.5% | 0 | 1 |
+| arm | `render_threads` | cores | audio IRQ | p50 | p99 | worst | over deadline | driver xruns |
+|---|---|---|---|---|---|---|---|---|
+| two heavy chains (control) | 1 | 3 | core 2 | 13% | 16% | 39.2% | 0 | 0 |
+| two heavy chains | 2 | 2,3 | **core 2 (a render core)** | 7% | 9% | 21.6% | 0 | 0 |
+| two heavy chains | 2 | 2,3 | **core 1 (housekeeping)** | 7% | 9% | 19.4% | 0 | 0 |
+| Ambient Wash (series chain) | 2 | 2,3 | core 2 | 12% | 15% | 31.9% | 0 | 0 |
 
-The two-chain gain replicates on a real device (12%/16% → 6%/9%), the series rig is unchanged as
-predicted, and the single driver xrun appears in **every** arm including the single-threaded one, so
-it belongs to the loopback card (or to start-up), not to the pool. Each run rendered exactly the
-number of blocks its wall time allows (15,102–15,105 in 20 s), so the device, not a free-running loop,
-was pacing them.
+Three things this settles:
+
+- **The pooled render works on the pedal's own interface**, with **0 driver xruns** — better than the
+  loopback card managed — and each run rendered exactly the blocks its wall time allows (22,547–22,603
+  in 30 s), so the SSL was pacing them.
+- **The two-chain gain holds on real hardware**: 13%/16% → 7%/9%.
+- **The audio-IRQ question is answered, and the answer is "leave it".** Moving the SSL's interrupt off
+  a render core changed the worst block from 21.6% to 19.4% — within the noise of a 30 s arm, with zero
+  overruns either way. At this load the interrupt on a render core costs nothing measurable. The
+  caveat is the load: this was measured with the render at ~7% of the deadline, and a rig pressed
+  against the deadline would be the place to look again.
+
+The kernel's **loopback** card was used before the SSL was known to be attached. It is kept here only
+for the one thing it adds — a device measurement of the *series* rig with two threads — and because
+the xrun it shows is instructive:
+
+| document | `render_threads` | p50 | p99 | worst | over deadline | driver xruns |
+|---|---|---|---|---|---|---|
+| two heavy chains | 1 | 12% | 16% | 33.2% | 0 | 1 |
+| two heavy chains | 2 | 6% | 9% | 25.0% | 0 | 1 |
+| Ambient Wash (series chain) | 2 | 11% | 14% | 31.5% | 0 | 1 |
+
+Its single driver xrun appears in **every** arm including the single-threaded control, so it belongs to
+that card, not to the pool; the SSL, in the table above, shows none.
+
+---
+
+## The edit-storm soak
+
+The recorded ljoss session (4 structural rebuilds and 150 ramped knob patches in the window replayed),
+replayed by namchain's own `namchain-session-replay` against `namchaind` for 10 minutes per arm, one
+arm per `render_threads` value.
+
+| `render_threads` | blocks | p50 | p99 | worst | over deadline | xruns | guard trips | `local_base_mismatches` | requests answered |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | 451,737 | 5% | 11% | 36.2% | 0 | 0 | 0 | 0 | 1,358, none refused |
+| 2 | 451,733 | 6% | 11% | 37.3% | 0 | 0 | 0 | 0 | 1,358, none refused |
+
+Both arms: **0 overruns, 0 xruns, 0 guard trips, 0 `local_base_mismatches`** (the counter that would
+move if two participants ever touched one chain's state), 166 parameter ramps applied and none stale,
+5 transitions started. `rig.apply` answered in p50 17 ms / max 19.7 ms, `rig.patch` in p50 0.19 ms, and
+the replay itself kept up (send lag p50 1.0 ms, 0 unanswered).
+
+This is the acceptance the engine's own M4 asks for — transitions and edits under a parallel render —
+and the two arms are the same to within the histogram's 1% bucket. The soak does not exercise the
+*two-chain gain*: this session's rig is the single serial chain, which is exactly the rig parallelism
+cannot help, and that is why its two arms match.
+
+
 
 ---
 
@@ -156,11 +202,12 @@ was pacing them.
   one sample by sample, TSan on the pool, and a single-owner rule for everything except the plans.
   The first version of it deadlocked on the daemon (see below) and no unit test could have caught
   that, which is the honest measure of the risk.
-- **Thermal is not measured here.** These arms are 60 s. A multi-core thermal soak (an hour, inside
+- **Thermal is not measured here.** These arms are 30–60 s. A multi-core thermal soak (an hour, inside
   the enclosure, on vip later) is outstanding.
-- **The audio IRQ question is open.** With `render_threads: 2` on this host core 2 renders *and*
-  carries the audio controller's interrupt. The plan's arm for that (move the IRQ to a housekeeping
-  core) could not be run: the SSL 2+ was not attached to piv, so there was no audio interrupt to move.
+- **The audio IRQ is left where it is, on evidence.** With `render_threads: 2`, core 2 renders *and*
+  carries the SSL's interrupt. Moving it to a housekeeping core changed the worst block from 21.6% to
+  19.4% — noise — with zero overruns either way, so the configuration need not change. That is measured
+  with the render at ~7% of the deadline; a rig pressed against the deadline is the place to revisit it.
 
 ## What went wrong on the way
 
