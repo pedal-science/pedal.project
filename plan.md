@@ -426,8 +426,10 @@ numbers need re-measuring on piv.
      `NET_INSTALL_AT_POWER_ON`); that last one spends about a second at cold boot on keyboard and
      network-install probing (`NET_INSTALL_KEYBOARD_WAIT` defaults to 900 ms) which the pedal
      does not need.
-   - Take it under the host's lock, by **power-cycling** vip rather than `reboot`ing it: a cold
-     boot is what this step asks for. Evidence: `bench-results/2026-10-02-boot-time-vip/`.
+   - Take the host's lock for the reads around it, and **power-cycle** vip rather than `reboot`ing
+     it: a cold boot is what this step asks for. The lock cannot span the power loss — it is an
+     `flock` held by an ssh session on the host, so pulling the power drops it. Evidence:
+     `bench-results/2026-10-02-boot-time-vip/`.
 
 8. **Soak it the way it will be used.** An hour through `namchaind` with an A2-Full + full-length
    cab IR rig, holding the Core host's lock, with ljoss editing over WiFi and one library rsync in the
