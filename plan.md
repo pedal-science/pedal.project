@@ -1052,6 +1052,57 @@ app builds clean. On Linux in colima, namchain main builds and **4 of 5** ctest 
 `ctl_cli` fails only because `chmod` on a Unix socket over colima's virtiofs mount returns `EINVAL`
 (proved with a three-line probe), not because of anything here.
 
+**Latency: real-time scheduling and the device's own buffer** (2026-10-02). The mode played
+correctly and arrived late — about 36 ms — and the budget was measurable rather than mysterious. On
+this Mac the SSL 2+ Mk II reports a 512-frame IO buffer (10.67 ms at 48 kHz), 74+74 frames of input
+safety and latency (3.1 ms) and 14+14 output (0.6 ms); the engine waited about a period on the capture
+side and primed the output ring with **two periods** of cushion, which is where the rest went. So the
+period is the thing to shrink, and two engine changes make a small one safe and selectable:
+
+- **macOS gets real-time scheduling, and it is verified rather than assumed.** `src/rt/scheduling.cpp`'s
+  non-Linux half was a stub that said so, so the render thread ran as ordinary work. It turns out
+  `pthread_setschedparam(SCHED_FIFO)` *does* work for an unprivileged macOS process — the Linux route
+  needs root, this one does not — and `pthread_getschedparam` reads it back, so the report is a reading
+  (`SCHED_FIFO priority 60`, `rt_policy 4`). On top of it the thread takes a
+  `THREAD_TIME_CONSTRAINT_POLICY` window sized to the audio period: the configured ceiling at start-up,
+  then the device's measured period as soon as `open_device` knows it. Three macOS 27 behaviours were
+  measured, not assumed: a further `pthread_setschedparam` answers `EINVAL` once a window is in force,
+  so the call is skipped when the thread already holds what was asked for (the daemon re-applies on
+  every device open — and a window in force means the *priority* can no longer be changed at all, which
+  is now a test); the mach timebase conversion is the opposite of the way it reads
+  (`ticks = ns * denom / numer`, or the `uint32_t` overflows and the kernel answers
+  `KERN_INVALID_ARGUMENT`); and macOS accepts the window then reports it back as the default, so the
+  report says "accepted, and these are the numbers asked for" instead of claiming to have read it. A
+  daemon asked for nothing still reports priority 0, not Darwin's 31.
+- **`--device-buffer-frames N`** (config key `device_buffer_frames`) asks the device for an IO buffer
+  of N frames, applied after the stream device is chosen and *before* the period is probed — the probe
+  measures what the callback is handed, which is what this changes. The request is checked against the
+  device's own range and **read back** into `backend_diagnostics.device_buffer_frames`, so a device
+  that clamps to 512 is not described as running at 32, and the value the device had is **put back in
+  `stop()`**, because leaving somebody's interface at 32 frames is not this tool's decision. A crash in
+  between leaves it set; that is the price of writing a device property at all.
+
+ljoss `d9ad735` sends `--device-buffer-frames 32` (0.67 ms) and `--rt-priority 60` in place of
+`--rt-priority 0`, offers 0/32/64/128/256/512 in a **Device buffer** picker with the frame count and
+its milliseconds, and explains in the footer which number is a request and which is a ceiling — the
+Audio row shows the period the device actually gave. The two new keys are missing from every settings
+file an earlier build wrote, and the synthesised `Codable` decoder throws on that, which the store's
+`try?` would have turned into the *default* settings: the mode off and the user's interface forgotten
+on the first launch after the update. Decoding is lenient now, with a test that loads a file from
+before the keys existed.
+
+Verified on the Mac: `--device-buffer-frames 128` on the built-in speakers opened at
+`period_size 128`, `realtime: true`, `rt_policy 4`, **0 xruns**, and the buffer was back at 512 after
+the daemon stopped; the log showed both promotions (a 21,333 µs window from the 1024-frame ceiling,
+then 2,667 µs from the measured 128). At **32 frames with a model loaded** the stream held for 14 s at
+`period_size 32`, **0 xruns**, `render_degraded: false`, and the speakers' buffer went back to 512.
+namchain's ctest is 5/5 (318 cases, including a hardware-free macOS case for the policy, the window
+and the `EINVAL` skip) and ljoss's tests pass. Expected monitoring latency at 32 frames: about
+0.67 ms of capture, 1.33 ms of output cushion and the interface's own 3.7 ms — roughly **6 ms**,
+against 36 ms before. The SSL itself was not asked to open at 32 by hand (ljoss's own child was
+already live on it), so what is verified for *that* interface is its reported range (15..4096, which
+contains 32) and the mechanism on two other devices; the Audio row is the place the result shows up.
+
 **Open:** nothing is pushed (both repos are committed on `main`, local only); vip still runs the
 engine from 2026-10-01 (`2e1a63a`) and these commits have not been deployed, which is where the
 pedal's own next step would start; the microphone prompt itself was never seen on this machine (the
