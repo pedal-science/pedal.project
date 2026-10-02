@@ -341,7 +341,7 @@ numbers need re-measuring on piv.
    - how long `rig.apply` takes on the Core host, from the command to hearing the new rig, with
      its NAM and IR: the **cold-switch baseline** that 3.8 has to beat to reach D10's 50 ms
    - power-on to sound (13–14 s from kernel start to a running rig on piv, 2026-09-26; firmware
-     time and the first audible output still to add).
+     time and the first audible output still to add — method at the end of this step).
    - `namchaind`'s memory with one rig loaded, and per extra model held: what bounds the bank on
      vip's 1 GB.
 
@@ -367,6 +367,47 @@ numbers need re-measuring on piv.
    - Found on the way: `namchaind`'s control thread, which compiles rigs, ran SCHED_FIFO 80 with
      core 3 allowed, beside the render thread. The pedal's drop-in now keeps it on cores 0–1 at
      normal priority.
+
+   **What is left, and how (2026-10-02).** Only the power-on number, and its two ends want
+   different tools.
+   - **Before the kernel — the firmware's and the bootloader's own time.** The Pi 5's bootloader
+     already prints it: vip's EEPROM config has `BOOT_UART=1`, and on a Pi 5 that output goes to
+     **UART10 on the dedicated debug connector** (the Raspberry Pi bootloader docs), which is
+     also where vip's console is (`console=ttyAMA10,115200`). `/dev/ttyAMA10` is the only UART
+     device vip exposes, so the console is not on the 40-pin header's UART that 3.4 wants for
+     the link — 3.4 has to enable that UART, not move a console off it. One 3-pin JST-SH cable
+     therefore carries the bootloader's first line and the kernel log.
+     `tools/measure-boot.py` captures it from the Mac through the Debug Probe's UART bridge (the
+     `/dev/cu.usbmodemNNN` that `firmware/tools/echo-test.py` already finds), or any 3.3 V
+     USB-TTL; a passive capture needs only GND and the Pi's TXD, and nothing is written back to
+     the getty on that port. The probe's SWD port is unaffected, but its UART bridge leaves the
+     echo test's GP0/GP1 wiring while it watches the Pi.
+   - **Power-on itself is the one thing the wire cannot show.** The first bootloader byte arrives
+     a small, unstated time after power is applied. Quote that offset as the uncertainty,
+     calibrate it once against the 5 V rail with a scope, or stamp t0 from a switched supply —
+     but say which: a power-on number without its anchor is not a number.
+   - **After the kernel, no probe is needed.** `dmesg` starts at `[    0.000000]`, and
+     `journalctl -b -o short-monotonic -u namchaind` is kernel-relative. On vip's 2026-10-02
+     boot: namchaind at 4.98 s, the rig published at 6.35 s, against piv's 13.2–14.2 s above. So
+     the "~20 s power-on to sound" estimate is pessimistic, and 3.6's urgency should be judged
+     from the measured number.
+   - **"First audible output" is not on the wire either.** Capture the jack (`engine.record`, or
+     the Mac's interface) on the same Mac clock as the serial reader, or report the engine's own
+     readiness and say that is what it is. "Rig published" is not "sound".
+   - **Monotonic timestamps only** (`-o short-monotonic`, `dmesg`): vip has no RTC battery, and
+     its journal dates the first entries 2026-07-27 before the clock jumps.
+   - The Pico's own boot is milliseconds and belongs to 3.1/3.4, on its USB console, not on this
+     probe.
+   - **Record the EEPROM config as well**, since it is boot behaviour nothing in `devices/vip/`
+     owns yet: `rpi-eeprom-config` and `vcgencmd` are both absent from the image, but Linux can
+     read the config through the device tree — `/proc/device-tree/aliases/blconfig` →
+     `/sys/bus/nvmem/devices/rmem4/nvmem`. `check` should diff it (`BOOT_UART`, `BOOT_ORDER`,
+     `NET_INSTALL_AT_POWER_ON`); that last one spends about a second at cold boot on keyboard and
+     network-install probing (`NET_INSTALL_KEYBOARD_WAIT` defaults to 900 ms) which the pedal
+     does not need.
+   - Take it under the host's lock, by **power-cycling** vip rather than `reboot`ing it: a cold
+     boot is what this step asks for. Evidence: `bench-results/2026-10-02-boot-time-vip/`.
+
 8. **Soak it the way it will be used.** An hour through `namchaind` with an A2-Full + full-length
    cab IR rig, holding the Core host's lock, with ljoss editing over WiFi and one library rsync in the
    middle.
