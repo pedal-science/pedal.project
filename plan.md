@@ -897,6 +897,20 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**Multi-core rendering, done and reported** (2026-10-02). namchain's M4 is built: `render_threads`
+shares a document's chains over a block-synchronous pool, one core by default and **bit-identical**
+to it, with the per-core model budget to match — namchain `69b5b54`, `6ca4324`, `cf7aa84`, developed
+and tested on **piv** against the `all-optimisations` NAM core
+(`rikkus/OptimisationWorkOnNeuralAmpModelerCore`, `f5c48d1`). It works where there are chains to share:
+two A2-Full chains go from p99 15% to 8%, and under memory pressure the two-core render holds the
+deadline where the one-core render misses it four times a minute. **It does not help the pedal's
+heaviest rig, and that is the finding that matters:** the Ambient Wash's two amps are *in series on
+one chain*, so there is nothing to overlap, and the rig is comfortable on one core anyway (p99 ~14%).
+The failure that motivated the work was measured on a busy vip and is **withdrawn**; the figure is
+corrected in `namchain/docs/daemon.md`. Plan and findings: [docs/multi-core.md](docs/multi-core.md);
+measurements, method and advice:
+[bench-results/2026-10-02-multi-core-piv.md](bench-results/2026-10-02-multi-core-piv.md).**
+
 **vip** (arrived): `docs/vip-image.md` step 1 is done, the spike card proved the boot layout on
 vip unchanged (`bench-results/vip-spike/results.md`). Step 2 is done too: rtpi's `vip-boot`,
 tested off the board and on vip (`bench-results/vip-spike/vip-boot.md`). Step 3 is done:
