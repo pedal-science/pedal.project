@@ -1,0 +1,544 @@
+# measure-boot.py: capture on the Mac's monotonic clock
+# ports: /dev/cu.usbmodem1302 /dev/cu.usbmodem1401
+# T+ is seconds since the capture started, not since power-on
+T+    0.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+    1.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+    2.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+    3.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+    4.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+    4.341  /dev/cu.usbmodem1401    fw: up 176046 s, session=0, frames ok=0 bad=0
+T+    5.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+    6.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+    7.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+    8.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+    9.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+    9.341  /dev/cu.usbmodem1401    fw: up 176051 s, session=0, frames ok=0 bad=0
+T+   10.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   11.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   12.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   13.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   14.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   14.341  /dev/cu.usbmodem1401    fw: up 176056 s, session=0, frames ok=0 bad=0
+T+   15.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   16.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   17.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   18.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   19.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   19.341  /dev/cu.usbmodem1401    fw: up 176061 s, session=0, frames ok=0 bad=0
+T+   20.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   21.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   22.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   23.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   24.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   24.341  /dev/cu.usbmodem1401    fw: up 176066 s, session=0, frames ok=0 bad=0
+T+   25.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   26.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   27.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   28.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   29.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   29.341  /dev/cu.usbmodem1401    fw: up 176071 s, session=0, frames ok=0 bad=0
+T+   30.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   31.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   32.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   33.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   34.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   34.342  /dev/cu.usbmodem1401    fw: up 176076 s, session=0, frames ok=0 bad=0
+T+   35.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   36.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   37.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   38.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   39.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   39.342  /dev/cu.usbmodem1401    fw: up 176081 s, session=0, frames ok=0 bad=0
+T+   40.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   41.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   42.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   43.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   44.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   44.342  /dev/cu.usbmodem1401    fw: up 176086 s, session=0, frames ok=0 bad=0
+T+   45.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   46.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   47.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   48.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   49.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   49.342  /dev/cu.usbmodem1401    fw: up 176091 s, session=0, frames ok=0 bad=0
+T+   50.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   51.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   52.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   53.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   54.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   54.342  /dev/cu.usbmodem1401    fw: up 176096 s, session=0, frames ok=0 bad=0
+T+   55.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   56.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   57.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   58.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   59.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   59.342  /dev/cu.usbmodem1401    fw: up 176101 s, session=0, frames ok=0 bad=0
+T+   60.158  /dev/cu.usbmodem1302    BOOT-CABLE-MARKER-A
+T+   60.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   61.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   62.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   63.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   64.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   64.342  /dev/cu.usbmodem1401    fw: up 176106 s, session=0, frames ok=0 bad=0
+T+   65.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   66.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   67.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   68.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   69.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   69.342  /dev/cu.usbmodem1401    fw: up 176111 s, session=0, frames ok=0 bad=0
+T+   70.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   71.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   72.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   73.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   74.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   74.342  /dev/cu.usbmodem1401    fw: up 176116 s, session=0, frames ok=0 bad=0
+T+   75.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   75.893  /dev/cu.usbmodem1302    [!p]104\[0m[?7h[1G[0J[6n[32766;32766H[6n[ 5441.784062] reboot: Power down
+T+   76.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   77.030  /dev/cu.usbmodem1302    
+T+   77.037  /dev/cu.usbmodem1302      1.13 RPi: BOOTSYS release VERSION:66f33f7e DATE: 2026/05/11 TIME: 12:20:02
+T+   77.039  /dev/cu.usbmodem1302      1.14 MFG_VER: 1
+T+   77.049  /dev/cu.usbmodem1302      1.14 BOOTMODE: 0x06 partition 63 build-ts BUILD_TIMESTAMP=1778498402 serial d6062e1d boardrev a04171 stc 1142671
+T+   77.053  /dev/cu.usbmodem1302      1.15 AON_RESET: 00000003 PM_RSTS 00000575
+T+   77.060  /dev/cu.usbmodem1302      1.15 POWER_OFF_ON_HALT: 0 WAIT_FOR_POWER_BUTTON 0 power-on-reset 0
+T+   77.061  /dev/cu.usbmodem1302      1.16 EEPROM ID 0xef4015
+T+   77.064  /dev/cu.usbmodem1302      1.16 SFDP v1.5 Param v1.5
+T+   77.068  /dev/cu.usbmodem1302      1.17 RP1_BOOT chip ID: 0x20001927
+T+   77.072  /dev/cu.usbmodem1302      1.17 Halt: power_off: 0
+T+   77.072  /dev/cu.usbmodem1302    
+T+   77.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   78.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   79.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   79.342  /dev/cu.usbmodem1401    fw: up 176121 s, session=0, frames ok=0 bad=0
+T+   80.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   80.750  /dev/cu.usbmodem1302      4.85 PCIEx1: PWR 0 DET_WAKE 0
+T+   80.754  /dev/cu.usbmodem1302      4.85 part 00000000 reset_info 00000000
+T+   80.761  /dev/cu.usbmodem1302      4.85 PMIC reset-event 00000000 rtc 6ac0104c alarm 00000000 enabled 0
+T+   80.763  /dev/cu.usbmodem1302      4.86 uSD voltage 3.3V
+T+   80.767  /dev/cu.usbmodem1302      4.87 SDRAM_CONFIG: 07
+T+   80.773  /dev/cu.usbmodem1302      4.87 Initialising SDRAM rank 1 total-size: 8Gbit 0 part: 0 (0x07 0x07)
+T+   80.777  /dev/cu.usbmodem1302      4.87 memsys_init: 0 8Gbit MCB 0x80015ff0: 7056
+T+   80.784  /dev/cu.usbmodem1302      4.88 DDR 4267 Mbps dual-rank:0 byte-mode:0 size-gbit:8 part-config:0
+T+   81.259  /dev/cu.usbmodem1302      5.36 RP1 FW: load 0
+T+   81.275  /dev/cu.usbmodem1302      5.37 RP1_BOOT chip ID: 0x20001927
+T+   81.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   82.034  /dev/cu.usbmodem1302      6.13 RP1 FW: load 1
+T+   82.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   82.443  /dev/cu.usbmodem1302      6.54 OTP boardrev a04171 bootrom a a
+T+   82.452  /dev/cu.usbmodem1302      6.54 Customer key hash 0000000000000000000000000000000000000000000000000000000000000000
+T+   82.453  /dev/cu.usbmodem1302      6.55 VC-JTAG unlocked
+T+   82.474  /dev/cu.usbmodem1302      6.57 RP1_BOOT chip ID: 0x20001927
+T+   83.019  /dev/cu.usbmodem1302    
+T+   83.125  /dev/cu.usbmodem1302      7.21 PCI2 init
+T+   83.126  /dev/cu.usbmodem1302      7.23 PCI2 reset
+T+   83.171  /dev/cu.usbmodem1302      7.27 PCIe scan 00001de4:00000001
+T+   83.174  /dev/cu.usbmodem1302      7.27 RP1_CHIP_INFO 20001927
+T+   83.175  /dev/cu.usbmodem1302    
+T+   83.182  /dev/cu.usbmodem1302      7.27 RPi: BOOTLOADER release VERSION:66f33f7e DATE: 2026/05/11 TIME: 12:20:02
+T+   83.183  /dev/cu.usbmodem1302      7.28 MFG_VER: 1
+T+   83.193  /dev/cu.usbmodem1302      7.28 BOOTMODE: 0x06 partition 0 build-ts BUILD_TIMESTAMP=1778498402 serial d6062e1d boardrev a04171 stc 7287067
+T+   83.195  /dev/cu.usbmodem1302      7.29 EEPROM ID 0xef4015
+T+   83.198  /dev/cu.usbmodem1302      7.29 SFDP v1.5 Param v1.5
+T+   83.201  /dev/cu.usbmodem1302      7.30 PCIEx1: PWR 0 DET_WAKE 0
+T+   83.203  /dev/cu.usbmodem1302      7.04 M.2 PCIe HAT not detected.
+T+   83.209  /dev/cu.usbmodem1302      7.31 usb_pd_init status 3
+T+   83.211  /dev/cu.usbmodem1302      7.31 USB_PD CONFIG 0 43
+T+   83.290  /dev/cu.usbmodem1302      7.39 XHCI-STOP
+T+   83.297  /dev/cu.usbmodem1302      7.39 xHC0 ver: 272 HCS: 03000440 140000f1 07ff000a HCC: 0240fe6d
+T+   83.298  /dev/cu.usbmodem1302      7.39 USBSTS 1
+T+   83.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   83.303  /dev/cu.usbmodem1302      7.40 xHC0 ver: 272 HCS: 03000440 140000f1 07ff000a HCC: 0240fe6d
+T+   83.306  /dev/cu.usbmodem1302      7.40 xHC0 ports 3 slots 64 intrs 4
+T+   83.314  /dev/cu.usbmodem1302      7.41 XHCI-STOP
+T+   83.319  /dev/cu.usbmodem1302      7.41 xHC1 ver: 272 HCS: 03000440 140000f1 07ff000a HCC: 0240fe6d
+T+   83.321  /dev/cu.usbmodem1302      7.42 USBSTS 1
+T+   83.328  /dev/cu.usbmodem1302      7.42 xHC1 ver: 272 HCS: 03000440 140000f1 07ff000a HCC: 0240fe6d
+T+   83.330  /dev/cu.usbmodem1302      7.43 xHC1 ports 3 slots 64 intrs 4
+T+   83.336  /dev/cu.usbmodem1302      7.43 USB-PD: src-cap PDO object1 0x080191f4
+T+   83.338  /dev/cu.usbmodem1302      7.43 Current 5000 mA
+T+   83.340  /dev/cu.usbmodem1302      7.44 Voltage 5000 mV
+T+   83.345  /dev/cu.usbmodem1302      7.44 USB-PD: src-cap PDO object2 0x0002d1f4
+T+   83.347  /dev/cu.usbmodem1302      7.44 Current 5000 mA
+T+   83.349  /dev/cu.usbmodem1302      7.45 Voltage 9000 mV
+T+   83.353  /dev/cu.usbmodem1302      7.45 USB-PD: src-cap PDO object3 0x0003c177
+T+   83.355  /dev/cu.usbmodem1302      7.45 Current 3750 mA
+T+   83.357  /dev/cu.usbmodem1302      7.45 Voltage 12000 mV
+T+   83.361  /dev/cu.usbmodem1302      7.46 USB-PD: src-cap PDO object4 0x0004b12c
+T+   83.364  /dev/cu.usbmodem1302      7.46 Current 3000 mA
+T+   83.365  /dev/cu.usbmodem1302      7.46 Voltage 15000 mV
+T+   83.369  /dev/cu.usbmodem1302      7.46 USB-PD: src-cap PDO object5 0x000640e1
+T+   83.372  /dev/cu.usbmodem1302      7.47 Current 2250 mA
+T+   83.374  /dev/cu.usbmodem1302      7.47 Voltage 20000 mV
+T+   83.413  /dev/cu.usbmodem1302      7.51 SD_OC: 0
+T+   83.415  /dev/cu.usbmodem1302      7.17 Boot mode: SD (01) order f4
+T+   84.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   84.343  /dev/cu.usbmodem1401    fw: up 176126 s, session=0, frames ok=0 bad=0
+T+   85.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   86.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   87.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   88.081  /dev/cu.usbmodem1302     12.17 SD HOST: 200000000 CTL0: 0x00800000 BUS: 400000 Hz actual: 390625 HZ div: 512 (256) status: 0x1fff0000 delay: 276
+T+   88.092  /dev/cu.usbmodem1302     12.18 SD HOST: 200000000 CTL0: 0x00800f00 BUS: 400000 Hz actual: 390625 HZ div: 512 (256) status: 0x1fff0000 delay: 276
+T+   88.264  /dev/cu.usbmodem1302     12.36 OCR c0ff8000 [272]
+T+   88.269  /dev/cu.usbmodem1302    CID: 00035344534b333247802e45382401a4
+T+   88.271  /dev/cu.usbmodem1302    CSD: 400e0032db790000edc87f800a404000
+T+   88.277  /dev/cu.usbmodem1302     12.37 SD: bus-width: 4 spec: 2 SCR: 0x02358447 0x00000000
+T+   88.290  /dev/cu.usbmodem1302     12.38 SD HOST: 200000000 CTL0: 0x00800f04 BUS: 50000000 Hz actual: 50000000 HZ div: 4 (2) status: 0x1fff0000 delay: 2
+T+   88.294  /dev/cu.usbmodem1302     12.39 MBR: 0x00000001,62333951 type: 0xee
+T+   88.297  /dev/cu.usbmodem1302     12.39 MBR: 0x00000000,       0 type: 0x00
+T+   88.301  /dev/cu.usbmodem1302     12.40 MBR: 0x00000000,       0 type: 0x00
+T+   88.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   88.305  /dev/cu.usbmodem1302     12.40 MBR: 0x00000000,       0 type: 0x00
+T+   88.308  /dev/cu.usbmodem1302     12.09 Trying partition: 0
+T+   88.359  /dev/cu.usbmodem1302     12.45 GPT 7f93b22c150ac6529f8c1c0379f6523b 000000001 003b723ff num-partitions 128 entry-size 128 pentry 2 first 0
+T+   88.366  /dev/cu.usbmodem1302     12.46 GPT partition: 0 ebd0a0a2-b9e5-4433-87c0-68b6b72699c7 000000800..0000207ff
+T+   88.371  /dev/cu.usbmodem1302     12.46 Matched GUID bootable-part-idx 0 want partition 0
+T+   88.377  /dev/cu.usbmodem1302     12.75 type: 32 lba: 2048 'mkfs.fat' ' BOOTSEL    ' clusters 129022 (1)
+T+   88.383  /dev/cu.usbmodem1302     12.48 rsc 32 fat-sectors 1009 root dir cluster 2 sectors 0 entries 0
+T+   88.386  /dev/cu.usbmodem1302     12.48 FAT32 clusters 129022
+T+   88.390  /dev/cu.usbmodem1302     12.91 Read autoboot.txt bytes       65 hnd 0x3
+T+   88.397  /dev/cu.usbmodem1302     12.49 Select partition rsts 0 C(boot_partition) 2 EEPROM config 0 result 2
+T+   88.399  /dev/cu.usbmodem1302     12.00 Trying partition: 2
+T+   88.409  /dev/cu.usbmodem1302     12.50 GPT 7f93b22c150ac6529f8c1c0379f6523b 000000001 003b723ff num-partitions 128 entry-size 128 pentry 2 first 0
+T+   88.417  /dev/cu.usbmodem1302     12.51 GPT partition: 0 ebd0a0a2-b9e5-4433-87c0-68b6b72699c7 000000800..0000207ff
+T+   88.422  /dev/cu.usbmodem1302     12.52 Matched GUID bootable-part-idx 0 want partition 1
+T+   88.429  /dev/cu.usbmodem1302     12.52 GPT partition: 1 ebd0a0a2-b9e5-4433-87c0-68b6b72699c7 000020800..0001207ff
+T+   88.435  /dev/cu.usbmodem1302     12.53 Matched GUID bootable-part-idx 1 want partition 1
+T+   88.440  /dev/cu.usbmodem1302     12.38 type: 32 lba: 133120 'mkfs.fat' ' PEDAL-BOOT ' clusters 130812 (8)
+T+   88.447  /dev/cu.usbmodem1302     12.54 rsc 32 fat-sectors 1024 root dir cluster 2 sectors 0 entries 0
+T+   88.449  /dev/cu.usbmodem1302     12.55 FAT32 clusters 130812
+T+   88.454  /dev/cu.usbmodem1302     12.55 Read config.txt bytes      845 hnd 0x430c
+T+   88.459  /dev/cu.usbmodem1302     12.58 Read profile.txt bytes      128 hnd 0x430d
+T+   88.462  /dev/cu.usbmodem1302     12.56 [sdcard] pieeprom.upd not found
+T+   88.467  /dev/cu.usbmodem1302     12.65 usb_max_current_enable default 0 max-current 5000
+T+   88.476  /dev/cu.usbmodem1302     12.77 Read a/bcm2712-rpi-5-b.dtb bytes    78655 hnd 0x40
+T+   88.482  /dev/cu.usbmodem1302     12.57 dt-match: compatible: raspberrypi,5-model-b match: brcm,bcm2712
+T+   88.487  /dev/cu.usbmodem1302     12.58 dt-match: compatible: brcm,bcm2712 match: brcm,bcm2712
+T+   88.502  /dev/cu.usbmodem1302     12.60 MESS:00:00:12.603742:0: *** Restart logging
+T+   88.506  /dev/cu.usbmodem1302     12.06 Read /config.txt bytes      845 hnd 0x430c
+T+   88.510  /dev/cu.usbmodem1302     12.10 Read /profile.txt bytes      128 hnd 0x430d
+T+   88.563  /dev/cu.usbmodem1302     12.64 Read /tryboot.txt bytes      128 hnd 0x430e
+T+   88.568  /dev/cu.usbmodem1302     12.66 MESS:00:00:12.667300:0: board: boardrev a04171 otp a04171
+T+   88.572  /dev/cu.usbmodem1302     12.73 Read /config.txt bytes      845 hnd 0x430c
+T+   88.578  /dev/cu.usbmodem1302     12.77 Read /profile.txt bytes      128 hnd 0x430d
+T+   88.583  /dev/cu.usbmodem1302     12.68 MESS:00:00:12.684531:0: Initial voltage 800000 temp 50469
+T+   88.784  /dev/cu.usbmodem1302     12.88 MESS:00:00:12.884920:0: avs_2712: AVS pred 8733 873300 temp 49370
+T+   88.788  /dev/cu.usbmodem1302     12.88 MESS:00:00:12.888527:0: vpred 873 mV +0
+T+   88.796  /dev/cu.usbmodem1302     12.89 MESS:00:00:12.892733:0: over-voltage idle: 0 avs: 113300 delta: 0 (0x00000000)
+T+   88.804  /dev/cu.usbmodem1302     12.90 MESS:00:00:12.906781:0: FB framebuffer_swap 1
+T+   88.811  /dev/cu.usbmodem1302     12.90 MESS:00:00:12.908634:0: Select resolution HDMI0/2 hotplug 0 max_mode 2
+T+   88.818  /dev/cu.usbmodem1302     12.91 MESS:00:00:12.915525:0: Select resolution HDMI1/2 hotplug 0 max_mode 2
+T+   88.830  /dev/cu.usbmodem1302     12.93 Loading 'a/initrd.img' to 0x00000000 offset 0x0
+T+   89.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   89.342  /dev/cu.usbmodem1401    fw: up 176131 s, session=0, frames ok=0 bad=0
+T+   90.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   91.028  /dev/cu.usbmodem1302     15.30 Read a/initrd.img bytes 52770103 hnd 0x10a1
+T+   91.248  /dev/cu.usbmodem1302     15.34 MESS:00:00:15.346963:0: initramfs (initrd.img) loaded to 0x2bdac000 (size 0x3253537)
+T+   91.253  /dev/cu.usbmodem1302     15.35 MESS:00:00:15.352266:0: dtb_file 'bcm2712-rpi-5-b.dtb'
+T+   91.260  /dev/cu.usbmodem1302     15.35 Loading 'a/bcm2712-rpi-5-b.dtb' to 0x00000000 offset 0x100
+T+   91.268  /dev/cu.usbmodem1302     15.69 Read a/bcm2712-rpi-5-b.dtb bytes    78655 hnd 0x40
+T+   91.284  /dev/cu.usbmodem1302     15.85 Read /a/overlays/overlay_map.dtb bytes     5971 hnd 0xf26
+T+   91.298  /dev/cu.usbmodem1302     15.99 Read /a/overlays/bcm2712d0.dtbo bytes     1363 hnd 0x100b
+T+   91.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   91.311  /dev/cu.usbmodem1302     15.41 MESS:00:00:15.413346:0: Loaded overlay 'bcm2712d0'
+T+   91.348  /dev/cu.usbmodem1302     15.45 PCIEx1: PWR 0 DET_WAKE 0
+T+   91.357  /dev/cu.usbmodem1302     15.59 Read /config.txt bytes      845 hnd 0x430c
+T+   91.361  /dev/cu.usbmodem1302     15.61 Read /profile.txt bytes      128 hnd 0x430d
+T+   91.367  /dev/cu.usbmodem1302     15.46 MESS:00:00:15.465872:0: dtparam: watchdog=on
+T+   91.409  /dev/cu.usbmodem1302     15.10 Read /a/cmdline-tuned.txt bytes      339 hnd 0xe85
+T+   91.417  /dev/cu.usbmodem1302     15.51 MESS:00:00:15.512923:0: Read command line from file 'a/cmdline-tuned.txt':
+T+   91.438  /dev/cu.usbmodem1302     15.52 MESS:00:00:15.520131:0: 'root=LABEL=pedal net.ifnames=0 console=ttyAMA10,115200 console=tty1 rootfstype=ext4 rootwait fixrtc cfg80211.ieee80211_regdom=GB rd.shell=0 rd.emergency=reboot rd.retry=60 rd.timeout=90 panic=10 isolcpus=managed_irq,domain,2-3 
+T+   91.538  /dev/cu.usbmodem1302     15.64 MESS:00:00:15.641182:0: RPM 0, max RPM 0
+T+   91.558  /dev/cu.usbmodem1302     15.66 MESS:00:00:15.660197:0: Enabling early watchdog
+T+   91.563  /dev/cu.usbmodem1302     15.66 BMD "armstub8-2712.bin" not found
+T+   91.565  /dev/cu.usbmodem1302     15.65 fs_open: 'a/armstub8-2712.bin' 
+T+   91.571  /dev/cu.usbmodem1302     15.66 Loading 'a/vmlinuz' to 0x00000000 offset 0x200000
+T+   92.184  /dev/cu.usbmodem1302     16.85 Read a/vmlinuz bytes 14703885 hnd 0x6a
+T+   92.303  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   93.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   93.419  /dev/cu.usbmodem1302     17.51 MESS:00:00:17.518705:0: Device tree loaded to 0x2bd98400 (size 0x13b26)
+T+   93.420  /dev/cu.usbmodem1302     17.52 PCI1 reset
+T+   93.430  /dev/cu.usbmodem1302     17.53 PCI2 reset
+T+   93.440  /dev/cu.usbmodem1302     17.54 set_reboot_order 0
+T+   93.442  /dev/cu.usbmodem1302     17.54 set_reboot_arg1 0
+T+   93.444  /dev/cu.usbmodem1302     17.54 USB-OTG disconnect
+T+   93.484  /dev/cu.usbmodem1302     17.58 MESS:00:00:17.585999:0: BSC_A no ACK
+T+   93.488  /dev/cu.usbmodem1302     17.58 MESS:00:00:17.587233:0: BSC_A no ACK
+T+   93.490  /dev/cu.usbmodem1302     17.59 MESS:00:00:17.591158:0: BSC_A no ACK
+T+   93.512  /dev/cu.usbmodem1302     17.61 MESS:00:00:17.615087:0: BSC_B no ACK
+T+   93.516  /dev/cu.usbmodem1302     17.61 MESS:00:00:17.616314:0: BSC_B no ACK
+T+   93.520  /dev/cu.usbmodem1302     17.62 MESS:00:00:17.620249:0: BSC_B no ACK
+T+   93.542  /dev/cu.usbmodem1302     17.64 MESS:00:00:17.644019:0: Starting OS 17644 ms
+T+   93.547  /dev/cu.usbmodem1302     17.64 MESS:00:00:17.649628:0: 00000040: -> 00000480
+T+   93.552  /dev/cu.usbmodem1302     17.65 MESS:00:00:17.651480:0: 00000030: -> 00100080
+T+   93.557  /dev/cu.usbmodem1302     17.65 MESS:00:00:17.656193:0: 00000034: -> 00100080
+T+   93.562  /dev/cu.usbmodem1302     17.66 MESS:00:00:17.660906:0: 00000038: -> 00100080
+T+   93.566  /dev/cu.usbmodem1302     17.66 MESS:00:00:17.665619:0: 0000003c: -> 00100080
+T+   93.566  /dev/cu.usbmodem1302    
+T+   93.571  /dev/cu.usbmodem1302    NOTICE:  BL31: v2.6(release):v2.6-240-gfc45bc492
+T+   93.575  /dev/cu.usbmodem1302    NOTICE:  BL31: Built : 12:55:13, Dec  4 2024
+T+   93.667  /dev/cu.usbmodem1302    [    0.000000] Booting Linux on physical CPU 0x0000000000 [0x414fd0b1]
+T+   93.691  /dev/cu.usbmodem1302    [    0.000000] Linux version 7.0.0-1017-raspi-realtime (buildd@bos03-arm64-107) (aarch64-linux-gnu-gcc (Ubuntu 15.2.0-16ubuntu1) 15.2.0, GNU ld (GNU Binutils for Ubuntu) 2.46) #17-Ubuntu SMP PREEMPT_RT Fri Aug  7 17:41:11 UTC 2026 (Ubuntu 7.0.0-1017.17-raspi-realtime 7.0.12)
+T+   93.694  /dev/cu.usbmodem1302    [    0.000000] KASLR enabled
+T+   93.697  /dev/cu.usbmodem1302    [    0.000000] random: crng init done
+T+   93.702  /dev/cu.usbmodem1302    [    0.000000] Machine model: Raspberry Pi 5 Model B Rev 1.1
+T+   93.706  /dev/cu.usbmodem1302    [    0.000000] Malformed early option 'numa'
+T+   93.710  /dev/cu.usbmodem1302    [    0.000000] efi: UEFI not found.
+T+   93.719  /dev/cu.usbmodem1302    [    0.000000] Reserved memory: created CMA memory pool at 0x000000003bc00000, size 64 MiB
+T+   93.727  /dev/cu.usbmodem1302    [    0.000000] OF: reserved mem: initialized node linux,cma, compatible id shared-dma-pool
+T+   93.736  /dev/cu.usbmodem1302    [    0.000000] OF: reserved mem: 0x000000003bc00000..0x000000003fbfffff (65536 KiB) map reusable linux,cma
+T+   93.745  /dev/cu.usbmodem1302    [    0.000000] OF: reserved mem: 0x0000000000000000..0x000000000007ffff (512 KiB) nomap non-reusable atf@0
+T+   93.755  /dev/cu.usbmodem1302    [    0.000000] OF: reserved mem: 0x000000003fd23440..0x000000003fd2347d (0 KiB) nomap non-reusable nvram@0
+T+   93.762  /dev/cu.usbmodem1302    [    0.000000] NUMA: Faking a node at [mem 0x0000000000000000-0x000000003fbfffff]
+T+   93.767  /dev/cu.usbmodem1302    [    0.000000] NODE_DATA(0) allocated [mem 0x3b9acc00-0x3b9b123f]
+T+   93.772  /dev/cu.usbmodem1302    [    0.000000] psci: probing for conduit method from DT.
+T+   93.777  /dev/cu.usbmodem1302    [    0.000000] psci: PSCIv1.1 detected in firmware.
+T+   93.782  /dev/cu.usbmodem1302    [    0.000000] psci: Using standard PSCI v0.2 function IDs
+T+   93.787  /dev/cu.usbmodem1302    [    0.000000] psci: MIGRATE_INFO_TYPE not supported.
+T+   93.791  /dev/cu.usbmodem1302    [    0.000000] psci: SMC Calling Convention v1.2
+T+   93.794  /dev/cu.usbmodem1302    [    0.000000] Zone ranges:
+T+   93.801  /dev/cu.usbmodem1302    [    0.000000]   DMA      [mem 0x0000000000000000-0x000000003fbfffff]
+T+   93.804  /dev/cu.usbmodem1302    [    0.000000]   DMA32    empty
+T+   93.806  /dev/cu.usbmodem1302    [    0.000000]   Normal   empty
+T+   93.810  /dev/cu.usbmodem1302    [    0.000000] Movable zone start for each node
+T+   93.814  /dev/cu.usbmodem1302    [    0.000000] Early memory node ranges
+T+   93.820  /dev/cu.usbmodem1302    [    0.000000]   node   0: [mem 0x0000000000000000-0x000000000007ffff]
+T+   93.826  /dev/cu.usbmodem1302    [    0.000000]   node   0: [mem 0x0000000000080000-0x000000003fbfffff]
+T+   93.833  /dev/cu.usbmodem1302    [    0.000000] Initmem setup node 0 [mem 0x0000000000000000-0x000000003fbfffff]
+T+   93.840  /dev/cu.usbmodem1302    [    0.000000] On node 0, zone DMA: 1024 pages in unavailable ranges
+T+   93.847  /dev/cu.usbmodem1302    [    0.000000] percpu: Embedded 56 pages/cpu s106032 r8192 d115152 u229376
+T+   93.851  /dev/cu.usbmodem1302    [    0.000000] Detected PIPT I-cache on CPU0
+T+   93.856  /dev/cu.usbmodem1302    [    0.000000] CPU features: detected: Virtualization Host Extensions
+T+   93.862  /dev/cu.usbmodem1302    [    0.000000] CPU features: detected: Spectre-v4
+T+   93.866  /dev/cu.usbmodem1302    [    0.000000] CPU features: detected: Spectre-BHB
+T+   93.872  /dev/cu.usbmodem1302    [    0.000000] CPU features: kernel page table isolation forced ON by KASLR
+T+   93.879  /dev/cu.usbmodem1302    [    0.000000] CPU features: detected: Kernel page table isolation (KPTI)
+T+   93.886  /dev/cu.usbmodem1302    [    0.000000] CPU features: detected: SSBS not fully self-synchronizing
+T+   93.890  /dev/cu.usbmodem1302    [    0.000000] alternatives: applying boot alternatives
+T+   93.955  /dev/cu.usbmodem1302    [    0.000000] Kernel command line: reboot=w coherent_pool=1M 8250.nr_uarts=1 pci=pcie_bus_safe numa_policy=interleave nvme.max_host_mem_size_mb=0 bcm2708_fb.fbwidth=640 bcm2708_fb.fbheight=480 bcm2708_fb.fbdepth=16 bcm2708_fb.fbswap=1 numa=fake=4 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=98:FE:54:15:25:8B vc_mem.mem_base=0x3fc00000 vc_mem.mem_size=0x40000000  root=LABEL=pedal net.ifnames=0 console=ttyAMA10,115200 console=tty1 rootfstype=ext4 rootwait fixrtc cfg80211.ieee80211_regdom=GB rd.shell=0 rd.emergency=reboot rd.retry=60 rd.timeout=90 panic=10 isolcpus=managed_irq,domain,2-3 nohz_full=2-3 rcu_nocbs=2-3 irqaffinity=0-1 skew_tick=1 vipboot.root=pedal vipboot.slot=a vipboot.profile=tuned
+T+   93.961  /dev/cu.usbmodem1302    [    0.000000] mempolicy: NUMA default policy overridden to 'interleave:0'
+T+   93.968  /dev/cu.usbmodem1302    [    0.000000] DMA IOMMU NUMA default policy overridden to 'interleave:0'
+T+   93.976  /dev/cu.usbmodem1302    [    0.000000] Unknown kernel command line parameters "fixrtc", will be passed to user space.
+T+   93.983  /dev/cu.usbmodem1302    [    0.000000] printk: log buffer data + meta data: 131072 + 557056 = 688128 bytes
+T+   93.991  /dev/cu.usbmodem1302    [    0.000000] Dentry cache hash table entries: 131072 (order: 8, 1048576 bytes, linear)
+T+   93.999  /dev/cu.usbmodem1302    [    0.000000] Inode-cache hash table entries: 65536 (order: 7, 524288 bytes, linear)
+T+   94.003  /dev/cu.usbmodem1302    [    0.000000] Fallback order for Node 0: 0 
+T+   94.010  /dev/cu.usbmodem1302    [    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 261120
+T+   94.013  /dev/cu.usbmodem1302    [    0.000000] Policy zone: DMA
+T+   94.020  /dev/cu.usbmodem1302    [    0.000000] mem auto-init: stack:all(zero), heap alloc:off, heap free:off
+T+   94.026  /dev/cu.usbmodem1302    [    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=4, Nodes=1
+T+   94.032  /dev/cu.usbmodem1302    [    0.000000] ftrace: allocating 51432 entries in 202 pages
+T+   94.036  /dev/cu.usbmodem1302    [    0.000000] ftrace: allocated 202 pages with 4 groups
+T+   94.040  /dev/cu.usbmodem1302    [    0.000000] Dynamic Preempt: lazy
+T+   94.045  /dev/cu.usbmodem1302    [    0.000000] rcu: Preemptible hierarchical RCU implementation.
+T+   94.052  /dev/cu.usbmodem1302    [    0.000000] rcu: 	RCU restricting CPUs from NR_CPUS=16 to nr_cpu_ids=4.
+T+   94.059  /dev/cu.usbmodem1302    [    0.000000] rcu: 	RCU priority boosting: priority 1 delay 500 ms.
+T+   94.064  /dev/cu.usbmodem1302    [    0.000000] rcu: 	RCU_SOFTIRQ processing moved to rcuc kthreads.
+T+   94.069  /dev/cu.usbmodem1302    [    0.000000] 	No expedited grace period (rcu_normal_after_boot).
+T+   94.075  /dev/cu.usbmodem1302    [    0.000000] 	Trampoline variant of Tasks RCU enabled.
+T+   94.080  /dev/cu.usbmodem1302    [    0.000000] 	Rude variant of Tasks RCU enabled.
+T+   94.084  /dev/cu.usbmodem1302    [    0.000000] 	Tracing variant of Tasks RCU enabled.
+T+   94.092  /dev/cu.usbmodem1302    [    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 100 jiffies.
+T+   94.099  /dev/cu.usbmodem1302    [    0.000000] rcu: Adjusting geometry for rcu_fanout_leaf=16, nr_cpu_ids=4
+T+   94.107  /dev/cu.usbmodem1302    [    0.000000] RCU Tasks: Setting shift to 2 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=4.
+T+   94.117  /dev/cu.usbmodem1302    [    0.000000] RCU Tasks Rude: Setting shift to 2 and lim to 1 rcu_task_cb_adjust=1 rcu_task_cpu_ids=4.
+T+   94.122  /dev/cu.usbmodem1302    [    0.000000] NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 0
+T+   94.126  /dev/cu.usbmodem1302    [    0.000000] Root IRQ handler: gic_handle_irq
+T+   94.133  /dev/cu.usbmodem1302    [    0.000000] GIC: Using split EOI/Deactivate mode
+T+   94.137  /dev/cu.usbmodem1302    [    0.000000] NO_HZ: Full dynticks CPUs: 2-3.
+T+   94.142  /dev/cu.usbmodem1302    [    0.000000] rcu: 	Offload RCU callbacks from CPUs: 2-3.
+T+   94.149  /dev/cu.usbmodem1302    [    0.000000] rcu: srcu_init: Setting srcu_struct sizes based on contention.
+T+   94.154  /dev/cu.usbmodem1302    [    0.000000] arch_timer: cp15 timer running at 54.00MHz (phys).
+T+   94.165  /dev/cu.usbmodem1302    [    0.000000] clocksource: arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0xc743ce346, max_idle_ns: 440795203123 ns
+T+   94.174  /dev/cu.usbmodem1302    [    0.000000] sched_clock: 56 bits at 54MHz, resolution 18ns, wraps every 4398046511102ns
+T+   94.177  /dev/cu.usbmodem1302    [    0.000141] Console: colour dummy device 80x25
+T+   94.183  /dev/cu.usbmodem1302    [    0.000147] printk: legacy console [tty1] enabled
+T+   94.194  /dev/cu.usbmodem1302    [    0.000183] Calibrating delay loop (skipped), value calculated using timer frequency.. 108.00 BogoMIPS (lpj=54000)
+T+   94.198  /dev/cu.usbmodem1302    [    0.000187] pid_max: default: 32768 minimum: 301
+T+   94.202  /dev/cu.usbmodem1302    [    0.000337] landlock: Up and running.
+T+   94.204  /dev/cu.usbmodem1302    [    0.000338] Yama: becoming mindful.
+T+   94.209  /dev/cu.usbmodem1302    [    0.000466] AppArmor: AppArmor initialized
+T+   94.217  /dev/cu.usbmodem1302    [    0.000468] AppArmor: AppArmor secmark mediation reserved: ready to be enabled
+T+   94.223  /dev/cu.usbmodem1302    [    0.000571] Mount-cache hash table entries: 2048 (order: 2, 16384 bytes, linear)
+T+   94.231  /dev/cu.usbmodem1302    [    0.000574] Mountpoint-cache hash table entries: 2048 (order: 2, 16384 bytes, linear)
+T+   94.237  /dev/cu.usbmodem1302    [    0.000746] VFS: Finished mounting rootfs on nullfs
+T+   94.241  /dev/cu.usbmodem1302    [    0.001610] rcu: Hierarchical SRCU implementation.
+T+   94.246  /dev/cu.usbmodem1302    [    0.001613] rcu: 	Max phase no-delay instances is 400.
+T+   94.254  /dev/cu.usbmodem1302    [    0.001913] Timer migration: 1 hierarchy levels; 8 children per group; 1 crossnode level
+T+   94.258  /dev/cu.usbmodem1302    [    0.002519] EFI services will not be available.
+T+   94.264  /dev/cu.usbmodem1302    [    0.002618] smp: Bringing up secondary CPUs ...
+T+   94.268  /dev/cu.usbmodem1302    [    0.002893] Detected PIPT I-cache on CPU1
+T+   94.275  /dev/cu.usbmodem1302    [    0.002944] CPU1: Booted secondary processor 0x0000000100 [0x414fd0b1]
+T+   94.279  /dev/cu.usbmodem1302    [    0.003273] Detected PIPT I-cache on CPU2
+T+   94.284  /dev/cu.usbmodem1302    [    0.003315] CPU2: Booted secondary processor 0x0000000200 [0x414fd0b1]
+T+   94.288  /dev/cu.usbmodem1302    [    0.003644] Detected PIPT I-cache on CPU3
+T+   94.295  /dev/cu.usbmodem1302    [    0.003678] CPU3: Booted secondary processor 0x0000000300 [0x414fd0b1]
+T+   94.299  /dev/cu.usbmodem1302    [    0.003711] smp: Brought up 1 node, 4 CPUs
+T+   94.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   94.304  /dev/cu.usbmodem1302    [    0.003716] SMP: Total of 4 processors activated.
+T+   94.308  /dev/cu.usbmodem1302    [    0.003717] CPU: All CPU(s) started at EL2
+T+   94.314  /dev/cu.usbmodem1302    [    0.003720] CPU features: detected: 32-bit EL0 Support
+T+   94.322  /dev/cu.usbmodem1302    [    0.003722] CPU features: detected: Data cache clean to the PoU not required for I/D coherence
+T+   94.329  /dev/cu.usbmodem1302    [    0.003724] CPU features: detected: Common not Private translations
+T+   94.333  /dev/cu.usbmodem1302    [    0.003725] CPU features: detected: CRC32 instructions
+T+   94.341  /dev/cu.usbmodem1302    [    0.003725] CPU features: detected: Data cache clean to Point of Persistence
+T+   94.342  /dev/cu.usbmodem1401    fw: up 176136 s, session=0, frames ok=0 bad=0
+T+   94.346  /dev/cu.usbmodem1302    [    0.003729] CPU features: detected: RCpc load-acquire (LDAPR)
+T+   94.352  /dev/cu.usbmodem1302    [    0.003730] CPU features: detected: LSE atomic instructions
+T+   94.357  /dev/cu.usbmodem1302    [    0.003731] CPU features: detected: Privileged Access Never
+T+   94.361  /dev/cu.usbmodem1302    [    0.003732] CPU features: detected: PMUv3
+T+   94.367  /dev/cu.usbmodem1302    [    0.003733] CPU features: detected: RAS Extension Support
+T+   94.370  /dev/cu.usbmodem1302    [    0.003735] CPU features: detected: XNX
+T+   94.377  /dev/cu.usbmodem1302    [    0.003736] CPU features: detected: Speculative Store Bypassing Safe (SSBS)
+T+   94.383  /dev/cu.usbmodem1302    [    0.003786] alternatives: applying system-wide alternatives
+T+   94.391  /dev/cu.usbmodem1302    [    0.005699] CPU features: detected: Hardware dirty bit management on CPU0-3
+T+   94.404  /dev/cu.usbmodem1302    [    0.005796] Memory: 855596K/1044480K available (18240K kernel code, 3142K rwdata, 11828K rodata, 8000K init, 755K bss, 115596K reserved, 65536K cma-reserved)
+T+   94.408  /dev/cu.usbmodem1302    [    0.006061] devtmpfs: initialized
+T+   94.412  /dev/cu.usbmodem1302    [    0.009363] Enabled cp15_barrier support
+T+   94.415  /dev/cu.usbmodem1302    [    0.009368] Enabled setend support
+T+   94.425  /dev/cu.usbmodem1302    [    0.009546] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1911260446275000 ns
+T+   94.433  /dev/cu.usbmodem1302    [    0.009573] posixtimers hash table entries: 2048 (order: 5, 81920 bytes, linear)
+T+   94.441  /dev/cu.usbmodem1302    [    0.009631] futex hash table entries: 1024 (65536 bytes on 1 NUMA nodes, total 64 KiB, linear).
+T+   94.448  /dev/cu.usbmodem1302    [    0.010103] 2G module region forced by RANDOMIZE_MODULE_REGION_FULL
+T+   94.452  /dev/cu.usbmodem1302    [    0.010105] 0 pages in range for non-PLT usage
+T+   94.457  /dev/cu.usbmodem1302    [    0.010107] 513744 pages in range for PLT usage
+T+   94.461  /dev/cu.usbmodem1302    [    0.010445] DMI not present or invalid.
+T+   94.466  /dev/cu.usbmodem1302    [    0.011170] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+T+   94.475  /dev/cu.usbmodem1302    [    0.011543] DMA: preallocated 1024 KiB GFP_KERNEL|GFP_DMA pool for atomic allocations
+T+   94.480  /dev/cu.usbmodem1302    [    0.011578] audit: initializing netlink subsys (disabled)
+T+   94.488  /dev/cu.usbmodem1302    [    0.011712] audit: type=2000 audit(0.009:1): state=initialized audit_enabled=0 res=1
+T+   94.493  /dev/cu.usbmodem1302    [    0.011866] thermal_sys: Registered thermal governor 'fair_share'
+T+   94.500  /dev/cu.usbmodem1302    [    0.011868] thermal_sys: Registered thermal governor 'bang_bang'
+T+   94.506  /dev/cu.usbmodem1302    [    0.011869] thermal_sys: Registered thermal governor 'step_wise'
+T+   94.512  /dev/cu.usbmodem1302    [    0.011870] thermal_sys: Registered thermal governor 'user_space'
+T+   94.516  /dev/cu.usbmodem1302    [    0.011901] cpuidle: using governor ladder
+T+   94.520  /dev/cu.usbmodem1302    [    0.011911] cpuidle: using governor menu
+T+   94.527  /dev/cu.usbmodem1302    [    0.012028] hw-breakpoint: found 6 breakpoint and 4 watchpoint registers.
+T+   94.533  /dev/cu.usbmodem1302    [    0.012054] ASID allocator initialised with 32768 entries
+T+   94.537  /dev/cu.usbmodem1302    [    0.012303] Serial: AMBA PL011 UART driver
+T+   94.549  /dev/cu.usbmodem1302    [    0.012894] /soc@107c000000/interrupt-controller@7fff9000: Fixed dependency cycle(s) with /soc@107c000000/interrupt-controller@7fff9000
+T+   94.554  /dev/cu.usbmodem1302    [    0.013168] bcm2835-mbox 107c013880.mailbox: mailbox enabled
+T+   94.564  /dev/cu.usbmodem1302    [    0.013357] 107d001000.serial: ttyAMA10 at MMIO 0x107d001000 (irq = 16, base_baud = 0) is a PL011 rev3
+T+   94.568  /dev/cu.usbmodem1302    [    0.013413] printk: console [ttyAMA10] enabled
+T+   94.578  /dev/cu.usbmodem1302    [    0.017759] raspberrypi-firmware soc@107c000000:firmware: Attached to firmware from 2026-05-11T11:20:02, variant start_cd
+T+   94.589  /dev/cu.usbmodem1302    [    0.018752] raspberrypi-firmware soc@107c000000:firmware: Firmware hash is 66f33f7e00000000000000000000000000000000
+T+   94.596  /dev/cu.usbmodem1302    [    0.057827] HugeTLB: registered 1.00 GiB page size, pre-allocated 0 pages
+T+   94.603  /dev/cu.usbmodem1302    [    0.057829] HugeTLB: 0 KiB vmemmap can be freed for a 1.00 GiB page
+T+   94.609  /dev/cu.usbmodem1302    [    0.057831] HugeTLB: registered 32.0 MiB page size, pre-allocated 0 pages
+T+   94.615  /dev/cu.usbmodem1302    [    0.057832] HugeTLB: 0 KiB vmemmap can be freed for a 32.0 MiB page
+T+   94.623  /dev/cu.usbmodem1302    [    0.057833] HugeTLB: registered 2.00 MiB page size, pre-allocated 0 pages
+T+   94.628  /dev/cu.usbmodem1302    [    0.057834] HugeTLB: 0 KiB vmemmap can be freed for a 2.00 MiB page
+T+   94.635  /dev/cu.usbmodem1302    [    0.057835] HugeTLB: registered 64.0 KiB page size, pre-allocated 0 pages
+T+   94.642  /dev/cu.usbmodem1302    [    0.057836] HugeTLB: 0 KiB vmemmap can be freed for a 64.0 KiB page
+T+   94.649  /dev/cu.usbmodem1302    [    0.061930] bcm2835-dma 1000010000.dma: DMA legacy API manager, dmachans=0x1
+T+   94.654  /dev/cu.usbmodem1302    [    0.062584] iommu: Default domain type: Translated
+T+   94.659  /dev/cu.usbmodem1302    [    0.062586] iommu: DMA domain TLB invalidation policy: strict mode
+T+   94.663  /dev/cu.usbmodem1302    [    0.062928] SCSI subsystem initialized
+T+   94.669  /dev/cu.usbmodem1302    [    0.062981] usbcore: registered new interface driver usbfs
+T+   94.674  /dev/cu.usbmodem1302    [    0.062990] usbcore: registered new interface driver hub
+T+   94.680  /dev/cu.usbmodem1302    [    0.063001] usbcore: registered new device driver usb
+T+   94.685  /dev/cu.usbmodem1302    [    0.063031] pps_core: LinuxPPS API ver. 1 registered
+T+   94.693  /dev/cu.usbmodem1302    [    0.063032] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+T+   94.697  /dev/cu.usbmodem1302    [    0.063035] PTP clock support registered
+T+   94.701  /dev/cu.usbmodem1302    [    0.063052] EDAC MC: Ver: 3.0.0
+T+   94.704  /dev/cu.usbmodem1302    [    0.066017] NetLabel: Initializing
+T+   94.708  /dev/cu.usbmodem1302    [    0.066019] NetLabel:  domain hash size = 128
+T+   94.715  /dev/cu.usbmodem1302    [    0.066019] NetLabel:  protocols = UNLABELED CIPSOv4 CALIPSO
+T+   94.720  /dev/cu.usbmodem1302    [    0.066037] NetLabel:  unlabeled traffic allowed by default
+T+   95.226  /dev/cu.usbmodem1302    [    1.571887] sdhci-brcmstb 1001100000.mmc: error -EINVAL: invalid resource (null)
+T+   95.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   96.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   97.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   97.620  /dev/cu.usbmodem1302    [    3.964653] bcm2708_fb soc@107c000000:fb: Unable to determine number of FBs. Disabling driver.
+T+   97.629  /dev/cu.usbmodem1302    [    3.968204] bcm2708_fb soc@107c000000:fb: probe with driver bcm2708_fb failed with error -2
+T+   98.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   98.395  /dev/cu.usbmodem1302    [    4.736607] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /axi/pcie@1000120000/rp1/i2s@a4000/status
+T+   98.408  /dev/cu.usbmodem1302    [    4.736659] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /axi/pcie@1000120000/rp1/i2c@74000/#address-cells
+T+   98.419  /dev/cu.usbmodem1302    [    4.736664] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /axi/pcie@1000120000/rp1/i2c@74000/#size-cells
+T+   98.431  /dev/cu.usbmodem1302    [    4.736667] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /axi/pcie@1000120000/rp1/i2c@74000/status
+T+   98.442  /dev/cu.usbmodem1302    [    4.736674] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/compatible
+T+   98.454  /dev/cu.usbmodem1302    [    4.736677] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/simple-audio-card,format
+T+   98.466  /dev/cu.usbmodem1302    [    4.736679] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/simple-audio-card,name
+T+   98.479  /dev/cu.usbmodem1302    [    4.736681] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/simple-audio-card,bitclock-master
+T+   98.492  /dev/cu.usbmodem1302    [    4.736683] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/simple-audio-card,frame-master
+T+   98.504  /dev/cu.usbmodem1302    [    4.736685] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/simple-audio-card,widgets
+T+   98.516  /dev/cu.usbmodem1302    [    4.736688] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/simple-audio-card,routing
+T+   98.526  /dev/cu.usbmodem1302    [    4.736690] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/status
+T+   99.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+   99.342  /dev/cu.usbmodem1401    fw: up 176141 s, session=0, frames ok=0 bad=0
+T+  100.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  101.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  102.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  103.306  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  104.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  104.342  /dev/cu.usbmodem1401    fw: up 176146 s, session=0, frames ok=0 bad=0
+T+  105.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  105.307  /dev/cu.usbmodem1302    [!p]104\[0m[?7h[1G[0J[6n[32766;32766H[6n[!p]104\[0m[?7h[1G[0J[6n[32766;32766H[6n]3008;start=14e08932e82d40658be6e811709dfb1f;user=root;hostname=vip;machineid=0789de491b8d4fc0abb8f5b51b46adb4;bootid=28c8605278e44e82b22b59c726b3d1b6;pid=487;pidfdid=332;comm=(agetty);servicename=serial-getty@ttyAMA10.service;invocationid=c2f39d0d83764daeb1f6cbfece5f8a7c;type=service\P+q6E616D65\
+T+  105.310  /dev/cu.usbmodem1302    Ubuntu 26.04.1 LTS vip ttyAMA10
+T+  105.310  /dev/cu.usbmodem1302    
+T+  106.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  107.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  108.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  109.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  109.343  /dev/cu.usbmodem1401    fw: up 176151 s, session=0, frames ok=0 bad=0
+T+  110.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  111.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  112.303  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  113.304  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  114.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  114.343  /dev/cu.usbmodem1401    fw: up 176156 s, session=0, frames ok=0 bad=0
+T+  115.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  116.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  117.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  118.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  119.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  119.343  /dev/cu.usbmodem1401    fw: up 176161 s, session=0, frames ok=0 bad=0
+T+  120.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  121.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  122.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  123.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  124.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  124.343  /dev/cu.usbmodem1401    fw: up 176166 s, session=0, frames ok=0 bad=0
+T+  125.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  126.303  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  127.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  128.303  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  129.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  129.343  /dev/cu.usbmodem1401    fw: up 176171 s, session=0, frames ok=0 bad=0
+T+  130.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  131.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  132.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  133.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  134.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  134.343  /dev/cu.usbmodem1401    fw: up 176176 s, session=0, frames ok=0 bad=0
+T+  135.303  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  136.303  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  137.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  138.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  139.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  139.343  /dev/cu.usbmodem1401    fw: up 176181 s, session=0, frames ok=0 bad=0
+T+  140.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  141.303  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  142.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  143.303  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  144.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  144.343  /dev/cu.usbmodem1401    fw: up 176186 s, session=0, frames ok=0 bad=0
+T+  145.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  146.303  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  147.303  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  148.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  149.303  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  149.343  /dev/cu.usbmodem1401    fw: up 176191 s, session=0, frames ok=0 bad=0
+T+  150.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  151.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  152.303  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  153.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  154.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  154.343  /dev/cu.usbmodem1401    fw: up 176196 s, session=0, frames ok=0 bad=0
+T+  155.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  156.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  157.303  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  158.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  159.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  159.343  /dev/cu.usbmodem1401    fw: up 176201 s, session=0, frames ok=0 bad=0
+T+  160.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)
+T+  161.302  /dev/cu.usbmodem1401    proto: hello sent (v1.0 caps=0x0000)

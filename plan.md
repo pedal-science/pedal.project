@@ -387,10 +387,24 @@ numbers need re-measuring on piv.
      calibrate it once against the 5 V rail with a scope, or stamp t0 from a switched supply —
      but say which: a power-on number without its anchor is not a number.
    - **After the kernel, no probe is needed.** `dmesg` starts at `[    0.000000]`, and
-     `journalctl -b -o short-monotonic -u namchaind` is kernel-relative. On vip's 2026-10-02
-     boot: namchaind at 4.98 s, the rig published at 6.35 s, against piv's 13.2–14.2 s above. So
-     the "~20 s power-on to sound" estimate is pessimistic, and 3.6's urgency should be judged
-     from the measured number.
+     `journalctl -b -o short-monotonic -u namchaind` is kernel-relative.
+   - **Measured 2026-10-02** (`bench-results/2026-10-02-boot-time-vip/`), on a boot from the
+     power button, so `power-on-reset 0` and the PMIC in standby rather than a plug pull:
+     - **First bootloader byte → kernel: 16.63 s** on the wire, and the firmware's own counter
+       agrees — `Starting OS 17644 ms` with its first logged line at 1.13 s is 16.51 s. The
+       0.12 s between the two clocks is what the wire costs, which is this method's accuracy.
+     - **Kernel → rig published: 6.52 s** (namchaind started at 5.16 s), against piv's
+       13.2–14.2 s above. So the pedal's own boot is not the slow half.
+     - **First bootloader byte → rig published: 23.2 s**, plus the PMIC and boot-ROM time before
+       that first byte. The "~20 s power-on to sound" above was therefore if anything
+       **optimistic**, not pessimistic, and 3.6's relay keeps its justification.
+     - The 16.6 s splits 6.2 s EEPROM bootloader, **5.3 s SD and boot mode** (4.7 s of it one
+       gap, `Boot mode: SD` to `SD HOST` init), 5.0 s start.elf (2.2 s of that the 52.8 MB
+       initrd, 0.6 s the kernel) and 0.1 s BL31. The initrd is rtpi's slimming work's, and the
+       SD gap wants explaining before Phase 4 accepts it. The getty is up at 11.6 s of kernel
+       time.
+     - Still open: the plug-pull repeat (the pedal's real case), and the jack end — "rig
+       published" is not "sound".
    - **"First audible output" is not on the wire either.** Capture the jack (`engine.record`, or
      the Mac's interface) on the same Mac clock as the serial reader, or report the engine's own
      readiness and say that is what it is. "Rig published" is not "sound".
@@ -1007,7 +1021,8 @@ be disrupted; then the test hardware gets chosen again. piv isn't updated meanwh
 runs namchain d4fb8e5 since the 2026-09-30 step 8 soak (Rik asked for it); and `devices/piv/check` reports `pedal-codec` and `pedal-device` as differing
 (they moved to `devices/common` and changed). The piv phases below wait on that choice.
 
-Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot time.
+Phase 1 on piv, on the SSL 2+. Steps 3–6 are done. Step 7 is measured on vip (its own note in
+Phase 1), leaving a plug-pull repeat and the jack end of the number.
 1. ~~The step 8 soak at q64~~: done 2026-09-30 with `scripts/soak/soak-replay` and the rebuilt
    ljoss session, PASS (step 8 in Phase 1 has the numbers).
 2. ~~Then the same soak with only the rsync, to isolate WiFi's cost~~: done 2026-09-30, 18:50–19:50,
