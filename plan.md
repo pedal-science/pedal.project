@@ -1003,6 +1003,63 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**The app can be its own device** (2026-10-02). ljoss has **Connect to this computer**: it runs
+`namchaind` as a child of the app, captures from a CoreAudio **input device** (or loops a WAV) and
+plays through an **output device**, both chosen by UID in Settings → Hardware. While it is on, the
+host/port/token fields and both Connect buttons are disabled — and they show the *stored* device, not
+the loopback session, so nothing can write `127.0.0.1` and a local token over the board's
+configuration — and at launch the daemon is started **instead of** connecting to a device. That last
+part is the point of the change: the mode used to try the remembered device first, fail, start the
+daemon and leave the session behind the failure it had just shown.
+
+It needed the engine first, and the engine needed two things nobody had noticed because everything
+used the default device:
+
+- **`--device <UID>` had never resolved a UID.** `kAudioHardwarePropertyTranslateUIDToDevice` refuses
+  every size this code can offer it on macOS 27 (`kAudioHardwareBadPropertySizeError`), including the
+  size of `AudioValueTranslation` itself, and the one refusal test passes a deliberately bogus UID —
+  which fails the same way a working call refuses a bad string. UIDs are matched by enumeration now,
+  which is what live input cannot do without (there is no default *input* to fall back on).
+- **The parked backend played the last period N times** when a callback carried more than one: one
+  shared scratch vector, popped once per period and read for every period. This machine's probe sees
+  512 frames and the stream's IOProc is handed 1024, so every other half-buffer was a repeat. An
+  underrun also wrote nothing, leaving the previous callback's audio in the device buffer.
+
+Landing on `main`, in dependency order: namchain `8535d2f` (the affinity calls are Linux's, so main
+did not build on a Mac at all), `8f90644` (the parked CoreAudio + loop backends, rebased),
+`2620aa2` (the multi-period, underrun, message and reported-bound defects above), `7f1eedc`
+(`--input-device`, and a **private aggregate device** when the input and output differ — two devices
+have two clocks and the engine has no resampler, so the HAL follows the output and resamples the
+input); ljoss `0c077b3` (the mode, the pickers, the disabled device fields, the launch order, the
+microphone entitlement) and `0564aa5` (the recording below, and what it does not cover). Both local
+`local-engine` branches now point at their `main`. That was `git branch -f`, not a literal rebase, and
+deliberately: main already carries the parked work in rewritten form, so replaying the parked commit
+could only have resolved every hunk in main's favour and ended at the same commit with a duplicate of
+the finished work beside it. The parked commits stay at `origin/local-engine` and in the reflog.
+
+Verified on the Mac (SSL 2+ Mk II, 8 in / 6 out): app → `namchaind --backend coreaudio
+--input-device <SSL> --capture-channels 2 …` as its child, `engine.status` health ok with the
+measured 512-frame period, 2 in / 6 out, **0 xruns**, `live_input: 1`, and the daemon publishing the
+app's rig (generation 1); quitting the app stopped the child. The WAV-loop form ran the same way
+(`live_input: 0`, `loop_wraps: 4`), and the aggregate path by hand (SSL in, built-in speakers out:
+`aggregate_device: 1`, 0 xruns, no aggregate left behind). **The capture is signal, not the silence a
+refused microphone would give**: three seconds recorded from the built-in mic through the daemon is
+143,872 samples, peak 0.10, RMS 0.015, none of them zero (playback correctly all zeros with no
+document loaded). **Reusing a token works**: with a daemon already listening on the app's port with
+the stored token, the app started no second daemon, the rig still reached the engine, and quitting the
+app left that daemon running. ljoss's `./Tests/run-model-tests.sh` passes (328 assertions) and the
+app builds clean. On Linux in colima, namchain main builds and **4 of 5** ctest groups pass;
+`ctl_cli` fails only because `chmod` on a Unix socket over colima's virtiofs mount returns `EINVAL`
+(proved with a three-line probe), not because of anything here.
+
+**Open:** nothing is pushed (both repos are committed on `main`, local only); vip still runs the
+engine from 2026-10-01 (`2e1a63a`) and these commits have not been deployed, which is where the
+pedal's own next step would start; the microphone prompt itself was never seen on this machine (the
+grant was already in place), so the refused-microphone path — silence, by design — is untested by
+hand; and the recording above is of a daemon started from a shell, not of the app's own child (the
+daemon's `record_dir` default is a Linux path the app does not override), so for the app the evidence
+is the device opening and the stream running, plus the entitlement it carries.
+
 **Multi-core rendering, done and reported** (2026-10-02). namchain's M4 is built: `render_threads`
 shares a document's chains over a block-synchronous pool, one core by default and **bit-identical**
 to it, with the per-core model budget to match — namchain `69b5b54`, `6ca4324`, `cf7aa84`, developed

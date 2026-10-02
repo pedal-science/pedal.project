@@ -75,7 +75,7 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 | Change | Loop |
 |---|---|
 | Engine (`namchain`) | Build and unit-test on the Mac → push → `scripts/deploy-engine` builds it in colima as vip's image does, runs the tests, installs into a versioned directory on vip, swaps a symlink, restarts the unit → check with `namchainctl` / `ljoss` → soak if it touches the render path. A new card or `make-card --remote` pins it in `devices/vip/image.lock` |
-| App (`ljoss`) | Xcode on the Mac → run against a local `namchaind` (CoreAudio backend) or against vip over WiFi → `Tools/check-device.sh` for the handshake and `audible_generation` |
+| App (`ljoss`) | Xcode on the Mac → **Connect to this computer** (Settings → Hardware runs `namchaind` here, capturing a live input device or a looped WAV) or against vip over WiFi → `Tools/check-device.sh` for the handshake and `audible_generation` |
 | Kernel, device tree (`rtpi`) | A kernel package in the pedal root → `vip-boot try-kernel` stages it in the spare slot and boots it once → `vip-boot-validate` promotes it or it rolls back (`bench-results/vip-card/fallbacks.md`); rtpi's boot files reach vip through its image (`make-card`, `--remote`) |
 | DSP research (`NAMBench`) | Fork branch → upstream PR, plus either a patch or pin in `namchain/vendor` or a port into one of `namchain`'s own nodes → `namchain`'s golden, parity or tolerance tests prove the swap |
 | Pico firmware (`firmware/`) | `firmware/build.sh` on the Mac (Pico SDK 2.3.1, Arm GNU 15.3.rel1) → `firmware/flash.sh` (picotool, or the UF2 volume) → the bench tests through the Debug Probe (`firmware/tools/`) → later, the pedal service over the Core host's UART |
