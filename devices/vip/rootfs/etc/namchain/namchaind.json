@@ -18,6 +18,7 @@
   "output_queue_periods": 4,
   "output_queue_floor_periods": 2,
   "fade_ms": 5,
+  "model_budget_kb": 448,
   "device_retry_ms": 250,
   "tcp_listen": true,
   "tcp_address": "0.0.0.0",
