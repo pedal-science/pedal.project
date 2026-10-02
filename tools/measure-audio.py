@@ -54,10 +54,11 @@ def frames(path):
             yield array.array("h", data)
 
 
-def mono(chunk, channels):
+def one_channel(chunk, channels, c):
+    """The interleaved samples of channel c (0-based)."""
     if channels == 1:
-        return [float(x) for x in chunk]
-    return [(chunk[i] + chunk[i + 1]) * 0.5 for i in range(0, len(chunk) - 1, channels)]
+        return chunk if c == 0 else []
+    return chunk[c::channels]
 
 
 def dbfs(amplitude):
@@ -80,14 +81,15 @@ def goertzel(samples, rate, hz):
     return 2.0 * math.sqrt(max(power, 0.0)) / n
 
 
-def energy_profile(path, rate, channels):
-    """One RMS level in dBFS per BLOCK_MS."""
+def energy_profile(path, rate, channels, c):
+    """One RMS level in dBFS per BLOCK_MS, for channel c."""
     block = max(1, int(rate * BLOCK_MS / 1000.0))
     levels = []
     for chunk in frames(path):
-        n = len(chunk) // channels
+        samples = one_channel(chunk, channels, c)
+        n = len(samples)
         for start in range(0, n - block + 1, block):
-            seg = chunk[start * channels:(start + block) * channels]
+            seg = samples[start:start + block]
             acc = 0
             for x in seg:
                 acc += x * x
@@ -95,8 +97,8 @@ def energy_profile(path, rate, channels):
     return levels
 
 
-def tone_profile(path, rate, channels, hz, upto_s):
-    """(seconds, dBFS at hz, tonality in dB) per window, from the start until upto_s.
+def tone_profile(path, rate, channels, hz, upto_s, c):
+    """(seconds, dBFS at hz, tonality in dB) per window for channel c, until upto_s.
 
     Tonality is the tone's level minus the window's RMS: a pure tone sits near +3 dB, a
     broadband pop far below it, which is how a power-up click is told from the tone.
@@ -106,10 +108,10 @@ def tone_profile(path, rate, channels, hz, upto_s):
     limit = int(upto_s * rate)
     out = []
     buf = []
-    base = 0       # absolute mono-sample index of buf[0]
+    base = 0       # absolute sample index of buf[0]
     nxt = 0        # absolute index of the next window to measure
     for chunk in frames(path):
-        buf.extend(mono(chunk, channels))
+        buf.extend(float(x) for x in one_channel(chunk, channels, c))
         while nxt + win <= base + len(buf) and nxt < limit:
             seg = buf[nxt - base:nxt - base + win]
             rms = math.sqrt(sum(x * x for x in seg) / len(seg))
@@ -132,38 +134,72 @@ def first_sustained(values, ok, run):
     return None
 
 
+def analyse_channel(path, rate, channels, c, hz, threshold_db, tonality_db):
+    levels = energy_profile(path, rate, channels, c)
+    peak = max(levels) if levels else -200.0
+    out = {"channel": c + 1, "peak_dbfs": round(peak, 1)}
+    energy_i = first_sustained(levels, lambda v: v > threshold_db, 2)
+    if energy_i is None:
+        out["energy_onset_s"] = None
+        out["tone_onset_s"] = None
+        out["tone_present"] = []
+        return out
+    out["energy_onset_s"] = round(energy_i * BLOCK_MS / 1000.0, 3)
+    out["energy_onset_dbfs"] = round(levels[energy_i], 1)
+
+    profile = tone_profile(path, rate, channels, hz, 1e9, c)   # stops at the end of the data
+    tone_i = first_sustained(profile, lambda w: w[1] > threshold_db and w[2] > tonality_db, 3)
+    if tone_i is None:
+        out["tone_onset_s"] = None
+    else:
+        out["tone_onset_s"] = round(profile[tone_i][0], 3)
+        out["tone_onset_dbfs"] = round(profile[tone_i][1], 1)
+        out["tone_onset_tonality_db"] = round(profile[tone_i][2], 1)
+
+    # Where the tone is and is not, which is what a power cycle shows: present, lost at the
+    # pull, and back when the pedal plays again.
+    present = [w[1] > threshold_db and w[2] > tonality_db for w in profile]
+    intervals = []
+    i = 0
+    while i < len(present):
+        if not present[i]:
+            i += 1
+            continue
+        start = i
+        while i < len(present) and present[i]:
+            i += 1
+        if i - start >= 3:                                  # 30 ms, not a flicker
+            intervals.append({
+                "start_s": round(profile[start][0], 3),
+                "end_s": round(profile[i - 1][0] + TONE_WIN_MS / 1000.0, 3),
+                "dbfs": round(profile[start][1], 1),
+                "tonality_db": round(profile[start][2], 1),
+                "at_end_of_data": i == len(present),
+            })
+    out["tone_present"] = intervals
+    return out
+
+
 def analyse(path, hz, threshold_db, tonality_db=-10.0):
+    """Every channel gets its own answer on purpose.
+
+    A multi-channel interface can expose its own loopback (the SSL 2+ Mk II puts the
+    playback on inputs 3-8), and that loopback carries the test tone with or without the
+    pedal: a channel that never changes across a power cycle is the interface talking to
+    itself, not the pedal.
+    """
     rate, channels, nframes, width = wav_info(path)
     if width != 2:
         raise SystemExit("%s is %d-bit; 16-bit expected" % (path, width * 8))
-    levels = energy_profile(path, rate, channels)
-    peak = max(levels) if levels else -200.0
-    result = {
+    return {
         "file": path,
         "rate": rate,
         "channels": channels,
         "seconds": round(nframes / float(rate), 3),
         "tone_hz": hz,
-        "peak_dbfs": round(peak, 1),
+        "per_channel": [analyse_channel(path, rate, channels, c, hz, threshold_db, tonality_db)
+                        for c in range(channels)],
     }
-    energy_i = first_sustained(levels, lambda v: v > threshold_db, 2)
-    if energy_i is None:
-        result["energy_onset_s"] = None
-        result["tone_onset_s"] = None
-        return result
-    energy_s = energy_i * BLOCK_MS / 1000.0
-    result["energy_onset_s"] = round(energy_s, 3)
-    result["energy_onset_dbfs"] = round(levels[energy_i], 1)
-
-    profile = tone_profile(path, rate, channels, hz, min(energy_s + 2.0, result["seconds"]))
-    tone_i = first_sustained(profile, lambda w: w[1] > threshold_db and w[2] > tonality_db, 3)
-    if tone_i is None:
-        result["tone_onset_s"] = None
-    else:
-        result["tone_onset_s"] = round(profile[tone_i][0], 3)
-        result["tone_onset_dbfs"] = round(profile[tone_i][1], 1)
-        result["tone_onset_tonality_db"] = round(profile[tone_i][2], 1)
-    return result
 
 
 def list_devices():
@@ -178,11 +214,11 @@ def list_devices():
     for line in out.splitlines():
         if "AVFoundation audio devices" in line:
             section = "audio"
-            print("audio devices:")
+            print("audio devices (ffmpeg's index — sox wants the name):")
         elif "AVFoundation video devices" in line:
             section = "video"
-        elif section == "audio" and "] [" in line:
-            print("  " + line.split("] [", 1)[1].rsplit("]", 1)[0])
+        elif section == "audio" and "] " in line:
+            print("  " + line.rsplit("] ", 1)[-1])
     return 0
 
 
@@ -191,6 +227,9 @@ def main():
     ap.add_argument("--list", action="store_true", help="print CoreAudio device names")
     ap.add_argument("--device", help="CoreAudio device name, as --list prints it")
     ap.add_argument("--seconds", type=float, default=180.0, help="how long to record")
+    ap.add_argument("--channels", type=int, default=2,
+                    help="record this many device channels; the SSL 2+ Mk II has 8, and its "
+                         "loopback is on 3-8, so record all of them and read the analog pair")
     ap.add_argument("--out", help="directory for audio.wav and audio.log")
     ap.add_argument("--tone-hz", type=int, default=220)
     ap.add_argument("--tone-db", type=int, default=-20, help="tone level out of the interface")
@@ -217,6 +256,7 @@ def main():
     header = {
         "tool": "measure-audio.py",
         "device": args.device,
+        "channels": args.channels,
         "tone_hz": None if args.no_tone else args.tone_hz,
         "tone_db": None if args.no_tone else args.tone_db,
         "record_seconds": args.seconds,
@@ -230,7 +270,8 @@ def main():
             stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     pre = time.monotonic()
     rec = subprocess.Popen(
-        ["sox", "-q", "-t", "coreaudio", args.device, "-r", "48000", "-c", "2", "-b", "16",
+        ["sox", "-q", "-t", "coreaudio", args.device, "-r", "48000",
+         "-c", str(args.channels), "-b", "16",
          wav, "trim", "0", "%.3f" % args.seconds],
         stdout=subprocess.DEVNULL, stderr=subprocess.STDOUT)
     post = time.monotonic()
@@ -257,12 +298,19 @@ def main():
 
     result = analyse(wav, args.tone_hz, args.threshold_db)
     result.update(header)
-    for key in ("energy_onset_s", "tone_onset_s"):
-        if result.get(key) is not None:
-            result[key.replace("_s", "_monotonic")] = round(post + result[key], 3)
+    for ch in result["per_channel"]:
+        for key in ("energy_onset_s", "tone_onset_s"):
+            if ch.get(key) is not None:
+                ch[key.replace("_s", "_monotonic")] = round(post + ch[key], 3)
     with open(log, "a") as fh:
         json.dump(result, fh, indent=2)
         fh.write("\n")
+    # One line per channel, so a wrong patch is obvious at a glance.
+    for ch in result["per_channel"]:
+        print("ch%-2d peak %7.1f dBFS  tone onset %s  intervals %d"
+              % (ch["channel"], ch["peak_dbfs"],
+                 "none" if ch["tone_onset_s"] is None else "%.3f s" % ch["tone_onset_s"],
+                 len(ch["tone_present"])))
     print(json.dumps(result, indent=2))
     return 0
 

@@ -1,0 +1,3 @@
+# clock start_monotonic 239791.189776
+# launch_pre_monotonic 239791.187827 (sox had not opened the device yet)
+# recording 300.0 s from SSL 2+ Mk II
