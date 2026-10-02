@@ -184,6 +184,56 @@ and the two arms are the same to within the histogram's 1% bucket. The soak does
 *two-chain gain*: this session's rig is the single serial chain, which is exactly the rig parallelism
 cannot help, and that is why its two arms match.
 
+---
+
+## The thermal soak: 1, 2 and 3 cores, and what an idle participant costs
+
+piv is a bare Raspberry Pi 500 — not vip, not the enclosure — so this answers "does spreading the
+render over more cores heat the board", not "will the pedal cook in its box". The governor is pinned
+at `performance` (the pedal's own tuning), so frequency is not a variable; what is measured is the
+SoC temperature, the throttle flags, and **how much of each core is actually busy**, from `/proc/stat`
+across each arm. Every arm: 0 deadline overruns, 0 xruns, clock flat at 2.4 GHz.
+
+| arm | threads | cores | rig | temp first / max / steady | throttle | per-core busy | render p50 / p99 / worst |
+|---|---|---|---|---|---|---|---|
+| reference | — | 1–3 | `stress-ng --cpu 3`, no audio | 37.5 / **40.8** / 38.9 | 0x0 | — | — |
+| n1 (15 min) | 1 | 3 | two heavy chains | 38.0 / 38.0 / 36.8 | 0x0 | 0:1% 1:1% 2:0% **3:13%** | 11% / 15% / 42.5% |
+| n2 (15 min) | 2 | 2,3 | two heavy chains | 37.0 / 39.7 / 37.3 | 0x0 | 0:1% 1:1% **2:7% 3:26%** | 6% / 8% / 22.9% |
+| n3 (15 min) | 3 | 1,2,3 | three heavy chains | 38.0 / 40.8 / 39.0 | 0x0 | 0:1% **1:12% 2:27% 3:27%** | 7% / 11% / 33.5% |
+| n3-idle (10 min) | 3 | 1,2,3 | one heavy chain + a vocal chain | 38.0 / 40.2 / 38.5 | 0x0 | 0:1% **1:20% 2:19% 3:19%** | 11% / 15% / 34.5% |
+
+Two findings, and the second is the one worth acting on.
+
+**Thermally this is a non-event on this host.** Three cores at full load with `stress-ng` reach
+40.8 °C; the pedal's own workload on three cores reaches the same 40.8 °C, and the board idles around
+35 °C. Throttling never came within thirty degrees. A bare Pi 5-class board with its own heatsink
+handles this workload without noticing it, and the fanless Pi 500 chassis is no obstacle.
+
+**But an extra participant costs CPU even when it has nothing to do.** The work is the same in every
+arm; what changes is how much of the machine is spent waiting:
+
+| arm | useful chain work | total CPU across all cores |
+|---|---|---|
+| n1: two chains, 1 core | ~13% of one core | **13%** |
+| n2: two chains, 2 cores | ~13% | **33%** (7 + 26) |
+| n3: three chains, 3 cores | ~21% | **66%** (12 + 27 + 27) |
+| n3-idle: one heavy chain, 3 cores | ~11% | **58%** (20 + 19 + 19) |
+
+`n3-idle` is the clean one: its third participant has **no chain at all**, and is 19% busy anyway.
+That is the pool's spin-before-park: a worker waits for the next block by spinning for a bounded
+number of iterations before it goes to sleep, so a participant whose share is small spends most of
+the block spinning rather than sleeping. It buys the lowest possible wake latency and it costs about
+a fifth of a core per idle participant — around 0.2 W here, which is why the temperature does not
+move, and which would matter more on a power budget than it does on this board.
+
+**The remedy is a one-constant change and is deliberately not applied**: parking sooner trades that
+spin for one futex wake per block. It should be tuned when something cares about the watts or the
+last few degrees — the enclosure soak, or a battery-powered build — and not before, because the spin
+is what keeps a worker's wake off the critical path. Recorded rather than changed.
+
+**What this does not cover:** the enclosure, and vip. The pedal's own in-box heat soak is Phase 4's,
+and it remains the one that decides whether the pedal needs a heatsink, a vent, or a thermal pad to
+the base plate.
 
 
 ---
@@ -202,8 +252,12 @@ cannot help, and that is why its two arms match.
   one sample by sample, TSan on the pool, and a single-owner rule for everything except the plans.
   The first version of it deadlocked on the daemon (see below) and no unit test could have caught
   that, which is the honest measure of the risk.
-- **Thermal is not measured here.** These arms are 30–60 s. A multi-core thermal soak (an hour, inside
-  the enclosure, on vip later) is outstanding.
+- **Thermal: measured on the bare board, and a non-event there.** A heat soak at 1, 2 and 3 render
+  cores (15 minutes an arm, plus a three-core `stress-ng` reference) peaked at 40.8 °C with throttling
+  never set — the same temperature three cores at *full* load reach on this host. What it did find is
+  a CPU cost rather than a heat cost: an idle participant spins ~19% of a core waiting for its next
+  block. See "The thermal soak" above. **The enclosure soak is still outstanding** and is the one that
+  decides whether the pedal needs a heatsink or a vent.
 - **The audio IRQ is left where it is, on evidence.** With `render_threads: 2`, core 2 renders *and*
   carries the SSL's interrupt. Moving it to a housekeeping core changed the worst block from 21.6% to
   19.4% — noise — with zero overruns either way, so the configuration need not change. That is measured

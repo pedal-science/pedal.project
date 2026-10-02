@@ -302,8 +302,16 @@ already confined to 0–1.
 - **The edit-storm soak is done**: the recorded ljoss session replayed for ten minutes per arm, one and
   two threads, both clean — 0 overruns, 0 xruns, 0 guard trips, **0 `local_base_mismatches`**, 166 ramps
   applied and none stale. The two arms match because that session's rig is the single series chain.
-- **Still outstanding: thermal.** These arms are 30–60 s; a multi-core hour at temperature, inside the
-  enclosure, on vip, is not measured.
+- **Thermal: done on the bare board, with a finding that is not about temperature.** A soak at 1, 2 and
+  3 render cores (15 minutes an arm, plus a three-core `stress-ng` reference) peaked at **40.8 °C** with
+  **throttling never set** — the same figure three cores at *full* load reach on this host, so the
+  pedal's workload costs nothing thermal here. What it did find is CPU: a participant whose share is
+  small **spins ~19% of a core** waiting for its next block rather than sleeping, so an idle
+  participant is not free (`n3-idle`: 58% of three cores to render what one core does in 13%). The
+  remedy is one constant — park sooner, trading the spin for one futex wake per block — and it is
+  deliberately not applied, because the spin is what keeps a worker's wake off the critical path and
+  0.2 W does not move this board's temperature. Tune it when something cares: **the enclosure soak**,
+  which remains outstanding and is Phase 4's.
 
 ### Phase E — Report — **DONE 2026-10-02**
 
