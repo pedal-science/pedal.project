@@ -76,6 +76,8 @@ def main():
         print("no port could be opened", file=sys.stderr)
         return 1
 
+    start = time.monotonic()
+
     log = None
     if args.out:
         os.makedirs(args.out, exist_ok=True)
@@ -83,8 +85,11 @@ def main():
         log.write("# measure-boot.py: capture on the Mac's monotonic clock\n")
         log.write("# ports: %s\n" % " ".join(sorted(fds.values())))
         log.write("# T+ is seconds since the capture started, not since power-on\n")
+        # CLOCK_MONOTONIC is system-wide on macOS, so tools/measure-audio.py's own start
+        # stamp lines up with this one; the header is what pairs the two logs.
+        log.write("# clock start_monotonic %.6f\n" % start)
+        print("start_monotonic %.6f" % start, flush=True)
 
-    start = time.monotonic()
     deadline = start + args.seconds
     bufs = {fd: b"" for fd in fds}
     lines = {fd: 0 for fd in fds}
