@@ -88,7 +88,7 @@ stage onward is identical across all three kinds of boot to within 0.03 s.
   Quote a total as "20.4 s from the first byte" unless something stamps the power application.
 - "Rig published" is the engine's own statement that it is rendering, not a measurement at the
   jack. The codec is opened at namchaind's start (5.8 s of kernel time), so the gap is small, but
-  the jack end is still unmeasured.
+  the jack end is measured below, and the two agree to within a second.
 - The firmware wraps or truncates long `MESS:` lines on the wire (the command line arrives cut
   mid-argument). Trust the arrival times, not the completeness of long lines.
 - `T+` in the logs is the capture's clock, which includes the USB bridge's latency; the firmware
@@ -101,3 +101,42 @@ stage onward is identical across all three kinds of boot to within 0.03 s.
   the repeat that agrees with the plug pull to 10 ms.
 - `serial-button-poweroff.log` — the power-button boot, `por 0`, with the marker test before it.
 - vip's `dmesg`, `systemd-analyze` and journal for each boot, quoted above.
+- `jack/` — the jack-end measurement: `boot-run/channel1-tone.tsv` (channel 1's 220 Hz level per
+  0.5 s), `boot-run/serial.log`, each run's `audio.log`, and `README.md` for what they were.
+- `patch-check/audio.log` — the first, invalid jack attempt, where the interface's own loopback
+  read as if it were the pedal; written up in `jack/attempt-1-failed.md`.
+
+# The jack end
+
+On one monotonic clock: a 220 Hz tone played into the pedal's input socket, out through the HPL
+output fixture into the SSL's input 1, while `tools/measure-boot.py` watched the debug UART.
+`jack/README.md` has the chain, the runs that led to it and the dead ends; this is the result.
+
+The tone is a real signal through a real rig (the resumed `last.json`: a slimmed Ampeg model and a
+cab), so its level moves between about −30 and −46 dBFS as the model's dynamics move.
+`jack/boot-run/channel1-tone.tsv` is channel 1's 220 Hz level per 0.5 s, gated at −45 dBFS with
+tonality better than −5 dB.
+
+| event | audio-clock time | source |
+|---|---|---|
+| tone healthy, last 0.5 s bin above the gate | **46.5 s** | channel 1 |
+| tone gone (outside the gate) | 48.0 s | channel 1 |
+| first bootloader byte | 56.14 s | wire |
+| kernel `[    0.000000]` | 69.09 s | wire |
+| `[namchaind] published …` | 77.27 s | vip's journal (kernel + 8.179 s) |
+| tone back, first 0.5 s bin above the gate | **78.0 s** | channel 1 |
+
+- **First bootloader byte → audible: 21.9 s.** The tone's first appearance at any level is 77.1 s
+  (−46.6 dBFS, tonality +2.1), which makes it 21.0 s. The two differ only by the gate, and the
+  fixture's 100 µF coupling cap smears both ends of the envelope by about a second, so call it
+  **21–22 s**.
+- **The engine's own claim agrees**: `published` is at 77.27 s and the analogue signal crosses the
+  gate at 78.0 s (first detectable 77.1 s). "Playing" and "audible" are the same moment to within
+  the second this method resolves — the first time the pedal has been shown to *make sound*
+  rather than to be rendering.
+- Of that, 12.95 s is the firmware and bootloader (the table above) and 8.9 s the kernel and
+  userspace, the same kernel half as the earlier boots. The analogue path adds nothing measurable
+  on top.
+- Power removed → audible was 31.5 s, of which 9.6 s was the owner's own time unplugged. A pedal
+  unplugged and plugged straight back in sounds about 22 s later.
+- Power-on itself stays the one unmeasured end: it is on neither the wire nor the jack.

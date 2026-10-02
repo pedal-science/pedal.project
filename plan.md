@@ -411,7 +411,21 @@ numbers need re-measuring on piv.
        more (rtpi's slimming work's) and the 14.7 MB kernel 0.6 s.
      - The kernel half is 7.5 s on a plug pull (namchaind started at 5.80 s, getty at 12.3 s of
        kernel time) against piv's 13.2–14.2 s above, so the pedal's own boot is no longer the
-       slow half. Still open: the jack end.
+       slow half.
+   - **The jack end, measured the same day** (`bench-results/2026-10-02-boot-time-vip/jack/`): a
+     220 Hz tone into the pedal's input socket, out through the HPL fixture into the SSL's input
+     1, recorded while the boot ran. **First bootloader byte → audible: 21–22 s** (12.95 s of
+     firmware and bootloader, then 8.9 s of kernel and userspace), and the engine's own
+     `published` line lands within a second of it — so "playing" and "audible" are the same moment
+     at this resolution, and the analogue path adds nothing measurable. Power removed → audible
+     was 31.5 s, 9.6 s of which was the owner's own time unplugged. Only the power-on instant
+     itself is still unmeasured, on neither the wire nor the jack.
+   - Two bench facts that came out of getting there, both now known: **vip's HPL only reaches
+     2a's output fixture** (a lead straight onto the codec pin has no return path and reads as
+     silence, which cost an afternoon), and **HPR is not wired at all** — the right half of the
+     fixture is missing, which is Phase 2's board 1 work. Also worth recording: the guitar lead
+     had come out of LIN1, and vip's input path had never carried a signal on this bench until
+     that was found.
    - **"First audible output" is not on the wire either.** Capture the jack (`engine.record`, or
      the Mac's interface) on the same Mac clock as the serial reader, or report the engine's own
      readiness and say that is what it is. "Rig published" is not "sound".
@@ -1031,8 +1045,8 @@ runs namchain d4fb8e5 since the 2026-09-30 step 8 soak (Rik asked for it); and `
 (they moved to `devices/common` and changed). The piv phases below wait on that choice.
 
 Phase 1 on piv, on the SSL 2+. Steps 3–6 are done. Step 7 is measured on vip (its own note in
-Phase 1), leaving only the jack end of the number: a rig plays 20.4 s after the bootloader's
-first byte on a plug pull.
+Phase 1) and at the jack, leaving only the power-on instant: the pedal is audible 21–22 s after
+the bootloader's first byte on a plug pull, and the engine's `published` agrees within a second.
 1. ~~The step 8 soak at q64~~: done 2026-09-30 with `scripts/soak/soak-replay` and the rebuilt
    ljoss session, PASS (step 8 in Phase 1 has the numbers).
 2. ~~Then the same soak with only the rsync, to isolate WiFi's cost~~: done 2026-09-30, 18:50–19:50,

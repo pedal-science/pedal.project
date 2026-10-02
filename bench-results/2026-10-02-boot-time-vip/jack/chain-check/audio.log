@@ -1,0 +1,1475 @@
+# clock start_monotonic 241636.689106
+# launch_pre_monotonic 241636.687330 (sox had not opened the device yet)
+# recording 30.0 s from SSL 2+ Mk II
+{
+  "file": "bench-results/2026-10-02-boot-time-vip/jack/chain-check/audio.wav",
+  "rate": 48000,
+  "channels": 8,
+  "seconds": 30.0,
+  "tone_hz": 220,
+  "per_channel": [
+    {
+      "channel": 1,
+      "peak_dbfs": -29.4,
+      "energy_onset_s": 0.0,
+      "energy_onset_dbfs": -35.9,
+      "tone_onset_s": 0.32,
+      "tone_onset_dbfs": -39.7,
+      "tone_onset_tonality_db": -4.5,
+      "tone_present": [
+        {
+          "start_s": 0.32,
+          "end_s": 0.36,
+          "dbfs": -39.7,
+          "tonality_db": -4.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 0.38,
+          "end_s": 0.44,
+          "dbfs": -40.5,
+          "tonality_db": -4.8,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 0.44,
+          "end_s": 0.48,
+          "dbfs": -39.8,
+          "tonality_db": -4.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 0.58,
+          "end_s": 0.62,
+          "dbfs": -41.3,
+          "tonality_db": -6.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 0.7,
+          "end_s": 0.74,
+          "dbfs": -38.7,
+          "tonality_db": -4.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 0.9,
+          "end_s": 0.94,
+          "dbfs": -38.2,
+          "tonality_db": -2.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 0.96,
+          "end_s": 1.0,
+          "dbfs": -38.8,
+          "tonality_db": -3.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 1.02,
+          "end_s": 1.06,
+          "dbfs": -38.4,
+          "tonality_db": -3.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 1.06,
+          "end_s": 1.12,
+          "dbfs": -40.5,
+          "tonality_db": -2.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 1.12,
+          "end_s": 1.18,
+          "dbfs": -39.1,
+          "tonality_db": -1.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 1.18,
+          "end_s": 1.63,
+          "dbfs": -40.2,
+          "tonality_db": -2.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 1.64,
+          "end_s": 2.04,
+          "dbfs": -35.7,
+          "tonality_db": -2.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 2.05,
+          "end_s": 2.15,
+          "dbfs": -41.5,
+          "tonality_db": -6.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 2.15,
+          "end_s": 2.22,
+          "dbfs": -38.4,
+          "tonality_db": -2.8,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 2.22,
+          "end_s": 2.29,
+          "dbfs": -44.7,
+          "tonality_db": -9.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 2.3,
+          "end_s": 2.37,
+          "dbfs": -38.2,
+          "tonality_db": -2.8,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 2.37,
+          "end_s": 2.44,
+          "dbfs": -41.0,
+          "tonality_db": -2.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 2.45,
+          "end_s": 2.78,
+          "dbfs": -41.2,
+          "tonality_db": -5.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 2.78,
+          "end_s": 2.85,
+          "dbfs": -42.2,
+          "tonality_db": -6.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 2.87,
+          "end_s": 2.91,
+          "dbfs": -43.9,
+          "tonality_db": -6.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 2.93,
+          "end_s": 3.0,
+          "dbfs": -45.7,
+          "tonality_db": -9.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 3.0,
+          "end_s": 3.08,
+          "dbfs": -41.5,
+          "tonality_db": -5.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 3.08,
+          "end_s": 3.15,
+          "dbfs": -45.8,
+          "tonality_db": -6.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 3.17,
+          "end_s": 3.28,
+          "dbfs": -42.4,
+          "tonality_db": -6.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 3.28,
+          "end_s": 3.33,
+          "dbfs": -40.0,
+          "tonality_db": -4.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 3.4,
+          "end_s": 3.44,
+          "dbfs": -44.2,
+          "tonality_db": -7.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 3.55,
+          "end_s": 3.6,
+          "dbfs": -43.2,
+          "tonality_db": -9.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 3.62,
+          "end_s": 3.66,
+          "dbfs": -38.1,
+          "tonality_db": -5.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 3.68,
+          "end_s": 3.75,
+          "dbfs": -42.2,
+          "tonality_db": -7.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 3.91,
+          "end_s": 3.96,
+          "dbfs": -45.1,
+          "tonality_db": -8.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 3.96,
+          "end_s": 4.0,
+          "dbfs": -39.4,
+          "tonality_db": -3.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 4.02,
+          "end_s": 4.13,
+          "dbfs": -38.2,
+          "tonality_db": -3.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 4.13,
+          "end_s": 4.18,
+          "dbfs": -38.6,
+          "tonality_db": -2.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 4.27,
+          "end_s": 4.38,
+          "dbfs": -39.3,
+          "tonality_db": -5.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 4.38,
+          "end_s": 4.69,
+          "dbfs": -40.4,
+          "tonality_db": -5.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 4.69,
+          "end_s": 4.86,
+          "dbfs": -38.0,
+          "tonality_db": -2.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 4.89,
+          "end_s": 4.94,
+          "dbfs": -41.1,
+          "tonality_db": -7.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 4.96,
+          "end_s": 5.0,
+          "dbfs": -39.1,
+          "tonality_db": -5.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 5.08,
+          "end_s": 5.33,
+          "dbfs": -39.5,
+          "tonality_db": -3.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 5.33,
+          "end_s": 5.47,
+          "dbfs": -36.8,
+          "tonality_db": -0.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 5.47,
+          "end_s": 5.71,
+          "dbfs": -38.5,
+          "tonality_db": -2.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 5.74,
+          "end_s": 5.9,
+          "dbfs": -42.6,
+          "tonality_db": -7.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 5.9,
+          "end_s": 5.97,
+          "dbfs": -37.2,
+          "tonality_db": -1.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 5.98,
+          "end_s": 6.07,
+          "dbfs": -43.7,
+          "tonality_db": -5.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 6.08,
+          "end_s": 6.16,
+          "dbfs": -35.6,
+          "tonality_db": -3.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 6.16,
+          "end_s": 6.26,
+          "dbfs": -41.2,
+          "tonality_db": -6.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 6.3,
+          "end_s": 6.67,
+          "dbfs": -41.5,
+          "tonality_db": -6.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 6.67,
+          "end_s": 6.75,
+          "dbfs": -47.2,
+          "tonality_db": -9.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 6.76,
+          "end_s": 6.88,
+          "dbfs": -41.8,
+          "tonality_db": -3.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 6.92,
+          "end_s": 7.11,
+          "dbfs": -39.9,
+          "tonality_db": -6.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 7.26,
+          "end_s": 7.31,
+          "dbfs": -47.8,
+          "tonality_db": -9.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 7.33,
+          "end_s": 7.41,
+          "dbfs": -44.3,
+          "tonality_db": -6.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 7.42,
+          "end_s": 7.52,
+          "dbfs": -39.1,
+          "tonality_db": -1.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 7.52,
+          "end_s": 7.66,
+          "dbfs": -41.6,
+          "tonality_db": -8.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 7.87,
+          "end_s": 7.91,
+          "dbfs": -39.8,
+          "tonality_db": -5.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 7.93,
+          "end_s": 8.01,
+          "dbfs": -39.9,
+          "tonality_db": -4.8,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 8.03,
+          "end_s": 8.07,
+          "dbfs": -45.1,
+          "tonality_db": -8.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 8.1,
+          "end_s": 8.16,
+          "dbfs": -45.0,
+          "tonality_db": -8.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 8.16,
+          "end_s": 8.35,
+          "dbfs": -42.8,
+          "tonality_db": -5.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 8.35,
+          "end_s": 8.41,
+          "dbfs": -43.0,
+          "tonality_db": -9.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 8.43,
+          "end_s": 8.5,
+          "dbfs": -44.7,
+          "tonality_db": -8.8,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 8.5,
+          "end_s": 8.71,
+          "dbfs": -44.5,
+          "tonality_db": -7.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 8.87,
+          "end_s": 9.32,
+          "dbfs": -42.7,
+          "tonality_db": -8.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 9.35,
+          "end_s": 10.11,
+          "dbfs": -46.7,
+          "tonality_db": -8.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 10.12,
+          "end_s": 10.21,
+          "dbfs": -38.3,
+          "tonality_db": -2.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 10.23,
+          "end_s": 10.33,
+          "dbfs": -40.5,
+          "tonality_db": -4.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 10.34,
+          "end_s": 10.41,
+          "dbfs": -40.2,
+          "tonality_db": -6.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 10.44,
+          "end_s": 10.56,
+          "dbfs": -35.7,
+          "tonality_db": -2.8,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 10.56,
+          "end_s": 10.68,
+          "dbfs": -43.5,
+          "tonality_db": -8.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 10.71,
+          "end_s": 10.79,
+          "dbfs": -42.1,
+          "tonality_db": -6.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 10.81,
+          "end_s": 10.85,
+          "dbfs": -44.5,
+          "tonality_db": -7.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 10.87,
+          "end_s": 11.03,
+          "dbfs": -45.2,
+          "tonality_db": -7.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 11.04,
+          "end_s": 11.11,
+          "dbfs": -42.3,
+          "tonality_db": -7.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 11.11,
+          "end_s": 11.19,
+          "dbfs": -39.6,
+          "tonality_db": -3.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 11.21,
+          "end_s": 11.26,
+          "dbfs": -37.3,
+          "tonality_db": -3.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 11.27,
+          "end_s": 11.32,
+          "dbfs": -38.8,
+          "tonality_db": -4.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 11.34,
+          "end_s": 11.72,
+          "dbfs": -40.3,
+          "tonality_db": -6.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 11.72,
+          "end_s": 11.83,
+          "dbfs": -38.7,
+          "tonality_db": -5.8,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 11.85,
+          "end_s": 11.89,
+          "dbfs": -45.1,
+          "tonality_db": -9.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 11.89,
+          "end_s": 11.98,
+          "dbfs": -42.7,
+          "tonality_db": -8.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 11.98,
+          "end_s": 12.06,
+          "dbfs": -41.8,
+          "tonality_db": -5.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 12.06,
+          "end_s": 12.13,
+          "dbfs": -40.7,
+          "tonality_db": -5.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 12.15,
+          "end_s": 12.23,
+          "dbfs": -41.5,
+          "tonality_db": -4.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 12.23,
+          "end_s": 12.28,
+          "dbfs": -39.4,
+          "tonality_db": -3.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 12.28,
+          "end_s": 12.34,
+          "dbfs": -39.4,
+          "tonality_db": -4.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 12.34,
+          "end_s": 12.39,
+          "dbfs": -37.1,
+          "tonality_db": -4.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 12.41,
+          "end_s": 12.45,
+          "dbfs": -42.6,
+          "tonality_db": -9.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 12.45,
+          "end_s": 12.95,
+          "dbfs": -39.7,
+          "tonality_db": -6.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 12.98,
+          "end_s": 13.02,
+          "dbfs": -40.9,
+          "tonality_db": -3.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 13.02,
+          "end_s": 13.08,
+          "dbfs": -43.1,
+          "tonality_db": -6.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 13.08,
+          "end_s": 13.13,
+          "dbfs": -44.2,
+          "tonality_db": -1.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 13.19,
+          "end_s": 13.23,
+          "dbfs": -43.4,
+          "tonality_db": -3.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 13.3,
+          "end_s": 13.34,
+          "dbfs": -43.3,
+          "tonality_db": -5.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 13.34,
+          "end_s": 13.38,
+          "dbfs": -41.8,
+          "tonality_db": -5.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 13.38,
+          "end_s": 13.45,
+          "dbfs": -39.5,
+          "tonality_db": -3.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 13.49,
+          "end_s": 13.53,
+          "dbfs": -44.6,
+          "tonality_db": -7.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 13.57,
+          "end_s": 13.61,
+          "dbfs": -39.8,
+          "tonality_db": -5.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 13.61,
+          "end_s": 13.81,
+          "dbfs": -41.1,
+          "tonality_db": -2.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 13.94,
+          "end_s": 13.98,
+          "dbfs": -44.1,
+          "tonality_db": -6.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 14.0,
+          "end_s": 14.07,
+          "dbfs": -46.1,
+          "tonality_db": -9.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 14.1,
+          "end_s": 14.14,
+          "dbfs": -48.3,
+          "tonality_db": -5.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 14.18,
+          "end_s": 14.22,
+          "dbfs": -41.7,
+          "tonality_db": -5.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 14.22,
+          "end_s": 14.26,
+          "dbfs": -43.3,
+          "tonality_db": -6.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 14.37,
+          "end_s": 14.47,
+          "dbfs": -47.2,
+          "tonality_db": -6.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 14.47,
+          "end_s": 14.51,
+          "dbfs": -42.0,
+          "tonality_db": -3.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 14.51,
+          "end_s": 14.55,
+          "dbfs": -44.1,
+          "tonality_db": -6.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 14.66,
+          "end_s": 14.72,
+          "dbfs": -47.5,
+          "tonality_db": -6.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 14.74,
+          "end_s": 14.78,
+          "dbfs": -47.7,
+          "tonality_db": -7.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 14.82,
+          "end_s": 14.87,
+          "dbfs": -49.3,
+          "tonality_db": -10.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 14.87,
+          "end_s": 14.91,
+          "dbfs": -46.1,
+          "tonality_db": -6.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 14.91,
+          "end_s": 14.96,
+          "dbfs": -45.2,
+          "tonality_db": -6.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.01,
+          "end_s": 15.06,
+          "dbfs": -47.2,
+          "tonality_db": -8.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.06,
+          "end_s": 15.17,
+          "dbfs": -43.6,
+          "tonality_db": -6.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.18,
+          "end_s": 15.22,
+          "dbfs": -40.3,
+          "tonality_db": -2.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.22,
+          "end_s": 15.31,
+          "dbfs": -39.8,
+          "tonality_db": -3.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.32,
+          "end_s": 15.42,
+          "dbfs": -45.9,
+          "tonality_db": -7.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.47,
+          "end_s": 15.56,
+          "dbfs": -42.7,
+          "tonality_db": -2.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.56,
+          "end_s": 15.61,
+          "dbfs": -47.5,
+          "tonality_db": -9.8,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.62,
+          "end_s": 15.67,
+          "dbfs": -48.8,
+          "tonality_db": -8.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.67,
+          "end_s": 15.71,
+          "dbfs": -48.4,
+          "tonality_db": -7.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.76,
+          "end_s": 15.81,
+          "dbfs": -48.3,
+          "tonality_db": -5.8,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.81,
+          "end_s": 15.86,
+          "dbfs": -53.8,
+          "tonality_db": -9.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.86,
+          "end_s": 15.91,
+          "dbfs": -48.9,
+          "tonality_db": -8.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.91,
+          "end_s": 15.98,
+          "dbfs": -41.7,
+          "tonality_db": -2.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 15.98,
+          "end_s": 16.02,
+          "dbfs": -37.9,
+          "tonality_db": 0.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 16.05,
+          "end_s": 16.13,
+          "dbfs": -39.9,
+          "tonality_db": -0.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 16.13,
+          "end_s": 16.21,
+          "dbfs": -38.3,
+          "tonality_db": -1.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 16.28,
+          "end_s": 16.32,
+          "dbfs": -46.6,
+          "tonality_db": -8.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 16.32,
+          "end_s": 16.36,
+          "dbfs": -45.7,
+          "tonality_db": -4.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 16.36,
+          "end_s": 16.41,
+          "dbfs": -45.8,
+          "tonality_db": -5.8,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 16.41,
+          "end_s": 16.49,
+          "dbfs": -44.5,
+          "tonality_db": -6.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 16.61,
+          "end_s": 16.65,
+          "dbfs": -45.9,
+          "tonality_db": -7.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 16.65,
+          "end_s": 16.93,
+          "dbfs": -44.6,
+          "tonality_db": -5.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 16.93,
+          "end_s": 17.33,
+          "dbfs": -45.2,
+          "tonality_db": -5.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 17.33,
+          "end_s": 17.43,
+          "dbfs": -37.0,
+          "tonality_db": -1.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 17.43,
+          "end_s": 17.89,
+          "dbfs": -43.4,
+          "tonality_db": -5.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 17.89,
+          "end_s": 18.07,
+          "dbfs": -39.8,
+          "tonality_db": -1.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 18.08,
+          "end_s": 18.85,
+          "dbfs": -45.1,
+          "tonality_db": -5.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 18.85,
+          "end_s": 18.89,
+          "dbfs": -36.4,
+          "tonality_db": -0.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 18.89,
+          "end_s": 18.93,
+          "dbfs": -35.2,
+          "tonality_db": 0.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 18.93,
+          "end_s": 19.09,
+          "dbfs": -35.6,
+          "tonality_db": 0.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 19.09,
+          "end_s": 19.13,
+          "dbfs": -36.7,
+          "tonality_db": -0.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 19.13,
+          "end_s": 19.33,
+          "dbfs": -34.3,
+          "tonality_db": 0.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 19.33,
+          "end_s": 20.12,
+          "dbfs": -39.2,
+          "tonality_db": -1.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 20.12,
+          "end_s": 20.22,
+          "dbfs": -39.6,
+          "tonality_db": -0.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 20.26,
+          "end_s": 20.58,
+          "dbfs": -42.8,
+          "tonality_db": -5.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 20.58,
+          "end_s": 20.69,
+          "dbfs": -43.4,
+          "tonality_db": -7.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 20.69,
+          "end_s": 20.78,
+          "dbfs": -44.5,
+          "tonality_db": -6.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 20.78,
+          "end_s": 20.82,
+          "dbfs": -42.6,
+          "tonality_db": -8.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 20.93,
+          "end_s": 21.03,
+          "dbfs": -41.2,
+          "tonality_db": -5.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 21.6,
+          "end_s": 21.96,
+          "dbfs": -45.7,
+          "tonality_db": -8.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 21.97,
+          "end_s": 22.14,
+          "dbfs": -33.9,
+          "tonality_db": 0.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 22.15,
+          "end_s": 22.37,
+          "dbfs": -35.6,
+          "tonality_db": 0.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 22.37,
+          "end_s": 22.52,
+          "dbfs": -43.8,
+          "tonality_db": -5.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 22.53,
+          "end_s": 22.84,
+          "dbfs": -40.5,
+          "tonality_db": -4.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 22.84,
+          "end_s": 22.94,
+          "dbfs": -44.0,
+          "tonality_db": -5.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 22.94,
+          "end_s": 23.19,
+          "dbfs": -42.6,
+          "tonality_db": -2.8,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 23.19,
+          "end_s": 23.42,
+          "dbfs": -37.4,
+          "tonality_db": -3.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 23.49,
+          "end_s": 23.53,
+          "dbfs": -39.5,
+          "tonality_db": -3.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 23.53,
+          "end_s": 23.58,
+          "dbfs": -47.5,
+          "tonality_db": -9.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 23.59,
+          "end_s": 23.76,
+          "dbfs": -48.6,
+          "tonality_db": -5.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 23.76,
+          "end_s": 24.05,
+          "dbfs": -43.3,
+          "tonality_db": -3.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 24.05,
+          "end_s": 24.16,
+          "dbfs": -39.1,
+          "tonality_db": -3.2,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 24.16,
+          "end_s": 24.25,
+          "dbfs": -38.9,
+          "tonality_db": -3.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 24.29,
+          "end_s": 24.33,
+          "dbfs": -43.2,
+          "tonality_db": -9.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 24.34,
+          "end_s": 24.73,
+          "dbfs": -41.1,
+          "tonality_db": -4.7,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 24.74,
+          "end_s": 24.78,
+          "dbfs": -41.8,
+          "tonality_db": -7.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 24.78,
+          "end_s": 24.82,
+          "dbfs": -45.0,
+          "tonality_db": -10.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 24.82,
+          "end_s": 24.86,
+          "dbfs": -43.2,
+          "tonality_db": -8.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 25.06,
+          "end_s": 25.11,
+          "dbfs": -44.4,
+          "tonality_db": -8.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 25.17,
+          "end_s": 25.21,
+          "dbfs": -49.7,
+          "tonality_db": -9.8,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 25.21,
+          "end_s": 25.25,
+          "dbfs": -46.3,
+          "tonality_db": -9.5,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 25.25,
+          "end_s": 25.29,
+          "dbfs": -47.2,
+          "tonality_db": -9.3,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 25.44,
+          "end_s": 26.03,
+          "dbfs": -45.0,
+          "tonality_db": -9.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 26.03,
+          "end_s": 26.24,
+          "dbfs": -39.9,
+          "tonality_db": -4.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 26.31,
+          "end_s": 26.35,
+          "dbfs": -43.2,
+          "tonality_db": -6.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 26.42,
+          "end_s": 26.5,
+          "dbfs": -45.2,
+          "tonality_db": -8.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 26.65,
+          "end_s": 26.9,
+          "dbfs": -41.0,
+          "tonality_db": -5.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 26.93,
+          "end_s": 28.45,
+          "dbfs": -43.8,
+          "tonality_db": -5.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 28.48,
+          "end_s": 28.67,
+          "dbfs": -44.4,
+          "tonality_db": -8.1,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 28.67,
+          "end_s": 28.75,
+          "dbfs": -44.5,
+          "tonality_db": -10.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 28.75,
+          "end_s": 28.79,
+          "dbfs": -43.9,
+          "tonality_db": -4.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 28.79,
+          "end_s": 28.83,
+          "dbfs": -42.6,
+          "tonality_db": -4.6,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 28.83,
+          "end_s": 29.11,
+          "dbfs": -41.2,
+          "tonality_db": -4.8,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 29.45,
+          "end_s": 29.52,
+          "dbfs": -42.1,
+          "tonality_db": -9.9,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 29.52,
+          "end_s": 29.59,
+          "dbfs": -40.0,
+          "tonality_db": -5.4,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 29.59,
+          "end_s": 29.67,
+          "dbfs": -43.6,
+          "tonality_db": -8.0,
+          "at_end_of_data": false
+        },
+        {
+          "start_s": 29.74,
+          "end_s": 29.96,
+          "dbfs": -40.9,
+          "tonality_db": -6.6,
+          "at_end_of_data": false
+        }
+      ],
+      "energy_onset_monotonic": 241636.689,
+      "tone_onset_monotonic": 241637.009
+    },
+    {
+      "channel": 2,
+      "peak_dbfs": -94.2,
+      "energy_onset_s": null,
+      "tone_onset_s": null,
+      "tone_present": []
+    },
+    {
+      "channel": 3,
+      "peak_dbfs": -14.7,
+      "energy_onset_s": 0.015,
+      "energy_onset_dbfs": -32.5,
+      "tone_onset_s": 0.01,
+      "tone_onset_dbfs": -17.5,
+      "tone_onset_tonality_db": 0.3,
+      "tone_present": [
+        {
+          "start_s": 0.01,
+          "end_s": 30.0,
+          "dbfs": -17.5,
+          "tonality_db": 0.3,
+          "at_end_of_data": true
+        }
+      ],
+      "energy_onset_monotonic": 241636.704,
+      "tone_onset_monotonic": 241636.699
+    },
+    {
+      "channel": 4,
+      "peak_dbfs": -14.7,
+      "energy_onset_s": 0.015,
+      "energy_onset_dbfs": -32.5,
+      "tone_onset_s": 0.01,
+      "tone_onset_dbfs": -17.5,
+      "tone_onset_tonality_db": 0.3,
+      "tone_present": [
+        {
+          "start_s": 0.01,
+          "end_s": 30.0,
+          "dbfs": -17.5,
+          "tonality_db": 0.3,
+          "at_end_of_data": true
+        }
+      ],
+      "energy_onset_monotonic": 241636.704,
+      "tone_onset_monotonic": 241636.699
+    },
+    {
+      "channel": 5,
+      "peak_dbfs": -14.7,
+      "energy_onset_s": 0.015,
+      "energy_onset_dbfs": -32.5,
+      "tone_onset_s": 0.01,
+      "tone_onset_dbfs": -17.5,
+      "tone_onset_tonality_db": 0.3,
+      "tone_present": [
+        {
+          "start_s": 0.01,
+          "end_s": 30.0,
+          "dbfs": -17.5,
+          "tonality_db": 0.3,
+          "at_end_of_data": true
+        }
+      ],
+      "energy_onset_monotonic": 241636.704,
+      "tone_onset_monotonic": 241636.699
+    },
+    {
+      "channel": 6,
+      "peak_dbfs": -14.7,
+      "energy_onset_s": 0.015,
+      "energy_onset_dbfs": -32.5,
+      "tone_onset_s": 0.01,
+      "tone_onset_dbfs": -17.5,
+      "tone_onset_tonality_db": 0.3,
+      "tone_present": [
+        {
+          "start_s": 0.01,
+          "end_s": 30.0,
+          "dbfs": -17.5,
+          "tonality_db": 0.3,
+          "at_end_of_data": true
+        }
+      ],
+      "energy_onset_monotonic": 241636.704,
+      "tone_onset_monotonic": 241636.699
+    },
+    {
+      "channel": 7,
+      "peak_dbfs": -14.7,
+      "energy_onset_s": 0.015,
+      "energy_onset_dbfs": -32.5,
+      "tone_onset_s": 0.01,
+      "tone_onset_dbfs": -17.5,
+      "tone_onset_tonality_db": 0.3,
+      "tone_present": [
+        {
+          "start_s": 0.01,
+          "end_s": 30.0,
+          "dbfs": -17.5,
+          "tonality_db": 0.3,
+          "at_end_of_data": true
+        }
+      ],
+      "energy_onset_monotonic": 241636.704,
+      "tone_onset_monotonic": 241636.699
+    },
+    {
+      "channel": 8,
+      "peak_dbfs": -14.7,
+      "energy_onset_s": 0.015,
+      "energy_onset_dbfs": -32.5,
+      "tone_onset_s": 0.01,
+      "tone_onset_dbfs": -17.5,
+      "tone_onset_tonality_db": 0.3,
+      "tone_present": [
+        {
+          "start_s": 0.01,
+          "end_s": 30.0,
+          "dbfs": -17.5,
+          "tonality_db": 0.3,
+          "at_end_of_data": true
+        }
+      ],
+      "energy_onset_monotonic": 241636.704,
+      "tone_onset_monotonic": 241636.699
+    }
+  ],
+  "tool": "measure-audio.py",
+  "device": "SSL 2+ Mk II",
+  "tone_db": -12,
+  "record_seconds": 30.0,
+  "launch_pre_monotonic": 241636.68733,
+  "launch_post_monotonic": 241636.689106,
+  "launch_latency_s": 0.002
+}

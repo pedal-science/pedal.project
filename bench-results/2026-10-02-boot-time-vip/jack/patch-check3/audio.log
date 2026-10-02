@@ -1,0 +1,153 @@
+# clock start_monotonic 240552.582533
+# launch_pre_monotonic 240552.580761 (sox had not opened the device yet)
+# recording 30.0 s from SSL 2+ Mk II
+{
+  "file": "bench-results/2026-10-02-boot-time-vip/jack/patch-check3/audio.wav",
+  "rate": 48000,
+  "channels": 8,
+  "seconds": 30.0,
+  "tone_hz": 220,
+  "per_channel": [
+    {
+      "channel": 1,
+      "peak_dbfs": -94.5,
+      "energy_onset_s": null,
+      "tone_onset_s": null,
+      "tone_present": []
+    },
+    {
+      "channel": 2,
+      "peak_dbfs": -94.0,
+      "energy_onset_s": null,
+      "tone_onset_s": null,
+      "tone_present": []
+    },
+    {
+      "channel": 3,
+      "peak_dbfs": -13.0,
+      "energy_onset_s": 0.0,
+      "energy_onset_dbfs": -19.7,
+      "tone_onset_s": 0.0,
+      "tone_onset_dbfs": -16.3,
+      "tone_onset_tonality_db": 2.9,
+      "tone_present": [
+        {
+          "start_s": 0.0,
+          "end_s": 30.0,
+          "dbfs": -16.3,
+          "tonality_db": 2.9,
+          "at_end_of_data": true
+        }
+      ],
+      "energy_onset_monotonic": 240552.583,
+      "tone_onset_monotonic": 240552.583
+    },
+    {
+      "channel": 4,
+      "peak_dbfs": -13.0,
+      "energy_onset_s": 0.0,
+      "energy_onset_dbfs": -19.7,
+      "tone_onset_s": 0.0,
+      "tone_onset_dbfs": -16.3,
+      "tone_onset_tonality_db": 2.9,
+      "tone_present": [
+        {
+          "start_s": 0.0,
+          "end_s": 30.0,
+          "dbfs": -16.3,
+          "tonality_db": 2.9,
+          "at_end_of_data": true
+        }
+      ],
+      "energy_onset_monotonic": 240552.583,
+      "tone_onset_monotonic": 240552.583
+    },
+    {
+      "channel": 5,
+      "peak_dbfs": -13.0,
+      "energy_onset_s": 0.0,
+      "energy_onset_dbfs": -19.7,
+      "tone_onset_s": 0.0,
+      "tone_onset_dbfs": -16.3,
+      "tone_onset_tonality_db": 2.9,
+      "tone_present": [
+        {
+          "start_s": 0.0,
+          "end_s": 30.0,
+          "dbfs": -16.3,
+          "tonality_db": 2.9,
+          "at_end_of_data": true
+        }
+      ],
+      "energy_onset_monotonic": 240552.583,
+      "tone_onset_monotonic": 240552.583
+    },
+    {
+      "channel": 6,
+      "peak_dbfs": -13.0,
+      "energy_onset_s": 0.0,
+      "energy_onset_dbfs": -19.7,
+      "tone_onset_s": 0.0,
+      "tone_onset_dbfs": -16.3,
+      "tone_onset_tonality_db": 2.9,
+      "tone_present": [
+        {
+          "start_s": 0.0,
+          "end_s": 30.0,
+          "dbfs": -16.3,
+          "tonality_db": 2.9,
+          "at_end_of_data": true
+        }
+      ],
+      "energy_onset_monotonic": 240552.583,
+      "tone_onset_monotonic": 240552.583
+    },
+    {
+      "channel": 7,
+      "peak_dbfs": -13.0,
+      "energy_onset_s": 0.0,
+      "energy_onset_dbfs": -19.7,
+      "tone_onset_s": 0.0,
+      "tone_onset_dbfs": -16.3,
+      "tone_onset_tonality_db": 2.9,
+      "tone_present": [
+        {
+          "start_s": 0.0,
+          "end_s": 30.0,
+          "dbfs": -16.3,
+          "tonality_db": 2.9,
+          "at_end_of_data": true
+        }
+      ],
+      "energy_onset_monotonic": 240552.583,
+      "tone_onset_monotonic": 240552.583
+    },
+    {
+      "channel": 8,
+      "peak_dbfs": -13.0,
+      "energy_onset_s": 0.0,
+      "energy_onset_dbfs": -19.7,
+      "tone_onset_s": 0.0,
+      "tone_onset_dbfs": -16.3,
+      "tone_onset_tonality_db": 2.9,
+      "tone_present": [
+        {
+          "start_s": 0.0,
+          "end_s": 30.0,
+          "dbfs": -16.3,
+          "tonality_db": 2.9,
+          "at_end_of_data": true
+        }
+      ],
+      "energy_onset_monotonic": 240552.583,
+      "tone_onset_monotonic": 240552.583
+    }
+  ],
+  "tool": "measure-audio.py",
+  "device": "SSL 2+ Mk II",
+  "tone_db": -12,
+  "record_seconds": 30.0,
+  "launch_pre_monotonic": 240552.580761,
+  "launch_post_monotonic": 240552.582533,
+  "launch_latency_s": 0.002
+}

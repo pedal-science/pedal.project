@@ -1,0 +1,62 @@
+{
+  "backend": "alsa_raw",
+  "capture_channels": 2,
+  "chains": [
+    {
+      "adopted_generation": 1,
+      "audible_generation": 1,
+      "failed_nodes": 0,
+      "generation": 1,
+      "guard_trips": 0,
+      "id": "A4449832-1FAB-4580-8705-2ACDF0943521",
+      "input_channel": 0,
+      "missing_assets": [],
+      "muted": false,
+      "name": "Guitar",
+      "output_channel": 0,
+      "slimmed_models": [
+        {
+          "element": "A78A22A3-BE2E-4107-84DA-E821E012CB7C",
+          "full_bytes": 300808,
+          "node": "A78A22A3-BE2E-4107-84DA-E821E012CB7C-nam",
+          "reference": "Ampeg SVT Classic with 6x10/Ampeg SVT - SM75",
+          "slim_bytes": 102068
+        }
+      ],
+      "target_generation": 1,
+      "transition_active": false
+    },
+    {
+      "adopted_generation": 1,
+      "audible_generation": 1,
+      "failed_nodes": 0,
+      "generation": 1,
+      "guard_trips": 0,
+      "id": "11A41186-1D74-4204-A37B-8432C2D2B8D4",
+      "input_channel": 1,
+      "missing_assets": [],
+      "muted": false,
+      "name": "Vocal",
+      "output_channel": 1,
+      "slimmed_models": [],
+      "target_generation": 1,
+      "transition_active": false
+    }
+  ],
+  "device": "hw:CARD=wm8960,DEV=0",
+  "files": {
+    "capture.wav": "every capture channel, as the device delivered it",
+    "events.tsv": "per period: dropped, inserted (after it), xrun, burst; gap = ring overflow",
+    "playback.wav": "every playback period the render loop offered, dropped or not"
+  },
+  "format": "S32_LE",
+  "generation": 1,
+  "name": "guitar",
+  "output_queue_floor_periods": 2,
+  "output_queue_periods": 4,
+  "period_size": 64,
+  "playback_channels": 2,
+  "rig_name": "Ambient Wash",
+  "sample_rate": 48000,
+  "started": "2026-10-02T21:13:45Z"
+}

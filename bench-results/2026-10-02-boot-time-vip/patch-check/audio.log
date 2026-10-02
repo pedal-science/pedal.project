@@ -1,0 +1,25 @@
+# clock start_monotonic 239772.931680
+# launch_pre_monotonic 239772.930015 (sox had not opened the device yet)
+# recording 8.0 s from SSL 2+ Mk II
+{
+  "file": "bench-results/2026-10-02-boot-time-vip/patch-check/audio.wav",
+  "rate": 48000,
+  "channels": 2,
+  "seconds": 8.0,
+  "tone_hz": 220,
+  "peak_dbfs": -25.2,
+  "energy_onset_s": 0.015,
+  "energy_onset_dbfs": -35.0,
+  "tone_onset_s": 0.01,
+  "tone_onset_dbfs": -27.9,
+  "tone_onset_tonality_db": 0.3,
+  "tool": "measure-audio.py",
+  "device": "SSL 2+ Mk II",
+  "tone_db": -20,
+  "record_seconds": 8.0,
+  "launch_pre_monotonic": 239772.930015,
+  "launch_post_monotonic": 239772.93168,
+  "launch_latency_s": 0.002,
+  "energy_onset_monotonic": 239772.947,
+  "tone_onset_monotonic": 239772.942
+}

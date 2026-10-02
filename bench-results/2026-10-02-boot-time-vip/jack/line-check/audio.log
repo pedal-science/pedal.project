@@ -1,0 +1,77 @@
+# clock start_monotonic 241036.693641
+# launch_pre_monotonic 241036.691579 (sox had not opened the device yet)
+# recording 60.0 s from SSL 2+ Mk II
+{
+  "file": "bench-results/2026-10-02-boot-time-vip/jack/line-check/audio.wav",
+  "rate": 48000,
+  "channels": 8,
+  "seconds": 60.0,
+  "tone_hz": null,
+  "per_channel": [
+    {
+      "channel": 1,
+      "peak_dbfs": -31.6,
+      "energy_onset_s": 0.685,
+      "energy_onset_dbfs": -32.2,
+      "tone_onset_s": null,
+      "tone_present": [],
+      "energy_onset_monotonic": 241037.379
+    },
+    {
+      "channel": 2,
+      "peak_dbfs": -94.3,
+      "energy_onset_s": null,
+      "tone_onset_s": null,
+      "tone_present": []
+    },
+    {
+      "channel": 3,
+      "peak_dbfs": -94.5,
+      "energy_onset_s": null,
+      "tone_onset_s": null,
+      "tone_present": []
+    },
+    {
+      "channel": 4,
+      "peak_dbfs": -94.8,
+      "energy_onset_s": null,
+      "tone_onset_s": null,
+      "tone_present": []
+    },
+    {
+      "channel": 5,
+      "peak_dbfs": -94.8,
+      "energy_onset_s": null,
+      "tone_onset_s": null,
+      "tone_present": []
+    },
+    {
+      "channel": 6,
+      "peak_dbfs": -94.8,
+      "energy_onset_s": null,
+      "tone_onset_s": null,
+      "tone_present": []
+    },
+    {
+      "channel": 7,
+      "peak_dbfs": -94.7,
+      "energy_onset_s": null,
+      "tone_onset_s": null,
+      "tone_present": []
+    },
+    {
+      "channel": 8,
+      "peak_dbfs": -94.8,
+      "energy_onset_s": null,
+      "tone_onset_s": null,
+      "tone_present": []
+    }
+  ],
+  "tool": "measure-audio.py",
+  "device": "SSL 2+ Mk II",
+  "tone_db": null,
+  "record_seconds": 60.0,
+  "launch_pre_monotonic": 241036.691579,
+  "launch_post_monotonic": 241036.693641,
+  "launch_latency_s": 0.002
+}
