@@ -1,0 +1,42 @@
+{
+ "chains": [
+  {
+   "connections": [
+    {
+     "from": "in",
+     "from_port": 0,
+     "to": "F7795F00-0000-4000-8000-000000000000-nam",
+     "to_port": 0
+    },
+    {
+     "from": "F7795F00-0000-4000-8000-000000000000-nam",
+     "from_port": 0,
+     "to": "out",
+     "to_port": 0
+    }
+   ],
+   "id": "A4449832-1FAB-4580-8705-2ACDF0943521",
+   "input_channel": 0,
+   "name": "Guitar",
+   "nodes": [
+    {
+     "element": "6685771E-D970-44D4-99C2-F73861280A5D",
+     "id": "in",
+     "type": "nc.input"
+    },
+    {
+     "id": "F7795F00-0000-4000-8000-000000000000-nam",
+     "element": "F7795F00-0000-4000-8000-000000000000",
+     "type": "nc.nam",
+     "model": "/var/lib/pedal/library/models/Ampeg GVT52 - Channel 2/AMPEG_CH 2 NEUTRAL G7.nam"
+    },
+    {
+     "element": "34D0B4F8-38CF-44AF-9D76-CFD73D91F7E4",
+     "id": "out",
+     "type": "nc.output"
+    }
+   ],
+   "output_channel": 0
+  }
+ ]
+}

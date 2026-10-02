@@ -1,0 +1,75 @@
+{
+  "audio_seconds": 30.0,
+  "block_ns": {
+    "max": 1536513,
+    "p50": 200128,
+    "p99": 971033
+  },
+  "blocks": 22500,
+  "deadline_ns": 1333333,
+  "deadline_overruns": 10,
+  "device_wait_ns": {
+    "max": 0,
+    "p50": 0,
+    "p99": 0
+  },
+  "driver_xruns": 0,
+  "frames": 1440000,
+  "gates": {
+    "deadline_overruns_zero": false,
+    "driver_xruns_zero": true,
+    "drop_gate_applied": true,
+    "max_output_drops": null,
+    "max_p99_percent": 50.0,
+    "oracle": true
+  },
+  "input": "pluck.wav",
+  "max_lateness_ms": 0.323874,
+  "model": "",
+  "p99_percent_of_deadline": 72.8274932068733,
+  "pass": false,
+  "phase_ns": {
+    "chain_max": 0,
+    "chain_p50": 0,
+    "chain_p99": 0,
+    "read_max": 0,
+    "read_p50": 0,
+    "read_p99": 0,
+    "write_max": 0,
+    "write_p50": 0,
+    "write_p99": 0
+  },
+  "plan": {
+    "buffer_bytes": 1280,
+    "buffers": 5,
+    "graph_mode": true,
+    "nodes": 22,
+    "reference_buffers": 0,
+    "source": "two-amp-ir2048.json"
+  },
+  "quantum": 64,
+  "realtime_paced": true,
+  "render_path_cpu_ns": {
+    "max": 0,
+    "stall_blocks": 0,
+    "stall_threshold_ns": 500000,
+    "total": 0,
+    "wall_total": 0
+  },
+  "rt_check": {
+    "allocations": 0,
+    "deallocations": 0,
+    "instrumented": true
+  },
+  "rtf": 0.9999998730666667,
+  "scheduling": {
+    "cpu_pinned": false,
+    "description": "",
+    "requested_cpu": -1,
+    "requested_priority": 80,
+    "rt_priority_held": false,
+    "running_cpu": -1
+  },
+  "slow_blocks": [],
+  "wall_seconds": 29.999996192
+}

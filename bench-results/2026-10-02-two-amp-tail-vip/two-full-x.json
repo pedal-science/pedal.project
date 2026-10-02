@@ -1,0 +1,123 @@
+{
+ "chains": [
+  {
+   "connections": [
+    {
+     "from": "in",
+     "from_port": 0,
+     "to": "8C185869-615E-46FD-97BF-D44BF61592A0-gain",
+     "to_port": 0
+    },
+    {
+     "from": "8C185869-615E-46FD-97BF-D44BF61592A0-gain",
+     "from_port": 0,
+     "to": "F7795F00-0000-4000-8000-000000000000-nam",
+     "to_port": 0
+    },
+    {
+     "from": "F7795F00-0000-4000-8000-000000000000-nam",
+     "from_port": 0,
+     "to": "F7795F00-0000-4000-8000-000000000000-tone",
+     "to_port": 0
+    },
+    {
+     "from": "F7795F00-0000-4000-8000-000000000000-tone",
+     "from_port": 0,
+     "to": "A78A22A3-BE2E-4107-84DA-E821E012CB7C-nam",
+     "to_port": 0
+    },
+    {
+     "from": "A78A22A3-BE2E-4107-84DA-E821E012CB7C-nam",
+     "from_port": 0,
+     "to": "A78A22A3-BE2E-4107-84DA-E821E012CB7C-tone",
+     "to_port": 0
+    },
+    {
+     "from": "A78A22A3-BE2E-4107-84DA-E821E012CB7C-tone",
+     "from_port": 0,
+     "to": "84C25CC1-9F73-4405-B909-D7680A590E74-cab",
+     "to_port": 0
+    },
+    {
+     "from": "84C25CC1-9F73-4405-B909-D7680A590E74-cab",
+     "from_port": 0,
+     "to": "C17CAC37-6DDD-47BE-85B3-0F1414365F7A-delay",
+     "to_port": 0
+    },
+    {
+     "from": "C17CAC37-6DDD-47BE-85B3-0F1414365F7A-delay",
+     "from_port": 0,
+     "to": "out",
+     "to_port": 0
+    }
+   ],
+   "id": "A4449832-1FAB-4580-8705-2ACDF0943521",
+   "input_channel": 0,
+   "name": "Guitar",
+   "nodes": [
+    {
+     "element": "6685771E-D970-44D4-99C2-F73861280A5D",
+     "id": "in",
+     "type": "nc.input"
+    },
+    {
+     "element": "8C185869-615E-46FD-97BF-D44BF61592A0",
+     "gain_db": 6.472,
+     "id": "8C185869-615E-46FD-97BF-D44BF61592A0-gain",
+     "type": "nc.gain"
+    },
+    {
+     "id": "F7795F00-0000-4000-8000-000000000000-nam",
+     "element": "F7795F00-0000-4000-8000-000000000000",
+     "type": "nc.nam",
+     "model": "/tmp/tail/gvt/A2-Full.nam"
+    },
+    {
+     "id": "F7795F00-0000-4000-8000-000000000000-tone",
+     "element": "F7795F00-0000-4000-8000-000000000000",
+     "type": "fx.amp.tonestack",
+     "bass": 0.0,
+     "mid": 0.0,
+     "treble": 2.4000000000000004
+    },
+    {
+     "id": "A78A22A3-BE2E-4107-84DA-E821E012CB7C-nam",
+     "element": "A78A22A3-BE2E-4107-84DA-E821E012CB7C",
+     "type": "nc.nam",
+     "model": "/tmp/tail/svt/A2-Full.nam"
+    },
+    {
+     "id": "A78A22A3-BE2E-4107-84DA-E821E012CB7C-tone",
+     "element": "A78A22A3-BE2E-4107-84DA-E821E012CB7C",
+     "type": "fx.amp.tonestack",
+     "bass": 0.0,
+     "mid": 0.0,
+     "treble": 2.4000000000000004
+    },
+    {
+     "element": "84C25CC1-9F73-4405-B909-D7680A590E74",
+     "high_cut": 5496.0,
+     "id": "84C25CC1-9F73-4405-B909-D7680A590E74-cab",
+     "ir": "/var/lib/pedal/library/irs/Ampeg 4x10/York Audio AMPG 410 HS v1.01/44.1k (Kemper, etc.)/Mixes/YA AMPG 410 HS Mix 08.wav",
+     "level_db": 0,
+     "low_cut": 80.0,
+     "type": "fx.cab.ir"
+    },
+    {
+     "element": "C17CAC37-6DDD-47BE-85B3-0F1414365F7A",
+     "feedback": 0.6188,
+     "id": "C17CAC37-6DDD-47BE-85B3-0F1414365F7A-delay",
+     "mix": 0.8094,
+     "time": 620.0,
+     "type": "fx.delay.feedback"
+    },
+    {
+     "element": "34D0B4F8-38CF-44AF-9D76-CFD73D91F7E4",
+     "id": "out",
+     "type": "nc.output"
+    }
+   ],
+   "output_channel": 0
+  }
+ ]
+}

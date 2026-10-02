@@ -458,6 +458,12 @@ numbers need re-measuring on piv.
 - An hour of playing and editing is clean.
 - `components.lock` names what's running.
 
+**First target reached** (declared by Rik, 2026-10-02), on vip with the WM8960 rather than `tib`
+with the SSL 2+: vip resumes its rig from power-on, ljoss edits it live (2e1a63a,
+`check-streaming`), the hour's replay soak passes (974060c), and `devices/vip/components.lock`
+names what runs. The two-amp Ambient Wash failing the gate alone is open, under "Next session
+starts with".
+
 ## Phase 2 — The codec and the analogue stages
 
 **2a. Stock bring-up.** The board is in hand, so this can overlap Phase 1. The bench walkthrough
@@ -987,3 +993,15 @@ Phase 1 on piv, on the SSL 2+. Steps 3–6 are done, and 7 except firmware boot 
      rigs, admission control refusing them (step 3 in `docs/rig-edits.md`), or finding where its
      peaks come from first (its median block is 15%, about 200 µs, and its worst 1.3 ms: the
      trouble is the tail, not the mean).
+   - **Where the peaks come from** (2026-10-02, offline on vip's core 2, namchain 2e1a63a;
+     `bench-results/2026-10-02-two-amp-tail-vip/results.md`): **memory**. Each amp is A2-Full
+     (8 channels, 23 layers, about 450 KB of ring buffers), and two of them don't fit in a core's
+     512 KB L2. So each block reads from the L3 and DRAM the other cores share, and the tail is
+     whatever else on vip touches memory. A `dd` on core 0 doubles the rig's median. Each amp
+     alone has p99 about 20%, both together 53%; flat out (no wait between blocks) the rig's p99
+     is 26%, paced 59–76%. Not the cab IR (cut to 2048 taps: no change) and not the block size
+     (q128: median unchanged, worst block still 92%). Two A2-Lites peak at 55%; Full + Lite at
+     98% on core 2, which runs harsher than the live engine's core 3, so that needs a live soak.
+     Not decided: the choice now is between a cost rule that refuses (or downgrades to Lite) a
+     second A2-Full on one chain (admission control, rig-edits step 3, with E2's Lite tier), and
+     engine work to shrink A2-Full's working set. q128 is ruled out as the fix.
