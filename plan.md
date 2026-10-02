@@ -388,23 +388,30 @@ numbers need re-measuring on piv.
      but say which: a power-on number without its anchor is not a number.
    - **After the kernel, no probe is needed.** `dmesg` starts at `[    0.000000]`, and
      `journalctl -b -o short-monotonic -u namchaind` is kernel-relative.
-   - **Measured 2026-10-02** (`bench-results/2026-10-02-boot-time-vip/`), on a boot from the
-     power button, so `power-on-reset 0` and the PMIC in standby rather than a plug pull:
-     - **First bootloader byte → kernel: 16.63 s** on the wire, and the firmware's own counter
-       agrees — `Starting OS 17644 ms` with its first logged line at 1.13 s is 16.51 s. The
-       0.12 s between the two clocks is what the wire costs, which is this method's accuracy.
-     - **Kernel → rig published: 6.52 s** (namchaind started at 5.16 s), against piv's
-       13.2–14.2 s above. So the pedal's own boot is not the slow half.
-     - **First bootloader byte → rig published: 23.2 s**, plus the PMIC and boot-ROM time before
-       that first byte. The "~20 s power-on to sound" above was therefore if anything
-       **optimistic**, not pessimistic, and 3.6's relay keeps its justification.
-     - The 16.6 s splits 6.2 s EEPROM bootloader, **5.3 s SD and boot mode** (4.7 s of it one
-       gap, `Boot mode: SD` to `SD HOST` init), 5.0 s start.elf (2.2 s of that the 52.8 MB
-       initrd, 0.6 s the kernel) and 0.1 s BL31. The initrd is rtpi's slimming work's, and the
-       SD gap wants explaining before Phase 4 accepts it. The getty is up at 11.6 s of kernel
-       time.
-     - Still open: the plug-pull repeat (the pedal's real case), and the jack end — "rig
-       published" is not "sound".
+   - **Measured 2026-10-02**, three boots (`bench-results/2026-10-02-boot-time-vip/`). First
+     bootloader byte → kernel, the firmware's own counter for the same span, kernel → rig
+     published, and the total:
+     - **plug pull** (`power-on-reset 1`): 12.95 s, 12.82 s, 7.48 s → **20.43 s**
+     - a second, incidental power-on: 12.96 s, 12.84 s, 7.52 s → 20.48 s
+     - **power button**, PMIC standby (`power-on-reset 0`): 16.64 s, 16.51 s, 6.52 s → 23.16 s
+
+     The two clocks (Mac and the firmware's own) agree to 0.12–0.13 s every time, which is what
+     the wire costs, so that is this method's accuracy; the two power-on boots agree with each
+     other to 10 ms at every stage. **The pedal's case is the plug pull: a rig is playing 20.4 s
+     after the bootloader's first byte**, plus the PMIC and boot-ROM time before it, so the
+     "~20 s power-on to sound" above holds and 3.6's relay keeps its justification. "Rig
+     published" is still not "measured at the jack".
+     - The button boot's extra 3.7 s is **one silent stall** between `Halt: power_off: 0` and
+       `PCIEx1: PWR 0 DET_WAKE 0` inside the EEPROM bootloader (firmware clock 1.17 → 4.85 s);
+       the plug pull runs the same lines with no stall, so it is the standby path, not the
+       pedal's, and needs no explaining for 1.7.
+     - Everything from the second bootloader stage on is identical across the three boots to
+       within 0.03 s, including **4.66 s between `Boot mode: SD` and the SD card coming up** —
+       a fixed wait, the largest in a boot, and Phase 4's target. The 52.8 MB initrd is 2.2 s
+       more (rtpi's slimming work's) and the 14.7 MB kernel 0.6 s.
+     - The kernel half is 7.5 s on a plug pull (namchaind started at 5.80 s, getty at 12.3 s of
+       kernel time) against piv's 13.2–14.2 s above, so the pedal's own boot is no longer the
+       slow half. Still open: the jack end.
    - **"First audible output" is not on the wire either.** Capture the jack (`engine.record`, or
      the Mac's interface) on the same Mac clock as the serial reader, or report the engine's own
      readiness and say that is what it is. "Rig published" is not "sound".
@@ -1022,7 +1029,8 @@ runs namchain d4fb8e5 since the 2026-09-30 step 8 soak (Rik asked for it); and `
 (they moved to `devices/common` and changed). The piv phases below wait on that choice.
 
 Phase 1 on piv, on the SSL 2+. Steps 3–6 are done. Step 7 is measured on vip (its own note in
-Phase 1), leaving a plug-pull repeat and the jack end of the number.
+Phase 1), leaving only the jack end of the number: a rig plays 20.4 s after the bootloader's
+first byte on a plug pull.
 1. ~~The step 8 soak at q64~~: done 2026-09-30 with `scripts/soak/soak-replay` and the rebuilt
    ljoss session, PASS (step 8 in Phase 1 has the numbers).
 2. ~~Then the same soak with only the rsync, to isolate WiFi's cost~~: done 2026-09-30, 18:50–19:50,
