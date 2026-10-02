@@ -19,7 +19,7 @@ h1{margin:0 0 6px;font-size:28px}
 svg text{font-family:system-ui,-apple-system,sans-serif}
 </style></head><body>
 <header><h1>Pedal plan — dependency graph</h1>
-<p style="margin:0 0 10px;color:var(--muted)">Updated 2026-10-02 from <code>plan.md</code>.</p>
+<p style="margin:0 0 10px;color:var(--muted)">Updated 2026-10-02 from <code>plan.md</code> and <code>docs/multi-core.md</code>.</p>
 <div class="legend">
 <span><i class="sw" style="background:var(--doneFill);border-color:var(--done)"></i>Done</span>
 <span><i class="sw" style="background:var(--nextFill);border-color:var(--next)"></i>Next up</span>
@@ -58,10 +58,13 @@ const N={
  measure:[4,3,'next','1.7 Measure what D3 needs','only firmware boot time left'],
  mixer:[4,8,'done','2a.4 Mixer state','as code, at boot'],
  tibuart:[4,10,'todo','3.4 vip\'s header UART','for the Pico link'],
- proto:[4,12,'next','3.3 UART protocol','draft 2 proposed; U8 open'],
+ proto:[4,12,'next','3.3 UART protocol','draft 2 + battery msg; U8 open'],
  e2:[4,13,'next','E2 Lite, chains, density','decide the switch tiers'],
  soak:[5,2,'done','1.8 Hour soak: PASS','piv SSL, then vip codec'],
- twoamp:[5,4,'next','Two-amp rig: 98.9% peak','cause: 2× A2-Full > L2; pick rule'],
+ twoamp:[5,4,'done','Two-amp tail: memory','2× A2-Full > 512 KB L2'],
+ budget:[5,5,'done','Model budget 448 shipped','Full + Lite fit; else refused'],
+ mulcore:[6,5,'done','M4: multi-core rendering','chains only; off by default'],
+ thermal:[7,5,'done','Thermal soak, 1–3 cores','no heat; idle worker spins 19%'],
  cmeas:[5,8,'done','2a.5 Measure the codec','1 V FS, −93.5 dBFS(A)'],
  models:[5,13,'todo','3.8 Rigs ready to switch','≤ 50 ms, no click (D10)'],
  target:[6,2,'mile','FIRST TARGET','criteria met on vip'],
@@ -79,20 +82,23 @@ const N={
  p2:[10,8,'mile','PHASE 2 DONE','Guitar → codec → amp'],
  encl:[10,10,'done','Enclosure modelled','1590DD, board 1 in 3D'],
  power:[10,11,'done','Power, mounting decided','USB-C ext., nylon on FR4'],
- buy:[10,12,'todo','Buy: USB-C extension,','FR4 plate, standoffs'],
- p4:[11,7,'todo','Phase 4 Enclosure,','power and hardening'],
- goal:[12,7,'mile','THE PEDAL','gig-ready'],
+ singlecable:[11,11,'todo','Single USB-C input?','isolated DC-DC; measure first'],
+ battery:[11,12,'todo','9 V battery option','switched jack + UART meter'],
+ buy:[10,12,'todo','Buy: USB-C extension,','FR4 plate, standoffs, PP3 snap'],
+ p4:[12,7,'todo','Phase 4 Enclosure,','power and hardening'],
+ goal:[13,7,'mile','THE PEDAL','gig-ready'],
 };
 const E=[['docs','scripts'],['park','scripts'],['neon','scripts'],['agent','scripts'],
 ['scripts','deploy'],['devtib','deploy'],['byname','deploy'],['tibdown','rerun'],['tibdown','vip'],['rerun','deploy'],['vip','deploy'],
 ['deploy','library'],['deploy','resume'],['deploy','ljoss'],['library','ljoss'],['deploy','measure'],['library','measure'],
-['ljoss','redits'],['redits','soak'],['cab','soak'],['rerun','soak'],['soak','target'],['resume','target'],['soak','twoamp'],['twoamp','models'],
+['ljoss','redits'],['redits','soak'],['cab','soak'],['rerun','soak'],['soak','target'],['resume','target'],['soak','twoamp'],['twoamp','budget'],['twoamp','mulcore'],['budget','models'],['mulcore','thermal'],
 ['wm','inspect'],['inspect','wire'],['wire','dtree'],['dtree','mixer'],['mixer','cmeas'],['deploy','cmeas'],
 ['cmeas','csoak'],['cmeas','review'],['review','buffer'],['parts','buffer'],['opamp','buffer'],['buffer','strip'],['csoak','modify'],['strip','modify'],['modify','p2'],
 ['parts','boards'],['resume','service'],['service','proto'],['dtree','tibuart'],['boards','fw'],['proto','fw'],['tibuart','fw'],
 ['boards','picopwr'],['picopwr','relay'],['fw','relay'],['fw','display'],['measure','models'],['e1','e2'],['e2','models'],['models','fw'],['service','models'],['relay','p3'],['models','p3'],['target','p3'],
-['encl','p4'],['power','buy'],['buy','p4'],['target','p4'],['p2','p4'],['p3','p4'],['p4','goal']];
-const cols=13,rows=14,SW=PX*2+(cols-1)*CW+W,SH=PY*2+(rows-1)*RH+H+30;
+['encl','p4'],['power','buy'],['buy','p4'],['target','p4'],['p2','p4'],['p3','p4'],['thermal','p4'],
+['power','singlecable'],['power','battery'],['singlecable','p4'],['battery','p4'],['p4','goal']];
+const cols=14,rows=14,SW=PX*2+(cols-1)*CW+W,SH=PY*2+(rows-1)*RH+H+30;
 const g=document.getElementById('g');g.setAttribute('width',SW);g.setAttribute('height',SH);g.setAttribute('viewBox',`0 0 ${SW} ${SH}`);
 const pos=k=>{const[c,r]=N[k];return{x:PX+c*CW,y:PY+30+r*RH}};
 let s=`<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--line)"/></marker></defs>`;
