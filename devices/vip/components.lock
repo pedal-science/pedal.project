@@ -3,5 +3,5 @@
 host=vip
 board=Raspberry Pi 5 Model B Rev 1.1
 kernel=7.0.0-1017-raspi-realtime
-namchain=66f8dda8f1b4664c5d657eefa4b7b93c1fb795d0
-devices=438a71f
+namchain=bf108e50a162b78f913601e2db25a5c1a325d276
+devices=a23dead
