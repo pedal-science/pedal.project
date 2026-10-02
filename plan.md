@@ -807,6 +807,33 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
     and the ribbon's fold in the model.
   - **The Pico** takes its 5 V from vip, as 3.6's reboot test decides.
   - **9 V** isolated for the analogue side, and the star ground.
+  - **Proposal (open, 2026-10-02): collapse to a single USB-C input.** The 5 V side is already a
+    USB-C extension into vip's own port; the open question is only the analogue rail. Recommended
+    route: a small **isolated DC-DC converter** (5 V → 9 V, ~1 W, galvanically isolated —
+    RECOM/Traco/Murata class) fed from vip's 5 V header, then a common-mode filter and an LDO, then
+    the existing 78L33 for AVDD. The converter's isolation keeps the analogue ground separate from
+    vip's, meeting only at the star point, so the analogue supply still never carries vip's current;
+    the LDO and choke make the rail quiet. This drops the 9 V barrel and its cut-out, removes the
+    Cioks from the pedal's dependencies, and adds one converter module on the power stripboard. The
+    buffer's 9 V is headroom, not a requirement — a 5 V buffer is possible but tightens the margin —
+    so 9 V stays. It must be measured for hum/noise against the Cioks-fed LDO before it is decided.
+    Rejected: two Li-ion cells (one powering the analogue side while the other charges, switched by
+    a relay) — a cell is 2.5–4.2 V, so a boost converter beside the input stage is unavoidable, and
+    the charge controllers reintroduce the switching noise the scheme exists to avoid. If it
+    goes ahead, the converter is a switcher inside the box and needs the display's treatment:
+    the choke and LDO handle the conducted noise (the part that reaches the audio), and
+    distance/orientation — plus a steel screen only if it ends up near the 1 MΩ input — handle
+    the radiated noise; the handoff records the split.
+  - **Battery option (2026-10-02): a 9 V battery as an alternative to the 9 V barrel.** A
+    **switched** 2.1 mm DC socket disconnects the battery when the barrel is plugged, so the barrel
+    takes precedence and can never back-feed or charge the battery — which is what makes every
+    chemistry safe, including a lithium primary. Battery + through a 1N5817 to the 9 V rail, battery
+    − through the socket's switch to the star ground; the barrel keeps its own 1N5817. The enclosure
+    must leave room for a PP3 (≈48.5 × 26.5 × 17.5 mm) and its snap, reachable for replacement. A
+    680 kΩ + 330 kΩ divider (both in hand) from the 9 V rail to a Pico ADC gives a battery meter on
+    the display and, over a new UART message, in the pedal service's API; it shows voltage plus a
+    coarse threshold, not a percentage (the chemistries' discharge curves differ). Detail and the
+    chemistry/safety notes: the handoff's Power section.
 - **Mounting, and the case kept out of the ground scheme** (decided 2026-10-01):
   - A 3 mm FR4 plate, cut to the inside of the box, is screwed to the base plate. vip and both
     stripboards stand on **nylon** standoffs on the plate, held by nylon screws (countersunk from
@@ -846,6 +873,7 @@ exactly this: think about them now, fix them after the higher-priority work.
 | The pedal plans its own expression jack, but the MIDI Commander already has two expression inputs | — | Decide whether the pedal needs its own. If not, drop the jack and its GPIO, since MIDI already carries expression |
 | Only program and control changes get mapped at first | Enough to change rigs | A mapping table in the pedal service: PC → rig, CC → parameter (streamed only when `engine.schema` marks it rampable), bank select, notes |
 | Mono engine: pan and stereo effects are refused. Two chains give dual mono | namchain decision: declare and refuse | namchain's stereo work, when a stereo effect is actually wanted. The outputs are already two channels |
+| Two power inputs: 5 V USB-C for vip and a separate 9 V for the analogue side (Cioks), so the pedal depends on a multi-outlet PSU and has two panel cut-outs | Decided 2026-10-01 and measured on the bench; the single-cable route needs an isolated converter that must be measured before it is trusted | Collapse to one USB-C input: an isolated DC-DC (5 V → 9 V) + LDO off vip's 5 V header for the analogue rail. The two-battery alternative is rejected — see Phase 4 Power |
 | The whole rig renders on one core (core 3), and A2-Full alone takes ~58% of it | namchain renders single-threaded. Parallel rendering is its M4, off by default | Two chains on two isolated cores: isolate core 2 too, and admit namchain's parallel mode only once it passes soak and glitch tests. A2-Lite, or slimmed models, where a rig is too big |
 | No resampler for models: a NAM model must already be at 48 kHz | IRs no longer need one: `nc.cab.ir` resamples 44.1 and 96 kHz (Phase 1.2) | Resample at load in namchain, or convert on upload in the pedal service. Until then its upload API refuses a model that declares another rate (`docs/pedal-service.md`) |
 | One instrument input | D5 | A mic stage on RINPUT1, and a decision on phantom power (a DC-DC converter beside the ADC) |

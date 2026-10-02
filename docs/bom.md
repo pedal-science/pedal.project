@@ -104,8 +104,9 @@ the middle of the op-amp's input range.
 
 | Part | CPC code | Qty | £ each | Status | Notes |
 |---|---|---|---|---|---|
-| 2.1 mm DC socket, panel mount (Cliff FC681445) | PL17192 | 1 | 1.60 | in hand | The 9 V input. Check that it keeps 0 V off a metal case, which the star ground depends on |
-| 1N5817 Schottky diode | SC07407 | 3 | 0.10 | in hand | Reverse-polarity protection on the 9 V, the diode into the Pico's VSYS if it's fed from vip's header, and a spare |
+| 2.1 mm DC socket, panel mount, **switched** (Cliff FC681445 or a switched equivalent) | PL17192 | 1 | 1.60 | in hand | The 9 V input, and the battery disconnect: a switched socket's third contact opens when a plug is inserted, taking the battery out of circuit. Confirm the FC681445 is the switched version; if not, pick one. Check that it keeps 0 V off a metal case, which the star ground depends on |
+| 9 V battery snap (PP3 clip) | — | 1 | — | to buy | The battery − runs through the DC socket's switch to the star ground, so the barrel disconnects the battery. Its wires can be reversed, so the battery + goes through a 1N5817 (below). The meter's 680 kΩ + 330 kΩ divider is already in hand (Analogue input) |
+| 1N5817 Schottky diode | SC07407 | 3 | 0.10 | in hand | Reverse-polarity protection on the 9 V barrel and on the battery (two), and the diode into the Pico's VSYS if it's fed from vip's header. With the battery option all three are used — no spare |
 | 100 µF 25 V electrolytic (Panasonic FR) | CA09947 | 10 | 0.11 | in hand | 9 V bulk capacitance, the buffer's RC filter. Sold in tens |
 | 10 µF 50 V electrolytic (Panasonic FC) | CA09903 | 10 | 0.18 | in hand | Decoupling for the bias and the regulators. Sold in tens |
 | L78L33ACZ, 3.3 V 100 mA (TO-92) | SC16361 | 2 | 0.26 | in hand | AVDD from the 9 V side in 2c. The second one could later take the whole codec board off `tib`'s rails |

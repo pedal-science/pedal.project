@@ -203,6 +203,98 @@ A single-cable alternative exists — 24 V AUX at 2 A into an onboard buck for 5
 plus a linear regulator for 9 V — but it puts a 48 W-capable switcher inside the
 enclosure and gives up the isolation. Rejected for the first build.
 
+A better single-cable route is proposed (2026-10-02, open): one USB-C input, as the
+5 V side already is, with the analogue rail derived from vip's 5 V header through a
+small **isolated DC-DC converter** (5 V → 9 V, ~1 W, galvanically isolated — RECOM/Traco/
+Murata class) into a common-mode filter and an LDO, then the existing 78L33 for AVDD.
+The converter's isolation is what the Cioks outlet provides today — the analogue ground
+stays separate from vip's and meets it only at the star point — and the LDO plus choke are
+what make the rail quiet, since an isolated converter is still a switcher and leaks
+common-mode noise through its internal transformer. It drops the 9 V barrel and removes
+the Cioks from the pedal's dependencies, and must be measured against the Cioks-fed LDO
+before it is decided.
+
+The buffer's 9 V is headroom, not a requirement: the follower only swings ±1.4 V around
+its ~2.9 V bias, and the codec's full scale is 1.0 Vrms, so a 5 V buffer would work but
+tightens the margin. 9 V is kept. Rejected: running the analogue side from two Li-ion
+cells (one powering it while the other charges, switched by a relay). A cell is 2.5–4.2 V,
+so a boost converter beside the input stage is unavoidable, and the charge controllers are
+themselves switchers — the battery adds complexity and noise without improving on an
+isolated converter, and the measured limit is grounding, not supply noise
+(`plan.md` Phase 2b).
+
+For the single-cable route, the converter needs the same discipline as the display
+(the loudest digital source: routed away from the input, grounded on the digital side).
+The risk splits two ways, and shielding answers only one:
+
+- **Conducted noise** — differential ripple on the 9 V rail, and common-mode hash
+  returning through the transformer's inter-winding capacitance. This is what reaches the
+  audio, and a metal box does nothing: it is current on wires. Fix it electrically — a
+  common-mode choke and capacitors right at the converter's output, before the wires run
+  anywhere, then the low-noise LDO.
+- **Radiated noise** — the field off the transformer and the switching loop. A shield helps
+  here, but at ~50–300 kHz the near field is mostly magnetic, so a thin copper box does
+  little and a ferrous (steel) screen is what works. Loop area matters more: keep the
+  input and output pairs twisted and short.
+
+The only node that really warrants a shield is the buffer's 1 MΩ input, which is
+E-field-sensitive: if the converter ends up near the input jack or the high-Z trace in the
+1590DD layout, a small steel screen (grounded on the digital side, wires through feedthrough
+caps) is worth fitting. Otherwise distance and orientation — the converter as far from the
+input as possible, its magnetic axis pointed away — beat the box for free. Order of value:
+CM choke + LDO, grounding discipline, distance/orientation, then the shield. The measured
+limit is grounding (`plan.md` Phase 2b), so the shield is hygiene, not the cure.
+
+**Battery option (2026-10-02): a 9 V battery as an alternative to the barrel, any chemistry.**
+The barrel socket is a **switched** 2.1 mm jack whose third contact sits in the battery's
+*ground* path:
+
+```
+Battery +     ──▶ 1N5817 (Db) ──┐
+                                 ├──▶ 9 V rail ──▶ 100 Ω ──▶ 100 µF ──▶ buffer, and 78L33 ──▶ AVDD
+Barrel centre ──▶ 1N5817 (Dp) ──┘
+Barrel sleeve ──▶ star ground
+Battery −      ──▶ [socket switch] ──▶ star ground
+```
+
+Plugging the barrel opens that switch, so the barrel takes precedence and the battery is left
+floating — the barrel can never back-feed it, and in particular can never charge it. That single
+fact is what makes every chemistry safe to insert: an alkaline can't be reverse-charged, a NiMH
+can't be trickle-fed, and a lithium primary can never be charged (the one thing that would
+otherwise be a fire risk). `Dp` and `Db` are reverse-polarity protection; `Db` matters because a
+reversed battery snap would reverse-bias the 100 µF electrolytic. Over-voltage is a non-issue:
+nothing realistic exceeds ~9 V, against a 36 V op-amp, a 30 V LDO and a 25 V cap.
+
+Any 9 V chemistry works — the rail is happy from ~9.4 V down to ~4 V — but they differ in how
+they die and in how much a voltage meter can say:
+
+| Chemistry | Voltage over life | Clean? | End of life |
+|---|---|---|---|
+| Alkaline (6LR61) | 9.6 V → 5.4 V, smooth | Yes | Graceful sag — best for a voltage meter |
+| NiMH (6HR61 = 7.2 V, or 7-cell 8.4 V) | ~9.6 V hot → flat → cliff | Yes | Fairly abrupt |
+| Lithium primary | ~9.4 V, very flat | Yes — quietest | Flat, then fades |
+| 2S Li-ion rechargeable | 8.4 V → 6 V | Yes | Hard BMS cutoff |
+| Boost-lithium ("holds 9 V", USB-C) | Regulated 9 V | No — internal switcher | Hard cutoff; reads full until it dies |
+
+Only the boost-lithium introduces a switcher (and its noise); the others are clean DC. The only
+risk from any of them is operational, not physical: a BMS-protected lithium drops the rail
+instantly at end of charge, so the pedal dies with no meter warning and a possible pop.
+
+**Battery meter.** A 680 kΩ + 330 kΩ divider (~9 µA) from the 9 V rail to a Pico ADC — one of
+the three, alongside the expression jack's — plus a second sense on the barrel centre (100 kΩ
+pull-down) for "PSU present". The Pico draws it on the display and sends a new `BATTERY` message
+over UART (`docs/uart-protocol.md`) so the pedal service surfaces it in its API. Show **voltage
+plus a coarse low threshold**, not a percentage: chemistry detection from voltage alone isn't
+feasible (a fresh alkaline, a hot NiMH and a boost-lithium all read ~9 V), and the flat-discharge
+chemistries give no useful gauge anyway. A user-set "battery type" is the clean way to a real
+percentage later.
+
+**Plug/unplug.** The socket's break-before-make gap is a few ms; the 100 µF holds 10 mA for tens
+of ms, so switching barrel ↔ battery is glitch-free whether the battery is present, charged or
+depleted. The one unavoidable droop is unplugging the barrel onto a *depleted* battery. The
+enclosure must leave room for a PP3 (≈48.5 × 26.5 × 17.5 mm) and its snap, reachable for
+replacement, wired on the analogue side.
+
 ### Control surface (all on the Pico — `tib` never sees any of it)
 
 **Display module** — 2.4" ST7789, 320×240, 4-wire SPI, board V1.2, with an EC11

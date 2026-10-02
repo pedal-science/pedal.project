@@ -95,6 +95,7 @@ payload are ignored.
 | 0x08 | `ERROR` | Core → Pico | `code`, `text` str8 |
 | 0x09 | `LOG` | Pico → Core | reserved |
 | 0x0A | `CFG` | Core → Pico | reserved |
+| 0x0B | `BATTERY` | Pico → Core | `psu_present` u8, `rail_mv` u16 LE — proposed (battery meter, plan Phase 4) |
 | other | — | — | ignore |
 
 Version 1.0 is this document. Nothing outside the bench speaks draft 1, so draft 2's changes
