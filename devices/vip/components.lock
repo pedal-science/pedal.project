@@ -2,6 +2,6 @@
 # devices/<host>/apply call; scripts/status compares it with the host. Commit it with the change.
 host=vip
 board=Raspberry Pi 5 Model B Rev 1.1
-kernel=7.0.0-1017-raspi-realtime
+kernel=7.0.0-1017-raspi-realtime-numaemu1
 namchain=bf108e50a162b78f913601e2db25a5c1a325d276
 devices=a23dead

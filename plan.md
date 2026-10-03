@@ -1003,6 +1003,23 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**vip's kernel has NUMA emulation on** (2026-10-03). The one config line Ubuntu ships off,
+`CONFIG_NUMA_EMU=y` (beside `CONFIG_NUMA=y` and `CONFIG_NUMA_MEMBLKS=y`), is now on: vip runs
+`7.0.0-1017-raspi-realtime-numaemu1`, the pedal's stock kernel rebuilt from the exact Ubuntu
+source tag with nothing else changed, tried through vip-boot's slot machinery (slot b promoted,
+slot a keeps the stock kernel) and recorded in `devices/vip/components.lock`. rtpi owns the
+whole loop now: `make vip-rt` (build; `config/vip-numa-emu.fragment`, rtpi `b1736c4`),
+`make vip-install-rt`, `make vip-try`. Full record:
+[bench-results/vip-card/vip-numa-emu.md](bench-results/vip-card/vip-numa-emu.md).
+
+Emulation activates only with `numa=fake=N` on the command line, which this boot does not set
+(the stock kernel answered that argument with "Malformed early option 'numa'"; this one should
+not — try it with `vip-boot try-args 'numa=fake=4'`). Two follow-ups were noted but not done:
+the module trim for future kernel builds (vip loads 74 of the 6,470 modules the build compiles;
+tib-rt.sh already has the localmodconfig + keep-list + coverage mechanism), and folding the
+rebuilt kernel into the image build if emulation proves worth keeping. Nothing is pushed
+(rtpi `b1736c4` and this entry are local).
+
 **The app can be its own device** (2026-10-02). ljoss has **Connect to this computer**: it runs
 `namchaind` as a child of the app, captures from a CoreAudio **input device** (or loops a WAV) and
 plays through an **output device**, both chosen by UID in Settings → Hardware. While it is on, the
