@@ -1015,10 +1015,12 @@ whole loop now: `make vip-rt` (build; `config/vip-numa-emu.fragment`, rtpi `b173
 Emulation activates only with `numa=fake=N` on the command line, which this boot does not set
 (the stock kernel answered that argument with "Malformed early option 'numa'"; this one should
 not — try it with `vip-boot try-args 'numa=fake=4'`). Two follow-ups were noted but not done:
-the module trim for future kernel builds (vip loads 74 of the 6,470 modules the build compiles;
-tib-rt.sh already has the localmodconfig + keep-list + coverage mechanism), and folding the
-rebuilt kernel into the image build if emulation proves worth keeping. Nothing is pushed
-(rtpi `b1736c4` and this entry are local).
+folding the rebuilt kernel into the image build if emulation proves worth keeping, and —
+done now — the module trim: vip's kernel build now trims by default (rtpi `955c2b9`), 107
+modules instead of 6,646, with the coverage gate and the module list in rtpi
+`results/vip-trimmed-modules-*.txt`. The trimmed kernel is built and verified but not deployed;
+deploying it is its own try-kernel step. Nothing is pushed (rtpi `955c2b9`, `b1736c4` and this
+entry are local).
 
 **The app can be its own device** (2026-10-02). ljoss has **Connect to this computer**: it runs
 `namchaind` as a child of the app, captures from a CoreAudio **input device** (or loops a WAV) and

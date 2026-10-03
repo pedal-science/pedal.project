@@ -91,6 +91,34 @@ set — so the pedal boots exactly as before. `vip-boot try-args 'numa=fake=4'` 
 one-shot way to try it; the stock kernel answered that argument with
 "Malformed early option 'numa'" and this one should not.
 
+## Module trim (2026-10-03, after the deploy)
+
+The build now trims modules by default (rtpi `955c2b9`): `make localmodconfig` driven by the
+board's own `/proc/modules`, then `config/vip-keep.fragment` (snd-usb-audio, for future
+USB-interface measurements), then the coverage gate — every module the board loads must be
+built in or present, or recorded in `TRIMMED_OK` with a reason. `--no-trim` reproduces the full
+6,646-module set; trimmed releases are suffixed `-trimmed`.
+
+Numbers: **107 modules instead of 6,646** (`4.2M` vs `149M` compressed), release
+`7.0.0-1017-raspi-realtime-numaemu1-trimmed`, all 76 loaded modules covered. The full list is
+committed in rtpi `results/vip-trimmed-modules-…-trimmed.txt`.
+
+The coverage gate earned its keep on the first trimmed build, finding two real things:
+
+- `snd_compress` and `ac97_bus` load on the board only as dependency edges out of
+  `snd-soc-core`; their selectors (`SND_SOC_AC97_BUS`, `SND_SOC_COMPRESS`) belong to codec
+  drivers the trim removes. The trimmed `snd-soc-core.ko` has zero ac97/compress references
+  (checked with `nm -u`), so both are recorded removals (`TRIMMED_OK`), not keeps — forcing
+  them back would have dragged the unused codec set along (they are promptless symbols only a
+  `select` can set).
+- `brcmfmac_cyw` has no CONFIG symbol of its own but is built unconditionally with `BRCMFMAC`,
+  so it survives the trim; the gate proves it rather than assuming it.
+
+The trimmed kernel is **built and verified, not deployed** — deploying it is its own
+try-kernel step (`make vip-install-rt` then `make vip-try`), and the deploy script's module
+gate is trim-aware (a full build must match the stock set exactly; a trimmed build must cover
+every module the board loads).
+
 ## Recording
 
 - `devices/vip/components.lock`: `kernel=7.0.0-1017-raspi-realtime-numaemu1` (rewritten from
@@ -113,11 +141,6 @@ one-shot way to try it; the stock kernel answered that argument with
 
 ## Follow-up worth doing
 
-**Module trim for vip kernel builds.** vip loads 74 modules; the config builds 6,470, and the
-module set is where the build's hour goes. tib-rt.sh already has the mechanism: pull
-`/proc/modules` off the board, `make localmodconfig`, a keep-list fragment for hardware not
-attached on build day (wifi first), and an assertion that every loaded module is built-in or
-present. A vip version is the same three pieces (a `--trim` flag in vip-ubuntu-rt.sh, a
-`config/vip-keep.fragment`, the coverage check), tried with its own try-kernel boot. Left
-undone deliberately: this build had to differ from the shipped kernel by one line, and a trim
-is a second variable worth its own test.
+**Fold the rebuilt kernel into the image build** if NUMA emulation (and the trim) prove worth
+keeping: a future `make-card` still builds the stock kernel into the image, and both custom
+kernels are recorded overlays on the running host (components.lock), not part of the card.
