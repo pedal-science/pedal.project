@@ -1,0 +1,114 @@
+{
+  "$schema": "../ljoss-rig.schema.json",
+  "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3300",
+  "name": "Brit Crunch",
+  "layout": "single",
+  "chains": [
+    {
+      "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3301",
+      "name": "Guitar",
+      "source": "guitar",
+      "input": {
+        "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3302",
+        "values": {}
+      },
+      "elements": [
+        {
+          "block": {
+            "_0": {
+              "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3310",
+              "componentID": "amp.britplexi",
+              "isEnabled": true,
+              "values": {
+                "engine.model": { "option": { "_0": "brit/plexi-hi" } },
+                "bass": { "number": { "_0": 6 } },
+                "mid": { "number": { "_0": 4 } },
+                "treble": { "number": { "_0": 7 } },
+                "gain": { "number": { "_0": 7.5 } }
+              }
+            }
+          }
+        },
+        {
+          "block": {
+            "_0": {
+              "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3311",
+              "componentID": "cab.412brit",
+              "isEnabled": true,
+              "values": {
+                "engine.ir": { "option": { "_0": "cab/412-v30" } },
+                "level": { "number": { "_0": 4 } },
+                "mic": { "option": { "_0": "57" } }
+              }
+            }
+          }
+        },
+        {
+          "parallel": {
+            "_0": {
+              "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3320",
+              "splitMode": "yCable",
+              "crossoverHz": 800,
+              "balance": 0,
+              "lanes": [
+                {
+                  "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3321",
+                  "elements": [
+                    {
+                      "block": {
+                        "_0": {
+                          "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3330",
+                          "componentID": "delay.digital",
+                          "isEnabled": true,
+                          "values": {
+                            "time": { "number": { "_0": 380 } },
+                            "feedback": { "number": { "_0": 7 } },
+                            "mix": { "number": { "_0": 30 } },
+                            "sync": { "flag": { "_0": false } }
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "level": -6,
+                  "pan": 0,
+                  "isMuted": false,
+                  "invertPhase": false
+                },
+                {
+                  "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3322",
+                  "elements": [],
+                  "level": 0,
+                  "pan": 0,
+                  "isMuted": false,
+                  "invertPhase": false
+                }
+              ]
+            }
+          }
+        },
+        {
+          "block": {
+            "_0": {
+              "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3340",
+              "componentID": "eq.highcut",
+              "isEnabled": true,
+              "values": {
+                "freq": { "number": { "_0": 6500 } },
+                "slope": { "option": { "_0": "24 dB" } }
+              }
+            }
+          }
+        }
+      ],
+      "output": {
+        "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3303",
+        "values": {
+          "level": { "number": { "_0": -3 } }
+        }
+      }
+    }
+  ],
+  "createdAt": "2026-01-02T10:30:00Z",
+  "modifiedAt": "2026-01-02T11:00:00Z"
+}

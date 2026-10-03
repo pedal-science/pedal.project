@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns"
+ xmlns:y="http://www.yworks.com/xml/graphml"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+<key id="label" for="node" attr.name="label" attr.type="string"/>
+<key id="elabel" for="edge" attr.name="label" attr.type="string"/>
+<graph id="1 · ljoss rig tree" edgedefault="directed">
+<node id="rig"><data key="label">Rig
+id: uuid
+name: string
+layout: RigLayout
+chains: SignalChain[]
+createdAt / modifiedAt: ISO-8601</data></node>
+<node id="chain"><data key="label">SignalChain
+id: uuid
+name: string
+source: SourceKind
+input / output: IONode
+elements: ChainElement[]</data></node>
+<node id="element"><data key="label">ChainElement
+block: Block
+parallel: ParallelSection
+a series/parallel tree —
+deliberately not a DAG</data></node>
+<node id="block"><data key="label">Block
+id: uuid
+componentID: string (catalogue id)
+isEnabled: bool = true
+values: {param → ParamValue}</data></node>
+<node id="pv"><data key="label">ParamValue
+number(Double)
+option(String)
+flag(Bool)
+on disk: {&quot;case&quot;: {&quot;_0&quot;: …}}</data></node>
+<node id="par"><data key="label">ParallelSection
+id: uuid
+splitMode: SplitMode = yCable
+crossoverHz / balance: number
+lanes: Lane[]</data></node>
+<node id="lane"><data key="label">Lane
+id: uuid
+elements: ChainElement[]
+level: dB · pan: −1…1
+isMuted · invertPhase</data></node>
+<node id="ionode"><data key="label">IONode
+id: uuid
+values: {param → ParamValue}
+fixed endpoints — never
+removable or reorderable</data></node>
+<node id="lay"><data key="label">RigLayout
+single
+dual
+a viewing preference — hidden
+chains are still sent</data></node>
+<node id="src"><data key="label">SourceKind
+guitar · bass · vocal</data></node>
+<node id="sm"><data key="label">SplitMode
+yCable
+aB
+crossover
+dynamic
+only yCable reaches
+today&#x27;s engine</data></node>
+<node id="cat"><data key="label">Catalogue component
+componentID → ComponentSpec
+(ParamSpec[]: kind, bounds,
+default, unit)
+defaults live here,
+not in the rig file</data></node>
+<node id="n1"><data key="label">one file per rig
+saved by Store/RigLibrary.swift;
+unknown keys are ignored on load</data></node>
+<edge id="rig-chain-0" source="rig" target="chain"><data key="elabel">chains 1…N</data></edge>
+<edge id="rig-lay-1" source="rig" target="lay"><data key="elabel">layout</data></edge>
+<edge id="chain-ionode-2" source="chain" target="ionode"><data key="elabel">input 1</data></edge>
+<edge id="chain-ionode-3" source="chain" target="ionode"><data key="elabel">output 1</data></edge>
+<edge id="chain-src-4" source="chain" target="src"><data key="elabel">source</data></edge>
+<edge id="chain-element-5" source="chain" target="element"><data key="elabel">elements 0…N</data></edge>
+<edge id="element-block-6" source="element" target="block"><data key="elabel">block</data></edge>
+<edge id="element-par-7" source="element" target="par"><data key="elabel">parallel</data></edge>
+<edge id="block-pv-8" source="block" target="pv"><data key="elabel">values 0…N — only what</data></edge>
+<edge id="ionode-pv-9" source="ionode" target="pv"><data key="elabel">values 0…N</data></edge>
+<edge id="par-lane-10" source="par" target="lane"><data key="elabel">lanes (≥2 after normalize)</data></edge>
+<edge id="lane-element-11" source="lane" target="element"><data key="elabel">elements 0…N — the recursion</data></edge>
+<edge id="par-sm-12" source="par" target="sm"><data key="elabel">splitMode</data></edge>
+<edge id="block-cat-13" source="block" target="cat"><data key="elabel">componentID →</data></edge>
+</graph>
+<graph id="2 · namchain rig document" edgedefault="directed">
+<node id="doc"><data key="label">Rig document
+name?: string
+meta?: object
+chains  — or —
+nodes + connections
+(exactly one form)</data></node>
+<node id="chain"><data key="label">Chain
+id: string (non-empty)
+name?: string
+input_channel?: int ≥ 0
+output_channel?: int ≥ 0
+nodes: Node[]
+connections?: Connection[]
+meta?: object</data></node>
+<node id="node"><data key="label">Node
+type: string (required)
+id? · element? (one needed)
+role?: string
+bypass?: bool = false
+params: {…: number}
+strings: {…: string}
++ any other key → inline
+parameter: number | bool | string</data></node>
+<node id="conn"><data key="label">Connection
+from: node id
+from_port?: int = 0
+to: node id
+to_port?: int = 0</data></node>
+<node id="meta"><data key="label">meta
+any object
+carried, never parsed</data></node>
+<node id="nt"><data key="label">NodeType
+the node&#x27;s type id,
+from engine.schema (page 3).
+Unknown keys are refused, not
+ignored — a client&#x27;s own data
+goes in meta.</data></node>
+<node id="n2"><data key="label">strict by contract
+the parser (src/graph/rig.cpp) refuses unknown keys
+at every level except the node</data></node>
+<edge id="doc-chain-0" source="doc" target="chain"><data key="elabel">chains 1…N</data></edge>
+<edge id="doc-node-1" source="doc" target="node"><data key="elabel">nodes (legacy form → chain &#x27;main&#x27;)</data></edge>
+<edge id="doc-conn-2" source="doc" target="conn"><data key="elabel">connections (legacy form)</data></edge>
+<edge id="chain-node-3" source="chain" target="node"><data key="elabel">nodes 1…N — order is irrelevant,</data></edge>
+<edge id="chain-conn-4" source="chain" target="conn"><data key="elabel">connections 0…N</data></edge>
+<edge id="conn-node-5" source="conn" target="node"><data key="elabel">from →</data></edge>
+<edge id="conn-node-6" source="conn" target="node"><data key="elabel">to →</data></edge>
+<edge id="node-nt-7" source="node" target="nt"><data key="elabel">type = a catalogue id</data></edge>
+<edge id="doc-meta-8" source="doc" target="meta"><data key="elabel">meta</data></edge>
+<edge id="chain-meta-9" source="chain" target="meta"><data key="elabel">meta</data></edge>
+<edge id="node-meta-10" source="node" target="meta"><data key="elabel">meta</data></edge>
+</graph>
+<graph id="3 · engine.schema catalogue" edgedefault="directed">
+<node id="prim"><data key="label">NodeType
+id · name · category
+kind: &quot;primitive&quot;
+ports: {in[], out[]}
+arity: Arity | null
+flags: Flags
+latency_samples · tail_samples
+params: Param[]
+per_port_params: Param[]</data></node>
+<node id="macro"><data key="label">MacroType
+id · name · category
+kind: &quot;macro&quot;
+inputs · outputs
+channels = 1 · stereo = false
+bypass: roles | crossfade
+roles: Role[]
+params: Param[] (+targets)</data></node>
+<node id="port"><data key="label">Port
+name: in0 / out0
+channels: 1
+optional: inputs only —
+unconnected = silence</data></node>
+<node id="arity"><data key="label">Arity
+param: &quot;inputs&quot; | &quot;outputs&quot;
+min · max · default
+only nc.split / nc.mix;
+null for a fixed shape</data></node>
+<node id="flags"><data key="label">Flags
+stateful
+has_lookback
+has_tail
+bypassable (1→1 only)
+block_delay</data></node>
+<node id="param"><data key="label">Param
+id · name
+kind: ParamKind
+unit: Hz | dB | ms | … | null
+default: number | null
+min / max · min_inclusive
+max_inclusive
+step · snap
+scale: ParamScale
+rampable · patchable · hidden
+required · one_of · one_of_required
+options | options_from
+aliases</data></node>
+<node id="option"><data key="label">Option
+value: the wire value
+label: the display label</data></node>
+<node id="role"><data key="label">Role
+role: addressable name
+type: a primitive id</data></node>
+<node id="target"><data key="label">Target
+role: which lowered node
+param: its parameter
+transform: Transform
+scale: number</data></node>
+<node id="kind"><data key="label">ParamKind
+number
+option
+flag</data></node>
+<node id="scale"><data key="label">ParamScale
+linear
+log</data></node>
+<node id="tf"><data key="label">Transform
+direct
+db_to_linear
+linear_to_db
+one_minus
+scale_by</data></node>
+<node id="plist"><data key="label">11 primitives
+nc.input · nc.output · nc.gain
+nc.eq.biquad · nc.delay · nc.nam
+nc.cab.ir · nc.split · nc.mix
+nc.bypass · nc.unit_delay</data></node>
+<node id="mlist"><data key="label">7 macros
+fx.eq.bands · fx.eq.tilt
+fx.filter.cut · fx.mix.drywet
+fx.delay.feedback
+fx.amp.tonestack · fx.cab.ir</data></node>
+<node id="n3"><data key="label">one array, palette order
+primitives and macros share the list,
+told apart by kind</data></node>
+<edge id="prim-port-0" source="prim" target="port"><data key="elabel">ports.in / ports.out</data></edge>
+<edge id="prim-arity-1" source="prim" target="arity"><data key="elabel">arity</data></edge>
+<edge id="prim-flags-2" source="prim" target="flags"><data key="elabel">flags</data></edge>
+<edge id="prim-param-3" source="prim" target="param"><data key="elabel">params 0…N</data></edge>
+<edge id="prim-param-4" source="prim" target="param"><data key="elabel">per_port_params 0…N (runtime, by port)</data></edge>
+<edge id="macro-role-5" source="macro" target="role"><data key="elabel">roles</data></edge>
+<edge id="role-prim-6" source="role" target="prim"><data key="elabel">type = a primitive id</data></edge>
+<edge id="macro-param-7" source="macro" target="param"><data key="elabel">params 0…N</data></edge>
+<edge id="param-target-8" source="param" target="target"><data key="elabel">targets (macro params only)</data></edge>
+<edge id="target-role-9" source="target" target="role"><data key="elabel">role →</data></edge>
+<edge id="target-tf-10" source="target" target="tf"><data key="elabel">transform</data></edge>
+<edge id="param-kind-11" source="param" target="kind"><data key="elabel">kind</data></edge>
+<edge id="param-scale-12" source="param" target="scale"><data key="elabel">scale</data></edge>
+<edge id="param-option-13" source="param" target="option"><data key="elabel">options (one of options / options_from)</data></edge>
+<edge id="plist-prim-14" source="plist" target="prim"><data key="elabel">one entry per type</data></edge>
+<edge id="mlist-macro-15" source="mlist" target="macro"><data key="elabel">one entry per type</data></edge>
+</graph>
+<graph id="4 · tree → document → lowered graph" edgedefault="directed">
+<node id="cin"><data key="label">Chain input (IONode)
+element = input UUID</data></node>
+<node id="cout"><data key="label">Chain output (IONode)
+values.level → gain_db</data></node>
+<node id="amp"><data key="label">Block · amp.britplexi
+engine.model: option
+bass/mid/treble: 0–10 knobs
+gain/master: out-of-band</data></node>
+<node id="cab"><data key="label">Block · cab.412brit
+engine.ir: option
+level: number
+mic/distance/axis:
+out-of-band</data></node>
+<node id="del"><data key="label">Block · delay.digital
+time: ms
+feedback: 0–10 knob
+mix: 0–100
+sync: out-of-band</data></node>
+<node id="eq"><data key="label">Block · eq.highcut
+freq: Hz
+slope: &quot;12 dB&quot; | &quot;24 dB&quot;</data></node>
+<node id="par"><data key="label">ParallelSection · yCable
+lanes: 2…N
+one element id on
+split and mix</data></node>
+<node id="lane"><data key="label">Lane
+level: −6 dB
+isMuted · invertPhase</data></node>
+<node id="unmapped"><data key="label">a block with no mapping
+(verb.*, dyn.*, …)</data></node>
+<node id="ab"><data key="label">ParallelSection
+aB | crossover | dynamic</data></node>
+<node id="ref1"><data key="label">refused:
+&quot;has no engine equivalent
+on this device&quot;</data></node>
+<node id="ref2"><data key="label">refused by name:
+&quot;only a Y split is built&quot; —
+not quietly flattened</data></node>
+<node id="bnote"><data key="label">Block.isEnabled = false
+→ every lowered node gets
+bypass: true (state stays warm)</data></node>
+<node id="nin"><data key="label">nc.input
+id: &quot;in&quot;
+element = input UUID</data></node>
+<node id="nout"><data key="label">nc.output
+id: &quot;out&quot;
+element = output UUID</data></node>
+<node id="nam"><data key="label">nc.nam
+model: library id</data></node>
+<node id="tone"><data key="label">fx.amp.tonestack
+bass/mid/treble: dB
+mid_freq: Hz</data></node>
+<node id="cabn"><data key="label">fx.cab.ir
+ir: library id
+low_cut / high_cut: Hz
+level_db: dB</data></node>
+<node id="deln"><data key="label">fx.delay.feedback
+time: ms
+feedback: 0…0.95
+mix: 0…1</data></node>
+<node id="cutn"><data key="label">fx.filter.cut
+high_cut: Hz
+high_slope: &quot;12&quot; | &quot;24&quot;</data></node>
+<node id="split"><data key="label">nc.split
+outputs = lane count</data></node>
+<node id="mix"><data key="label">nc.mix
+inputs = lane count
+lane i on port i</data></node>
+<node id="gain"><data key="label">nc.gain
+gain (linear) — lane
+gain_db (dB) — output level</data></node>
+<node id="chnote"><data key="label">channel binding
+chain input_channel / output_channel
+by position — chain 0 → channel 0</data></node>
+<node id="bb"><data key="label">nc.eq.biquad
+role: bass</data></node>
+<node id="bm"><data key="label">nc.eq.biquad
+role: mid</data></node>
+<node id="bt"><data key="label">nc.eq.biquad
+role: treble</data></node>
+<node id="clow"><data key="label">nc.eq.biquad
+role: low — highpass</data></node>
+<node id="cir"><data key="label">nc.cab.ir
+role: ir</data></node>
+<node id="chigh"><data key="label">nc.eq.biquad
+role: high — lowpass</data></node>
+<node id="clev"><data key="label">nc.gain
+role: level</data></node>
+<node id="ddry"><data key="label">nc.gain
+role: dry</data></node>
+<node id="dsum"><data key="label">nc.mix
+role: sum</data></node>
+<node id="dline"><data key="label">nc.delay
+role: line</data></node>
+<node id="dfb"><data key="label">nc.gain
+role: fb</data></node>
+<node id="dtap"><data key="label">nc.unit_delay
+role: tap — block_delay</data></node>
+<node id="dwet"><data key="label">nc.gain
+role: wet</data></node>
+<node id="dout"><data key="label">nc.mix
+role: out</data></node>
+<node id="idnote"><data key="label">engine-minted ids
+a lowered node is &lt;element&gt;/&lt;role&gt;
+a client draws rig.get&#x27;s
+&quot;lowered&quot; view, it does not
+rebuild it from roles</data></node>
+<edge id="cin-nin-0" source="cin" target="nin"><data key="elabel">element = input UUID</data></edge>
+<edge id="cout-nout-1" source="cout" target="nout"><data key="elabel">element = output UUID</data></edge>
+<edge id="cout-gain-2" source="cout" target="gain"><data key="elabel">level → gain_db (−60…24)</data></edge>
+<edge id="amp-nam-3" source="amp" target="nam"><data key="elabel">engine.model → &quot;model&quot;</data></edge>
+<edge id="amp-tone-4" source="amp" target="tone"><data key="elabel">bass/mid/treble:</data></edge>
+<edge id="cab-cabn-5" source="cab" target="cabn"><data key="elabel">engine.ir → &quot;ir&quot;</data></edge>
+<edge id="del-deln-6" source="del" target="deln"><data key="elabel">time direct</data></edge>
+<edge id="eq-cutn-7" source="eq" target="cutn"><data key="elabel">freq → high_cut</data></edge>
+<edge id="par-split-8" source="par" target="split"><data key="elabel">outputs = lanes</data></edge>
+<edge id="par-mix-9" source="par" target="mix"><data key="elabel">inputs = lanes</data></edge>
+<edge id="lane-gain-10" source="lane" target="gain"><data key="elabel">level/mute/polarity →</data></edge>
+<edge id="split-deln-11" source="split" target="deln"><data key="elabel">lane 0 series…</data></edge>
+<edge id="deln-gain-12" source="deln" target="gain"><data key="elabel">…then the lane&#x27;s gain</data></edge>
+<edge id="gain-mix-13" source="gain" target="mix"><data key="elabel">port 0</data></edge>
+<edge id="split-mix-14" source="split" target="mix"><data key="elabel">empty lane = dry path:</data></edge>
+<edge id="unmapped-ref1-15" source="unmapped" target="ref1"><data key="elabel"></data></edge>
+<edge id="ab-ref2-16" source="ab" target="ref2"><data key="elabel"></data></edge>
+<edge id="tone-bb-17" source="tone" target="bb"><data key="elabel">role bass</data></edge>
+<edge id="bb-bm-18" source="bb" target="bm"><data key="elabel">signal</data></edge>
+<edge id="bm-bt-19" source="bm" target="bt"><data key="elabel">signal</data></edge>
+<edge id="tone-bb-20" source="tone" target="bb"><data key="elabel">bass → gain_db</data></edge>
+<edge id="tone-bm-21" source="tone" target="bm"><data key="elabel">mid → gain_db</data></edge>
+<edge id="tone-bt-22" source="tone" target="bt"><data key="elabel">treble → gain_db</data></edge>
+<edge id="tone-bm-23" source="tone" target="bm"><data key="elabel">mid_freq → freq</data></edge>
+<edge id="cabn-clow-24" source="cabn" target="clow"><data key="elabel">role low — highpass @ low_cut</data></edge>
+<edge id="clow-cir-25" source="clow" target="cir"><data key="elabel">signal</data></edge>
+<edge id="cir-chigh-26" source="cir" target="chigh"><data key="elabel">role high — lowpass @ high_cut</data></edge>
+<edge id="chigh-clev-27" source="chigh" target="clev"><data key="elabel">role level — level_db</data></edge>
+<edge id="deln-ddry-28" source="deln" target="ddry"><data key="elabel">input goes two ways: dry…</data></edge>
+<edge id="deln-dsum-29" source="deln" target="dsum"><data key="elabel">…and into the loop</data></edge>
+<edge id="dsum-dline-30" source="dsum" target="dline"><data key="elabel">signal</data></edge>
+<edge id="dline-dfb-31" source="dline" target="dfb"><data key="elabel">signal</data></edge>
+<edge id="dfb-dtap-32" source="dfb" target="dtap"><data key="elabel">signal</data></edge>
+<edge id="dtap-dsum-33" source="dtap" target="dsum"><data key="elabel">feedback loop — tap breaks the cycle</data></edge>
+<edge id="dline-dwet-34" source="dline" target="dwet"><data key="elabel">wet tap</data></edge>
+<edge id="ddry-dout-35" source="ddry" target="dout"><data key="elabel">dry</data></edge>
+<edge id="dwet-dout-36" source="dwet" target="dout"><data key="elabel">wet</data></edge>
+</graph>
+</graphml>

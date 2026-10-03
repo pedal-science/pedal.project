@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "namchain-rig-document.schema.json",
+  "title": "namchain rig document",
+  "description": "The rig document the namchain engine runs: what `rig.apply` accepts, what `rig.get` returns, and what the daemon keeps as its rig file (`last.json`). Source of truth: the parser in namchain src/graph/rig.cpp (`parse_document_json`), which is the contract — it refuses unknown keys at every level except the node, where any key that is not reserved is a parameter.\n\nThis is the form ljoss's rig tree is transformed into: the designer document (ljoss-rig.schema.json) is flattened by ljoss's DocumentEncoder into these nodes and connections, then `rig.apply`-ed to the daemon. The app's document stays the tree; this document is a sink, never re-hydrated.\n\nTwo accepted shapes, exactly one of them in a document:\n1. `chains` — the shape documents use now: named chains, each with its own graph and device channel binding (what ljoss sends).\n2. the legacy top-level `nodes`/`connections` — one graph, one chain with id \"main\" and channels 0/0 (what rigs/guitar-chain.json and older rig files are).\n\nThe parser is strict where the designer format is tolerant: an unknown key here is a refused mistake, not ignored. A client's own data has a place — the `meta` object, which the engine carries and never reads.",
+  "type": "object",
+  "oneOf": [
+    {
+      "title": "chains form",
+      "description": "A document of named chains. A chain binds device channels itself; there is no nc.input/nc.output channel parameter.",
+      "required": ["chains"],
+      "not": { "anyOf": [{ "required": ["nodes"] }, { "required": ["connections"] }] },
+      "properties": {
+        "name": { "type": "string" },
+        "chains": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/chain" }
+        },
+        "meta": { "$ref": "#/$defs/meta" }
+      },
+      "additionalProperties": false
+    },
+    {
+      "title": "legacy single-graph form",
+      "description": "The shape everything was in before documents existed: one graph, one chain ('main', channels 0 and 0). A compatibility rule, not a special case.",
+      "required": ["nodes"],
+      "not": { "required": ["chains"] },
+      "properties": {
+        "name": { "type": "string" },
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+        "connections": { "type": "array", "items": { "$ref": "#/$defs/connection" } },
+        "meta": { "$ref": "#/$defs/meta" }
+      },
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "meta": {
+      "type": "object",
+      "description": "The client's own data. Must be an object; the engine stores it and never parses it. Free-form content inside."
+    },
+    "node": {
+      "title": "node",
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "id": { "type": "string", "description": "Unique within the chain; what connections and rig.patch name. Optional — if absent the engine mints one from `element` (and `role`)." },
+        "type": { "type": "string", "description": "The engine type: nc.gain, nc.nam, fx.delay.feedback, … One of the ids engine.schema publishes (namchain-engine-schema.schema.json)." },
+        "element": { "type": "string", "description": "The client's own identity for the document thing this node came from — ljoss puts a block's or parallel section's UUID here. Stored and returned verbatim; NOT required to be unique (an amp is two nodes sharing one element). At least one of id / element must be present." },
+        "role": { "type": "string", "description": "Which node of a macro's lowered graph this is, for element+role addressing (docs/macros.md). The engine's word, not the client's." },
+        "bypass": { "type": "boolean", "default": false, "description": "A bypassed node keeps running and passes its dry input through, so its state stays warm and un-bypassing does not click. Only allowed on 1→1 nodes." },
+        "params": {
+          "type": "object",
+          "additionalProperties": { "type": "number" },
+          "description": "Explicit numeric parameters. Inline shorthand keys can still override these."
+        },
+        "strings": {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "description": "Explicit string parameters (a model or IR name, an option value). Inline shorthand keys can still override these."
+        },
+        "meta": { "$ref": "#/$defs/meta" }
+      },
+      "patternProperties": {
+        "^(?!(?:id|type|element|role|params|strings|bypass|meta)$)": {
+          "title": "inline parameter",
+          "anyOf": [
+            { "type": "number", "description": "A numeric parameter." },
+            { "type": "boolean", "description": "A flag; the parser stores true as 1.0 and false as 0.0." },
+            { "type": "string", "description": "A string parameter — a library id like a model or IR, or an option value." }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "anyOf": [{ "required": ["id"] }, { "required": ["element"] }],
+      "description": "Every key other than the reserved ones (id, type, element, role, params, strings, bypass, meta) is a parameter: a number is a numeric param, a boolean a flag, a string a string param. That is the whole vocabulary — a parameter named like a reserved key cannot exist, which is why ljoss's encoder refuses to produce one."
+    },
+    "connection": {
+      "title": "connection",
+      "type": "object",
+      "required": ["from", "to"],
+      "properties": {
+        "from": { "type": "string" },
+        "from_port": { "type": "integer", "default": 0, "description": "An integer port number; the parser refuses a float, a bool or a string rather than truncating." },
+        "to": { "type": "string" },
+        "to_port": { "type": "integer", "default": 0 }
+      },
+      "additionalProperties": false,
+      "description": "from → to, by node id, with an optional port on each side. An unconnected input is legal and is bound to silence — a dry lane is a matter of not wiring it."
+    },
+    "chain": {
+      "title": "chain",
+      "type": "object",
+      "required": ["id", "nodes"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "name": { "type": "string" },
+        "input_channel": { "type": "integer", "minimum": 0, "default": 0, "description": "Which device channel the chain reads. Lives on the chain, not on nc.input: it is a property of the chain, not of a node." },
+        "output_channel": { "type": "integer", "minimum": 0, "default": 0 },
+        "nodes": { "type": "array", "items": { "$ref": "#/$defs/node" }, "description": "Node order is irrelevant to the compiler — the connections are the graph." },
+        "connections": { "type": "array", "items": { "$ref": "#/$defs/connection" } },
+        "meta": { "$ref": "#/$defs/meta" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

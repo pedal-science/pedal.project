@@ -1,0 +1,96 @@
+{
+  "name": "Brit Crunch",
+  "chains": [
+    {
+      "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3301",
+      "name": "Guitar",
+      "input_channel": 0,
+      "output_channel": 0,
+      "nodes": [
+        {
+          "id": "in",
+          "type": "nc.input",
+          "element": "3F2504E0-4F89-11D3-9A0C-0305E82C3302"
+        },
+        {
+          "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3310-nam",
+          "type": "nc.nam",
+          "element": "3F2504E0-4F89-11D3-9A0C-0305E82C3310",
+          "model": "brit/plexi-hi"
+        },
+        {
+          "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3310-tone",
+          "type": "fx.amp.tonestack",
+          "element": "3F2504E0-4F89-11D3-9A0C-0305E82C3310",
+          "bass": 2.4,
+          "mid": -2.4,
+          "treble": 4.8
+        },
+        {
+          "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3311-cab",
+          "type": "fx.cab.ir",
+          "element": "3F2504E0-4F89-11D3-9A0C-0305E82C3311",
+          "ir": "cab/412-v30",
+          "level_db": 4
+        },
+        {
+          "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3320-split",
+          "type": "nc.split",
+          "element": "3F2504E0-4F89-11D3-9A0C-0305E82C3320",
+          "outputs": 2
+        },
+        {
+          "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3330-delay",
+          "type": "fx.delay.feedback",
+          "element": "3F2504E0-4F89-11D3-9A0C-0305E82C3330",
+          "time": 380,
+          "feedback": 0.665,
+          "mix": 0.3
+        },
+        {
+          "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3321-gain",
+          "type": "nc.gain",
+          "element": "3F2504E0-4F89-11D3-9A0C-0305E82C3321",
+          "gain": 0.5012
+        },
+        {
+          "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3320-mix",
+          "type": "nc.mix",
+          "element": "3F2504E0-4F89-11D3-9A0C-0305E82C3320",
+          "inputs": 2
+        },
+        {
+          "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3340-cut",
+          "type": "fx.filter.cut",
+          "element": "3F2504E0-4F89-11D3-9A0C-0305E82C3340",
+          "high_cut": 6500,
+          "high_slope": "24"
+        },
+        {
+          "id": "3F2504E0-4F89-11D3-9A0C-0305E82C3303-level",
+          "type": "nc.gain",
+          "element": "3F2504E0-4F89-11D3-9A0C-0305E82C3303",
+          "gain_db": -3
+        },
+        {
+          "id": "out",
+          "type": "nc.output",
+          "element": "3F2504E0-4F89-11D3-9A0C-0305E82C3303"
+        }
+      ],
+      "connections": [
+        { "from": "in", "from_port": 0, "to": "3F2504E0-4F89-11D3-9A0C-0305E82C3310-nam", "to_port": 0 },
+        { "from": "3F2504E0-4F89-11D3-9A0C-0305E82C3310-nam", "from_port": 0, "to": "3F2504E0-4F89-11D3-9A0C-0305E82C3310-tone", "to_port": 0 },
+        { "from": "3F2504E0-4F89-11D3-9A0C-0305E82C3310-tone", "from_port": 0, "to": "3F2504E0-4F89-11D3-9A0C-0305E82C3311-cab", "to_port": 0 },
+        { "from": "3F2504E0-4F89-11D3-9A0C-0305E82C3311-cab", "from_port": 0, "to": "3F2504E0-4F89-11D3-9A0C-0305E82C3320-split", "to_port": 0 },
+        { "from": "3F2504E0-4F89-11D3-9A0C-0305E82C3320-split", "from_port": 0, "to": "3F2504E0-4F89-11D3-9A0C-0305E82C3330-delay", "to_port": 0 },
+        { "from": "3F2504E0-4F89-11D3-9A0C-0305E82C3330-delay", "from_port": 0, "to": "3F2504E0-4F89-11D3-9A0C-0305E82C3321-gain", "to_port": 0 },
+        { "from": "3F2504E0-4F89-11D3-9A0C-0305E82C3321-gain", "from_port": 0, "to": "3F2504E0-4F89-11D3-9A0C-0305E82C3320-mix", "to_port": 0 },
+        { "from": "3F2504E0-4F89-11D3-9A0C-0305E82C3320-split", "from_port": 1, "to": "3F2504E0-4F89-11D3-9A0C-0305E82C3320-mix", "to_port": 1 },
+        { "from": "3F2504E0-4F89-11D3-9A0C-0305E82C3320-mix", "from_port": 0, "to": "3F2504E0-4F89-11D3-9A0C-0305E82C3340-cut", "to_port": 0 },
+        { "from": "3F2504E0-4F89-11D3-9A0C-0305E82C3340-cut", "from_port": 0, "to": "3F2504E0-4F89-11D3-9A0C-0305E82C3303-level", "to_port": 0 },
+        { "from": "3F2504E0-4F89-11D3-9A0C-0305E82C3303-level", "from_port": 0, "to": "out", "to_port": 0 }
+      ]
+    }
+  ]
+}

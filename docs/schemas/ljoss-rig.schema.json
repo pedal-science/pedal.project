@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ljoss-rig.schema.json",
+  "title": "ljoss rig document",
+  "description": "One saved rig from the ljoss rig designer (one file per rig, `<uuid>.rig.json` in Application Support/RigDesigner/Rigs). Source of truth: ljoss RigDesigner/Model/{Rig,CoreTypes}.swift; written by Store/RigLibrary.swift with JSONEncoder (.sortedKeys, .prettyPrinted, ISO-8601 dates).\n\nDeliberately unlike the namchain document: this is a *tree* — a series of elements, where an element is a block or a parallel section whose lanes are themselves series — so every insertion point is addressable as (container, index) and the canvas renders left-to-right with vertical branches. It is NOT a general DAG.\n\nThe namchain engine document is produced from this by DocumentEncoder (RigDesigner/Engine/DocumentEncoder.swift): the tree is flattened into nodes and connections, and BlockMapping.swift decides which catalogue blocks the engine can render and how. See docs/schemas/README.md.\n\nDecoding tolerances: Swift's synthesized Codable ignores unknown keys (so files from newer builds still load), and every field with a default in the model is optional here because the decoder falls back to it when absent. The app's encoder always writes every field; the shape below is what it writes.",
+  "type": "object",
+  "required": ["name", "layout", "chains", "createdAt", "modifiedAt"],
+  "properties": {
+    "id": { "$ref": "#/$defs/uuid" },
+    "name": { "type": "string", "description": "The rig's name, shown in the library." },
+    "layout": {
+      "enum": ["single", "dual"],
+      "description": "How many chains are drawn. A viewing preference: chains beyond the layout's count are kept, still sent to the engine, and muted visibly."
+    },
+    "chains": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/signalChain" },
+      "description": "One entry per signal chain (a guitar chain and a vocal chain, say)."
+    },
+    "createdAt": { "$ref": "#/$defs/iso8601" },
+    "modifiedAt": { "$ref": "#/$defs/iso8601" }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$",
+      "description": "Swift UUID, written uppercase."
+    },
+    "iso8601": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 as written by .iso8601, e.g. 2026-01-02T10:30:00Z."
+    },
+    "paramValue": {
+      "description": "One stored parameter value. The `{\"<case>\": {\"_0\": …}}` wrapper is Swift's synthesized Codable encoding of an enum with associated values (ParamValue in CoreTypes.swift). number = a Double knob/level; option = a chosen string; flag = a switch.",
+      "oneOf": [
+        {
+          "title": "number",
+          "type": "object",
+          "required": ["number"],
+          "additionalProperties": false,
+          "properties": {
+            "number": {
+              "type": "object",
+              "required": ["_0"],
+              "additionalProperties": false,
+              "properties": { "_0": { "type": "number" } }
+            }
+          }
+        },
+        {
+          "title": "option",
+          "type": "object",
+          "required": ["option"],
+          "additionalProperties": false,
+          "properties": {
+            "option": {
+              "type": "object",
+              "required": ["_0"],
+              "additionalProperties": false,
+              "properties": { "_0": { "type": "string" } }
+            }
+          }
+        },
+        {
+          "title": "flag",
+          "type": "object",
+          "required": ["flag"],
+          "additionalProperties": false,
+          "properties": {
+            "flag": {
+              "type": "object",
+              "required": ["_0"],
+              "additionalProperties": false,
+              "properties": { "_0": { "type": "boolean" } }
+            }
+          }
+        }
+      ]
+    },
+    "values": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/paramValue" },
+      "description": "Parameter id → value, only what the user changed: an absent value falls back to the catalogue component's declared default (DocumentEncoder sends the *effective* value). Two reserved keys live here alongside catalogue parameters: \"engine.model\" and \"engine.ir\", option values naming assets in the device's library by id."
+    },
+    "block": {
+      "title": "Block",
+      "type": "object",
+      "required": ["componentID"],
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "componentID": {
+          "type": "string",
+          "description": "Catalogue identifier, e.g. \"amp.britplexi\", \"cab.412brit\", \"delay.tape\". A string rather than an enum so a rig saved with a component this build does not know still loads (it renders as an unknown block)."
+        },
+        "isEnabled": { "type": "boolean", "default": true },
+        "values": { "$ref": "#/$defs/values" }
+      },
+      "additionalProperties": true
+    },
+    "lane": {
+      "title": "Lane",
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "elements": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/chainElement" }
+        },
+        "level": { "type": "number", "default": 0, "description": "Merge level in dB." },
+        "pan": {
+          "type": "number",
+          "default": 0,
+          "description": "-1 (hard left) … 1 (hard right). Stored but never sent: the engine is mono end to end and declares one channel per port."
+        },
+        "isMuted": { "type": "boolean", "default": false },
+        "invertPhase": { "type": "boolean", "default": false }
+      },
+      "additionalProperties": true,
+      "description": "One parallel branch. Its level, mute and polarity reach the engine as a `nc.gain` of the lane's own (linear, so polarity has a sign) because the mixer's per-port level, mute and polarity are runtime state a document cannot set."
+    },
+    "parallelSection": {
+      "title": "ParallelSection",
+      "type": "object",
+      "required": ["lanes"],
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "splitMode": {
+          "enum": ["yCable", "aB", "crossover", "dynamic"],
+          "default": "yCable",
+          "description": "Only yCable reaches today's engine as `nc.split` + `nc.mix`; the others are refused by name rather than quietly flattened into a Y."
+        },
+        "crossoverHz": { "type": "number", "default": 800, "description": "Crossover frequency, used only when splitMode is crossover." },
+        "balance": { "type": "number", "default": 0, "description": "Routing balance for A/B and dynamic splits, -1 … 1." },
+        "lanes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/lane" },
+          "description": "After normalize() a section always has ≥ 2 lanes; a single-lane section collapses back into its series, and an all-empty one is pruned."
+        }
+      },
+      "additionalProperties": true
+    },
+    "blockElement": {
+      "title": "ChainElement: block",
+      "type": "object",
+      "required": ["block"],
+      "additionalProperties": false,
+      "properties": {
+        "block": {
+          "type": "object",
+          "required": ["_0"],
+          "additionalProperties": false,
+          "properties": { "_0": { "$ref": "#/$defs/block" } }
+        }
+      }
+    },
+    "parallelElement": {
+      "title": "ChainElement: parallel",
+      "type": "object",
+      "required": ["parallel"],
+      "additionalProperties": false,
+      "properties": {
+        "parallel": {
+          "type": "object",
+          "required": ["_0"],
+          "additionalProperties": false,
+          "properties": { "_0": { "$ref": "#/$defs/parallelSection" } }
+        }
+      }
+    },
+    "chainElement": {
+      "description": "One step in the series/parallel tree. The `{\"block\": {\"_0\": …}}` / `{\"parallel\": {\"_0\": …}}` wrapper is Swift's synthesized Codable for ChainElement.",
+      "oneOf": [
+        { "$ref": "#/$defs/blockElement" },
+        { "$ref": "#/$defs/parallelElement" }
+      ]
+    },
+    "ioNode": {
+      "title": "IONode",
+      "type": "object",
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "values": { "$ref": "#/$defs/values" }
+      },
+      "additionalProperties": true,
+      "description": "The fixed endpoints of a chain. Never removable or reorderable, but they carry parameters. Most input/output parameters are deliberately out-of-band (phantom, pad, impedance, destination …) and never sent to the engine; the one that reaches it is the output level, as a `nc.gain` node."
+    },
+    "signalChain": {
+      "title": "SignalChain",
+      "type": "object",
+      "required": ["name", "source"],
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "name": { "type": "string" },
+        "source": {
+          "enum": ["guitar", "bass", "vocal"],
+          "description": "What the chain is for; decides which device channels it binds to by position (first chain → channel 0, and so on)."
+        },
+        "input": { "$ref": "#/$defs/ioNode" },
+        "elements": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/chainElement" }
+        },
+        "output": { "$ref": "#/$defs/ioNode" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

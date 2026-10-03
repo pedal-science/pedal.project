@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "namchain-engine-schema.schema.json",
+  "title": "namchain engine.schema answer (the node catalogue)",
+  "description": "What the engine publishes in answer to {\"id\":\"1\",\"method\":\"engine.schema\"}, and what namchain's own docs/schema.md documents. It is the third leg of the tripod: the rig document (namchain-rig-document.schema.json) says *how a graph is written*; this catalogue says *what a node type is* — what may be added (the palette), what may be turned and in what units over what range (the inspector), and what a parameter name means (the validator). The engine refuses anything its catalogue does not declare.\n\nSource of truth: the emitters in namchain src/daemon/daemon.cpp (param_schema, node_type_schema, macro_type_schema) and the type declarations in src/nodes/builtin.cpp and src/nodes/macros.cpp. Primitives and macros share one array in palette order, told apart by `kind`.\n\nNotes the schema makes explicit:\n- A parameter's `default` is null when it is required or a member of a one_of group (publishing the stored zero would be a value no node could be built from).\n- `options` and `options_from` are exactly-one-of: fixed options, or values filled from the device's model/IR library (an empty library is an empty `options` list, not an error).\n- Bounds that depend on the rig (Nyquist, delay buffer size) are published as null and enforced by the node, not the schema.\n- Per-port parameters (`per_port_params`) are runtime, addressed with a port in rig.patch; a rig *file* cannot set one.\n- A macro's parameters carry `targets`, the lowered node parameters they drive and how (the transform names).",
+  "type": "object",
+  "required": ["ok", "protocol", "max_chains", "stereo", "nodes"],
+  "properties": {
+    "ok": { "const": true },
+    "protocol": { "const": 2 },
+    "max_chains": { "type": "integer" },
+    "stereo": { "const": false, "description": "Declared and refused: the engine is mono end to end, so no stereo block exists to be picked." },
+    "nodes": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "$ref": "#/$defs/primitive" },
+          { "$ref": "#/$defs/macro" }
+        ]
+      }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "port": {
+      "type": "object",
+      "required": ["name", "channels", "optional"],
+      "properties": {
+        "name": { "type": "string" },
+        "channels": { "type": "integer", "description": "1 for every type today; the engine declares the field and refuses anything wider." },
+        "optional": { "type": "boolean", "description": "Inputs are always optional: an unconnected input is legal and bound to silence. Outputs are never optional." }
+      },
+      "additionalProperties": false
+    },
+    "ports": {
+      "type": "object",
+      "required": ["in", "out"],
+      "properties": {
+        "in": { "type": "array", "items": { "$ref": "#/$defs/port" } },
+        "out": { "type": "array", "items": { "$ref": "#/$defs/port" } }
+      },
+      "additionalProperties": false
+    },
+    "arity": {
+      "description": "For a node whose port count comes from a parameter (nc.split, nc.mix): the parameter, its bounds and its default. Null for a fixed shape.",
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "required": ["param", "min", "max", "default"],
+          "properties": {
+            "param": { "type": "string" },
+            "min": { "type": "integer" },
+            "max": { "type": "integer" },
+            "default": { "type": "integer" }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "flags": {
+      "type": "object",
+      "required": ["stateful", "has_lookback", "has_tail", "bypassable", "block_delay"],
+      "properties": {
+        "stateful": { "type": "boolean", "description": "Explains why bypass keeps the node running rather than removing it." },
+        "has_lookback": { "type": "boolean" },
+        "has_tail": { "type": "boolean" },
+        "bypassable": { "type": "boolean", "description": "The compiler refuses bypass on anything but 1→1; publishing it lets a UI grey the control instead of finding out." },
+        "block_delay": { "type": "boolean", "description": "A scheduling primitive (nc.unit_delay), not a pedal: a palette should leave it out." }
+      },
+      "additionalProperties": false
+    },
+    "option": {
+      "type": "object",
+      "required": ["value", "label"],
+      "properties": {
+        "value": { "type": "string", "description": "The wire value a document and a patch name." },
+        "label": { "type": "string", "description": "The display label; not assumed to be the same string." }
+      },
+      "additionalProperties": false
+    },
+    "target": {
+      "title": "macro parameter target",
+      "type": "object",
+      "required": ["role", "param", "transform", "scale"],
+      "properties": {
+        "role": { "type": "string", "description": "Which lowered node." },
+        "param": { "type": "string", "description": "That node's parameter name." },
+        "transform": { "enum": ["direct", "db_to_linear", "linear_to_db", "one_minus", "scale_by"] },
+        "scale": { "type": "number", "description": "Only used by scale_by." }
+      },
+      "additionalProperties": false
+    },
+    "param": {
+      "title": "parameter",
+      "type": "object",
+      "required": [
+        "id", "name", "kind", "unit", "default", "min", "min_inclusive", "max",
+        "max_inclusive", "step", "snap", "scale", "rampable", "patchable",
+        "hidden", "required", "one_of", "one_of_required", "options_from", "options"
+      ],
+      "properties": {
+        "id": { "type": "string", "description": "The name a document and a patch use." },
+        "name": { "type": "string", "description": "What a control is labelled." },
+        "kind": { "enum": ["number", "option", "flag"], "description": "A count (like a split's outputs) is a number with step 1 and snap; a flag never carries bounds or a step." },
+        "unit": { "type": ["string", "null"], "description": "Hz, dB, ms, samples, %, … or null. What stops a dB knob being wired to a linear gain." },
+        "default": {
+          "type": ["number", "null"],
+          "description": "The *effective* value when the parameter is absent; null for a required parameter or one of a one_of group."
+        },
+        "min": { "type": ["number", "null"] },
+        "min_inclusive": { "type": "boolean", "description": "A Q of 0 is excluded rather than clamped." },
+        "max": { "type": ["number", "null"], "description": "Null means unbounded *by the schema* — a bound that depends on the rig (Nyquist, buffer size) is the node's to enforce and name." },
+        "max_inclusive": { "type": "boolean" },
+        "step": { "type": ["number", "null"], "description": "The smallest increment, or null for continuous." },
+        "snap": { "type": "boolean", "description": "What an off-grid value means: rounded to the grid, or refused." },
+        "scale": { "enum": ["linear", "log"], "description": "Presentation, but presentation the engine knows, so two clients cannot disagree." },
+        "rampable": { "type": "boolean", "description": "A change is ramped inside the node with no recompile — what a slider streams. Without it a change is a structural edit, dual-rendered and crossfaded." },
+        "patchable": { "type": "boolean", "description": "Whether rig.patch may name it at all." },
+        "hidden": { "type": "boolean", "description": "An alias or internal knob a generic inspector leaves out (nc.gain's linear `gain` beside its visible `gain_db`)." },
+        "required": { "type": "boolean", "description": "The node cannot be built without it." },
+        "one_of": { "type": ["string", "null"], "description": "A group name for alternatives: nc.delay takes samples OR ms. Giving two members of a group is refused rather than resolved by precedence." },
+        "one_of_required": { "type": "boolean", "description": "Whether at least one member of the group must be present." },
+        "options_from": {
+          "type": ["string", "null"],
+          "enum": ["models", "irs", null],
+          "description": "For an option whose values live on the device: \"models\" or \"irs\". The values are the library's ids — never paths, which a network client may not send. Exactly one of options / options_from is present."
+        },
+        "options": {
+          "anyOf": [
+            { "type": "null" },
+            { "type": "array", "items": { "$ref": "#/$defs/option" } }
+          ]
+        },
+        "targets": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/target" },
+          "description": "Macro parameters only: the lowered node parameters this one drives, and how. Publishing them is what makes 'why did my knob move two nodes' answerable from the daemon."
+        }
+      },
+      "additionalProperties": false
+    },
+    "role": {
+      "type": "object",
+      "required": ["role", "type"],
+      "properties": {
+        "role": { "type": "string", "description": "The role a client can address with element + role." },
+        "type": { "type": "string", "description": "The lowered node's engine type." }
+      },
+      "additionalProperties": false
+    },
+    "primitive": {
+      "title": "primitive node type",
+      "type": "object",
+      "required": [
+        "id", "name", "category", "kind", "ports", "arity", "flags",
+        "latency_samples", "tail_samples", "params", "per_port_params"
+      ],
+      "properties": {
+        "id": { "type": "string", "description": "What a document writes as `type`." },
+        "name": { "type": "string" },
+        "category": { "type": "string", "description": "What a palette groups it under. The engine owns these: a type the app cannot name is a type the app cannot offer." },
+        "kind": { "const": "primitive" },
+        "ports": { "$ref": "#/$defs/ports" },
+        "arity": { "$ref": "#/$defs/arity" },
+        "flags": { "$ref": "#/$defs/flags" },
+        "latency_samples": { "type": "integer", "description": "0 for every built-in today." },
+        "tail_samples": { "type": "integer" },
+        "params": { "type": "array", "items": { "$ref": "#/$defs/param" } },
+        "per_port_params": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/param" },
+          "description": "Parameters that exist once per port rather than once per node — a mixer's level, mute and polarity per input. Same shape as params, addressed with a port in rig.patch; runtime, not document."
+        }
+      },
+      "additionalProperties": false
+    },
+    "macro": {
+      "title": "macro node type",
+      "type": "object",
+      "required": [
+        "id", "name", "category", "kind", "inputs", "outputs", "channels",
+        "stereo", "bypass", "roles", "params"
+      ],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string" },
+        "kind": { "const": "macro" },
+        "inputs": { "type": "integer" },
+        "outputs": { "type": "integer" },
+        "channels": { "type": "integer", "const": 1 },
+        "stereo": { "const": false },
+        "bypass": {
+          "enum": ["roles", "crossfade"],
+          "description": "How the macro bypasses: every lowered role carries the dry signal, or a dry/wet crossfade."
+        },
+        "roles": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/role" },
+          "description": "The lowered graph's nodes, addressable as element + role."
+        },
+        "params": { "type": "array", "items": { "$ref": "#/$defs/param" } }
+      },
+      "additionalProperties": false,
+      "description": "A macro lives in the same array as the primitives, in palette order, and carries the same parameter shape — plus the roles and per-parameter targets that say how it lowers. A client that wants to draw the lowered graph should read rig.get's `lowered` view, not reconstruct it from roles and targets."
+    }
+  }
+}
