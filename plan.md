@@ -132,6 +132,8 @@ six choices for you at the end.
 | D8 | Bring the codec up stock, then modify it, measuring before and after | proposed | `CLAUDE.md`'s "differs from stock" becomes "planned modifications" |
 | D9 | Work across repos as set out in `docs/working-across-repos.md` | proposed | Phase 0 |
 | D10 | Every rig one interaction away is held ready: the current bank (the 4–8 rigs the footswitches step through) plus any rig MIDI can jump to. A switch takes **≤ 50 ms** from footswitch or MIDI to the new sound, crossfaded, with **no dropout and no click** | you, 2026-09-26 | 3.8 is required, not optional, and comes before 3.5. namchain's M3 (warm start) moves onto the critical path. Whole rigs are held ready: compiled plans, loaded models and prepared IRs. vip's 1 GB bounds the bank. *How* each rig is kept ready is a tier (`docs/rig-switch-strategies.md`), set by experiments E1 and E2 |
+| D11 | The Core host runs the pedal's own Wi-Fi network; the Pico advertises over BLE and the phone joins with `NEHotspotConfigurationManager.joinAccessoryHotspot` | you, 2026-10-01 | Phase 5 ([docs/pairing.md](docs/pairing.md)). The pedal root retires its station config, the bench reaches the pedal over Ethernet, and neither `sftp` nor a typed address is needed for the app |
+| D12 | The first pairing gets an out-of-band code on the pedal's screen, before the pedal releases its BLE bundle. v1 pairs without it | you, 2026-10-01 | 3.7's display carries a security job, not only a nice one; the code is the Mac's way in too, and the QR stays the fallback |
 
 **On storage (D3).** The existing design already keeps models and IRs on the pedal, in
 `namchaind`'s `models_root` and `irs_root` on the SD card. D3 and D4 bring in the four things it
@@ -759,7 +761,8 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    - The output coupling cap must settle before the relay first engages. 10 µF into ~1 MΩ is
      τ ≈ 10 s, inside the boot; 100 µF (τ ≈ 100 s) would still be charging and pop.
 7. **Display and encoder**, low priority per `about.md`. Check it has no onboard LDO before
-   powering it (per `CLAUDE.md`).
+   powering it (per `CLAUDE.md`). It picks up a job with Phase 5 (D12): the pairing out-of-band
+   code, and on the same screen the QR that gets the Mac onto the pedal's network.
 8. **Rigs ready for switching** (D10; namchain's M3). Required before 3.5: without it a footswitch
    press stalls on the SD card, JSON parsing and prewarm, and then clicks.
    - The **ready set**: the current bank (4–8 rigs) plus any rig MIDI can jump to. Each one held
@@ -931,6 +934,65 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
   measured inside an enclosure.
 - **Boot time**, if 1.7 shows the relay isn't enough on its own.
 
+## Phase 5 — The pedal's own network: pairing and the app's way in
+
+Designed 2026-10-01: [docs/pairing.md](docs/pairing.md). The pedal advertises itself over BLE; ljoss
+pairs with it through the system's accessory sheet (AccessorySetupKit, iOS 18+), receives the pedal's
+network and its `namchaind` token over a bonded BLE link, and joins the pedal's own Wi-Fi with
+`NEHotspotConfigurationManager.joinAccessoryHotspot`. No house network, no typed address, no pasted
+token, and the second visit asks nothing. It pays off the debt register's "the app needs the home
+network", and it closes "no discovery: the host is typed in" with the same change.
+
+It does not depend on 3.5–3.8: the Pico work is BLE, a gesture and (later) the display, none of it on
+the audio path, and the Core host work is `devices/` and the service. It is aimed at vip, the Core
+host since 2026-09-30, and it touches nothing on the render path.
+
+**Decided 2026-10-01** (the doc has the detail): the Core host runs the access point and the Pico does
+BLE; the first pairing's out-of-band code rides on 3.7's display, so 3.7 now carries a security job
+as well. The rest of the design's decisions are proposals at the end of the doc. **Plan only for now:**
+the stages below wait for your go-ahead.
+
+Steps (each committed on its own, spikes first — the Apple half is the one part of this pedal that
+cannot be tested from a shell, and the design turns on what the spikes find):
+
+0. **Spikes, evidence in `bench-results/pairing/`.**
+   - **The Core host as an access point.** `hostapd`, a static address and a DHCP server on `wlan0`,
+     a Mac and a phone join, `namchaind` answers over it. Measure boot-to-AP-up, and an hour of
+     playing while ljoss edits over it against plan 1.8's gates. It decides the channel, the address
+     range and the AP's real cost.
+   - **The Pico as an AccessorySetupKit-shaped peripheral.** Advertise the service UUID and name,
+     bond (LE Secure Connections, Just Works), read a protected characteristic — from the Mac with a
+     `bleak` script in `firmware/tools/`, as `ble_wifi_provisioner` does. The Bluetooth address must
+     be the same across reboots, reflashes and a flash wipe, or it is set from the board's unique id.
+   - **The Apple half, on a real phone.** The sheet shows the pedal's picture and name; the tap
+     pairs; `joinAccessoryHotspot` joins the AP. Settles `ssidPrefix` against
+     `finishAuthorization(settings.ssid)`, the `setupOptions`, `joinOnce`'s 15-second rule and the
+     entitlement. **If the join cannot be made to work, the design changes here**, to the QR path.
+   - **The bench loop.** The Mac on the pedal's AP runs `scripts/status` and `sync-library`, and an
+     upload is timed.
+1. **The pedal's network** (`devices/`, `pedald`): `pedal-ap` writes `hostapd.conf` from
+   `/var/lib/pedal/state/net.json`, `wlan0` gets the address and the DHCP server, the name resolves
+   over mDNS, the station path leaves the pedal root (the rescue root keeps it), and the image stops
+   writing the house Wi-Fi secret into the pedal root. The Pico's record and the Core host's cache
+   merge by generation, per `docs/uart-protocol.md` draft 3.
+2. **The Pico's record and setup mode** (`firmware/`): the record (passphrase, SSID suffix,
+   generation) and the bond store in flash, setup mode and its window, the protected characteristic
+   and the bundle, the forget gesture, and `PROV`/`PAIR`.
+3. **ljoss pairs** (ljoss): the plist keys and the capability, the ASK session, the picker image from
+   `enclosure/renders/`, the bundle over CoreBluetooth, the join, the keychain record, the Hardware
+   page's pedal section, and the re-join on returning to the foreground. The Mac keeps the manual
+   path.
+4. **Lifecycle** (with 3.7's display when it exists): remove and rotate on both sides, a second
+   phone, the pedal's own forget gesture, and `backup` covering the cache. The out-of-band code is
+   decided, so this is where 3.7 earns its place: the pedal shows a code and the app offers it back
+   before the pedal releases the bundle, with the QR for the Mac and as the fallback.
+5. **Soak it** as the doc stages it, with a rotation and a power cut in the middle.
+
+**Done when:**
+- A pedal and a phone that have never met pair with the system sheet and no typing.
+- The pedal plays from power-on with no house network anywhere.
+- ljoss edits it over the pedal's own network, and an hour of it is clean.
+
 ## Tracks off the critical path
 
 - namchain M2: admission control. (M3, warm start, is on the critical path now: D10 and 3.8.)
@@ -957,8 +1019,8 @@ exactly this: think about them now, fix them after the higher-priority work.
 | One instrument input | D5 | A mic stage on RINPUT1, and a decision on phantom power (a DC-DC converter beside the ADC) |
 | WM8960 replaces HDMI audio on the one I2S controller | Nothing uses HDMI audio | None needed. A second codec would mean TDM or USB |
 | No way to upload from the app yet | D4 | The pedal service's upload API. ljoss gets a "send to pedal" action. Designed 2026-09-28: `docs/pedal-service.md`, its v3, which has no plan step yet. `sync-library` moves onto the API then: its `rsync --delete` would remove uploads |
-| The app needs the home network | Phase 1 happens at home | The pedal as its own access point (check whether `tib`'s WiFi chip can run AP mode), or a phone hotspot |
-| No discovery: the host is typed in | — | mDNS from the pedal service |
+| The app needs the home network | Phase 1 happens at home | The pedal as its own access point (Phase 5, [docs/pairing.md](docs/pairing.md)): the Core host runs it, the Pico does BLE, and ljoss joins with `NEHotspotConfigurationManager.joinAccessoryHotspot`. The Mac keeps the typed address and token |
+| No discovery: the host is typed in | — | mDNS from the pedal service; and for ljoss the provisioning bundle hands it the address, the port and the token (Phase 5) |
 | Plain-text token, no TLS | Trusted LAN | A tunnel, or TLS in the service, if it ever leaves the LAN |
 | `tib` is out of production | `about.md`: reuse what you have | namchain already builds and tests for aarch64, so a Pi 4/5-class board is the replacement path. A Pi Zero 2 W hasn't been measured, and A2-Full already uses about 58% of a Cortex-A17 core, which is faster per clock than the Zero's in-order A53 |
 | Everything lives on one SD card | — | Overlayroot plus a data partition (Phase 4) |
