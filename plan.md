@@ -1012,15 +1012,15 @@ whole loop now: `make vip-rt` (build; `config/vip-numa-emu.fragment`, rtpi `b173
 `make vip-install-rt`, `make vip-try`. Full record:
 [bench-results/vip-card/vip-numa-emu.md](bench-results/vip-card/vip-numa-emu.md).
 
-Emulation activates only with `numa=fake=N` on the command line, which this boot does not set
-(the stock kernel answered that argument with "Malformed early option 'numa'"; this one should
-not — try it with `vip-boot try-args 'numa=fake=4'`). Two follow-ups were noted but not done:
-folding the rebuilt kernel into the image build if emulation proves worth keeping, and —
-done now — the module trim: vip's kernel build now trims by default (rtpi `955c2b9`), 107
-modules instead of 6,646, with the coverage gate and the module list in rtpi
-`results/vip-trimmed-modules-*.txt`. The trimmed kernel is built and verified but not deployed;
-deploying it is its own try-kernel step. Nothing is pushed (rtpi `955c2b9`, `b1736c4` and this
-entry are local).
+Emulation activates only with `numa=fake=N` on the command line, which the bootloader's own
+default cmdline supplies (`numa=fake=4`; the stock kernel logs "Malformed early option 'numa'"
+and boots on). The module trim is live too: **vip's default kernel is now
+`7.0.0-1017-raspi-realtime-numaemu1-trimmed`** (109 modules instead of 6,646, rtpi `c5e4a2b`),
+slot b; the stock kernel is the fallback in slot a; the full `-numaemu1` build stays installed
+on the root but holds no slot. Full record:
+[bench-results/vip-card/vip-numa-emu.md](bench-results/vip-card/vip-numa-emu.md). The only
+follow-up still open: folding the rebuilt kernel into the image build if emulation proves worth
+keeping. Nothing is pushed (rtpi `c5e4a2b`, `955c2b9`, `b1736c4` and this entry are local).
 
 **The app can be its own device** (2026-10-02). ljoss has **Connect to this computer**: it runs
 `namchaind` as a child of the app, captures from a CoreAudio **input device** (or loops a WAV) and

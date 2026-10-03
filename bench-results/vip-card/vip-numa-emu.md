@@ -114,10 +114,38 @@ The coverage gate earned its keep on the first trimmed build, finding two real t
 - `brcmfmac_cyw` has no CONFIG symbol of its own but is built unconditionally with `BRCMFMAC`,
   so it survives the trim; the gate proves it rather than assuming it.
 
-The trimmed kernel is **built and verified, not deployed** — deploying it is its own
-try-kernel step (`make vip-install-rt` then `make vip-try`), and the deploy script's module
-gate is trim-aware (a full build must match the stock set exactly; a trimmed build must cover
-every module the board loads).
+The trimmed kernel was **built and verified, then deployed as the default** (see
+"Deploy of the trimmed kernel", below): slot b is the trimmed kernel, slot a keeps the stock
+kernel as the fallback.
+
+Two rounds of findings shaped the final set:
+
+- The first trimmed build had 107 modules; a same-day rebuild dropped `inet_diag`, `tcp_diag`
+  and `mptcp_diag` because nothing happened to be using `ss` when `/proc/modules` was fetched.
+  `ss` is inside `vip-boot-validate` itself, so the diag modules are now deliberate keeps
+  (rtpi `c5e4a2b`), and the deploy gate ships the build's `TRIMMED_OK` list (`trimmed-ok.txt`)
+  instead of re-judging.
+- With the NOOP pretimeout-governor module trimmed away, `CONFIG_WATCHDOG_PRETIMEOUT_DEFAULT_GOV`
+  resolves to PANIC (PANIC's module is kept; the stock kernel's default was NOOP). For an
+  appliance that must never hang silently this is the better default; it is a consequence of
+  the trim and is recorded as such.
+
+## Deploy of the trimmed kernel (2026-10-03, ~17:40 UTC)
+
+Three boots, so the final state is exactly "trimmed default, stock fallback":
+
+1. `vip-boot try-kernel 7.0.0-1017-raspi-realtime` — the stock kernel tried once and
+   promoted, so it became the active slot (and was re-proven to boot).
+2. A plain reboot, to clear the tryboot flag before the next candidate.
+3. `vip-boot try-kernel 7.0.0-1017-raspi-realtime-numaemu1-trimmed` — came up at t+32s,
+   validated (sshd, real interface, uname, PREEMPT_RT), promoted.
+
+Result: slot b = `…-numaemu1-trimmed` (109 modules), `good`, default; slot a = stock,
+`good`, fallback. `namchaind` running and ok on `hw:CARD=wm8960` (48000/64, 0 guard trips,
+rig last.json). The bootloader's default cmdline supplies `numa=fake=4`, so the trimmed boot
+ran with NUMA emulation active; `/boot/config-…-numaemu1-trimmed` shows `CONFIG_NUMA_EMU=y`.
+The full `-numaemu1` kernel remains installed on the root (its /boot files and module tree are
+untouched) but holds no slot.
 
 ## Recording
 
