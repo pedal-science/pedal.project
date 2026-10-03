@@ -130,7 +130,8 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
   (schematic findings and reasoning), `codec-bringup-2a.md` (the 2a bench walkthrough),
   `build-board1-breadboard.md` and `build-board1.md` (board 1 on the breadboard, then soldered), `rig-switch-strategies.md`, `uart-protocol.md`, `pedal-service.md` (the service's design: what
   it owns, storage, uploads, the mapping, failure modes), `vip-image.md` (building vip's card,
-  its rescue and pedal roots, boot fallback), `bom.md`.
+  its rescue and pedal roots, boot fallback), `audio-dma-irq.md` (the audio DMA interrupt
+  thread: what it is, its measured cost, and why it outranks the render thread), `bom.md`.
 - `stripboard/`, `breadboard/` — board layouts as data; each script checks its placement against
   the netlist (`stripboard/board1.py` holds board 1's) and draws it.
 - `devices/<host>/rootfs/` — the Core host's configuration as code.
