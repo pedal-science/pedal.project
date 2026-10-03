@@ -135,6 +135,10 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
   thread: what it is, its measured cost, and why it outranks the render thread), `bom.md`.
 - `stripboard/`, `breadboard/` — board layouts as data; each script checks its placement against
   the netlist (`stripboard/board1.py` holds board 1's) and draws it.
+- `schematic/` — the pedal's schematic sheets as KiCad files, each written from the wiring table in
+  the script beside it (`schematic/case-wiring.py` holds the prototype case's: IN, OUT L and OUT R,
+  the two output fixtures, the case's 4-way strip and the codec header as it is today). The script
+  checks the wiring against KiCad's exported netlist; `schematic/renders/` holds the pictures.
 - `devices/<host>/rootfs/` — the Core host's configuration as code.
 - `enclosure/` — a Blender model of the pedal in a 1590DD-size box (parts, layout, wiring) and its
   renders; `enclosure/README.md` says what's approximate and how to rebuild it.

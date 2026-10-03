@@ -5,3 +5,6 @@ firmware/build/
 .$*.dtmp
 .$*.bkp
 build/
+
+# KiCad writes these while a sheet is open
+~*.lck

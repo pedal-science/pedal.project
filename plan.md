@@ -1065,6 +1065,19 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**The prototype case has a schematic** (2026-10-03). The IN jack and both output jacks in the
+plastic box are a KiCad sheet now, [schematic/prototype-case.kicad_sch](schematic/prototype-case.kicad_sch),
+written from the wiring table in [schematic/case-wiring.py](schematic/case-wiring.py). It holds the
+two output channels as the same circuit (10 µF with its + towards the codec, 100 Ω, 1 MΩ bleed), the
+input's screened cable (core → LIN1; braid bonded to the sleeve at the jack end only, cut flush at
+the other end), the case's 4-way strip (pin 1 OUT L tip, pin 2 OUT R tip, 3 and 4 reserved for the
+INST/LINE switch and the DC socket), and J4 as the codec header stands today — the sheet's notes say
+what replaces it once board 1 exists (the core to board 1's IN pad, the strip pins to OUT-L and
+OUT-R with the bypass relay in those runs). Two checks pass: `kicad-cli sch erc` reports **0
+violations**, and `case-wiring.py --check` compares KiCad's netlist against the intended nets — all
+eight match, and the eight spare pins are confirmed unconnected. Renders in `schematic/renders/`.
+The hand-drawn `docs/prototype-case-wiring.svg` and its PNG are deleted.
+
 **vip's kernel has NUMA emulation on** (2026-10-03). The one config line Ubuntu ships off,
 `CONFIG_NUMA_EMU=y` (beside `CONFIG_NUMA=y` and `CONFIG_NUMA_MEMBLKS=y`), is now on: vip runs
 `7.0.0-1017-raspi-realtime-numaemu1`, the pedal's stock kernel rebuilt from the exact Ubuntu
