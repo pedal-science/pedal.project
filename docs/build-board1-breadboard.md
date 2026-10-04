@@ -73,6 +73,15 @@ Wires off the breadboard: **+9V** a55, **STAR** T−, **IN** j5, **SW-I** j7, **
   **free hole in the column** the target pin sits in, never the target's own hole, and anchor the
   cable so a tug pulls the anchor rather than the pin. Leave the cable long enough to reach the
   soldered board later: the pin is cut off then and the core soldered to the pad instead.
+- **The star point.** Every ground returns to one place, each item on its own wire, and nothing else
+  joins two grounds together — a second path is what put the 90 Hz comb beside the codec's floor
+  (2b). The breadboard's **ground rail** is that place for now: it is one node, so give each ground
+  wire's pin its **own hole**, never two in one. Bridge the rail if yours is split half way, and tie
+  the top and bottom rails at **one** point only — tie them at both ends and you have built the loop
+  you were avoiding. Check it end to end with the meter: it should beep, and read well under an ohm.
+  Keep noisy loads off it. The soldered build uses the M3 tag on board A's front corner instead; if
+  the wires still end in pins by then, common a 1×8 socket strip along one stripboard row and bolt
+  the tag beside it, so every ground wire plugs into its own socket.
 
 ---
 
