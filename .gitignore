@@ -8,3 +8,6 @@ build/
 
 # KiCad writes these while a sheet is open
 ~*.lck
+
+# Python bytecode, left by importing the layout scripts
+__pycache__/
