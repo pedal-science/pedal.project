@@ -326,6 +326,16 @@ afterwards.
 - [ ] Every ground — the sockets' sleeves, the outputs' rings, the codec's GND — gets its own wire
       into the breadboard's ground rail, which stands in for the star tag at this stage: see
       "The star point" in [build-board1-breadboard.md](build-board1-breadboard.md).
+- [ ] **The input is line level here, not Hi-Z.** LIN1 is the codec's line input, so a guitar plugged
+      straight into the jack sees the codec's input impedance rather than the 1 MΩ the finished pedal
+      presents. That is fine for measurement work, which is all driven from the SSL's output. Playing
+      through it meanwhile, anything **buffered** in front of the pedal stands in — a buffered-bypass
+      pedal, not a true-bypass one, which just wires the guitar through to LIN1. A series resistor is
+      not a fix: it raises what the guitar sees but divides the signal into the codec and rolls the
+      top off against the cable. The real front end is board 1's follower
+      ([build-board1.md](build-board1.md), parts in [bom.md](bom.md)); why it is a follower at all,
+      and why the Inst/Line switch pads level instead of impedance, is in
+      [hardware-handoff.md](hardware-handoff.md).
 - [ ] Don't plug the SSL in yet. First calibrate the SSL's output: connect **SSL out 4 → TRS cable →
       socket A** with **LIN1 disconnected**. Claude plays a 200 Hz tone at a known level. You read
       **AC volts** between socket A's tip and sleeve.
