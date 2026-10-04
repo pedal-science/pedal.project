@@ -1068,6 +1068,33 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**Two wiring faults, and the Pico's USB console driver** (2026-10-04). After the rewire,
+`namchaind` was `running` but `lost` with no sound card at all (`pedal-codec` failed with
+"card wm8960 did not appear"): the codec's I²C bus was dead — every address on `i2c-1`, and the
+driver's own reset write to `0x1a`, ran to the controller's 1 s timeout, which is a held line
+and not an absent chip. Reseated, the card came back; the next failure was `capture timed out
+after 1000 ms (last state 3, ring 0 frames)` — PCM `RUNNING`, no frames — because **BCLK was
+out of the header**: with no bit clock the RP1's I²S RX makes no DMA requests, so no period
+ever completes. Both fixed at the bench. After: card 0 `wm8960`, engine `running/ok`,
+`issues: []`, blocks 750/s at q64, 2 xruns in total and none recent, render worst 3.4% of the
+1333 µs period, 0 over deadline. Evidence:
+[bench-results/2026-10-04-rewire-faults-and-the-pico-console.md](bench-results/2026-10-04-rewire-faults-and-the-pico-console.md).
+
+**vip's trimmed kernel keeps `cdc_acm` now** (2026-10-04, rtpi `e873c9c`). The Pico 2 W on
+vip's USB (`2e8a:0009`, serial `5988E9A10C2344D7`) presented its CDC-ACM pair with **no driver
+bound** and no `/dev/ttyACM0`: the `localmodconfig` trim had `CONFIG_USB_ACM` unset, and while
+the module is missing nothing can bind the Pico, so it can never appear in `/proc/modules` — a
+self-fulfilling absence, the shape `vip-keep.fragment` already describes for `inet_diag`.
+`config/vip-keep.fragment` keeps it as its fifth deliberate exception, the kernel was rebuilt
+(106 modules; all 71 the board loads present), installed and tried: slot a promoted, both slots
+good, nothing armed, guard 0. `/dev/ttyACM0` now appears (`cdc_acm 3-2:1.0: ttyACM0: USB ACM
+device`) and the codec and engine came through the reboot unchanged. The release string is
+unchanged, so `devices/vip/components.lock` still matches the host. The rebuild also drops
+`crypto/af_alg`, `crypto/algif_hash`, `crypto/sm4` and `crypto/sm4_generic` — fetch-day keeps in
+the 109-module build that nothing loads now; add them to the keep fragment if that matters. The
+USB CDC is the firmware's console, not the link: the link is the header UART, and on vip
+`ttyAMA0` (pins 8/10) is free of console and getty, so step 4 has nothing to move.
+
 **The prototype case has a schematic** (2026-10-03). The IN jack and both output jacks in the
 plastic box are a KiCad sheet now, [schematic/prototype-case.kicad_sch](schematic/prototype-case.kicad_sch),
 written from the wiring table in [schematic/case-wiring.py](schematic/case-wiring.py). It holds the
