@@ -3,11 +3,12 @@
 #
 #   devices/common/test-pedald [-v] [test_name ...]
 #
-# Runs on the Mac (the system python3 has the whole standard library) and on a host, where it
-# checks less: vip's python3 is python3-minimal, so the modules the service may not import
-# (termios, http.server, hmac, urllib) are exactly the ones the service must not use — a test
-# that needs one of them is a test that says the service cannot run there. Everything here
-# imports only what the contract allows.
+# Runs on the Mac, where the whole standard library is: the tests use `pty` (the link, over a
+# pseudo-terminal), `http.client` (the HTTP server) and `threading` (the fake engine). The Core
+# host cannot run them — vip's python3 is `python3-minimal`, with no `pty`, `http.client` or
+# `urllib` — which is the same fact the service is written around. What these tests check from
+# any machine is that the service's own modules import nothing vip lacks (`termios`,
+# `http.server`, `socketserver`, `hmac`, `urllib`).
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 export PYTHONPATH="$HERE/rootfs/usr/local/lib${PYTHONPATH:+:$PYTHONPATH}"

@@ -72,8 +72,16 @@ hunts:
 1. The Pico sends `HELLO` at boot, then every 1 s until answered.
 2. The Core answers `WELCOME` and immediately sends `STATE`.
 3. The session is up. Any valid frame resets the 1 s link timer.
-4. On 1 s without a valid frame, both ends drop the session; the Pico returns to step 1 and the
-   Core waits for a `HELLO` (it may also re-`WELCOME` on seeing one).
+4. On 1 s without a valid frame, both ends drop the session and the Pico returns to step 1.
+   **The Core re-establishes on any valid frame, not only on `HELLO`**: it answers a frame that
+   arrives while it thinks the session is down by sending `WELCOME` and `STATE` again. Once the
+   Pico's session is up the firmware never sends `HELLO` again — it holds the session open with
+   `PING`s and answers the Core's — so a Core that waited for a `HELLO` after dropping its half
+   would wait for ever, while its own `PONG` replies kept the Pico up. That is not hypothetical:
+   on vip (2026-10-04) `/status` read `session: false` while the Pico's console read `session=1`
+   and a steady stream of `pong` lines, and neither end could escape on its own. The firmware's
+   `WELCOME` handler is idempotent, so re-`WELCOME`ing is safe in both directions. (Measured
+   rule, not a proposal: `pedald` implements it and the bench needs it.)
 
 `HELLO` and `WELCOME` both carry `version_major` and `version_minor`. Same major is required. A
 different major is a protocol error: the Core sends `ERROR` and stops talking; the Pico shows a
