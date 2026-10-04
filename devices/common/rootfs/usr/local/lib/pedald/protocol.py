@@ -17,6 +17,10 @@ and pings the Pico when the link has been quiet. It never raises on link input: 
 or a bad length drops the frame, and the decoder rescans from the byte after the first sync
 byte so that a corrupted `len` cannot swallow the good frames behind it.
 
+A session is re-established by **any** valid frame, not only by `HELLO`: the Pico, once its
+session is up, never sends `HELLO` again, so a Core that dropped its half would otherwise
+wait for it for ever while its own `PONG` replies kept the Pico up. See `feed()`.
+
 Only the standard library is used, and only what the Core host's `python3-minimal` ships:
 no `termios`, no sockets, no `hmac`. The UART itself (open, `stty`, `select`) belongs to
 the caller, which hands `send` one complete frame to write.
@@ -147,6 +151,17 @@ class Session:
             self.frames_ok += 1
             # Any valid frame is proof of life, whatever its type (Session, step 3).
             self._last_rx_ms = self._now_ms
+            # ... and if we think the session is down, it is also proof that the Pico thinks
+            # otherwise. That asymmetry is not hypothetical: once its own session is up, the
+            # firmware never sends HELLO again — it holds the session open with PINGs (250 ms)
+            # and answers ours — so a Core that ever drops its half waits for a HELLO that
+            # cannot come, while its PONG replies keep the Pico up for ever. Measured on the
+            # bench, 2026-10-04: the Pico read session=1 and `pong` lines while /status read
+            # session false, with no way back. Re-WELCOME instead; the firmware's WELCOME
+            # handler is idempotent, and a HELLO lands here too (it starts the session below
+            # in `_handle`, which is a no-op once this has run).
+            if not self._up:
+                self._start_session()
             out.extend(self._handle(msg_type, payload))
         return out
 

@@ -235,6 +235,30 @@ class SessionTests(unittest.TestCase):
         self.assertTrue(self.session.session_up)
         self.assertEqual(self.link.types().count(WELCOME), 2)
 
+    def test_a_ping_from_a_live_pico_re_establishes_a_dropped_session(self):
+        # The bench's asymmetric deadlock (2026-10-04): the Pico, once up, stops sending HELLO
+        # and holds its session with PINGs; a Core that dropped its half answered the PINGs
+        # with PONGs (keeping the Pico up) while waiting for a HELLO that never came. Any valid
+        # frame has to bring the session back, not only HELLO.
+        self.session.feed(hello())
+        self.session.tick(1000)
+        self.assertFalse(self.session.session_up)
+        self.link.raw.clear()
+        self.session.feed(frame(PING, b"\x07"))
+        self.assertTrue(self.session.session_up)
+        self.assertEqual(self.link.types().count(WELCOME), 1)
+        self.assertEqual(self.link.types().count(STATE), 1)
+        self.assertEqual(self.link.payloads(PONG), [b"\x07"])
+
+    def test_an_event_or_pong_from_a_live_pico_also_re_establishes(self):
+        self.session.feed(hello())
+        self.session.tick(1000)
+        self.assertFalse(self.session.session_up)
+        self.link.raw.clear()
+        self.session.feed(frame(PONG, b"\x01"))
+        self.assertTrue(self.session.session_up)
+        self.assertEqual(self.link.types().count(WELCOME), 1)
+
     def test_state_payload_is_what_the_firmware_parses(self):
         # firmware/src/protocol.c, handle_state: flags, rig i8, bank i8, bank size, name to
         # the end of the payload.

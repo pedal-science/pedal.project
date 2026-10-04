@@ -54,7 +54,7 @@ def fake_service(status=None, engine_down=False, link_open=True, session_up=True
     service.mapping = mapping.Mapping(["Crunch Lead", "Ambient Wash"])
     service.mapping.note_rig("Crunch Lead")
     service.link = types.SimpleNamespace(open=link_open)
-    service.session = types.SimpleNamespace(session_up=session_up)
+    service.session = types.SimpleNamespace(session_up=session_up, frames_ok=12, frames_bad=1)
     service.pico = pico or {"fw": "0.1", "major": 1, "minor": 0, "caps": 0}
     service.bypass = False
     return service

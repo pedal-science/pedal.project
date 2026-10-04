@@ -203,6 +203,8 @@ class Service:
             },
             "link": {"device": self.cfg.uart_device, "baud": self.cfg.uart_baud,
                      "open": self.link.open, "session": self.session.session_up,
+                     "frames_ok": self.session.frames_ok,
+                     "frames_bad": self.session.frames_bad,
                      "pico": self.pico},
             "bank": {"banks": self.mapping.banks, "bank": self.mapping.bank,
                      "position": self.mapping.rig, "current": self.mapping.current_name(),
