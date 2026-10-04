@@ -45,3 +45,20 @@ done under `scripts/host-lock`, `namchaind` was restarted straight after, came b
 "Crunch Lead" reseeded by `pedal-resume`, and left no recording running. The engine's own recordings
 stay on the host under `/var/lib/namchain/recordings/` (`diag1`, and the 2026-10-02 `guitar*` used as
 the reference).
+
+## Resolution (same day)
+
+**The ADAT (ADCDAT) lead was in the wrong socket on the codec board.** Back in GPIO20 / header
+pin 38, the capture returned immediately — six seconds at 48 kHz, channel 0, guitar being played:
+
+| | before | after | 2026-10-02 reference |
+|---|---|---|---|
+| capture, ch 0 | −inf dBFS (exact zeros) | **−47.38 dBFS unweighted, −55.37 A-weighted, peak −33.92** | −86.69 dBFS (guitar at rest) |
+| engine playback, ch 0 | −inf dBFS | **−23.38 dBFS, peak −9.92** | −51.66 dBFS |
+
+The capture's lines are musical — 86, 144, 247 and 371 Hz, the notes being played — rather than the
+50/100 Hz mains of the earlier reference, so it is signal and not a floor. Recordings stay on the
+host under `/var/lib/namchain/recordings/afterfix/`.
+
+Still true for the output: the rig leaves on channel 0 = **HPL**, so the interface's cable belongs in
+the OUT L jack. A fixture fed from HPR stays silent until a chain's `output_channel` is bound.
