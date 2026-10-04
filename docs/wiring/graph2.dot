@@ -1,0 +1,40 @@
+graph wiring {
+    bgcolor="#848068"
+    subgraph cluster_digital {
+        bgcolor="#299385"
+        subgraph core {
+            cluster=true;
+            core_gnd
+        }
+        subgraph codec {
+            cluster=true;
+            codec_gnd
+            codec_lin1
+            codec_hpl
+        }
+    }
+    subgraph analogue {
+        cluster=true;
+        bgcolor="#994455"
+        subgraph in_socket {
+            cluster=true;
+            bgcolor="#755994"
+            in_t
+            in_tn
+            in_r
+            in_rn
+            in_s
+            in_rs
+        }
+        subgraph out_left_socket {
+            cluster=true;
+            bgcolor="#458295"
+            out_left_t
+            out_left_tn
+            out_left_r
+            out_left_rn
+            out_left_s
+            out_left_rs
+        }
+    }
+}
