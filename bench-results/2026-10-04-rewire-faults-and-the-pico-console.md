@@ -128,6 +128,32 @@ box is known. The candidate gate is what makes trying such a change safe:
 `vip-boot-validate` requires a physical interface with a routable address before it promotes,
 so a candidate that loses a driver rolls back rather than locking the box out.
 
+## 5. vip can talk to it — over the console, and only carefully
+
+With the driver bound, both directions were proved:
+
+| Direction | Evidence |
+|---|---|
+| Pico → vip | the console's own lines: `fw: up 1060 s, session=0, frames ok=0 bad=0` every 5 s, and `proto: hello sent (v1.0 caps=0x0000)` once a second |
+| vip → Pico | a written `?` answered `proto: frames ok=0 bad=0 events lost=0 session=0 rig=-1 name=''` |
+
+**Open it raw with echo off, or it loops.** The first attempt (`exec 3<>/dev/ttyACM0` with the
+default termios) came back as a storm of `proto: event refused, no session` at ~12/s, and it was
+self-inflicted: ECHO on the host echoes what the tty *receives* back down the port, and the
+firmware's bench stand-in reads `e`, `d`, `b` from that same console — the refusal text itself
+contains those letters, so it sustains itself. With `stty -F /dev/ttyACM0 raw -echo` the same
+port is clean: 6 HELLOs in 6 s, one heartbeat, **zero** refusals. This matters beyond tidiness:
+with a session up, an echoed `e`/`d`/`b` is a real `rig_up`/`rig_down`/`bypass_toggle` EVENT, so
+anything that opens this console — the pedal service included — must turn echo off and must
+never leave stray bytes on it.
+
+**The link is not on vip.** The Pico sends `hello sent` once a second into its UART0 (GP0/GP1),
+which is the Debug Probe's bridge, and `session=0` with `frames ok=0` says nothing has ever
+answered it. Listening on vip's header UART — `/dev/ttyAMA0`, pins 8/10, 115200, 4 s — gives
+nothing at all. So the USB console is what vip can drive today; the protocol link needs the
+Pico's UART on those pins (GP0 → pin 10 RXD, GP1 → pin 8 TXD, and a ground) *and* something on
+vip to answer HELLO, which is the pedal service (Phase 3.2) and does not exist yet.
+
 ## Note for the link, not the console
 
 The Pico's USB CDC is its debug console (`firmware/CMakeLists.txt`: "USB CDC for the console.
