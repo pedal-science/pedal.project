@@ -61,6 +61,12 @@ an empty token). The alternative, adding `libpython3-stdlib` to the image, is on
    `WELCOME` handler is idempotent), which is a reading of "the Core may also re-`WELCOME`"
    that the contract's step 4 does not spell out; `uart-protocol.md` should say it.
 
+   One consequence worth knowing: a service that **restarts while the Pico's session is up**
+   never sees a `HELLO`, so `/status`'s `pico` object stays empty until the Pico itself resets —
+   the link comes back (by the paragraph above), but the firmware's version is a fact only a
+   `HELLO` carries. Seen on vip after the second apply: `session true`, `frames_bad 0`,
+   `pico {}`.
+
 ## The deploy
 
 `devices/vip/apply` is gated on the host being idle (rule 8), and `namchaind` counts as busy, so
