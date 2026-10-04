@@ -1,0 +1,33 @@
+[Unit]
+Description=Pedal: the pedal service (Pico link, resume, the bank and the map)
+Documentation=file:/usr/local/lib/pedald
+# Follows the engine and never holds it up: the pedal plays when this is down (D4).
+Wants=namchaind.service
+After=namchaind.service
+ConditionPathExists=/etc/pedal/pedald.json
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/pedald run
+Restart=always
+RestartSec=2
+# A housekeeping job: off the render core, below everything that matters.
+Nice=10
+IOSchedulingClass=idle
+CPUAffinity=0-1
+
+# The service is the one process with a port on the LAN that writes files, so it runs as its
+# own user with a sandbox whose only writable path is /var/lib/pedal: a path-check bug is then
+# a bug inside that tree, not a write as root (docs/pedal-service.md, "Security"). The engine's
+# token stays root's: systemd hands over a readable copy through LoadCredential.
+User=pedal
+Group=pedal
+SupplementaryGroups=dialout
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/pedal
+PrivateTmp=yes
+LoadCredential=token:/etc/namchain/token
+
+[Install]
+WantedBy=multi-user.target

@@ -37,7 +37,7 @@ raspi-utils-dt
 device-tree-compiler
 alsa-utils
 
-# pedal-tune, pedal-device, pedal-resume.
+# pedal-tune, pedal-device, pedald (chown and stty are coreutils).
 procps
 util-linux
 kmod

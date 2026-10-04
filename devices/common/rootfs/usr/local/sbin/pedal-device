@@ -133,11 +133,33 @@ mask_units() {
 # The image build: enable what apply would enable, start nothing. The first boot brings it into force.
 activate_offline() {
   local u
-  for u in pedal-tune.service pedal-resume.service pedal-codec.service pedal-wifi.service; do
+  for u in pedal-tune.service pedald.service pedal-codec.service pedal-wifi.service; do
     [[ -e $ROOT/etc/systemd/system/$u ]] || continue
     run sctl enable "$u" >/dev/null 2>&1
     echo "  enabled   $u"
   done
+}
+
+# pedal-resume's job (save the running rig) folds into pedald, and two writers of last.json is
+# one too many. Its unit and script leave the tree, but apply only ever installs files, so a
+# host that has them from an earlier apply has to lose them here.
+retire_resume() {
+  local f
+  for f in /etc/systemd/system/pedal-resume.service /usr/local/sbin/pedal-resume; do
+    recorded "file $f" || continue
+    [[ $f == *.service ]] && run systemctl disable --now pedal-resume.service
+    run rm -f "$f"
+    (( DRY )) || sed -i "\|^file $f\$|d" "$MANIFEST"
+    echo "  retired   $f"
+  done
+}
+
+# The service's own user (usr/lib/sysusers.d/pedal.conf): configuration like the rest of this
+# tree, not something somebody did to a board once. Idempotent, and it says nothing when the
+# user is already there.
+sysusers() {
+  command -v systemd-sysusers >/dev/null 2>&1 || { echo "  no systemd-sysusers: pedal user left to the image"; return 0; }
+  run systemd-sysusers
 }
 
 activate() {
@@ -158,8 +180,11 @@ activate() {
   run systemctl enable pedal-tune.service
   run systemctl restart pedal-tune.service
   # namchaind itself is installed and enabled by scripts/deploy-engine, with its binaries.
-  run systemctl enable pedal-resume.service
-  run systemctl restart --no-block pedal-resume.service
+  # pedald carries the resume job now, so pedal-resume retires and the user it runs as is made.
+  retire_resume
+  sysusers
+  run systemctl enable pedald.service
+  run systemctl restart --no-block pedald.service
   # Every Pi host ships this unit; it fails, harmlessly, where no codec is wired.
   if [[ -e /etc/systemd/system/pedal-codec.service ]]; then
     run systemctl enable pedal-codec.service
@@ -196,6 +221,7 @@ do_revert() {
   local kind what
   [[ -r $MANIFEST ]] || { say "nothing to revert: no $MANIFEST"; exit 0; }
   systemctl cat pedal-tune.service >/dev/null 2>&1 && run systemctl disable --now pedal-tune.service
+  systemctl cat pedald.service >/dev/null 2>&1 && run systemctl disable --now pedald.service
   systemctl cat pedal-resume.service >/dev/null 2>&1 && run systemctl disable --now pedal-resume.service
   systemctl cat pedal-codec.service >/dev/null 2>&1 && run systemctl disable pedal-codec.service
   # Stopped while its helper is still installed: stopping it turns power saving back on.

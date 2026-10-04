@@ -53,9 +53,13 @@ check "codec files from common" '[[ -f $R/etc/pedal/codec/wm8960-codec-master.dt
 check "no piv-only files" '[[ ! -e $R/etc/wireplumber ]]'
 check "manifest paths are the host's, not the build's" '! grep -q /work "$R/var/lib/pedal/manifest" && grep -qx "file /etc/pedal/tune.conf" "$R/var/lib/pedal/manifest"'
 check "applied stamp" 'grep -qx "commit=test" $R/etc/pedal/applied && grep -qx "applied=1970-01-01T00:00:00Z" $R/etc/pedal/applied'
-for u in pedal-tune pedal-resume pedal-codec; do
+for u in pedal-tune pedald pedal-codec; do
   check "$u enabled for multi-user" '[[ -L $R/etc/systemd/system/multi-user.target.wants/$u.service ]]'
 done
+check "pedald's package and entry point are installed" '[[ -f $R/usr/local/lib/pedald/daemon.py && -x $R/usr/local/sbin/pedald && -f $R/etc/pedal/pedald.json ]]'
+check "pedal-resume is retired" '[[ ! -e $R/etc/systemd/system/pedal-resume.service && ! -e $R/usr/local/sbin/pedal-resume ]]'
+check "the service's user exists in the image" 'grep -q "^pedal:" $R/etc/passwd'
+check "and its unit names it" 'grep -qx "User=pedal" $R/etc/systemd/system/pedald.service'
 check "pedal-wifi follows wlan0" '[[ -L $R/etc/systemd/system/sys-subsystem-net-devices-wlan0.device.wants/pedal-wifi.service ]]'
 for u in apt-daily.timer apt-daily-upgrade.timer e2scrub_all.timer fstrim.timer dpkg-db-backup.timer; do
   if [[ -e $R/usr/lib/systemd/system/$u ]]; then
@@ -63,7 +67,7 @@ for u in apt-daily.timer apt-daily-upgrade.timer e2scrub_all.timer fstrim.timer 
   else pass "$u absent from the root (skipped)"; fi
 done
 check "masks recorded for revert" 'grep -q "^mask apt-daily.timer$" $R/var/lib/pedal/manifest'
-check "tools pedal-* need are installed" 'for t in dtoverlay dtc amixer alsactl arecord chrt taskset flock ps python3 udevadm; do chroot $R sh -c "command -v $t" >/dev/null || { echo "    missing $t"; exit 1; }; done'
+check "tools pedal-* need are installed" 'for t in dtoverlay dtc amixer alsactl arecord chrt taskset flock ps python3 udevadm stty chown; do chroot $R sh -c "command -v $t" >/dev/null || { echo "    missing $t"; exit 1; }; done'
 check "pedal-maint.target leaves the engine out" '! grep -q "multi-user\|namchaind" <(grep -v "^#" $R/etc/systemd/system/pedal-maint.target)'
 check "pedal-maint.target lets users log in" 'grep -q "^Wants=.*systemd-user-sessions.service" $R/etc/systemd/system/pedal-maint.target'
 check "eth0 not required for online" 'grep -qx "RequiredForOnline=no" $R/etc/systemd/network/20-eth0.network'

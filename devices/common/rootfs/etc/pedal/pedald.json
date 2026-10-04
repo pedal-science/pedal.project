@@ -1,0 +1,10 @@
+{
+  "uart_device": "/dev/ttyAMA0",
+  "uart_baud": 115200,
+  "http_host": "0.0.0.0",
+  "http_port": 47820,
+  "max_model_bytes": 16777216,
+  "max_ir_bytes": 67108864,
+  "max_rig_bytes": 1048576,
+  "log_level": "info"
+}

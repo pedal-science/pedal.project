@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# devices/common/test-pedald — the pedal service's unit tests.
+#
+#   devices/common/test-pedald [-v] [test_name ...]
+#
+# Runs on the Mac (the system python3 has the whole standard library) and on a host, where it
+# checks less: vip's python3 is python3-minimal, so the modules the service may not import
+# (termios, http.server, hmac, urllib) are exactly the ones the service must not use — a test
+# that needs one of them is a test that says the service cannot run there. Everything here
+# imports only what the contract allows.
+set -euo pipefail
+HERE=$(cd "$(dirname "$0")" && pwd)
+export PYTHONPATH="$HERE/rootfs/usr/local/lib${PYTHONPATH:+:$PYTHONPATH}"
+exec python3 -m unittest discover -s "$HERE/tests" -t "$HERE/tests" "$@"

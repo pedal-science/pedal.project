@@ -1,0 +1,23 @@
+#!/usr/bin/env python3
+"""pedald — the pedal service (docs/pedal-service.md). The code itself is a package in
+/usr/local/lib/pedald; this is the thin entry point systemd and namchaind call.
+
+    pedald run     the service (pedald.service)
+    pedald seed    before namchaind starts: make the tree under /var/lib/pedal the service's
+                   user's, and seed last.json from the default rig if there is none
+                   (namchaind's ExecStartPre, run as root)
+
+Kept thin so the package is editable and testable as a package, and so a broken import is one
+readable line in the journal rather than a traceback out of `python3 -c`.
+"""
+import os
+import sys
+
+LIB = os.environ.get("PEDALD_LIB", "/usr/local/lib")
+if LIB not in sys.path:
+    sys.path.insert(0, LIB)
+
+from pedald.daemon import main  # noqa: E402  (after the path is set)
+
+if __name__ == "__main__":
+    sys.exit(main())
