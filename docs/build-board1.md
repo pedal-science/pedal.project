@@ -117,7 +117,9 @@ More views: [plan](../stripboard/renders/board1-plan.png), [low](../stripboard/r
    sleeve is **+9 V**. Stage 2 confirms it with the meter. It matters again in Phase 4: the socket's
    sleeve must not touch a metal panel.
 3. **Never ground HPL, HPR or OUT3.** They sit at about 1.65 V DC (2a's rule). HPL and HPR only
-   ever reach a jack through C6/C7.
+   ever reach a jack through C6/C7. Never plug an output into a **phantom-powered** input either:
+   48 V arrives on the tip through that input's 6.8 kΩ feed resistors, and stands across C6/C7 the
+   wrong way round. Check the interface's switch before its cable goes in.
 4. **The input nodes are high impedance** (about 1 MΩ). The IN, SW-I, SW-L and SW-C wires pick up
    hum like an antenna. Keep them short, run them close to the board, and twist SW-I, SW-L and SW-C
    loosely together.
