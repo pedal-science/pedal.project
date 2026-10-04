@@ -142,10 +142,14 @@ More views: [plan](../stripboard/renders/board1-plan.png), [low](../stripboard/r
 
 Nothing is powered yet, except for the last check.
 
-- [ ] **Each jack** (IN, OUT L, OUT R). Push a jack plug in, then find which lug beeps to the plug's
-      tip, which to its ring and which to its sleeve. The NMJ6HF-S is switched, so two more lugs
-      touch tip and ring **only with no plug in**. Note all five for one jack. The other two jacks
-      are the same.
+- [ ] **Each jack** (IN, OUT L, OUT R). Six lugs, in two rows of three: **T**, **R**, **S** along the
+      body (**S** nearest the opening), and **TN**, **RN**, **SN** opposite them. Push a jack plug in
+      and find which lug beeps to the plug's tip, ring and sleeve. **All three** contacts are
+      switched, so each switch beeps to its own contact **only with no plug in** — **TN**–**T**,
+      **RN**–**R**, **SN**–**S** — and all three go open when the plug goes in. Note all six for one
+      jack; the other two are the same. Neutrik's chart is
+      [jacks-circuits.pdf](../references/neutrik-nmj6hf-s/jacks-circuits.pdf), with the datasheet
+      and the mechanical drawing beside it.
 - [ ] **The DC socket.** Plug the Cioks lead in with the Cioks switched off. Find which lug beeps to
       the centre pin and which to the sleeve. If there's a third lug, note whether it beeps to the
       sleeve only with no plug in.

@@ -124,8 +124,8 @@ def lib_pins(fname, name):
 # ---------------------------------------------------------------- the parts
 # key: (library file, symbol name, value)
 PARTS = {
-    "IN_JACK":   ("Connector_Audio.kicad_sym", "AudioJack3_SwitchTR", "NMJ6HF-S"),
-    "OUT_JACK":  ("Connector_Audio.kicad_sym", "AudioJack3_SwitchTR", "NMJ6HF-S"),
+    "IN_JACK":   ("Connector_Audio.kicad_sym", "AudioJack3_Switch", "NMJ6HF-S"),
+    "OUT_JACK":  ("Connector_Audio.kicad_sym", "AudioJack3_Switch", "NMJ6HF-S"),
     "R":         ("Device.kicad_sym", "R", ""),
     "C_POL":     ("Device.kicad_sym", "C_Polarized", ""),
     "STRIP":     ("Connector_Generic.kicad_sym", "Conn_01x04", ""),
@@ -138,9 +138,9 @@ PARTS = {
 # Every coordinate is a multiple of 1.27 mm (KiCad's connection grid).  The two output
 # channels are the same circuit, one 26.67 mm below the other, so they read across.
 INSTANCES = [
-    ("J1",   "IN_JACK",   (60.96, 57.15),   (54.61, 48.26),   (54.61, 52.07),   None),
-    ("J2",   "OUT_JACK",  (60.96, 105.41),  (54.61, 96.52),   (54.61, 99.06),   None),
-    ("J5",   "OUT_JACK",  (60.96, 132.08),  (54.61, 123.19),  (54.61, 125.73),  None),
+    ("J1",   "IN_JACK",   (60.96, 57.15),   (44.45, 60.96),   (44.45, 63.5),    None),
+    ("J2",   "OUT_JACK",  (60.96, 105.41),  (44.45, 105.41),  (44.45, 107.95),  None),
+    ("J5",   "OUT_JACK",  (60.96, 132.08),  (44.45, 132.08),  (44.45, 134.62),  None),
     ("C1",   "C_POL",     (120.65, 96.52),  (124.46, 93.98),  (124.46, 97.79),  "10u"),
     ("R1",   "R",         (120.65, 106.68), (124.46, 104.14), (124.46, 107.95), "100"),
     ("R2",   "R",         (120.65, 116.84), (124.46, 114.3),  (124.46, 118.11), "1M"),
@@ -154,6 +154,8 @@ INSTANCES = [
     ("#PWR03", "GND",     (73.66, 105.41),  (69.0, 101.6),    (69.0, 108.4),    None),
     ("#PWR04", "GND",     (120.65, 120.65), (116.0, 116.84),  (116.0, 123.7),   None),
     ("#PWR05", "GND",     (73.66, 132.08),  (69.0, 128.27),   (69.0, 135.1),    None),
+    ("#PWR09", "GND",     (73.66, 100.33),  (69.0, 96.52),    (69.0, 103.3),    None),
+    ("#PWR10", "GND",     (73.66, 127.0),   (69.0, 123.19),   (69.0, 130.0),    None),
     ("#PWR06", "GND",     (138.43, 147.32), (134.0, 143.51),  (134.0, 150.3),   None),
     ("#PWR07", "GND",     (250.19, 74.93),  (254.0, 71.12),   (254.0, 78.0),    None),
     ("#PWR08", "GND",     (30.48, 93.98),   (34.5, 90.17),    (34.5, 97.0),     None),
@@ -164,11 +166,11 @@ INSTANCES = [
 WIRES = [
     # IN jack: the core of the screened cable, one continuous conductor, to LIN1
     ((66.04, 62.23), (250.19, 62.23)),     # J1.T -> J4.1 (codec LIN1)
-    ((66.04, 48.26), (66.04, 54.61)),      # GND -> J1.S (sleeve)
+    ((66.04, 48.26), (66.04, 52.07)),      # GND -> J1.S (sleeve)
     ((66.04, 64.77), (66.04, 72.39)),      # J1.TN (tip switch) -> GND
-    # OUT L jack: tip to the strip, sleeve and ring to ground
-    ((66.04, 102.87), (66.04, 105.41)),    # J2.S -> J2.R
-    ((66.04, 105.41), (73.66, 105.41)),    #   -> GND
+    # OUT L jack: tip to the strip; sleeve and ring to ground, each on its own wire
+    ((66.04, 100.33), (73.66, 100.33)),    # J2.S -> GND
+    ((66.04, 105.41), (73.66, 105.41)),    # J2.R -> GND
     ((66.04, 110.49), (120.65, 110.49)),   # J2.T -> node
     ((120.65, 110.49), (250.19, 110.49)),  # node -> J3.1 (strip)
     # the OUT L fixture, on the breadboard today
@@ -178,8 +180,8 @@ WIRES = [
     ((218.44, 92.71), (218.44, 64.77)),    #   up
     ((218.44, 64.77), (250.19, 64.77)),    #   -> J4.2 (codec HPL)
     # OUT R jack: the same circuit, one strip pin along
-    ((66.04, 129.54), (66.04, 132.08)),    # J5.S -> J5.R
-    ((66.04, 132.08), (73.66, 132.08)),    #   -> GND
+    ((66.04, 127.0), (73.66, 127.0)),      # J5.S -> GND
+    ((66.04, 132.08), (73.66, 132.08)),    # J5.R -> GND
     ((66.04, 137.16), (138.43, 137.16)),   # J5.T -> node
     ((138.43, 137.16), (233.68, 137.16)),  # node ->
     ((233.68, 137.16), (233.68, 113.03)),  #   up
@@ -196,8 +198,6 @@ WIRES = [
 ]
 
 JUNCTIONS = [
-    (66.04, 105.41),   # J2.R: ring + sleeve link + ground
-    (66.04, 132.08),   # J5.R: the same
     (120.65, 110.49),  # OUT L node: jack, strip, R1, R2
     (138.43, 137.16),  # OUT R node: jack, strip, R3, R4
 ]
@@ -205,10 +205,13 @@ JUNCTIONS = [
 NO_CONNECTS = [
     (66.04, 57.15),    # J1.R   - IN is mono
     (66.04, 59.69),    # J1.RN
+    (66.04, 54.61),    # J1.SN  - sleeve switch, unused
     (66.04, 107.95),   # J2.RN  - cable detection later
     (66.04, 113.03),   # J2.TN
+    (66.04, 102.87),   # J2.SN
     (66.04, 134.62),   # J5.RN
     (66.04, 139.7),    # J5.TN
+    (66.04, 129.54),   # J5.SN
     (250.19, 115.57),  # J3.3   - reserved: INST/LINE switch
     (250.19, 118.11),  # J3.4   - reserved: DC socket +9 V
 ]
@@ -226,7 +229,7 @@ RECTS = [
     ((73.66, 47.63), (198.12, 64.77)),
 ]
 POLYS = [
-    [(66.04, 54.61), (71.12, 54.61), (71.12, 52.07), (193.04, 52.07)],   # the braid
+    [(66.04, 52.07), (193.04, 52.07)],                                   # the braid
     [(191.77, 50.8), (194.31, 53.34)],                                   # cut mark
     [(191.77, 53.34), (194.31, 50.8)],
 ]
@@ -236,7 +239,8 @@ NOTES = [
     (147.32, 50.8, "far end: cut flush + heatshrunk, connects to nothing"),
     (104.14, 56.5, "one screened cable (CBBR4177) - core and braid in one jacket"),
     (30, 78, "J1, J2 and J5 pin names, as the stock KiCad jack symbol draws them:"),
-    (30, 80.5, "T = tip, R = ring, S = sleeve, TN = tip switch, RN = ring switch."),
+    (30, 80.5, "T = tip, R = ring, S = sleeve, TN = tip switch, RN = ring switch,"),
+    (30, 83, "SN = sleeve switch.  SN and RN are unused on all three jacks."),
     (36.83, 88.9, "PWR_FLAG: the 0 V comes from the star tag (board 1 later);"),
     (36.83, 91.44, "this marks the GND net as driven for ERC."),
     (30, 156, "The input: screened cable CBBR4177."),
@@ -285,7 +289,8 @@ INTENDED = {
     "OUT R fixture: R3-C2": {"R3.1", "C2.2"},
     "OUT R fixture: C2-HPR": {"C2.1", "J4.3"},
 }
-UNCONNECTED = {"J1.R", "J1.RN", "J2.RN", "J2.TN", "J5.RN", "J5.TN", "J3.3", "J3.4"}
+UNCONNECTED = {"J1.R", "J1.RN", "J1.SN", "J2.RN", "J2.TN", "J2.SN",
+               "J5.RN", "J5.TN", "J5.SN", "J3.3", "J3.4"}
 
 
 def pin_pos(part, at):
