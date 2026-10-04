@@ -1,7 +1,8 @@
 # The Pico ↔ Core host UART protocol
 
 **Status:** draft 2, proposed 2026-09-28 in Claude's review (U1–U8, at the end). Draft 1 is what
-the firmware and `firmware/tools/protocol-test.py` speak today; they move to draft 2 once it is
+both ends speak today — the firmware, and since 2026-10-04 `pedald` (v1) as well, holding a live
+session on vip (plan Phase 3.2 and 3.4, both now in service) — and they move to draft 2 once it is
 agreed, and the bench loopback runs again. This is the contract for plan Phase 3 step 3, and it
 is kept here because both ends live here: the Pico firmware (`firmware/`) and the pedal service
 (Phase 3.2). The Core-side port is Phase 3 step 4 (see Transport); the port is not part of this
@@ -231,8 +232,11 @@ engine. Heartbeats at 250 ms with nothing else happening are about 0.4% of the l
 - `firmware/tools/protocol-test.py` is the frame-level loopback: it plays the service side
   over the Debug Probe and checks the session, heartbeats both ways, an EVENT whose ACK is
   deliberately dropped (retransmit, then no further copies), STATE, and link-down recovery.
-  The firmware implements this document today (`firmware/src/protocol.c`); the service end is
-  still a test script until the service is built (design: `docs/pedal-service.md`, its v1).
+  The firmware implements this document today (`firmware/src/protocol.c`); the service end was a
+  test script until v1 was built — it is now `pedald`
+  (`devices/common/rootfs/usr/local/lib/pedald/`, design: `docs/pedal-service.md`, its v1), with
+  114 unit tests of its own (`devices/common/test-pedald`) and a live session against the Pico on
+  vip (`bench-results/2026-10-04-pedald-on-vip.md`).
   Evidence:
   `bench-results/2026-09-28-pico-protocol-loopback.txt`.
 - It also sends a frame header whose length swallows the start of a good `STATE`, and checks

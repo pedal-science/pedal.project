@@ -1,9 +1,9 @@
 # Pedal Project
 
 The pedal as a system. This repo owns the goal, the hardware design, the diagrams, the
-decisions and the plan, plus the Core host's configuration as code (`devices/<host>/`) and
-the Pico firmware (`firmware/`). The pedal service beside `namchaind` will live here too
-(`docs/pedal-service.md`). The engine (`namchain`), the rig designer (`ljoss`), the kernel (`rtpi`) and DSP research
+decisions and the plan, plus the Core host's configuration as code (`devices/<host>/`), the
+Pico firmware (`firmware/`), and the pedal service `pedald` beside `namchaind`
+(`devices/common/rootfs/usr/local/lib/pedald/`, designed in `docs/pedal-service.md`). The engine (`namchain`), the rig designer (`ljoss`), the kernel (`rtpi`) and DSP research
 (`NAMBench`) are separate repos; `docs/working-across-repos.md` says which repo owns
 what, which machines exist, and the rules against drift.
 
@@ -51,6 +51,11 @@ schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-hando
   host's configuration as code. Run `backup` before changing anything. `pedal-device apply <stage> --root
   <dir>` applies the same tree to a root that isn't running (vip's image build);
   `devices/vip/test-offline-apply` checks that in the build container.
+- `devices/common/test-pedald`: the pedal service's tests (config, the engine client, the Pico link
+  over a pty, the mapping, resume, the HTTP server) — 114 of them, and they run on the Mac, not on
+  vip (no `pty`, `http.client` or `urllib` there). The service
+  itself is `devices/common/rootfs/usr/local/lib/pedald/`, run by `pedald.service`; `docs/pedal-service.md`
+  is its design and what each version is for.
 - `devices/vip/make-card [--image-only] [--disk /dev/diskN] [--dev]` (links to
   `devices/common/make-card`): build vip's whole card in colima from the commits in
   `devices/vip/image.lock` (namchain built and tested there, both roots, the boot partitions),

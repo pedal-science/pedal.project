@@ -336,6 +336,10 @@ numbers need re-measuring on piv.
    (power pulled): the same again, with `last.json` intact and valid, and the rig running 13.9 s
    after the kernel started. piv's root is a USB SATA SSD, not an SD card, so this says nothing
    yet about vip's storage; that stays Phase 4's.
+   **2026-10-04: `pedal-resume` is retired.** `pedald` (3.2's v1) owns the same job — one writer of
+   `last.json` — with the save rule R2 asked for widened: it watches `generation`, `params_applied`
+   **and** the rig the engine reports, because a `rig.load` moves the rig's path and name and leaves
+   both counters alone (measured). On vip it wrote `last.json` for the app's rig the same evening.
    First number for step 7: the rig was published and the render thread running **13.2 s** after
    the kernel started (userspace reached multi-user at 25 s; firmware and bootloader time before
    the kernel not counted).
@@ -716,21 +720,27 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      to step 2's failure-mode work.
    - The firmware implements it (`firmware/src/protocol.c`) and the frame-level loopback passes
      on the bench, retransmit and link-down included (`firmware/tools/protocol-test.py`;
-     `bench-results/2026-09-28-pico-protocol-loopback.txt`). The service end is a test script
-     until step 2.
+     `bench-results/2026-09-28-pico-protocol-loopback.txt`). The service end was a test script
+     until step 2; **since 2026-10-04 it is `pedald`** (v1, draft 1 framing), and the two ends hold
+     a live session on vip.
    - Draft 2, proposed in Claude's review of 2026-09-28 (U1–U8 in the doc): the CRC's text
      corrected, strings length-prefixed, one `EVENT` in flight with a queue behind it, dedupe
      per session, `engine_bypass` renamed `engine_muted`, and (U8, yours) footswitches sending
      `cc` 80–82 so footswitch and MIDI messages are identical. The firmware's resync now does
      what the text says (compile-checked; `protocol-test.py` has a check for it, to run on the
-     bench).
+     bench). **U8 is now the only thing in draft 2 that blocks 3.5**, and it is still yours.
 4. **The Core host side** (`tib`'s UART1 went with `tib`).
    - A UART on the Pi's 40-pin header that carries nothing but the link: no kernel console, no
      getty, no SysRq. On piv, pins 8/10 are `ttyAMA0`, and its kernel console is there
      (`console=ttyAMA0,115200` in its command line, 2026-09-28 backup). Either move the console,
      or give the link another RP1 UART through a `config.txt` overlay (the Pi 5's `uart2-pi5` to
      `uart4-pi5`; check Ubuntu's image has them). `devices/<host>/` owns whichever it is.
-   - The pedal service reads it (its v1).
+   - **Done on vip 2026-10-04, and nothing had to move.** vip's console and getty are on
+     `ttyAMA10` (the debug connector), so pins 8/10 are free: `ttyAMA0` carries the link, 115200,
+     GP0 → pin 10 and GP1 → pin 8 with GND, with `uart0` muxed onto them. A by-hand session came
+     up first (`bench-results/2026-10-04-rewire-faults-and-the-pico-console.md`), then `pedald`
+     took the port and the two ends have held a session since
+     (`bench-results/2026-10-04-the-pedal-plays-in-a-case.md`).
 5. **Firmware v1.**
    - Three footswitches, with 100 nF at each switch, debounce and long-press.
    - DIN MIDI in: optocoupler, UART RX at 31 250 baud.
@@ -754,6 +764,10 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
         Pi switches its USB-A power, and may cut it during a reboot or at shutdown.
      2. vip's header pin 2 through a 1N5817 into VSYS. The header's 5 V is more likely to stay
         live while the supply is on.
+     **2026-10-04: form 1 is what the bench is wired as** — the Pico is powered from vip's USB-A,
+     and its console rides the same cable — so the test is ready to run, and it is the one that
+     decides whether that cable (BOM, "USB-A to micro-B") stays the arrangement. Not yet run: the
+     Pico has not been through a vip reboot on this wiring.
      Power the Pico each way with its LED blinking, then `sudo reboot` vip, and separately shut
      it down. Watch whether the Pico restarts. Keep the first way that holds through both; if
      neither does, the Pico restarting with vip is still safe (the relay drops to bypass), but
@@ -871,6 +885,15 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
 - The relay covers boot and failure.
 
 ## Phase 4 — Enclosure, power and hardening
+
+**2026-10-04: the rear wall is being trialled in a plastic stand-in.** A temporary plastic box
+carries IN, OUT L and OUT R in the Neutrik jacks in exactly the arrangement this phase plans for the
+aluminium case, and vip's USB-C lead passes through a hole in that wall straight into the Pi's port
+(the panel-mount extension is still to buy). It plays
+([bench-results/2026-10-04-the-pedal-plays-in-a-case.md](bench-results/2026-10-04-the-pedal-plays-in-a-case.md)),
+which is the first hardware check the enclosure model has had: `enclosure/README.md` used to say
+none of its layout had been near hardware. The cut positions the plastic box ended up with are worth
+recording before the aluminium one is drilled.
 
 - **Panel:**
   - the display module's fixed screen/knob/button unit
@@ -1067,6 +1090,52 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 - **Not designed yet:** the mic stage, cooling and the panel hardware.
 
 ## Next session starts with
+
+**The pedal plays, assembled, in a case — with the Pico on the link** (2026-10-04). Not a part on the
+bench any more: the owner played the assembled pedal this evening. A **temporary plastic box** stands
+in for the aluminium case, and its rear wall carries **IN, OUT L and OUT R** in the Neutrik jacks, in
+the arrangement the aluminium case will use; vip's own **USB-C** supply lead comes through a hole in
+that wall straight into the Pi's USB-C port (no panel-mount extension yet); the **Pico** is powered
+from one of vip's **USB-A** ports into its micro-B, with its UART on the header (`ttyAMA0`, GP0 → pin
+10, GP1 → pin 8, GND). The owner's report: the codec and `namchaind` "work perfectly", ljoss sends
+rigs, it "sounds great", rigs can be edited and switched "with no glitches, no delays", and the
+latency "feels like zero". Evidence, and the list of what it does *not* show:
+[bench-results/2026-10-04-the-pedal-plays-in-a-case.md](bench-results/2026-10-04-the-pedal-plays-in-a-case.md).
+Read from vip while that rig was loaded: `namchaind` `running`, `ok`, `hw:CARD=wm8960,DEV=0`, 48000 Hz
+/ q64, **0 xruns**, 0 guard trips, `issues: []`, worst block **20.3%** of the 1333 µs deadline (0 over
+90%), ljoss's "New Rig" applied over TCP, 52 models and 1,538 IRs in the library, model budget 300,808
+of 458,752 bytes. `pedald` **v1 is deployed and running** (the service's own evidence is
+[bench-results/2026-10-04-pedald-on-vip.md](bench-results/2026-10-04-pedald-on-vip.md)):
+`pedald 0.1 up: link /dev/ttyAMA0, http on 0.0.0.0:47820`, `Pico says hello: fw '0.1', protocol
+1.0`, and its save rule wrote `/var/lib/pedal/library/rigs/last.json` for that rig.
+
+**Three things this makes true.** Phase **3.4** is in service, not on the bench: `ttyAMA0` carries
+the link and the other end is `pedald`, not a test script — the Core-side UART needed no console
+moving on vip (the console and getty are on `ttyAMA10`). Phase **3.2**'s **v1 has landed**
+(783a8de, dcaf0e2): the service is up, the `HELLO`/`WELCOME` session comes up against a live Pico,
+and `pedal-resume` is retired into it — one writer of `last.json`. And Phase **3.6**'s Pico power
+question now has its first wiring on the bench, which is the one that needs a reboot to answer.
+
+**And three it does not.** **Switching is still the app's path, not the pedal's:** no footswitches,
+no MIDI in, no relay, so the Pico's only job today is the link and its console, and every switch the
+owner made went ljoss → `namchaind` on the **cold** path — 25–35 ms, inside D10's 50 ms, but with
+E1's **170–340 ms** of wrong-sounding state at the front of it. "No glitches" and "no latency" are
+the owner's ear, not the glitch detector and not a timing at the jack; D10's gate is a switching soak
+and it belongs to 3.8. **The Pico's firmware is `fw '0.1'`**, which no checkout's `git describe`
+produces — reflash from a known commit before trusting anything firmware-side. And **the case is not
+the aluminium one**: nothing is panel-mounted, the display, footswitches, MIDI and the toggle are
+absent, and the analogue side still runs without board 1 (no input buffer, no output stage of its
+own), which is why [2026-10-04-case-first-sound-end-to-end.md](bench-results/2026-10-04-case-first-sound-end-to-end.md)'s
+fixtures are still in the path.
+
+**The next four things, cheapest first:** (1) **3.6's Pico power test** — the Pico is wired for it
+right now, and ten minutes decides whether the USB-A route survives a vip reboot and shutdown, which
+the relay rule needs; (2) **reflash the Pico from a known commit**; (3) **3.8** — namchain's ready set
+and `rig.switch`, then `pedald` v2's bank and map — which D10 puts before the footswitches, because
+without it a press stalls on the SD card and the first 170–340 ms is E1's wrong sound; (4) alongside
+those, **2b's board 1** (Phase 2b.3), which is what takes the analogue side off the bench fixtures.
+The UART contract's **U8** decision (footswitches sending `cc` 80–82, so footswitch and MIDI
+messages are identical) is needed before 3.5 and is the owner's to make.
 
 **Three disturbed leads, and the Pico's USB console driver** (2026-10-04). After the rewire,
 `namchaind` was `running` but `lost` with no sound card at all (`pedal-codec` failed with
@@ -1283,7 +1352,11 @@ three knobs as 580 ramps, a bypass with no rebuild
 Ambient Wash fails the gate on vip by itself at q64 (vip soak item 3, "Measured steady").
 
 **Testing happens on vip for now** (decided 2026-09-30), until it's a working pedal that shouldn't
-be disrupted; then the test hardware gets chosen again. piv isn't updated meanwhile, except that it
+be disrupted; then the test hardware gets chosen again. **That moment has arrived (2026-10-04):**
+vip is the assembled pedal the owner plays, wired into the case, with the Pico on its USB-A and the
+link running — so the next thing that needs a test host (2b's breadboard, a soak, a kernel try) either
+waits for a window the owner grants or goes on other hardware, and the choice of that hardware is
+open again. piv isn't updated meanwhile, except that it
 runs namchain d4fb8e5 since the 2026-09-30 step 8 soak (Rik asked for it); and `devices/piv/check` reports `pedal-codec` and `pedal-device` as differing
 (they moved to `devices/common` and changed). The piv phases below wait on that choice.
 

@@ -12,7 +12,7 @@ rather than a rule.
 
 | Repo (GitHub `rikkus/…`) | Checkout on the Mac | Owns |
 |---|---|---|
-| `pedal.project` | `~/code.local/pedal.project` | The pedal as a system: goal, hardware design, diagrams, decisions, plan. The Core host's appliance configuration (`devices/`), the Pico firmware (`firmware/`), and next, the pedal service beside `namchaind` |
+| `pedal.project` | `~/code.local/pedal.project` | The pedal as a system: goal, hardware design, diagrams, decisions, plan. The Core host's appliance configuration (`devices/`), the Pico firmware (`firmware/`), and the pedal service (`pedald`, in `devices/common/rootfs/usr/local/lib/pedald/`) beside `namchaind` |
 | `namchain` | `~/code.local/namchain` | The engine library, `namchaind`, `namchainctl`, the soak and bench tools, and **the control protocol** (protocol 2) |
 | `ljoss` | `~/code.local/ljoss` | The rig designer (macOS/iOS), including flattening the rig tree into an engine graph |
 | `rtpi` | `~/code.local/rtpi` | `tib`'s kernel, the boot-slot safety net, RT tuning, and so any **device-tree** change such as the WM8960 sound card |
@@ -78,7 +78,7 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 | App (`ljoss`) | Xcode on the Mac → **Connect to this computer** (Settings → Hardware runs `namchaind` here, capturing a live input device or a looped WAV) or against vip over WiFi → `Tools/check-device.sh` for the handshake and `audible_generation` |
 | Kernel, device tree (`rtpi`) | A kernel package in the pedal root → `vip-boot try-kernel` stages it in the spare slot and boots it once → `vip-boot-validate` promotes it or it rolls back (`bench-results/vip-card/fallbacks.md`); rtpi's boot files reach vip through its image (`make-card`, `--remote`) |
 | DSP research (`NAMBench`) | Fork branch → upstream PR, plus either a patch or pin in `namchain/vendor` or a port into one of `namchain`'s own nodes → `namchain`'s golden, parity or tolerance tests prove the swap |
-| Pico firmware (`firmware/`) | `firmware/build.sh` on the Mac (Pico SDK 2.3.1, Arm GNU 15.3.rel1) → `firmware/flash.sh` (picotool, or the UF2 volume) → the bench tests through the Debug Probe (`firmware/tools/`) → later, the pedal service over the Core host's UART |
+| Pico firmware (`firmware/`) | `firmware/build.sh` on the Mac (Pico SDK 2.3.1, Arm GNU 15.3.rel1) → `firmware/flash.sh` (picotool, or the UF2 volume) → the bench tests through the Debug Probe (`firmware/tools/`) → **and now the pedal service over the Core host's UART**: on vip the link is `ttyAMA0`, and `pedald` holds the session with it |
 
 Rollback on `tib` is the previous symlink. For the kernel it is `rtpi`'s known-good slot.
 

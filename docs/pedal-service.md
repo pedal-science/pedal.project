@@ -4,8 +4,9 @@
 sits, how the library is stored and uploaded, how the footswitch and MIDI vocabulary is mapped,
 and how it fails. It also answers the two questions [`uart-protocol.md`](uart-protocol.md)
 deferred here: the MIDI channel, settled, and the relay's rule, proposed and yours to decide.
-The service's v0 is [`pedal-resume`](../devices/common/rootfs/usr/local/sbin/pedal-resume), and
-the implementation is staged at the end.
+The service's v0 was [`pedal-resume`](../devices/common/rootfs/usr/local/sbin/pedal-resume), which
+**retired on 2026-10-04**; **v1 is `pedald`**, landed the same day (783a8de, dcaf0e2), deployed on
+vip, and running against a live Pico — see "What is staged" at the end.
 
 **Reviewed by Claude, 2026-09-28.** The comments are at the end (R1–R15). The text already
 carries the changes they propose, and where a choice is yours, it says so.
@@ -398,6 +399,24 @@ pedal changes rigs for real only from v2 (R1):
   (`HELLO`/`WELCOME`, `EVENT`/`ACK` with dedupe, `PING`/`PONG`, `STATE` at 1 Hz and on change),
   `/status`, and the mapping tables. It switches with `rig.load` on the bench only, to test the
   loop from a press to the engine; D10 keeps that path off the stage.
+  **Landed 2026-10-04** (783a8de, dcaf0e2, in `devices/common/rootfs/usr/local/lib/pedald/`, 114
+  tests under `devices/common/tests`, run by `devices/common/test-pedald` — on the Mac, which has
+  `pty` and `http.client`, not on vip). Deployed on vip the
+  same evening and running against a live Pico: `pedald 0.1 up: link /dev/ttyAMA0`, `Pico says
+  hello: fw '0.1', protocol 1.0`, and the save rule wrote `last.json` for the app's rig. Three
+  things the implementation settled that the design above does not say:
+  - **The save rule (R2) needs a third input.** Watching `generation` and `params_applied` alone
+    never saves a switch: a `rig.load` moves the rig's path and name and leaves both counters
+    alone, measured on vip. `pedald` watches the rig the engine reports as well.
+  - **The session is re-established by any valid frame, not only by `HELLO`.** Once its own
+    session is up the firmware stops sending `HELLO`, so a Core that drops its half would wait
+    for a message that cannot come while its own `PONG`s kept the Pico up. Found on the bench, not
+    by the unit tests; the rule now lives in [`uart-protocol.md`](uart-protocol.md).
+  - **The HTTP server and the link are hand-rolled.** vip's `python3-minimal` has no
+    `http.server` and no `termios`, so the server is written out and the UART is `stty` +
+    `select`. It runs unprivileged (`User=pedal`, `ProtectSystem=strict`, the only writable path
+    `/var/lib/pedal`, the token through `LoadCredential`), and the bearer is compared in constant
+    time and fails closed.
 - **v2** (with Phase 3.8, once namchain's M3 answers): the ready set and `rig.switch`. From here
   the footswitches and MIDI change rigs for real, and firmware v1 (3.5) has something to drive.
 - **v3** (no plan step yet; it pays off the debt register's "no way to upload from the app"): the

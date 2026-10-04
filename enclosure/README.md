@@ -107,7 +107,14 @@ The parts are close, not exact.
 
 ## What the model says about the layout
 
-None of this has been checked against hardware. `src/layout.py` has the positions; the parts'
+None of this had been near hardware when it was drawn. **Since 2026-10-04, one part of it has:** a
+temporary plastic box stands in for the case, and its rear wall carries IN, OUT L and OUT R in the
+Neutrik jacks in the arrangement modelled here, with the USB-C supply lead through a hole to the
+Pi's own port. It plays
+([bench-results/2026-10-04-the-pedal-plays-in-a-case.md](../bench-results/2026-10-04-the-pedal-plays-in-a-case.md)).
+Everything else — the footswitches, the display, the clock, and the board positions inside — is
+still unchecked, and the cut positions the plastic box ended up with are worth recording before the
+aluminium case is drilled. `src/layout.py` has the positions; the parts'
 meshes don't intersect except where they should touch (checked in Blender).
 
 - **The height is the constraint.** At 33 mm (Tayda's 1590DD) the Dupont housings on the Pi's

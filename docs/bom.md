@@ -20,6 +20,9 @@ The analogue values were settled by the Phase 2b review on 2026-09-27
 - `tib` (Tinker Board S), the SSL 2+, the SparkFun WM8960 breakout (stock, unchecked), the ST7789
   display with its encoder, the spare enclosure, the Cioks DC7 and the MIDI Commander. The
   RP2350-USB-A is on its way.
+- The **spare enclosure is the bench pedal since 2026-10-04**: a temporary plastic box whose rear
+  wall carries IN, OUT L and OUT R in the Neutrik jacks, standing in for the aluminium case until it
+  arrives (plan Phase 4).
 - Basic open-frame 6.35 mm jacks. The Neutrik jacks under Building replace them in the build.
 - Jumper leads, and black hook-up wire.
 
@@ -114,7 +117,7 @@ the middle of the op-amp's input range.
 | M3 solder tags, pack of 100 | CN22127 | 1 | 0.83 | in hand | The star-ground point |
 | Raspberry Pi 45 W USB-C power supply | — | 1 | — | in hand | vip's supply. It offers 5.1 V at 5 A by USB PD, which vip asks for itself. The DC7 v1's USB-A (1 A) isn't enough; it stays for the MIDI Commander |
 | USB-C panel-mount extension, female panel socket to male plug | — | 1 | — | to buy | The 5 V input on the rear panel, plugged into vip's own USB-C, so vip negotiates 5 A and keeps its input protection. It must be a full USB-C extension (all pins, not power-only or USB 2.0) rated 5 A ("100 W", e-marked), about 20–30 cm, ideally with a right-angle plug. Its mounting (two-screw flange or nut) sets the panel cut-out. The layout must leave room for the plug at vip's port (Phase 4) |
-| USB-A to micro-B cable, short, right-angle micro-B | — | 1 | — | to buy | The Pico's 5 V from one of vip's USB-A ports, and reflashing from vip if it carries data. Only if Phase 3.6's reboot test passes; otherwise vip's header pin 2 through a 1N5817 into VSYS |
+| USB-A to micro-B cable, short, right-angle micro-B | — | 1 | — | in hand | The Pico's 5 V from one of vip's USB-A ports, and reflashing from vip if it carries data. **In use on the bench since 2026-10-04** (powering the Pico and carrying its console); Phase 3.6's reboot test decides whether it stays the arrangement — otherwise vip's header pin 2 through a 1N5817 into VSYS |
 
 ## Control surface (Phase 3)
 
