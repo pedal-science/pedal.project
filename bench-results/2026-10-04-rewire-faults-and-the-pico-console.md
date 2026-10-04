@@ -6,7 +6,7 @@ sees it. What is actually broken — the wiring, the engine, or the host?
 
 ## Result
 
-Two wiring faults, in sequence, and one host configuration gap.
+Three disturbed leads, found in sequence, and one host configuration gap.
 
 1. **The codec's I²C bus was dead.** `namchaind` was `active (running)` but reported
    `state: lost`, `device_lost: 1` against `hw:CARD=wm8960,DEV=0`: there was no sound card
@@ -15,7 +15,13 @@ Two wiring faults, in sequence, and one host configuration gap.
    `device: capture timed out after 1000 ms (last state 3, ring 0 frames)`: the PCM was
    `RUNNING` but no frames ever arrived. Fixed at the bench; the engine went green and
    stayed there.
-3. **The trimmed kernel has no `cdc_acm`.** The Pico enumerates on vip's USB but no driver
+3. **The ADAT (ADCDAT) lead was in the wrong socket**, which only showed once the clock was
+   back: the card running and the ADC alive, but the capture exact zeros rather than a
+   timeout. Fixed and measured the same day in
+   [2026-10-04-case-no-audio-diagnosis.md](2026-10-04-case-no-audio-diagnosis.md), which also
+   settles the output side: the rig leaves on channel 0 = HPL, so the interface's cable
+   belongs in OUT L until a chain's `output_channel` is bound.
+4. **The trimmed kernel has no `cdc_acm`.** The Pico enumerates on vip's USB but no driver
    binds its CDC interfaces, so there is no `/dev/ttyACM0`. Fixed in rtpi (rtpi `e873c9c`),
    rebuilt, installed and tried on vip.
 
@@ -65,7 +71,14 @@ garbage, not a timeout. The BCLK lead had come out of the header; once it was ba
 | render | worst 3.4% of the 1333 µs period, 0 over deadline |
 | `scripts/status` | `namchaind: running, ok, hw:CARD=wm8960,DEV=0, 48000 Hz / 64` |
 
-## 3. The Pico on USB, and the trim
+The leads were not done moving: with the clock back the capture was exact zeros, and that
+turned out to be the **ADAT (ADCDAT)** lead in the wrong socket on the codec board —
+diagnosed, fixed and measured in
+[2026-10-04-case-no-audio-diagnosis.md](2026-10-04-case-no-audio-diagnosis.md). Zeros and a
+timeout look similar from the engine's side and are not the same fault: a timeout means no
+clock (this section), zeros mean the clock is there and the data is not (that one).
+
+## 4. The Pico on USB, and the trim
 
 The Pico 2 W (`2e8a:0009`, "Raspberry Pi", serial `5988E9A10C2344D7`) enumerates over USB and
 nobody binds it:

@@ -1068,16 +1068,21 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
-**Two wiring faults, and the Pico's USB console driver** (2026-10-04). After the rewire,
+**Three disturbed leads, and the Pico's USB console driver** (2026-10-04). After the rewire,
 `namchaind` was `running` but `lost` with no sound card at all (`pedal-codec` failed with
 "card wm8960 did not appear"): the codec's I²C bus was dead — every address on `i2c-1`, and the
 driver's own reset write to `0x1a`, ran to the controller's 1 s timeout, which is a held line
 and not an absent chip. Reseated, the card came back; the next failure was `capture timed out
 after 1000 ms (last state 3, ring 0 frames)` — PCM `RUNNING`, no frames — because **BCLK was
 out of the header**: with no bit clock the RP1's I²S RX makes no DMA requests, so no period
-ever completes. Both fixed at the bench. After: card 0 `wm8960`, engine `running/ok`,
-`issues: []`, blocks 750/s at q64, 2 xruns in total and none recent, render worst 3.4% of the
-1333 µs period, 0 over deadline. Evidence:
+ever completes. Once the clock was back the capture was **exact zeros**, and that third lead —
+**ADAT (ADCDAT)** in the wrong socket on the codec board — is diagnosed, fixed and measured in
+[bench-results/2026-10-04-case-no-audio-diagnosis.md](bench-results/2026-10-04-case-no-audio-diagnosis.md),
+which also settles the output side (the rig leaves on channel 0 = HPL, so the interface's cable
+belongs in OUT L until a chain's `output_channel` is bound). A timeout and zeros are not the
+same fault: no clock versus no data. All three fixed at the bench. After: card 0 `wm8960`,
+engine `running/ok`, `issues: []`, blocks 750/s at q64, 2 xruns in total and none recent, render
+worst 3.4% of the 1333 µs period, 0 over deadline. Evidence:
 [bench-results/2026-10-04-rewire-faults-and-the-pico-console.md](bench-results/2026-10-04-rewire-faults-and-the-pico-console.md).
 
 **vip's trimmed kernel keeps `cdc_acm` now** (2026-10-04, rtpi `e873c9c`). The Pico 2 W on
