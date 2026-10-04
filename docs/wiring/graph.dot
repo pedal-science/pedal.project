@@ -1,0 +1,126 @@
+graph wiring {
+    bgcolor="#848068"
+    node [
+		fixedsize = false,
+		fontsize = 24,
+		shape = box,
+		style = "filled",
+        color="#fffcd7"
+	]
+    subgraph cluster_digital {
+        bgcolor="lightblue";
+        label="Digital";
+        subgraph cluster_core {
+            bgcolor="green";
+            label="Core";
+            core_gnd
+        }
+        subgraph cluster_pico {
+            bgcolor="darkgreen";
+            label="Pico";
+            cluster=true;
+        }
+        subgraph cluster_codec {
+            bgcolor="darkred";
+            label="Codec";
+            cluster=true;
+            codec_gnd
+            codec_lin1
+            codec_hpl
+        }
+    }
+    subgraph cluster_analogue {
+        bgcolor="#fda5a5";
+        subgraph cluster_in_socket {
+            bgcolor="#444444";
+            fontcolor=white;
+            label="In";
+            in_t [label="Tip"]
+            in_tn [label="Tip Switch"]
+            in_r [label="Ring"]
+            in_rn [label="Ring Switch"]
+            in_s [label="Sleeve"]
+            in_rs [label="Sleeve Switch"]
+
+        }
+        subgraph cluster_out_sockets {
+            subgraph cluster_out_left_socket {
+                bgcolor="#444444";
+                fontcolor=white;
+                label="Out Left";
+                cluster=true;
+                out_left_t [label="Tip"]
+                out_left_tn [label="Tip Switch"]
+                out_left_r [label="Ring"]
+                out_left_rn [label="Ring Switch"]
+                out_left_s [label="Sleeve"]
+                out_left_rs [label="Sleeve Switch"]
+            }
+            subgraph cluster_out_right_socket {
+                bgcolor="#444444";
+                fontcolor=white;
+                label="Out Right";
+                out_right_t [label="Tip"]
+                out_right_tn [label="Tip Switch"]
+                out_right_r [label="Ring"]
+                out_right_rn [label="Ring Switch"]
+                out_right_s [label="Sleeve"]
+                out_right_rs [label="Sleeve Switch"]
+            }
+        }
+        subgraph cluster_strip {
+            bgcolor="#444444";
+            fontcolor=white;
+            label="Strip";
+            strip_1 [label="1 OUT L tip"]
+            strip_2 [label="2 OUT R tip"]
+            strip_3 [label="3 switch"]
+            strip_4 [label="4 9 V"]
+        }
+        subgraph cluster_power_9v_socket {
+            label="9V IN";
+        }
+        subgraph cluster_r1 {
+            bgcolor="#555522";
+            label="R1";
+            r1_1
+            r1_2
+        }
+        subgraph cluster_r2 {
+            bgcolor="#555522";
+            label="R2";
+            r2_1
+            r2_2
+        }
+        subgraph cluster_c1 {
+            bgcolor="#666666";
+            label="C1";
+            c1_positive
+            c1_negative
+        }
+        subgraph cluster_star {
+            bgcolor="#222222";
+            fontcolor=white;
+            label="Star tag";
+            star
+        }
+    }
+    # every ground returns to the star on its own wire
+    star -- in_s;
+    star -- in_tn;
+    star -- out_left_s;
+    star -- out_left_r;
+    star -- r2_2;
+    star -- codec_gnd;
+
+    # the Core's ground reaches the star through the codec board's header, not on its own wire
+    codec_gnd -- core_gnd;
+
+    # the signal: the input's core, then the output fixture and the strip
+    codec_lin1 -- in_t;
+    codec_hpl -- c1_positive;
+    c1_negative -- r1_1;
+    r1_2 -- out_left_t;
+    r1_2 -- r2_1;
+    r1_2 -- strip_1;
+}
