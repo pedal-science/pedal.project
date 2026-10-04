@@ -65,6 +65,14 @@ Wires off the breadboard: **+9V** a55, **STAR** T−, **IN** j5, **SW-I** j7, **
 - **Wire ends.** Breadboard holes take solid wire. For the jacks, switch and DC socket, solder a
   male-ended jumper lead or a short piece of solid wire onto each lug. Tinned stranded wire frays in
   the contacts.
+- **A stranded core into a breadboard.** The screened cable's core is stranded too, so it gets a pin
+  the same way. Strip about 20 mm of jacket; cut the screen back flush with the jacket and heatshrink
+  the cut — it is bonded to the jack's sleeve lug at that end only and connects to nothing here, and
+  a second ground connection is what made the 90 Hz comb — then strip and tin ~3 mm of core, solder
+  it to one pin cut off the 40-way header strip, and heatshrink that joint. Push the pin into a
+  **free hole in the column** the target pin sits in, never the target's own hole, and anchor the
+  cable so a tug pulls the anchor rather than the pin. Leave the cable long enough to reach the
+  soldered board later: the pin is cut off then and the core soldered to the pad instead.
 
 ---
 

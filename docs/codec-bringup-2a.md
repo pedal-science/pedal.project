@@ -320,6 +320,9 @@ afterwards.
 
 - [ ] **Socket A** on the breadboard: **tip → codec LIN1** (a female-to-male lead to the right-hand
       row), **sleeve → codec GND**. Leave the ring unconnected. A mono socket does that for you.
+- [ ] If you are feeding LIN1 from the case's screened cable rather than a jumper lead, its stranded
+      core needs a pin soldered on first: see "A stranded core into a breadboard" in
+      [build-board1-breadboard.md](build-board1-breadboard.md).
 - [ ] Don't plug the SSL in yet. First calibrate the SSL's output: connect **SSL out 4 → TRS cable →
       socket A** with **LIN1 disconnected**. Claude plays a 200 Hz tone at a known level. You read
       **AC volts** between socket A's tip and sleeve.
