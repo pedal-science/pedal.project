@@ -1097,8 +1097,14 @@ device`) and the codec and engine came through the reboot unchanged. The release
 unchanged, so `devices/vip/components.lock` still matches the host. The rebuild also drops
 `crypto/af_alg`, `crypto/algif_hash`, `crypto/sm4` and `crypto/sm4_generic` — fetch-day keeps in
 the 109-module build that nothing loads now; add them to the keep fragment if that matters. The
-USB CDC is the firmware's console, not the link: the link is the header UART, and on vip
-`ttyAMA0` (pins 8/10) is free of console and getty, so step 4 has nothing to move.
+USB CDC is the firmware's console, not the link — and the link is now on vip too: the Pico's UART
+was moved from the Debug Probe to the header (GP0 → pin 10, GP1 → pin 8, GND), `ttyAMA0` carries
+its 1 Hz HELLO, and a hand-driven WELCOME/STATE/PING session came up (session up, 15 frames,
+0 bad, `link down` a second after the frames stopped). The first placement was dead both ways and
+a re-seat fixed it; `ttyAMA0` was already free of console and getty (the console is on `ttyAMA10`),
+so step 4 has nothing to move. What the link still waits for is the pedal service (Phase 3.2).
+Note the firmware reports fw "0.1", which no current checkout's `git describe` produces — reflash
+from a known commit before trusting firmware-side numbers.
 
 **The prototype case has a schematic** (2026-10-03). The IN jack and both output jacks in the
 plastic box are a KiCad sheet now, [schematic/prototype-case.kicad_sch](schematic/prototype-case.kicad_sch),

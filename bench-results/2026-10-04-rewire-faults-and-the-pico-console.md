@@ -147,12 +147,30 @@ with a session up, an echoed `e`/`d`/`b` is a real `rig_up`/`rig_down`/`bypass_t
 anything that opens this console — the pedal service included — must turn echo off and must
 never leave stray bytes on it.
 
-**The link is not on vip.** The Pico sends `hello sent` once a second into its UART0 (GP0/GP1),
-which is the Debug Probe's bridge, and `session=0` with `frames ok=0` says nothing has ever
-answered it. Listening on vip's header UART — `/dev/ttyAMA0`, pins 8/10, 115200, 4 s — gives
-nothing at all. So the USB console is what vip can drive today; the protocol link needs the
-Pico's UART on those pins (GP0 → pin 10 RXD, GP1 → pin 8 TXD, and a ground) *and* something on
-vip to answer HELLO, which is the pedal service (Phase 3.2) and does not exist yet.
+**The link now runs on vip** (same day, later). The Pico's UART was moved off the Debug Probe
+onto the header — GP0 → pin 10 (RXD), GP1 → pin 8 (TXD), pin 3 → GND — and the first placement
+was dead in both directions: silence on `ttyAMA0`, and `frames ok=0 bad=0` on the Pico after
+valid PINGs sent from vip, so it was not even receiving mangled bytes. vip's side was already
+right (pins 14/15 muxed to `uart0`, 115200, no getty, nothing else claiming them), and no
+`/dev/cu.usbmodem*` existed on the Mac, so no third party was on the net. After the leads were
+re-seated, `ttyAMA0` carried HELLO once a second — `a5 5a 01 07 01 00 00 00 30 2e 31 16 4a`,
+i.e. v1.0, caps 0x0000, fw "0.1" — and three PINGs took the Pico's counter to `frames ok=3`.
+
+A full session was then driven from vip by hand (WELCOME, STATE, PINGs) with the console open
+to watch it:
+
+    proto: session up (service v1.0, heartbeat 250 ms)
+    proto: state audio_ready=1 bypass=0 health=0 rig=2 bank=0/3 name='Crunch Lead'
+    proto: ping 66 -> pong                                    (x11)
+    proto: frames ok=15 bad=0 events lost=0 session=1 rig=2 name='Crunch Lead'
+    proto: link down                                          (1 s after the frames stopped)
+
+So the Core side of the link works end to end from vip — with `stty` and raw file descriptors
+rather than the Mac's `firmware/tools/protocol-test.py`, because vip's python3 is
+`python3-minimal` and has no `termios`. Two things follow: the pedal service (Phase 3.2) is what
+the link still waits for, and the firmware reports itself as fw **"0.1"**, which no current
+checkout's `git describe` can produce (both give a commit hash), so the Pico is running an older
+build than the tree — reflash from a known commit before trusting firmware-side numbers.
 
 ## Note for the link, not the console
 
