@@ -70,6 +70,10 @@ schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-hando
 - `firmware/build.sh`, `firmware/flash.sh`, `firmware/tools/{echo,protocol}-test.py`: build,
   flash and bench-test the Pico firmware (Pico 2 W; SDK 2.3.1 and Arm GNU Toolchain 15.3.rel1
   under `~/pico/`). `FW_ECHO=1` builds step 1's echo for the echo test.
+- `scripts/codec-noise.py <capture.wav>`: the codec's noise floor from an `arecord` capture — DC
+  offset, unweighted and A-weighted RMS in dBFS and µV, and the spectral lines that show a hum comb.
+  `--selftest` checks the weighting against the standard's figures; the procedure it belongs to is
+  [docs/codec-bringup-2c.md](docs/codec-bringup-2c.md).
 - Write evidence into a repo's `bench-results/`, never `/tmp`.
 
 ## Architecture
@@ -127,7 +131,8 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
 - `firmware/` — the Pico firmware; [docs/uart-protocol.md](docs/uart-protocol.md) is the
   Pico ↔ Core host contract.
 - `docs/`: `working-across-repos.md` (repos, machines, rules), `hardware-handoff.md`
-  (schematic findings and reasoning), `codec-bringup-2a.md` (the 2a bench walkthrough),
+  (schematic findings and reasoning), `codec-bringup-2a.md` (the 2a bench walkthrough), `codec-bringup-2c.md` (2c: the
+  shunt swap and the supply and ground legs, with `scripts/codec-noise.py` reading its captures),
   `build-board1-breadboard.md` and `build-board1.md` (board 1 on the breadboard, then soldered), `rig-switch-strategies.md`, `uart-protocol.md`, `pedal-service.md` (the service's design: what
   it owns, storage, uploads, the mapping, failure modes), `pairing.md` (BLE pairing, the pedal's own
   Wi-Fi network, and how ljoss joins it), `vip-image.md` (building vip's card,

@@ -659,6 +659,9 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
 - First try the option that needs no cutting: VIN from a 78L05 on the 9 V side.
 - If that isn't enough, cut AVDD-ISO and fit the external LDO, open SPKVDD and disconnect VIN.
 - Measure against 2a, and keep what measurably helps.
+- Procedure and the rows it produces: [docs/codec-bringup-2c.md](docs/codec-bringup-2c.md). One
+  change per leg, captures read by `scripts/codec-noise.py`, and 2b's expectation that on the bench
+  the supply legs change nothing.
 
 **Done when:**
 - Guitar → buffer → WM8960 → `namchaind` → output stage → amp works.
