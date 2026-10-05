@@ -4,7 +4,10 @@
 # docs/vip-image.md says why each piece is the way it is.
 #
 # In:  /in/pedal, /in/rtpi, /in/namchain   the inputs, exported at their pinned commits
-#      /in/inputs                           name=commit lines for them, plus snapshot
+#      /in/inputs                           name=commit lines for them, plus snapshot and the
+#                                           pedal kernel's release, kind, commit and hashes
+#      /in/kernel                           rtpi's kernel artefacts (boot/modules tarballs and
+#                                           their gates), verified against the lock by make-card
 #      /in/authorized_keys                  public keys for the user
 #      stdin                                the secrets, never written anywhere but the roots:
 #                                           WiFi SSID, WiFi passphrase, namchaind token (one line
@@ -34,6 +37,24 @@ export SOURCE_DATE_EPOCH=$(date -u -d "${SNAPSHOT:0:8} ${SNAPSHOT:9:2}:${SNAPSHO
 export E2FSPROGS_FAKE_TIME=$SOURCE_DATE_EPOCH
 # Stable identifiers, so a rebuild with the same pins makes the same card, bar the secrets.
 uuid() { python3 -c "import uuid,sys; print(uuid.uuid5(uuid.NAMESPACE_URL, 'pedal/' + sys.argv[1]))" "$HOST/$1"; }
+
+# ------------------------------------------------------------------ the two kernels
+# The pedal's kernel is rtpi's rebuild, which is in no archive: it arrives as artefacts and is
+# installed into the root below (docs/vip-kernel-image.md). The stock kernel is an ordinary
+# package, and it is what the spare slot boots — so it has to be in the same root.
+[[ -n $PEDAL_KERNEL ]] || die "device.env has no PEDAL_KERNEL"
+if [[ -z ${FALLBACK_KERNEL:-} ]]; then
+  die "device.env has no FALLBACK_KERNEL: the spare slot would have no kernel"
+fi
+if [[ -z ${PIN[kernel]:-} ]]; then
+  die "/in/inputs has no kernel=: the card was built without the kernel artefacts (make-card says why)"
+fi
+[[ ${PIN[kernel]} == "$PEDAL_KERNEL" ]] \
+  || die "the lock pins ${PIN[kernel]} and device.env names $PEDAL_KERNEL: they must be the same rebuild"
+for p in "linux-image-$FALLBACK_KERNEL" "linux-modules-$FALLBACK_KERNEL"; do
+  grep -qx "$p" "$DEV/packages" \
+    || die "devices/$HOST/packages does not install $p: slot b would have no kernel to boot"
+done
 
 # ------------------------------------------------------------------ secrets
 IFS= read -r WIFI_SSID || die "no WiFi SSID on stdin"
@@ -181,7 +202,28 @@ for f in etc/dracut.conf.d/30-vip-guard.conf \
   install -D -m 644 "$RTPI_DEV/$f" "$PEDAL/$f"
 done
 install -D -m 755 "$RTPI_DEV/usr/local/libexec/vip-boot-validate" "$PEDAL/usr/local/libexec/vip-boot-validate"
+install -D -m 755 "$RTPI_DEV/usr/local/sbin/vip-install-kernel" "$PEDAL/usr/local/sbin/vip-install-kernel"
 cp -a "$RTPI_DEV/usr/lib/dracut/modules.d/95vip-guard" "$PEDAL/usr/lib/dracut/modules.d/"
+
+# The pedal kernel, from the artefacts make-card verified. rtpi's own script does it, so the
+# image and a live deploy share one version of the gates, the device-tree copy and the dracut
+# invocation (docs/vip-kernel-image.md). It runs inside the root, with /proc, /sys and /dev, and
+# builds that release's guarded initramfs as it goes.
+log "pedal root: the pedal kernel $PEDAL_KERNEL, from rtpi's artefacts"
+install -d "$PEDAL/tmp/kernel"
+cp -a "$IN/kernel/." "$PEDAL/tmp/kernel/"
+inroot "$PEDAL" /usr/local/sbin/vip-install-kernel --artefacts /tmp/kernel
+rm -rf "$PEDAL/tmp/kernel"
+# The kernel bytes each slot will boot: the manifest records them, and `--remote` compares the
+# board's booted slot against them before it writes a root under it (image/remote).
+PEDAL_VMLINUZ_SHA=$(sha256sum "$PEDAL/boot/vmlinuz-$PEDAL_KERNEL" | cut -d' ' -f1)
+FALLBACK_VMLINUZ_SHA=$(sha256sum "$PEDAL/boot/vmlinuz-$FALLBACK_KERNEL" | cut -d' ' -f1)
+# The board's own record of which kernel it carries and where it came from (the rescue root's
+# /etc/pedal-image has the commits only: it boots neither).
+{ echo "pedal-kernel=$PEDAL_KERNEL"
+  echo "fallback-kernel=$FALLBACK_KERNEL"
+  echo "kernel-kind=${PIN[kernel-kind]:-}"
+  echo "kernel-rtpi=${PIN[kernel-rtpi]:-}"; } >> "$PEDAL/etc/pedal-image"
 
 log "pedal root: namchain $NC_SHORT into /opt/namchain"
 nc=/opt/namchain/$NC_SHORT
@@ -208,11 +250,13 @@ cp -a "$DEV/rootfs/." "$S/rootfs/"
 bash "$S/rootfs/usr/local/sbin/pedal-device" apply "$S" --root "$PEDAL" --commit "${PIN[pedal]:0:7}" >&2
 chroot "$PEDAL" systemctl enable -q namchaind vip-boot-settle vip-boot-validate pedal-guard pedal-guard-maint vip-boot-deadline
 
-log "pedal root: initramfs with vip-guard"
-initramfs "$PEDAL" "$PEDAL_KERNEL"
-chroot "$PEDAL" lsinitrd "/boot/initrd.img-$PEDAL_KERNEL" > "$W/initrd-pedal.txt"
-grep -q 'vip-guard\.sh' "$W/initrd-pedal.txt" \
-  || die "vip-guard isn't in the pedal's initramfs"
+log "pedal root: initramfs for both kernels, with vip-guard"
+initramfs "$PEDAL" "$FALLBACK_KERNEL"      # the pedal kernel's came from vip-install-kernel
+for rel in "$PEDAL_KERNEL" "$FALLBACK_KERNEL"; do
+  chroot "$PEDAL" lsinitrd "/boot/initrd.img-$rel" > "$W/initrd-$rel.txt"
+  grep -q 'vip-guard\.sh' "$W/initrd-$rel.txt" \
+    || die "vip-guard isn't in the $rel initramfs: a boot of that slot would never count"
+done
 
 log "rescue root: customise"
 common "$RESCUE" rescue
@@ -259,7 +303,8 @@ initramfs "$RESCUE" "$RESCUE_KERNEL"
 log "boot partitions (rtpi's vip-boot init-*)"
 VB=(python3 "$RTPI_DEV/usr/local/sbin/vip-boot" --env "$RTPI_DEV/device.env")
 "${VB[@]}" init-bootsel --dir "$W/p1"
-"${VB[@]}" init-pedal-boot --dir "$W/p2" --kernel-root "$PEDAL" --release "$PEDAL_KERNEL" --config-extra "$DEV/config-pedal.txt"
+"${VB[@]}" init-pedal-boot --dir "$W/p2" --kernel-root "$PEDAL" --release "$PEDAL_KERNEL" \
+  --fallback-release "$FALLBACK_KERNEL" --config-extra "$DEV/config-pedal.txt"
 "${VB[@]}" init-rescue-boot --dir "$W/p3" --kernel-root "$RESCUE" --release "$RESCUE_KERNEL" --config-extra "$DEV/config-rescue.txt"
 
 # ------------------------------------------------------------------ the tree record
@@ -358,7 +403,18 @@ done < <(sfdisk -J "$IMG" | python3 -c 'import json,sys; [print(p["start"]) for 
   echo "host $HOST"
   for k in pedal rtpi namchain snapshot; do echo "$k ${PIN[$k]}"; done
   echo "pedal-kernel $PEDAL_KERNEL"
+  echo "fallback-kernel $FALLBACK_KERNEL"
   echo "rescue-kernel $RESCUE_KERNEL"
+  echo "kernel-kind ${PIN[kernel-kind]:-}"
+  echo "kernel-rtpi ${PIN[kernel-rtpi]:-}"
+  echo "kernel-boot-sha256 ${PIN[kernel-boot-sha256]:-}"
+  echo "kernel-modules-sha256 ${PIN[kernel-modules-sha256]:-}"
+  echo "kernel-dtb-sha256 ${PIN[kernel-dtb-sha256]:-}"
+  # What each slot's kernel is, byte for byte: `--remote` refuses to write a root under a slot
+  # whose kernel is not this (image/remote), because the FAT slot is the one thing a root swap
+  # cannot move.
+  echo "pedal-kernel-vmlinuz $PEDAL_VMLINUZ_SHA"
+  echo "fallback-kernel-vmlinuz $FALLBACK_VMLINUZ_SHA"
   echo "image-bytes $(stat -c %s "$IMG")"
   echo "image-sha256 $(sha256sum "$IMG" | cut -d' ' -f1)"
   for t in pedal rescue; do echo "packages-$t $(sha256sum < "$OUT/packages-$t.txt" | cut -d' ' -f1) $(wc -l < "$OUT/packages-$t.txt")"; done

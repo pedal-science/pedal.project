@@ -1101,6 +1101,20 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**The card carries both kernels, so vip is re-paveable without losing the pedal's kernel**
+(2026-10-05). `make-card --remote` had refused a root swap: vip runs rtpi's rebuild
+(`7.0.0-1017-raspi-realtime-numaemu1-trimmed`), the image built the stock kernel, and `--remote`
+cannot move a FAT boot slot. Now `devices/vip/image.lock` pins the rebuild as **artefacts** from
+rtpi's `build/vip/` (release, kind, rtpi commit, three sha256s), `make-card` verifies every hash
+before the container starts, `build-image` installs it into the root with rtpi's own
+`vip-install-kernel` and fills **slot b with the stock kernel** as the fallback, and `remote`'s
+guard checks the booted slot's `vmlinuz` against the image instead of comparing release strings.
+rtpi's half is `ad9fee1`; the design, what changed while doing it and the one open question
+(automatic kernel rollback on repeated guard trips) are
+[docs/vip-kernel-image.md](docs/vip-kernel-image.md). Next: send this build to vip, then
+`vip-boot try-kernel 7.0.0-1017-raspi-realtime` and back, so both slots are seen to validate on the
+board.
+
 **Diagnostics landed** (2026-10-05, this session): `scripts/diag` /
 `devices/common/rootfs/usr/local/sbin/pedal-diag` reads everything the host, the codec, the Pico
 link and both local sockets will say about themselves, compares it with

@@ -115,7 +115,13 @@ small files that `vip-boot` rewrites:
 ```
 
 Kernels live in two fixed slots, `a/` and `b/`. `profile.txt` names the active one; the other
-holds the previous kernel, or a candidate while one is tried. Promoting a candidate is one
+holds the previous kernel, or a candidate while one is tried. **A card is written with both slots
+filled** (2026-10-05): slot `a/` holds the pedal's kernel — rtpi's rebuild, installed from
+hash-pinned artefacts because it is in no archive — and slot `b/` the stock Ubuntu RT kernel that
+`devices/vip/packages` installs, both marked good. So the spare slot is not
+empty on a fresh card: `vip-boot try-kernel <the other release>` is a validated way back from a
+kernel that will not come up, without a card reader. [vip-kernel-image.md](vip-kernel-image.md) is
+the design, the artefacts and the reasons. Promoting a candidate is one
 rewrite of `profile.txt`, not a rename of directories, so at no moment does the card lack a
 kernel to boot. Every file `vip-boot` changes on FAT (`autoboot.txt`, `profile.txt`,
 `tryboot.txt`, the counter) is rewritten in place at the same length, inside one sector, so a

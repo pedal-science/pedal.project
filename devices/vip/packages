@@ -1,8 +1,10 @@
 # The pedal root's packages, beyond mmdebstrap's minbase: read by the image build (step 4 of
 # docs/vip-image.md), from the pinned snapshot, without recommends. What each is for:
 
-# The kernel: Ubuntu's RT flavour (rtpi devices/vip/device.env, PEDAL_KERNEL), and the Pi 5's
-# WiFi firmware.
+# The kernel: the STOCK Ubuntu RT flavour — the fallback the spare slot boots (rtpi
+# devices/vip/device.env, FALLBACK_KERNEL) — and the Pi 5's WiFi firmware. The pedal's own kernel,
+# rtpi's rebuild, is in no archive: the image build installs it from hash-pinned artefacts
+# (devices/vip/image.lock, docs/vip-kernel-image.md).
 linux-image-7.0.0-1017-raspi-realtime
 linux-modules-7.0.0-1017-raspi-realtime
 linux-firmware-raspi
@@ -16,9 +18,10 @@ systemd-timesyncd
 udev
 dbus
 dracut-core
-python3-minimal
 dosfstools
 e2fsprogs
+# Used by vip-boot, pedald and pedal-diag
+python3
 # pedal-data grows to fill the card on first boot.
 systemd-repart
 
@@ -42,3 +45,6 @@ procps
 util-linux
 kmod
 less
+
+# pedal-diag
+i2c-tools

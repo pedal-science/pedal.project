@@ -46,6 +46,36 @@ if [[ -f $DEV_DIR/authorized_keys ]]; then
   fi
 fi
 
+# The two kernels: the pedal's (rtpi's rebuild, installed from the image's artefacts) in slot a,
+# the stock one the spare slot boots in slot b, and both of them in the root so either slot can
+# boot against it (docs/vip-kernel-image.md). Read from the host's own device.env: this is about
+# what the board carries, not about what the repo would build.
+pedal_kernel=$(dev 'sed -n "s/^PEDAL_KERNEL=//p" /etc/rtpi/device.env' 2>/dev/null || true)
+fallback_kernel=$(dev 'sed -n "s/^FALLBACK_KERNEL=//p" /etc/rtpi/device.env' 2>/dev/null || true)
+if [[ -z $pedal_kernel || -z $fallback_kernel ]]; then
+  log "kernels: $DEV_HOST's /etc/rtpi/device.env names one kernel"
+  printf '  --    %-50s %s\n' "pedal and fallback kernels" \
+    "PEDAL_KERNEL='$pedal_kernel' FALLBACK_KERNEL='$fallback_kernel'"
+else
+  log "kernels: $pedal_kernel (slot a) and $fallback_kernel (slot b) on $DEV_HOST"
+  status=$(dev "sudo -n vip-boot status" 2>/dev/null || true)
+  for pair in "a:$pedal_kernel" "b:$fallback_kernel"; do
+    s=${pair%%:*}; rel=${pair#*:}
+    line=$(awk -v s="$s" '$1 == "slot" && $2 == s' <<< "$status")
+    read -ra fields <<< "$line"
+    good=0; named=0
+    for f in "${fields[@]}"; do
+      [[ $f == good ]] && good=1
+      [[ $f == "$rel" ]] && named=1
+    done
+    if (( good && named )); then printf '  ok    %s\n' "slot $s: $rel, good"
+    else printf '  FAIL  %-50s\n' "slot $s is not $rel, good"; bad=1; fi
+    have=$(dev "ls -d /lib/modules/$rel /boot/vmlinuz-$rel /boot/initrd.img-$rel 2>/dev/null | wc -l")
+    if [[ $have == 3 ]]; then printf '  ok    %s\n' "$rel: modules, kernel and initramfs in the root"
+    else printf '  FAIL  %-50s %s\n' "$rel" "only $have of 3 in the root"; bad=1; fi
+  done
+fi
+
 log "state on $DEV_HOST"
 dev "sudo -n /usr/local/sbin/pedal-device status" || bad=1
 printf '  --    %-34s %s\n' "repo tree" "$(tree_commit)"

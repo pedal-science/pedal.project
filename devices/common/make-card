@@ -69,11 +69,16 @@ lock_get() { sed -n "s/^$1=//p" "$LOCK"; }
 
 if (( DO_LOCK )); then
   snap=$(lock_get snapshot)
+  # The kernel block is not a commit: it stays as it is, comments and all, and is re-emitted
+  # verbatim below (docs/vip-kernel-image.md).
+  keep=$(sed -n '/^# The pedal kernel:/,$p' "$LOCK")
   {
     echo "# What devices/$HOST/make-card builds from (docs/vip-image.md). --lock rewrites the commits;"
-    echo "# the snapshot changes by hand, deliberately. Check namchain is the engine you mean."
+    echo "# the snapshot and the kernel change by hand, deliberately. Check namchain is the engine you"
+    echo "# mean, and that the kernel is the rebuild you mean (docs/vip-kernel-image.md)."
     echo "snapshot=${snap:?no snapshot in $LOCK}"
     for k in pedal rtpi namchain; do echo "$k=$(git -C "${REPOS[$k]}" rev-parse HEAD)"; done
+    [[ -z $keep ]] || { echo; printf '%s\n' "$keep"; }
   } > "$LOCK.new"
   mv "$LOCK.new" "$LOCK"
   cat "$LOCK"; exit 0
@@ -120,6 +125,11 @@ else
   [[ -f $LOCK ]] || die "no $LOCK: run --lock, commit it, or build with --dev"
   for k in snapshot pedal rtpi namchain; do PIN[$k]=$(lock_get "$k"); [[ -n ${PIN[$k]} ]] || die "no $k in $LOCK"; done
 fi
+# The pedal kernel is artefacts, not a tree, so both paths take it from the lock: --dev means the
+# working trees of the three repos, not a working directory full of kernel build output.
+for k in kernel kernel-kind kernel-rtpi kernel-boot-sha256 kernel-modules-sha256 kernel-dtb-sha256; do
+  PIN[$k]=$(lock_get "$k")
+done
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 # --dev: each repo with uncommitted changes is marked -dirty, and so is the image.
 DIRTY=""
@@ -147,7 +157,51 @@ for k in pedal rtpi namchain; do
   PIN[$k]=${PIN[$k]}${MARK[$k]}
 done
 find "$IN" -name .DS_Store -delete
-{ for k in snapshot pedal rtpi namchain; do echo "$k=${PIN[$k]}"; done; } > "$IN/inputs"
+
+# ------------------------------------------------------------------ the pedal kernel's artefacts
+# rtpi's build output, verified against the lock before any time is spent in the container. A
+# kernel is the one input where a silent difference is a card that boots the wrong thing, so each
+# hash is checked, and the release and kind have to agree with the lock too.
+if [[ -n ${PIN[kernel]} ]]; then
+  KDIR=$RTPI_REPO/build/vip
+  [[ -d $KDIR ]] || die "no $KDIR: build the kernel first (make vip-rt in $RTPI_REPO)"
+  got=$(cat "$KDIR/kernelrelease" 2>/dev/null || true)
+  [[ $got == "${PIN[kernel]}" ]] || die "$KDIR/kernelrelease is '$got', the lock says ${PIN[kernel]}: rebuild it, or re-pin the lock"
+  got=$(cat "$KDIR/build-kind" 2>/dev/null || true)
+  [[ $got == "${PIN[kernel-kind]}" ]] || die "$KDIR is a '$got' build, the lock says ${PIN[kernel-kind]}"
+  mkdir -p "$IN/kernel"
+  copy_verified() {  # copy_verified <file> <sha256 the lock pins>
+    local f=$1 want=$2 have
+    [[ -s $KDIR/$f ]] || die "$KDIR/$f is missing or empty: did the build finish?"
+    have=$(shasum -a 256 "$KDIR/$f" | cut -d' ' -f1)
+    [[ $have == "$want" ]] || die "$f is $have, the lock pins $want: rebuild it in rtpi, or re-pin the lock"
+    cp "$KDIR/$f" "$IN/kernel/"
+  }
+  copy_verified "boot-${PIN[kernel]}.tar.gz" "${PIN[kernel-boot-sha256]}"
+  copy_verified "modules-${PIN[kernel]}.tar.gz" "${PIN[kernel-modules-sha256]}"
+  for f in kernelrelease build-kind trimmed-ok.txt proc-modules bcm2712-rpi-5-b.dtb.sha256 \
+           sha256sums built-from; do
+    [[ -e $KDIR/$f ]] && cp "$KDIR/$f" "$IN/kernel/"
+  done
+  have=$(cut -d' ' -f1 "$IN/kernel/bcm2712-rpi-5-b.dtb.sha256" 2>/dev/null || true)
+  [[ $have == "${PIN[kernel-dtb-sha256]}" ]] \
+    || die "the built bcm2712-rpi-5-b.dtb is $have, the lock pins ${PIN[kernel-dtb-sha256]}"
+  # Provenance, so a card can say which rtpi tree its kernel came from. The locked artefacts
+  # predate rtpi's own stamp; the lock says so, and new builds write it themselves.
+  if [[ -s $KDIR/built-from ]]; then
+    got=$(cat "$KDIR/built-from")
+    [[ $got == "${PIN[kernel-rtpi]}" ]] \
+      || warn "the artefacts were built from rtpi $got, the lock says ${PIN[kernel-rtpi]}"
+  fi
+  log "kernel: ${PIN[kernel]} (${PIN[kernel-kind]}) verified against the lock"
+else
+  warn "no kernel= in $LOCK: the card gets only the stock kernel — no pedal kernel, no fallback slot"
+fi
+
+{ for k in snapshot pedal rtpi namchain; do echo "$k=${PIN[$k]}"; done
+  for k in kernel kernel-kind kernel-rtpi kernel-boot-sha256 kernel-modules-sha256 kernel-dtb-sha256; do
+    [[ -n ${PIN[$k]} ]] && echo "$k=${PIN[$k]}"
+  done; } > "$IN/inputs"
 printf '%s\n' "$AUTH_KEYS" > "$IN/authorized_keys"
 
 # ------------------------------------------------------------------ build

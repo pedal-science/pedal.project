@@ -1,6 +1,21 @@
 # What devices/vip/make-card builds from (docs/vip-image.md). --lock rewrites the commits;
-# the snapshot changes by hand, deliberately. Check namchain is the engine you mean.
+# the snapshot and the kernel change by hand, deliberately. Check namchain is the engine you
+# mean, and that the kernel is the rebuild you mean (docs/vip-kernel-image.md).
 snapshot=20260929T000000Z
 pedal=9dec58eca395c5ca7eadbd40096412f09b036209
 rtpi=bae26dc220c2a4e95ffa9d260d50191b6a83dcca
 namchain=d4fb8e54089d5e2528a7265537af7ca35752cb6b
+
+# The pedal kernel: rtpi's rebuild, which is in no archive, so the image takes it from rtpi's
+# build/vip/ as artefacts and pins it by hash — make-card verifies every one of these before the
+# build starts, and the image build installs them. The spare slot boots the stock kernel instead,
+# which devices/vip/packages installs as a package (rtpi's FALLBACK_KERNEL).
+kernel=7.0.0-1017-raspi-realtime-numaemu1-trimmed
+kernel-kind=trimmed
+# Reconstructed: this build predates rtpi's own built-from stamp (rtpi ad9fee1). The artefacts'
+# timestamps and the rtpi tree at that moment put them at the change that became e873c9c; builds
+# from now on write the commit themselves, and make-card says so when the two disagree.
+kernel-rtpi=e873c9cd2195088674fc296e42017909b92ae311
+kernel-boot-sha256=dac07fb7cdb514a45156afc2ea17a78b74ed1b3602ffd04ca30692c4cc43d527
+kernel-modules-sha256=ebce6fc56fbedc6e3b71eb4c91399f6d74c8b78c4eea30a8351891014e2816ab
+kernel-dtb-sha256=1d1988efb6e918ffb516362cebef482f8f6c48bbb4462129b57e3d1888afd2c3

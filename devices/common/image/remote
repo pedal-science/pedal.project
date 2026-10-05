@@ -34,6 +34,9 @@ done
 (( PREVIOUS )) || [[ -f $IMG && -f $OUT/pedal-root.ext4.sha256 ]] || die "$OUT has no pedal root image"
 want_commit=$(awk '$1 == "pedal" {print $2}' "$OUT/manifest")
 want_kernel=$(awk '$1 == "pedal-kernel" {print $2}' "$OUT/manifest")
+want_fallback=$(awk '$1 == "fallback-kernel" {print $2}' "$OUT/manifest")
+want_kernel_sha=$(awk '$1 == "pedal-kernel-vmlinuz" {print $2}' "$OUT/manifest")
+want_fallback_sha=$(awk '$1 == "fallback-kernel-vmlinuz" {print $2}' "$OUT/manifest")
 SHA=$( (( PREVIOUS )) || awk '{print $1}' "$OUT/pedal-root.ext4.sha256")
 
 SSH=(ssh -o BatchMode=yes -o ConnectTimeout=8 "$HOST")
@@ -57,7 +60,29 @@ wait_root() {
 r=$(root_now); [[ -n $r ]] || die "$HOST doesn't answer"
 if [[ $r == pedal ]]; then
   running=$("${SSH[@]}" "uname -r")
-  [[ $running == "$want_kernel" ]] || die "vip runs $running and the image $want_kernel: a kernel change goes through vip-boot try-kernel, not a new root (yet)"
+  # What a root swap can and cannot move. It cannot touch the FAT boot partition, so the kernel
+  # and initrd the firmware loads stay exactly as they are: the new root has to carry that
+  # release's modules, and for the pedal's kernel those are the ones in the locked artefacts
+  # (docs/vip-kernel-image.md). Two questions, because a release string alone cannot tell two
+  # builds apart.
+  case "$running" in
+    "$want_kernel")   want_running_sha=$want_kernel_sha ;;
+    "$want_fallback") want_running_sha=$want_fallback_sha ;;
+    *) die "$HOST runs $running; the image carries $want_kernel and $want_fallback. A kernel change goes through a card write or vip-boot try-kernel, not a new root" ;;
+  esac
+  slot=$("${SSH[@]}" 'grep -o "vipboot.slot=[a-z]*" /proc/cmdline | cut -d= -f2')
+  [[ -n $slot ]] || die "$HOST is on the pedal root but its cmdline names no slot"
+  [[ -n $want_running_sha ]] \
+    || die "$OUT/manifest has no kernel-hash line for $running: it was built before the image carried both kernels — rebuild it rather than sending this one"
+  # The slot's own vmlinuz, read off the card: if it is not the bytes this image has, the boot
+  # partition and the root have parted company (a rebuild under the same release string, or a
+  # candidate staged and not promoted) and rolling a new root under it is how a pedal stops
+  # booting.
+  got=$("${SSH[@]}" "sudo mount /boot/firmware 2>/dev/null; sudo sha256sum /boot/firmware/$slot/vmlinuz 2>/dev/null | cut -d' ' -f1; sudo umount /boot/firmware 2>/dev/null" | tail -1)
+  [[ -n $got ]] || die "could not read slot $slot's kernel from the boot partition"
+  [[ $got == "$want_running_sha" ]] \
+    || die "slot $slot holds kernel $got, the image has $want_running_sha for $running: a kernel change goes through a card write or vip-boot try-kernel, not a new root"
+  log "slot $slot's kernel is the one this image carries ($running)"
   log "vip to rescue, rescue the default"
   "${SSH[@]}" "sudo vip-boot rescue --stay" >/dev/null 2>&1 || true
   wait_root rescue 300 || die "vip didn't reach rescue"
