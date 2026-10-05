@@ -73,9 +73,15 @@ and pedald picked it up on its next retry:
 
 ## Still open
 
-`dtoverlay=uart0` in the boot partition's `config.txt` — durably, in rtpi's `vip-boot` template
-beside `enable_uart=1` — would bring the node up before any service runs, and is the canonical Pi
-way. It is not needed for the link (the pedal's overlay covers it) but it would mean a freshly
-written card has the UART without depending on this unit, and it is worth doing when the boot area
-is next touched. Why `enable_uart=1` stopped being honoured is the more interesting question: if
-the bootloader was updated on 2026-10-05, other firmware behaviour may have moved with it.
+**Done in rtpi, `f44864d` (2026-10-05):** `dtoverlay=uart0` is in rtpi's `vip-boot` template for
+**both** boot partitions — the pedal's, where the link lives, and the rescue root's, whose console
+is `ttyAMA10` too so there is no clash, and where being able to watch the header UART is exactly
+what you want when the pedal root is the problem. A card written from here has the node okay
+before any service runs, and the pedal's own `pedal-uart.service` is the belt to that braces: a
+card written before this line keeps the link regardless. rtpi's harness now builds the rescue
+partition as well and asserts both configs carry `enable_uart=1` and `dtoverlay=uart0` (42 tests).
+
+One thing is still open, and it is the interesting one: **why `enable_uart=1` stopped being
+honoured.** The bootloader's version cannot be read from the pedal root — `vcgencmd` is not
+installed and neither is the eeprom package — so whether the 2026-10-05 card work changed the
+firmware is unknown. If it did, other firmware behaviour may have moved with it.
