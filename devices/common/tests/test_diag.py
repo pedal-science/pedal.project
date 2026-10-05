@@ -211,20 +211,53 @@ class Levels(unittest.TestCase):
         self.assertEqual(present["severity"], "ok")
         self.assertIn("-61.5", present["what"])
 
-    def test_a_hot_channel_names_the_gain_stages(self):
+    def test_a_hot_channel_names_the_gain_stages_and_how_many_were_clamped(self):
         levels = self.levels()
         levels["input"]["peak"] = [-0.4, -0.4]
         f = finding(self.report(levels), "levels.hot")
         self.assertIsNotNone(f)
         self.assertEqual(f["severity"], "warn")
-        self.assertIn("Inst/Line", f["check"])
+        self.assertIn("inst/line", " ".join(f["likely"]).lower())
+        # A peak over a window is not a clamp, and saying which it is is the difference between a
+        # player reaching for their guitar's volume and reaching for their gain knob.
+        self.assertIn("clip count", " ".join(f["likely"]))
 
-    def test_an_input_at_the_floor_names_the_historical_wire(self):
+    def test_a_long_silent_window_names_the_historical_wire(self):
+        """A second of every input channel at the engine's floor: that is a fault, and the check
+        names the lead that has caused it before."""
         levels = self.levels()
         levels["input"]["peak"] = [-200.0, -200.0]
+        for chain in levels["chains"]:
+            chain["out"]["frames"] = 48000
+            for node in chain["nodes"]:
+                node["frames"] = 48000
         f = finding(self.report(levels), "levels.silent_input")
         self.assertIsNotNone(f)
+        self.assertEqual(f["severity"], "fail")
         self.assertIn("pin 38", f["check"])
+
+    def test_a_short_silent_window_is_not_a_fault(self):
+        """Sixty-four frames of silence is a decay between two notes, not a dead input. The engine
+        reads and resets, so a window can be one period long, and calling that silent would fire
+        the finding between every pair of notes -- the tool inventing a fault out of its own
+        timing, which is the mistake this whole section exists to avoid."""
+        levels = self.levels()
+        levels["input"]["peak"] = [-200.0, -200.0]
+        for chain in levels["chains"]:
+            chain["out"]["frames"] = 64
+            for node in chain["nodes"]:
+                node["frames"] = 64
+        self.assertIsNone(finding(self.report(levels), "levels.silent_input"))
+
+    def test_a_window_with_no_samples_is_never_silence(self):
+        """No frames means nothing was measured, whatever the peak says."""
+        levels = self.levels()
+        levels["input"]["peak"] = [-200.0, -200.0]
+        for chain in levels["chains"]:
+            chain["out"]["frames"] = 0
+            for node in chain["nodes"]:
+                node["frames"] = 0
+        self.assertIsNone(finding(self.report(levels), "levels.silent_input"))
 
     def test_the_engine_without_levels_says_so_rather_than_printing_zeros(self):
         findings = self.report(None) if False else report_for(sample()).findings

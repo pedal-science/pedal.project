@@ -53,7 +53,7 @@ schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-hando
   `devices/vip/test-offline-apply` checks that in the build container.
 - `devices/common/test-pedald`: the pedal service's tests (config, the engine client, the Pico link
   over a pty, the mapping, resume, the HTTP server) plus `test_diag.py` for the diagnostics tool's
-  report logic over captured fixtures — 154 of them, and they run on the Mac, not on
+  report logic over captured fixtures — 156 of them, and they run on the Mac, not on
   vip (no `pty`, `http.client` or `urllib` there). The service
   itself is `devices/common/rootfs/usr/local/lib/pedald/`, run by `pedald.service`; `docs/pedal-service.md`
   is its design and what each version is for. `sudo systemctl start pedal-diag` samples everything

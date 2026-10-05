@@ -1630,24 +1630,41 @@ class Report(object):
                      inp.get("clipped"), out.get("clipped"),
                      len(levels.get("chains") or []),
                      sum(len(c.get("nodes") or []) for c in levels.get("chains") or [])),
-                 check="nothing — these are the numbers the plan added for exactly this")
+                 check="nothing — these are the numbers the level probes exist for")
+
         for name, side in (("input", inp), ("output", out)):
             for channel, peak in enumerate(side.get("peak") or []):
                 if peak is not None and peak > -1.0:
                     self.add("warn", "levels.hot",
-                             "the %s channel %d is at %.1f dBFS" % (name, channel, peak),
-                             "peak %s" % json.dumps(side.get("peak")),
-                             likely=["the source is hot: an instrument or a pedal in front",
-                                     "a chain's output level or a model's gain"],
-                             check="the rig's gain stages, and the input stage's Inst/Line switch")
-                elif peak is not None and peak <= -200.0 and name == "input":
-                    self.add("warn", "levels.silent_input",
-                             "the input is digitally silent",
-                             "input peak %s" % json.dumps(side.get("peak")),
-                             likely=["nothing is plugged in",
-                                     "ADCDAT is in the wrong socket (present clock, absent data)",
-                                     "the codec's PGA or boost mixer is off in the mixer state"],
-                             check="the lead in header pin 38 first: it is the historical one")
+                             "the %s channel %d reached %.1f dBFS" % (name, channel, peak),
+                             "peak %s over the whole window; the floor is the engine's -200"
+                             % json.dumps(side.get("peak")),
+                             likely=["the source is hot: an instrument, a pedal in front, or the "
+                                     "inst/line switch",
+                                     "a chain's output level or a model's gain, if this is the output",
+                                     "the number is a *peak over a window*, so one transient counts: "
+                                     "if it reads 0.0 with a clip count of 0, nothing was clamped"],
+                             check="play and watch this meter; %d sample(s) of clipped output so "
+                                   "far" % sum(side.get("clipped") or []))
+
+        # Digitally silent is a fault only when the window is big enough to be sure. The engine
+        # reads and resets, so one short window of silence is a decay between two notes; a second
+        # of it, with every measured channel at the floor, is nobody playing or nothing arriving.
+        frames = 0
+        for chain in levels.get("chains") or []:
+            frames = max(frames, (chain.get("out") or {}).get("frames", 0))
+            for node in chain.get("nodes") or []:
+                frames = max(frames, node.get("frames", 0))
+        peaks = [p for p in (inp.get("peak") or []) if p is not None]
+        if frames >= 48000 and peaks and all(p <= -199.0 for p in peaks):
+            self.add("fail", "levels.silent_input",
+                     "the input is digitally silent over %.0f s of samples" % (frames / 48000.0),
+                     "every input channel at the floor, over a window of %d frames" % frames,
+                     likely=["nothing is plugged in, or nothing is playing",
+                             "ADCDAT is in the wrong socket: present clock, absent data (the "
+                             "historical one)",
+                             "the codec's PGA or boost mixer is off in the mixer state"],
+                     check="the lead in header pin 38, then the mixer state, then the jack")
 
     def finish(self):
         self.findings.sort(key=lambda f: SEVERITY_ORDER.get(f["severity"], 9))

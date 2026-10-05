@@ -105,3 +105,53 @@ Per-sample, from the log's own `cost` field (the gatherer's whole process tree, 
 Two thirds of the fixed cost is `sudo` and the Python interpreter start (measured separately:
 10 ms `python3 -c pass`, 20 ms through `sudo`), not the sampling. Nothing in a sample opens a
 sound device, a bus or the Pico's line.
+
+## The engine's own numbers, with the level probes in
+
+`pedal-diag --watch --interval 2.5` on the Mac for a minute, against the engine with the
+level probes compiled in and deployed (`a69d315` on vip):
+
+| | before | after |
+|---|---|---|
+| `state` | running | running |
+| `xruns` | 0 | 0 |
+| `guard_trips` | 0 | 0 |
+| `render_errors` | 0 | 0 |
+| `output_drops` | 0 | 0 |
+| `playback_underruns` | 0 | 0 |
+| `capture_overruns` | 0 | 0 |
+| `health` | ok | ok |
+| `render.worst_percent` | 21.04 | 22.53 |
+| `render.over_deadline` | 0 | 0 |
+
+**Nothing moved.** And the probe's own cost, from the log's `cost.pedal_cpu_s` (the
+gatherer's whole process tree): **92 ms a sample**, 3.68% of one core at a 2.5 s interval —
+of which about 30 ms is `sudo` and the Python interpreter's own start rather than the
+sampling.
+
+```
+pedal-diag: 24 samples, 46 ms cpu each on the pedal, 1.85% of one core at a 2.5s interval  (over the 1% budget: raise --interval, or --deep-every)
+```
+
+The sampler's numbers, read back from its own log:
+
+```
+pedal-diag: 48 samples over 2.1 min, one every 2.7 s
+  worst finding seen: warn
+  xruns                    0, unchanged over 2.1 min
+  guard_trips              0, unchanged over 2.1 min
+  frames_ok                46436 -> 46994 over 2.1 min (+4.476/s)
+  frames_bad               0, unchanged over 2.1 min
+  output_queue_drops       0, unchanged over 2.1 min
+  capture_bursts           0, unchanged over 2.1 min
+  cpu-thermal              53.5 C..57.3 C (mean 55.2 C)
+  memory                   70.3%..74.6% available
+  render                   22.5% worst block (deadline is 100%)
+  findings (48 samples; the loudest first):
+    warn  levels.hot                   35/48  the input channel 0 is at -0.0 dBFS
+          -> the rig's gain stages, and the input stage's Inst/Line switch
+    warn  levels.silent_input           4/48  the input is digitally silent
+          -> the lead in header pin 38 first: it is the historical one
+    info  wire.probe_absent            48/48  no Raspberry Pi Debug Probe is attached to this host
+  6 of the samples carry the full evidence in this log
+```

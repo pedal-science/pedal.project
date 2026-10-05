@@ -237,7 +237,7 @@ engine. Heartbeats at 250 ms with nothing else happening are about 0.4% of the l
   The firmware implements this document today (`firmware/src/protocol.c`); the service end was a
   test script until v1 was built — it is now `pedald`
   (`devices/common/rootfs/usr/local/lib/pedald/`, design: `docs/pedal-service.md`, its v1), with
-  154 unit tests of its own (`devices/common/test-pedald`) and a live session against the Pico on
+  156 unit tests of its own (`devices/common/test-pedald`) and a live session against the Pico on
   vip (`bench-results/2026-10-04-pedald-on-vip.md`).
   Evidence:
   `bench-results/2026-09-28-pico-protocol-loopback.txt`.
