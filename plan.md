@@ -1111,9 +1111,14 @@ before the container starts, `build-image` installs it into the root with rtpi's
 guard checks the booted slot's `vmlinuz` against the image instead of comparing release strings.
 rtpi's half is `ad9fee1`; the design, what changed while doing it and the one open question
 (automatic kernel rollback on repeated guard trips) are
-[docs/vip-kernel-image.md](docs/vip-kernel-image.md). Next: send this build to vip, then
-`vip-boot try-kernel 7.0.0-1017-raspi-realtime` and back, so both slots are seen to validate on the
-board.
+[docs/vip-kernel-image.md](docs/vip-kernel-image.md). **Done on the board the same day**: the build
+(`build/vip/20261005T202527Z`) went to vip with `--remote` and validated, and both kernels were then
+seen to boot and promote — `try-kernel 7.0.0-1017-raspi-realtime` (validated, promoted slot b) and
+back to the pedal kernel (slot a, active) — so vip now runs what a fresh card would: slot a the
+rebuild, slot b the stock kernel, both good, `devices/vip/check` green. That card write is still
+owed for one thing: rescue's `authorized_keys` came from an older card, so the Core key was
+installed into the rescue root by hand (the record in `devices/vip/authorized_keys` is what the next
+write will put there).
 
 **Diagnostics landed** (2026-10-05, this session): `scripts/diag` /
 `devices/common/rootfs/usr/local/sbin/pedal-diag` reads everything the host, the codec, the Pico
