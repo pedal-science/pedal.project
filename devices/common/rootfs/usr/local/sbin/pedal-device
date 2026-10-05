@@ -133,6 +133,15 @@ mask_units() {
 # The image build: enable what apply would enable, start nothing. The first boot brings it into force.
 activate_offline() {
   local u
+  # The service's user has to exist in the image, not only on a host that applied: a card written
+  # from this root starts pedald.service with `User=pedal`, and `pedald seed` (root, before
+  # namchaind) chowns the state tree to it. Without this the unit fails on a fresh card until
+  # somebody applies — which the image build has already done, so nobody would.
+  if [[ -x $ROOT/usr/bin/systemd-sysusers || -x $ROOT/usr/sbin/systemd-sysusers ]]; then
+    run chroot "$ROOT" systemd-sysusers && echo "  sysusers  pedal service user"
+  else
+    echo "  note      no systemd-sysusers in the root: the pedal user is missing from it"
+  fi
   for u in pedal-tune.service pedal-uart.service pedald.service pedal-codec.service pedal-wifi.service; do
     [[ -e $ROOT/etc/systemd/system/$u ]] || continue
     run sctl enable "$u" >/dev/null 2>&1
