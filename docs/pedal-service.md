@@ -123,11 +123,14 @@ the same reason.
   edits, never a good file.
 - Everything the service writes lives under `/var/lib/pedal`; `/etc/pedal` and `/etc/namchain`
   are configuration installed by `devices/`, and Phase 4's overlayroot is the reason.
-- `devices/<host>/backup` already takes `/var/lib/pedal` less `library/`, so `state/` is covered
-  as soon as it exists. What it leaves out is `library/rigs/`, and nothing else keeps a copy:
-  `sync-library` carries models and IRs, not rigs, so `last.json` and every stored rig exist
-  only on the pedal. The backup gains `library/rigs/` (it is small); models and IRs stay the
-  Mac's (R13).
+- `devices/<host>/backup` takes `/var/lib/pedal` less `library/models` and `library/irs`, so
+  `state/` is covered as soon as it exists and **`library/rigs/` is covered too** (2026-10-05):
+  `last.json`, `last.prev.json` and every stored rig have no other copy — `sync-library` carries
+  models and IRs, not rigs — and it is small (12 KB for the two resume files, against 15 MB of
+  models and 142 MB of IRs, which stay the Mac's, R13). `var/lib/pedal/soak` is excluded with
+  them: soak results are evidence and belong in a repo's `bench-results/` (rule 8), not in a
+  backup that is committed to git. Before the change the tar was 4.9 MB, of which the soak runs
+  were 4.8 MB; it is 250 KB now.
 
 ## Resume
 
@@ -452,12 +455,6 @@ here changes the audio path.
   once its session is up, so a restarted service never learns the version until the Pico resets.
   Decide: report "unknown" (today's behaviour, honest) or add a query to the reserved `CFG`
   message. Do not invent a `HELLO` from the Core — the direction is the Pico's.
-- **The backup does not have `library/rigs/`.** R13 says it gains it; today `devices/common/backup`
-  excludes the whole library (`--exclude var/lib/pedal/library`, with a comment that the library is
-  "synced from the Mac"). That was fair when nothing on the pedal wrote rigs. It is not now: the
-  resume state (`last.json`, `last.prev.json`) and any rig the service stores exist **only on the
-  card**, and `sync-library` never carries rigs. Add `library/rigs/` to the backup; leave models
-  and IRs out.
 
 **2. The relay rule's firmware half (R4, Phase 3.6).** The service's half is already on the
 wire: `STATE`'s `audio_ready` is `state == running` and `audible_generation > 0`. **The three
