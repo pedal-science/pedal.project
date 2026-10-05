@@ -416,11 +416,16 @@ pedal changes rigs for real only from v2 (R1):
     session is up the firmware stops sending `HELLO`, so a Core that drops its half would wait
     for a message that cannot come while its own `PONG`s kept the Pico up. Found on the bench, not
     by the unit tests; the rule now lives in [`uart-protocol.md`](uart-protocol.md).
-  - **The HTTP server and the link are hand-rolled.** vip's `python3-minimal` has no
-    `http.server` and no `termios`, so the server is written out and the UART is `stty` +
-    `select`. It runs unprivileged (`User=pedal`, `ProtectSystem=strict`, the only writable path
-    `/var/lib/pedal`, the token through `LoadCredential`), and the bearer is compared in constant
-    time and fails closed.
+  - **The HTTP server is ours; the link is `termios`.** The server is written out rather than
+    built on `http.server`, which gives request parsing and none of the rules below, and it is
+    tested as such. The UART sets its own line discipline through `termios`. Both began as
+    workarounds — the Core host's Python was `python3-minimal` that evening — but the image
+    carries the full `python3` now (`libpython3-stdlib`; `devices/vip/packages` lists it), so the
+    link no longer shells out to `stty`, and the server stays by choice. **The service requires
+    the full standard library**, and the package list is where that requirement lives. It runs
+    unprivileged (`User=pedal`, `ProtectSystem=strict`, the only writable path
+    `/var/lib/pedal`, the token through `LoadCredential`), and the bearer is compared with
+    `hmac.compare_digest` and fails closed.
 - **v2** (with Phase 3.8, once namchain's M3 answers): the ready set and `rig.switch`. From here
   the footswitches and MIDI change rigs for real, and firmware v1 (3.5) has something to drive.
 - **v3** (no plan step yet; it pays off the debt register's "no way to upload from the app"): the

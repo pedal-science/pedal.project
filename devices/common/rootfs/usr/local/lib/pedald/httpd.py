@@ -1,15 +1,16 @@
-"""pedald's HTTP server: hand-rolled, because the Core host's Python is minimal.
+"""pedald's HTTP server: ours, and deliberately small.
 
-`python3-minimal` has no `http.server`, `socketserver`, `urllib` or `hmac`, so the service's
-listener is built from `socket`, `threading`, `json` and `hashlib` directly. It is deliberately
-small: the upload API in docs/pedal-service.md needs a bearer check, a body cap and a handful
-of error codes, and no part of this is on the audio path.
+It is built from `socket`, `threading`, `json` and `hmac` rather than `http.server`. That is no
+longer a constraint — the Core host's python3 is the full one (vip's image installs `python3`)
+— it is a choice: `BaseHTTPRequestHandler` gives request parsing and none of what this API
+needs, so the rules below would be written anyway, and this way they are written once and
+tested (devices/common/tests/test_httpd.py) on the one component that faces the LAN. Nothing
+here is on the audio path.
 
 The rules come from "Security" and "The upload API" in that document:
 
-* `Authorization: Bearer <token>`, compared without an early exit, because the reply time is
-  the one thing an attacker on the LAN can measure. `hmac` is not there to do it, so the two
-  values are hashed and the digests compared byte by byte.
+* `Authorization: Bearer <token>`, compared with `hmac.compare_digest`, because the reply time
+  is the one thing an attacker on the LAN can measure.
 * `Content-Length` frames every body (chunked bodies are refused). A declared body over
   `max_body` is 413 and is never read for the request.
 * 401 for a missing or wrong token, 404 for a path nobody registered, 405 for a registered
@@ -29,7 +30,7 @@ always wins over 405.
 returns is left on its daemon thread rather than holding the caller there.
 """
 
-import hashlib
+import hmac
 import json
 import socket
 import sys
@@ -293,7 +294,8 @@ class Server:
         presented = presented.strip()
         if not presented:
             return False
-        return _constant_time_eq(presented, self._token)
+        # No early exit: the reply time is what an attacker on the LAN can measure.
+        return hmac.compare_digest(presented, self._token)
 
     def _read_body(self, reader, method, headers):
         """The framed body, or _Rejected(411/400/413) before a byte of it is read."""
@@ -520,20 +522,6 @@ def _route_key(key):
     if not path or not method.isascii() or not method.isalpha():
         raise ValueError(f"route key {key!r} is neither a path nor a method and a path")
     return method.upper(), path
-
-
-def _constant_time_eq(presented, expected):
-    """Compare two secrets without an early exit.
-
-    `hmac.compare_digest` is not on the Core host. Both sides are hashed first, so not even
-    their lengths are compared directly, and the loop then runs over a fixed 32 bytes.
-    """
-    left = hashlib.sha256(presented.encode("utf-8")).digest()
-    right = hashlib.sha256(expected.encode("utf-8")).digest()
-    difference = 0
-    for x, y in zip(left, right):
-        difference |= x ^ y
-    return difference == 0
 
 
 def _peer_text(conn):

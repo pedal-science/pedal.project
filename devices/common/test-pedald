@@ -3,12 +3,11 @@
 #
 #   devices/common/test-pedald [-v] [test_name ...]
 #
-# Runs on the Mac, where the whole standard library is: the tests use `pty` (the link, over a
-# pseudo-terminal), `http.client` (the HTTP server) and `threading` (the fake engine). The Core
-# host cannot run them — vip's python3 is `python3-minimal`, with no `pty`, `http.client` or
-# `urllib` — which is the same fact the service is written around. What these tests check from
-# any machine is that the service's own modules import nothing vip lacks (`termios`,
-# `http.server`, `socketserver`, `hmac`, `urllib`).
+# Runs on the Mac: the tests use `pty` (the link, over a pseudo-terminal), `http.client` (the
+# HTTP server) and `threading` (the fake engine). The Core host could run them — its python3 is
+# the full one since 2026-10-04 (`devices/vip/packages` installs `python3`) — but the convention
+# is the Mac, and the Core host is shared and quiet (rule 8). The service needs that full
+# standard library: `termios` for the UART's line discipline, `hmac` for the bearer compare.
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
 export PYTHONPATH="$HERE/rootfs/usr/local/lib${PYTHONPATH:+:$PYTHONPATH}"

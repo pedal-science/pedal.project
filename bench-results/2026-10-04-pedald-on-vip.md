@@ -32,16 +32,19 @@ end-to-end harness (`build/pedald-smoke.py`, gitignored): a real `namchaind` (`-
 a pty standing in for the Pico, and the whole path — HELLO → WELCOME + STATE, `/status`, an
 EVENT moving the engine's rig, and resume saving it.
 
-The unit tests need `pty`, `http.client` and `urllib`, so they run on the Mac, not on vip.
-What they check from anywhere is that the service's modules import nothing vip lacks.
+The unit tests need `pty`, `http.client` and `urllib`, so they run on the Mac; the Core host
+could run them now (below), but the convention is the Mac.
 
-**The Core host is `python3-minimal`** — no `termios`, `http.server`, `socketserver`, `hmac`,
-`urllib` (checked on vip). The design says "Python 3, standard library only", which is only
-true of the *full* standard library, so the service works around the two that matter: the UART
-is configured with `stty` and read with `select`, and the HTTP server is hand-rolled (bearer
-compared in constant time — `hmac.compare_digest` does not exist there — and it fails closed on
-an empty token). The alternative, adding `libpython3-stdlib` to the image, is one line in
-`devices/vip/packages` and a reimage; not taken yet.
+**The Core host's Python was `python3-minimal` that evening** — no `termios`, `http.server`,
+`socketserver`, `hmac`, `urllib` (checked on vip) — so the service worked around the two that
+mattered: the UART was configured with `stty` and read with `select`, and the HTTP server was
+hand-rolled, with the bearer compared by hand. Later the same day vip was carrying the full
+`python3` (`libpython3.14-stdlib`; `devices/vip/packages` lists `python3`), and the two small
+workarounds went with it: the link sets its line discipline through `termios` now, and the
+server uses `hmac.compare_digest`. The hand-rolled server stays, and that is a choice rather
+than a leftover — `http.server` gives request parsing and none of the rules in "The upload
+API", and this one is tested on the one component that faces the LAN. What the service needs
+now is the full standard library, and the package list is where that requirement lives.
 
 ## The three faults
 

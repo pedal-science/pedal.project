@@ -4,10 +4,10 @@ This does one thing — move bytes between the port and a `protocol.Session` —
 else. Nothing goes on this wire that is not a protocol frame (docs/uart-protocol.md): the
 Pico's USB console is where text belongs.
 
-Why `stty` and not `termios`: the Core host's python3 is `python3-minimal`, which has no
-`termios` module (checked on vip, 2026-10-04). `stty -F` does the same job through
-coreutils, and `pedald.service` puts the service in `dialout` so it may open the device.
-`select` needs no terminal setup, so reading is a plain `os.read`.
+Why `termios` and not `stty`: `stty` was the way in while the Core host's python3 was
+`python3-minimal` (no `termios`). The image installs the full `python3` now, so the service
+sets the line itself — see `_configure`. `select` does the waiting, so reading is a plain
+`os.read` on a non-blocking fd.
 
 The port can go away — the Pico resets, a lead moves, the driver reloads — so every read
 and write failure closes the fd and schedules a reopen. The session sees the silence and
@@ -16,7 +16,7 @@ drops the session on its own; this class never speaks protocol.
 import errno
 import os
 import select
-import subprocess
+import termios
 import time
 
 
@@ -60,31 +60,46 @@ class Link:
         except OSError as exc:
             self._retry(f"cannot open {self.device}: {exc.strerror}")
             return False
-        # raw, 8N1, no echo, no flow control. `stty` opens the device a second time, which is
-        # what makes this work without termios; the settings live on the tty, not the fd.
-        # GNU stty takes -F and BSD/macOS (where the tests run) -f, and -crtscts is GNU's
-        # spelling, so the second form is the shorter one.
-        attempts = (
-            ["stty", "-F", self.device, str(self.baud), "raw", "-echo", "-crtscts"],
-            ["stty", "-f", self.device, str(self.baud), "raw", "-echo"],
-        )
-        failure = None
-        for argv in attempts:
-            try:
-                subprocess.run(argv, check=True, capture_output=True, timeout=5)
-                failure = None
-                break
-            except (OSError, subprocess.SubprocessError) as exc:
-                failure = exc
-        if failure is not None:
+        # Raw 8N1, no echo, no flow control — set on our own fd, below.
+        try:
+            self._configure(fd)
+        except (OSError, termios.error) as exc:
             os.close(fd)
-            self._retry(f"cannot configure {self.device}: {failure}")
+            self._retry(f"cannot configure {self.device}: {exc}")
             return False
         self.fd = fd
         self.retry = self.retry_s
         self.opened_at = time.monotonic()
         self.log(f"{self.device} open at {self.baud} baud")
         return True
+
+    def _configure(self, fd):
+        """The line discipline this link needs, set through `termios` on our own fd.
+
+        `stty` did this until 2026-10-04, because the Core host's python3 was
+        `python3-minimal` and had no `termios`. The image installs the full `python3` now
+        (devices/vip/packages), so the service sets the line itself: no fork per open, no
+        second opener of the device, and no GNU/BSD spelling to fork on for the tests' sake.
+        What this asks for is what `stty raw -echo -crtscts` gave: no canonical mode, no echo,
+        no signals or flow control, 8 bits, one stop bit, no parity, receiver enabled.
+        """
+        iflag, oflag, cflag, lflag, _ispeed, _ospeed, cc = termios.tcgetattr(fd)
+        iflag &= ~(termios.IGNBRK | termios.BRKINT | termios.PARMRK | termios.ISTRIP
+                   | termios.INLCR | termios.IGNCR | termios.ICRNL | termios.IXON
+                   | termios.IXOFF | termios.IXANY)
+        oflag &= ~termios.OPOST
+        lflag &= ~(termios.ECHO | termios.ECHONL | termios.ICANON | termios.ISIG
+                   | termios.IEXTEN)
+        # CRTSCTS is Linux's name; Darwin splits it. Either way it is off.
+        flow = (getattr(termios, "CRTSCTS", 0) | getattr(termios, "CCTS_OFLOW", 0)
+                | getattr(termios, "CRTS_IFLOW", 0))
+        cflag &= ~(termios.CSIZE | termios.PARENB | termios.CSTOPB | flow)
+        cflag |= termios.CS8 | termios.CREAD | termios.CLOCAL
+        speed = getattr(termios, f"B{self.baud}", None)
+        if speed is None:
+            raise ValueError(f"unsupported baud rate {self.baud}")
+        # VMIN/VTIME stay as they were: the fd is non-blocking and `select` does the waiting.
+        termios.tcsetattr(fd, termios.TCSANOW, [iflag, oflag, cflag, lflag, speed, speed, cc])
 
     def close(self):
         if self.fd is not None:
