@@ -1,0 +1,45 @@
+# Phase 3.6 Pico power test — form 1 (vip USB-A → Pico micro-B)
+# 2026-10-05T10:09:22Z  host M2
+
+$ scripts/pico-power-test --leg read
+
+== Control: two reads 20s apart must show the counter advancing
+   reading /dev/ttyACM0 on vip (8s)…
+   read 1: 48890s at 11:09:31; read 2: 48920s at 11:10:00
+   counter advanced 30s over 29s of wall clock
+   CONTROL PASSES: reading the console does not reset the Pico.
+
+$ scripts/pico-power-test --leg reboot
+
+== Leg: reboot — rebooting vip
+   reading the Pico's counter before…
+   Pico up 48930s; host boot id 3c33404e
+   reboot issued; waiting for vip to come back on a new boot id (up to 900s)…
+   waiting for vip… 0s
+   back after 6s (boot id 2b745dc1)
+   reading the Pico's counter after…
+   Pico uptime: 48930s → 20s (Δ-48910s), host away for 27s
+   VERDICT: unclear. Δ-48910s against 27s away: neither a survival nor a fresh boot.
+
+# Host-side evidence, collected after the reboot
+# $ ssh vip 'cat /proc/sys/kernel/random/boot_id'
+#   3c33404e-cb8c-4056-8664-5936ea154bbc   (before)
+#   2b745dc1-8509-458d-a751-1434742b0ff6   (after)
+# $ sudo journalctl -b 0 -k | grep -iE '2e8a|cdc_acm'
+Oct 05 10:10:20 localhost kernel: usb 3-2: New USB device found, idVendor=2e8a, idProduct=0009, bcdDevice= 1.00
+Oct 05 10:10:22 vip kernel: cdc_acm 3-2:1.0: ttyACM0: USB ACM device
+Oct 05 10:10:22 vip kernel: usbcore: registered new interface driver cdc_acm
+# $ sudo journalctl -b 0 -u pedald -o short-monotonic
+[    5.906249] vip systemd[1]: Started pedald.service - Pedal: the pedal service (Pico link, resume, the bank and the map).
+[    6.124044] vip pedald[844]: pedald: /dev/ttyAMA0 open at 115200 baud
+[    6.125143] vip pedald[844]: pedald: pedald 0.1 up: link /dev/ttyAMA0, http on 0.0.0.0:47820
+[    6.163450] vip pedald[844]: pedald: engine status failed: engine_unreachable: 127.0.0.1:47810: [Errno 111] Connection refused
+[    6.527975] vip pedald[844]: pedald: Pico says hello: fw '0.1', protocol 1.0, caps 0x0000
+[    9.211295] vip pedald[844]: pedald: saved /var/lib/pedal/library/rigs/last.json (generation 1, params_applied 0, rig 'New Rig')
+# $ namchainctl status   (after the reboot)
+running ok xruns 2 guard 0 device hw:CARD=wm8960,DEV=0 rig New Rig worst% 18.9
+#
+# Note: the journal is volatile (/run/log/journal, tmpfs) — `journalctl -b -1` after the reboot
+# reports "no persistent journal", so the previous boot's shutdown sequence is not recoverable.
+# Also: reading /dev/ttyACM0 needs `sudo -n stty -F ... raw -echo` first (an echoed byte is a real
+# EVENT to the firmware's bench stand-in), and the read itself does not reset the Pico (control).

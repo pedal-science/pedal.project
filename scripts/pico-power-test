@@ -1,0 +1,139 @@
+#!/usr/bin/env bash
+# scripts/pico-power-test [--host vip] [--leg read|reboot|shutdown] [--wait <s>] [--device <dev>]
+#
+# Plan 3.6's question: does the Pico keep its power when the Core host reboots or shuts down?
+# The Pico takes 5 V from the Core host — form 1, one of its USB-A ports into the Pico's micro-B
+# (what the bench is wired as, 2026-10-05), or form 2, header pin 2 through a 1N5817 into VSYS.
+# A Pi switches its USB-A power, so form 1 may not hold; run this for whichever form is wired and
+# keep the first that survives both legs.
+#
+# The instrument is the Pico's own uptime. Its firmware prints, on the USB CDC console every 5 s:
+#
+#     fw: up 48790 s, session=1, frames ok=198694 bad=0
+#
+# `up` counts from the Pico's reset, so it measures *power*, not USB enumeration: the host
+# re-enumerates the device on every boot either way, so dmesg cannot answer this. A host reboot
+# that cuts the USB-A port resets the counter; one that leaves the port powered does not.
+#
+# `--leg read` is the control: two reads in a row, 20 s apart, must show the counter advancing by
+# about 20 s. If they do not, reading the console resets the Pico (the read sets termios on the
+# CDC port) and no conclusion can be drawn from the other legs.
+#
+# The console is read, never written: `stty raw -echo` first (an echoed byte is a real EVENT to
+# the firmware's bench stand-in), then `timeout N cat`. The Pico's *link* UART is on the header
+# (`ttyAMA0`), which the pedal service owns; this console is the Pico's debug CDC and is free.
+#
+# Exit: 0 the leg ran and the counter was read twice; 1 the host never came back, or the console
+# could not be read. Prints its own verdict; the numbers are the evidence.
+set -euo pipefail
+
+HOST=vip
+LEG=read
+WAIT=900
+DEV=/dev/ttyACM0
+READ_SECONDS=8
+CONTROL_GAP=20
+
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --leg) LEG=$2; shift ;;
+    --wait) WAIT=$2; shift ;;
+    --device) DEV=$2; shift ;;
+    -h|--help) sed -n '2,26p' "$0"; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+SSH=(ssh -o BatchMode=yes -o ConnectTimeout=5)
+on() { "${SSH[@]}" "$HOST" "$@"; }
+say() { printf '\n== %s\n' "$*"; }
+note() { printf '   %s\n' "$*"; }
+
+host_up() { on true 2>/dev/null; }
+boot_id() { on 'cat /proc/sys/kernel/random/boot_id' 2>/dev/null; }
+
+# The Pico's uptime, in seconds, from the first heartbeat in a short read. Prints "seconds epoch".
+pico_sample() {
+  local raw secs
+  # termios first: echo off, or the host echoes what it receives back to the firmware, whose
+  # bench stand-in reads e/d/b from this same console and would answer its own output.
+  on "sudo -n stty -F $DEV raw -echo" 2>/dev/null || true
+  raw=$(on "sudo -n timeout $READ_SECONDS cat $DEV" 2>/dev/null || true)
+  secs=$(printf '%s\n' "$raw" | sed -n 's/^fw: up \([0-9][0-9]*\) s.*/\1/p' | head -1)
+  [[ -n $secs ]] || return 1
+  printf '%s %s' "$secs" "$(date +%s)"
+}
+
+wait_for_new_boot() {
+  local old=$1 waited=0 bid
+  while (( waited < WAIT )); do
+    if host_up && bid=$(boot_id) && [[ -n $bid && $bid != "$old" ]]; then
+      note "back after ${waited}s (boot id ${bid:0:8})"
+      return 0
+    fi
+    (( waited % 15 == 0 )) && note "waiting for $HOST… ${waited}s" >&2
+    sleep 3
+    waited=$(( waited + 3 ))
+  done
+  return 1
+}
+
+verdict() { # before after elapsed
+  local before=$1 after=$2 elapsed=$3 delta=$(( $2 - $1 ))
+  note "Pico uptime: ${before}s → ${after}s (Δ${delta}s), host away for ${elapsed}s"
+  if (( after < before )); then
+    note "VERDICT: the Pico **restarted** — its counter began again during the ${LEG}"
+    note "         (${after}s at the read, against ${before}s before), so its 5 V did not hold."
+  elif (( delta >= elapsed - 20 )); then
+    note "VERDICT: the Pico **kept running** — the counter advanced by about the time that passed,"
+    note "         so its 5 V held through the ${LEG}."
+  else
+    note "VERDICT: unclear. ${after}s after ${before}s, with ${elapsed}s away: neither a survival"
+    note "         nor a counter that began again."
+  fi
+}
+
+host_up || { echo "pico-power-test: $HOST is unreachable" >&2; exit 1; }
+
+case $LEG in
+  read)
+    say "Control: two reads ${CONTROL_GAP}s apart must show the counter advancing"
+    note "reading $DEV on $HOST (${READ_SECONDS}s)…" >&2
+    a=$(pico_sample) || { echo "no 'fw: up' line on $DEV" >&2; exit 1; }
+    sleep "$CONTROL_GAP"
+    b=$(pico_sample) || { echo "no 'fw: up' line on $DEV" >&2; exit 1; }
+    a_s=${a%% *}; a_t=${a##* }; b_s=${b%% *}; b_t=${b##* }
+    note "read 1: ${a_s}s at $(date -r "$a_t" '+%H:%M:%S'); read 2: ${b_s}s at $(date -r "$b_t" '+%H:%M:%S')"
+    note "counter advanced $(( b_s - a_s ))s over $(( b_t - a_t ))s of wall clock"
+    if (( b_s - a_s >= 10 )); then
+      note "CONTROL PASSES: reading the console does not reset the Pico."
+    else
+      note "CONTROL FAILS: the read appears to reset the Pico; the other legs mean nothing."
+      exit 1
+    fi
+    ;;
+
+  reboot|shutdown)
+    say "Leg: $LEG — ${LEG}ing $HOST"
+    note "reading the Pico's counter before…" >&2
+    before=$(pico_sample) || { echo "no 'fw: up' line on $DEV" >&2; exit 1; }
+    before_s=${before%% *}; before_t=${before##* }
+    bid=$(boot_id); [[ -n $bid ]] || { echo "no boot id from $HOST" >&2; exit 1; }
+    note "Pico up ${before_s}s; host boot id ${bid:0:8}"
+
+    "${SSH[@]}" -o ConnectTimeout=5 "$HOST" "sudo -n $LEG" 2>/dev/null || true
+    note "$LEG issued; waiting for $HOST to come back on a new boot id (up to ${WAIT}s)…"
+    [[ $LEG == shutdown ]] && note "vip is halted: it needs its power button (or a power cycle)."
+
+    wait_for_new_boot "$bid" || { echo "pico-power-test: $HOST did not come back within ${WAIT}s" >&2; exit 1; }
+    after_t=$(date +%s)
+    note "reading the Pico's counter after…" >&2
+    after=$(pico_sample) || { echo "no 'fw: up' line on $DEV" >&2; exit 1; }
+    after_s=${after%% *}
+    verdict "$before_s" "$after_s" "$(( after_t - before_t ))"
+    ;;
+
+  *) echo "unknown leg: $LEG" >&2; exit 2 ;;
+esac

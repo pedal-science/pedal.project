@@ -765,9 +765,16 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      2. vip's header pin 2 through a 1N5817 into VSYS. The header's 5 V is more likely to stay
         live while the supply is on.
      **2026-10-04: form 1 is what the bench is wired as** — the Pico is powered from vip's USB-A,
-     and its console rides the same cable — so the test is ready to run, and it is the one that
-     decides whether that cable (BOM, "USB-A to micro-B") stays the arrangement. Not yet run: the
-     Pico has not been through a vip reboot on this wiring.
+     and its console rides the same cable.
+     **Measured 2026-10-05: form 1 fails the reboot leg.** The Pico's own uptime counter (it prints
+     `fw: up N s` on its USB console; the counter measures power, where `dmesg` cannot, because the
+     host re-enumerates the device on every boot either way) went **48,930 s → 20 s** across a
+     `sudo reboot` of vip, with a control showing the read itself does not reset it. So **form 2 is
+     the one to test next**: header pin 2 → 1N5817 → VSYS, with the USB cable left in for the console
+     (the reboot cuts the USB-A rail either way, so a survivor is surviving on the header). The
+     shutdown leg has not been run: it needs the host powering back on by hand.
+     Method and evidence: `scripts/pico-power-test`,
+     [bench-results/2026-10-05-pico-power-test.md](bench-results/2026-10-05-pico-power-test.md).
      Power the Pico each way with its LED blinking, then `sudo reboot` vip, and separately shut
      it down. Watch whether the Pico restarts. Keep the first way that holds through both; if
      neither does, the Pico restarting with vip is still safe (the relay drops to bypass), but
@@ -1090,6 +1097,31 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 - **Not designed yet:** the mic stage, cooling and the panel hardware.
 
 ## Next session starts with
+
+**The Pico restarts with a Core host reboot — form 1 is out** (2026-10-05). Phase 3.6's power
+question, first half, answered with the pedal's own instrument: the Pico prints `fw: up N s` on its
+USB console every 5 s, and `N` counts from the Pico's own reset, so it measures **power** where
+`dmesg` cannot (the host re-enumerates the device on every boot either way). Read twice, 20 s apart,
+as a control — the read itself does not reset it (48,850 → 48,880 s, and again 48,890 → 48,920 s) —
+then across a `sudo reboot` of vip: **48,930 s → 20 s**. The Pico restarted. The host side agrees:
+vip's kernel came up 10:10:17 UTC, the Pico re-enumerated as `2e8a:0009` at 10:10:20, and `pedald`
+logged `Pico says hello: fw '0.1', protocol 1.0` 6.5 s into the boot. (A HELLO alone proves nothing:
+the Pico returns to HELLO after a 1 s link timeout too.) Nothing else was disturbed — the engine came
+back `running`/`ok` on the codec, resumed ljoss's "New Rig" from `last.json`, worst block 18.9% — and
+the reboot's only cost was **2 xruns**, the stream stopping and starting.
+
+So **vip's USB-A rail is switched off through a reboot**, and the relay rule (R4) cannot lean on a
+Pico that is still up while the engine is not, which is what the plan wanted it for. It is not a
+fault: a Pico that restarts with the host comes back with a clean session, and the relay is
+de-energised throughout, which is bypass. **Next is form 2** — vip's header pin 2 → a 1N5817 → the
+Pico's VSYS — tested with the USB cable left in for the console, since the reboot cuts the USB-A rail
+either way and a Pico that survives is surviving on the header. Then 3.6's shutdown leg, which needs
+the host powering back on by hand. Instrument: `scripts/pico-power-test`; verbatim evidence:
+[bench-results/2026-10-05-pico-power-test.md](bench-results/2026-10-05-pico-power-test.md). Two
+things it cost, both recorded there: vip's journal is **volatile** (`/run/log/journal`, tmpfs), so a
+previous boot's shutdown sequence is not recoverable; and the console must be opened with
+`stty raw -echo` before it is read, or the host echoes what it receives back down the port and the
+firmware's bench stand-in answers its own output in a loop.
 
 **The pedal plays, assembled, in a case — with the Pico on the link** (2026-10-04). Not a part on the
 bench any more: the owner played the assembled pedal this evening. A **temporary plastic box** stands

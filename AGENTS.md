@@ -75,6 +75,12 @@ schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-hando
 - `firmware/build.sh`, `firmware/flash.sh`, `firmware/tools/{echo,protocol}-test.py`: build,
   flash and bench-test the Pico firmware (Pico 2 W; SDK 2.3.1 and Arm GNU Toolchain 15.3.rel1
   under `~/pico/`). `FW_ECHO=1` builds step 1's echo for the echo test.
+- `scripts/pico-power-test [--host vip] [--leg read|reboot|shutdown]`: Phase 3.6's question — does
+  the Pico keep its 5 V when the Core host reboots or shuts down? It reads the Pico's own uptime from
+  its USB console (`fw: up N s`, every 5 s; the counter runs from the Pico's reset, so it measures
+  power where `dmesg` cannot — the host re-enumerates the device on every boot either way), acts, and
+  reads again. `--leg read` is the control. Needs the USB cable in the Core host's port; `--leg
+  shutdown` needs the host powering back on by hand.
 - `scripts/codec-noise.py <capture.wav>`: the codec's noise floor from an `arecord` capture — DC
   offset, unweighted and A-weighted RMS in dBFS and µV, and the spectral lines that show a hum comb.
   `--selftest` checks the weighting against the standard's figures; the procedure it belongs to is
