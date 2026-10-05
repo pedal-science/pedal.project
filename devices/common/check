@@ -33,6 +33,19 @@ if [[ -f $DEV_DIR/packages ]]; then
   done
 fi
 
+if [[ -f $DEV_DIR/authorized_keys ]]; then
+  log "login keys: devices/$DEV_NAME/authorized_keys on $DEV_HOST"
+  user=$(sed -n 's/^USER_NAME=//p' "$DEV_DIR/image.env" 2>/dev/null || true)
+  if [[ -z $user ]]; then
+    printf '  --    %-50s %s\n' "login keys" "no USER_NAME in devices/$DEV_NAME/image.env"
+  else
+    want=$(shasum -a 256 "$DEV_DIR/authorized_keys" | cut -d' ' -f1)
+    got=$(dev "sha256sum /home/$user/.ssh/authorized_keys 2>/dev/null" | cut -d' ' -f1 || true)
+    if [[ $got == "$want" ]]; then printf '  ok    %s\n' "/home/$user/.ssh/authorized_keys"
+    else printf '  FAIL  %-50s differs from devices/%s/authorized_keys\n' "/home/$user/.ssh/authorized_keys" "$DEV_NAME"; bad=1; fi
+  fi
+fi
+
 log "state on $DEV_HOST"
 dev "sudo -n /usr/local/sbin/pedal-device status" || bad=1
 printf '  --    %-34s %s\n' "repo tree" "$(tree_commit)"

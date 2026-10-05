@@ -20,7 +20,7 @@ ok()   { printf '\033[1;32m[✓]\033[0m %s\n' "$*" >&2; }
 dev() { ssh "${SSH_OPTS[@]}" "$DEV_HOST" "$@"; }
 
 require_dev() {
-  dev true 2>/dev/null || die "cannot ssh to $DEV_HOST. If the 1Password agent is locked, unlock it (ssh-add -l)."
+  dev true 2>/dev/null || die "cannot ssh to $DEV_HOST. Check ~/.ssh/config (the Core hosts' key, docs/vip-image.md) and that $DEV_HOST is up."
 }
 
 # The commit the tree came from, marked dirty if this device's tree or the common one has

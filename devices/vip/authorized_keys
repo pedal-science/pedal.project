@@ -1,0 +1,9 @@
+# Who may log in to vip, on both roots: devices/common/image/build-image installs this file as the
+# user's ~/.ssh/authorized_keys, and sshd ignores lines starting with '#' (AUTHORIZED_KEYS FILE
+# FORMAT, sshd(8)). make-card reads it as the record, so a rebuild can't pick up whatever an SSH
+# agent happens to hold (docs/vip-image.md, "The build"). One key per line.
+
+# The Core hosts' key: one key, on the Mac at ~/.ssh/core_ed25519, named to the Core hosts by
+# ~/.ssh/config with IdentitiesOnly and IdentityAgent none. It is deliberately not the key for
+# anything else, so this file is the whole of what a rebuild can add.
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBJoTGPu5SUX/AxDHJuaugFBBermf80/BMelflFYMt1f core

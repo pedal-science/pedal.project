@@ -225,8 +225,13 @@ The account sees only `fx`. The items:
 | vip's SSH host keys, generated once by the first run and stored back (not there yet) | | `/etc/ssh/ssh_host_*` in both roots |
 
 Keeping the host keys means a reflashed vip is the same machine to `ssh`, with no `known_hosts`
-warning. `authorized_keys` comes from the 1Password agent (`ssh-add -L`). The build stops early if
-the token can't read `fx`, before any time is spent.
+warning. `authorized_keys` comes from `devices/vip/authorized_keys` and is installed verbatim in
+both roots: who may log in is a recorded input, not whatever an SSH agent happens to hold. A host
+without that file falls back to `ssh-add -L` with a warning. Its one key is the Core hosts' key,
+`~/.ssh/core_ed25519` on the Mac, named to `vip` and `piv` by `~/.ssh/config` (`IdentitiesOnly`
+and `IdentityAgent none`, so no agent and no prompt); it is deliberately not the key for anything
+else. `devices/vip/check` compares the file with the host's. The build stops early if the token
+can't read `fx`, before any time is spent.
 
 Reusing piv's token needs one step in 4: copy it from piv into 1Password, piped straight from
 `ssh piv sudo cat /etc/namchain/token` into `op`, never shown. It also changes a rule:
