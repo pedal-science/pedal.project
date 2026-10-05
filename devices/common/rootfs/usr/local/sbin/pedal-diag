@@ -145,6 +145,29 @@ def mb(value):
     return "%.1f MB" % (float(value) / 1e6)
 
 
+def levels_have_frames(levels):
+    """Whether a levels answer measured anything, anywhere it reports.
+
+    A window with no frames is not a level: it is a reading of nothing. Every read empties the probes
+    (namchain's level.h), so a read taken between two blocks is legitimately empty, and reporting
+    that as "-200 dBFS" would be the tool inventing silence out of its own timing. The gatherer has
+    its own copy of this, because it runs on the host where this file cannot be imported.
+    """
+    if not isinstance(levels, dict):
+        return False
+    for side in ("input", "output"):
+        rms = (levels.get(side) or {}).get("rms")
+        if isinstance(rms, list) and any(isinstance(v, (int, float)) and v > -199.0 for v in rms):
+            return True
+    for chain in levels.get("chains") or []:
+        if (chain.get("out") or {}).get("frames", 0):
+            return True
+        for node in chain.get("nodes") or []:
+            if node.get("frames", 0):
+                return True
+    return False
+
+
 def expand_cpu_list(text):
     """A cpu list ("0-1,3") as a set of ints."""
     out = set()
@@ -329,6 +352,28 @@ NOTES_ON_READING_THE_CHIP = '''
 '''
 GATHER_SOURCE = r'''
 import errno, glob, json, os, re, subprocess, sys, time
+
+def _levels_have_frames(levels):
+    """Whether a levels answer measured anything, anywhere it reports.
+
+    A window with no frames is not a level: it is a reading of nothing. Every read empties the
+    probes (namchain's level.h), so a read taken between two blocks is legitimately empty, and
+    reporting that as "-200 dBFS" would be the tool inventing silence out of its own timing.
+    """
+    if not isinstance(levels, dict):
+        return False
+    for side in ("input", "output"):
+        rms = (levels.get(side) or {}).get("rms")
+        if isinstance(rms, list) and any(isinstance(v, (int, float)) and v > -199.0 for v in rms):
+            return True
+    for chain in levels.get("chains") or []:
+        if (chain.get("out") or {}).get("frames", 0):
+            return True
+        for node in chain.get("nodes") or []:
+            if node.get("frames", 0):
+                return True
+    return False
+
 
 def tree_cpu_seconds():
     """The CPU this process tree has used: utime + stime + cutime + cstime, from /proc.
@@ -711,8 +756,23 @@ try:
             # advertises them. Asking anyway costs one round trip and removes the need to know
             # which engine this is.
             if "levels" in (hello.get("features") or []):
-                levels = _call({"id": "l", "method": "engine.levels"})
-                out["engine"]["levels"] = levels.get("levels") if levels.get("ok") else levels
+                # Read until a window has samples in it. Each read EMPTIES the probes (level.h:
+                # "read and reset"), so one read taken at a random moment can land between two
+                # blocks and be an empty window -- which is not silence, it is a reading of
+                # nothing. Two tries 250 ms apart is a quarter of a second of audio, which is
+                # plenty against a 1.3 ms period, and it is bounded so a stopped engine still
+                # answers promptly.
+                levels = None
+                for attempt, id_ in ((0, "l"), (1, "l2"), (2, "l3")):
+                    reply = _call({"id": id_, "method": "engine.levels"})
+                    body = reply.get("levels") if reply.get("ok") else reply
+                    if isinstance(body, dict) and _levels_have_frames(body):
+                        levels = body
+                        break
+                    levels = body
+                    if attempt < 2:
+                        time.sleep(0.25)
+                out["engine"]["levels"] = levels
     finally:
         _sock.close()
 except Exception as exc:

@@ -168,6 +168,82 @@ class UnpluggedLeads(unittest.TestCase):
         self.assertTrue(any("wm8960" in l for l in f["likely"]), f["likely"])
 
 
+class Levels(unittest.TestCase):
+    """The levels section, once the engine publishes them.
+
+    The fixture predates `engine.levels` (namchain a69d315), so the mutations here add the object a
+    live engine returns rather than replacing fields in one. The values are from the pedal with a
+    guitar plugged in and nothing played: about -60 dBFS on the input, which is signal, and -200 on
+    the output's second channel, which is a channel nothing is routed to.
+    """
+
+    def levels(self, **overrides):
+        base = {
+            "state": "running", "blocks": 2039, "sample_rate": 48000, "period_size": 64,
+            "truncated": False,
+            "input": {"peak": [-61.5, -75.3], "rms": [-72.0, -84.0], "clipped": [0, 0]},
+            "output": {"peak": [-49.5, -200.0], "rms": [-60.0, -200.0], "clipped": [0, 0]},
+            "chains": [{"id": "main", "name": "Guitar", "output_channel": 0, "muted": False,
+                        "out": {"peak": -49.5, "rms": -60.0, "frames": 4224, "clipped": 0},
+                        "nodes": [
+                            {"node": "in", "element": "E1", "role": "", "peak": -61.5,
+                             "rms": -72.0, "frames": 4224},
+                            {"node": "g", "element": "E2", "role": "level", "peak": -55.0,
+                             "rms": -68.0, "frames": 4224},
+                        ]}],
+        }
+        base.update(overrides)
+        return base
+
+    def report(self, levels):
+        s = sample()
+        s["engine"]["features"] = (s["engine"].get("features") or []) + ["levels"]
+        s["engine"]["levels"] = levels
+        return report_for(s).findings
+
+    def test_a_quiet_input_is_measured_not_called_silent(self):
+        """The trap this finding exists for: -60 dBFS is signal. Reporting it as silence would be
+        the tool inventing a fault out of a quiet guitar."""
+        findings = self.report(self.levels())
+        self.assertIsNone(finding(findings, "levels.silent_input"))
+        present = finding(findings, "levels.present")
+        self.assertIsNotNone(present)
+        self.assertEqual(present["severity"], "ok")
+        self.assertIn("-61.5", present["what"])
+
+    def test_a_hot_channel_names_the_gain_stages(self):
+        levels = self.levels()
+        levels["input"]["peak"] = [-0.4, -0.4]
+        f = finding(self.report(levels), "levels.hot")
+        self.assertIsNotNone(f)
+        self.assertEqual(f["severity"], "warn")
+        self.assertIn("Inst/Line", f["check"])
+
+    def test_an_input_at_the_floor_names_the_historical_wire(self):
+        levels = self.levels()
+        levels["input"]["peak"] = [-200.0, -200.0]
+        f = finding(self.report(levels), "levels.silent_input")
+        self.assertIsNotNone(f)
+        self.assertIn("pin 38", f["check"])
+
+    def test_the_engine_without_levels_says_so_rather_than_printing_zeros(self):
+        findings = self.report(None) if False else report_for(sample()).findings
+        f = finding(findings, "levels.unavailable")
+        self.assertIsNotNone(f)
+        self.assertEqual(f["severity"], "info")
+        self.assertIsNone(finding(findings, "levels.present"))
+
+    def test_a_window_with_no_frames_is_not_a_level(self):
+        """``frames: 0`` means the window measured nothing -- the read landed between two blocks.
+        The engine's answer is still valid, and the tool must not turn it into a level."""
+        self.assertFalse(pd.levels_have_frames({"input": {"rms": [-200.0]}}))
+        self.assertFalse(pd.levels_have_frames({"chains": [{"nodes": [{"frames": 0}]}]}))
+        self.assertTrue(pd.levels_have_frames({"input": {"rms": [-61.0]}}))
+        self.assertTrue(pd.levels_have_frames({"chains": [{"out": {"frames": 64}}]}))
+        self.assertTrue(pd.levels_have_frames({"chains": [{"nodes": [{"frames": 64}]}]}))
+        self.assertFalse(pd.levels_have_frames(None))
+
+
 class HeatAndPressure(unittest.TestCase):
     def test_a_normal_pi5_temperature_is_not_a_finding(self):
         s = sample()

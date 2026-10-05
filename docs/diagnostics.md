@@ -154,8 +154,8 @@ will confidently name the wrong wire.
 
 ## Levels: audio levels and every macro
 
-The report has a `levels` section and it says "unavailable" today, because **namchain has no
-audio-level measurement at all** (as of `b9ca368`). The plan is:
+The report has a `levels` section and it reads it from `engine.levels` (namchain `a69d315`), which
+is also what the ljoss meters will poll. **Landed 2026-10-05**, in this shape:
 
 1. **namchain** gains `engine.levels`, a read-only method with a small answer: device input and
    output peaks and RMS per channel, each chain's output, and every plan node's output keyed by
@@ -172,10 +172,13 @@ audio-level measurement at all** (as of `b9ca368`). The plan is:
    no `pedald` in the path.
 3. **pedal-diag** reads the same `engine.levels` in its sample and reports the things only a level
    can show: a dead input, a hot channel, a saturating output, and *which* block is eating the
-   level.
+   level. It reads until a window has samples in it, because every read **empties** the probes and a
+   read that lands between two blocks is a window of nothing — which is not the same as silence, and
+   reporting it as `-200 dBFS` would be the tool inventing a fault out of its own timing. That trap
+   is pinned by a test: a quiet guitar at −60 dBFS must be reported as a level, not as a dead input.
 
-Until then the report's `verbose.likely` says exactly that rather than printing zeros, because
-`-200 dBFS` everywhere would look exactly like a broken input.
+A client that does not see `levels` in `engine.hello`'s features gets the "unavailable" line instead,
+because there is nothing to read rather than nothing to hear.
 
 ## Adding a check
 
