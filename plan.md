@@ -1110,9 +1110,18 @@ report, `--json`, `--watch` (continuous, ~1.5 ms CPU and ~2.8 kB a sample, its o
 `--deltas` (what changed over a long run), `--probe` (the invasive checks; refuses while the engine
 plays) and `--selftest`. `pedal-diag.service` runs it on demand in the loose profile; `pedald`'s
 `/status` gained the link's byte counters, drop count and last-rx age, which is what makes a rate
-possible. Design and the I2C dead end: [docs/diagnostics.md](docs/diagnostics.md). The audio-level
-half of the plan — `engine.levels` in namchain and the meters in ljoss — is **not built yet**, and
-the report says so rather than printing zeros.
+possible. Design and the I2C dead end: [docs/diagnostics.md](docs/diagnostics.md).
+
+**And the audio-level half landed in namchain** the same day (namchain `a69d315`): `engine.levels`
+is a read-only method returning the device's input and output levels per channel, each chain's, and
+every plan node's labelled with its `element` and `role` — which is what "every macro in the running
+rig" means, since namchain lowers a macro into primitives that keep the client's `element`. The
+probes are relaxed atomics written once per period in the loop `outputs_finite` already walks, read
+and reset so a poller's windows are disjoint and its numbers add up. The same commit publishes the
+PCM `format` and gives ALSA a real `backend_diagnostics`, splitting the one `xruns` number into
+`capture_overruns` and `playback_underruns` — the split the 2026-09-2x soak needed and could not
+have. `pedal-diag` reads it already and stops saying "levels unavailable". **Remaining: the meters
+in ljoss** (a 20 Hz `engine.levels` poll and the views), which is the next piece.
 
 **3.6's power question is answered: the header feed holds, the USB-A port does not — and the codec is
 down** (2026-10-05). The instrument is the pedal's own: the Pico prints `fw: up N s` on its USB
