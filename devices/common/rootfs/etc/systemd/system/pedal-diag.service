@@ -1,0 +1,34 @@
+[Unit]
+Description=Pedal: continuous hardware and software diagnostics for troubleshooting
+Documentation=file:/usr/local/sbin/pedal-diag
+Documentation=file:/etc/pedal/pedal-interface.json
+# Started on demand while something is being diagnosed, never at boot: this is a development and
+# troubleshooting tool, and rule 8's "quiet unless asked" applies to the artifact too. The owner's
+# way in is `sudo systemctl start pedal-diag`, which is also how it stops.
+#
+# It is wanted by pedal-maint.target, which is the loose profile: a boot that does not play can
+# still be watched from the host itself rather than only from the Mac.
+After=sysinit.target systemd-udevd.service
+ConditionPathExists=/etc/pedal/pedal-interface.json
+
+[Service]
+Type=simple
+ExecStartPre=/usr/bin/install -d -o root -g root -m 0755 /var/log/pedal
+# The engine's token is read by the tool itself; the debugfs register file is root-only, so this
+# runs as root and drops to nothing else. --deep-every keeps the forking checks (pedal-tune,
+# pedal-device, amixer) off 9 samples in 10, which is what holds the sampler under its budget.
+ExecStart=/usr/local/sbin/pedal-diag --watch --interval 2.5 --deep-every 10 --quiet --out /var/log/pedal/diag.jsonl
+Restart=on-failure
+RestartSec=10
+Nice=10
+# It reads and writes its own log and nothing else; the sandbox says so rather than trusting it.
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+ReadWritePaths=/var/log/pedal
+# journald keeps its stdout, which is empty in --quiet mode; the JSONL file is the record.
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=pedal-maint.target

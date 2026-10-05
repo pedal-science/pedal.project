@@ -183,6 +183,29 @@ class Service:
         self.state_key, self.state_at = key, now
 
     # ------------------------------------------------------------------ http
+    def link_status(self, now):
+        """What the link is doing, with the timestamps a rate needs.
+
+        A counter without a clock is not a rate: `frames_ok: 27,523` cannot say whether the link
+        is alive, and `24 a second` can. `last_rx_s_ago` is the useful form for a human and for
+        pedal-diag, which turns it into "nothing has arrived for 40 seconds" when it should.
+        """
+        def age(at):
+            return None if at is None else round(now - at, 3)
+
+        return {
+            "device": self.cfg.uart_device, "baud": self.cfg.uart_baud,
+            "open": self.link.open, "session": self.session.session_up,
+            "frames_ok": self.session.frames_ok,
+            "frames_bad": self.session.frames_bad,
+            "bytes_in": self.link.bytes_in, "bytes_out": self.link.bytes_out,
+            "drops": self.link.drops,
+            "last_rx_s_ago": age(self.link.last_rx_at),
+            "last_tx_s_ago": age(self.link.last_tx_at),
+            "open_s": age(self.link.opened_at),
+            "pico": self.pico,
+        }
+
     def handle_status(self, request):
         bank = self.mapping.current_bank()
         status = self.status if isinstance(self.status, dict) else {}
@@ -201,11 +224,7 @@ class Service:
                 "xruns": status.get("xruns"), "guard_trips": status.get("guard_trips"),
                 "issues": status.get("issues", []),
             },
-            "link": {"device": self.cfg.uart_device, "baud": self.cfg.uart_baud,
-                     "open": self.link.open, "session": self.session.session_up,
-                     "frames_ok": self.session.frames_ok,
-                     "frames_bad": self.session.frames_bad,
-                     "pico": self.pico},
+            "link": self.link_status(time.monotonic()),
             "bank": {"banks": self.mapping.banks, "bank": self.mapping.bank,
                      "position": self.mapping.rig, "current": self.mapping.current_name(),
                      "size": len(bank)},

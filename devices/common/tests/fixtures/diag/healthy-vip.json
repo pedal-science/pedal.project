@@ -1,0 +1,1149 @@
+{
+ "alsa": {
+  "cards": "0 [wm8960         ]: simple-card - wm8960\n                      wm8960",
+  "devices": [
+   "by-path",
+   "controlC0",
+   "pcmC0D0c",
+   "pcmC0D0p",
+   "timer"
+  ],
+  "owners": {
+   "2128": "namchaind"
+  },
+  "pcm": {
+   "capture": {
+    "hw_params": "access: RW_INTERLEAVED\nformat: S32_LE\nsubformat: STD\nchannels: 2\nrate: 48000 (48000/1)\nperiod_size: 64\nbuffer_size: 384",
+    "node": "/proc/asound/card0/pcm0c/sub0",
+    "status": "state: RUNNING\nowner_pid   : 2128\ntrigger_time: 1791207195.604324534\ntstamp      : 0.000000000\ndelay       : 48\navail       : 48\navail_max   : 48\n-----\nhw_ptr      : 383394864\nappl_ptr    : 383394816",
+    "sw_params": "tstamp_mode: NONE\nperiod_step: 1\navail_min: 64\nstart_threshold: 1\nstop_threshold: 384\nsilence_threshold: 0\nsilence_size: 0\nboundary: 6917529027641081856"
+   },
+   "playback": {
+    "hw_params": "access: RW_INTERLEAVED\nformat: S32_LE\nsubformat: STD\nchannels: 2\nrate: 48000 (48000/1)\nperiod_size: 64\nbuffer_size: 384",
+    "node": "/proc/asound/card0/pcm0p/sub0",
+    "status": "state: RUNNING\nowner_pid   : 2128\ntrigger_time: 1791207195.605938923\ntstamp      : 0.000000000\ndelay       : 258\navail       : 126\navail_max   : 126\n-----\nhw_ptr      : 383394814\nappl_ptr    : 383395072",
+    "sw_params": "tstamp_mode: NONE\nperiod_step: 1\navail_min: 64\nstart_threshold: 64\nstop_threshold: 384\nsilence_threshold: 0\nsilence_size: 0\nboundary: 6917529027641081856"
+   }
+  }
+ },
+ "at": 1791215315.6111276,
+ "audio_irq": {
+  "affinity_mask": "4",
+  "irq": "138",
+  "line": "138:          0          0   23648430          0 rp1_irq_chip  40 Level     dw_axi_dmac_platform"
+ },
+ "codec": {
+  "access_summary": {
+   "readable": 0,
+   "registers": 56,
+   "volatile": 1,
+   "writable": 56
+  },
+  "name": "wm8960",
+  "range": "0-b\n10-1d\n20-22\n25-31\n33-37",
+  "registers": "00: 0117\n01: 0117\n02: 0173\n03: 0173\n04: 0005\n05: 0000\n06: 0000\n07: 004e\n08: 01c4\n09: 0000\n0a: 01ff\n0b: 01ff\n10: 0000\n11: 007b\n12: 0100\n13: 0032\n14: 0000\n15: 01c3\n16: 01c3\n17: 01c0\n18: 0004\n19: 00ec\n1a: 01f9\n1b: 0000\n1c: 0008\n1d: 0000\n20: 0108\n21: 0000\n22: 0150\n25: 0150\n26: 0000\n27: 0000\n28: 0100\n29: 0100\n2a: 0040\n2b: 0000\n2c: 0000\n2d: 0050\n2e: 0050\n2f: 003c\n30: 0002\n31: 00f7\n33: 0080\n34: 0038\n35: 0031\n36: 0026\n37: 00e9",
+  "registers_readable": true,
+  "regmap_present": true
+ },
+ "cost_cpu_s": 2.03,
+ "cost_wall_s": 4.361,
+ "cpu": {
+  "available_governors": "conservative ondemand userspace powersave performance schedutil",
+  "cur_khz": 2400000,
+  "governor": "performance",
+  "loadavg": "1.77 2.24 2.32 1/172 978427",
+  "max_khz": 2400000,
+  "min_khz": 1500000,
+  "online": "0-3",
+  "per_cpu": {
+   "cpu0": {
+    "idle": 695906,
+    "total": 795494
+   },
+   "cpu1": {
+    "idle": 678304,
+    "total": 794453
+   },
+   "cpu2": {
+    "idle": 794308,
+    "total": 799291
+   },
+   "cpu3": {
+    "idle": 752689,
+    "total": 798818
+   }
+  },
+  "policy": "/sys/devices/system/cpu/cpufreq/policy0",
+  "related": "0 1 2 3"
+ },
+ "deployed": {
+  "applied": "commit=dcaf0e2-dirty\napplied=2026-10-04T21:27:25Z",
+  "components_lock": null,
+  "engine_current": "/opt/namchain/bf108e5",
+  "engine_versions": [
+   "2e1a63a",
+   "66f8dda",
+   "974060c",
+   "bf108e5",
+   "current",
+   "d4fb8e5"
+  ],
+  "pedal_interface": false
+ },
+ "engine": {
+  "features": [
+   "multi_chain",
+   "documents",
+   "rig_apply",
+   "rig_get_document",
+   "structural_crossfade",
+   "smooth_params",
+   "bypass",
+   "guard",
+   "per_chain_mute",
+   "schema",
+   "tcp_transport",
+   "assets",
+   "record",
+   "local_transitions",
+   "meta",
+   "bypass_ramp",
+   "model_budget"
+  ],
+  "hello": {
+   "authenticated": true,
+   "features": [
+    "multi_chain",
+    "documents",
+    "rig_apply",
+    "rig_get_document",
+    "structural_crossfade",
+    "smooth_params",
+    "bypass",
+    "guard",
+    "per_chain_mute",
+    "schema",
+    "tcp_transport",
+    "assets",
+    "record",
+    "local_transitions",
+    "meta",
+    "bypass_ramp",
+    "model_budget"
+   ],
+   "id": "h",
+   "ok": true,
+   "protocol": 2,
+   "role": "namchaind",
+   "transport": "tcp",
+   "version": "0.1.0"
+  },
+  "reachable": true,
+  "status": {
+   "adopted_generation": 5,
+   "assets": {
+    "irs": 1538,
+    "irs_root": "/var/lib/pedal/library/irs",
+    "models": 52,
+    "models_root": "/var/lib/pedal/library/models",
+    "scan": 1
+   },
+   "audible_generation": 5,
+   "backend": "alsa_raw",
+   "blocks": 5990597,
+   "capture_channels": 2,
+   "chains": [
+    {
+     "adopted_generation": 5,
+     "audible_generation": 5,
+     "failed_nodes": 0,
+     "generation": 5,
+     "guard_trips": 0,
+     "id": "4104982D-EFEB-4CAE-914A-566FC688BCF9",
+     "input_channel": 0,
+     "missing_assets": [],
+     "muted": false,
+     "name": "Guitar",
+     "output_channel": 0,
+     "slimmed_models": [],
+     "target_generation": 5,
+     "transition_active": false
+    }
+   ],
+   "control": {
+    "tcp_address": "0.0.0.0",
+    "tcp_connections": 2,
+    "tcp_listening": true,
+    "tcp_max_connections": 4,
+    "tcp_max_message_bytes": 1048576,
+    "tcp_port": 47810,
+    "tcp_token_required": true,
+    "unix_connections": 0,
+    "unix_socket": "/run/namchain/namchaind.sock"
+   },
+   "device": "hw:CARD=wm8960,DEV=0",
+   "device_lost": 0,
+   "device_restored": 0,
+   "fade_ms": 5.0,
+   "failed_nodes": 0,
+   "features": [
+    "multi_chain",
+    "documents",
+    "rig_apply",
+    "rig_get_document",
+    "structural_crossfade",
+    "smooth_params",
+    "bypass",
+    "guard",
+    "per_chain_mute",
+    "schema",
+    "tcp_transport",
+    "assets",
+    "record",
+    "local_transitions",
+    "meta",
+    "bypass_ramp",
+    "model_budget"
+   ],
+   "generation": 5,
+   "guard_trips": 0,
+   "health": "ok",
+   "issues": [],
+   "last_transitions": [
+    {
+     "chain": "4104982D-EFEB-4CAE-914A-566FC688BCF9",
+     "created": 1,
+     "fades": 1,
+     "kept": 3,
+     "kind": "local",
+     "retiring": 0
+    }
+   ],
+   "local_base_mismatches": 0,
+   "local_transitions": 2,
+   "max_chains": 8,
+   "max_concurrent_transitions": 1,
+   "memory_locked": true,
+   "model_budget": {
+    "budget_bytes": 458752,
+    "configured_per_core_bytes": 458752,
+    "full_bytes": 0,
+    "heaviest_chain": 0,
+    "heaviest_chain_bytes": 0,
+    "over": false,
+    "per_chain_bytes": 458752,
+    "used_bytes": 0
+   },
+   "mute": false,
+   "param_edits": "ramped",
+   "params_applied": 76,
+   "params_stale": 0,
+   "period_size": 64,
+   "playback_channels": 2,
+   "protocol": 2,
+   "queue": {
+    "capture_bursts": 0,
+    "floor_insertions": 0,
+    "output_drops": 0,
+    "output_queue_floor_periods": 2,
+    "output_queue_periods": 4,
+    "output_target_drops": 0
+   },
+   "realtime": true,
+   "record": {
+    "active": false,
+    "enabled": true
+   },
+   "render": {
+    "deadline_us": 1333.333,
+    "load_histogram": [
+     [
+      0,
+      2024870
+     ],
+     [
+      1,
+      172879
+     ],
+     [
+      2,
+      626
+     ],
+     [
+      3,
+      69
+     ],
+     [
+      4,
+      41
+     ],
+     [
+      6,
+      2820340
+     ],
+     [
+      7,
+      943151
+     ],
+     [
+      8,
+      6950
+     ],
+     [
+      9,
+      11844
+     ],
+     [
+      10,
+      4251
+     ],
+     [
+      11,
+      2002
+     ],
+     [
+      12,
+      1810
+     ],
+     [
+      13,
+      895
+     ],
+     [
+      14,
+      389
+     ],
+     [
+      15,
+      206
+     ],
+     [
+      16,
+      156
+     ],
+     [
+      17,
+      74
+     ],
+     [
+      18,
+      24
+     ],
+     [
+      19,
+      17
+     ],
+     [
+      20,
+      2
+     ],
+     [
+      22,
+      1
+     ]
+    ],
+    "over_90_percent": 0,
+    "over_deadline": 0,
+    "worst_percent": 22.105430526357633,
+    "worst_us": 294.739
+   },
+   "render_cores": 0,
+   "render_degraded": false,
+   "render_errors": 0,
+   "render_threads": 1,
+   "render_threads_configured": 1,
+   "retired_pending": 0,
+   "rig": "",
+   "rig_name": "New Rig",
+   "rig_source": "applied",
+   "role": "namchaind",
+   "rt_policy": 1,
+   "rt_priority": 80,
+   "sample_rate": 48000,
+   "state": "running",
+   "structural_transitions": "crossfade",
+   "target_generation": 5,
+   "transition_active": false,
+   "transitions_started": 4,
+   "version": "0.1.0",
+   "xruns": 2
+  },
+  "status_ok": true,
+  "token_source": "/run/credentials/pedald.service/token"
+ },
+ "errors": [],
+ "host": {
+  "boot_id": "6ec257f4-fe7d-4b5e-b13f-e8046324098d",
+  "cmdline": "reboot=w coherent_pool=1M 8250.nr_uarts=1 pci=pcie_bus_safe numa_policy=interleave nvme.max_host_mem_size_mb=0 bcm2708_fb.fbwidth=640 bcm2708_fb.fbheight=480 bcm2708_fb.fbdepth=16 bcm2708_fb.fbswap=1 numa=fake=4 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=98:FE:54:15:25:8B vc_mem.mem_base=0x3fc00000 vc_mem.mem_size=0x40000000  root=LABEL=pedal net.ifnames=0 console=ttyAMA10,115200 console=tty1 rootfstype=ext4 rootwait fixrtc cfg80211.ieee80211_regdom=GB rd.shell=0 rd.emergency=reboot rd.retry=60 rd.timeout=90 panic=10 isolcpus=managed_irq,domain,2-3 nohz_full=2-3 rcu_nocbs=2-3 irqaffinity=0-1 skew_tick=1 vipboot.root=pedal vipboot.slot=a vipboot.profile=tuned",
+  "euid": 0,
+  "hostname": "vip",
+  "model": "Raspberry Pi 5 Model B Rev 1.1\u0000",
+  "uname": "Linux vip 7.0.0-1017-raspi-realtime-numaemu1-trimmed #1 SMP PREEMPT_RT Sun Oct  4 20:32:26 UTC 2026 aarch64",
+  "uptime_s": null
+ },
+ "hwmon": {
+  "cpu_thermal": {
+   "temp1_input": "60050"
+  },
+  "rp1_adc": {
+   "in1_input": "307",
+   "in1_raw": "382",
+   "in2_input": "2570",
+   "in2_raw": "3184",
+   "in3_input": "1145",
+   "in3_raw": "1248",
+   "in4_input": "1264",
+   "in4_raw": "1416",
+   "temp1_input": "57215",
+   "temp1_raw": "813"
+  },
+  "rpi_volt": {
+   "in0_lcrit_alarm": "0"
+  }
+ },
+ "i2c": {
+  "devices": [
+   "1-001a",
+   "i2c-1"
+  ]
+ },
+ "i2c_probe": {
+  "attempted": false,
+  "requested": false,
+  "why": "reading the chip needs i2c-tools or a working I2C_RDWR ioctl; neither is on vip today (see this tool's source or docs/diagnostics.md)"
+ },
+ "interrupts": {
+  "106": {
+   "counts": "236 0 0 0",
+   "name": "1f00074000.i2c"
+  },
+  "123": {
+   "counts": "69290 0 0 0",
+   "name": "uart-pl011"
+  },
+  "138": {
+   "counts": "0 0 23648430 0",
+   "name": "dw_axi_dmac_platform"
+  },
+  "16": {
+   "counts": "25 0 0 0",
+   "name": "uart-pl011"
+  }
+ },
+ "kmsg_interesting": [
+  "[    0.000000] OF: reserved mem: initialized node linux,cma, compatible id shared-dma-pool",
+  "[    0.000000] Kernel command line: reboot=w coherent_pool=1M 8250.nr_uarts=1 pci=pcie_bus_safe numa_policy=interleave nvme.max_host_mem_size_mb=0 bcm2708_fb.fbwidth=640 bcm2708_fb.fbheight=480 bcm2708_fb.fbdepth=16 bcm2708_fb.fbswap=1 numa=fake=4 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=98:FE:54:15:25:8B vc_mem.mem_base=0x3fc00000 vc_mem.mem_size=0x40000000  root=LABEL=pedal net.ifnames=0 console=ttyAMA10,115200 console=tty1 rootfstype=ext4 rootwait fixrtc cfg80211.ieee80211_regdom=GB rd.shell=0 rd.emergency=reboot rd.retry=60 rd.timeout=90 panic=10 isolcpus=managed_irq,domain,2-3 nohz_full=2-3 rcu_nocbs=2-3 irqaffinity=0-1 skew_tick=1 vipboot.root=pedal vipboot.slot=a vipboot.profile=tuned",
+  "[    0.071365] bcm2835-dma 1000010000.dma: DMA legacy API manager, dmachans=0x1",
+  "[    0.457384] i2c_dev: i2c /dev entries driver",
+  "[    0.480190] platform 1000800000.codec: bcm2712_iommu_of_xlate: MMU 1000005100.iommu",
+  "[    0.480193] platform 1000800000.codec: bcm2712_iommu_probe_device: MMU 1000005100.iommu",
+  "[    0.480197] platform 1000800000.codec: bcm2712_iommu_device_group: MMU 1000005100.iommu",
+  "[    0.480201] platform 1000800000.codec: Adding to iommu group 0",
+  "[    0.480256] platform 1000800000.codec: bcm2712_iommu_attach_dev: MMU 1000005100.iommu",
+  "[    1.253520] dw_axi_dmac_platform 1f00188000.dma: DesignWare AXI DMA Controller, 8 channels",
+  "[    4.477665] rpi-hevc-dec 1000800000.codec: Device registered as /dev/video19",
+  "[    4.557260] hci_uart_bcm serial0-0: supply vbat not found, using dummy regulator",
+  "[    4.557332] hci_uart_bcm serial0-0: supply vddio not found, using dummy regulator",
+  "[    5.169885] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /axi/pcie@1000120000/rp1/i2c@74000/#address-cells",
+  "[    5.169891] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /axi/pcie@1000120000/rp1/i2c@74000/#size-cells",
+  "[    5.169894] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /axi/pcie@1000120000/rp1/i2c@74000/status",
+  "[    5.294470] wm8960 1-001a: supply DCVDD not found, using dummy regulator",
+  "[    5.294525] wm8960 1-001a: supply DBVDD not found, using dummy regulator",
+  "[    5.294541] wm8960 1-001a: supply AVDD not found, using dummy regulator",
+  "[    5.294560] wm8960 1-001a: supply SPKVDD1 not found, using dummy regulator",
+  "[    5.294570] wm8960 1-001a: supply SPKVDD2 not found, using dummy regulator",
+  "[ 5931.465830] wm8960 1-001a: debugfs cache_bypass=Y forced",
+  "[ 5931.469413] wm8960 1-001a: debugfs cache_bypass=N forced"
+ ],
+ "kmsg_lines": [
+  "[    0.459869] sdhci-pltfm: SDHCI platform and OF driver helper",
+  "[    0.459905] SMCCC: SOC_ID: ARCH_SOC_ID not implemented, skipping ....",
+  "[    0.459942] hid: raw HID events driver (C) Jiri Kosina",
+  "[    0.460387] hw perfevents: enabled with armv8_cortex_a76 PMU driver, 7 (0,8000003f) counters available",
+  "[    0.460720] NET: Registered PF_INET6 protocol family",
+  "[    0.461096] Segment Routing with IPv6",
+  "[    0.461106] In-situ OAM (IOAM) with IPv6",
+  "[    0.461125] NET: Registered PF_PACKET protocol family",
+  "[    0.461187] Key type dns_resolver registered",
+  "[    0.463111] registered taskstats version 1",
+  "[    0.463360] Loading compiled-in X.509 certificates",
+  "[    0.464099] Loaded X.509 cert 'Build time autogenerated kernel key: 8ec4b56abca9721a0393c93a78b3599f466f20b8'",
+  "[    0.464102] blacklist: Loading compiled-in revocation X.509 certificates",
+  "[    0.464120] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing: 61482aa2830d0ab2ad5af10b7250da9033ddcef0'",
+  "[    0.464134] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2017): 242ade75ac4a15e50d50c84b0d45ff3eae707a03'",
+  "[    0.464146] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (ESM 2018): 365188c1d374d6b07c3c8f240f8ef722433d6a8b'",
+  "[    0.464158] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2019): c0746fd6c5da3ae827864651ad66ae47fe24b3e8'",
+  "[    0.464170] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2021 v1): a8d54bbb3825cfb94fa13c9f8a594a195c107b8d'",
+  "[    0.464181] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2021 v2): 4cf046892d6fd3c9a5b03f98d845f90851dc6a8c'",
+  "[    0.464192] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (2021 v3): 100437bb6de6e469b581e61cd66bce3ef4ed53af'",
+  "[    0.464206] Loaded X.509 cert 'Canonical Ltd. Secure Boot Signing (Ubuntu Core 2019): c1d57b8f6b743f23ee41f4f7ee292f06eecadfb9'",
+  "[    0.471842] Demotion targets for Node 0: null",
+  "[    0.471846] Demotion targets for Node 1: null",
+  "[    0.471846] Demotion targets for Node 2: null",
+  "[    0.471847] Demotion targets for Node 3: null",
+  "[    0.471998] Key type .fscrypt registered",
+  "[    0.472000] Key type fscrypt-provisioning registered",
+  "[    0.472035] Key type big_key registered",
+  "[    0.478919] Key type encrypted registered",
+  "[    0.478925] AppArmor: AppArmor sha256 policy hashing enabled",
+  "[    0.478929] ima: No TPM chip found, activating TPM-bypass!",
+  "[    0.478938] ima: Allocated hash algorithm: sha256",
+  "[    0.478955] ima: No architecture policies found",
+  "[    0.478986] evm: Initialising EVM extended attributes:",
+  "[    0.478987] evm: security.selinux",
+  "[    0.478988] evm: security.SMACK64",
+  "[    0.478989] evm: security.SMACK64EXEC",
+  "[    0.478990] evm: security.SMACK64TRANSMUTE",
+  "[    0.478991] evm: security.SMACK64MMAP",
+  "[    0.478991] evm: security.apparmor",
+  "[    0.478992] evm: security.ima",
+  "[    0.478993] evm: security.capability",
+  "[    0.478994] evm: HMAC attrs: 0x1",
+  "[    0.479987] bcm2712-iommu 1000005100.iommu: IOVA aperture 0xa00000000..0xb00000000 including DMA offset 0x0",
+  "[    0.480049] bcm2712-iommu 1000005100.iommu: bcm2712_iommu_init: DEBUG_INFO = 0x20804774",
+  "[    0.480190] platform 1000800000.codec: bcm2712_iommu_of_xlate: MMU 1000005100.iommu",
+  "[    0.480193] platform 1000800000.codec: bcm2712_iommu_probe_device: MMU 1000005100.iommu",
+  "[    0.480197] platform 1000800000.codec: bcm2712_iommu_device_group: MMU 1000005100.iommu",
+  "[    0.480201] platform 1000800000.codec: Adding to iommu group 0",
+  "[    0.480215] platform 1000880000.pisp_be: bcm2712_iommu_of_xlate: MMU 1000005100.iommu",
+  "[    0.480216] platform 1000880000.pisp_be: bcm2712_iommu_probe_device: MMU 1000005100.iommu",
+  "[    0.480220] platform 1000880000.pisp_be: bcm2712_iommu_device_group: MMU 1000005100.iommu",
+  "[    0.480223] platform 1000880000.pisp_be: Adding to iommu group 0",
+  "[    0.480256] platform 1000800000.codec: bcm2712_iommu_attach_dev: MMU 1000005100.iommu",
+  "[    0.480257] platform 1000880000.pisp_be: bcm2712_iommu_attach_dev: MMU 1000005100.iommu",
+  "[    0.480426] bcm2712-iommu 1000005200.iommu: IOVA aperture 0xa00000000..0xa80000000 including DMA offset 0x0",
+  "[    0.480465] bcm2712-iommu 1000005200.iommu: bcm2712_iommu_init: DEBUG_INFO = 0x20804774",
+  "[    0.480540] bcm2712-iommu 1000005280.iommu: IOVA aperture 0x1a00000000..0x1a80000000 including DMA offset 0x1000000000",
+  "[    0.480563] bcm2712-iommu 1000005280.iommu: bcm2712_iommu_init: DEBUG_INFO = 0x20804774",
+  "[    0.480891] of_cfs_init",
+  "[    0.480929] of_cfs_init: OK",
+  "[    0.481187] clk: Disabling unused clocks",
+  "[    0.488892] PM: genpd: Disabling unused power domains",
+  "[    0.497635] Freeing unused kernel memory: 7680K",
+  "[    0.500744] Checked W+X mappings: passed, no W+X pages found",
+  "[    0.500760] Run /init as init process",
+  "[    0.500762]   with arguments:",
+  "[    0.500764]     /init",
+  "[    0.500765]     fixrtc",
+  "[    0.500766]   with environment:",
+  "[    0.500767]     HOME=/",
+  "[    0.500768]     TERM=linux",
+  "[    0.505284] systemd[1]: System time advanced to built-in epoch: Mon 2026-07-27 20:44:02 UTC",
+  "[    0.507592] systemd[1]: Inserted module 'autofs4'",
+  "[    0.516614] systemd[1]: Successfully made /usr/ read-only.",
+  "[    0.516879] systemd[1]: systemd 259.5-0ubuntu3.4 running in system mode (+PAM +AUDIT +SELINUX +APPARMOR +IMA +IPE +SMACK +SECCOMP +GCRYPT -GNUTLS +OPENSSL +ACL +BLKID +CURL +ELFUTILS +FIDO2 +IDN2 -IDN +KMOD +LIBCRYPTSETUP +LIBCRYPTSETUP_PLUGINS +LIBFDISK +PCRE2 +PWQUALITY +P11KIT +QRENCODE +TPM2 +BZIP2 +LZ4 +XZ +ZLIB +ZSTD +BPF_FRAMEWORK +BTF -XKBCOMMON -UTMP +SYSVINIT +LIBARCHIVE)",
+  "[    0.516894] systemd[1]: Detected architecture arm64.",
+  "[    0.516897] systemd[1]: Running in initrd.",
+  "[    0.517204] systemd[1]: Initializing machine ID from random generator.",
+  "[    0.517306] systemd[1]: No hostname configured, using default hostname.",
+  "[    0.517362] systemd[1]: Hostname set to <localhost>.",
+  "[    0.572427] systemd[1]: bpf-restrict-fs: BPF LSM hook not enabled in the kernel, BPF LSM not supported.",
+  "[    0.572563] systemd[1]: Using hardware watchdog /dev/watchdog0: 'Broadcom BCM2835 Watchdog timer', version 0.",
+  "[    0.572592] systemd[1]: Watchdog running with a hardware timeout of 14s.",
+  "[    0.662186] systemd[1]: Queued start job for default target initrd.target.",
+  "[    0.674436] systemd[1]: Started systemd-ask-password-console.path - Dispatch Password Requests to Console Directory Watch.",
+  "[    0.675304] systemd[1]: Expecting device dev-disk-by\\x2dlabel-pedal.device - /dev/disk/by-label/pedal...",
+  "[    0.675358] systemd[1]: Reached target initrd-usr-fs.target - Initrd /usr File System.",
+  "[    0.675397] systemd[1]: Reached target paths.target - Path Units.",
+  "[    0.675429] systemd[1]: Reached target remote-fs.target - Remote File Systems.",
+  "[    0.675459] systemd[1]: Reached target slices.target - Slice Units.",
+  "[    0.675492] systemd[1]: Reached target swap.target - Swaps.",
+  "[    0.675522] systemd[1]: Reached target timers.target - Timer Units.",
+  "[    0.675659] systemd[1]: Listening on systemd-journald-dev-log.socket - Journal Socket (/dev/log).",
+  "[    0.675774] systemd[1]: Listening on systemd-journald.socket - Journal Sockets.",
+  "[    0.675872] systemd[1]: Listening on systemd-udevd-control.socket - udev Control Socket.",
+  "[    0.675951] systemd[1]: Listening on systemd-udevd-kernel.socket - udev Kernel Socket.",
+  "[    0.675999] systemd[1]: Reached target sockets.target - Socket Units.",
+  "[    0.676086] systemd[1]: dracut-cmdline-ask.service - dracut ask for additional cmdline parameters skipped, no trigger condition checks were met.",
+  "[    0.681329] systemd[1]: Starting dracut-cmdline.service - dracut cmdline hook...",
+  "[    0.699451] systemd[1]: Starting dracut-pre-mount.service - dracut pre-mount hook...",
+  "[    0.701652] systemd[1]: Starting kmod-static-nodes.service - Create List of Static Device Nodes...",
+  "[    0.701834] systemd[1]: systemd-battery-check.service - Early Battery Level Check skipped, unmet condition check ConditionDirectoryNotEmpty=/sys/class/power_supply",
+  "[    0.709476] systemd[1]: Starting systemd-journald.service - Journal Service...",
+  "[    0.709788] systemd[1]: systemd-modules-load.service - Load Kernel Modules skipped, no trigger condition checks were met.",
+  "[    0.709811] systemd[1]: systemd-pcrphase-initrd.service - TPM PCR Barrier (initrd) skipped, unmet condition check ConditionSecurity=measured-uki",
+  "[    0.720196] systemd[1]: Starting systemd-sysctl.service - Apply Kernel Variables...",
+  "[    0.737956] systemd[1]: Finished kmod-static-nodes.service - Create List of Static Device Nodes.",
+  "[    0.741355] systemd[1]: Starting systemd-tmpfiles-setup-dev-early.service - Create Static Device Nodes in /dev gracefully...",
+  "[    0.772418] systemd-journald[154]: Collecting audit messages is disabled.",
+  "[    0.780400] systemd[1]: Finished systemd-sysctl.service - Apply Kernel Variables.",
+  "[    0.784562] systemd[1]: Started systemd-journald.service - Journal Service.",
+  "[    1.124134] brcm-pcie 1000120000.pcie: host bridge /axi/pcie@1000120000 ranges:",
+  "[    1.124310] brcm-pcie 1000120000.pcie:      MEM 0x1f00000000..0x1ffffffffb -> 0x0000000000",
+  "[    1.124316] brcm-pcie 1000120000.pcie:      MEM 0x1c00000000..0x1effffffff -> 0x0400000000",
+  "[    1.124322] brcm-pcie 1000120000.pcie:   IB MEM 0x1f00000000..0x1f003fffff -> 0x0000000000",
+  "[    1.124327] brcm-pcie 1000120000.pcie:   IB MEM 0x0000000000..0x0fffffffff -> 0x1000000000",
+  "[    1.124330] brcm-pcie 1000120000.pcie:   IB MEM 0x1000130000..0x1000130fff -> 0xfffffff000",
+  "[    1.126432] brcm-pcie 1000120000.pcie: PCI host bridge to bus 0002:00",
+  "[    1.126445] pci_bus 0002:00: root bus resource [bus 00-ff]",
+  "[    1.126449] pci_bus 0002:00: root bus resource [mem 0x1f00000000-0x1ffffffffb] (bus address [0x00000000-0xfffffffb])",
+  "[    1.126451] pci_bus 0002:00: root bus resource [mem 0x1c00000000-0x1effffffff pref] (bus address [0x400000000-0x6ffffffff])",
+  "[    1.126464] pci 0002:00:00.0: [14e4:2712] type 01 class 0x060400 PCIe Root Port",
+  "[    1.126470] pci 0002:00:00.0: PCI bridge to [bus 00]",
+  "[    1.126472] pci 0002:00:00.0:   bridge window [mem 0x1f80000000-0x1fbfffffff]",
+  "[    1.126489] pci 0002:00:00.0: PME# supported from D0 D3hot",
+  "[    1.127130] pci 0002:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring",
+  "[    1.138304] 107d50c000.serial: ttyS0 at MMIO 0x107d50c000 (irq = 35, base_baud = 6000000) is a Broadcom BCM7271 UART",
+  "[    1.138468] serial serial0: tty port ttyS0 registered",
+  "[    1.156758] rpi-rtc soc@107c000000:rpi_rtc: registered as rtc0",
+  "[    1.158353] rpi-rtc soc@107c000000:rpi_rtc: setting system clock to 1970-01-01T00:00:13 UTC (13)",
+  "[    1.159515] systemd-journald[154]: Time jumped backwards, rotating.",
+  "[    1.232277] brcm-pcie 1000120000.pcie: clkreq-mode set to default",
+  "[    1.232289] brcm-pcie 1000120000.pcie: link up, 5.0 GT/s PCIe x4 (!SSC)",
+  "[    1.232319] pci 0002:01:00.0: [1de4:0001] type 00 class 0x020000 PCIe Endpoint",
+  "[    1.232356] pci 0002:01:00.0: BAR 0 [mem 0xffffc000-0xffffffff]",
+  "[    1.232360] pci 0002:01:00.0: BAR 1 [mem 0xffc00000-0xffffffff]",
+  "[    1.232363] pci 0002:01:00.0: BAR 2 [mem 0xffff0000-0xffffffff]",
+  "[    1.232429] pci 0002:01:00.0: supports D1",
+  "[    1.232435] pci 0002:01:00.0: PME# supported from D0 D1 D3hot D3cold",
+  "[    1.234408] pci 0002:01:00.0: ASPM: default states L1",
+  "[    1.234431] pci_bus 0002:01: busn_res: [bus 01-ff] end is updated to 01",
+  "[    1.234442] pci 0002:00:00.0: bridge window [mem 0x1f00000000-0x1f004fffff]: assigned",
+  "[    1.234446] pci 0002:01:00.0: BAR 1 [mem 0x1f00000000-0x1f003fffff]: assigned",
+  "[    1.234450] pci 0002:01:00.0: BAR 2 [mem 0x1f00400000-0x1f0040ffff]: assigned",
+  "[    1.234454] pci 0002:01:00.0: BAR 0 [mem 0x1f00410000-0x1f00413fff]: assigned",
+  "[    1.234458] pci 0002:00:00.0: PCI bridge to [bus 01]",
+  "[    1.234460] pci 0002:00:00.0:   bridge window [mem 0x1f00000000-0x1f004fffff]",
+  "[    1.234462] pci_bus 0002:00: resource 4 [mem 0x1f00000000-0x1ffffffffb]",
+  "[    1.234464] pci_bus 0002:00: resource 5 [mem 0x1c00000000-0x1effffffff pref]",
+  "[    1.234466] pci_bus 0002:01: resource 1 [mem 0x1f00000000-0x1f004fffff]",
+  "[    1.234468] pci 0002:00:00.0: Max Payload Size set to  256/ 512 (was  128), Max Read Rq  512",
+  "[    1.234475] pci 0002:01:00.0: Max Payload Size set to  256/ 256 (was  128), Max Read Rq  512",
+  "[    1.234583] pcieport 0002:00:00.0: enabling device (0000 -> 0002)",
+  "[    1.235227] pcieport 0002:00:00.0: PME: Signaling with IRQ 36",
+  "[    1.235361] pcieport 0002:00:00.0: AER: enabled with IRQ 36",
+  "[    1.235686] rp1 0002:01:00.0: bar0 len 0x4000, start 0x1f00410000, end 0x1f00413fff, flags, 0x40200",
+  "[    1.235695] rp1 0002:01:00.0: bar1 len 0x400000, start 0x1f00000000, end 0x1f003fffff, flags, 0x40200",
+  "[    1.235701] rp1 0002:01:00.0: enabling device (0000 -> 0002)",
+  "[    1.236580] rp1 0002:01:00.0: chip_id 0x20001927",
+  "[    1.249387] input: pwr_button as /devices/platform/pwr_button/input/input2",
+  "[    1.251751] genirq: irq_chip rp1_irq_chip did not update eff. affinity mask of irq 156",
+  "[    1.253520] dw_axi_dmac_platform 1f00188000.dma: DesignWare AXI DMA Controller, 8 channels",
+  "[    1.254214] pl011-axi 1f00030000.serial: cts_event_workaround enabled",
+  "[    1.254266] sdhci-brcmstb 1000fff000.mmc: Got CD GPIO",
+  "[    1.256540] sdhci-brcmstb 1001100000.mmc: error -EINVAL: invalid resource (null)",
+  "[    1.258438] mmc1: CQHCI version 5.10",
+  "[    1.258547] mmc0: CQHCI version 5.10",
+  "[    1.259335] 1f00030000.serial: ttyAMA0 at MMIO 0x1f00030000 (irq = 123, base_baud = 0) is a PL011 AXI",
+  "[    1.336945] mmc0: SDHCI controller on 1000fff000.mmc [1000fff000.mmc] using ADMA 64-bit",
+  "[    1.443084] mmc0: new UHS-I speed SDR104 SDHC card at address aaaa",
+  "[    1.460825] mmc1: SDHCI controller on 1001100000.mmc [1001100000.mmc] using ADMA 64-bit",
+  "[    1.466475] mmcblk0: mmc0:aaaa SK32G 29.7 GiB",
+  "[    1.469539] xhci-hcd xhci-hcd.0: xHCI Host Controller",
+  "[    1.469561] xhci-hcd xhci-hcd.0: new USB bus registered, assigned bus number 1",
+  "[    1.470022] xhci-hcd xhci-hcd.0: hcc params 0x0240fe6d hci version 0x110 quirks 0x0000808000000810",
+  "[    1.470120] xhci-hcd xhci-hcd.0: irq 129, io mem 0x1f00200000",
+  "[    1.470228] xhci-hcd xhci-hcd.0: xHCI Host Controller",
+  "[    1.470231] xhci-hcd xhci-hcd.0: new USB bus registered, assigned bus number 2",
+  "[    1.470235] xhci-hcd xhci-hcd.0: Host supports USB 3.0 SuperSpeed",
+  "[    1.471910] usb usb1: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 7.00",
+  "[    1.471922] usb usb1: New USB device strings: Mfr=3, Product=2, SerialNumber=1",
+  "[    1.471923] usb usb1: Product: xHCI Host Controller",
+  "[    1.471925] usb usb1: Manufacturer: Linux 7.0.0-1017-raspi-realtime-numaemu1-trimmed xhci-hcd",
+  "[    1.471926] usb usb1: SerialNumber: xhci-hcd.0",
+  "[    1.472310] hub 1-0:1.0: USB hub found",
+  "[    1.472478] hub 1-0:1.0: 2 ports detected",
+  "[    1.473702] usb usb2: New USB device found, idVendor=1d6b, idProduct=0003, bcdDevice= 7.00",
+  "[    1.473712] usb usb2: New USB device strings: Mfr=3, Product=2, SerialNumber=1",
+  "[    1.473714] usb usb2: Product: xHCI Host Controller",
+  "[    1.473715] usb usb2: Manufacturer: Linux 7.0.0-1017-raspi-realtime-numaemu1-trimmed xhci-hcd",
+  "[    1.473717] usb usb2: SerialNumber: xhci-hcd.0",
+  "[    1.474150] hub 2-0:1.0: USB hub found",
+  "[    1.474293] hub 2-0:1.0: 1 port detected",
+  "[    1.474659] xhci-hcd xhci-hcd.1: xHCI Host Controller",
+  "[    1.474665] xhci-hcd xhci-hcd.1: new USB bus registered, assigned bus number 3",
+  "[    1.475118] xhci-hcd xhci-hcd.1: hcc params 0x0240fe6d hci version 0x110 quirks 0x0000808000000810",
+  "[    1.476427] xhci-hcd xhci-hcd.1: irq 134, io mem 0x1f00300000",
+  "[    1.476541] xhci-hcd xhci-hcd.1: xHCI Host Controller",
+  "[    1.476546] xhci-hcd xhci-hcd.1: new USB bus registered, assigned bus number 4",
+  "[    1.476551] xhci-hcd xhci-hcd.1: Host supports USB 3.0 SuperSpeed",
+  "[    1.477388] usb usb3: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 7.00",
+  "[    1.477397] usb usb3: New USB device strings: Mfr=3, Product=2, SerialNumber=1",
+  "[    1.477399] usb usb3: Product: xHCI Host Controller",
+  "[    1.477401] usb usb3: Manufacturer: Linux 7.0.0-1017-raspi-realtime-numaemu1-trimmed xhci-hcd",
+  "[    1.477402] usb usb3: SerialNumber: xhci-hcd.1",
+  "[    1.477548] hub 3-0:1.0: USB hub found",
+  "[    1.477563] hub 3-0:1.0: 2 ports detected",
+  "[    1.478346] usb usb4: New USB device found, idVendor=1d6b, idProduct=0003, bcdDevice= 7.00",
+  "[    1.478353] usb usb4: New USB device strings: Mfr=3, Product=2, SerialNumber=1",
+  "[    1.478355] usb usb4: Product: xHCI Host Controller",
+  "[    1.478356] usb usb4: Manufacturer: Linux 7.0.0-1017-raspi-realtime-numaemu1-trimmed xhci-hcd",
+  "[    1.478358] usb usb4: SerialNumber: xhci-hcd.1",
+  "[    1.478826] hub 4-0:1.0: USB hub found",
+  "[    1.478882] hub 4-0:1.0: 1 port detected",
+  "[    1.479748]  mmcblk0: p1 p2 p3 p4 p5 p6",
+  "[    1.482050] mmcblk0: mmc0:aaaa SK32G 29.7 GiB (quirks 0x00004000)",
+  "[    1.494837] mmc1: new UHS-I speed DDR50 SDIO card at address 0001",
+  "[    1.712276] usb 3-2: new full-speed USB device number 2 using xhci-hcd",
+  "[    1.865654] usb 3-2: New USB device found, idVendor=2e8a, idProduct=0009, bcdDevice= 1.00",
+  "[    1.865727] usb 3-2: New USB device strings: Mfr=1, Product=2, SerialNumber=3",
+  "[    1.865730] usb 3-2: Product: Pico",
+  "[    1.865731] usb 3-2: Manufacturer: Raspberry Pi",
+  "[    1.865733] usb 3-2: SerialNumber: 5988E9A10C2344D7",
+  "[    2.785457] EXT4-fs (mmcblk0p5): orphan cleanup on readonly fs",
+  "[    2.785786] EXT4-fs (mmcblk0p5): mounted filesystem 16187f41-8d44-565c-aff2-bb2bc99b9b29 ro with ordered data mode. Quota mode: none.",
+  "[    2.951348] systemd-journald[154]: Received SIGTERM from PID 1 (systemd).",
+  "[    3.113813] systemd[1]: System time advanced to timestamp on /var/lib/systemd/timesync/clock: Mon 2026-10-05 13:33:10 UTC",
+  "[    3.140259] systemd[1]: systemd 259.5-0ubuntu3.4 running in system mode (+PAM +AUDIT +SELINUX +APPARMOR +IMA +IPE +SMACK +SECCOMP +GCRYPT -GNUTLS +OPENSSL +ACL +BLKID +CURL +ELFUTILS +FIDO2 +IDN2 -IDN +KMOD +LIBCRYPTSETUP +LIBCRYPTSETUP_PLUGINS +LIBFDISK +PCRE2 +PWQUALITY +P11KIT +QRENCODE +TPM2 +BZIP2 +LZ4 +XZ +ZLIB +ZSTD +BPF_FRAMEWORK +BTF -XKBCOMMON -UTMP +SYSVINIT +LIBARCHIVE)",
+  "[    3.140289] systemd[1]: Detected architecture arm64.",
+  "[    3.156895] systemd[1]: Hostname set to <vip>.",
+  "[    3.243459] systemd[1]: bpf-restrict-fs: BPF LSM hook not enabled in the kernel, BPF LSM not supported.",
+  "[    3.243595] systemd[1]: Using hardware watchdog /dev/watchdog0: 'Broadcom BCM2835 Watchdog timer', version 0.",
+  "[    3.243623] systemd[1]: Watchdog running with a hardware timeout of 14s.",
+  "[    3.388528] systemd[1]: /etc/systemd/system/namchaind.service.d/10-pedal.conf:21: Failed to parse CPU scheduling priority, ignoring: ",
+  "[    3.504946] systemd[1]: initrd-switch-root.service: Deactivated successfully.",
+  "[    3.505166] systemd[1]: Stopped initrd-switch-root.service - Switch Root.",
+  "[    3.506363] systemd[1]: systemd-journald.service: Scheduled restart job, restart counter is at 1.",
+  "[    3.506878] systemd[1]: Created slice pedal.slice - Slice /pedal.",
+  "[    3.507378] systemd[1]: Created slice pedal-rt.slice - Pedal realtime work: namchaind and measurements, allowed onto the render core.",
+  "[    3.507905] systemd[1]: Created slice system-getty.slice - Slice /system/getty.",
+  "[    3.508466] systemd[1]: Created slice system-serial\\x2dgetty.slice - Slice /system/serial-getty.",
+  "[    3.509045] systemd[1]: Created slice system-systemd\\x2dfsck.slice - Slice /system/systemd-fsck.",
+  "[    3.509528] systemd[1]: Created slice system-systemd\\x2dgrowfs.slice - Slice /system/systemd-growfs.",
+  "[    3.509965] systemd[1]: Created slice system-wpa_supplicant.slice - Slice /system/wpa_supplicant.",
+  "[    3.510353] systemd[1]: Created slice user.slice - User and Session Slice.",
+  "[    3.510472] systemd[1]: Started systemd-ask-password-console.path - Dispatch Password Requests to Console Directory Watch.",
+  "[    3.510550] systemd[1]: Started systemd-ask-password-wall.path - Forward Password Requests to Wall Directory Watch.",
+  "[    3.510770] systemd[1]: Set up automount proc-sys-fs-binfmt_misc.automount - Arbitrary Executable File Formats File System Automount Point.",
+  "[    3.510826] systemd[1]: Expecting device dev-disk-by\\x2dlabel-pedal\\x2ddata.device - /dev/disk/by-label/pedal-data...",
+  "[    3.510863] systemd[1]: Expecting device dev-ttyAMA10.device - /dev/ttyAMA10...",
+  "[    3.510910] systemd[1]: Expecting device sys-subsystem-net-devices-wlan0.device - /sys/subsystem/net/devices/wlan0...",
+  "[    3.510960] systemd[1]: Reached target imports.target - Image Downloads.",
+  "[    3.511008] systemd[1]: Stopped target initrd-switch-root.target - Switch Root.",
+  "[    3.511049] systemd[1]: Stopped target initrd-fs.target - Initrd File Systems.",
+  "[    3.511083] systemd[1]: Stopped target initrd-root-fs.target - Initrd Root File System.",
+  "[    3.511141] systemd[1]: Reached target paths.target - Path Units.",
+  "[    3.511185] systemd[1]: Reached target remote-fs.target - Remote File Systems.",
+  "[    3.511221] systemd[1]: Reached target slices.target - Slice Units.",
+  "[    3.511291] systemd[1]: Reached target swap.target - Swaps.",
+  "[    3.512836] systemd[1]: Listening on systemd-ask-password.socket - Query the User Interactively for a Password.",
+  "[    3.514057] systemd[1]: Listening on systemd-creds.socket - Credential Encryption/Decryption.",
+  "[    3.515396] systemd[1]: Listening on systemd-factory-reset.socket - Factory Reset Management.",
+  "[    3.517035] systemd[1]: Listening on systemd-mute-console.socket - Console Output Muting Service Socket.",
+  "[    3.517255] systemd[1]: Listening on systemd-networkd-varlink.socket - Network Management Varlink Socket.",
+  "[    3.517440] systemd[1]: Listening on systemd-networkd.socket - Network Management Netlink Socket.",
+  "[    3.517504] systemd[1]: systemd-pcrextend.socket - TPM PCR Measurements skipped, unmet condition check ConditionSecurity=measured-uki",
+  "[    3.517522] systemd[1]: systemd-pcrlock.socket - Make TPM PCR Policy skipped, unmet condition check ConditionSecurity=measured-uki",
+  "[    3.518519] systemd[1]: Listening on systemd-repart.socket - Disk Repartitioning Service Socket.",
+  "[    3.518651] systemd[1]: Listening on systemd-resolved-monitor.socket - Resolve Monitor Varlink Socket.",
+  "[    3.518750] systemd[1]: Listening on systemd-resolved-varlink.socket - Resolve Service Varlink Socket.",
+  "[    3.518867] systemd[1]: Listening on systemd-udevd-control.socket - udev Control Socket.",
+  "[    3.518991] systemd[1]: Listening on systemd-udevd-varlink.socket - udev Varlink Socket.",
+  "[    3.520389] systemd[1]: Mounting dev-hugepages.mount - Huge Pages File System...",
+  "[    3.521386] systemd[1]: Mounting dev-mqueue.mount - POSIX Message Queue File System...",
+  "[    3.522288] systemd[1]: Mounting sys-kernel-debug.mount - Kernel Debug File System...",
+  "[    3.523369] systemd[1]: Mounting sys-kernel-tracing.mount - Kernel Trace File System...",
+  "[    3.529570] systemd[1]: Mounting tmp.mount - Temporary Directory /tmp...",
+  "[    3.538740] systemd[1]: Starting systemd-journald.service - Journal Service...",
+  "[    3.545366] systemd[1]: Starting kmod-static-nodes.service - Create List of Static Device Nodes...",
+  "[    3.545533] systemd[1]: modprobe@configfs.service - Load Kernel Module configfs skipped, unmet condition check ConditionKernelModuleLoaded=!configfs",
+  "[    3.545584] systemd[1]: modprobe@drm.service - Load Kernel Module drm skipped, unmet condition check ConditionKernelModuleLoaded=!drm",
+  "[    3.548860] systemd[1]: Starting modprobe@efi_pstore.service - Load Kernel Module efi_pstore...",
+  "[    3.553044] systemd[1]: Starting modprobe@fuse.service - Load Kernel Module fuse...",
+  "[    3.553579] systemd[1]: systemd-hibernate-clear.service - Clear Stale Hibernate Storage Info skipped, unmet condition check ConditionPathExists=/sys/firmware/efi/efivars/HibernateLocation-8cf2644b-4b0b-428f-9387-6d876050dc67",
+  "[    3.559368] systemd[1]: Starting systemd-modules-load.service - Load Kernel Modules...",
+  "[    3.565688] systemd[1]: Starting systemd-network-generator.service - Generate Network Units from Kernel Command Line...",
+  "[    3.565918] systemd[1]: systemd-pcrmachine.service - TPM PCR Machine ID Measurement skipped, unmet condition check ConditionSecurity=measured-uki",
+  "[    3.565964] systemd[1]: systemd-pcrproduct.service - TPM NvPCR Product ID Measurement skipped, unmet condition check ConditionSecurity=measured-uki",
+  "[    3.568603] systemd[1]: Starting systemd-remount-fs.service - Remount Root and Kernel File Systems...",
+  "[    3.569269] systemd[1]: systemd-tpm2-setup-early.service - Early TPM SRK Setup skipped, unmet condition check ConditionSecurity=measured-uki",
+  "[    3.572543] systemd[1]: Starting systemd-udev-load-credentials.service - Load udev Rules from Credentials...",
+  "[    3.579515] systemd[1]: Starting systemd-udev-trigger.service - Coldplug All udev Devices...",
+  "[    3.591784] fuse: init (API version 7.45)",
+  "[    3.593338] systemd[1]: Started vip-boot-deadline.service - vip-boot: a pedal boot that hasn't reached pedal-guard in five minutes reboots, so it counts.",
+  "[    3.600094] systemd[1]: Mounted dev-hugepages.mount - Huge Pages File System.",
+  "[    3.602419] systemd[1]: Mounted dev-mqueue.mount - POSIX Message Queue File System.",
+  "[    3.602678] systemd[1]: Mounted sys-kernel-debug.mount - Kernel Debug File System.",
+  "[    3.602927] systemd[1]: Mounted sys-kernel-tracing.mount - Kernel Trace File System.",
+  "[    3.603143] systemd[1]: Mounted tmp.mount - Temporary Directory /tmp.",
+  "[    3.613157] systemd[1]: Finished kmod-static-nodes.service - Create List of Static Device Nodes.",
+  "[    3.613889] systemd[1]: modprobe@efi_pstore.service: Deactivated successfully.",
+  "[    3.614147] systemd[1]: Finished modprobe@efi_pstore.service - Load Kernel Module efi_pstore.",
+  "[    3.615127] systemd[1]: modprobe@fuse.service: Deactivated successfully.",
+  "[    3.616333] systemd[1]: Finished modprobe@fuse.service - Load Kernel Module fuse.",
+  "[    3.616896] systemd[1]: Finished systemd-modules-load.service - Load Kernel Modules.",
+  "[    3.620307] EXT4-fs (mmcblk0p5): re-mounted 16187f41-8d44-565c-aff2-bb2bc99b9b29 r/w.",
+  "[    3.624521] systemd[1]: Finished systemd-network-generator.service - Generate Network Units from Kernel Command Line.",
+  "[    3.625970] systemd[1]: Finished systemd-remount-fs.service - Remount Root and Kernel File Systems.",
+  "[    3.626500] systemd-journald[351]: Collecting audit messages is disabled.",
+  "[    3.632504] systemd[1]: Finished systemd-udev-load-credentials.service - Load udev Rules from Credentials.",
+  "[    3.633456] systemd[1]: Started systemd-journald.service - Journal Service.",
+  "[    3.676682] systemd-journald[351]: Received client request to flush runtime journal.",
+  "[    4.143067] cfg80211: Loading compiled-in X.509 certificates for regulatory database",
+  "[    4.143440] Loaded X.509 cert 'benh@debian.org: 577e021cb980e0e820821ba7b54b4961b8b4fadf'",
+  "[    4.143627] Loaded X.509 cert 'romain.perier@gmail.com: 3abbc6ec146e09d1b6016ab9d6cf71dd233f0328'",
+  "[    4.143811] Loaded X.509 cert 'sforshee: 00b28ddf47aef9cea7'",
+  "[    4.143987] Loaded X.509 cert 'wens: 61c038651aabdcf94bd0ac7ff06c7248db18c600'",
+  "[    4.253916] rp1-firmware rp1_firmware: RP1 Firmware version 23fca1cd776798b50bd3e640ecb242215778e7f8",
+  "[    4.263481] rpi-gpiomem 107d508500.gpiomem: window base 0x107d508500 size 0x00000040",
+  "[    4.263660] rpi-gpiomem 107d508500.gpiomem: initialised 1 regions as /dev/gpiomem1",
+  "[    4.263693] rpi-gpiomem 107d517c00.gpiomem: window base 0x107d517c00 size 0x00000040",
+  "[    4.263994] rpi-gpiomem 107d517c00.gpiomem: initialised 1 regions as /dev/gpiomem2",
+  "[    4.264018] rpi-gpiomem 107d504100.gpiomem: window base 0x107d504100 size 0x00000020",
+  "[    4.264063] rpi-gpiomem 107d504100.gpiomem: initialised 1 regions as /dev/gpiomem3",
+  "[    4.264081] rpi-gpiomem 107d510700.gpiomem: window base 0x107d510700 size 0x00000020",
+  "[    4.264116] rpi-gpiomem 107d510700.gpiomem: initialised 1 regions as /dev/gpiomem4",
+  "[    4.264165] rpi-gpiomem 1f000d0000.gpiomem: window base 0x1f000d0000 size 0x00030000",
+  "[    4.264687] rpi-gpiomem 1f000d0000.gpiomem: initialised 1 regions as /dev/gpiomem0",
+  "[    4.293861] rp1-pio 1f00178000.pio: Created instance as pio0",
+  "[    4.321623] macb 1f00100000.ethernet eth0: Cadence GEM rev 0x00070109 at 0x1f00100000 irq 104 (98:fe:54:15:25:8b)",
+  "[    4.344379] mc: Linux media interface: v0.10",
+  "[    4.379423] cdc_acm 3-2:1.0: ttyACM0: USB ACM device",
+  "[    4.379495] usbcore: registered new interface driver cdc_acm",
+  "[    4.379497] cdc_acm: USB Abstract Control Model driver for USB modems and ISDN adapters",
+  "[    4.385864] videodev: Linux video capture interface: v2.00",
+  "[    4.407080] brcmfmac: F1 signature read @0x18000000=0x15264345",
+  "[    4.408470] brcmfmac: brcmf_fw_alloc_request: using brcm/brcmfmac43455-sdio for chip BCM4345/6",
+  "[    4.408774] usbcore: registered new interface driver brcmfmac",
+  "[    4.428528] bcm2708_fb soc@107c000000:fb: Unable to determine number of FBs. Disabling driver.",
+  "[    4.428544] bcm2708_fb soc@107c000000:fb: probe with driver bcm2708_fb failed with error -2",
+  "[    4.477665] rpi-hevc-dec 1000800000.codec: Device registered as /dev/video19",
+  "[    4.478667] Bluetooth: Core ver 2.22",
+  "[    4.478828] NET: Registered PF_BLUETOOTH protocol family",
+  "[    4.478830] Bluetooth: HCI device and connection manager initialized",
+  "[    4.478835] Bluetooth: HCI socket layer initialized",
+  "[    4.478838] Bluetooth: L2CAP socket layer initialized",
+  "[    4.478843] Bluetooth: SCO socket layer initialized",
+  "[    4.556862] Bluetooth: HCI UART driver ver 2.3",
+  "[    4.556888] Bluetooth: HCI UART protocol H4 registered",
+  "[    4.556890] Bluetooth: HCI UART protocol BCSP registered",
+  "[    4.556932] Bluetooth: HCI UART protocol LL registered",
+  "[    4.556933] Bluetooth: HCI UART protocol ATH3K registered",
+  "[    4.556942] Bluetooth: HCI UART protocol Three-wire (H5) registered",
+  "[    4.556992] Bluetooth: HCI UART protocol Intel registered",
+  "[    4.557027] Bluetooth: HCI UART protocol Broadcom registered",
+  "[    4.557036] Bluetooth: HCI UART protocol QCA registered",
+  "[    4.557037] Bluetooth: HCI UART protocol AG6XX registered",
+  "[    4.557047] Bluetooth: HCI UART protocol Marvell registered",
+  "[    4.557055] Bluetooth: HCI UART protocol AML registered",
+  "[    4.557260] hci_uart_bcm serial0-0: supply vbat not found, using dummy regulator",
+  "[    4.557332] hci_uart_bcm serial0-0: supply vddio not found, using dummy regulator",
+  "[    4.604579] macb 1f00100000.ethernet eth0: PHY [1f00100000.ethernet-ffffffff:01] driver [Broadcom BCM54213PE] (irq=POLL)",
+  "[    4.605551] macb 1f00100000.ethernet eth0: configuring for phy/rgmii-id link mode",
+  "[    4.609158] macb 1f00100000.ethernet: gem-ptp-timer ptp clock registered.",
+  "[    4.725353] EXT4-fs (mmcblk0p6): mounted filesystem bdd5eefe-38f8-5b27-ae0c-db873937a5dd r/w with ordered data mode. Quota mode: none.",
+  "[    4.754346] EXT4-fs (mmcblk0p6): resizing filesystem from 6398843 to 6398843 blocks",
+  "[    4.772565] brcmfmac: brcmf_c_process_txcap_blob: no txcap_blob available (err=-2)",
+  "[    4.772826] brcmfmac: brcmf_c_preinit_dcmds: Firmware: BCM4345/6 wl0: Aug 29 2023 01:47:08 version 7.45.265 (28bca26 CY) FWID 01-b677b91b",
+  "[    4.858451] brcmfmac: brcmf_cfg80211_set_power_mgmt: power save enabled",
+  "[    4.880797] Bluetooth: hci0: BCM: chip id 107",
+  "[    4.881151] Bluetooth: hci0: BCM: features 0x2f",
+  "[    4.882522] Bluetooth: hci0: BCM4345C0",
+  "[    4.882531] Bluetooth: hci0: BCM4345C0 (003.001.025) build 0000",
+  "[    4.885399] Bluetooth: hci0: BCM4345C0 'brcm/BCM4345C0.raspberrypi,5-model-b.hcd' Patch",
+  "[    5.131870] brcmfmac: brcmf_cfg80211_set_power_mgmt: power save disabled",
+  "[    5.169706] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /axi/pcie@1000120000/rp1/i2s@a4000/status",
+  "[    5.169885] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /axi/pcie@1000120000/rp1/i2c@74000/#address-cells",
+  "[    5.169891] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /axi/pcie@1000120000/rp1/i2c@74000/#size-cells",
+  "[    5.169894] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /axi/pcie@1000120000/rp1/i2c@74000/status",
+  "[    5.169908] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/compatible",
+  "[    5.169911] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/simple-audio-card,format",
+  "[    5.169913] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/simple-audio-card,name",
+  "[    5.169914] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/simple-audio-card,bitclock-master",
+  "[    5.169917] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/simple-audio-card,frame-master",
+  "[    5.169919] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/simple-audio-card,widgets",
+  "[    5.169920] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/simple-audio-card,routing",
+  "[    5.169923] OF: overlay: WARNING: memory leak will occur if overlay removed, property: /soc@107c000000/sound/status",
+  "[    5.294470] wm8960 1-001a: supply DCVDD not found, using dummy regulator",
+  "[    5.294525] wm8960 1-001a: supply DBVDD not found, using dummy regulator",
+  "[    5.294541] wm8960 1-001a: supply AVDD not found, using dummy regulator",
+  "[    5.294560] wm8960 1-001a: supply SPKVDD1 not found, using dummy regulator",
+  "[    5.294570] wm8960 1-001a: supply SPKVDD2 not found, using dummy regulator",
+  "[    5.617821] Bluetooth: hci0: BCM: features 0x2f",
+  "[    5.619316] Bluetooth: hci0: BCM43455 37.4MHz Raspberry Pi 3+-0190",
+  "[    5.619335] Bluetooth: hci0: BCM4345C0 (003.001.025) build 0382",
+  "[    5.619692] Bluetooth: hci0: BCM: Using default device address (43:45:c0:00:1f:ac)",
+  "[   38.974413] ieee80211 phy0: brcmf_p2p_send_action_frame: Unknown Frame: category 0xa, action 0x8",
+  "[ 5931.465830] wm8960 1-001a: debugfs cache_bypass=Y forced",
+  "[ 5931.469413] wm8960 1-001a: debugfs cache_bypass=N forced"
+ ],
+ "link_line": {
+  "error": "OSError: termios is not available on this platform"
+ },
+ "memory": {
+  "MemAvailable": "704172",
+  "MemFree": "581692",
+  "MemTotal": "991936",
+  "SwapFree": "0",
+  "SwapTotal": "0",
+  "cgroup_pedal.slice": "54693888",
+  "cgroup_system.slice": "198881280",
+  "oom_kills_hint": null
+ },
+ "mixer": {
+  "age_samples": 0,
+  "controls": 53,
+  "float_db": [
+   "Front Left: Playback 115 [91%] [-6.00dB]",
+   "Front Right: Playback 115 [91%] [-6.00dB]",
+   "Front Left: Playback 0 [0%] [-99999.99dB]",
+   "Front Right: Playback 0 [0%] [-99999.99dB]",
+   "Front Left: 255 [100%] [0.00dB]",
+   "Front Right: 255 [100%] [0.00dB]",
+   "Front Left: Capture 23 [37%] [0.00dB] [on]",
+   "Front Right: Capture 23 [37%] [0.00dB] [on]",
+   "Front Left: Capture 195 [76%] [0.00dB]",
+   "Front Right: Capture 195 [76%] [0.00dB]",
+   "Mono: 0 [0%] [0.00dB]",
+   "Mono: 0 [0%] [-99999.99dB]",
+   "Mono: 0 [0%] [-99999.99dB]",
+   "Mono: 2 [29%] [-15.00dB] Playback [off]",
+   "Mono: 2 [29%] [-15.00dB] Playback [off]",
+   "Mono: 0 [0%] [0.00dB]",
+   "Mono: 0 [0%] [-99999.99dB]",
+   "Mono: 0 [0%] [-99999.99dB]",
+   "Mono: 2 [29%] [-15.00dB] Playback [off]",
+   "Mono: 2 [29%] [-15.00dB] Playback [off]"
+  ],
+  "rc": 0,
+  "text": "Simple mixer control 'Headphone',0\n  Capabilities: pvolume\n  Playback channels: Front Left - Front Right\n  Limits: Playback 0 - 127\n  Mono:\n  Front Left: Playback 115 [91%] [-6.00dB]\n  Front Right: Playback 115 [91%] [-6.00dB]\nSimple mixer control 'Headphone Playback ZC',0\n  Capabilities: pswitch\n  Playback channels: Front Left - Front Right\n  Mono:\n  Front Left: Playback [off]\n  Front Right: Playback [off]\nSimple mixer control 'Speaker',0\n  Capabilities: pvolume\n  Playback channels: Front Left - Front Right\n  Limits: Playback 0 - 127\n  Mono:\n  Front Left: Playback 0 [0%] [-99999.99dB]\n  Front Right: Playback 0 [0%] [-99999.99dB]\nSimple mixer control 'Speaker AC',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 5\n  Mono: 0 [0%]\nSimple mixer control 'Speaker DC',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 5\n  Mono: 0 [0%]\nSimple mixer control 'Speaker Playback ZC',0\n  Capabilities: pswitch\n  Playback channels: Front Left - Front Right\n  Mono:\n  Front Left: Playback [off]\n  Front Right: Playback [off]\nSimple mixer control 'PCM Playback -6dB',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [off]\nSimple mixer control 'Mono Output Mixer Left',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [off]\nSimple mixer control 'Mono Output Mixer Right',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [off]\nSimple mixer control 'Playback',0\n  Capabilities: volume\n  Playback channels: Front Left - Front Right\n  Capture channels: Front Left - Front Right\n  Limits: 0 - 255\n  Front Left: 255 [100%] [0.00dB]\n  Front Right: 255 [100%] [0.00dB]\nSimple mixer control 'Capture',0\n  Capabilities: cvolume cswitch\n  Capture channels: Front Left - Front Right\n  Limits: Capture 0 - 63\n  Front Left: Capture 23 [37%] [0.00dB] [on]\n  Front Right: Capture 23 [37%] [0.00dB] [on]\nSimple mixer control 'Capture Volume ZC',0\n  Capabilities: pswitch\n  Playback channels: Front Left - Front Right\n  Mono:\n  Front Left: Playback [off]\n  Front Right: Playback [off]\nSimple mixer control '3D',0\n  Capabilities: volume volume-joined pswitch pswitch-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 15\n  Mono: 0 [0%] Playback [off]\nSimple mixer control '3D Filter Lower Cut-Off',0\n  Capabilities: enum\n  Items: 'Low' 'High'\n  Item0: 'Low'\nSimple mixer control '3D Filter Upper Cut-Off',0\n  Capabilities: enum\n  Items: 'High' 'Low'\n  Item0: 'High'\nSimple mixer control 'ADC Data Output Select',0\n  Capabilities: enum\n  Items: 'Left Data = Left ADC;  Right Data = Right ADC' 'Left Data = Left ADC;  Right Data = Left ADC' 'Left Data = Right ADC; Right Data = Right ADC' 'Left Data = Right ADC; Right Data = Left ADC'\n  Item0: 'Left Data = Left ADC;  Right Data = Right ADC'\nSimple mixer control 'ADC High Pass Filter',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [off]\nSimple mixer control 'ADC PCM',0\n  Capabilities: cvolume\n  Capture channels: Front Left - Front Right\n  Limits: Capture 0 - 255\n  Front Left: Capture 195 [76%] [0.00dB]\n  Front Right: Capture 195 [76%] [0.00dB]\nSimple mixer control 'ADC Polarity',0\n  Capabilities: enum\n  Items: 'No Inversion' 'Left Inverted' 'Right Inverted' 'Stereo Inversion'\n  Item0: 'No Inversion'\nSimple mixer control 'ALC Attack',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 15\n  Mono: 2 [13%]\nSimple mixer control 'ALC Decay',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 15\n  Mono: 3 [20%]\nSimple mixer control 'ALC Function',0\n  Capabilities: enum\n  Items: 'Off' 'Right' 'Left' 'Stereo'\n  Item0: 'Off'\nSimple mixer control 'ALC Hold Time',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 15\n  Mono: 0 [0%]\nSimple mixer control 'ALC Max Gain',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 7\n  Mono: 7 [100%]\nSimple mixer control 'ALC Min Gain',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 7\n  Mono: 0 [0%]\nSimple mixer control 'ALC Mode',0\n  Capabilities: enum\n  Items: 'ALC' 'Limiter'\n  Item0: 'ALC'\nSimple mixer control 'ALC Target',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 15\n  Mono: 4 [27%]\nSimple mixer control 'DAC Deemphasis',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [off]\nSimple mixer control 'DAC Filter Characteristics',0\n  Capabilities: enum\n  Items: 'Normal' 'Sloping'\n  Item0: 'Normal'\nSimple mixer control 'DAC Mono Mix',0\n  Capabilities: enum\n  Items: 'Stereo' 'Mono'\n  Item0: 'Stereo'\nSimple mixer control 'DAC Polarity',0\n  Capabilities: enum\n  Items: 'No Inversion' 'Left Inverted' 'Right Inverted' 'Stereo Inversion'\n  Item0: 'No Inversion'\nSimple mixer control 'Left Boost Mixer LINPUT1',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [on]\nSimple mixer control 'Left Boost Mixer LINPUT2',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [off]\nSimple mixer control 'Left Boost Mixer LINPUT3',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [off]\nSimple mixer control 'Left Input Boost Mixer LINPUT1',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 3\n  Mono: 0 [0%] [0.00dB]\nSimple mixer control 'Left Input Boost Mixer LINPUT2',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 7\n  Mono: 0 [0%] [-99999.99dB]\nSimple mixer control 'Left Input Boost Mixer LINPUT3',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 7\n  Mono: 0 [0%] [-99999.99dB]\nSimple mixer control 'Left Input Mixer Boost',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [on]\nSimple mixer control 'Left Output Mixer Boost Bypass',0\n  Capabilities: volume volume-joined pswitch pswitch-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 7\n  Mono: 2 [29%] [-15.00dB] Playback [off]\nSimple mixer control 'Left Output Mixer LINPUT3',0\n  Capabilities: volume volume-joined pswitch pswitch-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 7\n  Mono: 2 [29%] [-15.00dB] Playback [off]\nSimple mixer control 'Left Output Mixer PCM',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [on]\nSimple mixer control 'Noise Gate',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [off]\nSimple mixer control 'Noise Gate Threshold',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 31\n  Mono: 0 [0%]\nSimple mixer control 'Right Boost Mixer RINPUT1',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [off]\nSimple mixer control 'Right Boost Mixer RINPUT2',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [off]\nSimple mixer control 'Right Boost Mixer RINPUT3',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [off]\nSimple mixer control 'Right Input Boost Mixer RINPUT1',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 3\n  Mono: 0 [0%] [0.00dB]\nSimple mixer control 'Right Input Boost Mixer RINPUT2',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 7\n  Mono: 0 [0%] [-99999.99dB]\nSimple mixer control 'Right Input Boost Mixer RINPUT3',0\n  Capabilities: volume volume-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 7\n  Mono: 0 [0%] [-99999.99dB]\nSimple mixer control 'Right Input Mixer Boost',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [off]\nSimple mixer control 'Right Output Mixer Boost Bypass',0\n  Capabilities: volume volume-joined pswitch pswitch-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 7\n  Mono: 2 [29%] [-15.00dB] Playback [off]\nSimple mixer control 'Right Output Mixer PCM',0\n  Capabilities: pswitch pswitch-joined\n  Playback channels: Mono\n  Mono: Playback [on]\nSimple mixer control 'Right Output Mixer RINPUT3',0\n  Capabilities: volume volume-joined pswitch pswitch-joined\n  Playback channels: Mono\n  Capture channels: Mono\n  Limits: 0 - 7\n  Mono: 2 [29%] [-15.00dB] Playback [off]\n"
+ },
+ "pedal_tune_check": {
+  "age_samples": 0,
+  "rc": 0,
+  "text": "== kernel isolation (rtpi)\n  ok    isolated cpus                      2-3\n  ok    nohz_full cpus                     2-3\n== clock\n  ok    policy0 governor                   performance\n  ok    policy0 max kHz                    2400000\n  --    policy0 cpus / now kHz             0 1 2 3 / 2400000\n  --    cpu-thermal temperature            59 C (first trip 110 C)\n== cpusets\n  ok    system.slice                       0-1\n  ok    user.slice                         0-1\n  ok    init.scope                         0-1\n  ok    pedal-rt.slice loads               loaded\n  ok    user tasks allowed on cpu 2-3      none outside pedal-rt.slice\n== audio interrupt (dw_axi_dmac_platform)\n  ok    IRQ 138 affinity                   2\n  ok    thread irq/138-dw_axi_dmac_platform prio 85\n"
+ },
+ "pico": {
+  "probed": false
+ },
+ "processes": {
+  "namchaind": {
+   "Cpus_allowed_list": "0-1",
+   "Mems_allowed_list": "0-3",
+   "Threads": "2",
+   "VmRSS": "23080 kB",
+   "cmdline": "/opt/namchain/current/bin/namchaind --config /etc/namchain/namchaind.json",
+   "pid": 803,
+   "policy": 0,
+   "prio": 120,
+   "running": true,
+   "threads": [
+    {
+     "affinity": "3",
+     "comm": "namchaind",
+     "policy": 1,
+     "rt_priority": 80,
+     "tid": 2128
+    },
+    {
+     "affinity": "0-1",
+     "comm": "namchaind",
+     "policy": 0,
+     "rt_priority": 0,
+     "tid": 803
+    }
+   ]
+  },
+  "pedal-codec": {
+   "running": false
+  },
+  "pedald": {
+   "running": false
+  }
+ },
+ "service": {
+  "bank": {
+   "bank": 0,
+   "banks": [
+    []
+   ],
+   "current": null,
+   "position": -1,
+   "size": 0
+  },
+  "bypass": false,
+  "engine": {
+   "audible_generation": 5,
+   "device": "hw:CARD=wm8960,DEV=0",
+   "generation": 5,
+   "guard_trips": 0,
+   "health": "ok",
+   "issues": [],
+   "params_applied": 76,
+   "params_stale": 0,
+   "reachable": true,
+   "rig": "",
+   "rig_name": "New Rig",
+   "rig_source": "applied",
+   "state": "running",
+   "xruns": 2
+  },
+  "link": {
+   "baud": 115200,
+   "device": "/dev/ttyAMA0",
+   "frames_bad": 0,
+   "frames_ok": 34644,
+   "open": true,
+   "pico": {
+    "caps": 0,
+    "fw": "0.1",
+    "major": 1,
+    "minor": 0
+   },
+   "session": true
+  },
+  "reachable": true,
+  "service": {
+   "pid": 818,
+   "uptime_s": 7989.3,
+   "version": "pedald 0.1"
+  }
+ },
+ "storage": {
+  "/": {
+   "free": 806600704,
+   "total": 3094126592
+  },
+  "/boot": {
+   "free": 806600704,
+   "total": 3094126592
+  },
+  "/var/lib/pedal": {
+   "free": 22865018880,
+   "total": 24692125696
+  },
+  "/var/log": {
+   "free": 806600704,
+   "total": 3094126592
+  }
+ },
+ "thermal": {
+  "thermal_zone0": {
+   "temp_mc": 60050,
+   "trips": [
+    {
+     "mc": 110000,
+     "type": "critical"
+    },
+    {
+     "mc": 50000,
+     "type": "active"
+    },
+    {
+     "mc": 60000,
+     "type": "active"
+    },
+    {
+     "mc": 67500,
+     "type": "active"
+    },
+    {
+     "mc": 75000,
+     "type": "active"
+    }
+   ],
+   "type": "cpu-thermal"
+  }
+ },
+ "tty": {
+  "ttyACM0": {
+   "exists": true,
+   "target": "/sys/devices/platform/axi/1000120000.pcie/1f00300000.usb/xhci-hcd.1/usb3/3-2/3-2:1.0",
+   "uid_gid": "0:20"
+  },
+  "ttyAMA0": {
+   "exists": true,
+   "target": "/sys/devices/platform/axi/1000120000.pcie/1f00030000.serial/1f00030000.serial:0/1f00030000.serial:0.0",
+   "uid_gid": "0:20"
+  },
+  "ttyAMA10": {
+   "exists": true,
+   "target": "/sys/devices/platform/soc@107c000000/107d001000.serial/107d001000.serial:0/107d001000.serial:0.0",
+   "uid_gid": "0:20"
+  }
+ },
+ "tuning_cheap": {
+  "cpus": "0 1 2 3",
+  "cpusets": {
+   "init.scope": "0-1",
+   "pedal.slice": "0-3",
+   "system.slice": "0-1",
+   "user.slice": "0-1"
+  },
+  "cur_khz": 2400000,
+  "governor": "performance",
+  "isolated_cpus": "2-3",
+  "isolcpus_raw": "managed_irq,domain,2-3",
+  "max_khz": 2400000,
+  "nohz_full": "2-3",
+  "wifi_power_save": "auto"
+ },
+ "units": {
+  "namchaind.service": {
+   "ActiveState": "active",
+   "NRestarts": "0",
+   "SubState": "running"
+  },
+  "pedal-codec.service": {
+   "ActiveState": "active",
+   "NRestarts": "0",
+   "SubState": "exited"
+  },
+  "pedal-diag.service": {
+   "ActiveState": "inactive",
+   "NRestarts": "0",
+   "SubState": "dead"
+  },
+  "pedal-maint.target": {
+   "ActiveState": "inactive",
+   "SubState": "dead"
+  },
+  "pedal-tune.service": {
+   "ActiveState": "active",
+   "NRestarts": "0",
+   "SubState": "exited"
+  },
+  "pedald.service": {
+   "ActiveState": "active",
+   "NRestarts": "0",
+   "SubState": "running"
+  }
+ },
+ "usb": [
+  {
+   "class": "ef",
+   "manufacturer": "Raspberry Pi",
+   "path": "3-2",
+   "pid": "0009",
+   "product": "Pico",
+   "serial": "5988E9A10C2344D7",
+   "vid": "2e8a"
+  },
+  {
+   "class": "09",
+   "manufacturer": "Linux 7.0.0-1017-raspi-realtime-numaemu1-trimmed xhci-hcd",
+   "path": "usb1",
+   "pid": "0002",
+   "product": "xHCI Host Controller",
+   "serial": "xhci-hcd.0",
+   "vid": "1d6b"
+  },
+  {
+   "class": "09",
+   "manufacturer": "Linux 7.0.0-1017-raspi-realtime-numaemu1-trimmed xhci-hcd",
+   "path": "usb2",
+   "pid": "0003",
+   "product": "xHCI Host Controller",
+   "serial": "xhci-hcd.0",
+   "vid": "1d6b"
+  },
+  {
+   "class": "09",
+   "manufacturer": "Linux 7.0.0-1017-raspi-realtime-numaemu1-trimmed xhci-hcd",
+   "path": "usb3",
+   "pid": "0002",
+   "product": "xHCI Host Controller",
+   "serial": "xhci-hcd.1",
+   "vid": "1d6b"
+  },
+  {
+   "class": "09",
+   "manufacturer": "Linux 7.0.0-1017-raspi-realtime-numaemu1-trimmed xhci-hcd",
+   "path": "usb4",
+   "pid": "0003",
+   "product": "xHCI Host Controller",
+   "serial": "xhci-hcd.1",
+   "vid": "1d6b"
+  }
+ ]
+}

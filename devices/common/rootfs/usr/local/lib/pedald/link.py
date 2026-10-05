@@ -35,6 +35,14 @@ class Link:
         self.next_try = 0.0
         self.opened_at = None
         self.inbox = []          # what the session decoded, for the owner to drain
+        # Counters and timestamps, for /status and for pedal-diag: a rate is a diagnosis where a
+        # total is only a fact ("frames ok 27,523" says nothing; "24 a second" says the link is
+        # alive). Everything here is monotonic-clock, and bytes are counted as they cross.
+        self.bytes_in = 0
+        self.bytes_out = 0
+        self.drops = 0
+        self.last_rx_at = None
+        self.last_tx_at = None
 
     # ------------------------------------------------------------------ state
     @property
@@ -89,6 +97,7 @@ class Link:
 
     def _drop(self, reason):
         if self.fd is not None:
+            self.drops += 1
             self.log(f"{self.device}: {reason}")
         self.close()
         self.next_try = time.monotonic() + self.retry
@@ -123,6 +132,8 @@ class Link:
         if not data:
             self._drop("end of file")
             return
+        self.bytes_in += len(data)
+        self.last_rx_at = time.monotonic()
         if self.session is not None:
             messages = self.session.feed(data)
             if messages:                      # a session that returns nothing is a session too
@@ -146,6 +157,8 @@ class Link:
                     return
                 written = os.write(self.fd, view)
                 view = view[written:]
+                self.bytes_out += written
+                self.last_tx_at = time.monotonic()
             except BlockingIOError:
                 if time.monotonic() >= deadline:
                     self._drop("write would block")

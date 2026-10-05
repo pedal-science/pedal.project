@@ -11,3 +11,6 @@ build/
 
 # Python bytecode, left by importing the layout scripts
 __pycache__/
+
+# pedal-diag --watch writes its log here when run from a checkout
+scratch/

@@ -52,10 +52,12 @@ schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-hando
   <dir>` applies the same tree to a root that isn't running (vip's image build);
   `devices/vip/test-offline-apply` checks that in the build container.
 - `devices/common/test-pedald`: the pedal service's tests (config, the engine client, the Pico link
-  over a pty, the mapping, resume, the HTTP server) — 114 of them, and they run on the Mac, not on
+  over a pty, the mapping, resume, the HTTP server) plus `test_diag.py` for the diagnostics tool's
+  report logic over captured fixtures — 149 of them, and they run on the Mac, not on
   vip (no `pty`, `http.client` or `urllib` there). The service
   itself is `devices/common/rootfs/usr/local/lib/pedald/`, run by `pedald.service`; `docs/pedal-service.md`
-  is its design and what each version is for.
+  is its design and what each version is for. `sudo systemctl start pedal-diag` samples everything
+  the host, the codec and the link are doing (docs/diagnostics.md, `scripts/diag`).
 - `devices/vip/make-card [--image-only] [--disk /dev/diskN] [--dev]` (links to
   `devices/common/make-card`): build vip's whole card in colima from the commits in
   `devices/vip/image.lock` (namchain built and tested there, both roots, the boot partitions),

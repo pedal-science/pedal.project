@@ -1,0 +1,331 @@
+{
+  "format": 1,
+  "what": [
+    "The pedal's physical and software interface, as data: every signal that has to be present",
+    "for the thing to work, and what a fault in each one looks like from software. It exists so",
+    "`pedal-diag` can check an observation against an expectation and name the wire, rather than",
+    "printing a wall of numbers for a human to interpret.",
+    "",
+    "One home per fact (docs/working-across-repos.md rule 1). The prose the rows come from:",
+    "  - docs/codec-bringup-2a.md stage 4    the codec board to the 40-pin header",
+    "  - docs/uart-protocol.md               the Pico to the Core host",
+    "  - devices/vip/rootfs/etc/pedal/tune.conf  the CPU split and the audio interrupt",
+    "  - devices/common/rootfs/etc/pedal/codec/wm8960.mixer  the codec's expected mixer state",
+    "Those documents stay the explanation; this file is the form a tool can check. Change both",
+    "together, or a diagnostic will confidently name the wrong wire."
+  ],
+
+  "codec": {
+    "part": "WM8960",
+    "board": "SparkFun WM8960 Audio Codec Breakout v1.0",
+    "i2c_bus": 1,
+    "i2c_address": 26,
+    "i2c_address_hex": "0x1a",
+    "id_register": 0,
+    "id_value": 35168,
+    "id_value_hex": "0x8960",
+    "regmap": "/sys/kernel/debug/regmap/1-001a/registers",
+    "regmap_access": "/sys/kernel/debug/regmap/1-001a/access",
+    "register_ranges": ["0-b", "10-1d", "20-22"],
+    "mixer_state": "/etc/pedal/codec/wm8960.mixer",
+    "i2s_role": "master",
+    "host_i2s_role": "slave",
+    "notes": [
+      "The codec board carries its own 24 MHz oscillator (Y1) and MCLK is not brought out: the",
+      "codec is the I2S master and the Core host is the slave. A host that tried to master would",
+      "drift against a separate reference.",
+      "The I2C interface is in the DBVDD domain, fed from 3V3 on header pin 1 — so a displaced",
+      "pin 1 alone gives 'the card never appears', not just a dead oscillator.",
+      "ADCLRC is deliberately NOT wired: the Pi's I2S has one frame clock (GPIO19/DACLRC) and the",
+      "overlay (wlf,gpio-cfg ALRCGPIO + wlf,shared-lrclk) runs the ADC from DACLRC too. Wiring it",
+      "as well would put two outputs on one pin."
+    ],
+    "signals": [
+      {
+        "signal": "3V3",
+        "from": "Core host header pin 1 (3.3 V)",
+        "to": "codec 3V3",
+        "carries": "DCVDD, DBVDD and the 24 MHz oscillator (Y1)",
+        "fault_symptom": "no I2C at all: 0x1a NACKs, the codec never appears in the kernel log, and the board's PWR LED is dark (the LED is on 3V3)",
+        "check": "meter 3.3 V at the codec board's 3V3 pin, and check the lead in header pin 1 is seated"
+      },
+      {
+        "signal": "VIN",
+        "from": "Core host header pin 2 (5 V)",
+        "to": "codec VIN",
+        "carries": "the onboard LDO (U3, XC6222B331MR-G) into AVDD, and SPKVDD",
+        "fault_symptom": "the board answers on I2C (3V3 is fine) but AVDD is dead: the card appears, the stream runs, and capture is digital silence or very low",
+        "check": "meter 5 V at VIN and 3.3 V at the codec's AVDD-ISO side; check the lead in header pin 2",
+        "notes": ["Header pin 2 also feeds the Pico's VSYS through its 1N5817 since 2026-10-05. Pins 1, 2, 3 and 5 are neighbours, so a second lead in pin 2 sits a lead's width from 3.3 V, SDA and SCL. The Pico's feed belongs on pin 4 so pin 2 keeps the codec's lead alone (plan.md 3.6)."]
+      },
+      {
+        "signal": "SDA",
+        "from": "Core host header pin 3 (GPIO2)",
+        "to": "codec SDA",
+        "carries": "I2C1 data, with 2.2 k pull-ups on the codec board",
+        "fault_symptom": "the codec never appears, or every address on the bus times out: a held line. A NACK at 0x1a with the rest of the bus quiet is the board not answering, which is its power or its seating",
+        "check": "meter SDA to 3.3 V (the pull-ups should hold it high when idle); reseat the lead in header pin 3"
+      },
+      {
+        "signal": "SCL",
+        "from": "Core host header pin 5 (GPIO3)",
+        "to": "codec SCL",
+        "carries": "I2C1 clock",
+        "fault_symptom": "as SDA: no codec, or a bus that times out on every address",
+        "check": "meter SCL to 3.3 V while idle; reseat the lead in header pin 5"
+      },
+      {
+        "signal": "BCLK",
+        "from": "codec BCLK",
+        "to": "Core host header pin 12 (GPIO18)",
+        "carries": "the bit clock, 3.072 MHz at 48 kHz (64 x fs)",
+        "fault_symptom": "capture is RUNNING and no period ever completes: 'capture timed out after 1000 ms (last state 3, ring 0 frames)'. With no bit clock the RP1's I2S RX makes no DMA requests, so nothing is ever transferred",
+        "check": "a lead out of header pin 12 — this is a wire, not a configuration. Twisting it loosely with the pin 39 ground lead is what the bring-up asks for"
+      },
+      {
+        "signal": "DACLRC",
+        "from": "codec DLRC",
+        "to": "Core host header pin 35 (GPIO19)",
+        "carries": "the frame clock, 48 kHz, and it is the one LRCLK for both directions",
+        "fault_symptom": "the card binds but the stream does not run cleanly, or the sample rate is wrong: one frame clock pin serves the ADC too, so losing it stops both directions",
+        "check": "the lead in header pin 35"
+      },
+      {
+        "signal": "ADCDAT",
+        "from": "codec ADAT",
+        "to": "Core host header pin 38 (GPIO20)",
+        "carries": "the recorded audio, codec to host",
+        "fault_symptom": "the classic: the stream runs, periods complete on time, and the capture is EXACT ZEROS. A timeout and zeros are not the same fault — no clock versus no data",
+        "check": "the lead in header pin 38. This is the one that was found in the wrong socket on 2026-10-04 (bench-results/2026-10-04-case-no-audio-diagnosis.md)"
+      },
+      {
+        "signal": "DACDAT",
+        "from": "Core host header pin 40 (GPIO21)",
+        "to": "codec DDAT",
+        "carries": "the playback audio, host to codec",
+        "fault_symptom": "the engine renders, the capture is healthy, and nothing comes out of the output jacks",
+        "check": "the lead in header pin 40"
+      },
+      {
+        "signal": "GND",
+        "from": "Core host header pins 6 and 39",
+        "to": "codec GND (row pins 1, and 10 or 11)",
+        "carries": "the return, and it belongs beside the I2S leads",
+        "fault_symptom": "anything at all: a floating ground is a floating bus. It shows up as noise, intermittent enumeration or a dead codec",
+        "check": "both ground leads, starting with pin 6"
+      },
+      {
+        "signal": "ALRC",
+        "from": "codec ALRC",
+        "to": "not connected",
+        "carries": "nothing, deliberately",
+        "fault_symptom": "wiring it as well puts two outputs on one pin: the frame clock fights and the codec misbehaves intermittently",
+        "check": "no lead. If one is fitted, remove it"
+      }
+    ]
+  },
+
+  "pico_link": {
+    "host_device": "/dev/ttyAMA0",
+    "host_baud": 115200,
+    "protocol": "docs/uart-protocol.md",
+    "session": ["HELLO", "WELCOME"],
+    "line": "8N1, raw, no getty on this port (the console is ttyAMA10)",
+    "signals": [
+      {
+        "signal": "GP0 (Pico TX)",
+        "from": "Pico GP0, physical pin 1",
+        "to": "Core host header pin 10 (GPIO15, ttyAMA0 TXD)",
+        "carries": "the Pico's side of the protocol: HELLO, PONG, EVENT, STATE",
+        "fault_symptom": "no HELLO and no frames arriving at all: frames_ok stops climbing while pedald still reports the port open",
+        "check": "the lead in header pin 10, at both ends"
+      },
+      {
+        "signal": "GP1 (Pico RX)",
+        "from": "Core host header pin 8 (GPIO14, ttyAMA0 RXD)",
+        "to": "Pico GP1, physical pin 2",
+        "carries": "the host's side: WELCOME, PING, ACK",
+        "fault_symptom": "HELLO arrives and the session never comes up (no WELCOME reaches the Pico): frames_ok climbs but pedald reports session false",
+        "check": "the lead in header pin 8, at both ends. The firmware holds RX with a pull-up, so a floating RX invents bytes rather than going quiet"
+      },
+      {
+        "signal": "GND",
+        "from": "Core host header GND",
+        "to": "Pico GND",
+        "carries": "the return",
+        "fault_symptom": "framing errors (frames_bad climbing) with occasional good frames: the two ends disagree about what a byte is",
+        "check": "the ground lead at both ends"
+      },
+      {
+        "signal": "5 V feed",
+        "from": "Core host header pin 4 (5 V), through a 1N5817",
+        "to": "Pico VSYS",
+        "carries": "the Pico's power, so it survives a Core host reboot and shutdown",
+        "fault_symptom": "the Pico restarts with the host: its console uptime resets across a reboot. The firmware prints 'fw: up N s' every 5 s on its USB console, counting from the Pico's own reset, which is the only measurement that sees this",
+        "check": "plan.md 3.6 / scripts/pico-power-test: read the uptime, reboot the host, read it again. The USB-A leg was ruled out on 2026-10-05; the header leg holds"
+      }
+    ],
+    "console": {
+      "device_on_host_usb": "/dev/ttyACM0",
+      "usb_id": "2e8a:0009",
+      "baud": 115200,
+      "queries": ["?", "h"],
+      "banners": {
+        "boot": ["fw: <version>, protocol <major>.<minor> on UART0 GP0/GP1 at 115200 baud"],
+        "uptime": ["fw: up <n> s", "session=<u>", "frames ok=<n> bad=<n>"],
+        "counters": ["proto: frames ok=<n> bad=<n> events lost=<n> session=<u> rig=<d> name='<s>'"]
+      },
+      "notes": ["The console is the firmware's own account of what it has seen, which is not the same as what the host has seen: pedald's counters are the other half. Read both."]
+    }
+  },
+
+  "host": {
+    "expected_hostname": "vip",
+    "audio": {
+      "card_id": "wm8960",
+      "engine_device": "hw:CARD=wm8960,DEV=0",
+      "sample_rate": 48000,
+      "period_size": 64,
+      "periods": 6,
+      "capture_channels": 2,
+      "playback_channels": 2,
+      "capture_node": "/proc/asound/card0/pcm0c/sub0",
+      "playback_node": "/proc/asound/card0/pcm0p/sub0",
+      "state_words": {
+        "RUNNING": "the stream is live",
+        "PREPARED": "opened and prepared, not started: the engine is between blocks, or it is stopped",
+        "XRUN": "the device is in an overrun or underrun and will not recover without a prepare"
+      },
+      "faults": [
+        {
+          "symptom": "no card 0 wm8960 in /proc/asound/cards",
+          "likely": ["the codec is not answering on I2C (see codec.signals: 3V3 first, then SDA/SCL)", "the overlay did not load: check dmesg for 'wm8960 1-001a' and 'card wm8960 did not appear'"],
+          "check": "sudo cat /sys/kernel/debug/regmap/1-001a/registers — if this file exists the driver bound the codec, and the problem is later"
+        },
+        {
+          "symptom": "the card exists and the engine cannot open it",
+          "likely": ["another process holds the PCM (check the owner pid in the status file)", "hw_params do not match: the engine asks for an exact period size and refuses a device that cannot give it"],
+          "check": "compare /proc/asound/card0/pcm0p/sub0/hw_params with this file's audio block, field by field"
+        }
+      ]
+    },
+    "cpu": {
+      "isolated": "2-3",
+      "render_cpu": "3",
+      "audio_irq_cpu": "2",
+      "audio_irq_match": "dw_axi_dmac_platform",
+      "audio_irq_prio": 85,
+      "housekeeping": "0-1",
+      "governor": "performance",
+      "max_khz": 2400000,
+      "source": "/etc/pedal/tune.conf, and /usr/local/sbin/pedal-tune check is the authority on whether it is in force"
+    },
+    "thermal": {
+      "zone": "/sys/class/thermal/thermal_zone0",
+      "trip_active": [50000, 60000, 67500, 75000],
+      "trip_critical": 110000,
+      "notes": ["The active trips are where the firmware starts pulling the clock back, so the number that matters is the distance to 50 C, not the 110 C critical trip."]
+    },
+    "engine": {
+      "config": "/etc/namchain/namchaind.json",
+      "token": "/etc/namchain/token",
+      "tcp": {"address": "0.0.0.0", "port": 47810},
+      "unix_socket": "/run/namchain/namchaind.sock",
+      "protocol": 2,
+      "methods_read_only": ["engine.hello", "engine.schema", "engine.status", "engine.levels", "rig.get", "engine.record"],
+      "methods_mutating": ["rig.load", "rig.apply", "rig.patch", "engine.mute", "engine.panic"],
+      "wire": "a 4-byte little-endian length prefix then one JSON object, both directions; the token goes at the TOP LEVEL of engine.hello, and the id is a string"
+    },
+    "service": {
+      "config": "/etc/pedal/pedald.json",
+      "http": {"address": "0.0.0.0", "port": 47820, "auth": "Authorization: Bearer <the engine's token>"},
+      "status_route": "/status",
+      "poll": "engine.status, once a second"
+    }
+  },
+
+  "levels": {
+    "method": "engine.levels",
+    "floor_db": -200.0,
+    "units": "dBFS, one decimal; the floor is the sentinel for digital silence",
+    "notes": [
+      "Added by this plan: namchain has no audio-level measurement at all as of b9ca368. Until it",
+      "lands, pedal-diag reports levels as unavailable and says so in one line rather than",
+      "printing zeros that look like silence."
+    ]
+  },
+
+  "attached_aids": [
+    {
+      "name": "Raspberry Pi Debug Probe",
+      "usb_id": "2e8a:000c",
+      "ports": {
+        "A": "USB, to whatever host is looking",
+        "D": "SWD (JST-SH), to the Pico's debug pads",
+        "U": "UART (3-pin), to whichever serial line is being watched"
+      },
+      "may_be_attached_to": [
+        "the Pico's UART (probe RX yellow <- GP0/pin 1, probe TX orange -> GP1/pin 2, GND black <-> pin 3) — what firmware/tools/echo-test.py and firmware/tools/protocol-test.py assume",
+        "the Core host's 3-pin debug header (the Pi 5's console, ttyAMA10, and the bootloader's own output with BOOT_UART=1) — what tools/measure-boot.py assumes",
+        "the Mac rather than the pedal"
+      ],
+      "notes": [
+        "Its absence is never a fault: it is a bench aid, and the Pico's console is also reachable over its own USB (/dev/ttyACM0 on the Core host).",
+        "The D port cannot be read without halting the target, so nothing continuous uses it: pedal-diag --probe only, and never while the engine is playing.",
+        "The probe's UART cannot be shared: if it already carries a getty's line, rendering writes nothing to it."
+      ]
+    }
+  ],
+
+  "known_fault_seeds": [
+    {
+      "id": "i2c-nack-vs-timeout",
+      "seen": "2026-10-05",
+      "from": "bench-results/2026-10-05-pico-power-test.md",
+      "symptom": "pedal-codec fails with 'card wm8960 did not appear'; /proc/asound/cards is empty",
+      "discriminator": "the driver's own reset write to 0x1a returns -121 (EREMOTEIO, a NACK) rather than -110 (ETIMEDOUT, the controller's timeout)",
+      "meaning": "a NACK is the Pi driving the bus and being told 'nobody here' — the board is not answering. A timeout is a held line, which is a short or a crossed lead. They have different fixes and the error number is the whole difference",
+      "check": "the board's supplies and its I2C are four adjacent header pins (1, 2, 3, 5). Check those leads and the board's seating in its socket strips first — the I2C interface is in the DBVDD domain, fed from 3V3 on pin 1, so a displaced pin 1 alone gives this symptom"
+    },
+    {
+      "id": "capture-timeout-ring-zero",
+      "seen": "2026-10-04",
+      "from": "bench-results/2026-10-04-rewire-faults-and-the-pico-console.md",
+      "symptom": "capture timed out after 1000 ms (last state 3, ring 0 frames)",
+      "meaning": "PCM RUNNING and no frames: with no bit clock the RP1's I2S RX makes no DMA requests, so no period ever completes",
+      "check": "BCLK — the lead in header pin 12"
+    },
+    {
+      "id": "capture-exact-zeros",
+      "seen": "2026-10-04",
+      "from": "bench-results/2026-10-04-case-no-audio-diagnosis.md",
+      "symptom": "the capture completes on time and is exact zeros",
+      "meaning": "clock present, data absent: ADAT (ADCDAT) in the wrong socket on the codec board",
+      "check": "the lead in header pin 38. Zeros and a timeout are not the same fault"
+    },
+    {
+      "id": "outputs-on-the-l-jack",
+      "seen": "2026-10-04",
+      "from": "bench-results/2026-10-04-case-no-audio-diagnosis.md",
+      "symptom": "playback is rendering and one output jack is silent",
+      "meaning": "the rig leaves on channel 0 = HPL, so the interface's cable belongs in OUT L until a chain's output_channel is bound",
+      "check": "which jack the cable is in, and the chain's output_channel in the running rig"
+    },
+    {
+      "id": "pico-restarts-with-the-host",
+      "seen": "2026-10-05",
+      "from": "bench-results/2026-10-05-pico-power-test.md",
+      "symptom": "the Pico appears to be alive and re-sends HELLO after a reboot, which a HELLO cannot distinguish from a restart",
+      "meaning": "the Pico re-sends HELLO after a 1 s link timeout, restart or not, so a HELLO is not evidence of power. Only the Pico's own uptime is",
+      "check": "scripts/pico-power-test --leg read, before and after: the counter runs from the Pico's reset"
+    }
+  ],
+
+  "cannot_be_seen_from_software": [
+    "Which socket a lead is in, physically. The tool narrows the fault to a signal and names the pin; a meter or a photo closes it.",
+    "A lead that is fitted but making poor contact: intermittent, so it shows as noise, occasional framing errors or an occasional device loss rather than a clean absence.",
+    "An I2S line that is present and clocking but at the wrong logic level: it looks like data, and only a scope sees it.",
+    "Whether the case is the aluminium one, whether a panel part is fitted, and the state of anything not yet built (display, footswitches, MIDI, expression, relay).",
+    "Anything about the analogue side beyond the codec: the input buffer's gain switch, the output stage, the star ground."
+  ]
+}

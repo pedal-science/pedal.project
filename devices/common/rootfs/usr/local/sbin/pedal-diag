@@ -1,0 +1,2328 @@
+#!/usr/bin/env python3
+"""pedal-diag — what the pedal's hardware and software are doing, in one read-only report.
+
+    pedal-diag                       a report, from wherever this runs
+    pedal-diag --json                the same sample as one JSON object
+    pedal-diag --watch               sample continuously, one JSON line per sample
+    pedal-diag --deltas FILE         read a watch log back and say what changed
+    pedal-diag --probe               the invasive checks only (never while playing)
+    pedal-diag --fixtures DIR        render a report from captured samples
+    pedal-diag --selftest            the tool's own tests
+    pedal-diag --host vip            gather on another host over ssh (the default is local)
+
+Why this exists: a fault on this pedal is almost always a wire, a power feed, a clock or a
+device that failed to open, and each of those leaves a different fingerprint in a different
+file. The fingerprints are known (bench-results/2026-10-04-rewire-faults-and-the-pico-console.md,
+bench-results/2026-10-04-case-no-audio-diagnosis.md, bench-results/2026-10-05-pico-power-test.md)
+and the expectations are data (devices/common/pedal-interface.json), so this tool reads the
+files, compares them with the expectations, and says which wire to look at. It never guesses
+at a conclusion it cannot cite: every finding carries the evidence it came from.
+
+Read-only, and it stays that way. It opens no sound device, writes nothing to the codec, the
+I2C bus or the Pico's serial line, and the only file it ever creates is --watch's own log.
+--watch samples cheaply and never more often than once a second; --probe does the invasive
+things (a deep register read, a read of the Pico's console) and refuses to run while the
+engine is playing. The two are separate modes on purpose: a diagnostic that changed what it
+was measuring would be worse than no diagnostic.
+
+Standard library only, and only what the pedal's python3-minimal actually has (no `http`, no
+`urllib`, no `dataclasses`): the same discipline pedald is written around, and a test asserts
+it. So this file runs on the Core host as well as on the Mac.
+
+The tools this leans on rather than repeats: /usr/local/sbin/pedal-tune check (isolation,
+governor, cpusets, the audio interrupt) and /usr/local/sbin/pedal-device status (whether the
+host is running the tree in the repo). Where they already answer a question, the report
+quotes them.
+"""
+import argparse
+import errno
+import glob
+import json
+import os
+import re
+import select
+import socket
+import struct
+import subprocess
+import sys
+import types
+import time
+try:
+    import termios      # not on every platform; --probe's console read is the only user
+except ImportError:
+    termios = None
+
+TOOL = "pedal-diag"
+FORMAT = 1
+
+# Where the interface model is, in the order it is looked for: beside this file (so a run from
+# a checkout works), the same place from the repo root (this file is reached through scripts/diag
+# and through /usr/local/sbin/pedal-diag), the environment, then the installed copy.
+def _interface_paths():
+    here = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))
+    candidates = [
+        os.environ.get("PEDAL_INTERFACE", ""),
+        os.path.join(here, "pedal-interface.json"),
+        # devices/common/rootfs/usr/local/sbin -> devices/common
+        os.path.join(here, "..", "..", "..", "..", "pedal-interface.json"),
+        "/etc/pedal/pedal-interface.json",
+    ]
+    return [os.path.normpath(p) for p in candidates if p]
+
+
+INTERFACE_PATHS = _interface_paths()
+
+DEFAULT_INTERVAL_S = 2.5
+MIN_INTERVAL_S = 1.0
+DEFAULT_LOG = "/var/log/pedal/diag.jsonl"
+
+# Severity, worst first. `ok` is reported too: a report that only lists faults cannot say
+# "this part is fine", and "is the codec there" is the first thing anyone asks.
+SEVERITY_ORDER = {"fail": 0, "warn": 1, "info": 2, "ok": 3}
+SEVERITY_WORD = {"fail": "FAIL", "warn": "warn", "info": "info", "ok": "ok  "}
+
+
+# --------------------------------------------------------------------------- small helpers
+
+def read(path, default=None, limit=None):
+    """A file's text, or `default`. Never raises: half the diagnostic is what is absent."""
+    try:
+        with open(path, "r", errors="replace") as f:
+            text = f.read(limit) if limit else f.read()
+    except (OSError, ValueError):
+        return default
+    return text.strip()
+
+
+def read_int(path, default=None):
+    text = read(path)
+    if text is None or text == "":
+        return default
+    try:
+        return int(text.split()[0])
+    except ValueError:
+        return default
+
+
+def exists(path):
+    return os.path.exists(path)
+
+
+def now():
+    return time.time()
+
+
+def proc_cpu_seconds(pid):
+    """utime + stime for a pid, from /proc — or None. Works for a `sudo` wrapper's child too.
+
+    This is how the tool measures what a sample cost on the pedal: the number inside the child is
+    wrong (sudo is the parent, so `os.times()` there is a quarter of the truth), and the kernel
+    keeps the right one anyway.
+    """
+    try:
+        with open("/proc/%d/stat" % pid, "rb") as f:
+            fields = f.read().rpartition(b") ")[2].split()
+        ticks = int(fields[11]) + int(fields[12])
+        return ticks / os.sysconf("SC_CLK_TCK")
+    except (OSError, IndexError, ValueError):
+        return None
+
+
+def mean(values):
+    values = [v for v in values if v is not None]
+    return sum(values) / len(values) if values else None
+
+
+def celsius(millicelsius):
+    if millicelsius is None:
+        return "?"
+    return "%.1f C" % (millicelsius / 1000.0)
+
+
+def mb(value):
+    if value is None:
+        return "?"
+    return "%.1f MB" % (float(value) / 1e6)
+
+
+def expand_cpu_list(text):
+    """A cpu list ("0-1,3") as a set of ints."""
+    out = set()
+    for part in (text or "").split(","):
+        part = part.strip()
+        if not part:
+            continue
+        if "-" in part:
+            try:
+                lo, hi = (int(x) for x in part.split("-", 1))
+            except ValueError:
+                continue
+            out.update(range(lo, hi + 1))
+        else:
+            try:
+                out.add(int(part))
+            except ValueError:
+                continue
+    return out
+
+
+def expand_hex_mask(text):
+    """/proc/irq/N/smp_affinity as a set of cpu numbers.
+
+    It is hexadecimal, with a comma between 32-bit words on a wide machine: "4" means cpu 2,
+    which is the mistake to avoid here (it looks like a binary string and is not one).
+    """
+    value = int((text or "0").replace(",", "").strip() or "0", 16)
+    return {bit for bit in range(64) if value & (1 << bit)}
+
+
+def run(argv, timeout=15):
+    """A command's stdout and return code. Never raises; a missing or hanging tool is a fact too.
+
+    Every call carries a timeout, because the one thing this must not do is hang: a diagnostic
+    that never returns is worse than no diagnostic. (`stty -F /dev/ttyAMA0 -a` hangs exactly
+    that way while a getty or another reader holds the console line, which is why the gatherer
+    reads the line discipline from termios instead of asking stty.)
+    """
+    try:
+        p = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                           timeout=timeout)
+    except Exception as exc:
+        return None, getattr(exc, "errno", 1)
+    return p.stdout.decode("utf-8", "replace"), p.returncode
+
+
+# termios' baud constants, once: `dir(termios)` walks a couple of hundred names, and calling it
+# per lookup made the tool report its own cost as ten times what it was.
+_BAUD_BY_MASK = {}
+if termios is not None:
+    for _name in dir(termios):
+        if _name.startswith("B") and _name[1:].isdigit():
+            _BAUD_BY_MASK.setdefault(getattr(termios, _name), int(_name[1:]))
+
+
+def baud_from_speed(speed):
+    """A termios speed mask as a baud, via termios' own constants rather than a hardcoded map.
+
+    ispeed/ospeed come back as a symbol (termios.B115200) on the host's Python: that value is
+    already the number the caller wants, so this is mostly about not assuming which it is.
+    """
+    if isinstance(speed, int) and speed > 1000:
+        return speed
+    return _BAUD_BY_MASK.get(speed, speed)
+
+
+def sock_call(host, port, request, token=None, timeout=4.0):
+    """One framed namchaind request. Returns the reply object, or an exception.
+
+    The wire is docs/daemon.md, "The wire, byte for byte": a u32 little-endian length, then
+    one JSON object. The token goes at the TOP level of engine.hello, and the id is a string.
+    """
+    body = json.dumps(request, separators=(",", ":")).encode()
+    sock = socket.create_connection((host, port), timeout)
+    try:
+        sock.sendall(struct.pack("<I", len(body)) + body)
+        header = b""
+        while len(header) < 4:
+            chunk = sock.recv(4 - len(header))
+            if not chunk:
+                raise OSError("the engine closed before it answered")
+            header += chunk
+        (length,) = struct.unpack("<I", header)
+        if length > 16 << 20:
+            raise OSError("a reply of %d bytes is past the cap" % length)
+        payload = b""
+        while len(payload) < length:
+            chunk = sock.recv(min(1 << 16, length - len(payload)))
+            if not chunk:
+                raise OSError("the engine closed mid-reply")
+            payload += chunk
+        return json.loads(payload.decode("utf-8"))
+    finally:
+        sock.close()
+
+
+def http_get(host, port, path, token=None, timeout=4.0):
+    """A minimal HTTP/1.1 GET, because python3-minimal has no http.client.
+
+    Hand-rolled for the same reason pedald's server is: the host's Python has socket and
+    nothing above it. Connection: close, so one read to the end is the whole reply.
+    """
+    sock = socket.create_connection((host, port), timeout)
+    try:
+        head = "GET %s HTTP/1.1\r\nHost: %s\r\nConnection: close\r\n" % (path, host)
+        if token:
+            head += "Authorization: Bearer %s\r\n" % token
+        sock.sendall((head + "\r\n").encode())
+        chunks = []
+        while True:
+            chunk = sock.recv(1 << 16)
+            if not chunk:
+                break
+            chunks.append(chunk)
+        raw = b"".join(chunks)
+        header, _, body = raw.partition(b"\r\n\r\n")
+        if header.startswith(b"HTTP/1.1 200") or header.startswith(b"HTTP/1.0 200"):
+            return json.loads(body.decode("utf-8"))
+        return {"__error__": header.split(b"\r\n")[0].decode("utf-8", "replace")}
+    finally:
+        sock.close()
+
+
+# --------------------------------------------------------------------------- the interface
+
+def load_interface(paths=None):
+    """The wiring and configuration expectations, as data.
+
+    Read from the first path that has it. A missing model is not fatal — the report says so
+    and carries on with the raw observations — but it does mean the findings lose their
+    "which wire" lines, so it is reported as a warn rather than ignored.
+    """
+    for path in (paths or INTERFACE_PATHS):
+        if path and os.path.exists(path):
+            try:
+                with open(path, "r") as f:
+                    return json.load(f), path
+            except (OSError, ValueError) as exc:
+                return None, "%s: %s" % (path, exc)
+    return None, None
+
+
+NOTES_ON_READING_THE_CHIP = '''
+# Reading the codec's registers over I2C from the host, explored and NOT solved (2026-10-05), kept
+# here so the next person does not repeat it. The findings, all measured on vip (Python 3.14.3):
+#
+#   - vip has no i2cget: i2c-tools is not in devices/vip/packages. Its python3-minimal has no
+#     ctypes either, so a hand-packed ioctl is the only route that needs no packages.
+#   - /dev/i2c-1 cannot be claimed while the driver holds 0x1a: I2C_SLAVE returns EBUSY. The
+#     wm8960 driver owns it, which is correct and not to be worked around.
+#   - I2C_SLAVE_FORCE works, and then a plain write does reach the chip (a bad register number
+#     answers -EREMOTEIO, a real NAK), but a plain read does not: i2c-dev issues it as a read
+#     with no preceding write, which the WM8960's register protocol needs.
+#   - I2C_RDWR is the ioctl that does exactly that, and with array.buffer_info()'s address
+#     packed into i2c_rdwr_ioctl_data it returns EFAULT even for a single write message, so the
+#     kernel did not accept the pointers this file builds.
+#   - The adapter does advertise I2C_FUNC_I2C (funcs=0xf7f0027), so the capability is there; it
+#     is the Python side that did not work out.
+#   - The SMBus route is a dead end by design: the adapter has no smbus_xfer, so I2C_SMBUS
+#     returns EINVAL, and the WM8960's 7-bit-register protocol is not SMBus anyway.
+#
+# So the tool does not read the chip. What it reads instead is the driver's view — regmap's
+# register file, which is a cache but a meaningful one (it is what the driver wrote and what the
+# codec is therefore configured as), plus the mixer controls, which the driver does read back.
+# A real chip read would be worth having, and the two ways to get it are honest ones: add
+# i2c-tools to devices/vip/packages (an image change, `i2cget -y 1 0x1a 0x00 w`), or fix the
+# ioctl here.
+
+# regmap's cache can be bypassed, and it was worth testing: with cache_bypass=Y the register file
+# answers XXXX for every register on this codec, so the driver cannot read it back on demand
+# either (the codec is likely powered down between DAPM transitions). That is a reason NOT to
+# make --probe flip it: it would report XXXX as though it were the chip's silence.
+
+
+# --------------------------------------------------------------------------- the gatherer
+#
+# This runs on the machine being diagnosed — here, or on the Core host over ssh. It prints one
+# JSON object and nothing else, so the report is written in exactly one place and the thing
+# that runs on the pedal is a file reader with no opinions. It must import nothing that
+# python3-minimal lacks: os, glob, json, re, subprocess, time.
+'''
+GATHER_SOURCE = r'''
+import errno, glob, json, os, re, subprocess, sys, time
+
+def tree_cpu_seconds():
+    """The CPU this process tree has used: utime + stime + cutime + cstime, from /proc.
+
+    From /proc rather than os.times() because sudo is the parent when the tool runs this, and sudo
+    passes its children's accounting on — while os.times() here reported about a quarter of the
+    truth. This is the number the run is judged by, so it is the kernel's.
+    """
+    try:
+        fields = open("/proc/self/stat", "rb").read().rpartition(b") ")[2].split()
+        ticks = sum(int(fields[i]) for i in (11, 12, 13, 14))
+        return ticks / os.sysconf("SC_CLK_TCK")
+    except (OSError, IndexError, ValueError):
+        return None
+PROBE = "--probe" in sys.argv
+COUNTER = 0
+if "--sample" in sys.argv:
+    try:
+        COUNTER = int(sys.argv[sys.argv.index("--sample") + 1])
+    except (ValueError, IndexError):
+        COUNTER = 0
+
+def _arg_int(name, default):
+    if name in sys.argv:
+        try:
+            return max(1, int(sys.argv[sys.argv.index(name) + 1]))
+        except (ValueError, IndexError):
+            return default
+    return default
+
+DEEP_EVERY = _arg_int("--deep-every", 10)
+deep = (COUNTER % DEEP_EVERY) == 0
+try:
+    import termios
+except ImportError:      # not on this platform: the line discipline is simply not reported
+    termios = None
+
+_BAUD_BY_MASK = {}
+if termios is not None:
+    for _name in dir(termios):
+        if _name.startswith("B") and _name[1:].isdigit():
+            _BAUD_BY_MASK.setdefault(getattr(termios, _name), int(_name[1:]))
+
+def baud_from_speed(speed):
+    if isinstance(speed, int) and speed > 1000:
+        return speed
+    return _BAUD_BY_MASK.get(speed, speed)
+
+def read(path, default=None, limit=None):
+    try:
+        with open(path, "r", errors="replace") as f:
+            return (f.read(limit) if limit else f.read()).strip()
+    except (OSError, ValueError):
+        return default
+
+def read_int(path, default=None):
+    t = read(path)
+    if not t:
+        return default
+    try:
+        return int(t.split()[0])
+    except ValueError:
+        return default
+
+def read_json(path):
+    t = read(path)
+    if not t:
+        return None
+    try:
+        return json.loads(t)
+    except ValueError:
+        return None
+
+def run(argv, timeout=15):
+    try:
+        p = subprocess.run(argv, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=timeout)
+    except Exception as exc:
+        return None, getattr(exc, "errno", 1)
+    return p.stdout.decode("utf-8", "replace"), p.returncode
+
+out = {"at": time.time(), "host": {}, "errors": []}
+
+# --- host -------------------------------------------------------------------
+out["host"]["hostname"] = read("/etc/hostname") or os.uname()[1]
+out["host"]["uname"] = " ".join(os.uname())
+out["host"]["model"] = read("/sys/firmware/devicetree/base/model")
+out["host"]["cmdline"] = read("/proc/cmdline")
+out["host"]["uptime_s"] = read_int("/proc/uptime")
+out["host"]["boot_id"] = read("/proc/sys/kernel/random/boot_id")
+out["host"]["euid"] = os.geteuid()
+
+# --- cpu, heat, memory, storage ---------------------------------------------
+out["cpu"] = {}
+pol = glob.glob("/sys/devices/system/cpu/cpufreq/policy*")
+if pol:
+    p = sorted(pol)[0]
+    out["cpu"]["policy"] = p
+    out["cpu"]["governor"] = read(p + "/scaling_governor")
+    out["cpu"]["cur_khz"] = read_int(p + "/scaling_cur_freq")
+    out["cpu"]["min_khz"] = read_int(p + "/scaling_min_freq")
+    out["cpu"]["max_khz"] = read_int(p + "/scaling_max_freq")
+    out["cpu"]["related"] = read(p + "/related_cpus")
+    out["cpu"]["available_governors"] = read(p + "/scaling_available_governors")
+out["cpu"]["online"] = read("/sys/devices/system/cpu/online")
+out["cpu"]["loadavg"] = read("/proc/loadavg")
+try:
+    out["cpu"]["per_cpu"] = {}
+    for line in read("/proc/stat", "").splitlines() or []:
+        if re.match(r"^cpu[0-9]+[ \t]", line):
+            f = line.split()
+            idle = int(f[4]) + int(f[5])
+            total = sum(int(x) for x in f[1:])
+            out["cpu"]["per_cpu"][f[0]] = {"total": total, "idle": idle}
+except Exception as exc:
+    out["errors"].append("cpu: %s" % exc)
+
+out["thermal"] = {}
+try:
+    z = sorted(glob.glob("/sys/class/thermal/thermal_zone*"))
+    for zone in z:
+        entry = {"type": read(zone + "/type"), "temp_mc": read_int(zone + "/temp"),
+                 "trips": []}
+        for t in sorted(glob.glob(zone + "/trip_point_*_temp")):
+            kind = read(t.replace("_temp", "_type"))
+            v = read_int(t)
+            if v is not None:
+                entry["trips"].append({"type": kind, "mc": v})
+        out["thermal"][os.path.basename(zone)] = entry
+except Exception as exc:
+    out["errors"].append("thermal: %s" % exc)
+
+out["hwmon"] = {}
+try:
+    for h in sorted(glob.glob("/sys/class/hwmon/hwmon*")):
+        name = read(h + "/name")
+        entry = {}
+        for f in sorted(glob.glob(h + "/*")):
+            if os.path.basename(f).startswith(("in", "temp", "curr", "fan")):
+                entry[os.path.basename(f)] = read(f)
+        out["hwmon"][name or h] = entry
+except Exception as exc:
+    out["errors"].append("hwmon: %s" % exc)
+
+mem = {}
+for line in (read("/proc/meminfo", "") or "").splitlines():
+    f = line.split()
+    if len(f) >= 2 and f[0].rstrip(":") in ("MemTotal", "MemAvailable", "MemFree", "SwapTotal", "SwapFree"):
+        mem[f[0].rstrip(":")] = f[1]
+out["memory"] = mem
+out["memory"]["oom_kills_hint"] = read("/sys/fs/cgroup/memory.events")
+for unit in ("pedal.slice", "system.slice"):
+    v = read("/sys/fs/cgroup/%s/memory.current" % unit)
+    if v:
+        out["memory"]["cgroup_" + unit] = v
+
+out["storage"] = {}
+for mount in ("/", "/var/lib/pedal", "/boot", "/var/log"):
+    try:
+        s = os.statvfs(mount)
+        if s.f_blocks:
+            out["storage"][mount] = {"total": s.f_blocks * s.f_frsize,
+                                     "free": s.f_bavail * s.f_frsize}
+    except OSError:
+        pass
+
+# --- usb --------------------------------------------------------------------
+out["usb"] = []
+try:
+    for d in sorted(glob.glob("/sys/bus/usb/devices/*")):
+        vid = read(d + "/idVendor")
+        if not vid:
+            continue
+        out["usb"].append({
+            "path": os.path.basename(d), "vid": vid, "pid": read(d + "/idProduct"),
+            "product": read(d + "/product"), "manufacturer": read(d + "/manufacturer"),
+            "serial": read(d + "/serial"), "class": read(d + "/bDeviceClass"),
+        })
+except Exception as exc:
+    out["errors"].append("usb: %s" % exc)
+
+out["tty"] = {}
+for dev in ("ttyAMA0", "ttyAMA10", "ttyACM0", "ttyACM1"):
+    p = "/dev/" + dev
+    if os.path.exists(p):
+        out["tty"][dev] = {"exists": True, "target": os.path.realpath("/sys/class/tty/%s/device" % dev),
+                           "uid_gid": "%s:%s" % (os.stat(p).st_uid, os.stat(p).st_gid)}
+
+# --- i2c and the codec ------------------------------------------------------
+out["i2c"] = {"devices": sorted(os.path.basename(x) for x in glob.glob("/sys/bus/i2c/devices/*"))}
+regmap = "/sys/kernel/debug/regmap/1-001a"
+out["codec"] = {
+    "regmap_present": os.path.isdir(regmap),
+    "name": read(regmap + "/name"),
+    "range": read(regmap + "/range"),
+    "registers": read(regmap + "/registers"),
+    "access": read(regmap + "/access"),
+    "registers_readable": True,
+}
+# The raw access file is 60 lines of ynyn flags; the summary is what a report wants, and the
+# full text would be most of every watch line for no extra diagnosis.
+_lines = [l.split(":", 1)[1].split() for l in (out["codec"].get("access") or "").splitlines() if ":" in l]
+out["codec"]["access_summary"] = {
+    "registers": len(_lines),
+    "readable": sum(1 for f in _lines if len(f) > 0 and f[0] == "y"),
+    "writable": sum(1 for f in _lines if len(f) > 1 and f[1] == "y"),
+    "volatile": sum(1 for f in _lines if len(f) > 2 and f[2] == "y"),
+}
+out["codec"].pop("access", None)
+if out["codec"]["regmap_present"] and out["codec"]["registers"] is None:
+    out["codec"]["registers_readable"] = False
+    out["errors"].append("codec registers need root (debugfs is root-only)")
+
+# --- alsa -------------------------------------------------------------------
+out["alsa"] = {"cards": read("/proc/asound/cards"), "devices": sorted(os.path.basename(x) for x in glob.glob("/dev/snd/*")),
+               "pcm": {}}
+for name, node in (("capture", "/proc/asound/card0/pcm0c/sub0"),
+                   ("playback", "/proc/asound/card0/pcm0p/sub0")):
+    entry = {"node": node}
+    for key, f in (("status", "status"), ("hw_params", "hw_params"), ("sw_params", "sw_params")):
+        entry[key] = read(node + "/" + f)
+    out["alsa"]["pcm"][name] = entry
+
+# Who holds the PCM, if anyone: the owner pid names a process, which is worth naming back.
+owners = set()
+for name in ("capture", "playback"):
+    text = out["alsa"]["pcm"][name].get("status") or ""
+    m = re.search(r"owner_pid[ \t]*:[ \t]*([0-9]+)", text)
+    if m and m.group(1) != "0" and m.group(1) != "-1":
+        owners.add(m.group(1))
+out["alsa"]["owners"] = {}
+for pid in sorted(owners):
+    out["alsa"]["owners"][pid] = read("/proc/%s/comm" % pid)
+
+# --- interrupts and processes ----------------------------------------------
+# One read of /proc/interrupts: it is small, and the two views of it (the audio IRQ's line, and
+# the lines worth mentioning) come from the same text.
+out["interrupts"] = {}
+out["audio_irq"] = {}
+try:
+    for line in (read("/proc/interrupts", "") or "").splitlines():
+        head = line.split(":")[0].strip()
+        if not head or not head[0].isdigit():
+            continue
+        if "dw_axi_dmac" in line:
+            mask = read("/proc/irq/%s/smp_affinity" % head)
+            out["audio_irq"] = {"irq": head, "line": line.strip(), "affinity_mask": mask}
+        if any(m in line for m in ("dw_axi_dmac", "uart-pl011", "i2c")):
+            # Just the per-cpu counts: the name is in the line the audio IRQ entry keeps, and the
+            # whole /proc/interrupts table is most of a sample.
+            counts = " ".join(line.split(":")[1].split()[:4])
+            out["interrupts"][head] = {"counts": counts, "name": line.split()[-1]}
+except Exception as exc:
+    out["errors"].append("interrupts: %s" % exc)
+
+out["processes"] = {}
+for name, comm in (("namchaind", "namchaind"), ("pedald", "pedald"), ("pedal-codec", "pedal-codec")):
+    entry = {"running": False}
+    try:
+        for d in sorted(glob.glob("/proc/[0-9]*")):
+            if read(d + "/comm") == comm:
+                entry["running"] = True
+                entry["pid"] = int(os.path.basename(d))
+                entry["cmdline"] = read(d + "/cmdline", "").replace("\x00", " ").strip()
+                st = read(d + "/status", "") or ""
+                for key in ("Cpus_allowed_list", "Mems_allowed_list", "VmRSS", "Threads"):
+                    m = re.search(r"^%s:[ \t]*(.*)$" % key, st, re.M)
+                    if m:
+                        entry[key] = m.group(1).strip()
+                sched = read(d + "/sched", "") or ""
+                m = re.search(r"policy[ \t]*:[ \t]*([0-9]+)", sched)
+                if m:
+                    entry["policy"] = int(m.group(1))
+                m = re.search(r"prio[ \t]*:[ \t]*(-?[0-9]+)", sched)
+                if m:
+                    entry["prio"] = int(m.group(1))
+                # Per-thread scheduling: the render thread is the one at realtime priority,
+                # and that is the fact worth having — not the process's own. Its affinity is
+                # the other half: the design pins it to the isolated core.
+                threads = []
+                for t in sorted(glob.glob(d + "/task/*")):
+                    tf = read(t + "/stat")
+                    if not tf:
+                        continue
+                    try:
+                        rest = tf[tf.rindex(")") + 2:].split()
+                        entry_thread = {"tid": int(os.path.basename(t)), "comm": read(t + "/comm"),
+                                        "policy": int(rest[38]), "rt_priority": int(rest[37])}
+                        st = read(t + "/status", "") or ""
+                        m = re.search(r"^Cpus_allowed_list:[ \t]*(.*)$", st, re.M)
+                        if m:
+                            entry_thread["affinity"] = m.group(1).strip()
+                        threads.append(entry_thread)
+                    except (ValueError, IndexError):
+                        continue
+                entry["threads"] = threads
+                break
+    except Exception as exc:
+        entry["error"] = str(exc)
+    out["processes"][name] = entry
+
+# --- systemd units ----------------------------------------------------------
+# One `systemctl show` per unit, and each one is a fork: they run with the deep sample, because a
+# unit's state changes when something restarts, which is the same news as the boot log.
+UNITS = ("namchaind.service", "pedald.service", "pedal-codec.service",
+         "pedal-tune.service", "pedal-diag.service", "pedal-maint.target")
+out["units"] = {}
+if deep:
+    for unit in UNITS:
+        text, rc = run(["systemctl", "show", "-p", "ActiveState", "-p", "SubState",
+                        "-p", "NRestarts", unit], timeout=5)
+        entry = {}
+        if text:
+            for line in text.splitlines():
+                if "=" in line:
+                    k, v = line.split("=", 1)
+                    entry[k] = v
+        else:
+            entry["error"] = "systemctl unavailable (rc=%s)" % rc
+        out["units"][unit] = entry
+
+# --- the deployed state -----------------------------------------------------
+def symlink_target(path):
+    try:
+        return os.readlink(path)
+    except OSError:
+        return None
+
+out["deployed"] = {
+    "engine_current": symlink_target("/opt/namchain/current"),
+    "engine_versions": sorted(os.path.basename(x) for x in glob.glob("/opt/namchain/*")),
+    "applied": read("/etc/pedal/applied"),
+    "components_lock": read("/etc/pedal/components.lock"),
+    "pedal_interface": os.path.exists("/etc/pedal/pedal-interface.json"),
+}
+
+# --- the engine and the service --------------------------------------------
+# Authentication is per CONNECTION, not per process: on TCP an unauthenticated connection may
+# say only `engine.hello`, so one socket is opened, helloed and then used for everything asked
+# of the engine. (Found the hard way: three separate connections, two of them unauthorized.)
+out["engine"] = {"reachable": False}
+ncfg = read_json("/etc/namchain/namchaind.json") or {}
+token = None
+for p in ("/run/credentials/pedald.service/token", "/etc/namchain/token"):
+    token = read(p)
+    if token:
+        out["engine"]["token_source"] = p
+        break
+port = ncfg.get("tcp_port", 47810)
+host = "127.0.0.1"
+try:
+    import socket as _s, struct as _st
+    _sock = _s.create_connection((host, port), 6)
+    try:
+        def _call(obj):
+            b = json.dumps(obj, separators=(",", ":")).encode()
+            _sock.sendall(_st.pack("<I", len(b)) + b)
+            h = b""
+            while len(h) < 4:
+                c = _sock.recv(4 - len(h))
+                if not c:
+                    raise OSError("closed")
+                h += c
+            n = _st.unpack("<I", h)[0]
+            payload = b""
+            while len(payload) < n:
+                c = _sock.recv(min(65536, n - len(payload)))
+                if not c:
+                    raise OSError("closed")
+                payload += c
+            return json.loads(payload.decode("utf-8"))
+        hello = _call({"id": "h", "method": "engine.hello", "token": token, "protocol": 2})
+        out["engine"]["hello"] = hello
+        out["engine"]["reachable"] = bool(hello.get("ok"))
+        if hello.get("ok"):
+            out["engine"]["features"] = hello.get("features")
+            status = _call({"id": "s", "method": "engine.status"})
+            out["engine"]["status"] = status.get("status") if status.get("ok") else status
+            out["engine"]["status_ok"] = bool(status.get("ok"))
+            # Levels are a separate method with a small answer, and only exist once the engine
+            # advertises them. Asking anyway costs one round trip and removes the need to know
+            # which engine this is.
+            if "levels" in (hello.get("features") or []):
+                levels = _call({"id": "l", "method": "engine.levels"})
+                out["engine"]["levels"] = levels.get("levels") if levels.get("ok") else levels
+    finally:
+        _sock.close()
+except Exception as exc:
+    out["engine"]["error"] = "%s: %s" % (type(exc).__name__, exc)
+
+out["service"] = {"reachable": False}
+pcfg = read_json("/etc/pedal/pedald.json") or {}
+try:
+    import socket as _sock
+    port2 = pcfg.get("http_port", 47820)
+    s = _sock.create_connection((host, port2), 6)
+    try:
+        head = "GET /status HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n"
+        if token:
+            head += "Authorization: Bearer %s\r\n" % token
+        s.sendall((head + "\r\n").encode())
+        chunks = []
+        while True:
+            c = s.recv(65536)
+            if not c:
+                break
+            chunks.append(c)
+    finally:
+        s.close()
+    raw = b"".join(chunks)
+    hdr, _, body = raw.partition(b"\r\n\r\n")
+    if hdr.startswith(b"HTTP/1.1 200"):
+        out["service"] = json.loads(body.decode("utf-8"))
+        out["service"]["reachable"] = True
+    else:
+        out["service"]["error"] = hdr.split(b"\r\n")[0].decode("utf-8", "replace")
+except Exception as exc:
+    out["service"]["error"] = "%s: %s" % (type(exc).__name__, exc)
+
+# --- the link's line discipline --------------------------------------------
+line = {}
+if out["tty"].get("ttyAMA0"):
+    fd = None
+    try:
+        if termios is None:
+            raise OSError("termios is not available on this platform")
+        _t = termios
+        fd = os.open("/dev/ttyAMA0", os.O_RDONLY | os.O_NOCTTY | os.O_NONBLOCK)
+        attrs = _t.tcgetattr(fd)
+        iflag, oflag, cflag, lflag, ispeed, ospeed, cc = attrs
+        line = {"cflag": cflag, "lflag": lflag, "oflag": oflag, "iflag": iflag,
+                "ispeed": baud_from_speed(ispeed), "ospeed": baud_from_speed(ospeed),
+                "raw": (lflag & _t.ICANON) == 0 and (lflag & _t.ECHO) == 0,
+                "cs8": (cflag & _t.CSIZE) == _t.CS8, "cread": bool(cflag & _t.CREAD),
+                "clocal": bool(cflag & _t.CLOCAL), "hupcl": bool(cflag & _t.HUPCL)}
+    except Exception as exc:
+        line = {"error": "%s: %s" % (type(exc).__name__, exc)}
+    finally:
+        if fd is not None:
+            os.close(fd)
+out["link_line"] = line
+
+# --- tuning, from the files rather than from the tool ------------------------
+# `pedal-tune check` is the authority on whether the tuning is in force, and it costs about two
+# seconds of CPU because it walks masked units and forks systemctl for each. So the same facts are
+# read here directly — the governor, the clock cap, the cpusets, the Pico's link and the audio
+# interrupt's core — and the authority is run every `--tune-every` samples to confirm them. A
+# disagreement between the two is itself worth reporting, and the report says which one to trust.
+out["tuning_cheap"] = {}
+_cpufreq = sorted(glob.glob("/sys/devices/system/cpu/cpufreq/policy*"))
+if _cpufreq:
+    _p = _cpufreq[0]
+    out["tuning_cheap"]["governor"] = read(_p + "/scaling_governor")
+    out["tuning_cheap"]["max_khz"] = read_int(_p + "/scaling_max_freq")
+    out["tuning_cheap"]["cur_khz"] = read_int(_p + "/scaling_cur_freq")
+    out["tuning_cheap"]["cpus"] = read(_p + "/related_cpus")
+out["tuning_cheap"]["isolated_cpus"] = None
+# `isolcpus=managed_irq,domain,2-3` — the value is a list of modifiers and then the cpus, and only
+# the cpus are the answer. (Reading the whole value as a cpu list makes a tuned host look untuned.)
+def _cpu_list(value):
+    parts = [p for p in (value or "").split(",") if p and all(c.isdigit() or c == "-" for c in p)]
+    return ",".join(parts) or None
+
+for line in (read("/proc/cmdline", "") or "").split():
+    if line.startswith("isolcpus="):
+        out["tuning_cheap"]["isolated_cpus"] = _cpu_list(line.split("=", 1)[1])
+        out["tuning_cheap"]["isolcpus_raw"] = line.split("=", 1)[1]
+    if line.startswith("nohz_full="):
+        out["tuning_cheap"]["nohz_full"] = _cpu_list(line.split("=", 1)[1])
+out["tuning_cheap"]["cpusets"] = {}
+for unit in ("system.slice", "user.slice", "init.scope", "pedal.slice", "pedal-rt.slice"):
+    v = read("/sys/fs/cgroup/%s/cpuset.cpus.effective" % unit)
+    if v:
+        out["tuning_cheap"]["cpusets"][unit] = v
+out["tuning_cheap"]["wifi_power_save"] = None
+_link = read("/sys/class/net/wlan0/device/power/control")
+if _link:
+    out["tuning_cheap"]["wifi_power_save"] = _link
+
+# --- the tools that already answer part of this -----------------------------
+# Everything host-side is read HERE, on the host, and travels in the sample: the report is
+# rendered wherever the operator is, and `amixer` or `dmesg` on a Mac would answer about the Mac.
+# (Found the hard way: the first version asked the local machine for the pedal's mixer.)
+#
+# `pedal-tune check` and `pedal-device status` are the two forks in here, and both walk files and
+# talk to systemd: they are run every TUNE_EVERY samples, not every sample, because --watch's
+# budget is the point of --watch. Between them the sample says `stale` and how old the answer is.
+TUNE_EVERY = DEEP_EVERY                      # the mixing controls: cheap, and they can change
+PEDAL_TUNE_EVERY = _arg_int("--tune-every", 240)    # ~10 minutes: 2 s of CPU, and it barely moves
+counter = COUNTER
+if counter % PEDAL_TUNE_EVERY == 0:
+    text, rc = run(["sudo", "-n", "/usr/local/sbin/pedal-tune", "check"], timeout=30)
+    if text is None:
+        text, rc = run(["/usr/local/sbin/pedal-tune", "check"], timeout=30)
+    out["pedal_tune_check"] = {"rc": rc, "text": text, "age_samples": 0}
+if deep:
+    amixer_text, amixer_rc = run(["amixer", "-c", "wm8960", "scontents"], timeout=10)
+    out["mixer"] = {"rc": amixer_rc, "text": amixer_text if deep else None,
+                    "controls": (amixer_text or "").count("Simple mixer control"),
+                    "float_db": [l.strip() for l in (amixer_text or "").splitlines() if "dB]" in l][:40],
+                    "age_samples": 0}
+else:
+    out["deep_skipped"] = {"every": TUNE_EVERY, "sample": counter,
+                           "why": "the forking checks run once every %d samples" % TUNE_EVERY}
+if "pedal_tune_check" not in out:
+    out["tune_skipped"] = {"every": PEDAL_TUNE_EVERY, "sample": counter,
+                           "why": "pedal-tune check costs ~2 s of CPU, so it runs every %d samples; "
+                                  "the tuning facts above are read from the files every sample"
+                                  % PEDAL_TUNE_EVERY}
+
+# --- the boot log, once ------------------------------------------------------
+# dmesg, not /dev/kmsg: /dev/kmsg is a sequential device, so a plain read() blocks until the
+# ring gives it EOF — which it never does. (Found the hard way: the first version hung here.)
+kmsg, rc = (run(["dmesg"], timeout=8) if deep else (None, 0))
+if deep and (kmsg is None or not kmsg.strip()):
+    kmsg, rc = run(["sudo", "-n", "dmesg"], timeout=8)
+if kmsg is None:
+    kmsg = ""
+# The boot log is one of the two big fields in a sample, and it only changes when something
+# restarts, so a watch log does not need it every time. The fingerprints it is searched for are
+# cut out and kept regardless: they are short and they are the whole point.
+INTERESTING = ("wm8960", "did not appear", "undervolt", "throttl", "i2c", "snd", "asoc",
+               "codec", "dma", "uart", "EREMOTEIO", "ETIMEDOUT", "-121", "-110", "xrun")
+out["kmsg_interesting"] = [l.strip() for l in kmsg.splitlines() if any(m in l for m in INTERESTING)][-60:]
+out["kmsg_lines"] = [l for l in kmsg.splitlines() if l.strip()][-400:] if deep else None
+
+# --- nothing touches a bus: the I2C attempt failed, see the note above -------------
+out["i2c_probe"] = {"requested": bool(PROBE), "attempted": False,
+                    "why": "reading the chip needs i2c-tools or a working I2C_RDWR ioctl; neither "
+                           "is on vip today (see this tool's source or docs/diagnostics.md)"}
+
+out["pico"] = {"probed": False}
+
+# The sample's cost last, on its own line, so the tool can take it without parsing the payload.
+cost = tree_cpu_seconds()
+print(json.dumps(out))
+if cost is not None:
+    print("COST %.4f" % cost)
+'''
+
+
+def gather_local(probe=False, sample_index=0, deep_every=10, tune_every=240):
+    """Run the gatherer in this process, so a local run needs no child and no ssh."""
+    import io
+    namespace = {"__name__": "gather"}
+    stdout = sys.stdout
+    argv = sys.argv
+    buffer = io.StringIO()
+    sys.stdout = buffer
+    sys.argv = [argv[0]] + (["--probe"] if probe else []) + [
+        "--sample", str(sample_index), "--deep-every", str(deep_every),
+        "--tune-every", str(tune_every)]
+    try:
+        exec(compile(GATHER_SOURCE, "<pedal-diag gather>", "exec"), namespace)
+    finally:
+        sys.stdout = stdout
+        sys.argv = argv
+    return json.loads(buffer.getvalue())
+
+
+def gather_remote(host, ssh_opts=None, probe=False, sample_index=0,
+                  deep_every=10, tune_every=240):
+    """The same gatherer on another host, over one ssh invocation.
+
+    One session per sample, and `sudo -n python3` so debugfs (the codec's register file) is
+    readable. `-n` means a host that wants a password fails loudly instead of hanging a
+    continuous sampler on a prompt.
+    """
+    argv = ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8",
+            "-o", "ServerAliveInterval=5", "-o", "ServerAliveCountMax=3"]
+    if ssh_opts:
+        argv += ssh_opts
+    argv.append(host)
+    remote = "sudo -n python3 -" if os.environ.get("PEDAL_DIAG_NO_SUDO") != "1" else "python3 -"
+    tail = (" --sample %d --deep-every %d --tune-every %d"
+            % (sample_index, _deep_every, _tune_every))
+    argv += [remote + tail + (" --probe" if probe else "")]
+    wall_before = time.monotonic()
+    # /proc gives the whole process tree's CPU once we know the pid, and `sudo` is the parent of
+    # the python we actually want — but the kernel accounts the tree's CPU to whoever it belongs.
+    proc = subprocess.Popen(argv, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+    try:
+        out, err = proc.communicate(input=GATHER_SOURCE.encode(), timeout=60)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        raise SystemExit("%s: the gatherer timed out (60 s)" % TOOL)
+    p = types.SimpleNamespace(returncode=proc.returncode, stdout=out, stderr=err)
+    wall_seconds = round(time.monotonic() - wall_before, 3)
+    if p.returncode != 0:
+        detail = p.stderr.decode("utf-8", "replace").strip().splitlines()
+        raise SystemExit("%s: gathering on %s failed: %s" % (
+            TOOL, host, detail[-1] if detail else "rc=%d" % p.returncode))
+    text = p.stdout.decode("utf-8", "replace").strip()
+    if not text:
+        raise SystemExit("%s: %s returned nothing" % (TOOL, host))
+    # Only the last line: `sudo` can put a warning on stdout ahead of it.
+    # The payload is one line of JSON and the cost is one line after it (or a sudo warning before
+    # it), so each is found by what it looks like rather than by position.
+    sample = None
+    cost = None
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith("COST "):
+            try:
+                cost = float(line.split()[1])
+            except (ValueError, IndexError):
+                cost = None
+        elif line.startswith("{"):
+            sample = json.loads(line)
+    if sample is None:
+        raise SystemExit("%s: %s returned no sample" % (TOOL, host))
+    if cost is not None:
+        sample["cost_cpu_s"] = round(cost, 4)
+    sample["cost_wall_s"] = wall_seconds
+    return sample
+
+
+# --------------------------------------------------------------------------- findings
+
+class Report(object):
+    def __init__(self, sample, interface, interface_path=None):
+        self.sample = sample
+        self.iface = interface or {}
+        self.iface_path = interface_path
+        self.findings = []
+
+    def add(self, severity, key, what, evidence, likely=None, check=None, seed=None):
+        self.findings.append({"severity": severity, "key": key, "what": what,
+                              "evidence": evidence, "likely": likely or [],
+                              "check": check, "seed": seed})
+
+    # -- convenience accessors over the sample -------------------------------
+    def dig(self, *path, **kw):
+        node = self.sample
+        for key in path:
+            if not isinstance(node, dict) or key not in node:
+                return kw.get("default")
+            node = node[key]
+        return node
+
+    def write_codec_findings(self):
+        codec = self.dig("codec") or {}
+        i2c = self.dig("i2c", "devices") or []
+        cards = self.dig("alsa", "cards") or ""
+        iface = self.iface.get("codec", {})
+
+        if "1-001a" not in i2c:
+            seed = find_seed(self.iface, "i2c-nack-vs-timeout") or {}
+            self.add(
+                "fail", "codec.i2c_absent",
+                "the WM8960 is not on the I2C bus at all (no 1-001a sysfs entry)",
+                "i2c-1 devices: %s" % (", ".join(i2c) or "(none besides the bus itself)"),
+                likely=[
+                    "3V3 to the codec board is out (header pin 1): its DCVDD, DBVDD and the 24 MHz "
+                    "oscillator are all on that rail, and the board's PWR LED would be dark",
+                    "the SDA or SCL lead is out (header pins 3 and 5)",
+                    "the codec board is not seated in its socket strips",
+                    "the overlay did not load, so nothing binds the address",
+                ],
+                check="the board's supplies and its I2C are four adjacent header pins (1, 2, 3, 5). "
+                      "Check those leads and the board's seating first, then dmesg for 'wm8960 1-001a'",
+                seed=seed.get("id"))
+        else:
+            regs_raw = codec.get("registers")
+            regs = parse_registers(regs_raw)
+            probed_id = (self.sample.get("i2c_probe") or {}).get("id")
+            probe_error = (self.sample.get("i2c_probe") or {}).get("error")
+            want = iface.get("id_value")
+            names = decode_codec_registers(regs)
+
+            if probed_id is not None and want is not None and probed_id != want:
+                self.add("fail", "codec.wrong_id",
+                         "the chip at 0x1a answers, but its device id is not the WM8960's",
+                         "a real I2C read of register 0x00 returns 0x%04x; a WM8960 returns 0x%04x" % (
+                             probed_id, want),
+                         likely=["something else is answering at 0x1a",
+                                 "the codec board's 3V3 is low enough that the part misbehaves"],
+                         check="meter 3.3 V at the codec board's 3V3 pin, and check no other board "
+                               "is on the bus")
+            elif probed_id is not None:
+                self.add("ok", "codec.answers",
+                         "the WM8960 is on I2C and a real register read returns its device id",
+                         "0x1a register 0x00 = 0x%04x; %d registers in the driver's map" % (
+                             probed_id, len(regs)),
+                         check="nothing: this is the branch that has to be true for audio to exist")
+            elif regs_raw:
+                detail = "; ".join("%s = %s" % (k, v) for k, v in list(names.items())[:6])
+                self.add("ok", "codec.answers",
+                         "the driver has the codec bound and its register map is readable",
+                         "%d registers; %s" % (len(regs), detail or "no named registers"),
+                         likely=[],
+                         check="these are the driver's CACHE, not a chip read: the codec is "
+                               "configured to what the driver wrote, which is the useful half. A "
+                               "real chip read needs i2cget (see docs/diagnostics.md)")
+                if probe_error:
+                    self.add("info", "codec.probe_failed",
+                             "the chip did not answer a direct register read",
+                             probe_error,
+                             likely=["the kernel driver holds the bus and the read needs the "
+                                     "adapter's own arbitration",
+                                     "the codec is between power transitions (DAPM) and NAKs"],
+                             check="--probe again in a moment; if it persists, the I2C section above")
+            else:
+                self.add("warn", "codec.registers_unreadable",
+                         "the codec is on the bus but its registers were not readable",
+                         "regmap present: %s; registers: %s" % (
+                             codec.get("regmap_present"),
+                             "root-only" if codec.get("registers_readable") is False else "absent"),
+                         likely=["the gatherer had no root, and /sys/kernel/debug is root-only"],
+                         check="run with sudo on the host (the tool does this itself unless "
+                               "PEDAL_DIAG_NO_SUDO=1)")
+
+        # The card list being EMPTY is the case that matters most ("card wm8960 did not appear"),
+        # so it is a fault as much as a list without wm8960 in it.
+        if "wm8960" not in (cards or ""):
+            self.add("fail", "codec.no_card",
+                     "the codec is on the bus but no ALSA card appeared",
+                     "/proc/asound/cards: %s" % (cards.replace("\n", " / ") or "(empty)"),
+                     likely=["ADCLRC or BCLK wired when it should be (or the reverse): the card "
+                             "binds only when the DAI's clocks agree",
+                             "the overlay's simple-card node did not match the codec's compatible"],
+                     check="dmesg for the card's bind, and the four I2S leads against "
+                           "devices/common/pedal-interface.json")
+
+        # The historical discriminator, worth naming whenever the error is visible at all — and
+        # only from a line about the codec or the I2C bus, because "-121" appears in other
+        # drivers' messages and a report that quotes the wrong line is worse than one that says
+        # nothing.
+        def bus_lines(needle):
+            return [l for l in (self.dig("kmsg_lines") or self.dig("kmsg_interesting") or [])
+                    if needle in l and ("wm8960" in l or "i2c" in l.lower() or "1-001a" in l)]
+        nack = bus_lines("-121") or bus_lines("EREMOTEIO")
+        timeout = bus_lines("-110") or bus_lines("ETIMEDOUT")
+        if nack and "1-001a" not in i2c:
+            seed = find_seed(self.iface, "i2c-nack-vs-timeout") or {}
+            self.add("info", "codec.errno", seed.get("meaning", "I2C fault"),
+                     "dmesg carries %s" % ("-121 (EREMOTEIO, a NACK)" if nack else "-110 (ETIMEDOUT)"),
+                     likely=[seed.get("likely", "")][0] if seed.get("likely") else [],
+                     check=seed.get("check"), seed=seed.get("id"))
+        elif timeout and "1-001a" not in i2c:
+            self.add("info", "codec.errno",
+                     "the I2C controller's own timeout (-110/ETIMEDOUT) is in dmesg, not a NACK",
+                     "a timeout is a held line, not an absent chip",
+                     likely=["a short or a crossed lead on SDA/SCL, or a device holding the bus"],
+                     check="meter SDA and SCL: both should sit at 3.3 V when idle")
+
+    def write_audio_findings(self):
+        pcm = self.dig("alsa", "pcm") or {}
+        cap = parse_pcm_status(pcm.get("capture", {}).get("status"))
+        play = parse_pcm_status(pcm.get("playback", {}).get("status"))
+        owners = self.dig("alsa", "owners") or {}
+        engine_state = self.dig("engine", "status", "state")
+        cfg = self.iface.get("host", {}).get("audio", {})
+        want_dev = cfg.get("engine_device")
+
+        def owner_text():
+            if not owners:
+                return "none recorded"
+            return ", ".join("%s (%s)" % (p, n or "?") for p, n in sorted(owners.items()))
+
+        if engine_state in ("running",) and cap.get("state") == "RUNNING":
+            self.add("ok", "audio.streaming",
+                     "the capture stream is running and owned",
+                     "capture state RUNNING, owner %s; playback %s, owner %s" % (
+                         cap.get("owner_pid", "?"), play.get("state", "?"), play.get("owner_pid", "?")),
+                     check="nothing — this is the state audio has to be in")
+        elif engine_state in (None, "closed", "lost"):
+            self.add("fail", "audio.engine_down",
+                     "the engine is not running: state is %s" % (engine_state or "unknown"),
+                     "engine.status: %s; issues: %s" % (
+                         engine_state or "(no status)",
+                         json.dumps(self.dig("engine", "status", "issues") or [])[:400]),
+                     likely=self.engine_issue_likely(),
+                     check="the issues list above is the engine's own account of why")
+
+        if engine_state == "closed" and self.dig("codec", "regmap_present"):
+            self.add("warn", "audio.closed_with_codec",
+                     "the codec is bound but the engine has the device closed",
+                     "engine state closed; card %s" % (self.dig("alsa", "cards", "").split("\n")[0] if self.dig("alsa", "cards") else "?"),
+                     likely=["the engine is between device opens: it retries every "
+                             "device_retry_ms, so this is a state to watch rather than one to panic at",
+                             "the device open is failing: read the issues list for the reason"],
+                     check="watch it: pedal-diag --watch --interval 2 and look at engine.state")
+
+        hw = parse_hw_params(pcm.get("playback", {}).get("hw_params"))
+        want_rate, want_period = cfg.get("sample_rate"), cfg.get("period_size")
+        if hw and want_rate and (hw.get("rate"), hw.get("period_size")) != (want_rate, want_period):
+            self.add("warn", "audio.hw_params",
+                     "the open device's hardware parameters are not the ones the pedal expects",
+                     "open: %s Hz, period %s, %s channels; expected: %s Hz, period %s" % (
+                         hw.get("rate"), hw.get("period_size"), hw.get("channels"),
+                         want_rate, want_period),
+                     likely=["the engine asked for an exact period and could not get it: it refuses "
+                             "rather than silently running a different quantum",
+                             "the overlay or the codec's clocking is not what the config assumes"],
+                     check="the engine's own status.format and backend_diagnostics once they are "
+                           "published, and this file's audio block")
+        elif hw:
+            self.add("ok", "audio.hw_params",
+                     "the open device is at %s Hz, period %s, %s channels" % (
+                         hw.get("rate"), hw.get("period_size"), hw.get("channels")),
+                     "devices/common/pedal-interface.json expects the same",
+                     check="nothing")
+
+        fmt = self.dig("engine", "status", "format")
+        if fmt is None:
+            self.add("info", "audio.format_unpublished",
+                     "the engine does not publish the PCM format it opened",
+                     "engine.status has no 'format' key (namchain 0.1.0)",
+                     likely=["not built yet: the daemon stores the format (active_format_) and "
+                             "never reports it"],
+                     check="the plan's namchain change adds it; until then read "
+                           "/proc/asound/card0/*/hw_params")
+
+        if play.get("state") == "RUNNING" and cap.get("state") not in ("RUNNING", None):
+            self.add("warn", "audio.capture_not_running",
+                     "playback is running and capture is not",
+                     "capture %s, playback %s" % (cap.get("state"), play.get("state")),
+                     check="the capture node's status file, and the codec's ADC path in the mixer state")
+
+    def engine_issue_likely(self):
+        issues = self.dig("engine", "status", "issues") or []
+        out = []
+        for issue in issues[:4]:
+            code = issue.get("code")
+            message = issue.get("message") or ""
+            if code == "device_lost":
+                out.append("the engine lost the device and is retrying: %s" % message)
+            elif code in ("xruns",):
+                out.append("xruns: the render thread is missing its deadline, or the device is "
+                           "starving: %s" % message)
+            elif code in ("node_failed",):
+                out.append("a graph node failed its guard and was replaced by dry signal: %s" % message)
+            elif code in ("asset_missing", "model_slimmed", "model_budget_exceeded"):
+                out.append("a model or IR is missing or over budget: %s" % message)
+            else:
+                out.append("%s: %s" % (code, message))
+        return out or ["the engine said nothing specific: read its full status, and the card "
+                       "and codec sections of this report"]
+
+    def write_link_findings(self):
+        iface = self.iface.get("pico_link", {})
+        service = self.dig("service") or {}
+        link = service.get("link") or {}
+        pico = link.get("pico") or {}
+        line = self.dig("link_line") or {}
+        tty = self.dig("tty", "ttyAMA0")
+
+        if not tty:
+            self.add("fail", "link.no_device",
+                     "the Pico's link device is absent",
+                     "/dev/ttyAMA0 does not exist",
+                     likely=["the kernel did not bring up the PL011 the overlay assigns, or the host "
+                             "is not the one this tool thinks it is"],
+                     check="dmesg for ttyAMA0, and /proc/device-tree for the uart's status")
+            return
+
+        if not service.get("reachable"):
+            self.add("warn", "link.no_service",
+                     "pedald is not answering on its HTTP port",
+                     "service error: %s" % (service.get("error") or "no reply"),
+                     likely=["pedald is down or restarting",
+                             "the token is unreadable, so every request is refused with 401"],
+                     check="systemctl status pedald, and /etc/namchain/token's permissions")
+
+        if line and line.get("raw") is False:
+            self.add("warn", "link.line_mode",
+                     "the link's line discipline is not raw",
+                     "termios: lflag=0x%x cflag=0x%x %s baud, %s" % (
+                         line.get("lflag") or 0, line.get("cflag") or 0,
+                         line.get("ispeed"), "8N1" if line.get("cs8") else "not 8N1"),
+                     likely=["something else opened the port and left it in canonical mode: a login "
+                             "shell, a getty, or a tool that did not restore it"],
+                     check="fuser -v /dev/ttyAMA0, and check no getty is enabled on ttyAMA0 — the "
+                           "console belongs on ttyAMA10")
+
+        frames_ok = link.get("frames_ok")
+        frames_bad = link.get("frames_bad")
+        session = link.get("session")
+        if frames_ok is not None:
+            if session and not frames_bad:
+                self.add("ok", "link.session",
+                         "the Pico link has a session and has never seen a bad frame",
+                         "frames_ok=%s frames_bad=%s, pico fw %s protocol %s.%s" % (
+                             frames_ok, frames_bad, pico.get("fw"), pico.get("major"), pico.get("minor")),
+                         check="nothing — but check the firmware version against a real commit: "
+                               "'fw 0.1' matches no checkout's git describe")
+            elif frames_ok and not session:
+                self.add("fail", "link.no_session",
+                         "frames are arriving and the session never comes up",
+                         "frames_ok=%s frames_bad=%s, session=%s" % (frames_ok, frames_bad, session),
+                         likely=["the Pico's RX does not reach it: HELLO arrives, WELCOME does not "
+                                 "(header pin 8 -> GP1)",
+                                 "the Pico's firmware version speaks a protocol this host does not"],
+                         check="the lead in header pin 8, and the '? ' counter line on the Pico's "
+                               "own console (pedal-diag --probe)")
+            elif frames_bad and frames_ok and frames_bad * 10 > frames_ok:
+                self.add("fail", "link.framing",
+                         "most frames from the Pico are malformed",
+                         "frames_ok=%s frames_bad=%s" % (frames_ok, frames_bad),
+                         likely=["the ground lead is missing, so the two ends disagree about levels",
+                                 "a baud or format mismatch: the link is 115200 8N1",
+                                 "noise on a long lead beside a switching supply"],
+                         check="the ground lead (header pin 6 or 39), and the port's line "
+                               "settings in this report's link section")
+            elif not frames_ok:
+                self.add("fail", "link.silent",
+                         "no frames have ever arrived from the Pico",
+                         "frames_ok=0, link open=%s" % link.get("open"),
+                         likely=["GP0 to header pin 10 is out: nothing is arriving at all",
+                                 "the Pico has no power (check its own uptime, --probe)",
+                                 "the Pico is in BOOTSEL or has no firmware"],
+                         check="the lead in header pin 10; then the Pico's console on "
+                               "/dev/ttyACM0 for its own counter line")
+
+        # Freshness: the counter says how much has arrived ever; the age says whether anything is
+        # arriving now, and those are different faults. Since pedald began reporting the age, a
+        # link that is up but silent is a finding rather than an absence.
+        age = link.get("last_rx_s_ago")
+        if isinstance(age, (int, float)) and age > 10 and session:
+            self.add("fail", "link.silent_now",
+                     "the link has a session and nothing has arrived for %.1f s" % age,
+                     "frames_ok=%s, bytes_in=%s, drops=%s" % (
+                         link.get("frames_ok"), link.get("bytes_in"), link.get("drops")),
+                     likely=["GP0 to header pin 10 has come out, or is intermittent",
+                             "the Pico has stopped: check its power (its USB enumeration, or its "
+                             "own uptime with --probe)",
+                             "something else has taken /dev/ttyAMA0 and pedald is reading a port "
+                             "nobody is writing to"],
+                     check="the lead in header pin 10; then fuser -v /dev/ttyAMA0")
+        if isinstance(link.get("drops"), (int, float)) and link.get("drops", 0) > 0:
+            self.add("warn", "link.drops",
+                     "the link has dropped and reopened %d time(s)" % link["drops"],
+                     "drops=%s, open for %s s, bytes_in=%s" % (
+                         link.get("drops"), link.get("open_s"), link.get("bytes_in")),
+                     likely=["the Pico reset: a power blip on its 5 V feed, or a firmware fault",
+                             "the port's driver reloaded",
+                             "a lead making intermittent contact"],
+                     check="the Pico's own uptime with --probe: a counter that went back to zero "
+                           "means it restarted, and its feed is the thing to look at")
+
+        if line.get("ispeed") and line.get("ispeed") != 115200:
+            self.add("warn", "link.baud",
+                     "the link port is not at 115200",
+                     "termios reports %s baud" % line.get("ispeed"),
+                     likely=["something else configured the port: the link is 115200 8N1 or it is "
+                             "not the link"],
+                     check="stty -F /dev/ttyAMA0 115200, then restart pedald")
+
+    def write_host_findings(self):
+        # The tuning, from the files, every sample: these four facts are the whole of what
+        # pedal-tune enforces at runtime, and they are four file reads. `pedal-tune check`'s own
+        # answer is used when it is there — it is the authority — and the cheap reads are what is
+        # reported between its runs.
+        cheap = self.dig("tuning_cheap") or {}
+        cfg_cpu = self.iface.get("host", {}).get("cpu", {})
+        tune = self.dig("pedal_tune_check") or {}
+        tune_text = tune.get("text") or ""
+        tune_age = tune.get("age_s")
+        problems = []
+
+        governor, want_governor = cheap.get("governor"), cfg_cpu.get("governor")
+        if governor and want_governor and governor != want_governor:
+            problems.append("the governor is %s, not %s" % (governor, want_governor))
+        max_khz, want_khz = cheap.get("max_khz"), cfg_cpu.get("max_khz")
+        if max_khz and want_khz and int(max_khz) != int(want_khz):
+            problems.append("the clock cap is %s kHz, not %s" % (max_khz, want_khz))
+        isolated = cheap.get("isolated_cpus")
+        want_isolated = str(cfg_cpu.get("isolated") or "")
+        if isolated and want_isolated and isolated != want_isolated:
+            problems.append("the kernel isolates %s, not %s" % (isolated, want_isolated))
+        for unit, want in (("system.slice", cfg_cpu.get("housekeeping")),
+                           ("user.slice", cfg_cpu.get("housekeeping")),
+                           ("init.scope", cfg_cpu.get("housekeeping"))):
+            got = (cheap.get("cpusets") or {}).get(unit)
+            if got and want and got != want:
+                problems.append("%s may run on %s, not %s" % (unit, got, want))
+        rt_cpus = (cheap.get("cpusets") or {}).get("pedal-rt.slice")
+        if rt_cpus and want_isolated and not (expand_cpu_list(rt_cpus) & expand_cpu_list(want_isolated)):
+            problems.append("pedal-rt.slice is confined to %s, which excludes the render cores %s"
+                            % (rt_cpus, want_isolated))
+
+        if problems:
+            self.add("fail", "host.tuning",
+                     "the runtime tuning is not what tune.conf declares",
+                     "; ".join(problems),
+                     likely=["the host was applied a tree but not rebooted, or a step was undone "
+                             "by hand",
+                             "pedal-tune.service did not run at boot (it is in the tuned profile "
+                             "only: a loose boot leaves the tuning off, by design)"],
+                     check="sudo pedal-tune apply, then sudo pedal-tune check — the command that "
+                           "owns this question" +
+                           (" (its own answer is %.0f s old: %s)" % (
+                               tune_age, (tune_text.strip().splitlines() or [""])[-1])
+                            if tune_age is not None else ""))
+        elif tune.get("rc") == 0 and tune_text:
+            self.add("ok", "host.tuning",
+                     "the CPU split, governor, clock cap and cpusets are in force",
+                     "read from the files this sample%s" % (
+                         "" if tune_age is None else ", and pedal-tune check agreed %.0f s ago"
+                         % tune_age),
+                     check="nothing — this is why the render thread has isolated cores")
+        elif tune.get("rc") is not None and tune.get("rc") != 0:
+            fails = [l.strip() for l in tune_text.splitlines() if "FAIL" in l]
+            self.add("fail", "host.tuning", "pedal-tune check reports what is not in force",
+                     " | ".join(fails[:4]) or (tune_text.strip()[-200:] or "no output"),
+                     likely=["the host was applied a tree but not rebooted, or a tuning step was "
+                             "undone by hand"],
+                     check="sudo pedal-tune apply, then pedal-tune check")
+        else:
+            self.add("ok", "host.tuning",
+                     "governor %s, cap %s kHz, isolated %s" % (
+                         governor, max_khz, isolated or "?"),
+                     "read from the files; pedal-tune check has not run yet this session",
+                     check="nothing — sudo pedal-tune check is the authority if this is disputed")
+
+        zone = self.thermal_zone()
+        if zone:
+            temp_c = (zone.get("temp_mc") or 0) / 1000.0
+            actives = sorted(t["mc"] for t in zone.get("trips", []) if t.get("type") == "active")
+            first = actives[0] / 1000.0 if actives else None
+            critical = next((t["mc"] / 1000.0 for t in zone.get("trips", [])
+                             if t.get("type") == "critical"), None)
+            # The trips are the firmware's own cooling steps, not a limit: 50-60 C is where a Pi 5
+            # sits under light load with the fan idle, so the number only becomes a finding when it
+            # is near the step that pulls the clock back (75 C on vip), or near the critical trip.
+            level = "ok"
+            if first is not None and temp_c >= min(first + 25.0, (critical or 999.0) - 15.0):
+                level = "fail"
+            elif first is not None and temp_c >= first + 10.0:
+                level = "warn"
+            self.add(level, "host.thermal",
+                     "cpu-thermal is %s" % celsius(zone.get("temp_mc")),
+                     "the firmware's cooling steps begin at %s; critical %s" % (
+                         ", ".join(celsius(a) for a in actives) or "?",
+                         celsius(int(critical * 1000)) if critical else "?"),
+                     likely=[] if level == "ok" else
+                     ["the case is the plastic stand-in, or the lid is on, or the airflow is "
+                      "through a hole meant for a cable",
+                      "a rig has just been switched and the load is transient",
+                      "the fan is not spinning: check it on the board"],
+                     check="the temperature again in a minute under the same rig. Sustained heat is "
+                           "what matters: a single reading after a rig switch is the load, not the "
+                           "cooling")
+
+        uv = (self.dig("hwmon", "rpi_volt") or {}).get("in0_lcrit_alarm")
+        if uv and uv != "0":
+            self.add("fail", "host.undervoltage",
+                     "the firmware's low-voltage alarm is asserted",
+                     "hwmon rpi_volt in0_lcrit_alarm = %s" % uv,
+                     likely=["the supply is not the 45 W USB-C one, or the cable is thin",
+                             "the codec or the Pico's feed is loading the 5 V rail"],
+                     check="the supply and cable, and journalctl -k for undervoltage lines")
+
+        # Scheduling: the render thread is the one at realtime priority.
+        n = self.dig("processes", "namchaind") or {}
+        rt = [t for t in (n.get("threads") or []) if t.get("policy") not in (0, None)]
+        if n.get("running"):
+            if rt:
+                self.add("ok", "host.rt",
+                         "namchaind has a realtime thread",
+                         "%s at policy %s priority %s; process threads: %s" % (
+                             ", ".join("%s(%s)" % (t["comm"], t["tid"]) for t in rt),
+                             rt[0].get("policy"), rt[0].get("rt_priority"), n.get("Threads")),
+                         check="nothing — this is what keeps the render thread ahead of the DSP's "
+                               "deadline")
+            else:
+                self.add("fail", "host.not_rt",
+                         "namchaind has no realtime thread: every block can be preempted",
+                         "no thread with a scheduling policy other than SCHED_OTHER (0)",
+                         likely=["it could not get CAP_SYS_NICE: check the service's LimitRTPRIO",
+                                 "it fell back after a failure and logged why"],
+                         check="journalctl -u namchaind --grep 'realtime|priority'")
+
+            # The process being pinned to the housekeeping cores is the DESIGN: the render thread
+            # pins itself to the isolated core once it starts. So the question is not what the
+            # process is allowed, it is where the realtime thread ended up.
+            if rt:
+                # Compare as strings: the interface model is JSON, so its cpu numbers are
+                # strings, and a set of ints will never contain one.
+                rt_affinity = [str(c) for c in
+                               sorted(expand_cpu_list((rt[0].get("affinity") or "").strip()))]
+                want_rt = str(self.iface.get("host", {}).get("cpu", {}).get("render_cpu") or "")
+                if rt_affinity and want_rt and want_rt not in rt_affinity:
+                    self.add("warn", "host.rt_affinity",
+                             "the render thread is not on the core the design isolates for it",
+                             "%s (tid %s) is allowed on %s, the design says core %s" % (
+                                 rt[0].get("comm"), rt[0].get("tid"),
+                                 ",".join(rt_affinity), want_rt),
+                             likely=["the thread's affinity call failed, so it stayed where the "
+                                     "process started",
+                                     "the cpuset the service runs in is narrower than tune.conf says"],
+                             check="pedal-tune check, and the slice's cpuset.cpus.effective")
+
+        # The audio interrupt: which core it runs on is one of the four things tune.conf declares,
+        # and a migration is a real cause of the "one block in a thousand is late" kind of fault.
+        mask = (self.dig("audio_irq") or {}).get("affinity_mask")
+        want_irq_cpu = str(self.iface.get("host", {}).get("cpu", {}).get("audio_irq_cpu") or "")
+        if mask and want_irq_cpu:
+            # smp_affinity is a MASK IN HEX, not a binary string: "4" is core 2, not bit 4.
+            cores = expand_hex_mask(mask)
+            if cores and want_irq_cpu not in {str(c) for c in cores}:
+                self.add("warn", "host.irq_affinity",
+                         "the audio interrupt is not on the core the design gives it",
+                         "IRQ %s smp_affinity=%s -> cores %s; the design says core %s" % (
+                             (self.dig("audio_irq") or {}).get("irq"), mask.strip(),
+                             ",".join(str(c) for c in sorted(cores)) or "?", want_irq_cpu),
+                         likely=["rtpi's or pedal-tune's audio IRQ step did not run: pedal-tune only "
+                                 "moves it when AUDIO_IRQ_MATCH is set and the thread exists",
+                                 "irq balance or a driver reset moved it back"],
+                         check="pedal-tune check's 'audio interrupt' section, which is the authority")
+
+        mem = self.dig("memory") or {}
+        try:
+            total_kb = int(mem.get("MemTotal", "0"))
+            avail_kb = int(mem.get("MemAvailable", "0"))
+            if total_kb:
+                pct = 100.0 * avail_kb / total_kb
+                if pct < 8:
+                    self.add("fail", "host.memory",
+                             "only %.1f%% of RAM is available" % pct,
+                             "MemAvailable %s kB of %s kB" % (avail_kb, total_kb),
+                             likely=["a model or IR library that does not fit the 1 GB board",
+                                     "the page cache holding the models, which is not a fault in itself"],
+                             check="engine.status.model_budget: used_bytes against budget_bytes")
+                elif pct < 20:
+                    self.add("warn", "host.memory", "memory is getting tight (%.1f%% available)" % pct,
+                             "MemAvailable %s kB of %s kB" % (avail_kb, total_kb),
+                             check="model_budget, and whether a heavier rig is about to be loaded")
+        except ValueError:
+            pass
+
+        for mount, st in sorted((self.dig("storage") or {}).items()):
+            try:
+                if st["total"] and 100.0 * st["free"] / st["total"] < 5:
+                    self.add("fail", "host.storage",
+                             "%s is %.1f%% full" % (mount, 100.0 * (1 - st["free"] / st["total"])),
+                             "free %.2f GB of %.2f GB" % (st["free"] / 1e9, st["total"] / 1e9),
+                             likely=["journald or a diag log with no rotation",
+                                     "a model library sync that stopped half way"],
+                             check="du -sh /var/log/* /var/lib/pedal/library/*")
+            except (KeyError, TypeError, ZeroDivisionError):
+                continue
+
+        self.write_wiring_findings()
+
+    def write_wiring_findings(self):
+        """The USB devices the wiring needs, and the things that are absent by design."""
+        usb = self.dig("usb") or []
+        pico_usb = [d for d in usb if (d.get("vid"), d.get("pid")) == ("2e8a", "0009")]
+        probe = [d for d in usb if (d.get("vid"), d.get("pid")) == ("2e8a", "000c")]
+        if pico_usb:
+            self.add("ok", "wire.pico_usb",
+                     "the Pico's own USB is enumerated",
+                     "%s %s serial %s" % (pico_usb[0].get("path"), pico_usb[0].get("product"),
+                                          pico_usb[0].get("serial")),
+                     check="nothing — and it means the Pico is powered, so a silent link is a wire "
+                           "rather than a dead Pico")
+        else:
+            self.add("info", "wire.pico_usb_absent",
+                     "the Pico's USB console is not enumerated",
+                     "no 2e8a:0009 on the host",
+                     likely=["the Pico's USB cable is not fitted (the design feeds the Pico from the "
+                             "header instead, so this is often correct)",
+                             "the Pico has no power at all"],
+                     check="if you want the Pico's own console, fit its USB cable and read "
+                           "/dev/ttyACM0; the 5 V feed is on header pin 4")
+        if probe:
+            self.add("ok", "wire.probe", "the Debug Probe is attached to this host",
+                     "%s %s" % (probe[0].get("path"), probe[0].get("product")),
+                     check="nothing: it is an aid, and its absence is never a fault")
+        else:
+            self.add("info", "wire.probe_absent",
+                     "no Raspberry Pi Debug Probe is attached to this host",
+                     "no 2e8a:000c on this host's USB",
+                     likely=["it is on the Pico, on the Mac, or in a drawer"],
+                     check="nothing — the Pico's console is also reachable over its own USB, and "
+                           "the link's counters come from pedald")
+
+        smixer = self.iface.get("codec", {}).get("mixer_state")
+        if smixer:
+            mixer = self.dig("mixer") or {}
+            controls = mixer.get("controls") or 0
+            age = mixer.get("age_s")
+            if not controls and age is not None:
+                self.add("ok", "wire.mixer_stale",
+                         "the codec's mixer controls were readable %.0f s ago" % age,
+                         "amixer is only run every tenth sample: it forks, and --watch's budget "
+                         "is the point of --watch",
+                         check="nothing")
+            elif not controls:
+                self.add("info", "wire.mixer_unreadable",
+                         "the codec's mixer controls could not be read",
+                         "amixer -c wm8960 scontents on the host: rc=%s, %s" % (
+                             mixer.get("rc"), (mixer.get("text") or "no output").strip()[:80]),
+                         likely=["there is no wm8960 card, so there is no mixer",
+                                 "the caller is not root and not in the audio group, so "
+                                 "/dev/snd/controlC0 cannot be opened"],
+                         check="the codec section above, and the card list")
+            else:
+                self.add("ok", "wire.mixer_readable",
+                         "the codec's %d mixer controls are readable" % controls,
+                         "; ".join((mixer.get("float_db") or [])[:2]) or "no dB readouts",
+                         check="the values themselves are applied from %s by pedal-codec at boot; "
+                               "this only checks they can be read" % smixer)
+
+    def kmsg_has(self, needle):
+        for line in self.dig("kmsg_lines") or []:
+            if needle in line:
+                return line.strip()
+        return None
+
+    def thermal_zone(self):
+        zones = self.dig("thermal") or {}
+        for name, zone in sorted(zones.items()):
+            if zone.get("type") == "cpu-thermal":
+                return zone
+        return None
+
+    def levels_findings(self):
+        """The levels section: present only once namchain publishes them."""
+        levels = self.dig("engine", "levels")
+        if not levels:
+            features = self.dig("engine", "features") or []
+            self.add("info", "levels.unavailable",
+                     "audio levels are not available from this engine",
+                     "engine advertises %d features, none of them 'levels'; no engine.levels reply" % len(features),
+                     likely=["not built yet: namchain has no audio-level measurement at all as of "
+                             "b9ca368 (this plan adds engine.levels)"],
+                     check="the plan's namchain change; until then read the card's own counters and "
+                           "the render/queue numbers in engine.status")
+            return
+        inp = (levels.get("input") or {})
+        out = (levels.get("output") or {})
+        self.add("ok", "levels.present",
+                 "input peak %s dBFS, output peak %s dBFS" % (
+                     fmt_db(inp.get("peak")), fmt_db(out.get("peak"))),
+                 "clipped: in %s out %s; %d chain(s), %d node(s)" % (
+                     inp.get("clipped"), out.get("clipped"),
+                     len(levels.get("chains") or []),
+                     sum(len(c.get("nodes") or []) for c in levels.get("chains") or [])),
+                 check="nothing — these are the numbers the plan added for exactly this")
+        for name, side in (("input", inp), ("output", out)):
+            for channel, peak in enumerate(side.get("peak") or []):
+                if peak is not None and peak > -1.0:
+                    self.add("warn", "levels.hot",
+                             "the %s channel %d is at %.1f dBFS" % (name, channel, peak),
+                             "peak %s" % json.dumps(side.get("peak")),
+                             likely=["the source is hot: an instrument or a pedal in front",
+                                     "a chain's output level or a model's gain"],
+                             check="the rig's gain stages, and the input stage's Inst/Line switch")
+                elif peak is not None and peak <= -200.0 and name == "input":
+                    self.add("warn", "levels.silent_input",
+                             "the input is digitally silent",
+                             "input peak %s" % json.dumps(side.get("peak")),
+                             likely=["nothing is plugged in",
+                                     "ADCDAT is in the wrong socket (present clock, absent data)",
+                                     "the codec's PGA or boost mixer is off in the mixer state"],
+                             check="the lead in header pin 38 first: it is the historical one")
+
+    def finish(self):
+        self.findings.sort(key=lambda f: SEVERITY_ORDER.get(f["severity"], 9))
+        return self.findings
+
+
+def find_seed(iface, seed_id):
+    for seed in (iface or {}).get("known_fault_seeds") or []:
+        if seed.get("id") == seed_id:
+            return seed
+    return None
+
+
+def fmt_db(values):
+    if not values:
+        return "?"
+    return ", ".join("%.1f" % v if isinstance(v, (int, float)) else "?" for v in values)
+
+
+def parse_pcm_status(text):
+    """The /proc/asound status file as a dict. Keys keep their own spelling."""
+    out = {}
+    if not text:
+        return out
+    for line in text.splitlines():
+        if ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        key = key.strip().replace(" ", "_")
+        value = value.strip()
+        if key in ("state", "owner_pid"):
+            out[key] = value
+        else:
+            try:
+                out[key] = int(value)
+            except ValueError:
+                out[key] = value
+    return out
+
+
+def parse_hw_params(text):
+    """The hw_params file: 'rate: 48000 (48000/1)' and 'period_size: 64', one per line."""
+    out = {}
+    if not text:
+        return out
+    for line in text.splitlines():
+        if ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        key, value = key.strip(), value.strip()
+        if key in ("rate", "period_size", "buffer_size", "channels"):
+            try:
+                out[key] = int(value.split()[0])
+            except (ValueError, IndexError):
+                continue
+    return out
+
+
+def parse_registers(text):
+    """The regmap registers file as {address: value}."""
+    out = {}
+    for line in (text or "").splitlines():
+        head, _, rest = line.partition(":")
+        try:
+            out[int(head.strip(), 16)] = int(rest.strip(), 16)
+        except ValueError:
+            continue
+    return out
+
+
+# The one thing in this tool that writes to a bus, kept as text because it runs on the HOST, not
+# wherever the operator is: --probe embeds it in the sample and the host executes it. It is
+# deliberately absent from --watch, which must never touch a bus.
+def decode_codec_registers(registers):
+    """The registers worth naming, from the regmap dump (which is the cache, see i2c_read)."""
+    wanting = {
+        0x00: ("left input volume", None),
+        0x02: ("right input volume", None),
+        0x04: ("clocking 1 (PLL, SYSCLK)", None),
+        0x05: ("clocking 2 (DAC/ADC sample rate)", None),
+        0x06: ("audio interface (format, word length, master/slave)", None),
+        0x07: ("clocking (SYSCLK divide, DAC/ADC clocks, PLL enable)", None),
+        0x08: ("DAC control 1", None),
+        0x0A: ("DAC volume", None),
+        0x0D: ("ADC control 1 (ADCHPD)", None),
+        0x0F: ("ADC volume", None),
+        0x1A: ("power management 1 (VMID)", None),
+        0x1B: ("power management 2 (DAC, PLL, MICB, BOOST, LINE)", None),
+        0x1C: ("power management 3 (ADCs, input/output mixers)", None),
+        0x2F: ("class D control 1", None),
+        0x3A: ("class D control 3", None),
+    }
+    out = {}
+    for address, value in sorted((registers or {}).items()):
+        if address in wanting:
+            label, _ = wanting[address]
+            out["0x%02x %s" % (address, label)] = "0x%04x" % value
+    return out
+
+
+# --------------------------------------------------------------------------- rendering
+
+def render_text(report, sample, verbose=False):
+    lines = []
+    host = (sample.get("host") or {})
+    lines.append("%s — %s" % (TOOL, host.get("hostname") or "?"))
+    lines.append("  when     %s" % time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(sample.get("at") or now())))
+    lines.append("  host     %s" % (host.get("uname") or "?"))
+    lines.append("  interface model: %s" % (report.iface_path or "(not found — findings will name no wires)"))
+
+    counts = {}
+    for finding in report.findings:
+        counts[finding["severity"]] = counts.get(finding["severity"], 0) + 1
+    lines.append("  verdict  %s" % ", ".join(
+        "%d %s" % (counts[s], s) for s in ("fail", "warn", "info", "ok") if counts.get(s)))
+    lines.append("")
+
+    for finding in report.findings:
+        if finding["severity"] == "ok" and not verbose:
+            lines.append("  ok    %s" % finding["what"])
+            continue
+        lines.append("  %s  %s" % (SEVERITY_WORD.get(finding["severity"], "?"), finding["what"]))
+        if finding.get("evidence"):
+            for line in str(finding["evidence"]).splitlines():
+                lines.append("        evidence: %s" % line.strip())
+        for i, likely in enumerate(finding.get("likely") or []):
+            if not likely:
+                continue
+            lines.append("        %s %s" % ("likely:  " if i == 0 else "         ", likely))
+        if finding.get("check"):
+            lines.append("        check:    %s" % finding["check"])
+        if finding.get("seed"):
+            lines.append("        seen before: %s" % finding["seed"])
+        lines.append("")
+
+    add = []
+    add.append("  things software cannot see:")
+    for line in (report.iface.get("cannot_be_seen_from_software") or [])[:3]:
+        add.append("    - %s" % line)
+    lines += add
+    return "\n".join(lines)
+
+
+def render_json(report, sample):
+    return json.dumps({
+        "format": FORMAT,
+        "tool": TOOL,
+        "at": sample.get("at"),
+        "host": (sample.get("host") or {}).get("hostname"),
+        "findings": report.findings,
+        "counts": {s: sum(1 for f in report.findings if f["severity"] == s)
+                   for s in ("fail", "warn", "info", "ok")},
+        "sample": sample,
+    }, sort_keys=True, default=str)
+
+
+def worst(findings):
+    for finding in findings:
+        if finding["severity"] == "fail":
+            return "fail"
+    for finding in findings:
+        if finding["severity"] == "warn":
+            return "warn"
+    return "ok"
+
+
+# --------------------------------------------------------------------------- modes
+
+def build_report(sample, interface, interface_path):
+    report = Report(sample, interface, interface_path)
+    if interface is None:
+        report.add("warn", "interface.missing",
+                   "the interface model was not found, so findings cannot name a wire",
+                   "looked in: %s" % ", ".join(p for p in INTERFACE_PATHS if p),
+                   check="install devices/common/pedal-interface.json (pedal-device apply does), "
+                         "or pass --interface")
+    report.write_codec_findings()
+    report.write_audio_findings()
+    report.write_link_findings()
+    report.write_host_findings()
+    report.levels_findings()
+    report.finish()
+    return report
+
+
+def mode_report(args, interface, interface_path):
+    sample = gather(args)
+    report = build_report(sample, interface, interface_path)
+    if args.json_out:
+        print(render_json(report, sample))
+    else:
+        print(render_text(report, sample, verbose=args.verbose))
+    return 1 if worst(report.findings) == "fail" else 0
+
+
+def watch_line(args, sample, previous, report, wall=None):
+    """One sample as the two lines a watch log is made of.
+
+    A line per sample, and — every `--deep-every` samples — a second line carrying the whole
+    raw sample. The first line is what a person or a grep wants (the numbers, their deltas, and
+    the findings that are not fine); the second is the evidence a finding came from, kept
+    because a log that cannot be re-examined is a log nobody trusts, and kept RARE because it is
+    fifteen kilobytes and the host has 1 GB of RAM.
+    """
+    deep = "deep_skipped" not in sample
+    line = {
+        "t": round(time.time(), 3),
+        "kind": "sample",
+        "deep": deep,
+        "worst": worst(report.findings),
+        "counts": {s: sum(1 for f in report.findings if f["severity"] == s)
+                   for s in ("fail", "warn", "info", "ok")},
+        "findings": [f for f in report.findings if f["severity"] != "ok"],
+        "readings": {
+            "engine_state": dig(sample, ("engine", "status", "state")),
+            "health": dig(sample, ("engine", "status", "health")),
+            "issues": dig(sample, ("engine", "status", "issues")),
+            "rig_name": dig(sample, ("engine", "status", "rig_name")),
+            "xruns": dig(sample, ("engine", "status", "xruns")),
+            "guard_trips": dig(sample, ("engine", "status", "guard_trips")),
+            "render_worst_percent": dig(sample, ("engine", "status", "render", "worst_percent")),
+            "output_queue_drops": dig(sample, ("engine", "status", "queue", "output_drops")),
+            "capture_bursts": dig(sample, ("engine", "status", "queue", "capture_bursts")),
+            "link_session": dig(sample, ("service", "link", "session")),
+            "frames_ok": dig(sample, ("service", "link", "frames_ok")),
+            "frames_bad": dig(sample, ("service", "link", "frames_bad")),
+            "pico_fw": dig(sample, ("service", "link", "pico", "fw")),
+            "cpu_thermal_mc": dig(sample, ("thermal", "thermal_zone0", "temp_mc")),
+            "mem_available_kb": dig(sample, ("memory", "MemAvailable")),
+            "percent_available": percent_available(sample),
+            "engine_levels": dig(sample, ("engine", "levels")),
+        },
+    }
+    if previous is not None:
+        line["deltas"] = delta(previous, sample)
+    # The tool's own cost, in the log rather than only on stderr: the budget is a claim about
+    # this tool and a claim nobody can check is not much of a claim.
+    line["cost"] = {"pedal_cpu_s": sample.get("cost_cpu_s"), "wall_s": wall}
+    return line, ({"t": line["t"], "kind": "evidence", "sample": sample} if deep else None)
+
+
+def percent_available(sample):
+    """How much RAM is left, which on a 1 GB board is a number worth watching."""
+    try:
+        total = int(dig(sample, ("memory", "MemTotal")) or 0)
+        free = int(dig(sample, ("memory", "MemAvailable")) or 0)
+        return round(100.0 * free / total, 1) if total else None
+    except (TypeError, ValueError):
+        return None
+
+
+def mode_watch(args, interface, interface_path):
+    out = args.out
+    if out == DEFAULT_LOG and not exists(os.path.dirname(out)):
+        out = os.path.join(os.getcwd(), "diag.jsonl")
+    started = time.monotonic()
+    samples = 0
+    cpu = 0.0
+    costs = []
+    busy = 0.0
+    previous = None
+    stale = {}
+    try:
+        while True:
+            began = time.monotonic()
+            args.advance_sample = True
+            try:
+                sample = gather(args)
+            except SystemExit as exc:
+                print("%s: %s" % (TOOL, exc), file=sys.stderr)
+                time.sleep(args.interval)
+                continue
+            # The forking checks only ran on deep samples: carry their last answer forward, with
+            # how old it is, so a non-deep sample reports a stale fact rather than an absent one.
+            for name in ("pedal_tune_check", "pedal_device_status", "mixer"):
+                if name in sample:
+                    stale[name] = {"value": sample[name], "at": sample.get("at")}
+                elif name in stale:
+                    sample[name] = dict(stale[name]["value"])
+                    sample[name]["age_s"] = round((sample.get("at") or 0) - stale[name]["at"], 1)
+            report = build_report(sample, interface, interface_path)
+            line, evidence = watch_line(args, sample, previous, report,
+                                         wall=round(time.monotonic() - began, 3))
+            previous = sample
+            body = json.dumps(line, sort_keys=True, default=str) + "\n"
+            if evidence:
+                body += json.dumps(evidence, sort_keys=True, default=str) + "\n"
+            if out:
+                with open(out, "a") as f:
+                    f.write(body)
+                rotate(out, args.keep)
+            if not args.quiet:
+                sys.stdout.write(body)
+                sys.stdout.flush()
+            samples += 1
+            costs.append(float(sample.get("cost_cpu_s") or 0.0))
+            # The mean quoted to the owner drops the slowest sample, which is sudo's first
+            # invocation: a per-sample number should not be dominated by a one-off.
+            ranked = sorted(costs)
+            measured = ranked[:-1] if len(ranked) > 5 else ranked
+            cpu = sum(measured)
+            spent = time.monotonic() - began
+            busy += spent
+            if not args.quiet and samples % 10 == 0:
+                print(cost_line(samples, cpu, time.monotonic() - started, args.interval),
+                      file=sys.stderr)
+                if busy / samples > args.interval:
+                    print("       (a sample takes %.1fs of wall time here, longer than the "
+                          "interval: the log is being sampled as fast as it can be)"
+                          % (busy / samples), file=sys.stderr)
+            time.sleep(max(0.0, args.interval - spent))
+    except KeyboardInterrupt:
+        print(cost_line(samples, cpu, time.monotonic() - started, args.interval), file=sys.stderr)
+    return 0
+
+
+def cost_line(samples, cpu_seconds, elapsed, interval):
+    """What the sampler is actually costing on the pedal, printed rather than asserted.
+
+    The number is the gatherer's whole process tree, read from /proc by that process itself (and
+    it *is* the tree: inside a `sudo` wrapper `os.times()` reported a quarter of the truth). It
+    covers the reads, the children — systemctl, amixer, dmesg — the interpreter's own start, and
+    sudo's first-invocation cost, which is a one-off: the first sample of a remote run is a
+    second or two slower than the rest, so the mean is quoted with the slowest sample dropped.
+    """
+    if not samples or not elapsed:
+        return "%s: nothing sampled" % TOOL
+    per = cpu_seconds / samples
+    share = 100.0 * per / max(interval, 0.001)
+    return ("%s: %d samples, %.0f ms cpu each on the pedal, %.2f%% of one core at a %.1fs interval%s"
+            % (TOOL, samples, per * 1000.0, share, interval,
+               "  (over the 1% budget: raise --interval, or --deep-every)"
+               if share > 1.0 else ""))
+
+
+def dig(node, path):
+    """A nested dict lookup that returns None instead of raising: half of this data is absent."""
+    for key in path:
+        if not isinstance(node, dict) or key not in node:
+            return None
+        node = node[key]
+    return node
+
+
+def delta(previous, sample):
+    """What changed between two samples, for the numbers where a rate is the point.
+
+    Cumulative counters are only useful as deltas: 24,000 frames is a fact, 24 frames a second is
+    a diagnosis. Everything here is either a difference or a thing whose change is itself news.
+    """
+    out = {}
+    counters = (
+        ("service.link.frames_ok", ("service", "link", "frames_ok")),
+        ("service.link.frames_bad", ("service", "link", "frames_bad")),
+        ("engine.xruns", ("engine", "status", "xruns")),
+        ("engine.guard_trips", ("engine", "status", "guard_trips")),
+        ("engine.render_errors", ("engine", "status", "render_errors")),
+        ("engine.device_lost", ("engine", "status", "device_lost")),
+        ("engine.queue.output_drops", ("engine", "status", "queue", "output_drops")),
+    )
+    for name, path in counters:
+        a = dig(previous, path)
+        b = dig(sample, path)
+        if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+            out[name] = b - a
+    now_t, was_t = sample.get("at"), previous.get("at")
+    if now_t and was_t and now_t > was_t:
+        out["elapsed_s"] = round(now_t - was_t, 3)
+        for name in ("service.link.frames_ok", "service.link.frames_bad", "engine.xruns"):
+            if name in out:
+                out[name + "_per_s"] = round(out[name] / out["elapsed_s"], 2)
+    for name, path in (("engine.render.worst_percent", ("engine", "status", "render", "worst_percent")),
+                       ("engine.state", ("engine", "status", "state")),
+                       ("engine.rig_name", ("engine", "status", "rig_name")),
+                       ("link.session", ("service", "link", "session")),
+                       ("cpu-thermal_mc", ("thermal", "thermal_zone0", "temp_mc")),
+                       ("audio_irq_affinity", ("audio_irq", "affinity_mask"))):
+        a = dig(previous, path)
+        b = dig(sample, path)
+        if a != b and b is not None:
+            out[name] = b
+    return out
+
+
+def rotate(path, keep=24):
+    """Keep the log bounded: the whole point is to leave it running, and the host has 1 GB.
+
+    Hourly files, `keep` of them, plus the live one. Renaming the live file is atomic enough
+    for this (one writer, appended lines), and it costs nothing until the hour turns.
+    """
+    if keep <= 0 or not exists(path):
+        return
+    try:
+        stamp = time.strftime("%Y%m%d%H", time.localtime(os.path.getmtime(path)))
+        if stamp == time.strftime("%Y%m%d%H", time.localtime()):
+            return
+        rotated = "%s.%s" % (path, stamp)
+        if not exists(rotated):
+            os.rename(path, rotated)
+        old = sorted(glob.glob(path + ".*"))
+        for dead in old[:-keep]:
+            os.unlink(dead)
+    except OSError:
+        pass
+
+
+def mode_deltas(args, interface, interface_path):
+    """Read a --watch log back and say what changed.
+
+    This is what makes a long log usable: a sample on its own says "xruns 2", and two samples say
+    "2 in an hour" or "2 in ten seconds", which are different diagnoses. Evidence lines are
+    ignored here (they are the same numbers, in full) and a sample line's own deltas are preferred
+    to a re-computation, because the deltas were taken on the clock the samples were.
+    """
+    rows = []
+    with open(args.deltas) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except ValueError:
+                continue
+            if row.get("kind") == "sample" or "readings" in row:
+                rows.append(row)
+    if not rows:
+        print("%s: %s has no sample lines" % (TOOL, args.deltas))
+        return 2
+    if args.since:
+        cut = time.time() - args.since
+        rows = [r for r in rows if (r.get("t") or 0) >= cut]
+    if not rows:
+        print("%s: no samples in the last %s" % (TOOL, human_seconds(args.since)))
+        return 2
+
+    first, last = rows[0], rows[-1]
+    span = (last.get("t") or 0) - (first.get("t") or 0)
+    print("%s: %d samples over %s%s" % (
+        TOOL, len(rows), human_seconds(span),
+        "" if len(rows) < 2 else ", one every %s" % human_seconds(span / (len(rows) - 1))))
+    print("  worst finding seen: %s" % worst_of(rows))
+
+    def reading(row, key):
+        return dig(row.get("readings") or {}, (key,))
+
+    counters = ("xruns", "guard_trips", "frames_ok", "frames_bad", "output_queue_drops",
+                "capture_bursts")
+    for key in counters:
+        a, b = reading(first, key), reading(last, key)
+        if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+            if b == a:
+                print("  %-24s %s, unchanged over %s" % (key, b, human_seconds(span)))
+            else:
+                rate = (b - a) / span if span else 0.0
+                print("  %-24s %s -> %s over %s (%+.3f/s)" % (key, a, b, human_seconds(span), rate))
+
+    moved = [r for r in rows if r.get("readings", {}).get("engine_state") != reading(first, "engine_state")]
+    if moved:
+        print("  %-24s %s -> %s (%d samples in the new state)" % (
+            "engine state", reading(first, "engine_state"),
+            reading(last, "engine_state"), len(moved)))
+    sessions = {reading(r, "link_session") for r in rows}
+    if len(sessions) > 1:
+        print("  %-24s changed %d times (the link dropped and came back)" % ("link session", len(sessions) - 1))
+    rigs = {reading(r, "rig_name") for r in rows}
+    if len(rigs) > 1:
+        print("  %-24s %s" % ("rigs seen", ", ".join(sorted(str(r) for r in rigs))))
+
+    temps = [reading(r, "cpu_thermal_mc") for r in rows]
+    temps = [t for t in temps if isinstance(t, (int, float))]
+    if temps:
+        print("  %-24s %s..%s (mean %s)" % ("cpu-thermal", celsius(min(temps)),
+                                            celsius(max(temps)), celsius(mean(temps))))
+    mem = [reading(r, "percent_available") for r in rows]
+    mem = [m for m in mem if isinstance(m, (int, float))]
+    if mem:
+        print("  %-24s %.1f%%..%.1f%% available" % ("memory", min(mem), max(mem)))
+    renders = [reading(r, "render_worst_percent") for r in rows]
+    renders = [w for w in renders if isinstance(w, (int, float))]
+    if renders:
+        print("  %-24s %.1f%% worst block (deadline is 100%%)" % ("render", max(renders)))
+    irqs = {reading(r, "audio_irq_affinity") for r in rows}
+    if len(irqs) > 1:
+        print("  %-24s changed %d times" % ("audio IRQ affinity", len(irqs) - 1))
+
+    seen = {}
+    for row in rows:
+        for finding in row.get("findings") or []:
+            key = (finding.get("severity"), finding.get("key"))
+            entry = seen.setdefault(key, [0, finding.get("what"), finding.get("check")])
+            entry[0] += 1
+    if seen:
+        print("  findings (%d samples; the loudest first):" % len(rows))
+        for (severity, key), (count, what, check) in sorted(
+                seen.items(), key=lambda kv: (SEVERITY_ORDER.get(kv[0][0], 9), -kv[1][0])):
+            print("    %-5s %-26s %4d/%d  %s" % (severity, key, count, len(rows), what))
+            if severity in ("fail", "warn") and check:
+                print("          -> %s" % check)
+    else:
+        print("  findings: none beyond the ok lines")
+    if any(r.get("deep") for r in rows):
+        full = [r for r in rows if r.get("deep")]
+        print("  %d of the samples carry the full evidence in this log" % len(full))
+    return 0
+
+
+def worst_of(rows):
+    order = {"fail": 0, "warn": 1, "info": 2, "ok": 3}
+    return sorted((r.get("worst") or "ok" for r in rows), key=lambda w: order.get(w, 9))[0]
+
+
+def human_seconds(s):
+    if not s:
+        return "0 s"
+    if s < 90:
+        return "%.1f s" % s
+    if s < 5400:
+        return "%.1f min" % (s / 60.0)
+    return "%.1f h" % (s / 3600.0)
+
+
+# --------------------------------------------------------------------------- --probe
+
+def mode_probe(args, interface, interface_path):
+    """The invasive checks, and nothing else.
+
+    These are the ones that can change what is being measured, so they are separate from
+    --watch and they refuse to run while the engine is playing:
+      - the Pico's own console: opening /dev/ttyACM0 steals the line from anything reading it,
+        and writing feeds bytes to a firmware that may be in the middle of a session
+      - a deep codec read with the regmap cache bypassed: real I2C traffic on the bus the audio
+        codec shares with nothing else, which is safe, but it is not free
+    """
+    sample = gather(args)
+    playing = dig(sample, ("engine", "status", "state")) == "running"
+    say = (lambda *a: None) if args.json_out else print
+    say("%s --probe on %s" % (TOOL, (sample.get("host") or {}).get("hostname")))
+    probed = sample.get("i2c_probe") or {}
+    say("  codec chip: read from the driver's register cache only (%s)" % (probed.get("why") or "no chip read"))
+    if playing:
+        say("  the engine is running: the Pico's console is NOT being opened, and neither is")
+        say("  anything else that could disturb a live stream. Stop the engine to probe it.")
+    else:
+        probe_pico_console(sample, args, say)
+    report = build_report(sample, interface, interface_path)
+    if args.json_out:
+        print(render_json(report, sample))
+    else:
+        print()
+        print(render_text(report, sample, verbose=True))
+    return 1 if worst(report.findings) == "fail" else 0
+
+
+def read_for(fd, seconds):
+    out = ""
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        ready, _, _ = select.select([fd], [], [], 0.1)
+        if not ready:
+            continue
+        try:
+            chunk = os.read(fd, 4096)
+        except (BlockingIOError, OSError):
+            continue
+        if chunk:
+            out += chunk.decode("utf-8", "replace")
+    return out
+
+
+# --------------------------------------------------------------------------- --fixtures
+
+def mode_fixtures(args, interface, interface_path):
+    names = sorted(glob.glob(os.path.join(args.fixtures, "*.json")))
+    if not names:
+        print("%s: no *.json samples under %s" % (TOOL, args.fixtures))
+        return 2
+    rc = 0
+    for name in names:
+        with open(name) as f:
+            sample = json.load(f)
+        report = build_report(sample, interface, interface_path)
+        print("=== %s" % os.path.basename(name))
+        print(render_text(report, sample, verbose=args.verbose))
+        print()
+        if worst(report.findings) == "fail":
+            rc = 1
+    return rc
+
+
+# --------------------------------------------------------------------------- --selftest
+
+SELFTESTS = []
+
+
+def selftest(fn):
+    SELFTESTS.append(fn)
+    return fn
+
+
+@selftest
+def test_pcm_status():
+    text = ("state: RUNNING\nowner_pid   : 2128\ntrigger_time: 1791207195.604324534\n"
+            "tstamp      : 0.000000000\ndelay       : 24\navail       : 24\navail_max   : 24\n"
+            "-----\nhw_ptr      : 81551000\nappl_ptr    : 81550976\n")
+    out = parse_pcm_status(text)
+    assert out["state"] == "RUNNING", out
+    assert out["owner_pid"] == "2128", out
+    assert out["delay"] == 24 and out["avail_max"] == 24, out
+    assert out["hw_ptr"] == 81551000, out
+    assert parse_pcm_status("") == {}
+
+
+@selftest
+def test_hw_params():
+    text = ("access: RW_INTERLEAVED\nformat: S32_LE\nsubformat: STD\nchannels: 2\n"
+            "rate: 48000 (48000/1)\nperiod_size: 64\nbuffer_size: 384\n")
+    out = parse_hw_params(text)
+    assert out == {"rate": 48000, "period_size": 64, "buffer_size": 384, "channels": 2}, out
+
+
+@selftest
+def test_registers():
+    text = "00: 8960\n01: 0117\n02: 0173\n0b: 0000\n"
+    out = parse_registers(text)
+    assert out[0] == 0x8960 and out[0x0b] == 0, out
+
+
+@selftest
+def test_wire_frames():
+    body = b'{"ok":true}'
+    frame = struct.pack("<I", len(body)) + body
+    assert struct.unpack("<I", frame[:4])[0] == len(body)
+
+
+def run_selftests():
+    failures = 0
+    for fn in SELFTESTS:
+        try:
+            fn()
+            print("  ok    %s" % fn.__name__)
+        except AssertionError as exc:
+            failures += 1
+            print("  FAIL  %s: %s" % (fn.__name__, exc))
+    print("%s: %d test(s), %d failure(s)" % (TOOL, len(SELFTESTS), failures))
+    return 1 if failures else 0
+
+
+# --------------------------------------------------------------------------- main
+
+_deep_every = 10
+_tune_every = 240
+
+
+def gather(args):
+    """One sample, from wherever the data is.
+
+    The cadence flags travel as ARGUMENTS, not through the environment: sudo strips the
+    environment by default, so an env var set here never arrives on the far side of
+    `sudo -n python3 -` (found the hard way — the first version's cadence silently never changed).
+    """
+    if args.sample:
+        with open(args.sample) as f:
+            return json.load(f)
+    probe = bool(getattr(args, "probe", False))
+    index = getattr(args, "sample_index", 0)
+    if getattr(args, "advance_sample", False):
+        args.sample_index = index + 1
+    elif getattr(args, "reset_sample", False):
+        # A one-shot report computes everything: it is one sample, and the owner asked for it now.
+        index = 0
+    globals()["_deep_every"] = int(getattr(args, "deep_every", 10) or 10)
+    globals()["_tune_every"] = int(getattr(args, "tune_every", 240) or 240)
+    if args.host:
+        return gather_remote(args.host, args.ssh_opt, probe=probe, sample_index=index,
+                             deep_every=_deep_every, tune_every=_tune_every)
+    return gather_local(probe=probe, sample_index=index,
+                        deep_every=_deep_every, tune_every=_tune_every)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog=TOOL, description=__doc__.splitlines()[0],
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="Exit 0 when nothing is worse than a warning, 1 when anything is a fail.")
+    parser.add_argument("--host", help="gather on this host over ssh instead of here")
+    parser.add_argument("--ssh-opt", action="append", help="extra -o option for ssh (repeatable)")
+    parser.add_argument("--interface", help="the interface model to read")
+    parser.add_argument("--json", dest="json_out", action="store_true",
+                        help="one JSON object instead of the report")
+    parser.add_argument("--verbose", action="store_true", help="include the lines that are fine")
+    parser.add_argument("--watch", action="store_true", help="sample continuously")
+    parser.add_argument("--interval", type=float, default=DEFAULT_INTERVAL_S,
+                        help="seconds between samples in --watch (default %.1f, floor %.1f)"
+                             % (DEFAULT_INTERVAL_S, MIN_INTERVAL_S))
+    parser.add_argument("--out", default=DEFAULT_LOG,
+                        help="where --watch writes its JSON lines (default %s on the host)" % DEFAULT_LOG)
+    parser.add_argument("--quiet", action="store_true", help="--watch: log only, no stdout")
+    parser.add_argument("--keep", type=int, default=24, help="--watch: rotated files to keep")
+    parser.add_argument("--deep-every", type=int, default=10,
+                        help="--watch: run the forking checks (systemctl, amixer, dmesg) once "
+                             "every N samples (default 10)")
+    parser.add_argument("--tune-every", type=int, default=240,
+                        help="--watch: run `pedal-tune check` once every N samples (default 240, "
+                             "about ten minutes at 2.5 s: it costs ~2 s of CPU, and the tuning "
+                             "facts are read from the files every sample anyway)")
+    parser.add_argument("--deltas", metavar="FILE", help="read a --watch log and report what changed")
+    parser.add_argument("--since", type=float, help="--deltas: only the last N seconds")
+    parser.add_argument("--probe", action="store_true",
+                        help="the invasive checks (refuses while the engine is playing)")
+    parser.add_argument("--console", help="--probe: the Pico console device (default /dev/ttyACM0)")
+    parser.add_argument("--fixtures", help="render reports from *.json samples in this directory")
+    parser.add_argument("--sample", help="render a report from one captured sample (used by tests)")
+    parser.add_argument("--selftest", action="store_true", help="run the tool's own tests")
+    parser.add_argument("--version", action="version", version="%s, format %d" % (TOOL, FORMAT))
+    args = parser.parse_args(argv)
+
+    if args.selftest:
+        return run_selftests()
+    if args.interval < MIN_INTERVAL_S:
+        args.interval = MIN_INTERVAL_S
+
+    interface, interface_path = load_interface([args.interface] if args.interface else None)
+
+    if args.deltas:
+        return mode_deltas(args, interface, interface_path)
+    if args.fixtures:
+        return mode_fixtures(args, interface, interface_path)
+    if args.watch:
+        return mode_watch(args, interface, interface_path)
+    args.reset_sample = True
+    if args.probe:
+        return mode_probe(args, interface, interface_path)
+    return mode_report(args, interface, interface_path)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

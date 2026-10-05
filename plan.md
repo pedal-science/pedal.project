@@ -1101,6 +1101,19 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**Diagnostics landed** (2026-10-05, this session): `scripts/diag` /
+`devices/common/rootfs/usr/local/sbin/pedal-diag` reads everything the host, the codec, the Pico
+link and both local sockets will say about themselves, compares it with
+`devices/common/pedal-interface.json` (the wiring tables as data) and prints what is wrong, the
+evidence, the likely cause naming a physical thing, and the measurement that closes it. Modes: a
+report, `--json`, `--watch` (continuous, ~1.5 ms CPU and ~2.8 kB a sample, its own cost printed),
+`--deltas` (what changed over a long run), `--probe` (the invasive checks; refuses while the engine
+plays) and `--selftest`. `pedal-diag.service` runs it on demand in the loose profile; `pedald`'s
+`/status` gained the link's byte counters, drop count and last-rx age, which is what makes a rate
+possible. Design and the I2C dead end: [docs/diagnostics.md](docs/diagnostics.md). The audio-level
+half of the plan — `engine.levels` in namchain and the meters in ljoss — is **not built yet**, and
+the report says so rather than printing zeros.
+
 **3.6's power question is answered: the header feed holds, the USB-A port does not — and the codec is
 down** (2026-10-05). The instrument is the pedal's own: the Pico prints `fw: up N s` on its USB
 console every 5 s, and `N` counts from the Pico's own reset, so it measures **power** where `dmesg`

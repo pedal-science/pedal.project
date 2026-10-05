@@ -34,7 +34,9 @@ journal.
 - **115200 baud** to start. Worst-case frame is 6.1 ms (see Timing); a real event is under 1 ms.
   If step 4's measurements show the event-to-sound budget needs it, both ends move together and
   this line changes.
-- Pico side, on the bench: UART0, **GP0 = TX, GP1 = RX**. The panel wiring is step 5's business.
+- Pico side, on the bench: UART0, **GP0 = TX, GP1 = RX**. (The pins, the fault each lead
+  produces and how to check it are in `devices/common/pedal-interface.json`, which
+  `scripts/diag` checks against: docs/diagnostics.md.) The panel wiring is step 5's business.
   RX is pulled up, because a floating RX invents bytes.
 - Core host side: a UART on the 40-pin header that carries **nothing but this link**: no kernel
   console, no getty, no SysRq. On piv, header pins 8/10 are `ttyAMA0`, and its kernel console is
@@ -235,7 +237,7 @@ engine. Heartbeats at 250 ms with nothing else happening are about 0.4% of the l
   The firmware implements this document today (`firmware/src/protocol.c`); the service end was a
   test script until v1 was built — it is now `pedald`
   (`devices/common/rootfs/usr/local/lib/pedald/`, design: `docs/pedal-service.md`, its v1), with
-  114 unit tests of its own (`devices/common/test-pedald`) and a live session against the Pico on
+  149 unit tests of its own (`devices/common/test-pedald`) and a live session against the Pico on
   vip (`bench-results/2026-10-04-pedald-on-vip.md`).
   Evidence:
   `bench-results/2026-09-28-pico-protocol-loopback.txt`.

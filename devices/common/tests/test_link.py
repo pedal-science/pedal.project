@@ -65,6 +65,34 @@ class LinkOverPty(unittest.TestCase):
         self.link.send(b"\xa5\x5a\x06\x01\x42\x00\x00")
         self.assertEqual(read_all(self.master), b"\xa5\x5a\x06\x01\x42\x00\x00")
 
+    def test_the_counters_and_timestamps_move_with_the_traffic(self):
+        """What /status and pedal-diag read: a total, and when it was last true.
+
+        A counter without a clock cannot say whether the link is alive, so both are asserted
+        here rather than only in the handler's test (where the link is faked).
+        """
+        session = StubSession()
+        self.link.attach(session)
+        self.assertTrue(self.link.open_port())
+        self.assertEqual((self.link.bytes_in, self.link.bytes_out, self.link.drops), (0, 0, 0))
+        self.assertIsNone(self.link.last_rx_at)
+        self.assertIsNotNone(self.link.opened_at)
+
+        os.write(self.master, b"\xa5\x5aabcdef")
+        self.link.poll(0.5)
+        self.assertEqual(self.link.bytes_in, 8)
+        self.assertIsNotNone(self.link.last_rx_at)
+
+        self.link.send(b"\xa5\x5a\x06\x01\x42\x00\x00")
+        read_all(self.master)
+        self.assertEqual(self.link.bytes_out, 7)
+        self.assertIsNotNone(self.link.last_tx_at)
+
+        # A port that goes away is counted: the difference between "the Pico reset twice" and
+        # "the Pico has never been heard from" is the whole diagnosis.
+        self.link._drop("test")
+        self.assertEqual(self.link.drops, 1)
+
     def test_a_session_answers_hello_through_the_link(self):
         session = protocol.Session(self.link.send)
         self.link.attach(session)

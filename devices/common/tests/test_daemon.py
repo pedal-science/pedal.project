@@ -53,7 +53,10 @@ def fake_service(status=None, engine_down=False, link_open=True, session_up=True
     service.engine_down = engine_down
     service.mapping = mapping.Mapping(["Crunch Lead", "Ambient Wash"])
     service.mapping.note_rig("Crunch Lead")
-    service.link = types.SimpleNamespace(open=link_open)
+    service.link = types.SimpleNamespace(open=link_open, bytes_in=4096, bytes_out=512,
+                                         drops=0, last_rx_at=time.monotonic() - 0.5,
+                                         last_tx_at=time.monotonic() - 1.5,
+                                         opened_at=time.monotonic() - 30.0)
     service.session = types.SimpleNamespace(session_up=session_up, frames_ok=12, frames_bad=1)
     service.pico = pico or {"fw": "0.1", "major": 1, "minor": 0, "caps": 0}
     service.bypass = False
@@ -71,6 +74,12 @@ class Status(unittest.TestCase):
         self.assertEqual(body["bank"]["current"], "Crunch Lead")
         self.assertEqual(body["bank"]["size"], 2)
         self.assertGreater(body["service"]["uptime_s"], 12)
+        # The freshness of the link, which is what makes a rate possible: a counter alone cannot
+        # say whether anything is arriving now.
+        self.assertEqual(body["link"]["bytes_in"], 4096)
+        self.assertEqual(body["link"]["drops"], 0)
+        self.assertAlmostEqual(body["link"]["last_rx_s_ago"], 0.5, delta=0.5)
+        self.assertAlmostEqual(body["link"]["open_s"], 30.0, delta=1.0)
 
     def test_an_unreachable_engine_is_reported_not_invented(self):
         _, body = fake_service(status={}, engine_down=True).handle_status(None)
