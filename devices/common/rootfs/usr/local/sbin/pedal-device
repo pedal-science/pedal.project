@@ -133,7 +133,7 @@ mask_units() {
 # The image build: enable what apply would enable, start nothing. The first boot brings it into force.
 activate_offline() {
   local u
-  for u in pedal-tune.service pedald.service pedal-codec.service pedal-wifi.service; do
+  for u in pedal-tune.service pedal-uart.service pedald.service pedal-codec.service pedal-wifi.service; do
     [[ -e $ROOT/etc/systemd/system/$u ]] || continue
     run sctl enable "$u" >/dev/null 2>&1
     echo "  enabled   $u"
@@ -183,6 +183,13 @@ activate() {
   # pedald carries the resume job now, so pedal-resume retires and the user it runs as is made.
   retire_resume
   sysusers
+  # The link's UART, before the service that opens it. Restarted rather than only enabled, so a
+  # host whose boot lost the node gets it back without a reboot: 2026-10-05, a re-paved card came
+  # up with serial@30000 disabled and pedald had no /dev/ttyAMA0 to open.
+  if [[ -e /etc/systemd/system/pedal-uart.service ]]; then
+    run systemctl enable pedal-uart.service
+    run systemctl restart pedal-uart.service
+  fi
   run systemctl enable pedald.service
   run systemctl restart --no-block pedald.service
   # Every Pi host ships this unit; it fails, harmlessly, where no codec is wired.
@@ -221,6 +228,8 @@ do_revert() {
   local kind what
   [[ -r $MANIFEST ]] || { say "nothing to revert: no $MANIFEST"; exit 0; }
   systemctl cat pedal-tune.service >/dev/null 2>&1 && run systemctl disable --now pedal-tune.service
+  # The overlay it loaded stays in the tree until the next reboot, as the codec's does.
+  systemctl cat pedal-uart.service >/dev/null 2>&1 && run systemctl disable pedal-uart.service
   systemctl cat pedald.service >/dev/null 2>&1 && run systemctl disable --now pedald.service
   systemctl cat pedal-resume.service >/dev/null 2>&1 && run systemctl disable --now pedal-resume.service
   systemctl cat pedal-codec.service >/dev/null 2>&1 && run systemctl disable pedal-codec.service

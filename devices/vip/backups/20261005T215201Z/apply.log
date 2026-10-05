@@ -1,0 +1,7 @@
+  installed /etc/pedal/uart/uart0-enable.dts
+  installed /etc/systemd/system/pedal-uart.service
+  installed /usr/local/sbin/pedal-device
+  installed /usr/local/sbin/pedal-uart
+Created symlink '/etc/systemd/system/multi-user.target.wants/pedal-uart.service' → '/etc/systemd/system/pedal-uart.service'.
+Unit /etc/systemd/system/pedal-wifi.service is added as a dependency to a non-existent unit sys-subsystem-net-devices-wlan0.device.
+pedal-device: done. Manifest: /var/lib/pedal/manifest

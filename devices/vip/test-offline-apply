@@ -53,9 +53,11 @@ check "codec files from common" '[[ -f $R/etc/pedal/codec/wm8960-codec-master.dt
 check "no piv-only files" '[[ ! -e $R/etc/wireplumber ]]'
 check "manifest paths are the host's, not the build's" '! grep -q /work "$R/var/lib/pedal/manifest" && grep -qx "file /etc/pedal/tune.conf" "$R/var/lib/pedal/manifest"'
 check "applied stamp" 'grep -qx "commit=test" $R/etc/pedal/applied && grep -qx "applied=1970-01-01T00:00:00Z" $R/etc/pedal/applied'
-for u in pedal-tune pedald pedal-codec; do
+for u in pedal-tune pedal-uart pedald pedal-codec; do
   check "$u enabled for multi-user" '[[ -L $R/etc/systemd/system/multi-user.target.wants/$u.service ]]'
 done
+check "the link's UART overlay is installed" '[[ -f $R/etc/pedal/uart/uart0-enable.dts && -x $R/usr/local/sbin/pedal-uart ]]'
+check "and pedal-uart runs before pedald" 'grep -qx "Before=pedald.service" $R/etc/systemd/system/pedal-uart.service'
 check "pedald's package and entry point are installed" '[[ -f $R/usr/local/lib/pedald/daemon.py && -x $R/usr/local/sbin/pedald && -f $R/etc/pedal/pedald.json ]]'
 check "pedal-resume is retired" '[[ ! -e $R/etc/systemd/system/pedal-resume.service && ! -e $R/usr/local/sbin/pedal-resume ]]'
 check "the service's user exists in the image" 'grep -q "^pedal:" $R/etc/passwd'

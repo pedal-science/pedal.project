@@ -1,0 +1,13 @@
+[Unit]
+Description=Pedal: enable the header UART the Pico's link lives on
+Documentation=file:/usr/local/sbin/pedal-uart
+# The link's device has to exist before the service that opens it starts.
+Before=pedald.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/pedal-uart
+
+[Install]
+WantedBy=multi-user.target

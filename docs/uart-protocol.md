@@ -43,6 +43,14 @@ journal.
   there (`console=ttyAMA0,115200`), so step 4 either moves the console or takes another UART. A
   console would put boot messages on the Pico's RX, and a Pico that resets holds its TX low,
   which a console reads as a break: the start of a SysRq. Both ends are 3.3 V.
+- On **vip** the header UART is RP1's UART0 (`serial@30000`, pins 8/10 = `ttyAMA0`) and the console
+  is elsewhere (`ttyAMA10`), so the link has the port to itself. The stock device tree ships that
+  node `status = "disabled"`, and `enable_uart=1` in the boot partition was not enough to bring it
+  up after a card rewrite on 2026-10-05 — so the pedal enables it itself: `pedal-uart.service`
+  loads `devices/common/rootfs/etc/pedal/uart/uart0-enable.dts` before `pedald.service` starts.
+  That is the same runtime-overlay arrangement the codec uses, and for the same reasons. If
+  `/dev/ttyAMA0` is missing, that unit is where to look:
+  [bench-results/2026-10-05-header-uart-disabled.md](../bench-results/2026-10-05-header-uart-disabled.md).
 - Byte order: little-endian for multi-byte integers. A string is a `str8`: one length byte, then
   that many bytes of UTF-8, not NUL-terminated.
 

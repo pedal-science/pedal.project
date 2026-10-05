@@ -1,0 +1,33 @@
+// The Pico link UART, enabled by the pedal rather than inherited from the boot config.
+//
+// The stock bcm2712 DTB ships RP1's UART0 — `serial@30000`, the 40-pin header's pins 8 and 10 —
+// with `status = "disabled"`. Everything else on the node is already right: its clocks, its
+// interrupt, and `pinctrl-0 = <&uart0_pins>`, the GPIO14/15 mux. This sets the properties that
+// are missing, which is what `dtoverlay=uart0` does on this SoC (the card's
+// `a/overlays/uart0-pi5.dtbo`: `status = "okay"` and that same `pinctrl-0`).
+//
+// Why an overlay at runtime and not a line in the boot partition's config.txt: the same
+// reasoning as the codec's overlay beside this one. It lives in the device tree that
+// `devices/vip/apply` installs and `pedal-device revert` undoes, it survives a card rewrite
+// (the boot partition is written once at image build), and it cannot stop the host booting.
+//
+// Found the hard way on 2026-10-05: a re-paved card came up with the node disabled, so there
+// was no /dev/ttyAMA0 for pedald to open and the Pico's session had nobody to answer it
+// (bench-results/2026-10-05-header-uart-disabled.md).
+//
+// Loaded by pedal-uart.service, ordered before pedald.service.
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "brcm,bcm2712";
+
+	fragment@0 {
+		target = <&uart0>;
+		__overlay__ {
+			status = "okay";
+			pinctrl-names = "default";
+			pinctrl-0 = <&uart0_pins>;
+		};
+	};
+};

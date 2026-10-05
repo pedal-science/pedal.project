@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# pedal-uart — enable the header UART the Pico's link lives on.
+#
+# The stock bcm2712 device tree ships RP1's UART0 (`serial@30000`, header pins 8 and 10) with
+# `status = "disabled"`, so without this there is no /dev/ttyAMA0 and pedald has no port to open.
+# The overlay beside this script sets it okay; this loads it before pedald.service starts. Safe to
+# re-run: an overlay already in configfs (where dtoverlay puts it as <index>_<name>) is left alone.
+# Needs dtc (device-tree-compiler) and dtoverlay (raspi-utils-dt).
+#
+# Why not `dtoverlay=uart0` in the boot partition's config.txt: see the overlay's own comment. The
+# short version is that the boot partition is written once at image build, and this way the pedal
+# owns the peripheral it depends on — applied and reverted with the rest of devices/, and it
+# survives a card rewrite. The card did come back from one without it (2026-10-05).
+set -euo pipefail
+
+dir=/etc/pedal/uart
+name=uart0-enable
+dev=/dev/ttyAMA0
+
+if ! compgen -G "/sys/kernel/config/device-tree/overlays/*_$name" >/dev/null; then
+  tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+  dtc -q -@ -I dts -O dtb -o "$tmp/$name.dtbo" "$dir/$name.dts"
+  dtoverlay -d "$tmp" "$name"
+fi
+
+for _ in $(seq 50); do
+  [[ -e $dev ]] && break
+  sleep 0.1
+done
+[[ -e $dev ]] || { echo "pedal-uart: $dev did not appear after loading $name" >&2; exit 1; }
+
+echo "pedal-uart: $dev up"
