@@ -268,6 +268,10 @@ decision the contract deferred, and it is **yours to make** (R4). Proposed:
     reboots while the Pico stays powered. Both run from the same 5 V, the Pico through its VSYS
     diode (`bom.md`), so a reboot is ~20 s of silence otherwise. 3.6 wants a booting `tib` to
     fall back to bypass, and Phase 3 is done when "the relay covers boot and failure".
+    **Measured 2026-10-05** (`scripts/pico-power-test`, plan Phase 3.6): the assumption holds —
+    on the header feed the Pico does not reset across a vip reboot or a shutdown (uptime 100 s →
+    135 s and 190 s → 295 s), where on a USB-A port it does (48,930 s → 20 s). So link loss is the
+    Pico's *only* cue during a Core host reboot, which is exactly what this rule reads.
   - What it costs: a click each way, and a service stuck in a crash loop leaves the pedal on dry
     guitar — audio, not silence, but not the rig either.
 - **The alternative**, this document's first answer: leave the relay where it is on link loss,

@@ -56,8 +56,11 @@ and 1 MΩ resistors. Everything else in the order is for 2b and later.
 
 1. **Unplug piv's power before changing any wiring.** A Pi 5's 5 V header pin stays live after
    `poweroff`. Plug back in only after you've checked the wiring.
-2. **piv's GPIO is 3.3 V and not 5 V tolerant.** The only thing that touches a 5 V pin is the
-   codec's VIN.
+2. **piv's GPIO is 3.3 V and not 5 V tolerant.** The only things that touch a 5 V pin are the
+   codec's VIN (**pin 2**) and, since 2026-10-05, the Pico's VSYS feed through its 1N5817 — take
+   that one from **pin 4**, the other 5 V pin, so pin 2 keeps the codec's lead alone. Pins 1 (3.3 V),
+   2 (5 V), 3 (SDA) and 5 (SCL) are neighbours: a second lead in pin 2 sits a lead's width from the
+   codec's I²C and its digital supply.
 3. **HPL, HPR and OUT3 sit at about 1.65 V DC.** That's the board's capless design. **Never connect
    OUT3 to ground.** It's a driven output, and grounding it shorts it. Never connect HPL or HPR to
    the SSL without the capacitor in the fixture.
@@ -409,6 +412,7 @@ output parts arrive. Afterwards, piv goes back to the SSL 2+ unless you decide o
 | PWR LED off | VIN, 3V3 or GND lead on the wrong pin, or pin 1 identified wrongly. **Unplug first** |
 | piv won't boot with the board connected | A short on 5 V or 3.3 V. Unplug, and repeat 1.1 with the leads connected but piv unplugged |
 | `i2cdetect` doesn't show `1a` | SDA and SCL swapped, no 3.3 V at the board, or a lead on pin 3/5 not seated |
+| `pedal-codec` fails: `card wm8960 did not appear`, and `dmesg` says `wm8960 1-001a: Failed to issue reset` **with error −121** (`EREMOTEIO`, a NACK) | The bus works and **nobody answers at `0x1a`**: the board is unpowered in its digital domain (**3V3 on pin 1** — the I2C interface is in the DBVDD domain), out of its socket strips, or its SDA/SCL leads are out. A **−110** (`ETIMEDOUT`, the controller's 1.024 s timeout after every address) is the other fault: a **held** line, i.e. wiring. The two are easy to confuse and are not the same thing (2026-10-05) |
 | The card appears, but recording hangs or gives an I/O error | No clocks. The codec isn't master or its PLL isn't set up. Stage 6's meter check tells which |
 | Clocks present but the recording is all zeros | The ADAT lead, or the ADC not following DACLRC (the `wlf,gpio-cfg` setting) |
 | One channel right and the other wrong, or channels swapped | DLRC and ALRC mixed up at the board |

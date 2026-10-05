@@ -754,7 +754,8 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    - The Pico energises it only once the service reports audio ready.
    - When it drops back to bypass after boot is `docs/pedal-service.md`'s relay rule, open (R4).
      The Pico and the Core host share the 5 V input, so the Pico stays powered through a Core
-     host reboot or hang (if the reboot test below holds); the proposal (bypass after 5 s without the link, or 2 s without
+     host reboot or hang — **the test below holds for form 2 (2026-10-05)**, which is what the case
+     will use; the proposal (bypass after 5 s without the link, or 2 s without
      `audio_ready`) is what keeps "a booting `tib`" failing to bypass then too. Set its times on
      the bench, and check what a hung Core host puts out: silence, or a repeating buffer.
    - A long press gives a panic bypass.
@@ -766,14 +767,16 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
         live while the supply is on.
      **2026-10-04: form 1 is what the bench is wired as** — the Pico is powered from vip's USB-A,
      and its console rides the same cable.
-     **Measured 2026-10-05: form 1 fails the reboot leg.** The Pico's own uptime counter (it prints
+     **Measured 2026-10-05: form 1 fails the reboot leg and form 2 holds both legs.** The Pico's own
+     uptime counter (it prints
      `fw: up N s` on its USB console; the counter measures power, where `dmesg` cannot, because the
      host re-enumerates the device on every boot either way) went **48,930 s → 20 s** across a
-     `sudo reboot` of vip, with a control showing the read itself does not reset it. So **form 2 is
-     the one to test next**: header pin 2 → 1N5817 → VSYS, with the USB cable left in for the console
-     (the reboot cuts the USB-A rail either way, so a survivor is surviving on the header). The
-     shutdown leg has not been run: it needs the host powering back on by hand.
-     Method and evidence: `scripts/pico-power-test`,
+     `sudo reboot` of vip on form 1, with a control showing the read itself does not reset it. On
+     **form 2** — header pin 2 → 1N5817 → VSYS, USB cable left in for the console — it went
+     **100 s → 135 s** across a reboot and **190 s → 295 s** across a shutdown: the Pico never reset.
+     So form 2 is the arrangement, the diode is the right way round, "the Pico stays up" holds for
+     the relay rule above, and the header's second 5 V consumer should take **pin 4**, leaving pin 2
+     to the codec's VIN alone. Method and evidence: `scripts/pico-power-test`,
      [bench-results/2026-10-05-pico-power-test.md](bench-results/2026-10-05-pico-power-test.md).
      Power the Pico each way with its LED blinking, then `sudo reboot` vip, and separately shut
      it down. Watch whether the Pico restarts. Keep the first way that holds through both; if
@@ -1098,30 +1101,48 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
-**The Pico restarts with a Core host reboot — form 1 is out** (2026-10-05). Phase 3.6's power
-question, first half, answered with the pedal's own instrument: the Pico prints `fw: up N s` on its
-USB console every 5 s, and `N` counts from the Pico's own reset, so it measures **power** where
-`dmesg` cannot (the host re-enumerates the device on every boot either way). Read twice, 20 s apart,
-as a control — the read itself does not reset it (48,850 → 48,880 s, and again 48,890 → 48,920 s) —
-then across a `sudo reboot` of vip: **48,930 s → 20 s**. The Pico restarted. The host side agrees:
-vip's kernel came up 10:10:17 UTC, the Pico re-enumerated as `2e8a:0009` at 10:10:20, and `pedald`
-logged `Pico says hello: fw '0.1', protocol 1.0` 6.5 s into the boot. (A HELLO alone proves nothing:
-the Pico returns to HELLO after a 1 s link timeout too.) Nothing else was disturbed — the engine came
-back `running`/`ok` on the codec, resumed ljoss's "New Rig" from `last.json`, worst block 18.9% — and
-the reboot's only cost was **2 xruns**, the stream stopping and starting.
+**3.6's power question is answered: the header feed holds, the USB-A port does not — and the codec is
+down** (2026-10-05). The instrument is the pedal's own: the Pico prints `fw: up N s` on its USB
+console every 5 s, and `N` counts from the Pico's own reset, so it measures **power** where `dmesg`
+cannot (the host re-enumerates the device on every boot either way) and where a `HELLO` cannot (the
+Pico re-sends `HELLO` after a 1 s link timeout, restart or not). Read twice, 20 s apart, as a control
+first — the read itself does not reset it (48,850 → 48,880 s, and again 48,890 → 48,920 s).
 
-So **vip's USB-A rail is switched off through a reboot**, and the relay rule (R4) cannot lean on a
-Pico that is still up while the engine is not, which is what the plan wanted it for. It is not a
-fault: a Pico that restarts with the host comes back with a clean session, and the relay is
-de-energised throughout, which is bypass. **Next is form 2** — vip's header pin 2 → a 1N5817 → the
-Pico's VSYS — tested with the USB cable left in for the console, since the reboot cuts the USB-A rail
-either way and a Pico that survives is surviving on the header. Then 3.6's shutdown leg, which needs
-the host powering back on by hand. Instrument: `scripts/pico-power-test`; verbatim evidence:
-[bench-results/2026-10-05-pico-power-test.md](bench-results/2026-10-05-pico-power-test.md). Two
-things it cost, both recorded there: vip's journal is **volatile** (`/run/log/journal`, tmpfs), so a
-previous boot's shutdown sequence is not recoverable; and the console must be opened with
-`stty raw -echo` before it is read, or the host echoes what it receives back down the port and the
-firmware's bench stand-in answers its own output in a loop.
+- **Form 1, vip's USB-A → micro-B: out.** Across a `sudo reboot`: **48,930 s → 20 s**. vip's kernel
+  came up 10:10:17 UTC and the Pico re-enumerated as `2e8a:0009` at 10:10:20. The engine came back
+  `running`/`ok`, resumed ljoss's "New Rig", worst block 18.9%, and the reboot's only cost was
+  **2 xruns**, the stream stopping and starting.
+- **Form 2, header pin 2 → 1N5817 → VSYS: in.** With the USB cable left in for the console (the
+  reboot cuts the USB-A rail either way, so a survivor is surviving on the header): **reboot 100 s →
+  135 s** across a 26 s outage, **shutdown 190 s → 295 s** across a 95 s outage. Both legs held, so
+  the feed works and the diode is the right way round — a reversed 1N5817 would have left the Pico on
+  USB alone and it would have restarted exactly as form 1 did. `pedald` did log a `HELLO` after the
+  shutdown leg, from a Pico that demonstrably never reset: that is the caveat above, measured.
+
+So **the relay rule (R4) keeps its "the Pico stays up" case** — it can hold bypass on link loss
+through a Core host reboot or a shutdown, rather than relying on having restarted into a safe state —
+and the USB cable stays only as the console and the flashing path. The header now has **two 5 V
+consumers**: the codec board's VIN is on pin 2 (`docs/codec-bringup-2a.md` stage 4), so the Pico's
+feed belongs on **pin 4**, with pin 2 left to the codec alone — pins 1 (3.3 V), 2 (5 V), 3 (SDA) and
+5 (SCL) are neighbours.
+
+**Open, and the reason the pedal is not playing: the codec stopped answering.** `pedal-codec` fails
+with `card wm8960 did not appear`, `/proc/asound/cards` is empty and the engine is `lost`/`error`.
+It is **not** the 2026-10-04 fault: the reset write to `0x1a` returns **`-121` (`EREMOTEIO`, a NACK)
+rather than `-110` (`ETIMEDOUT`, the controller's timeout)**, so the Pi drives the bus and is told
+"nobody here" — the board is not answering, not holding a line. The engine was `running`/`ok` at
+10:12, before the Pico's feed was added, and the card has not appeared since the power cycle that
+followed it; the board's supplies and its I²C are four adjacent header pins (1, 2, 3, 5) and its VIN
+shares pin 2 with the new lead. Check those leads and the board's seating in its socket strips first
+(the I²C interface is in the DBVDD domain, fed from **3V3 on pin 1**, so a displaced pin 1 alone
+gives this symptom). Full record and the verbatim log:
+[bench-results/2026-10-05-pico-power-test.md](bench-results/2026-10-05-pico-power-test.md).
+
+Instrument: `scripts/pico-power-test` (`--leg read|reboot|shutdown`). Two things it cost, both
+recorded: vip's journal is **volatile** (`/run/log/journal`, tmpfs), so a previous boot's shutdown
+sequence is not recoverable; and the console must be opened with `stty raw -echo` before it is read,
+or the host echoes what it receives back down the port and the firmware's bench stand-in answers its
+own output in a loop.
 
 **The pedal plays, assembled, in a case — with the Pico on the link** (2026-10-04). Not a part on the
 bench any more: the owner played the assembled pedal this evening. A **temporary plastic box** stands

@@ -43,3 +43,46 @@ running ok xruns 2 guard 0 device hw:CARD=wm8960,DEV=0 rig New Rig worst% 18.9
 # reports "no persistent journal", so the previous boot's shutdown sequence is not recoverable.
 # Also: reading /dev/ttyACM0 needs `sudo -n stty -F ... raw -echo` first (an echoed byte is a real
 # EVENT to the firmware's bench stand-in), and the read itself does not reset the Pico (control).
+
+# ---------------------------------------------------------------------------
+# Form 2 (vip header pin 2 -> 1N5817 -> Pico VSYS), with the USB cable left in
+# 2026-10-05T11:44:17Z
+
+$ scripts/pico-power-test --leg read
+
+== Control: two reads 20s apart must show the counter advancing
+   reading /dev/ttyACM0 on vip (8s)…
+   read 1: 60s at 12:44:26; read 2: 90s at 12:44:54
+   counter advanced 30s over 28s of wall clock
+   CONTROL PASSES: reading the console does not reset the Pico.
+
+$ scripts/pico-power-test --leg reboot
+
+== Leg: reboot — rebooting vip
+   reading the Pico's counter before…
+   Pico up 100s; host boot id 2443bd92
+   reboot issued; waiting for vip to come back on a new boot id (up to 900s)…
+   waiting for vip… 0s
+   back after 9s (boot id 3880762d)
+   reading the Pico's counter after…
+   Pico uptime: 100s → 135s (Δ35s), host away for 26s
+   VERDICT: the Pico **kept running** — the counter advanced by about the time that passed,
+            so its 5 V held through the reboot.
+
+$ scripts/pico-power-test --leg shutdown
+
+== Leg: shutdown — shutdowning vip
+   reading the Pico's counter before…
+   Pico up 190s; host boot id 3880762d
+   shutdown issued; waiting for vip to come back on a new boot id (up to 900s)…
+   vip is halted: it needs its power button (or a power cycle).
+   waiting for vip… 0s
+   waiting for vip… 15s
+   waiting for vip… 30s
+   waiting for vip… 45s
+   waiting for vip… 60s
+   back after 69s (boot id 1618a076)
+   reading the Pico's counter after…
+   Pico uptime: 190s → 295s (Δ105s), host away for 95s
+   VERDICT: the Pico **kept running** — the counter advanced by about the time that passed,
+            so its 5 V held through the shutdown.
