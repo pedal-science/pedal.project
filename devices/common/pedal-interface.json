@@ -131,6 +131,13 @@
     "protocol": "docs/uart-protocol.md",
     "session": ["HELLO", "WELCOME"],
     "line": "8N1, raw, no getty on this port (the console is ttyAMA10)",
+    "enabled_by": {
+      "unit": "pedal-uart.service",
+      "overlay": "uart0-enable",
+      "cause": "RP1's UART0 (serial@30000, header pins 8 and 10) is disabled in the stock device tree, so the pedal loads its own overlay at boot",
+      "why": "A card rewrite on 2026-10-05 came back without it: the link was dead while the engine, the codec and everything else were fine (bench-results/2026-10-05-header-uart-disabled.md)",
+      "check": "systemctl status pedal-uart; cat /sys/kernel/config/device-tree/overlays/*/status; then dmesg for '1f00030000.serial'"
+    },
     "signals": [
       {
         "signal": "GP0 (Pico TX)",
@@ -264,6 +271,24 @@
         "D": "SWD (JST-SH), to the Pico's debug pads",
         "U": "UART (3-pin), to whichever serial line is being watched"
       },
+      "usb_host": "Port A goes to the machine that runs the tooling, which by design is the Mac: decided 2026-09-29, the probe stays on the Pico while the Core host's console is set up on its 3-pin header (docs/vip-image.md). Its USB is on the pedal host only in the bench case where the pedal host is itself the debugger.",
+      "watches": [
+        {
+          "target": "the Pico's link UART (probe RX <- GP0/pin 1, GND <-> pin 3)",
+          "what_it_looks_like": "protocol frames: every frame starts a5 5a, and the firmware sends HELLO about once a second whether or not the Core host answers",
+          "assumed_by": "firmware/tools/echo-test.py, firmware/tools/protocol-test.py"
+        },
+        {
+          "target": "the Core host's own console on its 3-pin debug header (ttyAMA10, 115200)",
+          "what_it_looks_like": "kernel and getty text; silent while the host is up and idle, and the bootloader's first line arrives only at a power-on",
+          "assumed_by": "tools/measure-boot.py, plan.md Phase 1 step 7"
+        },
+        {
+          "target": "the Pico's SWD pads (port D)",
+          "what_it_looks_like": "nothing readable: SWD needs a debugger on the other end, so its traffic cannot be seen passively",
+          "assumed_by": "firmware/flash.sh's openocd path"
+        }
+      ],
       "may_be_attached_to": [
         "the Pico's UART (probe RX yellow <- GP0/pin 1, probe TX orange -> GP1/pin 2, GND black <-> pin 3) — what firmware/tools/echo-test.py and firmware/tools/protocol-test.py assume",
         "the Core host's 3-pin debug header (the Pi 5's console, ttyAMA10, and the bootloader's own output with BOOT_UART=1) — what tools/measure-boot.py assumes",
@@ -271,6 +296,7 @@
       ],
       "notes": [
         "Its absence is never a fault: it is a bench aid, and the Pico's console is also reachable over its own USB (/dev/ttyACM0 on the Core host).",
+        "A report gathered on the pedal host cannot see the operator's machine, so 'no Debug Probe' on the pedal is the expected state and not news: the tool says which machines it looked at, and reads the operator's own USB itself.",
         "The D port cannot be read without halting the target, so nothing continuous uses it: pedal-diag --probe only, and never while the engine is playing.",
         "The probe's UART cannot be shared: if it already carries a getty's line, rendering writes nothing to it."
       ]

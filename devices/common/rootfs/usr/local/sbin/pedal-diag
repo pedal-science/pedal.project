@@ -21,9 +21,17 @@ at a conclusion it cannot cite: every finding carries the evidence it came from.
 Read-only, and it stays that way. It opens no sound device, writes nothing to the codec, the
 I2C bus or the Pico's serial line, and the only file it ever creates is --watch's own log.
 --watch samples cheaply and never more often than once a second; --probe does the invasive
-things (a deep register read, a read of the Pico's console) and refuses to run while the
-engine is playing. The two are separate modes on purpose: a diagnostic that changed what it
+things (a deep register read, a read of the Pico's console, and a read of the Debug Probe's UART
+bridge here, which is how the tool can say what that probe is watching) and refuses to run while
+the engine is playing. The two are separate modes on purpose: a diagnostic that changed what it
 was measuring would be worse than no diagnostic.
+
+Two machines, and it is careful about which is which. The gatherer runs on the pedal host, so a
+sample describes that host; the machine the operator is sitting at is read by the reporter for the
+one question that needs both ends — a Debug Probe's USB is plugged into one of them, and its UART
+or SWD lead is what reaches the pedal. A probe on the operator's machine is therefore the normal
+arrangement, and the report says so instead of reporting it as a pedal fault. A captured sample
+carries no such view, and the report says which machines it looked at.
 
 Standard library only, and only what the pedal's python3-minimal actually has (no `http`, no
 `urllib`, no `dataclasses`): the same discipline pedald is written around, and a test asserts
@@ -561,6 +569,84 @@ for dev in ("ttyAMA0", "ttyAMA10", "ttyACM0", "ttyACM1"):
         out["tty"][dev] = {"exists": True, "target": os.path.realpath("/sys/class/tty/%s/device" % dev),
                            "uid_gid": "%s:%s" % (os.stat(p).st_uid, os.stat(p).st_gid)}
 
+# --- serial ports, and what holds them --------------------------------------
+# The link's own device, and the difference between "the kernel has this UART" and "there is a
+# /dev node for it". Those are different faults with different fixes: on vip (2026-10-05) the
+# PL011 was registered as ttyAMA0 (sysfs class entry, dev 204:64, udevadm DEVNAME=/dev/ttyAMA0)
+# while /dev/ttyAMA0 did not exist at all, which is a node problem and not a device-tree one.
+def _sysfs_dev(name):
+    """What the kernel thinks of a tty: the class entry, its major:minor, and where it lives."""
+    entry = {"class_entry": os.path.isdir("/sys/class/tty/%s" % name),
+             "major_minor": read("/sys/class/tty/%s/dev" % name),
+             "path": None, "usb": None}
+    if entry["class_entry"]:
+        try:
+            entry["path"] = os.path.realpath("/sys/class/tty/%s/device" % name)
+        except OSError:
+            pass
+    return entry
+
+
+def _usb_of(path):
+    """The USB device a sysfs path belongs to, if any: walk up looking for idVendor."""
+    node = os.path.realpath(path) if path else None
+    while node and node != "/":
+        if os.path.exists(node + "/idVendor"):
+            return {"vid": read(node + "/idVendor"), "pid": read(node + "/idProduct"),
+                    "product": read(node + "/product"), "serial": read(node + "/serial"),
+                    "path": node}
+        node = os.path.dirname(node)
+    return None
+
+
+def _holders(dev):
+    """Which processes have this device open, by name.
+
+    The link's holder is the useful one (pedald, if pedald has the port), and it is the fact that
+    separates "nothing is listening" from "something else took the port".
+    """
+    found = []
+    for d in sorted(glob.glob("/proc/[0-9]*")):
+        try:
+            for fd in os.listdir(d + "/fd"):
+                try:
+                    if os.readlink(d + "/fd/" + fd) == dev:
+                        found.append("%s (%s)" % (read(d + "/comm"), os.path.basename(d)))
+                        break
+                except OSError:
+                    continue
+        except OSError:
+            continue
+    return found
+
+
+out["serial"] = []
+for _pattern in ("/dev/ttyACM*", "/dev/ttyUSB*", "/dev/ttyAMA*"):
+    for _dev in sorted(glob.glob(_pattern)):
+        _name = os.path.basename(_dev)
+        _sys = _sysfs_dev(_name)
+        _sys["holders"] = _holders(_dev)
+        _sys["usb"] = _usb_of(_sys.get("path"))
+        _sys["device"] = _dev
+        _sys["name"] = _name
+        out["serial"].append(_sys)
+
+# The link's device, named by the interface model (devices/common/pedal-interface.json,
+# pico_link.host_device). It gets a full entry whether or not the node exists, because "no node"
+# and "no UART" are the two halves of the same fault and the report has to tell them apart.
+_LINK = "ttyAMA0"
+out["link_device"] = _sysfs_dev(_LINK)
+out["link_device"]["name"] = _LINK
+out["link_device"]["node"] = "/dev/" + _LINK
+out["link_device"]["node_exists"] = os.path.exists("/dev/" + _LINK)
+if out["link_device"]["node_exists"]:
+    out["link_device"]["holders"] = _holders("/dev/" + _LINK)
+    out["link_device"]["uid_gid"] = "%s:%s" % (os.stat("/dev/" + _LINK).st_uid,
+                                               os.stat("/dev/" + _LINK).st_gid)
+else:
+    out["link_device"]["holders"] = []
+out["link_device"]["usb"] = _usb_of(out["link_device"].get("path"))
+
 # --- i2c and the codec ------------------------------------------------------
 out["i2c"] = {"devices": sorted(os.path.basename(x) for x in glob.glob("/sys/bus/i2c/devices/*"))}
 regmap = "/sys/kernel/debug/regmap/1-001a"
@@ -629,14 +715,22 @@ except Exception as exc:
     out["errors"].append("interrupts: %s" % exc)
 
 out["processes"] = {}
-for name, comm in (("namchaind", "namchaind"), ("pedald", "pedald"), ("pedal-codec", "pedal-codec")):
+# pedald is a python3 script, so its comm is "python3" and matching on comm alone never found it:
+# every process is matched on comm OR on its command line. (Found the hard way: the report said
+# "held by python3 (35704)" for the link's own port, because nothing had told it that python3 with
+# pedald's command line IS pedald.)
+for name, comm, needle in (("namchaind", "namchaind", "namchaind"),
+                           ("pedald", "python3", "pedald"),
+                           ("pedal-codec", "pedal-codec", "pedal-codec")):
     entry = {"running": False}
     try:
         for d in sorted(glob.glob("/proc/[0-9]*")):
-            if read(d + "/comm") == comm:
+            _cmdline = read(d + "/cmdline", "").replace("\x00", " ").strip()
+            _comm = read(d + "/comm")
+            if _comm == comm or (needle and needle in _cmdline):
                 entry["running"] = True
                 entry["pid"] = int(os.path.basename(d))
-                entry["cmdline"] = read(d + "/cmdline", "").replace("\x00", " ").strip()
+                entry["cmdline"] = _cmdline
                 st = read(d + "/status", "") or ""
                 for key in ("Cpus_allowed_list", "Mems_allowed_list", "VmRSS", "Threads"):
                     m = re.search(r"^%s:[ \t]*(.*)$" % key, st, re.M)
@@ -677,7 +771,7 @@ for name, comm in (("namchaind", "namchaind"), ("pedald", "pedald"), ("pedal-cod
 # --- systemd units ----------------------------------------------------------
 # One `systemctl show` per unit, and each one is a fork: they run with the deep sample, because a
 # unit's state changes when something restarts, which is the same news as the boot log.
-UNITS = ("namchaind.service", "pedald.service", "pedal-codec.service",
+UNITS = ("namchaind.service", "pedald.service", "pedal-codec.service", "pedal-uart.service",
          "pedal-tune.service", "pedal-diag.service", "pedal-maint.target")
 out["units"] = {}
 if deep:
@@ -708,6 +802,14 @@ out["deployed"] = {
     "components_lock": read("/etc/pedal/components.lock"),
     "pedal_interface": os.path.exists("/etc/pedal/pedal-interface.json"),
 }
+
+# The pedal's own device-tree overlays, as configfs holds them: the codec's (0_wm8960-codec-master)
+# and the header UART's (2_uart0-enable, loaded by pedal-uart). They are the pedal's, not the
+# card's: a card rewrite on 2026-10-05 came back with RP1's UART0 disabled and no /dev/ttyAMA0,
+# which is a fault in this tree rather than in any lead (bench-results/2026-10-05-header-uart-disabled.md).
+out["overlays"] = {}
+for _d in sorted(glob.glob("/sys/kernel/config/device-tree/overlays/*")):
+    out["overlays"][os.path.basename(_d)] = read(_d + "/status")
 
 # --- the engine and the service --------------------------------------------
 # Authentication is per CONNECTION, not per process: on TCP an unauthenticated connection may
@@ -1006,6 +1108,208 @@ def gather_remote(host, ssh_opts=None, probe=False, sample_index=0,
     return sample
 
 
+# --------------------------------------------------------------- the other end of the cable
+#
+# A probe has one USB port, and it is plugged into one machine. The sample knows the host it came
+# from; this is the machine the operator is sitting at, and the report has to be able to say which
+# of the two a probe is on. That question cost a session on 2026-10-05: the Debug Probe's USB was
+# on the Mac while the report, gathered on vip, said no probe was attached to "this host", which
+# read as a fault on the pedal. It was not one: a probe's USB goes to the machine that runs the
+# tooling, and only its UART or SWD lead goes to the pedal.
+#
+# This half is read only for a LIVE sample. A captured fixture knows nothing about today's desk,
+# and printing the operator's laptop inside a fixture would be a lie with a timestamp on it.
+
+DEBUG_PROBE = ("2e8a", "000c")          # Raspberry Pi Debug Probe
+PICO_USB = ("2e8a", "0009")             # the Pico's own CDC console
+
+# Vendors that put a serial port on the end of a USB cable. A debug probe is one of these; so is a
+# plain USB-TTL lead, which is what "any other probes" means in practice.
+USB_SERIAL_VENDORS = {
+    "0403": "FTDI", "067b": "Prolific PL2303", "10c4": "Silicon Labs CP210x",
+    "1a86": "WCH CH34x", "2341": "Arduino", "239a": "Adafruit", "2e8a": "Raspberry Pi",
+}
+
+MAC_SERIAL_GLOBS = ("/dev/cu.usbmodem*", "/dev/cu.usbserial*", "/dev/cu.SLAB_USBtoUART*",
+                    "/dev/cu.wchusbserial*")
+LINUX_SERIAL_GLOBS = ("/dev/ttyACM*", "/dev/ttyUSB*")
+
+
+def parse_ioreg_usb(text):
+    """The USB devices in `ioreg -p IOUSB -l` output.
+
+    ioreg prints a tree: a node line, then that node's properties under it. idVendor and idProduct
+    come out in DECIMAL and the gatherer reports sysfs hex, so they are converted here — the two
+    sides have to compare equal, and "11914" is not "2e8a" to anything but arithmetic.
+    """
+    devices = []
+    current = None
+    for line in (text or "").splitlines():
+        if "<class IOUSB" in line:
+            name = line.split("+-o ", 1)[-1].split("<class", 1)[0].strip()
+            current = {"node": name, "props": {}}
+            devices.append(current)
+            continue
+        if current is None:
+            continue
+        # ioreg prefixes every line with the tree's own furniture ("|   "), so the key is the
+        # quoted word and not everything to the left of the equals sign.
+        match = re.match(r'^[|\s+\\-]*"([^"]+)"\s*=\s*(.*)$', line)
+        if not match:
+            continue
+        current["props"][match.group(1)] = match.group(2).strip().strip('"')
+    out = []
+    for dev in devices:
+        props = dev["props"]
+        vid, pid = props.get("idVendor"), props.get("idProduct")
+        if vid is None or pid is None:
+            continue
+        try:
+            vid, pid = "%04x" % int(vid), "%04x" % int(pid)
+        except ValueError:
+            continue
+        out.append({"vid": vid, "pid": pid,
+                    "product": props.get("USB Product Name") or props.get("kUSBProductString"),
+                    "serial": props.get("USB Serial Number"),
+                    "location": props.get("locationID"), "path": dev["node"]})
+    return out
+
+
+def parse_lsof(text):
+    """`lsof -F pcn` as "command (pid)" lines: who holds a serial port open, if anyone.
+
+    The holder matters twice over: a port nobody holds has nothing listening on the far end, and a
+    port held by a process names its consumer (a capture, a getty, a tool left running).
+    """
+    holders = []
+    pid, command = None, None
+    for line in (text or "").splitlines():
+        if line.startswith("p"):
+            pid = line[1:].strip()
+        elif line.startswith("c"):
+            command = line[1:].strip()
+        elif line.startswith("n") and command:
+            holders.append("%s (%s)" % (command, pid))
+    return holders
+
+
+def local_serial_holders(device, platform):
+    if platform == "darwin":
+        text, _ = run(["lsof", "-F", "pcn", device], timeout=8)
+        return parse_lsof(text)
+    return []
+
+
+def sysfs_usb_of(path):
+    """The USB device a sysfs path belongs to: walk up until something has an idVendor."""
+    node = os.path.realpath(path) if path else None
+    while node and node != "/":
+        if os.path.exists(node + "/idVendor"):
+            return {"vid": read(node + "/idVendor"), "pid": read(node + "/idProduct"),
+                    "product": read(node + "/product"), "serial": read(node + "/serial"),
+                    "path": node}
+        node = os.path.dirname(node)
+    return None
+
+
+def serial_ports_for(side, dev):
+    """The serial ports a USB device exposes on its side, where they can be attributed.
+
+    Linux answers this properly: sysfs says which USB device each tty belongs to. macOS has no such
+    tree at a cost a sample can pay, so a port is attributed there only when the answer is not
+    ambiguous — one device of that kind and one port — and otherwise not at all.
+    """
+    ident = (dev.get("vid"), dev.get("pid"))
+    with_usb = [s for s in side.get("serial") or []
+                if s.get("usb") and (s["usb"].get("vid"), s["usb"].get("pid")) == ident]
+    if with_usb:
+        return with_usb
+    candidates = [s for s in side.get("serial") or [] if "usbmodem" in s.get("device", "")]
+    same_kind = [d for d in side.get("usb") or []
+                 if (d.get("vid"), d.get("pid")) == ident]
+    if len(candidates) == 1 and len(same_kind) == 1:
+        return candidates
+    return []
+
+
+def local_machine_aids(platform=None):
+    """What the machine running this tool has on its USB, and which ports it holds open.
+
+    macOS has no sysfs, so the USB tree comes from ioreg (a query, not a package) and the serial
+    ports from /dev. On Linux the same files the gatherer reads are used, so a run from a Linux
+    workstation says the same things about itself that a sample says about the pedal.
+    """
+    platform = platform or sys.platform
+    out = {"hostname": os.uname().nodename, "platform": platform, "usb": [], "serial": [],
+           "gathered_with": None}
+    if platform == "darwin":
+        text, rc = run(["ioreg", "-p", "IOUSB", "-w", "0", "-l"], timeout=20)
+        if text:
+            out["usb"] = parse_ioreg_usb(text)
+            out["gathered_with"] = "ioreg"
+        else:
+            out["error"] = "ioreg unavailable (rc=%s)" % rc
+        for pattern in MAC_SERIAL_GLOBS:
+            for device in sorted(glob.glob(pattern)):
+                if device not in [s["device"] for s in out["serial"]]:
+                    out["serial"].append({"device": device, "name": os.path.basename(device),
+                                          "holders": local_serial_holders(device, platform)})
+        return out
+    # Linux, or anything with sysfs: the same trees the gatherer reads on the pedal.
+    usb = []
+    for d in sorted(glob.glob("/sys/bus/usb/devices/*")):
+        vid = read(d + "/idVendor")
+        if vid:
+            usb.append({"vid": vid, "pid": read(d + "/idProduct"), "product": read(d + "/product"),
+                        "serial": read(d + "/serial"), "path": os.path.basename(d)})
+    out["usb"] = usb
+    out["gathered_with"] = "sysfs"
+    for pattern in LINUX_SERIAL_GLOBS:
+        for device in sorted(glob.glob(pattern)):
+            name = os.path.basename(device)
+            holder_names = []
+            for proc in sorted(glob.glob("/proc/[0-9]*")):
+                for fd in (os.listdir(proc + "/fd") if os.path.isdir(proc + "/fd") else []):
+                    try:
+                        if os.readlink(proc + "/fd/" + fd) == device:
+                            holder_names.append("%s (%s)" % (read(proc + "/comm"),
+                                                             os.path.basename(proc)))
+                            break
+                    except OSError:
+                        continue
+            out["serial"].append({"device": device, "name": name, "holders": holder_names,
+                                  "usb": sysfs_usb_of("/sys/class/tty/%s/device" % name)})
+    return out
+
+
+def classify_serial_bytes(data):
+    """What a few seconds of a UART's traffic says about the line it is on.
+
+    This is the only way software can answer "what is that probe's UART lead attached to": the lead
+    itself is invisible, but the bytes on it are not. Two signatures matter here, and both are
+    known from the bench:
+      - the Pico's link protocol: every frame starts a5 5a, and the firmware sends HELLO about once
+        a second whether or not the Core host answers (bench-results/2026-10-04-rewired... )
+      - a Linux console: kernel and getty text, which is what vip's 3-pin debug header carries
+    Silence is a real answer too, and it is not the same as "unknown": an idle console and a link
+    with nobody listening both look like nothing at all.
+    """
+    if not data:
+        return None, "nothing arrived in the window"
+    if b"\xa5\x5a" in data:
+        return "the Pico's link UART", "protocol frames (a5 5a) are on it"
+    text = data.decode("utf-8", "replace")
+    markers = ("Linux version", "systemd[1]", "Booting Linux", "kernel:", "login:",
+               "Welcome to", "Raspberry Pi", "Ubuntu")
+    for marker in markers:
+        if marker in text:
+            return "a Linux console", "%r is on it" % marker
+    printable = sum(1 for c in text if c.isprintable() or c in "\r\n\t")
+    if printable > 0.9 * len(text):
+        return None, "printable text, but nothing that names the line: %r" % text[:60]
+    return None, "binary data that is not the Pico's protocol: %r" % data[:24]
+
+
 # --------------------------------------------------------------------------- findings
 
 class Report(object):
@@ -1015,10 +1319,11 @@ class Report(object):
         self.iface_path = interface_path
         self.findings = []
 
-    def add(self, severity, key, what, evidence, likely=None, check=None, seed=None):
+    def add(self, severity, key, what, evidence, likely=None, check=None, seed=None,
+            connected_to=None):
         self.findings.append({"severity": severity, "key": key, "what": what,
                               "evidence": evidence, "likely": likely or [],
-                              "check": check, "seed": seed})
+                              "check": check, "seed": seed, "connected_to": connected_to})
 
     # -- convenience accessors over the sample -------------------------------
     def dig(self, *path, **kw):
@@ -1236,16 +1541,63 @@ class Report(object):
         pico = link.get("pico") or {}
         line = self.dig("link_line") or {}
         tty = self.dig("tty", "ttyAMA0")
+        device = self.dig("link_device") or {}
+        overlays = self.dig("overlays") or {}
+        uart_overlays = {k: v for k, v in overlays.items() if "uart" in k}
+        owner = iface.get("enabled_by") or {}
+        owner_unit = owner.get("unit") or "pedal-uart.service"
+        uart_unit = ((self.dig("units") or {}).get(owner_unit) or {})
 
         if not tty:
-            self.add("fail", "link.no_device",
-                     "the Pico's link device is absent",
-                     "/dev/ttyAMA0 does not exist",
-                     likely=["the kernel did not bring up the PL011 the overlay assigns, or the host "
-                             "is not the one this tool thinks it is"],
-                     check="dmesg for ttyAMA0, and /proc/device-tree for the uart's status")
+            # Two faults wear the same symptom and have different fixes. The kernel either has the
+            # UART (a node problem: udev, or something that removed it) or does not (a device-tree
+            # problem: RP1's UART0 ships disabled, and pedal-uart loads the overlay that enables
+            # it). The tool blamed the overlay for both until 2026-10-05, and the day the link came
+            # back was the day that distinction mattered
+            # (bench-results/2026-10-05-header-uart-disabled.md).
+            where = "sysfs %s %s" % (device.get("path") or "(no device path)",
+                                     device.get("major_minor") or "(no major:minor)")
+            state = "overlay %s; %s %s" % (
+                ", ".join("%s=%s" % (k, v) for k, v in sorted(uart_overlays.items())) or "not loaded",
+                owner_unit, uart_unit.get("ActiveState") or "not reported")
+            if device.get("class_entry") or device.get("major_minor"):
+                self.add("fail", "link.no_node",
+                         "the Core→Pico UART link has no device node: the kernel has %s, /dev has no "
+                         "node for it" % (device.get("name") or "ttyAMA0"),
+                         "%s does not exist; %s; %s" % (device.get("node") or "/dev/ttyAMA0",
+                                                        where, state),
+                         likely=["something removed the node: a by-hand test, or a tool that did not "
+                                 "put it back (devtmpfs does not recreate one until the device is "
+                                 "re-registered)",
+                                 "udev did not create it: systemd-udevd is not running, or the "
+                                 "uevent was missed"],
+                         check="udevadm info /sys/class/tty/%s, then udevadm trigger --name-match=%s "
+                               "(or, as a test, mknod %s c %s). The device tree is fine in this "
+                               "state: do not go looking at the overlay" % (
+                                   device.get("name") or "ttyAMA0",
+                                   device.get("name") or "ttyAMA0",
+                                   device.get("node") or "/dev/ttyAMA0",
+                                   (device.get("major_minor") or "204:64").replace(":", " ")))
+            else:
+                self.add("fail", "link.no_device",
+                         "the Core→Pico UART link has no device: the kernel has no %s at all" % (
+                             device.get("name") or "ttyAMA0"),
+                         "%s does not exist and there is no /sys/class/tty entry; %s%s" % (
+                             device.get("node") or "/dev/ttyAMA0", state,
+                             "; %s" % owner.get("why") if owner.get("why") else ""),
+                         likely=["%s, and %s loads the overlay (%s) that enables it" % (
+                                     owner.get("cause") or "the header UART is disabled in the "
+                                                          "device tree",
+                                     owner_unit, owner.get("overlay") or "uart0-enable"),
+                                 "%s is not running or failed, so the overlay never loaded"
+                                 % owner_unit,
+                                 "the overlay loaded and the PL011 did not probe"],
+                         check=owner.get("check") or
+                               "systemctl status %s; cat "
+                               "/sys/kernel/config/device-tree/overlays/*/status" % owner_unit)
             return
 
+        holders = [self.name_process(h) for h in (device.get("holders") or [])]
         if not service.get("reachable"):
             self.add("warn", "link.no_service",
                      "pedald is not answering on its HTTP port",
@@ -1271,14 +1623,19 @@ class Report(object):
         if frames_ok is not None:
             if session and not frames_bad:
                 self.add("ok", "link.session",
-                         "the Pico link has a session and has never seen a bad frame",
-                         "frames_ok=%s frames_bad=%s, pico fw %s protocol %s.%s" % (
-                             frames_ok, frames_bad, pico.get("fw"), pico.get("major"), pico.get("minor")),
+                         "the Core→Pico UART link is up: a session, and not one bad frame",
+                         "%s is %s%s, frames_ok=%s frames_bad=%s, pico fw %s protocol %s.%s" % (
+                             device.get("node") or "/dev/ttyAMA0",
+                             "held by " + ", ".join(holders) if holders else "held by nobody",
+                             " (termios %s baud, 8N1)" % line.get("ispeed") if line.get("ispeed")
+                             else "",
+                             frames_ok, frames_bad, pico.get("fw"), pico.get("major"),
+                             pico.get("minor")),
                          check="nothing — but check the firmware version against a real commit: "
                                "'fw 0.1' matches no checkout's git describe")
             elif frames_ok and not session:
                 self.add("fail", "link.no_session",
-                         "frames are arriving and the session never comes up",
+                         "the Core→Pico UART link carries frames and the session never comes up",
                          "frames_ok=%s frames_bad=%s, session=%s" % (frames_ok, frames_bad, session),
                          likely=["the Pico's RX does not reach it: HELLO arrives, WELCOME does not "
                                  "(header pin 8 -> GP1)",
@@ -1287,7 +1644,7 @@ class Report(object):
                                "own console (pedal-diag --probe)")
             elif frames_bad and frames_ok and frames_bad * 10 > frames_ok:
                 self.add("fail", "link.framing",
-                         "most frames from the Pico are malformed",
+                         "most frames on the Core→Pico UART link are malformed",
                          "frames_ok=%s frames_bad=%s" % (frames_ok, frames_bad),
                          likely=["the ground lead is missing, so the two ends disagree about levels",
                                  "a baud or format mismatch: the link is 115200 8N1",
@@ -1296,8 +1653,10 @@ class Report(object):
                                "settings in this report's link section")
             elif not frames_ok:
                 self.add("fail", "link.silent",
-                         "no frames have ever arrived from the Pico",
-                         "frames_ok=0, link open=%s" % link.get("open"),
+                         "no frames have ever arrived on the Core→Pico UART link",
+                         "frames_ok=0, link open=%s, %s" % (
+                             link.get("open"),
+                             "held by " + ", ".join(holders) if holders else "held by nobody"),
                          likely=["GP0 to header pin 10 is out: nothing is arriving at all",
                                  "the Pico has no power (check its own uptime, --probe)",
                                  "the Pico is in BOOTSEL or has no firmware"],
@@ -1534,39 +1893,35 @@ class Report(object):
                 continue
 
         self.write_wiring_findings()
+        self.write_connection_findings()
 
     def write_wiring_findings(self):
         """The USB devices the wiring needs, and the things that are absent by design."""
-        usb = self.dig("usb") or []
-        pico_usb = [d for d in usb if (d.get("vid"), d.get("pid")) == ("2e8a", "0009")]
-        probe = [d for d in usb if (d.get("vid"), d.get("pid")) == ("2e8a", "000c")]
+        pico_usb = [d for d in (self.dig("usb") or [])
+                    if (d.get("vid"), d.get("pid")) == PICO_USB]
+        host = self.dig("host", "hostname") or "the sampled host"
+        port = None
+        for entry in self.dig("serial") or []:
+            if entry.get("usb") and (entry["usb"].get("vid"), entry["usb"].get("pid")) == PICO_USB:
+                port = entry
+                break
         if pico_usb:
             self.add("ok", "wire.pico_usb",
-                     "the Pico's own USB is enumerated",
-                     "%s %s serial %s" % (pico_usb[0].get("path"), pico_usb[0].get("product"),
-                                          pico_usb[0].get("serial")),
+                     "the Pico's own USB console is on %s" % host,
+                     "%s %s serial %s%s" % (pico_usb[0].get("path"), pico_usb[0].get("product"),
+                                            pico_usb[0].get("serial"),
+                                            ", %s" % port["device"] if port else ""),
                      check="nothing — and it means the Pico is powered, so a silent link is a wire "
                            "rather than a dead Pico")
         else:
             self.add("info", "wire.pico_usb_absent",
-                     "the Pico's USB console is not enumerated",
-                     "no 2e8a:0009 on the host",
+                     "the Pico's USB console is not enumerated on %s" % host,
+                     "no 2e8a:0009 on %s's USB" % host,
                      likely=["the Pico's USB cable is not fitted (the design feeds the Pico from the "
                              "header instead, so this is often correct)",
                              "the Pico has no power at all"],
                      check="if you want the Pico's own console, fit its USB cable and read "
                            "/dev/ttyACM0; the 5 V feed is on header pin 4")
-        if probe:
-            self.add("ok", "wire.probe", "the Debug Probe is attached to this host",
-                     "%s %s" % (probe[0].get("path"), probe[0].get("product")),
-                     check="nothing: it is an aid, and its absence is never a fault")
-        else:
-            self.add("info", "wire.probe_absent",
-                     "no Raspberry Pi Debug Probe is attached to this host",
-                     "no 2e8a:000c on this host's USB",
-                     likely=["it is on the Pico, on the Mac, or in a drawer"],
-                     check="nothing — the Pico's console is also reachable over its own USB, and "
-                           "the link's counters come from pedald")
 
         smixer = self.iface.get("codec", {}).get("mixer_state")
         if smixer:
@@ -1594,6 +1949,134 @@ class Report(object):
                          "; ".join((mixer.get("float_db") or [])[:2]) or "no dB readouts",
                          check="the values themselves are applied from %s by pedal-codec at boot; "
                                "this only checks they can be read" % smixer)
+
+    # -- probes, and the connections that should exist -------------------------
+
+    def connection_sides(self):
+        """The machines a probe can be plugged into, and what each one can see.
+
+        `core` is the host the sample came from. `local` is the machine this tool is running on,
+        and it is only there for a live run where the two are different machines: a captured
+        sample cannot know what is on today's desk, and the report must not invent it.
+        """
+        host = self.dig("host", "hostname") or "the sampled host"
+        here = os.uname().nodename
+        same = (host == here)
+        sides = [{
+            "role": "core",
+            "label": "%s (the Core host%s)" % (host, ", where this tool is running" if same else ""),
+            "name": host, "is_here": same,
+            "usb": self.dig("usb") or [], "serial": self.dig("serial") or [],
+        }]
+        local = self.dig("local")
+        if local and not same:
+            sides.append({
+                "role": "local",
+                "label": "%s (the machine running this tool)" % (local.get("hostname") or "here"),
+                "name": local.get("hostname") or "here", "is_here": True,
+                "usb": local.get("usb") or [], "serial": local.get("serial") or [],
+                "age_s": local.get("age_s"),
+            })
+        return sides
+
+    def ports_of(self, side, dev):
+        """The serial ports a USB device exposes on its side (see `serial_ports_for`)."""
+        return serial_ports_for(side, dev)
+
+    def probe_target(self, side, dev, ports):
+        """What a probe's other end is on: the honest answer, or none.
+
+        The lead itself is invisible to software, so this says what the probe LOOKS like it is
+        watching when anything can say (its own UART traffic, read by --probe, or a port some
+        process holds open), and otherwise names the candidates rather than guessing.
+        """
+        sniffed = self.dig("probe_uart") or {}
+        for port in ports:
+            if sniffed.get("device") == port.get("device") and sniffed.get("target"):
+                return "%s: %s" % (sniffed["target"], sniffed.get("because") or "seen on that port")
+        holders = []
+        for port in ports:
+            for holder in port.get("holders") or []:
+                holders.append("%s on %s" % (self.name_process(holder), port["device"]))
+        if holders:
+            return "in use: " + ", ".join(holders)
+        candidates = []
+        for aid in (self.iface.get("attached_aids") or []):
+            if aid.get("usb_id") == "%s:%s" % (dev.get("vid"), dev.get("pid")):
+                candidates = [w.get("target") for w in (aid.get("watches") or [])]
+        if not candidates:
+            return None
+        return ("not visible to software. It can be on: " + "; ".join(candidates) +
+                ". `%s --probe` reads its UART port for a few seconds and says which" % TOOL)
+
+    def name_process(self, holder):
+        """A holder as the sample names it: pedald runs as python3, and the report says pedald."""
+        match = re.match(r"^(\S+) \(([0-9]+)\)$", holder or "")
+        if not match:
+            return holder
+        pid = int(match.group(2))
+        for name in ("pedald", "namchaind", "pedal-codec"):
+            if self.dig("processes", name, "pid") == pid:
+                return "%s (pid %s)" % (name, pid)
+        return "%s (pid %s)" % (match.group(1), pid)
+
+    def write_connection_findings(self):
+        """Every probe, on every machine that can be looked at, and the link that should exist."""
+        sides = self.connection_sides()
+        probes = []
+        for side in sides:
+            for dev in side["usb"]:
+                if (dev.get("vid"), dev.get("pid")) == DEBUG_PROBE:
+                    probes.append((side, dev))
+
+        if not probes:
+            looked = "; ".join("%s's USB: %s" % (s["name"], self.usb_summary(s)) for s in sides)
+            self.add("info", "probe.none",
+                     "No debug probes connected via USB to any device",
+                     "looked at %s" % looked,
+                     likely=["its USB is on a machine this run cannot see, which for a probe "
+                             "watching the pedal is normally the operator's own machine"],
+                     check="nothing, if the probe is on the machine you are sitting at: a probe's "
+                           "USB goes to the machine running the tooling, and only its UART or SWD "
+                           "lead goes to the pedal")
+
+        for side, dev in probes:
+            ports = self.ports_of(side, dev)
+            where = ("%s (the machine running this tool)" % side["name"] if side["is_here"]
+                     else "%s (the Core host)" % side["name"])
+            self.add("info", "probe.on_core" if side["role"] == "core" else "probe.on_local",
+                     "the Debug Probe is connected via USB to %s" % where,
+                     "%s%s%s" % ("%s:%s at %s" % (dev.get("vid"), dev.get("pid"),
+                                                  dev.get("path") or "?"),
+                                 ", serial %s" % dev.get("serial") if dev.get("serial") else "",
+                                 "; port %s" % ", ".join(p["device"] for p in ports) if ports else ""),
+                     connected_to=self.probe_target(side, dev, ports))
+
+        # The other probes: a serial bridge on either machine, which is a USB-TTL lead or another
+        # debugger, and whose state is the port it brings up and whether anything holds it.
+        for side in sides:
+            for dev in side["usb"]:
+                if (dev.get("vid"), dev.get("pid")) in (DEBUG_PROBE, PICO_USB):
+                    continue
+                bridge = USB_SERIAL_VENDORS.get(dev.get("vid"))
+                if not bridge:
+                    continue
+                ports = self.ports_of(side, dev)
+                held = [self.name_process(h) for p in ports for h in (p.get("holders") or [])]
+                self.add("info", "probe.other.%s" % side["role"],
+                         "a %s USB serial device is attached to %s" % (bridge, side["label"]),
+                         "%s:%s %s%s" % (dev.get("vid"), dev.get("pid"),
+                                         dev.get("product") or "(no product string)",
+                                         "; port %s" % ", ".join(p["device"] for p in ports)
+                                         if ports else "; no port enumerated"),
+                         connected_to="held by %s" % ", ".join(held) if held else None)
+
+    def usb_summary(self, side):
+        usb = side["usb"]
+        if not usb:
+            return "no USB devices were enumerated"
+        return "%d device(s), none of them a probe: %s" % (
+            len(usb), ", ".join(sorted({"%s:%s" % (d.get("vid"), d.get("pid")) for d in usb})))
 
     def kmsg_has(self, needle):
         for line in self.dig("kmsg_lines") or []:
@@ -1790,6 +2273,8 @@ def render_text(report, sample, verbose=False):
         if finding.get("evidence"):
             for line in str(finding["evidence"]).splitlines():
                 lines.append("        evidence: %s" % line.strip())
+        if finding.get("connected_to"):
+            lines.append("        connected to: %s" % finding["connected_to"])
         for i, likely in enumerate(finding.get("likely") or []):
             if not likely:
                 continue
@@ -1939,7 +2424,7 @@ def mode_watch(args, interface, interface_path):
                 continue
             # The forking checks only ran on deep samples: carry their last answer forward, with
             # how old it is, so a non-deep sample reports a stale fact rather than an absent one.
-            for name in ("pedal_tune_check", "pedal_device_status", "mixer"):
+            for name in ("pedal_tune_check", "pedal_device_status", "mixer", "local"):
                 if name in sample:
                     stale[name] = {"value": sample[name], "at": sample.get("at")}
                 elif name in stale:
@@ -2196,6 +2681,9 @@ def mode_probe(args, interface, interface_path):
     --watch and they refuse to run while the engine is playing:
       - the Pico's own console: opening /dev/ttyACM0 steals the line from anything reading it,
         and writing feeds bytes to a firmware that may be in the middle of a session
+      - the Debug Probe's UART bridge on this machine: reading it is passive, but it consumes
+        bytes another reader may want, and it is the only way to answer "what is that probe
+        watching?"
       - a deep codec read with the regmap cache bypassed: real I2C traffic on the bus the audio
         codec shares with nothing else, which is safe, but it is not free
     """
@@ -2210,6 +2698,7 @@ def mode_probe(args, interface, interface_path):
         say("  anything else that could disturb a live stream. Stop the engine to probe it.")
     else:
         probe_pico_console(sample, args, say)
+    probe_local_uart(sample, args, say)
     report = build_report(sample, interface, interface_path)
     if args.json_out:
         print(render_json(report, sample))
@@ -2217,6 +2706,23 @@ def mode_probe(args, interface, interface_path):
         print()
         print(render_text(report, sample, verbose=True))
     return 1 if worst(report.findings) == "fail" else 0
+
+
+def read_bytes_for(fd, seconds):
+    """Whatever arrives on a file descriptor for a few seconds, as bytes."""
+    out = b""
+    deadline = time.monotonic() + seconds
+    while time.monotonic() < deadline:
+        ready, _, _ = select.select([fd], [], [], 0.1)
+        if not ready:
+            continue
+        try:
+            chunk = os.read(fd, 4096)
+        except (BlockingIOError, OSError):
+            continue
+        if chunk:
+            out += chunk
+    return out
 
 
 def read_for(fd, seconds):
@@ -2233,6 +2739,113 @@ def read_for(fd, seconds):
         if chunk:
             out += chunk.decode("utf-8", "replace")
     return out
+
+
+def open_raw(device, baud=115200):
+    """A serial port in raw mode, read-only. Raises on the platform's own terms.
+
+    Read-only and with ECHO and canonical mode off: this tool writes nothing to any line, so
+    anything it reads is what something else sent, and a console's echo cannot be mistaken for
+    traffic. (`cu.*` rather than `tty.*` on macOS: opening a callout port does not wait for DCD,
+    so it cannot hang on a device that is not asserting it.)
+    """
+    fd = os.open(device, os.O_RDONLY | os.O_NOCTTY | os.O_NONBLOCK)
+    try:
+        iflag, oflag, cflag, lflag, ispeed, ospeed, cc = termios.tcgetattr(fd)
+        # The termios constant, not the number: on Linux B115200 is a mask (4098), and passing
+        # 115200 there sets nothing at all.
+        speed = getattr(termios, "B%d" % baud, baud)
+        attrs = [0, 0,
+                 (cflag | termios.CS8 | termios.CREAD | termios.CLOCAL)
+                 & ~getattr(termios, "PARENB", 0) & ~getattr(termios, "CSTOPB", 0),
+                 0, speed, speed, cc]
+        termios.tcsetattr(fd, termios.TCSANOW, attrs)
+        return fd
+    except Exception:
+        os.close(fd)
+        raise
+
+
+def probe_pico_console(sample, args, say):
+    """--probe: the Pico's own console, read and never written.
+
+    The firmware prints `fw: up N s`, `session=<n>` and `frames ok=<n> bad=<n>`, and it prints the
+    uptime every 5 s, so this reads for a little over that and quotes what arrived. Nothing is
+    written to the line: the queries the interface model lists exist, but sending one would put
+    bytes into a firmware that may be mid-session, and the uptime line says the same thing for
+    free. Its absence is not a fault either — the design does not require the Pico's USB cable.
+    """
+    console = args.console or ((sample.get("pico") or {}).get("console")
+                               or "/dev/ttyACM0")
+    if not exists(console):
+        say("  the Pico's console: %s does not exist on this host (its USB cable is often not "
+            "fitted, by design)" % console)
+        return
+    try:
+        fd = open_raw(console, 115200)
+    except Exception as exc:
+        say("  the Pico's console: cannot open %s (%s: %s)" % (console, type(exc).__name__, exc))
+        return
+    try:
+        data = read_bytes_for(fd, 5.5)
+    finally:
+        os.close(fd)
+    text = data.decode("utf-8", "replace")
+    lines = [l.strip() for l in text.splitlines() if l.strip()]
+    sample["pico"] = {"probed": True, "device": console, "lines": lines[-40:]}
+    if not lines:
+        say("  the Pico's console: open, and silent for 5.5 s (it speaks when spoken to, and its "
+            "uptime line comes every 5 s — so a silent line means no firmware, or no Pico)")
+        return
+    say("  the Pico's console (%s), %d line(s):" % (console, len(lines)))
+    for line in lines[-8:]:
+        say("    %s" % line)
+
+
+def probe_local_uart(sample, args, say):
+    """--probe: read the Debug Probe's UART port here, to see what its lead is on.
+
+    This is the question a report cannot answer on its own: the lead is invisible to software, so
+    the only evidence is the bytes on it. A few seconds is enough for the two signatures that
+    matter — the Pico sends HELLO about once a second whether or not the Core host answers, and a
+    Linux console prints something eventually. Silence is reported as silence.
+    """
+    local = sample.get("local")
+    if not local:
+        return
+    probes = [d for d in (local.get("usb") or [])
+              if (d.get("vid"), d.get("pid")) == DEBUG_PROBE]
+    if not probes:
+        return
+    ports = serial_ports_for(local, probes[0])
+    if len(probes) != 1 or len(ports) != 1:
+        say("  the Debug Probe here: %d probe(s) and %d serial port(s) on this machine, so which "
+            "port belongs to which probe is not answerable from software" % (len(probes), len(ports)))
+        return
+    device = ports[0]["device"]
+    held = [h for h in (ports[0].get("holders") or [])]
+    if held:
+        say("  the Debug Probe here: %s is held by %s, so it will not be opened"
+            % (device, ", ".join(held)))
+        return
+    seconds = 3.0
+    try:
+        fd = open_raw(device, 115200)
+    except Exception as exc:
+        say("  the Debug Probe here: cannot open %s (%s: %s)" % (device, type(exc).__name__, exc))
+        return
+    try:
+        data = read_bytes_for(fd, seconds)
+    finally:
+        os.close(fd)
+    target, because = classify_serial_bytes(data)
+    sample["probe_uart"] = {"device": device, "target": target, "because": because,
+                            "bytes": len(data), "seconds": seconds}
+    if target:
+        say("  the Debug Probe here: %s is watching %s — %s" % (device, target, because))
+    else:
+        say("  the Debug Probe here: %s is not identified (%s, %d byte(s) in %.0f s)"
+            % (device, because, len(data), seconds))
 
 
 # --------------------------------------------------------------------------- --fixtures
@@ -2339,8 +2952,14 @@ def gather(args):
     globals()["_deep_every"] = int(getattr(args, "deep_every", 10) or 10)
     globals()["_tune_every"] = int(getattr(args, "tune_every", 240) or 240)
     if args.host:
-        return gather_remote(args.host, args.ssh_opt, probe=probe, sample_index=index,
-                             deep_every=_deep_every, tune_every=_tune_every)
+        sample = gather_remote(args.host, args.ssh_opt, probe=probe, sample_index=index,
+                               deep_every=_deep_every, tune_every=_tune_every)
+        # The operator's own USB, for the probe question: which machine is that probe plugged into?
+        # Refreshed with the deep sample, because it changes when somebody reaches for a cable,
+        # which is not the cadence of a temperature. `--watch` carries the last answer forward.
+        if index % _deep_every == 0:
+            sample["local"] = local_machine_aids()
+        return sample
     return gather_local(probe=probe, sample_index=index,
                         deep_every=_deep_every, tune_every=_tune_every)
 

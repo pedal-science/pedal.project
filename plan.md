@@ -1131,6 +1131,19 @@ plays) and `--selftest`. `pedal-diag.service` runs it on demand in the loose pro
 `/status` gained the link's byte counters, drop count and last-rx age, which is what makes a rate
 possible. Design and the I2C dead end: [docs/diagnostics.md](docs/diagnostics.md).
 
+**Probes and the link are reported as connections** (later the same day): the report reads the
+machine the operator is sitting at as well as the pedal host (`ioreg`'s USB tree on macOS, sysfs on
+Linux), because a Debug Probe's USB is plugged into one of them and only its UART or SWD lead
+reaches the pedal — the fact that had "no Debug Probe attached to this host" reading as a pedal
+fault. It says `No debug probes connected via USB to any device`, or names the machine each probe is
+on, with the port it brings up and who holds it; `--probe` reads that port for three seconds to say
+what the probe is watching (the Pico's `a5 5a` frames, or a Linux console's text) and reports
+silence as silence rather than inventing a target. The Core→Pico UART link is reported in the same
+voice, and its two absent states are now told apart: the kernel has no `ttyAMA0` at all (RP1's
+UART0 disabled; `pedal-uart.service` owns the overlay, named from `pico_link.enabled_by`) versus the
+kernel has it and `/dev` has no node for it, which is udev's business and not the device tree's.
+Tests: `devices/common/tests/test_diag.py`, 11 more of them.
+
 **And the audio-level half landed in namchain** the same day (namchain `a69d315`): `engine.levels`
 is a read-only method returning the device's input and output levels per channel, each chain's, and
 every plan node's labelled with its `element` and `role` — which is what "every macro in the running

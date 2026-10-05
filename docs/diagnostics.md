@@ -44,7 +44,7 @@ measurement that closes it**.
 |---|---|---|
 | a report (`scripts/diag`) | reads everything once, prints the findings | write anything, anywhere |
 | `--watch` | samples continuously, one compact line per sample, plus a full sample every tenth | fork per sample, open a bus, talk to the codec |
-| `--probe` | the invasive checks: the Pico's console, and anything else that changes what is measured | run while the engine is playing — it checks, and refuses |
+| `--probe` | the invasive checks: the Pico's console, the Debug Probe's UART bridge on this machine (the only way to say what that probe is watching), and anything else that changes what is measured | run while the engine is playing — it checks, and refuses |
 
 The split is the design, not a convenience. A diagnostic that changed the thing it was measuring
 would be worse than no diagnostic, so the passive reading and the active poking are separate
@@ -86,13 +86,60 @@ sockets. The list is long because the point is breadth; these are the parts wort
 - **the engine**: `engine.status` over the TCP control protocol, with its issues, xruns, render
   histogram, queue drops and model budget; `engine.levels` once namchain publishes it (see below)
 - **the link**: `pedald`'s `/status` — session, frame counters, byte counters, drops, and how long
-  since anything arrived — plus the port's own line discipline from `termios`
+  since anything arrived — plus the port's own line discipline from `termios`, who holds the port
+  open, and the difference between "the kernel has `ttyAMA0`" and "there is a `/dev` node for it"
 - **the host**: thermal zone and its cooling steps, `rpi_volt`'s undervoltage alarm, cpufreq, the
   render thread's realtime policy *and* which core it is on, the audio interrupt's affinity,
-  memory, storage, USB devices, the deployed engine's commit
+  memory, storage, USB devices, the deployed engine's commit, and the pedal's own device-tree
+  overlays from configfs
+- **the machine you are sitting at**: its USB tree and serial ports, read by the tool itself while
+  it gathers on the pedal (`ioreg` on macOS, sysfs on Linux). A captured sample cannot see it, and
+  the report says which machines it looked at rather than guessing.
 - **the things that already answer part of this**: `pedal-tune check` and `pedal-device status` are
   run and *quoted* rather than reimplemented. Where an existing tool is the authority, this one
   repeats its answer and links to it.
+
+## Probes, and the link that should exist
+
+A probe has one USB port, and it is plugged into one machine. Which machine is not a detail: the
+Debug Probe's USB goes to whoever runs the tooling (the Mac, by design), and only its UART or SWD
+lead goes to the pedal, so "no Debug Probe attached to the host" is normally the expected state
+rather than a fault. It cost a session on 2026-10-05 to read that line the other way, so the
+report now says three things, and only one of them at a time:
+
+- `No debug probes connected via USB to any device` — when neither the pedal host nor the machine
+  running the tool has one. The evidence line names every machine that was looked at.
+- `the Debug Probe is connected via USB to <machine>` — for the Core host, for the machine running
+  the tool, or for both, each with its serial number and the port it brings up.
+- `connected to:` on that finding — what the probe's other end is on, when anything can say. A
+  port some process holds open names the process (`held by measure-boot.py (4312)`). Otherwise the
+  candidates come from the interface model's `attached_aids.watches`, and `--probe` settles it: it
+  reads that port for three seconds and looks for the Pico's protocol frames (`a5 5a`, sent about
+  once a second whether or not the Core host answers) or a Linux console's text. Silence is
+  reported as silence — an idle console and a link nobody is talking to look the same, and inventing
+  a target out of the tool's own timing is the failure mode this paragraph exists to prevent.
+
+Other USB serial leads are reported the same way (`probe.other.*`): a USB-TTL adapter, an Arduino,
+or another debugger, with the port it brings up and who holds it.
+
+The Core→Pico UART link is reported as what it is — a connection that has to exist — and its
+wording is the shortest way to answer "is it working again":
+
+```
+  ok    the Core→Pico UART link is up: a session, and not one bad frame
+        evidence: /dev/ttyAMA0 is held by pedald (pid 35704) (termios 115200 baud, 8N1), frames_ok=4803 frames_bad=0, pico fw 0.1 protocol 1.0
+```
+
+When it is not up, the report separates the two faults that look identical from the outside,
+because their fixes have nothing in common:
+
+- **the kernel has no `ttyAMA0` at all** (`link.no_device`): RP1's UART0 is disabled in the device
+  tree. The pedal owns this: `pedal-uart.service` loads `uart0-enable`, and the interface model's
+  `pico_link.enabled_by` is where the report gets that (a card rewrite on 2026-10-05 came back
+  without it: `bench-results/2026-10-05-header-uart-disabled.md`).
+- **the kernel has `ttyAMA0` and `/dev` has no node** (`link.no_node`): the tty is registered
+  (sysfs, `204:64`) and the node is missing. That is udev's business, not the device tree's, and
+  the finding says so instead of sending somebody to look at the overlay.
 
 ## What it cannot see, and says so
 

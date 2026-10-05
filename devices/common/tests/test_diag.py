@@ -18,6 +18,7 @@ rather than merely present in the repo.
 import importlib.machinery
 import importlib.util
 import json
+import os
 import pathlib
 import sys
 import textwrap
@@ -88,8 +89,14 @@ class TheHealthyPedal(unittest.TestCase):
             self.assertEqual(self.severity.get(key), "ok", "%s: %s" % (key, self.severity.get(key)))
 
     def test_the_missing_debug_probe_is_information_not_a_fault(self):
-        self.assertEqual(self.severity.get("wire.probe_absent"), "info")
-        self.assertEqual(self.severity.get("wire.probe"), None)
+        """A fixture cannot see the operator's machine, so "no probe anywhere" is the honest
+        answer for it — and it is an info, never a fault."""
+        probe = finding(self.findings, "probe.none")
+        self.assertIsNotNone(probe)
+        self.assertEqual(probe["severity"], "info")
+        self.assertEqual(probe["what"], "No debug probes connected via USB to any device")
+        self.assertEqual(self.severity.get("probe.on_core"), None)
+        self.assertEqual(self.severity.get("probe.on_local"), None)
 
     def test_the_unbuilt_levels_are_reported_rather_than_faked(self):
         """The engine has no levels yet, and the tool must say so instead of printing zeros:
@@ -410,6 +417,176 @@ class TheInvariants(unittest.TestCase):
             if f["severity"] in ("fail", "warn"):
                 self.assertTrue(f.get("check"), "no check for %s" % f["key"])
                 self.assertTrue(f.get("likely"), "no cause for %s" % f["key"])
+
+
+class ProbesAndTheLink(unittest.TestCase):
+    """Where the probes are, and whether the link that should exist does.
+
+    The probe question cost a session (2026-10-05): the Debug Probe's USB was on the Mac, the
+    report was gathered on vip, and "no Debug Probe is attached to this host" read as a fault on
+    the pedal. A probe's USB goes to the machine running the tooling and only its UART or SWD lead
+    goes to the pedal, so the report now says which machine it looked at and which machine has it.
+    """
+
+    PROBE_ON_CORE = {"path": "3-2", "vid": "2e8a", "pid": "000c",
+                     "product": "Debug Probe (CMSIS-DAP)", "serial": "E664A836A3366B37"}
+
+    def probe_on_local(self, s, ports=("/dev/cu.usbmodem1102",)):
+        s["local"] = {"hostname": "M2", "platform": "darwin", "gathered_with": "ioreg",
+                      "usb": [{"vid": "2e8a", "pid": "000c", "product": "Debug Probe _CMSIS_DAP_",
+                               "serial": "E664A836A3366B37", "path": "Debug Probe@01100000"}],
+                      "serial": [{"device": p, "name": os.path.basename(p), "holders": []}
+                                 for p in ports]}
+        return s
+
+    def test_a_probe_on_the_core_is_reported_with_the_machine_it_is_on(self):
+        s = sample()
+        s["usb"].append(self.PROBE_ON_CORE)
+        f = finding(report_for(s).findings, "probe.on_core")
+        self.assertIsNotNone(f)
+        self.assertIn("vip", f["what"])
+        self.assertIn("2e8a:000c", f["evidence"])
+        self.assertIn("not visible to software", f["connected_to"])
+
+    def test_a_probe_on_the_operators_own_machine_is_reported_as_being_there(self):
+        """The Mac's own USB, read by the tool itself: this is the case that was misread."""
+        s = self.probe_on_local(sample())
+        findings = report_for(s).findings
+        self.assertIsNone(finding(findings, "probe.none"))
+        f = finding(findings, "probe.on_local")
+        self.assertIsNotNone(f)
+        self.assertIn("M2", f["what"])
+        self.assertIn("machine running this tool", f["what"])
+        self.assertIn("/dev/cu.usbmodem1102", f["evidence"])
+
+    def test_the_two_machines_are_reported_separately(self):
+        s = self.probe_on_local(sample())
+        s["usb"].append(self.PROBE_ON_CORE)
+        findings = report_for(s).findings
+        self.assertIsNotNone(finding(findings, "probe.on_local"))
+        self.assertIsNotNone(finding(findings, "probe.on_core"))
+        self.assertIsNone(finding(findings, "probe.none"))
+
+    def test_a_held_port_names_the_process_that_holds_it(self):
+        s = self.probe_on_local(sample())
+        s["local"]["serial"][0]["holders"] = ["measure-boot.py (4312)"]
+        f = finding(report_for(s).findings, "probe.on_local")
+        self.assertIn("measure-boot.py", f["connected_to"])
+
+    def test_a_probe_sniffed_on_the_pico_is_said_to_be_on_the_pico(self):
+        s = self.probe_on_local(sample())
+        s["probe_uart"] = {"device": "/dev/cu.usbmodem1102", "target": "the Pico's link UART",
+                           "because": "protocol frames (a5 5a) are on it"}
+        f = finding(report_for(s).findings, "probe.on_local")
+        self.assertIn("the Pico's link UART", f["connected_to"])
+
+    def test_no_probe_anywhere_says_so_in_one_sentence(self):
+        f = finding(report_for(sample()).findings, "probe.none")
+        self.assertEqual(f["what"], "No debug probes connected via USB to any device")
+        self.assertIn("vip", f["evidence"])
+
+    def test_another_usb_serial_lead_is_reported_as_an_aid(self):
+        s = sample()
+        s["usb"].append({"path": "3-3", "vid": "0403", "pid": "6001", "product": "FT232R",
+                         "serial": "A50285BI"})
+        f = finding(report_for(s).findings, "probe.other.core")
+        self.assertIsNotNone(f)
+        self.assertIn("FTDI", f["what"])
+
+    def test_the_link_that_should_exist_is_reported_as_up_in_one_line(self):
+        f = finding(report_for(sample()).findings, "link.session")
+        self.assertEqual(f["severity"], "ok")
+        self.assertIn("Core→Pico UART link is up", f["what"])
+
+    def test_a_registered_uart_with_no_device_node_is_not_blamed_on_the_overlay(self):
+        """The state measured on vip on 2026-10-05: the tty was registered (204:64) and /dev had
+        no node for it. That is a node problem, and the fix is udev, not the device tree."""
+        s = sample()
+        del s["tty"]["ttyAMA0"]
+        s["link_device"] = {"name": "ttyAMA0", "node": "/dev/ttyAMA0", "node_exists": False,
+                            "class_entry": True, "major_minor": "204:64", "holders": [],
+                            "path": "/sys/devices/platform/1f00030000.serial/1f00030000.serial:0"}
+        s["overlays"] = {"2_uart0-enable": "applied"}
+        f = finding(report_for(s).findings, "link.no_node")
+        self.assertIsNotNone(f)
+        self.assertEqual(f["severity"], "fail")
+        self.assertIn("204:64", f["evidence"])
+        self.assertIn("udevadm", f["check"])
+        self.assertIsNone(finding(report_for(s).findings, "link.no_device"))
+
+    def test_an_absent_uart_names_the_service_that_enables_it(self):
+        s = sample()
+        del s["tty"]["ttyAMA0"]
+        s["link_device"] = {"name": "ttyAMA0", "node": "/dev/ttyAMA0", "node_exists": False,
+                            "class_entry": False, "major_minor": None, "holders": []}
+        s["overlays"] = {}
+        s["units"] = {"pedal-uart.service": {"ActiveState": "failed"}}
+        f = finding(report_for(s).findings, "link.no_device")
+        self.assertIsNotNone(f)
+        self.assertEqual(f["severity"], "fail")
+        self.assertIn("pedal-uart.service", f["evidence"])
+        self.assertIn("failed", f["evidence"])
+        self.assertIn("pedal-uart", f["check"])
+
+    def test_a_holder_is_named_as_the_service_it_is(self):
+        """pedald is a python3 script: its comm is "python3", and the link's port is held by it."""
+        s = sample()
+        s["processes"]["pedald"] = {"running": True, "pid": 35704,
+                                    "cmdline": "python3 /usr/local/sbin/pedald run"}
+        s["link_device"] = {"name": "ttyAMA0", "node": "/dev/ttyAMA0", "node_exists": True,
+                            "class_entry": True, "major_minor": "204:64",
+                            "holders": ["python3 (35704)"]}
+        f = finding(report_for(s).findings, "link.session")
+        self.assertIn("pedald (pid 35704)", f["evidence"])
+
+
+class TheProbeParsers(unittest.TestCase):
+    """The two parsers that read the machine this tool runs on, against real output."""
+
+    IOREG = textwrap.dedent("""\
+        +-o Root  <class IORegistryEntry, id 0x100000100, retain 32>
+          +-o AppleT8112USBXHCI@01000000  <class AppleT8112USBXHCI, id 0x100000471, registered>
+          | +-o Debug Probe (CMSIS-DAP)@01100000  <class IOUSBHostDevice, id 0x10001ce1d, registered>
+          |     {
+          |       "USBSpeed" = 1
+          |       "idProduct" = 12
+          |       "USB Product Name" = "Debug Probe _CMSIS_DAP_"
+          |       "USB Serial Number" = "E664A836A3366B37"
+          |       "idVendor" = 11914
+          |       "locationID" = 17825792
+          |     }
+        """)
+
+    def test_ioreg_decimal_ids_become_the_hex_the_gatherer_reports(self):
+        devices = pd.parse_ioreg_usb(self.IOREG)
+        self.assertEqual(len(devices), 1, devices)
+        self.assertEqual((devices[0]["vid"], devices[0]["pid"]), ("2e8a", "000c"))
+        self.assertEqual(devices[0]["serial"], "E664A836A3366B37")
+        self.assertIn("Debug Probe", devices[0]["path"])
+
+    def test_ioreg_output_with_no_usb_device_is_empty_rather_than_wrong(self):
+        self.assertEqual(pd.parse_ioreg_usb("+-o Root  <class IORegistryEntry>\n"), [])
+
+    def test_lsof_output_becomes_command_and_pid(self):
+        self.assertEqual(pd.parse_lsof("p4312\ncmeasure-boot.py\nn/dev/cu.usbmodem1102\n"),
+                         ["measure-boot.py (4312)"])
+        self.assertEqual(pd.parse_lsof(""), [])
+
+    def test_the_pico_s_protocol_frames_identify_the_link_uart(self):
+        target, because = pd.classify_serial_bytes(b"\xa5\x5a\x01\x07\x01\x00\x00\x00\x30")
+        self.assertEqual(target, "the Pico's link UART")
+        self.assertIn("a5 5a", because)
+
+    def test_kernel_text_identifies_a_console(self):
+        target, _ = pd.classify_serial_bytes(b"\r\nUbuntu 26.04 resolute vip ttyAMA10\r\n")
+        self.assertEqual(target, "a Linux console")
+
+    def test_silence_is_reported_as_silence_and_not_as_a_target(self):
+        """An idle console and a link nobody is talking to both look like nothing, and the tool
+        must not turn its own timing into a diagnosis."""
+        target, because = pd.classify_serial_bytes(b"")
+        self.assertIsNone(target)
+        self.assertIn("nothing arrived", because)
 
 
 class TheRendering(unittest.TestCase):
