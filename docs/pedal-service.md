@@ -432,6 +432,137 @@ pedal changes rigs for real only from v2 (R1):
   upload API and the refresh path, the `/bank` and `/midi-map` endpoints, ljoss's "send to
   pedal" and the library listing, and `sync-library` moving onto the API.
 
+## Implementing what is left, in order
+
+v1 is deployed and running (2026-10-04). This is the order for the rest, and each step is meant
+to be green on its own: engine before service wherever the call is new (rule 4), and nothing
+here changes the audio path.
+
+**1. v1's loose ends** (no plan step; each is small and independently checkable)
+
+- **`log_level` is read and ignored.** `pedal-device` enforces that every key in `pedald.json`
+  is one the service knows, and then the service ignores this one. Either honour it (the `log()`
+  every module takes already funnels every line) or drop the key — a key that does nothing is a
+  lie in the same way a misspelling would be.
+- **The event path on the board.** The bank is empty because `/var/lib/pedal/library/rigs/` holds
+  only `last.json` and `last.prev.json`, so a press has nothing to load. Put one rig there, press
+  `e` on the Pico's console, and watch the engine change rig and `STATE` go back: that is 3.2
+  v1's bench loop, and it is the one acceptance D10 allows before 3.8.
+- **`/status`'s `pico` is empty after a service restart.** The firmware stops sending `HELLO`
+  once its session is up, so a restarted service never learns the version until the Pico resets.
+  Decide: report "unknown" (today's behaviour, honest) or add a query to the reserved `CFG`
+  message. Do not invent a `HELLO` from the Core — the direction is the Pico's.
+- **The backup does not have `library/rigs/`.** R13 says it gains it; today `devices/common/backup`
+  excludes the whole library (`--exclude var/lib/pedal/library`, with a comment that the library is
+  "synced from the Mac"). That was fair when nothing on the pedal wrote rigs. It is not now: the
+  resume state (`last.json`, `last.prev.json`) and any rig the service stores exist **only on the
+  card**, and `sync-library` never carries rigs. Add `library/rigs/` to the backup; leave models
+  and IRs out.
+
+**2. The relay rule's firmware half (R4, Phase 3.6).** The service's half is already on the
+wire: `STATE`'s `audio_ready` is `state == running` and `audible_generation > 0`. **The three
+times are the owner's to confirm** (bypass after 5 s without the link or 2 s without
+`audio_ready`; engage after 1 s of both). Then it is firmware work in `firmware/`, and it is
+Phase 3's "the relay covers boot and failure".
+
+**3. v2: the ready set and `rig.switch`** (with Phase 3.8, once namchain's M3 answers).
+
+- **Engine first** (rule 4): `rig.ready_set {"rigs": [... in priority order]}`, `rig.switch
+  {"rig": name}`, and `engine.status.ready` per rig (tier, state, refusal reason). The names are
+  namchain's to choose.
+- **Service**: derive the ready set (the current bank plus every rig a PC can jump to, D10),
+  keep one switch in flight and one pending, send a new `ready_set` on a bank change, and surface
+  the per-rig state in `/status` so the panel and ljoss can show it.
+- **Confirm R14 first**: this design gives "what fits" to namchain; `rig-switch-strategies.md`
+  ("Limits") and plan 3.8 give it to the service. One of the two must change, and it changes
+  before this step is written.
+- **Acceptance**: the 3.8 switching soak — a switch every few seconds through a bank, the glitch
+  detector, the render tail.
+
+**4. v3: the upload API and the library** (no plan step; the debt register's "no way to upload
+from the app"). Service only — no engine change.
+
+- `PUT /library/{models,irs,rigs}/<path>`, `GET` the three listings, `POST /library/refresh`,
+  and `GET`/`PUT` for `/bank` and `/midi-map`. The path names the file and the id follows from it
+  (R9); stage by dot-name, fsync, rename, then `engine.assets {"refresh": true}`.
+- **Build the listener with `max_body=cfg.max_ir_bytes`.** `httpd.Server`'s default is 1 MiB,
+  which would answer a model or an IR with 413 before its route ever saw it — this is the one
+  transport detail v3 must not forget.
+- Refusals to keep asserted: a declared body over the cap (413, from `Content-Length`, before
+  reading), free space (`statvfs`, 507), a model whose declared rate is not 48 kHz (checked on
+  the staged file, after its weights, R9), a second file for an id that already has one, absolute
+  paths, `..`, control characters, an over-long id, and a rig name that another rig has.
+- **Then `sync-library` moves onto the API** (R10) and the service becomes the only writer of
+  `models/` and `irs/`.
+- **Acceptance**: upload one of each kind over the LAN from the Mac, watch the engine's scan pick
+  it up, and play a rig that names the new id; then the refusals above.
+- ljoss's "send to pedal" is the client of this, and lands in ljoss after it.
+
+**5. What other repos owe this.** R6 (ljoss "my document wins" on connect) must be decided
+*before* v2 puts switches under the player's feet. The MIDI channel wait for a second controller.
+The map's learn UI waits for ljoss to name targets stably. The silent-input liveness check is
+namchain's, and the service surfaces it as an issue once it exists.
+
+**6. Housekeeping that keeps the above honest.** New routes arrive with tests, and the transport
+rules (401, 404/405, 411, 413, the three-failures close, the `"GET /path"` key convention) stay
+asserted. `devices/vip/components.lock` is re-stamped by the next apply on a clean tree (it reads
+`-dirty` today). The service needs the full `python3`: keep it in `devices/vip/packages`, and
+remember that an apply is what moves the running service to the tree — vip currently runs the
+build from before the `termios`/`hmac` change.
+
+## Threads: what owns one, and how to prove they come back
+
+**Who has threads.** The HTTP server, and nothing else: one accept thread plus one per
+connection, all daemons. The link, the engine client, resume and the mapping are single-threaded
+and run on the main loop. That is also why there are no locks: the HTTP thread reads cached or
+immutable state only (`self.status`, `link.open`, `session.session_up`, the counters) and never
+calls the engine itself. **A v3 route that calls the engine from the HTTP thread** (refresh,
+assets) breaks that argument, so it must either take a lock around the engine client or hand the
+call to the main loop through a queue. Decide when the route is written, not after.
+
+**What is already true**, measured against the module on the Mac (2026-10-04):
+
+| | live `pedald-http-*` threads |
+|---|---|
+| after `start()` | 1 |
+| 50 requests, each on a fresh connection, closed properly | 1 |
+| 50 clients that connect and send nothing | **51** |
+| those clients closed | 1 |
+| `stop()` | 0 |
+
+So the ordinary path and shutdown are clean. The defect is **unboundedness**: a connection that
+never sends a request holds a thread until it goes away, with no cap and no read timeout. A LAN
+client can open sockets until the service is a thread per socket (on a 1 GB Pi 5 that is a cheap
+way to exhaust it), and a client that dies without a FIN — a Wi-Fi drop, which this box has —
+leaves one held for as long as the kernel keeps the socket. namchaind caps its own TCP at
+`tcp_max_connections` for the same reason; this listener caps nothing.
+
+**What to fix, and how to check it:**
+
+1. **Cap concurrent connections.** `Server(..., max_connections=N)`, default 8, with a
+   `max_connections` key in `pedald.json` (and in the loader's known-keys map, or it is refused
+   as unknown). Past the cap, accept and close at once with a log line — not a 500, which would
+   claim the request was understood.
+2. **Timeout a silent connection.** A deadline for the first request byte (5 s) and between
+   keep-alive requests (30 s), after which the connection closes. `_Reader` needs a socket
+   timeout it can act on.
+3. **Make the threads attributable.** Name them per server (`pedald-http-<port>-conn`) or hand
+   back the thread objects, so a test or `pedal-diag` can count *its own* server's threads.
+4. **Fix the flaky assertion.** `test_httpd`'s `test_stop_is_safe_twice_and_leaves_no_thread_running`
+   counts `pedald-http-*` process-wide while handlers from earlier tests are still unwinding — it
+   failed four times and passed three across the seven runs done on 2026-10-04. With (3), assert
+   on that server's threads and keep the deadline.
+5. **Show it on the board.** Add `threads` (and a connections counter) to `/status`, or let
+   `pedal-diag` sample `/proc/<pid>/status`; either way the number is visible over time.
+6. **Churn gate.** Hold the host lock and hammer `/status` from the Mac for ten minutes — fresh
+   connections, keep-alive, and sockets abandoned mid-request — sampling `Threads:` before and
+   after. A flat line is the pass; it also covers the engine client's connection lifetime across
+   an engine restart and the link's reconnects across a Pico reset. Evidence to `bench-results/`.
+
+**What is not a leak, so nobody "fixes" it:** the per-connection thread while a request is being
+served, a handler waiting on a slow client (bounded by (1) and (2)), and the accept thread —
+one, by design.
+
 ## What this leaves
 
 - **ljoss on connect** (`rig-edits.md` C12). Today ljoss applies its own document when it
