@@ -278,10 +278,35 @@ class HttpdTest(unittest.TestCase):
         self.server.stop()          # the one setUp started; its cleanup stops it again
         server.stop()
         server.stop()
-        deadline = time.monotonic() + 5
+        # stop() shuts each live connection down and then joins its handler, so by the time it has
+        # returned the handlers are done. The wait is only for a thread's own exit bookkeeping; the
+        # 5 s that used to be here was covering a real bug — a socket closed underneath a handler
+        # that was inside recv(), which could leave it waiting for its whole read timeout.
+        deadline = time.monotonic() + 1
         while time.monotonic() < deadline and self.pedald_threads():
-            time.sleep(0.05)
+            time.sleep(0.01)
         self.assertEqual(self.pedald_threads(), [])
+
+    def test_stop_shuts_the_peer_down_and_stops_answering(self):
+        """What a client sees when the server stops: this connection ends, and no new one starts.
+
+        The handler owns the close — httpd._shutdown only shuts down, so that a reader is never left
+        waiting on a descriptor closed underneath it — which makes this the test that the peer's
+        view is still closed either way.
+        """
+        server = Server("127.0.0.1", 0, TOKEN, ROUTES, log=self.log.append)
+        server.start()
+        conn = http.client.HTTPConnection("127.0.0.1", server.port, timeout=5)
+        conn.request("GET", "/status", headers={"Authorization": f"Bearer {TOKEN}"})
+        response = conn.getresponse()
+        self.assertEqual(response.status, 200)
+        response.read()             # idle keep-alive now: the handler is inside recv()
+        server.stop()
+        conn.sock.settimeout(2)
+        self.assertEqual(conn.sock.recv(1), b"", "the peer did not see its connection end")
+        conn.close()
+        with self.assertRaises(OSError):
+            socket.create_connection(("127.0.0.1", server.port), timeout=2)
 
 
 if __name__ == "__main__":

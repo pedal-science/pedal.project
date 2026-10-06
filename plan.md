@@ -1287,10 +1287,19 @@ exists) holds both halves: that nothing in the image's rootfs invokes dtoverlay 
 the helper really waits. Putting it on the card needs `devices/common/apply`, which refuses while the
 engine is running, so it applies at the next convenient stop.
 
-**A flaky test in the common suite, caught on the way** (2026-10-06):
-`test_httpd.HttpdTest.test_stop_is_safe_twice_and_leaves_no_thread_running` failed once in seven runs
-of `devices/common/tests` (186 tests) while the bench was busy and passed the other six. Timing in a
-thread shutdown; worth making deterministic rather than living with.
+**The flaky httpd test, and the real race underneath it** (2026-10-06):
+`test_httpd.HttpdTest.test_stop_is_safe_twice_and_leaves_no_thread_running` failed about one run in
+seven, and the leftover thread's own stack said why: a `pedald-http-conn` handler sitting in
+`recv()`. `stop()` shut each live connection down and then *closed* it, and closing a socket another
+thread is inside `recv()` on does not wake that thread — it can leave it waiting on a descriptor that
+has been closed, and possibly reused, underneath it, until its 30 s read timeout. `_shutdown` now
+only shuts down, which is the documented way to wake a blocked reader, and the handler closes its own
+connection in its `finally`, so the peer still sees EOF and the descriptor is freed a moment later;
+`stop()`'s docstring now says what it owns — ending connections, not freeing them. The test's 5 s
+wait, which had been covering the bug, is 1 s of grace for a thread's own exit, and a new test
+(`test_stop_shuts_the_peer_down_and_stops_answering`) holds the client-visible half: EOF on a live
+connection, nothing answering on the port afterwards. Five runs of the full suite (187 tests) and 400
+rounds of the stop path in a loop: clean.
 
 **And the audio-level half landed in namchain** the same day (namchain `a69d315`): `engine.levels`
 is a read-only method returning the device's input and output levels per channel, each chain's, and

@@ -26,7 +26,7 @@ may pin its method instead (`"GET /status"`), and then the same path asked with 
 is 405 with an `Allow` header. A path nobody registered is 404 whatever the method, so 404
 always wins over 405.
 
-`stop()` closes the listener and every live connection and returns; a handler that never
+`stop()` closes the listener, shuts down every live connection and returns; a handler that never
 returns is left on its daemon thread rather than holding the caller there.
 """
 
@@ -147,10 +147,11 @@ class Server:
         self._log(f"listening on {self._host}:{self._bound_port}")
 
     def stop(self):
-        """Stop listening, close every live connection, and return.
+        """Stop listening, shut every live connection down so its handler returns, and come back.
 
         Safe to call twice, safe before `start()`, and bounded: the joins have a timeout, so a
-        handler that will not return cannot hold the caller here.
+        handler that will not return cannot hold the caller here. The handlers close their own
+        connections (see `_shutdown`), so what this owns is ending them, not freeing them.
         """
         self._stopping.set()
         listener, self._listener = self._listener, None
@@ -536,12 +537,19 @@ def _peer_text(conn):
 
 
 def _shutdown(conn):
-    """Unblock whichever thread is reading this connection, then close it."""
+    """Unblock whichever thread is reading this connection. Do not close it here.
+
+    shutdown() makes a blocked recv() return 0, which is what wakes the handler; close() does not,
+    and closing a socket another thread is inside recv() on is how a reader ends up waiting on a
+    descriptor that has been closed (and possibly reused) underneath it — 2026-10-06: one handler
+    thread in twenty runs of test_httpd sat in recv() for the full read timeout after stop() had
+    returned. The handler closes its own connection in its `finally`, so the peer still sees EOF
+    from this shutdown() and the descriptor is freed a moment later.
+    """
     try:
         conn.shutdown(socket.SHUT_RDWR)
     except OSError:
         pass
-    _close(conn)
 
 
 def _close(conn):
