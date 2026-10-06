@@ -1,9 +1,11 @@
 # The Pico ↔ Core host UART protocol
 
-**Status:** draft 2, proposed 2026-09-28 in Claude's review (U1–U8, at the end). Draft 1 is what
-both ends speak today — the firmware, and since 2026-10-04 `pedald` (v1) as well, holding a live
-session on vip (plan Phase 3.2 and 3.4, both now in service) — and they move to draft 2 once it is
-agreed, and the bench loopback runs again. This is the contract for plan Phase 3 step 3, and it
+**Status:** draft 2, **agreed 2026-10-06**: the review's eight points stand and U8 is decided
+(both below). Draft 1 is what both ends speak today — the firmware, and since 2026-10-04 `pedald`
+(v1) as well, holding a live session on vip (plan Phase 3.2 and 3.4, both now in service) — so
+this text is the target, not the wire. The two ends move to it **together**, because `str8` is a
+wire change and `pedald` is in service, and the bench loopback runs again on the way (the version
+question is under Open, below). This is the contract for plan Phase 3 step 3, and it
 is kept here because both ends live here: the Pico firmware (`firmware/`) and the pedal service
 (Phase 3.2). The Core-side port is Phase 3 step 4 (see Transport); the port is not part of this
 contract. Engine control is not here either — that is namchain's protocol 2 over TCP, and the
@@ -117,8 +119,9 @@ payload are ignored.
 | 0x0B | `BATTERY` | Pico → Core | `psu_present` u8, `rail_mv` u16 LE — proposed (battery meter, plan Phase 4) |
 | other | — | — | ignore |
 
-Version 1.0 is this document. Nothing outside the bench speaks draft 1, so draft 2's changes
-keep the number.
+Version 1.0 is this document. Draft 2's changes kept the number on the assumption that nothing
+outside the bench spoke draft 1; `pedald` has spoken it in service since 2026-10-04, so that
+assumption is stale and the swap has to be considered rather than assumed — see Open, below.
 
 `caps` bits: 0 relay, 1 MIDI DIN in, 2 display, 3 expression jack, 4–7 footswitch count
 (0–15). The service uses them to refuse a mapping the board cannot honour instead of silently
@@ -157,13 +160,17 @@ MIDI-learn UI, and the service's mapping tables key on `kind`, never on `source`
 Raw MIDI arrives as `cc`/`pc` because the mapping (a trigger → an action) is the pedal service's
 table, not the Pico's — that is what makes USB MIDI a firmware-only change later (debt register).
 
-**Footswitches send what a MIDI controller would** (proposed in draft 2, U8; yours to choose).
+**Footswitches send what a MIDI controller would** (draft 2, U8; **decided 2026-10-06**).
 Footswitches 1–3 send `cc` 80, 81 and 82, the general-purpose switch controllers, with `b` 127
 on press and 0 on release. The service's map turns every `cc` and `pc` into an action
 (`pedal-service.md`); by default 80 is `rig_down`, 81 `rig_up`, and 82 is the assignable one. A
 press on the pedal and the same controller from the MIDI Commander are then the same message,
 byte for byte apart from `source`. The semantic kinds stay for what only the Pico can say: the
 panel's choices (step 7), and `bypass_set` for the panic bypass, whose long press stays local.
+The decision changes the firmware only, and only when 3.5 builds the switches: `pedald` already
+ships this map (`DEFAULT_CC` in `mapping.py`). `source` stays on every event, so a map that wants
+to treat a footswitch differently from the same controller over MIDI can key on it later without
+a wire change.
 
 Kind 0x12 exists only while the expression-jack debt entry survives.
 
@@ -225,6 +232,18 @@ engine. Heartbeats at 250 ms with nothing else happening are about 0.4% of the l
 
 ## Open, and deliberately not settled here
 
+- **The version draft 2 takes, and how the swap is made.** Draft 1's premise ("nothing outside the
+  bench speaks it") stopped being true on 2026-10-04, when `pedald` went into service on vip, so
+  the `str8` change now lands on a link that is carrying a live session. What a mismatch costs was
+  read off both ends rather than assumed: the firmware's `handle_state` copies the name from the
+  byte after `bank_size` to the end of the payload (draft 1) and `pedald` reads its `HELLO`'s
+  `fw_version` the same way, so a draft-1 reader takes the `str8` length byte as the first
+  character and a draft-2 reader takes the first character as a length — **the strings are wrong
+  either way and nothing else is**: no frame is dropped, `HELLO`/`WELCOME` still meet on major 1,
+  and the link keeps its session. Either keep 1.x and swap both ends in one stop (flash the
+  firmware, then start the new `pedald`, with the rig name briefly wrong if the order slips), or
+  take major 2 so a mismatched end is refused with `ERROR` and the Pico's fault path instead of
+  showing a garbled name. Decide it with the swap, not before: nothing else waits on it.
 - The baud rate, if step 4 measures that 115200 is too slow (it will not be, for events).
 - MIDI channel: `cc`/`pc` ignore it today (one controller). A second controller needs a field,
   and a minor version bump. **Settled 2026-09-28** (`docs/pedal-service.md`): ignored for now;
@@ -298,3 +317,11 @@ footswitches send what a MIDI controller would (`cc` 80–82), and the service's
 gives the service, turns every trigger into an action. The other way to make it true is for
 the Pico to translate MIDI into the semantic kinds with a map the service sends over `CFG`: two
 places that must agree, where this has one.
+
+**Decided 2026-10-06: the footswitches send `cc` 80–82**, so a press on the pedal and the same
+button on a controller are one message apart from `source`, and the mapping stays in the one place
+D4 puts it — the service's table — rather than in a `CFG` map the Pico must keep in step. `source`
+is what keeps the choice open: it is provenance today, and a map that wants a footswitch to mean
+something different from the same controller over MIDI can key on it later with no wire change.
+`pedald` needs no change for the decision (`DEFAULT_CC` in `mapping.py` already maps 80 and 81,
+with 82 assignable); the firmware half lands with 3.5, when there are switches to send it.

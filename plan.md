@@ -762,10 +762,21 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      a live session on vip.
    - Draft 2, proposed in Claude's review of 2026-09-28 (U1–U8 in the doc): the CRC's text
      corrected, strings length-prefixed, one `EVENT` in flight with a queue behind it, dedupe
-     per session, `engine_bypass` renamed `engine_muted`, and (U8, yours) footswitches sending
+     per session, `engine_bypass` renamed `engine_muted`, and (U8) footswitches sending
      `cc` 80–82 so footswitch and MIDI messages are identical. The firmware's resync now does
      what the text says (compile-checked; `protocol-test.py` has a check for it, to run on the
-     bench). **U8 is now the only thing in draft 2 that blocks 3.5**, and it is still yours.
+     bench). **U8 is decided (2026-10-06): the footswitches send `cc` 80–82.** A press on the
+     pedal and the same button on the MIDI Commander are then one message apart from `source`,
+     and the map stays in the one place D4 puts it — the service's table — instead of a `CFG` map
+     the Pico would have to keep in step. `source` is kept on every event, so a per-source map can
+     come later with no wire change, and `pedald` needs no change for the decision at all
+     (`mapping.py`'s `DEFAULT_CC` already maps 80 `rig_down`, 81 `rig_up`, 82 assignable). That
+     was the last item of draft 2 that blocked 3.5; the firmware sends the `cc` when 3.5 builds
+     the switches. **What 3.3 still holds** is the swap itself: both ends leave draft 1 for draft
+     2 **together** — `str8` is a wire change and `pedald` is in service on vip — with
+     `protocol-test.py` run again on the bench on the way, and the version question the doc now
+     carries under Open settled as part of it (reflash the Pico from a known commit first: it
+     still reports `fw '0.1'`, which no checkout produces).
 4. **The Core host side** (`tib`'s UART1 went with `tib`).
    - A UART on the Pi's 40-pin header that carries nothing but the link: no kernel console, no
      getty, no SysRq. On piv, pins 8/10 are `ttyAMA0`, and its kernel console is there
@@ -1137,6 +1148,20 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 - **Not designed yet:** the mic stage, cooling and the panel hardware.
 
 ## Next session starts with
+
+**3.3's last open item is decided, and it unblocks 3.5** (2026-10-06, U8). The footswitches send
+`cc` 80–82 — what the MIDI Commander's own buttons send — so a press on the pedal and a press on
+the Commander are the same message apart from `source`, and the trigger-to-action map stays in the
+one place D4 gives it: `pedald`'s `mapping.py`, which already maps them (`DEFAULT_CC`: 80
+`rig_down`, 81 `rig_up`, 82 the assignable one). **Nothing in the service changes.** `source` is
+kept on every event, so a per-source map can come later without a wire change. What 3.3 still
+holds is the swap: both ends leave draft 1 for draft 2 **together**, because `str8` is a wire
+change and `pedald` is in service on vip, and `protocol-test.py` runs again on the bench on the
+way — reflash the Pico from a known commit first, since it still reports `fw '0.1'`, which no
+checkout produces. The one question the swap has to settle (1.x and a coordinated stop, or a
+major bump so a mismatched end is refused) is written up under Open in
+[docs/uart-protocol.md](docs/uart-protocol.md); what a mismatch actually costs was read off both
+ends and is recorded there with it.
 
 **The five repositories are one workspace now** (2026-10-06). Everything the pedal is made of
 lives in `~/code.local/pedal/`: `pedal.project/` beside `namchain/`, `ljoss/`, `rtpi/` and
