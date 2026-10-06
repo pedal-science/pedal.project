@@ -180,9 +180,12 @@ Every rig gets the highest tier the budget allows, in this order.
 
 Notes:
 - **Lite and Full are separate submodels** in a `SlimmableContainer`, not one network at two
-  widths. Their states can't be copied from one to the other, and handing over from Lite to Full
-  is a small change of sound. A 5 ms crossfade stops it clicking. E2 finds out whether the change
-  itself can be heard.
+  widths. Their states can't be copied from one to the other. **E2 measured this on 2026-10-06 and
+  the change is not small**: two separately trained networks, 9 to 40 dB apart, level-matched and
+  time-aligned, so handing over substitutes a different rig's tone rather than a narrower version of
+  the same one. The 5 ms crossfade does stop it *clicking* (102 of 104 model-directions passed every
+  glitch rule), and whether the change itself is acceptable is the one measurement E2 left to a
+  listening test — see the results below.
 - **Upgrading from Lite to Full:** the simplest way is the whole rig at once, one crossfade. For
   those 5 ms both run on the render core. That needs about 1.2× the rig's Full cost, since Lite
   is ~1/5. If that doesn't fit, upgrade one instance at a time, upstream first.
@@ -220,3 +223,23 @@ In `plan.md` 3.8, after E1.
    on a housekeeping core under load; the render core's tail with them running.
 4. **IRs as input records**: fill a convolver from recorded input and check it matches one that
    ran all along.
+
+**Measured 2026-10-06, all four** (namchain `083de32`; the tables are in its `bench-results/` as
+`e2-lite-vs-full.txt`, `e2-chains-and-irs.txt` and `e2-warm-density-vip.txt`, and the reading is
+[bench-results/2026-10-06-e2-tiers.md](../bench-results/2026-10-06-e2-tiers.md)):
+
+1. **Lite and Full are 9 to 40 dB apart** (median 21.7 below the signal), level-matched and
+   time-aligned, because each `SlimmableContainer` holds two separately trained networks. The
+   crossfade between them is clean — 102 of 104 model-directions passed every glitch rule — so the
+   handover does not click, it *changes the sound*. Tier 2's "a Lite takes over at once" therefore
+   plays a different rig until the Full catches up, and the sentence below is the live question.
+2. **170 ms of replay per model is bit-exact at depths 1–4**; 85 ms fails at depth 3–4. A series
+   chain's memory is the *sum* of its stages', so the per-model replay does not grow with depth, and
+   the work is the `d(d+1)/2` replays estimated here: 29.4 ms at depth 2, 58.8 at depth 3, 98.2 at
+   depth 4 on vip.
+3. **8 Full or 30 Lite models stay warm on one core** (p99 of the warm thread under one quantum:
+   89.1% and 97.4%; 10 and 40 do not), not the ~10 and ~50 estimated above. The render core's p99
+   moves 8.08% → 10.60% with 8 Full warm and there were no overruns; a lower-priority spinner on the
+   warm core changes nothing measurable.
+4. **An IR can be kept as a record**: filling the convolver from the last 8192 samples of the
+   model's output reproduces one that ran all along to −138.5 dBFS, for 1.26 ms at the switch.

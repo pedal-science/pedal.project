@@ -952,6 +952,48 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    Extend `namchain-warm-bench` for these rather than build engine features. Then decide the
    tiers, and the limits the pedal service enforces.
 
+   **E2 results, 2026-10-06** (namchain `083de32`, which is the bench with these four modes; the
+   evidence files are `e2-lite-vs-full.txt`, `e2-chains-and-irs.txt` and `e2-warm-density-vip.txt`
+   in its `bench-results/`, or read them with the whole reading in
+   [bench-results/2026-10-06-e2-tiers.md](bench-results/2026-10-06-e2-tiers.md)). Input: a guitar DI
+   recorded for this, [guitar-di.wav](guitar-di.wav), 48 kHz mono 24-bit, 56.66 s — its level was
+   checked not to matter (trimming it 22.7 dB moved the relative null by 1.4 dB).
+   1. **Lite against Full: the premise is false.** All 52 library models, both submodels, compared
+      sample by sample: they are level-matched (median 0.09 dB) and time-aligned (lag 0, within a
+      sample), and 9 to 40 dB apart (median 21.7 dB below the signal, worst the Ampeg SVT VR 8x10
+      Beta52A+DI at 9.2). They are **two separately trained networks**, not one at two widths: the
+      worst model shares 56 of the Lite's 1871 weights with its Full, the vendored `A2.nam` 4. Its
+      "small change of sound" is wrong on every model in the library. **The crossfade is not the
+      problem** — 102 of 104 model-directions were clean at all 11 switch points, and the two that
+      were not are 20–40% over the second-difference bar in the DI's decaying tail. So tier 2's
+      "a Lite takes over at once" plays a different-sounding rig for the catch-up, and the branch
+      above applies: it needs a listening test, and the files are made by
+      [bench-results/2026-10-06-e2-listening](bench-results/2026-10-06-e2-listening/README.md).
+   2. **Chains need 170 ms per model, not 340.** Four different models in series: 170 ms of replay
+      per model is **bit-identical** to the chain that ran all along at depths 1–4; 85 ms is enough
+      at depth 1–2 and fails at 3–4 (−50.1, −57.8 dBFS). The work is `d(d+1)/2` single-model
+      replays, confirmed by the cost on vip: 9.8, 29.4, 58.8 and 98.2 ms at depths 1–4. E1's 340 ms
+      is also explained — a series chain's memory is the **sum** of its stages' (6347 samples for
+      the model + 8192 for the cab = 303 ms), and the bench's default replay was `max()` of the two.
+   3. **8 Full or 30 Lite per core, not ~10 and ~50.** On vip, p99 of the warm thread under one
+      quantum (E1's bar): 8 Full is 89.1%, 10 is 112.9%; 30 Lite is 97.4%, 40 is 141.2%. The cost of
+      the *audio* is small — the render core's p99 goes 8.08% → 10.60% with 8 Full warm, no overruns
+      — and a lower-priority spinner saturating the warm core changes nothing measurable (89.1 →
+      94.3%), which is also the "under load" case. The estimates were optimistic because the same
+      cache crowding the two-amp result found is here: the first Full costs 6.6% of a quantum and
+      the eighth 11.1%.
+   4. **An IR as a record works.** Reset the convolver at the switch and fill it from the last 8192
+      samples of the model's output: **−138.5 dBFS** worst (float rounding in the partitioned FFT),
+      for **1.26 ms** on vip. It only applies to rigs with a separate cab (35 of the 52 models carry
+      their own), and it is an optimisation rather than a requirement.
+
+   **What that leaves the decision:** tier 1 (Full warm, exact) at 8 models per warm core, tier 2
+   (Lite warm) at 30, tier 3 unchanged with a Lite-first catch-up about a third of the Full cost.
+   That supports what `docs/rig-switch-strategies.md` already sketches — tier 1 for the one-press
+   candidates, tier 2 for the rest of an 8-rig bank — **if** the Lite standing in is acceptable.
+   If it is not, the bank is tier 1 and 8 models per core is the ceiling. The one measurement left
+   is the listening test in item 1.
+
 **Done when:**
 - With no app, the footswitches and the MIDI Commander step through rigs stored on the pedal.
 - Changes are click-free, and each takes ≤ 50 ms (D10), through an hour's switching soak.
