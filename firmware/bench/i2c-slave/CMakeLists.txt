@@ -21,7 +21,16 @@ set(CMAKE_C_STANDARD 11)
 
 pico_sdk_init()
 
+set(SLAVE_I2C 0 CACHE STRING "I2C block the slave answers on (0 or 1)")
+set(SLAVE_SDA 4 CACHE STRING "slave SDA pin")
+set(SLAVE_SCL 5 CACHE STRING "slave SCL pin")
+set(SLAVE_SELFTEST 0 CACHE STRING "1: drive the other I2C pair as a master to test this slave")
+
 add_executable(i2c-slave i2c-slave.c)
+
+target_compile_definitions(i2c-slave PRIVATE
+    SLAVE_I2C=${SLAVE_I2C} SDA_PIN=${SLAVE_SDA} SCL_PIN=${SLAVE_SCL}
+    SLAVE_SELFTEST=${SLAVE_SELFTEST})
 
 target_link_libraries(i2c-slave
     pico_stdlib

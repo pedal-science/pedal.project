@@ -39,9 +39,41 @@
 #include "pico/i2c_slave.h"
 #include "pico/cyw43_arch.h"
 
-#define SDA_PIN 4
-#define SCL_PIN 5
+#ifndef SDA_PIN
+#define SDA_PIN 4          /* i2c0's SDA on the Pico */
+#endif
+#ifndef SCL_PIN
+#define SCL_PIN 5          /* i2c0's SCL */
+#endif
+#ifndef SLAVE_I2C
+#define SLAVE_I2C 0
+#endif
+#if SLAVE_I2C == 1
+#define SLAVE_INST i2c1    /* the other pair: GP2/GP3, for a suspected dead pad */
+#else
+#define SLAVE_INST i2c0
+#endif
 #define SLAVE_ADDRESS 0x2a
+
+/* Self-test: with two jumpers between the two I2C pairs (see the README), the *other* block acts as
+ * a master and reads this slave's register 0x00 the way i2cget does — register byte, repeated
+ * start, two bytes back. It proves the peripheral, the event handler, the register map and the
+ * counters on their own, with no other hardware in the loop, which is the difference between "the
+ * firmware is not listening" and "nothing reaches the pins". */
+#ifndef SLAVE_SELFTEST
+#define SLAVE_SELFTEST 0
+#endif
+#if SLAVE_SELFTEST
+#if SLAVE_I2C == 1
+#define MASTER_INST i2c0
+#define MASTER_SDA 4
+#define MASTER_SCL 5
+#else
+#define MASTER_INST i2c1
+#define MASTER_SDA 2
+#define MASTER_SCL 3
+#endif
+#endif
 
 #define REGISTERS 16
 
@@ -123,13 +155,20 @@ int main(void) {
     stdio_init_all();
     sleep_ms(1500);     // let the USB console come up before the banner
 
-    i2c_init(i2c0, 100 * 1000);
+    i2c_init(SLAVE_INST, 100 * 1000);
     gpio_set_function(SDA_PIN, GPIO_FUNC_I2C);
     gpio_set_function(SCL_PIN, GPIO_FUNC_I2C);
     gpio_pull_up(SDA_PIN);
     gpio_pull_up(SCL_PIN);
 
-    i2c_slave_init(i2c0, SLAVE_ADDRESS, i2c_slave_handler);
+    i2c_slave_init(SLAVE_INST, SLAVE_ADDRESS, i2c_slave_handler);
+#if SLAVE_SELFTEST
+    i2c_init(MASTER_INST, 100 * 1000);
+    gpio_set_function(MASTER_SDA, GPIO_FUNC_I2C);
+    gpio_set_function(MASTER_SCL, GPIO_FUNC_I2C);
+    gpio_pull_up(MASTER_SDA);
+    gpio_pull_up(MASTER_SCL);
+#endif
 
     // The LED is the only sign of life when it is powered from the header with the USB lead out,
     // and "is the firmware running at all" is the first question when nothing answers on the bus.
@@ -137,7 +176,12 @@ int main(void) {
     // anything else here.
     bool led_ready = cyw43_arch_init() == 0;
 
-    printf("i2c-slave: up, SDA=GP%d SCL=GP%d, address 0x%02x\n", SDA_PIN, SCL_PIN, SLAVE_ADDRESS);
+    printf("i2c-slave: up, i2c%d SDA=GP%d SCL=GP%d, address 0x%02x\n", SLAVE_I2C, SDA_PIN, SCL_PIN,
+           SLAVE_ADDRESS);
+#if SLAVE_SELFTEST
+    printf("i2c-slave: SELF-TEST on: i2c%d SDA=GP%d SCL=GP%d must be jumpered to the pair above\n",
+           SLAVE_I2C == 1 ? 0 : 1, MASTER_SDA, MASTER_SCL);
+#endif
     printf("i2c-slave: R0=0x%04x R1=0x%04x (complements), R2 counts seconds, R3 takes writes\n",
            regs[0], regs[1]);
     printf("i2c-slave: read it with  i2cget -f -y 1 0x%02x 0x00 w  (and 0x02 for the counter)\n",
@@ -146,6 +190,9 @@ int main(void) {
 
     absolute_time_t next = make_timeout_time_ms(1000);
     uint16_t seconds = 0;
+#if SLAVE_SELFTEST
+    bool selftest_done_this_second = false;
+#endif
     while (true) {
         if (time_reached(next)) {
             next = delayed_by_ms(next, 1000);
@@ -158,6 +205,23 @@ int main(void) {
                        seconds, regs[2], transactions, bytes_in, bytes_out);
             }
         }
+#if SLAVE_SELFTEST
+        // Read our own register 0x00 the way the master does, and say what came back.
+        if (seconds % 2 == 0 && !selftest_done_this_second) {
+            selftest_done_this_second = true;
+            uint8_t reg = 0x00, buf[2] = {0, 0};
+            i2c_write_blocking(MASTER_INST, SLAVE_ADDRESS, &reg, 1, true);
+            int n = i2c_read_blocking(MASTER_INST, SLAVE_ADDRESS, buf, 2, false);
+            printf("i2c-slave: selftest -> %d byte(s) 0x%02x%02x (want 0xdead); slave has seen "
+                   "%u transaction(s)\n", n, buf[0], buf[1], transactions);
+            if (led_ready) {
+                cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, 0);
+            }
+        }
+        if (seconds % 2 == 1) {
+            selftest_done_this_second = false;
+        }
+#endif
         tight_loop_contents();
     }
 }

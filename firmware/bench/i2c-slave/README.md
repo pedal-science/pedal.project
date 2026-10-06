@@ -45,6 +45,34 @@ loop and there is no second ground path:
 The pedal's own Pico keeps its UART link and is not touched. The codec stays where it is, at
 `0x1a`; this answers at `0x2a`.
 
+## If nothing answers: the self-test
+
+`transactions=0` on the console after a bus scan means the slave's peripheral saw no start condition
+at all. That is either "the signals never arrive" or "this firmware is not listening", and the
+counter alone cannot tell them apart. The self-test can, with no other hardware:
+
+1. Jumper the two I2C pairs on the *Pico itself*: GP2 to GP4, GP3 to GP5.
+2. Build and flash the variant whose other block is a master:
+
+```sh
+export PICO_TOOLCHAIN_PATH=$HOME/pico/arm-gnu-toolchain-15.3.rel1 PICO_SDK_PATH=$HOME/pico/pico-sdk
+PATH=$PICO_TOOLCHAIN_PATH/bin:$PATH cmake -S firmware/bench/i2c-slave -B /tmp/selftest \
+  -G Ninja -DPICO_BOARD=pico2_w -DSLAVE_SELFTEST=1 && cmake --build /tmp/selftest
+```
+
+The console then prints, every two seconds, what it read back from its own slave register `0x00`:
+
+```
+i2c-slave: selftest -> 2 byte(s) 0xdead (want 0xdead); slave has seen 1 transaction(s)
+```
+
+`0xdead` and a rising counter prove the peripheral, the event handler, the register map and the
+counters. If they hold, the firmware is not the problem and the fault is in the wiring between the
+Pico and the Core host. If they do not, no amount of rewiring will help and the fault is here.
+
+The same switches reposition the slave on the other pair, for a suspected dead pad:
+`-DSLAVE_I2C=1 -DSLAVE_SDA=2 -DSLAVE_SCL=3` puts it on i2c1 (GP2/GP3) instead of i2c0 (GP4/GP5).
+
 ## The measurement
 
 With the campaign (or any soak) finished — the Core host is shared, so this waits for its lock:
