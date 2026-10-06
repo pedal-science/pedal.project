@@ -49,23 +49,29 @@ on dmesg | grep "GPIO recovery mode" | tail -1 | sed 's/^/  /'
 say
 
 say "--- what this says ---"
-# "No answer" first, and separately from "answered wrongly": on the first run every read failed and
-# an earlier version of this summary claimed the slave had answered. A measurement that misreports
-# its own failure is worse than no measurement.
-nothing=0
-for v in "$r0" "$r1" "$c1" "$c2" "$k0" "$k7"; do
-    case "$v" in Error*|error*|"") nothing=1 ;; esac
+# Keyed on the slave, deliberately. The codec's leads may be out — there is one dupont socket per
+# header hole, so the two devices cannot both be on pins 3 and 5 without a fan-out — and then a NAK
+# from 0x1a is expected and means nothing either way. The slave is the device whose behaviour we
+# know, so its answer is what decides. (The first version of this summary treated any failure as
+# "nothing answered", and the second claimed the slave had answered when every read had failed. A
+# measurement that misreports its own result is worse than no measurement.)
+slave_failed=0
+for v in "$r0" "$r1" "$c1" "$c2"; do
+    case "$v" in Error*|error*|"") slave_failed=1 ;; esac
 done
-if [ "$nothing" = 1 ]; then
-    say "  Nothing answered, or not everything did: slave $r0 / $r1 / $c1 -> $c2; codec $k0 / $k7."
-    say "  This run says nothing about the read path. If dmesg shows aborts, the controller is"
-    say "  still misbehaving and it is worth repeating; a clean NAK means a device is off the bus"
-    say "  (power, a lead, or the firmware), and that has to be fixed before this test can decide"
-    say "  anything. Check the wiring and run it again."
+if [ "$slave_failed" = 1 ]; then
+    say "  INCONCLUSIVE: the bench slave did not answer ($r0 / $r1 / $c1 -> $c2)."
+    say "  Nothing can be read into the codec's lines ($k0 / $k7) until a known device answers."
+    say "  Check the slave's power, its four leads (SDA and SCL not swapped) and that its firmware"
+    say "  is running: its console says 'i2c-slave: up', and after a reflash its LED blinks once a"
+    say "  second, which needs no console and no second supply."
 elif [ "$r0" = "0xdead" ] && [ "$r1" = "0x2152" ] && [ "$c1" != "$c2" ]; then
-    say "  The controller read a known device, three registers, and the live counter moved."
-    say "  So the controller's read path, the bus and the pins are fine, and the codec is the"
-    say "  fault: its read protocol, its board, or the part itself."
+    say "  THE CONTROLLER CAN READ. A known device answered three registers and its live counter"
+    say "  moved — on the same controller and the same pins where every read of the codec aborts."
+    say "  So the codec's read is the fault: its protocol, its board, or the part itself, and not"
+    say "  the controller's read path."
+    say "  For the side-by-side version, put both devices on the bus (a fan-out from pins 3 and 5)"
+    say "  and run this again: the codec's reads should fail while the slave's do not."
 else
     say "  The slave answered, but not with what it should: $r0 / $r1 / $c1 -> $c2."
     say "  That is suspicious of the transfer itself rather than of either device — treat these"
