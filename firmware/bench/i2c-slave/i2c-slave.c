@@ -53,6 +53,14 @@ static volatile uint16_t regs[REGISTERS] = {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 };
 
+// What the master has actually done to us. "Transactions" is one per completed transfer, so a
+// console that shows it climbing while nothing answers on the bus means the address and the wiring
+// reach the slave and the problem is in the reply; a console that shows zero means the master's
+// transactions never arrive. That distinction is the first thing to look at from the bench.
+static volatile uint32_t transactions = 0;
+static volatile uint32_t bytes_in = 0;
+static volatile uint32_t bytes_out = 0;
+
 static volatile uint8_t selected = 0;   // the byte the master put in a write, or the running read
 static volatile uint8_t byte_in_reg = 0;
 static volatile bool have_selection = false;
@@ -76,6 +84,7 @@ static void i2c_slave_handler(i2c_inst_t *i2c, i2c_slave_event_t event) {
     switch (event) {
     case I2C_SLAVE_RECEIVE: {
         uint8_t b = i2c_read_byte_raw(i2c);
+        bytes_in++;
         if (!have_selection) {
             // The first byte of a write is the register address, exactly as the WM8960's protocol
             // has it; everything after it is data, big-endian, auto-incrementing like a memory.
@@ -94,6 +103,7 @@ static void i2c_slave_handler(i2c_inst_t *i2c, i2c_slave_event_t event) {
     case I2C_SLAVE_REQUEST:
         // A read repeats the last write's register address, then walks forward two bytes at a time.
         i2c_write_byte_raw(i2c, reg_byte(selected, byte_in_reg));
+        bytes_out++;
         if (++byte_in_reg > 1) {
             byte_in_reg = 0;
             selected = (uint8_t)(selected + 2);
@@ -102,6 +112,7 @@ static void i2c_slave_handler(i2c_inst_t *i2c, i2c_slave_event_t event) {
     case I2C_SLAVE_FINISH:
         have_selection = false;
         byte_in_reg = 0;
+        transactions++;
         break;
     default:
         break;
@@ -131,6 +142,7 @@ int main(void) {
            regs[0], regs[1]);
     printf("i2c-slave: read it with  i2cget -f -y 1 0x%02x 0x00 w  (and 0x02 for the counter)\n",
            SLAVE_ADDRESS);
+    printf("i2c-slave: the transaction counter below is what says whether the master reaches us\n");
 
     absolute_time_t next = make_timeout_time_ms(1000);
     uint16_t seconds = 0;
@@ -142,8 +154,8 @@ int main(void) {
                 cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, seconds % 2);
             }
             if (seconds % 5 == 0) {
-                printf("i2c-slave: up %u s, R2=0x%04x, selections=%u\n", seconds, regs[2],
-                       have_selection);
+                printf("i2c-slave: up %u s, R2=0x%04x, transactions=%u (in %u, out %u)\n",
+                       seconds, regs[2], transactions, bytes_in, bytes_out);
             }
         }
         tight_loop_contents();
