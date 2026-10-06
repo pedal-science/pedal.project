@@ -1207,6 +1207,15 @@ What that reboot has to show is `running with GPIO recovery mode! scl,sda` in `d
 was already seen once at runtime. Commands and the revert:
 [bench-results/2026-10-06-boot-overlay-installed.md](bench-results/2026-10-06-boot-overlay-installed.md).
 
+**A known-register I2C device exists to settle controller-versus-codec** (2026-10-06): the spare
+Pico 2 W now runs a bench firmware, `firmware/bench/i2c-slave/` — a slave at `0x2a` whose registers
+are an identity word, its complement, a live seconds counter and a scratch register, so a read path
+that returns stale or half-read bytes fails it. Wire four leads to the header (GP4->pin 3, GP5->pin
+5, GND->pin 6, VSYS->pin 2) and `i2cget -f -y 1 0x2a 0x00 w` either answers `0xdead` — the
+controller reads, and the codec's read is the fault — or aborts the way the codec's reads do, which
+puts the controller's read path at fault. The procedure and the outcome table are in its README.
+The measurement waits for the Core host's lock: a levels campaign held it all session.
+
 **And the audio-level half landed in namchain** the same day (namchain `a69d315`): `engine.levels`
 is a read-only method returning the device's input and output levels per channel, each chain's, and
 every plan node's labelled with its `element` and `role` — which is what "every macro in the running
