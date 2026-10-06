@@ -49,29 +49,32 @@ on dmesg | grep "GPIO recovery mode" | tail -1 | sed 's/^/  /'
 say
 
 say "--- what this says ---"
-# Keyed on the slave, deliberately. The codec's leads may be out — there is one dupont socket per
-# header hole, so the two devices cannot both be on pins 3 and 5 without a fan-out — and then a NAK
-# from 0x1a is expected and means nothing either way. The slave is the device whose behaviour we
-# know, so its answer is what decides. (The first version of this summary treated any failure as
-# "nothing answered", and the second claimed the slave had answered when every read had failed. A
-# measurement that misreports its own result is worse than no measurement.)
+# Keyed on the slave, deliberately: the codec's leads can be out (its NAK then means nothing), and
+# the slave is the device whose behaviour we wrote. The two earlier versions of this summary both
+# misreported their own run — one called any failure "nothing answered", the next claimed the slave
+# had answered when every read had failed — so the ordering here matters: decide, then speak.
 slave_failed=0
 for v in "$r0" "$r1" "$c1" "$c2"; do
     case "$v" in Error*|error*|"") slave_failed=1 ;; esac
 done
+# i2cget prints a word low byte first, so the slave's 0xdead arrives as 0xadde: accept either order
+# rather than let a display convention look like a device fault.
+ok_r0=0
+ok_r1=0
+case "$r0" in 0xdead|0xadde) ok_r0=1 ;; esac
+case "$r1" in 0x2152|0x5221) ok_r1=1 ;; esac
+
 if [ "$slave_failed" = 1 ]; then
     say "  INCONCLUSIVE: the bench slave did not answer ($r0 / $r1 / $c1 -> $c2)."
     say "  Nothing can be read into the codec's lines ($k0 / $k7) until a known device answers."
     say "  Check the slave's power, its four leads (SDA and SCL not swapped) and that its firmware"
     say "  is running: its console says 'i2c-slave: up', and after a reflash its LED blinks once a"
     say "  second, which needs no console and no second supply."
-elif [ "$r0" = "0xdead" ] && [ "$r1" = "0x2152" ] && [ "$c1" != "$c2" ]; then
+elif [ "$ok_r0" = 1 ] && [ "$ok_r1" = 1 ] && [ "$c1" != "$c2" ]; then
     say "  THE CONTROLLER CAN READ. A known device answered three registers and its live counter"
-    say "  moved — on the same controller and the same pins where every read of the codec aborts."
+    say "  moved — on the same controller and the same pins where every read of the codec fails."
     say "  So the codec's read is the fault: its protocol, its board, or the part itself, and not"
     say "  the controller's read path."
-    say "  For the side-by-side version, put both devices on the bus (a fan-out from pins 3 and 5)"
-    say "  and run this again: the codec's reads should fail while the slave's do not."
 else
     say "  The slave answered, but not with what it should: $r0 / $r1 / $c1 -> $c2."
     say "  That is suspicious of the transfer itself rather than of either device — treat these"

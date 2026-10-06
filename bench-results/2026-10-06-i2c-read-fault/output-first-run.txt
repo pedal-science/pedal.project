@@ -1,0 +1,26 @@
+controller or codec — 2026-10-06T16:54:01Z
+
+--- the bench slave, vip bus 1 address 0x2a (the device with a known map) ---
+  0x00 identity      = Error: Read failed    (want 0xdead)
+  0x01 complement    = Error: Read failed    (want 0x2152)
+  0x02 counter       = Error: Read failed
+  0x02 counter again = Error: Read failed    (must differ from the line above)
+
+--- the codec, bus 1 address 0x1a (the device under suspicion) ---
+  0x00 = Error: Read failed
+  0x07 = Error: Read failed
+
+--- the controller's own account since those reads ---
+  i2c_dw_handle_tx_abort lines in dmesg: 0
+?
+
+--- the bus lines, and whether recovery is armed ---
+   2: a3    pu | hi // GPIO2 = SDA1
+   3: a3    pu | hi // GPIO3 = SCL1
+
+--- what this says ---
+  The slave answered, but not with what it should: Error: Read failed / Error: Read failed / Error: Read failed -> Error: Read failed.
+  That is suspicious of the transfer itself rather than of either device — treat these
+  numbers as evidence, not as a verdict, and repeat the run.
+
+done — 2026-10-06T16:54:05Z

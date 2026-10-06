@@ -77,9 +77,11 @@
 
 #define REGISTERS 16
 
-// R0/R1 are complements, R2 is a live seconds counter, R3 is scratch for writes. Big-endian on the
-// wire (MSB first), which is the order the WM8960 answers a word read in — the point is to be
-// comparable with the codec's transactions, not merely readable.
+// R0/R1 are complements, R2 is a live seconds counter, R3 is scratch for writes. The master
+// selects a register by *number* (0x00, 0x01, ...), as the WM8960 does, and the value goes out
+// big-endian (MSB first), which is also the WM8960's order — the point is to look like the codec's
+// transactions on the wire, not merely to be readable. Note that `i2cget ... w` prints an SMBus
+// word low byte first, so R0 reads back as 0xadde, not 0xdead.
 static volatile uint16_t regs[REGISTERS] = {
     0xDEAD, 0x2152, 0x0000, 0x0000,
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -97,7 +99,10 @@ static volatile uint8_t selected = 0;   // the byte the master put in a write, o
 static volatile uint8_t byte_in_reg = 0;
 static volatile bool have_selection = false;
 
-static inline unsigned reg_index(uint8_t sel) { return (sel >> 1) & (REGISTERS - 1); }
+// The selection byte is a register number, not a byte offset: 0x01 means R1. Treating it as a byte
+// offset reads back the register below the one asked for, which is exactly what the first working
+// run did — the values looked plausible and were wrong by one.
+static inline unsigned reg_index(uint8_t sel) { return sel & (REGISTERS - 1); }
 
 static uint8_t reg_byte(uint8_t sel, unsigned off) {
     uint16_t v = regs[reg_index(sel)];
@@ -127,7 +132,7 @@ static void i2c_slave_handler(i2c_inst_t *i2c, i2c_slave_event_t event) {
             reg_store(selected, byte_in_reg, b);
             if (++byte_in_reg > 1) {
                 byte_in_reg = 0;
-                selected = (uint8_t)(selected + 2);
+                selected = (uint8_t)((selected + 1) & (REGISTERS - 1));
             }
         }
         break;
@@ -138,7 +143,7 @@ static void i2c_slave_handler(i2c_inst_t *i2c, i2c_slave_event_t event) {
         bytes_out++;
         if (++byte_in_reg > 1) {
             byte_in_reg = 0;
-            selected = (uint8_t)(selected + 2);
+            selected = (uint8_t)((selected + 1) & (REGISTERS - 1));
         }
         break;
     case I2C_SLAVE_FINISH:
@@ -201,8 +206,13 @@ int main(void) {
                 cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, seconds % 2);
             }
             if (seconds % 5 == 0) {
-                printf("i2c-slave: up %u s, R2=0x%04x, transactions=%u (in %u, out %u)\n",
-                       seconds, regs[2], transactions, bytes_in, bytes_out);
+                // The line levels matter as much as the counters: a pin that follows what the
+                // master drives is on the same wire as the master's pin, and one that ignores it is
+                // not — which is what separates a wiring fault from a silent device.
+                printf("i2c-slave: up %u s, R2=0x%04x, transactions=%u (in %u, out %u), "
+                       "SDA=%d SCL=%d\n",
+                       seconds, regs[2], transactions, bytes_in, bytes_out,
+                       gpio_get(SDA_PIN), gpio_get(SCL_PIN));
             }
         }
 #if SLAVE_SELFTEST

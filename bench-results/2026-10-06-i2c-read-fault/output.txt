@@ -1,26 +1,31 @@
-controller or codec — 2026-10-06T16:54:01Z
+controller or codec — 2026-10-06T18:42:55Z
 
 --- the bench slave, vip bus 1 address 0x2a (the device with a known map) ---
-  0x00 identity      = Error: Read failed    (want 0xdead)
-  0x01 complement    = Error: Read failed    (want 0x2152)
-  0x02 counter       = Error: Read failed
-  0x02 counter again = Error: Read failed    (must differ from the line above)
+  0x00 identity      = 0xadde    (want 0xdead)
+  0x01 complement    = 0x5221    (want 0x2152)
+  0x02 counter       = 0x1100
+  0x02 counter again = 0x1200    (must differ from the line above)
 
 --- the codec, bus 1 address 0x1a (the device under suspicion) ---
   0x00 = Error: Read failed
   0x07 = Error: Read failed
 
 --- the controller's own account since those reads ---
-  i2c_dw_handle_tx_abort lines in dmesg: 0
-?
+  i2c_dw_handle_tx_abort lines in dmesg: 12
+  [ 1755.291692] i2c_designware 1f00074000.i2c: i2c_dw_handle_tx_abort: lost arbitration
+  [ 1755.302664] i2c_designware 1f00074000.i2c: i2c_dw_handle_tx_abort: SDA stuck at low
+  [ 1755.529491] i2c_designware 1f00074000.i2c: i2c_dw_handle_tx_abort: lost arbitration
+  [ 1755.540623] i2c_designware 1f00074000.i2c: i2c_dw_handle_tx_abort: SDA stuck at low
 
 --- the bus lines, and whether recovery is armed ---
    2: a3    pu | hi // GPIO2 = SDA1
    3: a3    pu | hi // GPIO3 = SCL1
+  [    5.534007] i2c_designware 1f00074000.i2c: running with GPIO recovery mode! scl,sda
 
 --- what this says ---
-  The slave answered, but not with what it should: Error: Read failed / Error: Read failed / Error: Read failed -> Error: Read failed.
-  That is suspicious of the transfer itself rather than of either device — treat these
-  numbers as evidence, not as a verdict, and repeat the run.
+  THE CONTROLLER CAN READ. A known device answered three registers and its live counter
+  moved — on the same controller and the same pins where every read of the codec fails.
+  So the codec's read is the fault: its protocol, its board, or the part itself, and not
+  the controller's read path.
 
-done — 2026-10-06T16:54:05Z
+done — 2026-10-06T18:42:58Z

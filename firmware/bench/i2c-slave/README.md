@@ -19,6 +19,10 @@ auto-incrementing like a memory:
 | `0x02` | seconds since reset | a **live** value: read it twice a second apart and it must change. A read path that returns stale bytes fails this and passes the first two |
 | `0x03` | writable | exercises the write path on the same device |
 
+The register is selected by **number** (`0x00`, `0x01`, ...), and `i2cget ... w` prints an SMBus
+word **low byte first**, so R0 reads back as `0xadde` — that is `0xdead` on the wire, MSB first,
+which is the WM8960's own order.
+
 ## Build and flash (on the Mac)
 
 ```sh

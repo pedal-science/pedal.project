@@ -657,6 +657,39 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    the breadboard proves the circuit, the stripboard is practice before the enclosure's tighter
    board A, and the noise is measured on the stripboard. Board 1 (about 127 × 36 mm) doesn't fit
    the enclosure; board A gets its own layout in Phase 4.
+4. **Calibrate the input meters with a player in the path** — the step that makes ljoss's meters
+   mean something, and the reason board 1 is not finished when it plays. A meter is only useful
+   once its full scale is the jack's clip point rather than digital 0 dBFS: this input clips at
+   **−11.25 dBFS** and the app draws 0 dBFS, so the bargraph promises about 11 dB of headroom that
+   does not exist. Everything the campaign measured was the **codec's** scale, driven by the
+   interface's line output (about 2 kΩ, +14.5 dBu at 0 dBFS) into a jack wired straight to LIN1.
+   No guitar has ever been the source into this input, and board 1 changes the loading the source
+   sees — which is a fact about the jack, and so about what the player's own signal is *at* the
+   meter. Two runs, and the first one needs no board 1 at all.
+   - **Now: a real guitar into a guitar buffer pedal into the input.** The stand-in the case
+     measurements already name (2026-10-04). The buffer's job here is not to make the signal
+     hotter: it is to hand the pedal what a pedalboard hands it, a low-impedance source, while
+     the guitar is loaded by the buffer instead of by the codec. Record with the pedal's own
+     `engine.record` as well as the SSL, and take the guitar pass as a **played take**, not
+     `signals.py`'s DI file: the file proves the meter arithmetic, and a player is what the scale
+     is for. If the buffer has a second output, put it into an SSL input so the take's own level
+     is known independently of the pedal's reading. Update ljoss's calibration block
+     (`input_clip_dbfs`, `input_full_scale_dbu`, the meter's floor and nominal) from what comes
+     back. Expect the clip counter's pinned-frame counts to stay unhelpful until it counts the
+     converter's own positive rail: read them as a pointer, not a measurement.
+   - **Once board 1 is built: both switch positions.** The same **Inst** run through the 1 MΩ
+     follower at unity, and the **Line** run with the SSL as the known line source, because the
+     two cannot share a scale — full scale is about 3.06 V peak at the jack on Line against
+     0.92 V peak on Inst, and a passive guitar through the Line pad is judged through 680 kΩ
+     (the 470 Hz pole). Each position gets its own clip point and its own calibration block, so
+     the app has to know which one the switch is in and pick the matching scale — a hardware
+     switch the app cannot see is a meter that lies in one of its two positions. Measure the
+     Line pad's ratio here rather than trusting 330k/(680k+330k), and settle the PGA question
+     (bench entry, items 1–2) while the ladder is set up.
+   - Order and cost: this is a `Tools/levels` campaign, so it goes under the host lock, after the
+     codec's card is back — it is down at the time of writing, and no campaign can run until it
+     answers. Both runs are written up as dated bench entries, and ljoss's two blocks land in
+     dependency order after them.
 
 **2c. Modify and compare.**
 - Replace LIN1's 47 nF ceramic shunt with a film capacitor (2b finding), and measure THD against
@@ -672,6 +705,9 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
 - Guitar → buffer → WM8960 → `namchaind` → output stage → amp works.
 - The noise floor is recorded at each stage.
 - An hour on the codec is clean.
+- The input's clip point is known **at the jack, in both switch positions**, and ljoss's meters are
+  scaled to it rather than to 0 dBFS (2b.4) — the player's meters are how the stage is judged, and
+  they are wrong until that number exists.
 
 ## Phase 3 — The control surface and the pedal service
 
@@ -1216,6 +1252,34 @@ controller reads, and the codec's read is the fault — or aborts the way the co
 puts the controller's read path at fault. The procedure and the outcome table are in its README.
 The measurement waits for the Core host's lock: a levels campaign held it all session.
 
+**And it answered the question** (2026-10-06, later): on one bus in one run the controller read the
+bench slave at `0x2a` perfectly — identity word, its complement, a moving counter — while every read
+of the codec at `0x1a` failed with `lost arbitration` and `SDA stuck at low`, and a scan shows the
+codec answering its own address. So the controller's read path is fine and **the codec's read is the
+fault**: its protocol, its board or the part. Reaching a bus that could answer took four faults, all
+found by evidence: no link from the breadboard to header pins 3 and 5; the lead from pin 5 not
+conducting (proven by driving vip's pins low and reading the slave's own line-level report); the
+Pico's pads cleared by swapping the leads, where the fault followed the wire; and the instrument's
+own register addressing, which treated a register number as a byte offset. What remains open is
+*why* the codec cannot be read, which needs a scope on SDA/SCL during one read or a second controller
+known to read the same part. Evidence:
+[bench-results/2026-10-06-i2c-read-fault/](bench-results/2026-10-06-i2c-read-fault/).
+
+**The pedal is back** and its reads still fail the same way. After the reboot the codec's driver
+probe had failed (no card, mute pedal); with the bus wired again the probe was retried in place —
+`echo 1-001a > /sys/bus/i2c/drivers/wm8960/bind`, then `systemctl start pedal-codec` — the card came
+back and the pedal reports 10 ok, 1 info. Its writes never stopped working, which is why the probe
+succeeds. `pedal-uart.service` still fails at boot on a `dtoverlay` race (see below) although the
+link is up.
+
+**A boot-time race between the two overlay services** (2026-10-06): `pedal-uart.service` failed with
+`* Failed to create '/tmp/.dtoverlays' - 17` — `dtoverlay`'s temporary directory already existing,
+which is what two of them starting at once looks like. `pedal-uart` and `pedal-codec` both call
+`dtoverlay` and neither is ordered after the other, so they race for one shared directory. Nothing
+was lost this boot — the firmware honoured `enable_uart=1` on its own and the link came up — but the
+same race can hit the codec's overlay, which is not harmless. The fix belongs in the units: order
+them (`After=`/`Before=`) or serialise the overlay step so the collision cannot happen.
+
 **And the audio-level half landed in namchain** the same day (namchain `a69d315`): `engine.levels`
 is a read-only method returning the device's input and output levels per channel, each chain's, and
 every plan node's labelled with its `element` and `role` — which is what "every macro in the running
@@ -1249,6 +1313,17 @@ question — what measuring *costs* — and the switch to stop paying it:
   condition in the campaign — a 34-node rig with a client polling at 20 Hz — still cost only 4.8% of
   one core. This is an upper bound rather than a real rig's number: a rig with an A2 model in it
   would show a smaller *share*, because an inference swamps a probe.
+
+**What the meters still lack is their scale, and a guitar has never been the source that set it.**
+The campaign's numbers are the codec's, measured through the interface's line output, and a meter
+drawn to 0 dBFS on this input claims about 11 dB of headroom the jack does not have. The fix is a
+calibration, not a display tweak: **2b.4** runs the campaign again with a real guitar into a guitar
+buffer pedal in front of the input — possible today, and it is the stand-in the case measurements
+already name
+([2026-10-04-case-first-sound-end-to-end.md](bench-results/2026-10-04-case-first-sound-end-to-end.md)),
+and then again for the Inst and Line positions once board 1 exists, because the two positions
+cannot share a scale. That item is the dependency: until it has run, the bars are accurate and
+meaningless.
 
 **The conversion never touches the audio core, and two finer switches turn the sampling down**
 (2026-10-06, namchain `5eff47e`). The worry was that the control thread's dB conversion — square
