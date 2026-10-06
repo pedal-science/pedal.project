@@ -1,0 +1,40 @@
+host vip
+pedal 572910adbec1e2a7a35ba5779f88b743d1526e65
+rtpi ad9fee1430e5431266c53dfc3ebbbd102f276fe8
+namchain a69d31560f9230ca316be9a486778a245fbace9a
+snapshot 20260929T000000Z
+pedal-kernel 7.0.0-1017-raspi-realtime-numaemu1-trimmed
+fallback-kernel 7.0.0-1017-raspi-realtime
+rescue-kernel 7.0.0-1017-raspi
+kernel-kind trimmed
+kernel-rtpi e873c9cd2195088674fc296e42017909b92ae311
+kernel-boot-sha256 dac07fb7cdb514a45156afc2ea17a78b74ed1b3602ffd04ca30692c4cc43d527
+kernel-modules-sha256 ebce6fc56fbedc6e3b71eb4c91399f6d74c8b78c4eea30a8351891014e2816ab
+kernel-dtb-sha256 1d1988efb6e918ffb516362cebef482f8f6c48bbb4462129b57e3d1888afd2c3
+pedal-kernel-vmlinuz eb6904d8a017cbc39c9cada5ec17539cdba956fdd07ab4244dea1b1821cdfd78
+fallback-kernel-vmlinuz de22756cee5bdc25cfa507a31d3d7e4dad843bb2f690beea9df52aecccbaf5a8
+image-bytes 6247415808
+image-sha256 d8d098e6b9e730410e4d182cf801726af9821dcaa7674ad856c639d92aaf3ed4
+packages-pedal 82b6534d8f46ea8278a5d5bffe8624b01e97060341e70edbf61b98ea3156577a 187
+packages-rescue 2a8e1fb602e3153f423d4216c17db52c846f42dfa6ca182e914232c0ed6a0fb1 159
+tree-bootsel d830ae76729198ca9159797406c8b35bc110ccd4ecf64c2d4a6ad8d7263bb394 4
+tree-pedal-boot 65ccbae194cfa0c2f59c3b481e7b87eafb04f34b7c0a4dd45cfcccd4a942f577 777
+tree-rescue-boot 0c9fbfe5c0309a0972ea1ea343287fcd28d486881d0d99478df70f93d59669af 384
+tree-rescue 8ca44537b7c2f6b16ecb1ba0a7c23b8b2f8da6e98649c56326d187449bd7c467 21487
+tree-pedal 35cd99ead8c7c9b07612a03a0af3691f0e2fee13c19f06eef3cc73e1031122a9 26134
+tree-pedal-data eaf2cb747f25ee348bb5527b8246e162fd6a4fd7379f9ec9add9ebb9329ac1c6 4
+--- sfdisk
+label: gpt
+label-id: 2CB2937F-0A15-52C6-9F8C-1C0379F6523B
+device: vip.img
+unit: sectors
+first-lba: 2048
+last-lba: 12201950
+sector-size: 512
+
+vip.img1 : start=        2048, size=      131072, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=A053EFEC-0910-5338-8917-480E9A267B21, name="bootsel"
+vip.img2 : start=      133120, size=     1048576, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=98E3FE32-4130-56EC-AE3C-45A0FC72B337, name="pedal-boot"
+vip.img3 : start=     1181696, size=      524288, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=C7B254D8-7283-5832-8278-561635E17D45, name="rescue-boot"
+vip.img4 : start=     1705984, size=     3145728, type=B921B045-1DF0-41C3-AF44-4C6F280D3FAE, uuid=ADA57533-8C8B-506A-B37A-4A28B43C0587, name="rescue"
+vip.img5 : start=     4851712, size=     6291456, type=B921B045-1DF0-41C3-AF44-4C6F280D3FAE, uuid=3B34BD9D-6EF7-5751-8932-003E1C7AE819, name="pedal"
+vip.img6 : start=    11143168, size=     1056768, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=0B72A613-89A6-53BF-B195-74F207639741, name="pedal-data"
