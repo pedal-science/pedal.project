@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="460" viewBox="0 0 900 460" role="img">
+<rect width="900" height="460" fill="#ffffff"/>
+<text x="78.0" y="26.0" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="16" fill="#0f172a" text-anchor="start" font-weight="600">What each way of measuring costs, one core, client polling at 1 Hz</text>
+<text x="78.0" y="44.0" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="12" fill="#475569" text-anchor="start" font-weight="400">namchaind&#x27;s CPU as a share of one core (the board has four)</text>
+<line x1="78.0" y1="368.0" x2="876.0" y2="368.0" stroke="#e2e8f0" stroke-width="1.0"/>
+<text x="68.0" y="372.0" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="end" font-weight="400">0%</text>
+<line x1="78.0" y1="294.8" x2="876.0" y2="294.8" stroke="#e2e8f0" stroke-width="1.0"/>
+<text x="68.0" y="298.8" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="end" font-weight="400">1.5%</text>
+<line x1="78.0" y1="221.7" x2="876.0" y2="221.7" stroke="#e2e8f0" stroke-width="1.0"/>
+<text x="68.0" y="225.7" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="end" font-weight="400">3%</text>
+<line x1="78.0" y1="148.5" x2="876.0" y2="148.5" stroke="#e2e8f0" stroke-width="1.0"/>
+<text x="68.0" y="152.5" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="end" font-weight="400">4.5%</text>
+<line x1="78.0" y1="75.3" x2="876.0" y2="75.3" stroke="#e2e8f0" stroke-width="1.0"/>
+<text x="68.0" y="79.3" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="end" font-weight="400">6%</text>
+<line x1="78.0" y1="368.0" x2="876.0" y2="368.0" stroke="#94a3b8" stroke-width="1.2"/>
+<rect x="113.9" y="257.8" width="87.8" height="110.2" rx="3" fill="#94a3b8" opacity="1.0"/>
+<text x="157.8" y="249.8" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#0f172a" text-anchor="middle" font-weight="600">2.26%</text>
+<text x="157.8" y="388.0" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">levels off</text>
+<rect x="273.5" y="118.4" width="87.8" height="249.6" rx="3" fill="#2563eb" opacity="1.0"/>
+<text x="317.4" y="110.4" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#0f172a" text-anchor="middle" font-weight="600">5.12%</text>
+<text x="317.4" y="94.4" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="middle" font-weight="400">+2.86 pp</text>
+<text x="317.4" y="388.0" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">measuring</text>
+<rect x="433.1" y="147.3" width="87.8" height="220.7" rx="3" fill="#0d9488" opacity="1.0"/>
+<text x="477.0" y="139.3" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#0f172a" text-anchor="middle" font-weight="600">4.52%</text>
+<text x="477.0" y="123.3" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="middle" font-weight="400">+2.27 pp</text>
+<text x="477.0" y="388.0" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">measuring</text>
+<text x="477.0" y="402.0" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">drained at poll rate</text>
+<rect x="592.7" y="228.2" width="87.8" height="139.8" rx="3" fill="#d97706" opacity="1.0"/>
+<text x="636.6" y="220.2" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#0f172a" text-anchor="middle" font-weight="600">2.87%</text>
+<text x="636.6" y="204.2" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="middle" font-weight="400">+0.61 pp</text>
+<text x="636.6" y="388.0" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">measuring</text>
+<text x="636.6" y="402.0" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">one frame per period</text>
+<rect x="752.3" y="255.8" width="87.8" height="112.2" rx="3" fill="#7c3aed" opacity="1.0"/>
+<text x="796.2" y="247.8" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="13" fill="#0f172a" text-anchor="middle" font-weight="600">2.30%</text>
+<text x="796.2" y="231.8" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="middle" font-weight="400">+0.04 pp</text>
+<text x="796.2" y="388.0" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">both</text>
+<line x1="78.0" y1="257.8" x2="876.0" y2="257.8" stroke="#94a3b8" stroke-width="1.0" stroke-dasharray="4 3"/>
+<text x="82.0" y="251.8" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="start" font-weight="400">switch off: 2.26%</text>
+</svg>

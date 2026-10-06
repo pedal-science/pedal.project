@@ -1,150 +1,185 @@
 # What measuring audio levels costs namchaind
 
-**Measured:** 2026-10-06, on **vip** (Raspberry Pi 5, 1 GB, Cortex-A76). Engine `f00714d`
-(`f00714d` is where `--levels`/`--no-levels` landed; the daemon reported `f00714d` for every run).
+**Measured:** 2026-10-06, on **vip** (Raspberry Pi 5, 1 GB, Cortex-A76). Engine `5eff47e`, where
+`--levels`/`--no-levels` and the two finer switches below all landed; the daemon reported `5eff47e`
+for every run. An earlier run of conditions 1–18 on `f00714d` is superseded by this one and is not
+quoted: the two agree to within the tick resolution, and quoting one binary is simpler than
+explaining two.
 **Instrument:** [`poll-levels.py`](poll-levels.py) — a TCP `engine.levels` client, the same shape as
 the meter in ljoss. **Campaign:** [`run-campaign.sh`](run-campaign.sh). **Arithmetic:**
-[`analyse.py`](analyse.py). **Raw results:** [`results.jsonl`](results.jsonl),
-[`stability.jsonl`](stability.jsonl).
+[`analyse.py`](analyse.py). **Charts:** [`charts.py`](charts.py). **Raw results:**
+[`results.jsonl`](results.jsonl).
+
+![What each way of measuring costs](overhead-by-mode.svg)
+
+![What a client polling costs, by rate and by rig](overhead-by-poll-rate.svg)
 
 ## Why this was measured
 
 `engine.levels` folds a peak, a sum, a frame count and a clip count into a probe **per sample**, in
-the loop the non-finite guard already walks. That is the price of a level meter, and it is paid on
-the render core whether or not any client is watching. `f00714d` adds the switch to stop paying it:
-`--no-levels` builds no probes at all, so the render path does no level work rather than a little
-less work.
+the loop the non-finite guard already walks. That is the price of a level meter, and the render
+thread pays it whether or not any client is watching.
 
-These numbers are what that switch buys, and what a client polling the levels costs on top.
+The question that started this was narrower: the conversion — the square root, the logarithms, the
+JSON — happens on the control thread, which is only useful if the control thread is somewhere the
+render thread is not. If it shares the audio core, it is eating the headroom the audio work needs.
+So this campaign answers three things: **where the conversion runs** (Part 1), **what the switches
+cost** (Part 2), and **what changing the sampling and the read rate buys** (Part 3).
 
 ## Method
 
-Two series, because the switch has two costs and they are not visible in the same place.
+Two rigs, generated ([`make-rig.py`](make-rig.py)) and passed as absolute paths with `--rig` so every
+condition ran the same document:
 
 | Series | Rig | What it isolates |
 |---|---|---|
 | **A** | `input → output` (2 nodes) | The cost of **answering**: the levels JSON is built and sent once per poll. There is almost nothing inside the rig to measure. |
 | **B** | 32 × `nc.gain` (34 nodes) | The cost of **measuring**: every node's probe folds a sample. The rig's own cost is one multiply per node, so the probes dominate rather than the audio. |
 
-Both rigs are generated ([`make-rig.py`](make-rig.py)) and passed as absolute paths with `--rig`, so
-every condition ran the same document. Series B is a synthetic upper bound, not a realistic rig: a
-rig with an A2 model in it would show a smaller *share*, because an inference swamps a probe. The
-real saving for a real rig sits between the two series.
+Series B is a synthetic **upper bound**, not a realistic rig: a rig with an A2 model in it would show
+a smaller *share*, because an inference swamps a probe. The real saving for a real rig sits between
+the two series.
 
 - **CPU** is the daemon process's own `utime + stime` from `/proc/<pid>/stat`, every thread included,
   read immediately before and after the window. It is the kernel's accounting, not a sampled estimate.
   `CLK_TCK` is 100, so one tick is 10 ms of CPU time; over a 120 s window one tick is 0.83 ms of CPU
   per second of wall clock, which is the resolution every figure below is quoted to.
-- **Windows** are 120 s for the campaign, 60 s for the stability re-runs. Every condition used the
-  same window and the same 8 s settle after the daemon reported `running`.
-- Percentages are a share of **one** core. vip has four; the render thread is pinned to core 3.
-- Each run was gated before it started: the daemon had to report `running`, `engine.levels` had to
-  answer with the rig's expected node count when measuring, and had to be **refused** when not. A run
-  that failed either gate wrote an error instead of a number — which is why the "off" rows are
-  trustworthy rather than merely labelled.
-- Level measuring was **on** unless the condition says `off`, so it stays the product default and the
-  switch is what is under test.
+- **Percentages are a share of one core.** vip has four.
+- **Windows** are 120 s, after an 8 s settle once the daemon reported `running`.
+- Each run was **gated before it started**: the daemon had to report `running`; `engine.levels` had to
+  answer with the rig's expected node count when measuring, and to be **refused** when not; and the
+  daemon's own reported mode (`cache.rate_hz`, `cache.first_frame`) had to match what the condition
+  asked for. A run that failed a gate wrote an error instead of a number. That gate is not ceremony:
+  the first attempt at this campaign measured whatever `pedald seed` had resumed — a different
+  document — and nothing in the CPU numbers would have said so.
+- **Measuring was on** unless a condition says `off`, so the product default is what is under test.
 
-## Results
+## Part 1 — where the measurement actually runs
+
+**The conversion does not run on the audio core. The audio core is exclusively the render thread's.**
+
+```
+$ ps -L -o tid,psr,cls,rtprio,comm -p $(pgrep -x namchaind)
+    TID PSR CLS RTPRIO COMMAND
+  14423   1  TS      - namchaind     <- control thread: cores 0,1 (taskset), SCHED_OTHER
+  14426   3  FF     80 namchaind     <- render thread: core 3, SCHED_FIFO 80
+```
+
+Why it is so, in the code:
+
+- `apply_scheduling` pins **the calling thread** (`sched_setaffinity(0, …)`,
+  [scheduling.cpp:103](../../../namchain/src/rt/scheduling.cpp#L103)) — not the process.
+- Its only daemon call site is `promote_render_thread`
+  ([daemon.cpp:2216](../../../namchain/src/daemon/daemon.cpp#L2216)), called from `render_loop`, which
+  runs on the thread created at [daemon.cpp:2044](../../../namchain/src/daemon/daemon.cpp#L2044).
+- So `CPUAffinity=0-1` from the device's `10-pedal.conf` stays in force for the control thread, and
+  the render thread adds core 3 for itself.
+- `engine.levels` → `handle_request` → the level build all run on the control thread — the same thread
+  as `Daemon::run()`'s poll loop, created in `main` before the render thread exists.
+- What is heavy there: the atomic drain per probe, the square root, the logarithms and the JSON. None
+  of it touches core 3.
+- With `render_threads = 1` (vip's config) `start_render_pool` returns early and the chains run inline
+  on the render thread, so **no worker threads exist at all**.
+
+**The one coupling that remains is not the conversion.** It is the per-sample probe write by the
+render thread plus the cache-line traffic between the two cores: reading a probe on core 1 while core
+3 writes it moves those lines back and forth. That is what the per-node figures in Part 2 measure, and
+it is what Part 3's `--levels-first-frame` attacks. The logarithms cost render headroom nothing.
+
+## Part 2 — results, as a share of one core
 
 ### Series A — a minimal rig (2 nodes)
 
-| # | Levels | Client polling | Window | CPU ticks | CPU (one core) | ms/s | vs baseline |
-|---|---|---|---|---|---|---|---|
-| 1 | **off** | — | 120 s | 249 | 2.08% | 20.8 | baseline |
-| 2 | on | — | 120 s | 286 | 2.38% | 23.8 | +0.31 pp (+3.1 ms/s) |
-| 3 | on | 20 Hz | 120 s | 300 | 2.50% | 25.0 | +0.42 pp (+4.2 ms/s) |
-| 4 | on | 10 Hz | 120 s | 292 | 2.43% | 24.3 | +0.36 pp (+3.6 ms/s) |
-| 5 | on | 5 Hz | 120 s | 290 | 2.42% | 24.2 | +0.34 pp (+3.4 ms/s) |
-| 6 | on | 4 Hz | 120 s | 290 | 2.42% | 24.2 | +0.34 pp (+3.4 ms/s) |
-| 7 | on | 3 Hz | 120 s | 289 | 2.41% | 24.1 | +0.33 pp (+3.3 ms/s) |
-| 8 | on | 2 Hz | 120 s | 290 | 2.42% | 24.2 | +0.34 pp (+3.4 ms/s) |
-| 9 | on | 1 Hz | 120 s | 287 | 2.39% | 23.9 | +0.32 pp (+3.2 ms/s) |
+| Condition | Mode | Client polling | CPU (one core) | vs `--no-levels` |
+|---|---|---|---|---|
+| 1 | `--no-levels` | — | **2.07%** | baseline |
+| 2 | measuring (default) | — | **2.52%** | +0.45 pp |
+| 3 | measuring (default) | 20 Hz | **2.64%** | +0.58 pp |
+| 4 | measuring (default) | 10 Hz | **2.58%** | +0.52 pp |
+| 5 | measuring (default) | 5 Hz | **2.54%** | +0.47 pp |
+| 6 | measuring (default) | 4 Hz | **2.54%** | +0.47 pp |
+| 7 | measuring (default) | 3 Hz | **2.52%** | +0.45 pp |
+| 8 | measuring (default) | 2 Hz | **2.52%** | +0.45 pp |
+| 9 | measuring (default) | 1 Hz | **2.52%** | +0.45 pp |
 
 ### Series B — a 32-gain rig (34 nodes)
 
-| # | Levels | Client polling | Window | CPU ticks | CPU (one core) | ms/s | vs baseline |
-|---|---|---|---|---|---|---|---|
-| 10 | **off** | — | 120 s | 268 | 2.23% | 22.3 | baseline |
-| 11 | on | — | 120 s | 541 | 4.51% | 45.1 | +2.28 pp (+22.8 ms/s) |
-| 12 | on | 20 Hz | 120 s | 578 | 4.82% | 48.2 | +2.58 pp (+25.8 ms/s) |
-| 13 | on | 10 Hz | 120 s | 560 | 4.67% | 46.7 | +2.43 pp (+24.3 ms/s) |
-| 14 | on | 5 Hz | 120 s | 554 | 4.62% | 46.2 | +2.38 pp (+23.8 ms/s) |
-| 15 | on | 4 Hz | 120 s | 552 | 4.60% | 46.0 | +2.37 pp (+23.7 ms/s) |
-| 16 | on | 3 Hz | 120 s | 549 | 4.58% | 45.8 | +2.34 pp (+23.4 ms/s) |
-| 17 | on | 2 Hz | 120 s | 547 | 4.56% | 45.6 | +2.33 pp (+23.3 ms/s) |
-| 18 | on | 1 Hz | 120 s | 546 | 4.55% | 45.5 | +2.32 pp (+23.2 ms/s) |
-
-## What the numbers say
-
-**1. The switch is worth having, and its worth is set by the rig.** With the switch off, a 34-node
-rig costs 2.23% of a core; with it on, 4.51% — **measuring more than doubles the engine's cost on a
-light rig**, because a gain node is nearly free and the probe is not. On the 2-node rig the same
-switch moves 2.08% → 2.38%.
-
-Per node, from the two off/on pairs: Series B's 32 extra nodes cost 22.8 ms/s, so **0.71 ms/s of one
-core per measured node** — and Series A's 2 nodes cost 3.1 ms/s, which is 1.5 ms/s each. Those two
-figures are the same quantity measured at different chain lengths and they differ by more than the
-tick resolution, so the honest reading is **0.7–1.5 ms/s per node, call it ~1 ms/s**, with the
-smaller-chain figure noisier because it is a difference of only 37 ticks. In the currency a pedal is
-judged in, that is **0.07–0.15% of one core per node**, and roughly **0.6–1.2% of one core for a
-nine-block rig**.
-
-**2. Polling a client is cheap, and linear in the rate.** The marginal cost of one poll is the
-difference between adjacent rates, where the tick resolution is not the limit:
-
-| Difference | Polls added | Extra ticks | Extra CPU | Per poll |
+| Condition | Mode | Client polling | CPU (one core) | vs `--no-levels` |
 |---|---|---|---|---|
-| 20 Hz → 10 Hz, Series B | 1,200 | 18 | 0.15% of a core | **0.125 ms** |
-| 20 Hz → 10 Hz, Series A | 1,200 | 8 | 0.07% of a core | **0.056 ms** |
-| 10 Hz → 5 Hz, Series B | 600 | 6 | 0.05% | 0.125 ms |
-| 10 Hz → 5 Hz, Series A | 600 | 2 | 0.02% | 0.028 ms |
+| 10 | `--no-levels` | — | **2.24%** | baseline |
+| 11 | measuring (default) | — | **5.16%** | +2.92 pp |
+| 12 | measuring (default) | 20 Hz | **5.62%** | +3.38 pp |
+| 13 | measuring (default) | 10 Hz | **5.33%** | +3.09 pp |
+| 14 | measuring (default) | 5 Hz | **5.19%** | +2.95 pp |
+| 15 | measuring (default) | 4 Hz | **5.18%** | +2.94 pp |
+| 16 | measuring (default) | 3 Hz | **5.21%** | +2.97 pp |
+| 17 | measuring (default) | 2 Hz | **5.12%** | +2.88 pp |
+| 18 | measuring (default) | 1 Hz | **5.10%** | +2.86 pp |
 
-The counts double cleanly and the cost follows: **the reply, not the rate, is what a poll costs**, so
-a 20 Hz meter costs twice a 10 Hz one and eleven times a 1 Hz one, and all of them together are a
-rounding error beside the per-sample cost of measuring.
+**What the first two parts say.** With the switch off, a 34-node rig costs 2.24% of one core; with it
+on, 5.16% — **measuring more than doubles the engine's cost on a light rig**, because a gain node is
+nearly free and its probe is not. Per measured node that is **0.7–1.5 ms/s of one core** (0.07–0.15%),
+so roughly 0.6–1.2% of a core for a nine-block rig. Client polling is cheap and linear in the rate: a
+poll costs about **0.06 ms** on the 2-node rig and **0.13 ms** on the 34-node rig, so the reply's size
+is most of it, and the heaviest condition in the whole campaign — a 34-node rig with a 20 Hz client —
+is **5.62% of one core**, on a board with four.
 
-**3. The reply's size is most of a poll's cost.** A poll of the 2-node rig costs ~0.06 ms and of the
-34-node rig ~0.125 ms — the difference is the JSON for 32 more nodes (mean reply 3.6 kB against
-0.6 kB). At 20 Hz that is ~2.5 ms/s on the small rig and ~5 ms/s on the big one.
+## Part 3 — the two finer switches, at 1 Hz
 
-**4. Nothing here is close to a limit.** The heaviest condition in the whole campaign — measuring a
-34-node rig while a client polls at 20 Hz — costs **4.82% of one core**, on a board with four. The
-engine's own render work, not the meters, is what a rig's cost is made of.
+The per-sample fold is the render thread's and no poll rate touches it, so the two things that *can*
+be turned down are **how much of a window is measured** and **how often it is read**:
 
-**5. One caveat, and it is about clocks not code.** The two empty windows (conditions 5 and 6, and
-one in condition 12) are the documented read-and-reset behaviour: a poll that lands between two
-rendered periods gets `frames: 0` everywhere. ljoss holds its display through those rather than
-drawing the floor, which is why they are reported here rather than treated as failures.
+| Switch | What it changes | Default |
+|---|---|---|
+| `--levels-first-frame` | A probe folds the period's first frame and skips the rest: the render path's level work falls by the period length (64× at the pedal's 64-frame period) | off |
+| `--levels-rate-hz N` | Probes are drained at most N times a second; a read in between is answered from the held reply. `0` = a real measurement per read | 0 |
 
-## Stability
+At 1 Hz client polling, over the 34-node rig:
 
-The two baselines and the "measuring, nobody polling" condition were re-run at the end of the
-campaign, after ~40 minutes of load, with a **60 s** window. The 60 s figures reproduce the 120 s
-ones almost exactly, which is the check that the campaign measured a steady state rather than a
-warming board:
+| Condition | Mode | CPU (one core) | vs `--no-levels` | What it costs the render path |
+|---|---|---|---|---|
+| 19 | `--no-levels` | **2.26%** | +0.02 pp | nothing — there are no probes |
+| 20 | measuring (default) | **5.12%** | +2.88 pp | a fold per sample, per probe |
+| 21 | measuring, `--levels-rate-hz 1` | **4.52%** | +2.28 pp | unchanged: this switch only limits the *reading* |
+| 22 | measuring, `--levels-first-frame` | **2.87%** | +0.63 pp | a fold per period instead of per sample |
+| 23 | both finer switches | **2.30%** | +0.06 pp | a fold per period, read once a second |
+
+Measured as savings against condition 20:
+
+- **`--levels-rate-hz 1` saves 0.60 pp** (5.12 → 4.52), and it is a saving for the **daemon**, not for
+  render headroom: it limits the reading, and the reading is the control thread's. Confirmed in the
+  data rather than assumed — condition 21's replies were 251 cache hits and 9 drains against condition
+  20's 0 hits and 254 drains, so most of its polls cost a lookup.
+- **`--levels-first-frame` saves 2.25 pp** (5.12 → 2.87), which is the render thread's per-sample work
+  falling as designed. This is the switch that buys anything at all on the audio core.
+- **Together they save 2.82 pp**, and end at **2.30% against the 2.24% of not measuring at all** — so
+  with both on, a 34-node rig's meters cost about **0.06 pp of one core**.
+- The two are very nearly **additive** (0.60 + 2.25 = 2.85 against 2.82 measured), which says they act
+  on different resources rather than on the same one twice: the rate limits control-thread conversion,
+  the sparse fold limits render-thread atomics.
+
+**The catch, and it is why these are off by default.** `--levels-first-frame` changes what a meter
+reads: one sample per period misses nearly every transient a peak exists to catch, and the reported
+`rms` becomes that one sample's magnitude rather than a mean over the window. It is honest about it —
+a window reports `frames: 1` per period rather than the period's length, so a client that reads
+`frames` (and ljoss does, to tell an empty window from a silent one) can see that it is looking at a
+sparse window. `--levels-rate-hz` trades freshness instead: at 1 Hz a meter shows a value up to a
+second old, which is legible for a level and not for an edit.
+
+Neither switch changes the audio, and that is pinned by a test rather than argued: two plans differing
+only in `levels_first_frame` render identical samples over three quanta.
+
+### Stability
+
+Three conditions were re-run at the end of the campaign, after about an hour of load, with a **60 s**
+window ([`stability.jsonl`](stability.jsonl)). They reproduce the 120 s figures, which is the check
+that the campaign measured a steady state rather than a warming board:
 
 | Condition | 120 s window | 60 s re-run | Agreement |
 |---|---|---|---|
-| Series A, off | 2.08% | 2.07% (124 ticks / 60 s) | 0.5% |
-| Series B, off | 2.23% | 2.23% (134 ticks / 60 s) | ~0% |
-| Series B, on | 4.51% | 4.52% (271 ticks / 60 s) | 0.2% |
-
-## Conditions worth knowing about
-
-- **Do not run this campaign against a daemon nobody has checked.** The first attempt measured
-  whatever `pedald seed` had resumed (`/var/lib/pedal/library/rigs/last.json`) instead of the rig the
-  campaign asked for, and the CPU numbers looked entirely plausible. Every condition now gates on the
-  node count the daemon reports before its window opens.
-- The campaign's `--rig` is always an **absolute path**. A bare name resolves under the pedal's own
-  rig library, which is the owner's, and a measurement has no business writing there.
-- The campaign changes the unit through a drop-in
-  (`/etc/systemd/system/namchaind.service.d/50-levels-campaign.conf`) and **removes it on exit**,
-  including on failure, so `namchaind` is always left starting the way `devices/vip` says it starts.
-  The rig documents it installs under `/etc/namchain/rigs/` stay behind by default
-  (`KEEP_INSTRUMENT=0` removes them) so the campaign can be re-run without reinstalling.
-- Everything above ran under the Core host's lock (`scripts/host-lock`), and the host was left with
-  the lock free, `namchaind` active, and no campaign drop-in.
+| 10 — `--no-levels` | 2.24% | 2.22% (133 ticks / 60 s) | 0.02 pp |
+| 20 — measuring, 1 Hz | 5.12% | 5.12% (307 ticks / 60 s) | 0.00 pp |
+| 23 — both finer switches, 1 Hz | 2.30% | 2.30% (138 ticks / 60 s) | 0.00 pp |
 
 ## Reproducing it
 
@@ -153,6 +188,35 @@ scripts/host-lock --host vip -- env SECONDS_PER_RUN=120 SETTLE_SECONDS=8 \
   bench-results/2026-10-06-levels-switch/run-campaign.sh
 python3 bench-results/2026-10-06-levels-switch/analyse.py \
   bench-results/2026-10-06-levels-switch/results.jsonl
+python3 bench-results/2026-10-06-levels-switch/charts.py \
+  bench-results/2026-10-06-levels-switch/results.jsonl --only 19,20,21,22,23
 ```
 
-`--only 1,2,3` runs a subset, and `SECONDS_PER_RUN` shortens the window for a smoke test.
+`--only 19,22` runs a subset and `SECONDS_PER_RUN` shortens the window, both for a smoke test.
+`analyse.py --only` needs no special handling for the baseline: it is looked up in the whole run.
+
+## Things that went wrong, and what they cost
+
+Recorded because each one was a trap that produced plausible numbers:
+
+- **The gate exists because the first attempt measured the wrong rig.** `pedald seed` resumes
+  `/var/lib/pedal/library/rigs/last.json` at startup, and the campaign's `--rig` and the daemon's own
+  startup rig were two different documents. The CPU figures looked entirely reasonable.
+- **A background drain moved no counter a client could see.** The rate test first asserted that
+  `misses` grew over time, and it never did: `misses` counts reads that cost a drain, and the control
+  loop's own drains are not reads. The reply now carries `drains` as well, which is what says the
+  cadence is running at all.
+- **Two attempts to verify the sampling mode from outside were abandoned, deliberately.** A single
+  window's `frames` cannot identify the mode, because with a rate limit the window spans many periods
+  and first-frame mode correctly reports one frame *per period*. And the growth between two reads
+  cannot either, because the control loop's drains land between them and the interval is therefore
+  arbitrary — it measured 8.0 frames per period where the answer should have been 64, and 0.0 where it
+  should have been 1. The mode is now gated on the daemon's declared configuration, and the *behaviour*
+  is pinned where it can be pinned exactly: in the unit tests.
+- **A pre-existing test flaked on the aarch64 build container, twice, for two different reasons.**
+  `engine.levels reports the device, the chain and every node` polled for a non-empty window with a
+  budget of 200 attempts of (a read + 2 ms) — about 400 ms, which is a deadline in disguise whose real
+  length depends on how loaded the machine is. The second failure was the same race one level down: it
+  waited only for a *node's* window and then asserted the *device's* had samples, and any drain in
+  between empties the device's probe. Both now wait on a 10 s deadline for the whole reply they are
+  about to assert on.

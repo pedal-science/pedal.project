@@ -101,6 +101,8 @@ def main() -> int:
     parser.add_argument("--port", type=int, default=47810)
     parser.add_argument("--expect-refusal", action="store_true",
                         help="assert that engine.levels is refused, then exit")
+    parser.add_argument("--probe-once", action="store_true",
+                        help="one read: report the cache counters and the rig's node shape, then exit")
     parser.add_argument("--label", default="")
     args = parser.parse_args()
 
@@ -121,6 +123,41 @@ def main() -> int:
         print(json.dumps(result))
         return 0
 
+    if args.probe_once:
+        # What the gate needs before a window opens: how many nodes the loaded rig has, what the
+        # daemon says about its own cadence, and -- the part that actually identifies the mode -- how
+        # many samples a window holds **per period**.
+        #
+        # Frames alone cannot say: with a rate limit the window spans many periods, so it holds one
+        # frame per period in first-frame mode (correctly, and that is what `frames` means) and the
+        # period's length per period in full mode. So two reads a period apart, and the difference
+        # between them is one period's worth of sampling: 1 in first-frame mode, the period's length
+        # in full mode. The first read also primes the cache, so the second is a real window either
+        # way rather than a held one.
+        def read_levels():
+            return (call(sock, {"id": "l", "method": "engine.levels"}).get("levels") or {})
+
+        def max_frames(levels):
+            return max((int(node.get("frames") or 0)
+                        for chain in (levels.get("chains") or [])
+                        for node in (chain.get("nodes") or [])), default=0)
+
+        first = read_levels()
+        time.sleep(0.05)
+        levels = read_levels()
+        chains = levels.get("chains") or []
+        result["nodes"] = sum(len(chain.get("nodes") or []) for chain in chains)
+        result["chains"] = len(chains)
+        result["cache"] = levels.get("cache") or {}
+        result["max_node_frames"] = max_frames(levels)
+        period = int(levels.get("period_size") or 0)
+        grew = max_frames(levels) - max_frames(first)
+        result["period_size"] = period
+        result["frames_per_period"] = round(grew / period, 2) if period else None
+        sock.close()
+        print(json.dumps(result))
+        return 0
+
     if args.pid is None or args.hz is None:
         parser.error("--pid and --hz are required unless --expect-refusal is given")
 
@@ -133,6 +170,13 @@ def main() -> int:
     nodes_seen: int = 0
     nodes_with_frames: int = 0
     reply_bytes: int = 0
+    # What the daemon says about its own measurement cadence. `hits`/`misses` are what this client's
+    # reads cost (a lookup or a drain) and `drains` is every drain there has been, including the
+    # control loop's own: the three together are how a run proves the rate it asked for was honoured
+    # rather than assuming it.
+    cache_first: dict = {}
+    cache_last: dict = {}
+    max_node_frames: int = 0
 
     started_cpu = cpu_ticks(args.pid)
     started = time.monotonic()
@@ -172,6 +216,15 @@ def main() -> int:
             for node in (chain.get("nodes") or [])
             if int(node.get("frames") or 0) > 0
         )
+        # The largest `frames` any node reported, which is how a run tells full measurement from
+        # first-frame measurement: a period's length against 1.
+        for chain in chains:
+            for node in (chain.get("nodes") or []):
+                max_node_frames = max(max_node_frames, int(node.get("frames") or 0))
+        if "cache" in levels:
+            if not cache_first:
+                cache_first = dict(levels["cache"])
+            cache_last = dict(levels["cache"])
         # The last request's duration, so a run that could not keep up says so.
         result["last_call_ms"] = round((time.monotonic() - request_started) * 1000.0, 3)
 
@@ -190,6 +243,9 @@ def main() -> int:
         "chains": chains_seen,
         "nodes": nodes_seen,
         "nodes_with_frames": nodes_with_frames,
+        "max_node_frames": max_node_frames,
+        "cache_first": cache_first,
+        "cache_last": cache_last,
         "mean_reply_bytes": round(reply_bytes / ticks) if ticks else 0,
     })
     sock.close()
