@@ -1250,6 +1250,32 @@ question — what measuring *costs* — and the switch to stop paying it:
   one core. This is an upper bound rather than a real rig's number: a rig with an A2 model in it
   would show a smaller *share*, because an inference swamps a probe.
 
+**The conversion never touches the audio core, and two finer switches turn the sampling down**
+(2026-10-06, namchain `5eff47e`). The worry was that the control thread's dB conversion — square
+root, logarithms, JSON — might be sharing the render core and eating the headroom the audio work
+needs. It is not:
+
+- The control thread carries `CPUAffinity=0-1` from the device's own drop-in and runs `SCHED_OTHER`;
+  the render thread pins **itself** to core 3 at `SCHED_FIFO 80`, because `sched_setaffinity(0, …)` is
+  per-thread and its only call site is `promote_render_thread`. Shown live on vip, not just read:
+  `ps -L` puts the two threads on cores 1 and 3.
+- What does cost the render thread anything is the per-sample probe write and the cache-line traffic
+  with its reader on core 1. That, not the maths, is the price of a meter — which is what the new
+  switches reduce.
+
+Two switches, both **off by default**, both experiment-grade:
+`--levels-first-frame` folds one frame per period instead of every frame (the render path's level
+work falls 64×, and a meter starts missing transients — it says so, reporting `frames: 1` per
+period); `--levels-rate-hz N` drains the probes at most N times a second and answers a read in
+between from the held reply (a saving for the control thread, not for render headroom). Measured at
+1 Hz client polling on the 34-node rig: **2.26% off, 5.12% default, 4.52% with the rate limit, 2.87%
+with the sparse fold, 2.30% with both** — so both together bring a 34-node rig's meters to about
+0.06 pp of one core, and the two are very nearly additive because they act on different resources.
+The report, with charts and the measured caveats:
+[bench-results/2026-10-06-levels-switch.md](bench-results/2026-10-06-levels-switch.md). It ran under
+the host lock while the I2C bench firmware was being written in this repo, and the half-window
+stability re-runs reproduced to 0.02 pp.
+
 **3.6's power question is answered: the header feed holds, the USB-A port does not — and the codec is
 down** (2026-10-05). The instrument is the pedal's own: the Pico prints `fw: up N s` on its USB
 console every 5 s, and `N` counts from the Pico's own reset, so it measures **power** where `dmesg`
