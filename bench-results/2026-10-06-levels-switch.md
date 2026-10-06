@@ -1,10 +1,10 @@
 # What measuring audio levels costs namchaind
 
-**Measured:** 2026-10-06, on **vip** (Raspberry Pi 5, 1 GB, Cortex-A76). Engine `dd8d480`, where
-`--levels`, `--levels-rate-hz`, `--levels-first-frame` and `--levels-publish-period` all landed; the
-daemon reported it for every run. Parts 1–3 were measured on `5eff47e` and are quoted as they were
-taken; Part 4 on `dd8d480`, and its two controls were re-measured on the day so that no comparison
-crosses a commit.
+**Measured:** 2026-10-06, on **vip** (Raspberry Pi 5, 1 GB, Cortex-A76). Engine `663d0c9`, where
+`--levels`, `--levels-rate-hz`, `--levels-first-frame` and `--levels-publish-period` all landed and
+the last two became the defaults. Parts 1–3 were measured on `5eff47e` and are quoted as they were
+taken; Part 4 on `dd8d480`, with both of its controls re-measured on the day so that no comparison
+crosses a commit; the shipping figures at the end of Part 4 on `663d0c9`.
 **Instrument:** [`poll-levels.py`](poll-levels.py) — a TCP `engine.levels` client, the same shape as
 the meter in ljoss. **Campaign:** [`run-campaign.sh`](run-campaign.sh). **Arithmetic:**
 [`analyse.py`](analyse.py). **Charts:** [`charts.py`](charts.py). **Raw results:**
@@ -129,10 +129,16 @@ is **5.62% of one core**, on a board with four.
 The per-sample fold is the render thread's and no poll rate touches it, so the two things that *can*
 be turned down are **how much of a window is measured** and **how often it is read**:
 
-| Switch | What it changes | Default |
-|---|---|---|
-| `--levels-first-frame` | A probe folds the period's first frame and skips the rest: the render path's level work falls by the period length (64× at the pedal's 64-frame period) | off |
-| `--levels-rate-hz N` | Probes are drained at most N times a second; a read in between is answered from the held reply. `0` = a real measurement per read | 0 |
+| Switch | What it changes | Default then | Default now |
+|---|---|---|---|
+| `--levels-first-frame` | A probe folds the period's first frame and skips the rest: the render path's level work falls by the period length (64× at the pedal's 64-frame period) | off | off |
+| `--levels-rate-hz N` | Probes are drained at most N times a second; a read in between is answered from the held reply. `0` = a real measurement per read | 0 | **8** |
+
+**These numbers were taken on `5eff47e`, before per-period publishing existed and before the rate had
+a default.** Every condition in this part therefore measured the **per-sample** path, and condition 20
+("measuring, default") is not what ships: with the shipped configuration the same 1 Hz measurement is
+3.66% rather than 5.12%, and polled at ljoss's 20 Hz it is 3.31% rather than ~5.6%. The table is kept
+as it was measured — it is the evidence for Part 4 — and Part 4 has the shipping figures.
 
 At 1 Hz client polling, over the 34-node rig:
 
@@ -158,13 +164,15 @@ Measured as savings against condition 20:
   on different resources rather than on the same one twice: the rate limits control-thread conversion,
   the sparse fold limits render-thread atomics.
 
-**The catch, and it is why these are off by default.** `--levels-first-frame` changes what a meter
-reads: one sample per period misses nearly every transient a peak exists to catch, and the reported
-`rms` becomes that one sample's magnitude rather than a mean over the window. It is honest about it —
-a window reports `frames: 1` per period rather than the period's length, so a client that reads
-`frames` (and ljoss does, to tell an empty window from a silent one) can see that it is looking at a
-sparse window. `--levels-rate-hz` trades freshness instead: at 1 Hz a meter shows a value up to a
-second old, which is legible for a level and not for an edit.
+**The catch, and it is why Part 4's switch is the one that shipped and this one did not.**
+`--levels-first-frame` changes what a meter *reads*: one sample per period misses nearly every
+transient a peak exists to catch, and the reported `rms` becomes that one sample's magnitude rather
+than a mean over the window. It is honest about it — a window reports `frames: 1` per period rather
+than the period's length, so a client that reads `frames` (and ljoss does, to tell an empty window
+from a silent one) can see that it is looking at a sparse window — but it is a compromise on the
+measurement, and `--levels-publish-period` gets a comparable saving without one. This switch remains
+**off by default**, available for an appliance that would rather have the last 1.4 pp than the
+transients.
 
 Neither switch changes the audio, and that is pinned by a test rather than argued: two plans differing
 only in `levels_first_frame` render identical samples over three quanta.
@@ -221,10 +229,26 @@ day** so that a slow drift on the board cannot read as an effect of the change:
   thread's traffic, the rate limit is the control thread's conversions.
 
 **The price, stated plainly:** a reader can see a window that closed up to one period ago — 1.33 ms
-at 64 frames and 48 kHz. Nothing meters at that resolution. The switch is **off by default**, so the
-shipped behaviour is unchanged until you decide otherwise; the case for turning it on is this table
-plus ljoss's display being unaffected, which it is: the reply's shape, `frames`, and the
-read-and-reset rule are all as they were, and only `cache.publish` is new.
+at 64 frames and 48 kHz. Nothing meters at that resolution.
+
+### What shipped, and what it costs in the case that actually happens
+
+Both switches became the **defaults** on 2026-10-06 (namchain `663d0c9`), and
+`devices/vip/rootfs/etc/namchain/namchaind.json` names both explicitly, so the appliance does not
+depend on remembering what a binary's defaults are. ljoss polls `engine.levels` at **20 Hz**, so this
+is the configuration the pedal actually runs — measured against the **running service**, polled at
+its real rate:
+
+| Configuration | Polled at | CPU (one core) |
+|---|---|---|
+| per-sample publish, no rate limit (what shipped before) | 20 Hz | **~5.6%** |
+| per-period publish, 8 Hz drain (what ships now) | 20 Hz | **3.31%** |
+
+About **2.3 pp of one core** — 0.23% of the board's four — on the busiest thing anyone does to this
+engine, and the **every-sample** guarantee still holds: of the client's 1,801 reads in that window,
+227 were real measurements, 1,674 were answered from the held window, and **no read came back
+empty**. Both switches remain switchable off (`--no-levels-publish-period`, `--no-levels-rate-hz`),
+because a default somebody cannot turn off is one they work around.
 
 ### Stability
 
