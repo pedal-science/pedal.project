@@ -344,6 +344,24 @@ NOTES_ON_READING_THE_CHIP = '''
 # A real chip read would be worth having, and the two ways to get it are honest ones: add
 # i2c-tools to devices/vip/packages (an image change, `i2cget -y 1 0x1a 0x00 w`), or fix the
 # ioctl here.
+#
+# UPDATE 2026-10-06, which is why the note above is history rather than a plan: i2c-tools landed
+# in devices/vip/packages (572910a) and is installed on vip, and the read still fails. The
+# invocation is `sudo i2cget -f -y 1 0x1a <reg> w` (-f: the wm8960 driver owns 0x1a; word mode:
+# that IS the codec's protocol, write-register / repeated start / read-16). Every register aborts
+# in the controller with "lost arbitration" and "SDA stuck at low", while writes have been clean
+# for hours, so the register file is a cache because the controller cannot complete a read from
+# this codec. It is not timing: i2c-sda-hold-time-ns at 300, 1000 and 3000 ns changes nothing
+# (verified through the driver's own "SDA Hold Time TX:RX" line with dynamic debug on), and a
+# single-message read with no repeated start fails the same way. A read can also leave the RP1
+# controller HOLDING SDA LOW, which nothing here can clear: the i2c1 node has no scl-gpios or
+# sda-gpios, so i2c_recover_bus() is a no-op, and the controller's bus-clear path runs only from
+# an abort while a wedged controller gives timeouts. Only a reboot freed it. The measurements are
+# in bench-results/2026-10-06-codec-i2c-reads-and-the-sda-hold-time.md.
+#
+# So the two things the next session should do are not in this file: put a second I2C device with
+# a known ID register on the bus (if reads fail on it too, it is the controller), or watch SDA and
+# SCL with a scope during one i2cget.
 
 # regmap's cache can be bypassed, and it was worth testing: with cache_bypass=Y the register file
 # answers XXXX for every register on this codec, so the driver cannot read it back on demand

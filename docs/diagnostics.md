@@ -181,6 +181,30 @@ So the tool reports the driver's register map, and says in the finding that it i
 cache rather than the chip. The two honest ways to get a real read are adding `i2c-tools` to
 `devices/vip/packages` (an image change; `i2cget -y 1 0x1a 0x00 w`) or fixing the ioctl.
 
+### Update, 2026-10-06: `i2c-tools` is there, and the block is the bus
+
+`i2c-tools` has been in `devices/vip/packages` since `572910a` and is installed on vip, so the
+userspace half of the above is settled — and it is now known that it was never the whole story.
+The invocation is `sudo i2cget -f -y 1 0x1a <reg> w`: `-f` because the wm8960 driver holds 0x1a
+(`I2C_SLAVE` returns `EBUSY`, which is correct), and word mode because that is the codec's
+protocol. It fails, and not in userspace:
+
+```
+i2c_designware 1f00074000.i2c: i2c_dw_handle_tx_abort: lost arbitration
+i2c_designware 1f00074000.i2c: i2c_dw_handle_tx_abort: SDA stuck at low
+```
+
+Every read, on every register, while writes have been clean for hours — so the driver's register
+file is a cache because **the controller cannot complete a read from this codec**, not because a
+package was missing. Two things follow, both measured:
+`i2c-sda-hold-time-ns` does not change it (300/1000/3000 ns all fail identically, confirmed honoured
+through the driver's own `SDA Hold Time TX:RX` line), and a read can leave the RP1 controller
+**holding SDA low**, which no software here can clear: the node has no `scl-gpios`/`sda-gpios`, so
+`i2c_recover_bus()` does nothing, and the controller's bus-clear path runs only from an abort while
+a wedged controller gives timeouts. That is what a reboot is for, and the whole episode, with the
+numbers, is in
+[bench-results/2026-10-06-codec-i2c-reads-and-the-sda-hold-time.md](../bench-results/2026-10-06-codec-i2c-reads-and-the-sda-hold-time.md).
+
 ## The interface model
 
 `devices/common/pedal-interface.json` is installed to `/etc/pedal/pedal-interface.json` and is the
