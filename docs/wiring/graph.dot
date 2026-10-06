@@ -32,7 +32,7 @@ graph wiring {
     subgraph cluster_analogue {
         bgcolor="#fda5a5";
         subgraph cluster_in_socket {
-            bgcolor="#444444";
+            bgcolor="#666666";
             fontcolor=white;
             label="In";
             in_t [label="Tip"]
@@ -45,7 +45,7 @@ graph wiring {
         }
         subgraph cluster_out_sockets {
             subgraph cluster_out_left_socket {
-                bgcolor="#444444";
+                bgcolor="#666666";
                 fontcolor=white;
                 label="Out Left";
                 cluster=true;
@@ -57,7 +57,7 @@ graph wiring {
                 out_left_rs [label="Sleeve Switch"]
             }
             subgraph cluster_out_right_socket {
-                bgcolor="#444444";
+                bgcolor="#666666";
                 fontcolor=white;
                 label="Out Right";
                 out_right_t [label="Tip"]

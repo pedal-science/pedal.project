@@ -212,7 +212,7 @@
               <y:Realizers active="0">
                 <y:GroupNode>
                 <y:Geometry height="76.5" width="711" x="2148" y="225.5"/>
-                <y:Fill color="#444444" transparent="false"/>
+                <y:Fill color="#666666" transparent="false"/>
                 <y:BorderStyle color="#000000" type="line" width="1.0"/>
                 <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="14" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" iconTextGap="4" textColor="#FFFFFF" verticalTextPosition="bottom" visible="true" modelName="internal" modelPosition="t" xml:space="preserve">In</y:NodeLabel>
                 <y:Shape type="rectangle"/>
@@ -222,7 +222,7 @@
                 </y:GroupNode>
                 <y:GroupNode>
                 <y:Geometry height="60" width="100" x="2153" y="230.5"/>
-                <y:Fill color="#444444" transparent="false"/>
+                <y:Fill color="#666666" transparent="false"/>
                 <y:BorderStyle color="#000000" type="line" width="1.0"/>
                 <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="14" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" iconTextGap="4" textColor="#FFFFFF" verticalTextPosition="bottom" visible="true" modelName="internal" modelPosition="t" xml:space="preserve">In</y:NodeLabel>
                 <y:Shape type="rectangle"/>
@@ -336,7 +336,7 @@
                   <y:Realizers active="0">
                     <y:GroupNode>
                     <y:Geometry height="76.5" width="712" x="700" y="225.5"/>
-                    <y:Fill color="#444444" transparent="false"/>
+                    <y:Fill color="#666666" transparent="false"/>
                     <y:BorderStyle color="#000000" type="line" width="1.0"/>
                     <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="14" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" iconTextGap="4" textColor="#FFFFFF" verticalTextPosition="bottom" visible="true" modelName="internal" modelPosition="t" xml:space="preserve">Out Left</y:NodeLabel>
                     <y:Shape type="rectangle"/>
@@ -346,7 +346,7 @@
                     </y:GroupNode>
                     <y:GroupNode>
                     <y:Geometry height="60" width="100" x="705" y="230.5"/>
-                    <y:Fill color="#444444" transparent="false"/>
+                    <y:Fill color="#666666" transparent="false"/>
                     <y:BorderStyle color="#000000" type="line" width="1.0"/>
                     <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="14" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" iconTextGap="4" textColor="#FFFFFF" verticalTextPosition="bottom" visible="true" modelName="internal" modelPosition="t" xml:space="preserve">Out Left</y:NodeLabel>
                     <y:Shape type="rectangle"/>
@@ -432,7 +432,7 @@
                   <y:Realizers active="0">
                     <y:GroupNode>
                     <y:Geometry height="76.5" width="712" x="1420" y="225.5"/>
-                    <y:Fill color="#444444" transparent="false"/>
+                    <y:Fill color="#666666" transparent="false"/>
                     <y:BorderStyle color="#000000" type="line" width="1.0"/>
                     <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="14" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" iconTextGap="4" textColor="#FFFFFF" verticalTextPosition="bottom" visible="true" modelName="internal" modelPosition="t" xml:space="preserve">Out Right</y:NodeLabel>
                     <y:Shape type="rectangle"/>
@@ -442,7 +442,7 @@
                     </y:GroupNode>
                     <y:GroupNode>
                     <y:Geometry height="60" width="100" x="1425" y="230.5"/>
-                    <y:Fill color="#444444" transparent="false"/>
+                    <y:Fill color="#666666" transparent="false"/>
                     <y:BorderStyle color="#000000" type="line" width="1.0"/>
                     <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="14" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" horizontalTextPosition="center" iconTextGap="4" textColor="#FFFFFF" verticalTextPosition="bottom" visible="true" modelName="internal" modelPosition="t" xml:space="preserve">Out Right</y:NodeLabel>
                     <y:Shape type="rectangle"/>
