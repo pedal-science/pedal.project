@@ -1,12 +1,12 @@
 # The Pico ↔ Core host UART protocol
 
-**Status:** draft 2, **agreed 2026-10-06** — the review's eight points stand and U8 is decided
-(both below) — and implemented at both ends the same day as **version 2.0**: the firmware
-(`firmware/src/protocol.c`) and `pedald` (`devices/common/rootfs/usr/local/lib/pedald/protocol.py`)
-now speak it, and a different major is refused with `ERROR` rather than half-spoken. What is still
-owed is the board: the flashed Pico speaks draft 1 until it is reflashed from a known commit, the
-two ends then swap in one stop, Pico first (see Messages, below), and `firmware/tools/protocol-test.py` runs
-again on the bench. This is the contract for plan Phase 3 step 3, and it
+**Status:** draft 2, **agreed and in force 2026-10-06 as version 2.0** — the review's eight points
+stand and U8 is decided (both below). The firmware (`firmware/src/protocol.c`, flashed as
+`bb6dde1`) and `pedald` (`devices/common/rootfs/usr/local/lib/pedald/protocol.py`) both speak it,
+the bench loopback passed against the flashed firmware — its refusal check included — and the live
+pair holds a 2.0 session on vip. A different major is refused with `ERROR` rather than half-spoken.
+Evidence: [bench-results/2026-10-06-draft2-swap-bench.md](../bench-results/2026-10-06-draft2-swap-bench.md).
+This is the contract for plan Phase 3 step 3, and it
 is kept here because both ends live here: the Pico firmware (`firmware/`) and the pedal service
 (Phase 3.2). The Core-side port is Phase 3 step 4 (see Transport); the port is not part of this
 contract. Engine control is not here either — that is namchain's protocol 2 over TCP, and the
@@ -286,17 +286,18 @@ engine. Heartbeats at 250 ms with nothing else happening are about 0.4% of the l
 - `firmware/tools/echo-test.py` proved the UART and the wiring (step 1). It needs
   `FW_ECHO=1 firmware/build.sh`. Evidence: `bench-results/2026-09-28-pico-uart-echo.txt`.
 - `firmware/tools/protocol-test.py` is the frame-level loopback: it plays the service side
-  over the Debug Probe and checks the session, heartbeats both ways, an EVENT whose ACK is
-  deliberately dropped (retransmit, then no further copies), STATE, link-down recovery, and
-  since 2026-10-06 a `WELCOME` from another major being refused with `ERROR` and no session.
-  Both ends implement this document now — the firmware (`firmware/src/protocol.c`) and `pedald`
-  (`devices/common/rootfs/usr/local/lib/pedald/`, design: `docs/pedal-service.md`), whose own
-  suite is `devices/common/test-pedald` (193 tests, no Pico needed). The live session on vip
-  (`bench-results/2026-10-04-pedald-on-vip.md`) is on **draft 1** until the swap: the Pico
-  reports `fw '0.1'`, which no checkout produces, so it is reflashed from a known commit first,
-  the loopback runs, and `pedald` goes out in the same stop. Evidence:
-  `bench-results/2026-09-28-pico-protocol-loopback.txt` (draft 1), and this swap's own run when
-  it happens.
+  and checks the session, heartbeats both ways, an EVENT whose ACK is deliberately dropped
+  (retransmit, then no further copies), STATE, link-down recovery, and since 2026-10-06 a
+  `WELCOME` from another major being refused with `ERROR` and no session.
+  Both ends implement this document now — the firmware (`firmware/src/protocol.c`, flashed as
+  `bb6dde1`) and `pedald` (`devices/common/rootfs/usr/local/lib/pedald/`, design:
+  `docs/pedal-service.md`), whose own suite is `devices/common/test-pedald` (194 tests, no Pico
+  needed). The swap ran on 2026-10-06, and the loopback with it: it was run **on vip** rather than
+  through the Debug Probe, because the probe's UART lead would not make contact at the Pico's pins,
+  and it passed every check against the flashed firmware; `pedald` was applied in the same stop.
+  Evidence: `bench-results/2026-10-06-draft2-swap-bench.md` (the run's transcript, and the two
+  measurements that found a crossed signal pair), and `bench-results/2026-09-28-pico-protocol-loopback.txt`
+  for draft 1 on the Mac bench.
 - It also sends a frame header whose length swallows the start of a good `STATE`, and checks
   that the `STATE` still arrives (Resync, U3). The firmware before U3's fix fails that check.
 

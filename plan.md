@@ -779,12 +779,19 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      sides instead of propping up half a link. The version is **2.0**: what a mismatch costs was
      read off both ends (the strings are wrong, nothing else is), and that is a failure worth
      refusing rather than diagnosing. Evidence: `firmware/src/protocol.c` + `protocol.h`,
-     `pedald`'s `protocol.py`, the firmware builds clean, and `devices/common/test-pedald` is 193
-     tests. **What 3.3 still holds is the board**: the Pico reports `fw '0.1'`, which no checkout
-     produces, so it is reflashed from a known commit, `firmware/tools/protocol-test.py` runs on
-     the bench against the 2.0 firmware (it now also checks the refusal), and `pedald` goes to vip
-     in the same stop — the flashed pair and the deployed service move together, which is the
-     whole reason for the major bump.
+     `pedald`'s `protocol.py`, the firmware builds clean, and `devices/common/test-pedald` is 194
+     tests. **And it is on the pedal** (2026-10-06, later): the Pico was reflashed from the
+     committed tree as `bb6dde1`, the loopback passed every check against it — `HELLO` carrying
+     `firmware='bb6dde1'`, the `str8` `STATE`, and the refusal (`ERROR` code 1, "Pico speaks 2.0,
+     service 1.0", no session, then back up) — and `devices/vip/apply` put the 2.0 `pedald` on vip
+     in the same stop. The live pair now holds a 2.0 session, `scripts/diag --host vip` reports the
+     link up with no bad frame, and `devices/vip/components.lock` moved to `bb6dde1`. The loopback
+     ran **on vip** rather than through the Debug Probe: the probe's UART lead would not make
+     contact at the Pico's pins, and the vip port is the production one anyway. Evidence, including
+     the crossed-signal-pair diagnosis and the old service reading `fw '\x07bb6dde1'` in the second
+     before the deploy — the mismatch's fingerprint, seen for real:
+     [bench-results/2026-10-06-draft2-swap-bench.md](bench-results/2026-10-06-draft2-swap-bench.md).
+     **3.3 is done.**
 4. **The Core host side** (`tib`'s UART1 went with `tib`).
    - A UART on the Pi's 40-pin header that carries nothing but the link: no kernel console, no
      getty, no SysRq. On piv, pins 8/10 are `ttyAMA0`, and its kernel console is there
@@ -1165,12 +1172,18 @@ one place D4 gives it: `pedald`'s `mapping.py`, which already maps them (`DEFAUL
 kept on every event, so a per-source map can come later without a wire change. **Draft 2 itself is
 now in both ends** (version 2.0, same day): `str8` strings, `engine_muted`, `ERROR` on a version
 mismatch, `HELLO` answered every time, and no `PING`/`STATE`/`ACK` answered without a session
-([docs/uart-protocol.md](docs/uart-protocol.md) has the rules and why each one exists). What 3.3
-still holds is the **board**: the Pico reports `fw '0.1'`, which no checkout produces, so it is
-reflashed from a known commit, `firmware/tools/protocol-test.py` runs on the bench against the
-2.0 firmware, and `pedald` goes to vip in the same stop — the two ends move together, which is
-the reason the major went to 2 rather than staying 1.x with a garbled rig name on a
-half-swapped link. Nothing else waits on it.
+([docs/uart-protocol.md](docs/uart-protocol.md) has the rules and why each one exists). **And it
+is on the pedal** (later the same day): the Pico was flashed as `bb6dde1`, the loopback passed every
+check against it — the refusal included — and `devices/vip/apply` put the 2.0 `pedald` on vip in the
+same stop, so the live pair holds a 2.0 session and `devices/vip/components.lock` is at `bb6dde1`
+([bench-results/2026-10-06-draft2-swap-bench.md](bench-results/2026-10-06-draft2-swap-bench.md),
+which also records the crossed signal pair that cost an hour and how it was told apart from a dead
+one). **3.3 is done**, and with it the last thing blocking 3.5.
+
+**What is next, cheapest first, unchanged otherwise:** **3.5 Firmware v1** (the three
+footswitches, DIN MIDI in, LEDs — the footswitches sending `cc` 80–82 per U8), then **3.8** (the
+ready set and `rig.switch`, then `pedald` v2's bank and map), and alongside them **2b.3 board 1**,
+which takes the analogue side off the bench fixtures. The Pico's reflash is no longer on the list.
 
 **The five repositories are one workspace now** (2026-10-06). Everything the pedal is made of
 lives in `~/code.local/pedal/`: `pedal.project/` beside `namchain/`, `ljoss/`, `rtpi/` and

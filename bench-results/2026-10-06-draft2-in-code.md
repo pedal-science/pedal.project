@@ -5,6 +5,10 @@
 then **the draft-2 wire itself**, written into the firmware and `pedald` together, with the
 version bumped to **2.0** so that a half-swapped pair is refused instead of garbled.
 
+**The board half landed later the same day** — flashed, loopback run, service deployed:
+[2026-10-06-draft2-swap-bench.md](2026-10-06-draft2-swap-bench.md). Everything below marked "not
+verified yet" was the state before that.
+
 Nothing on the board changed: vip still runs the draft-1 pair, and the swap is a stop of its own
 (see "What is not verified", below).
 
