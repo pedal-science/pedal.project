@@ -18,6 +18,7 @@ RUN test -n "$SNAPSHOT" \
  && apt-get -o Acquire::Check-Valid-Until=false update \
  && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
       mmdebstrap ca-certificates dosfstools mtools e2fsprogs fdisk zstd xz-utils \
+      device-tree-compiler \
       python3 openssh-client \
       cmake ninja-build make gcc g++ git \
  && rm -rf /var/lib/apt/lists/*

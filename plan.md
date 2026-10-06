@@ -1193,9 +1193,19 @@ what happens today: every read aborts with lost arbitration and SDA stuck at low
 clean). The SDA hold time is ruled out (300/1000/3000 ns, honoured and ineffective), and the two
 measurements that would separate the controller from the codec are a second I2C device with a
 known ID register, or a scope on SDA/SCL during one read. rtpi now carries the other half:
-`devices/vip/dt/rp1-i2c1-recovery.dts`, which arms the driver's GPIO bus recovery — **not yet in
-either boot partition**, so until it is, a wedged bus still needs a reboot. Full evidence:
+`devices/vip/dt/rp1-i2c1-recovery.dts`, which arms the driver's GPIO bus recovery. Full evidence:
 [bench-results/2026-10-06-codec-i2c-reads-and-the-sda-hold-time.md](bench-results/2026-10-06-codec-i2c-reads-and-the-sda-hold-time.md).
+
+**The recovery overlay is in the boot partitions now** (2026-10-06, later): `vip-boot init-*`
+compiles every `rtpi/devices/vip/dt/*.dts` into each boot tree's `overlays/` — both slots of the
+pedal partition and rescue's — and enables each with a `dtoverlay=` line, so a card written from
+the image carries it and a `.dts` that will not compile stops the build. `dtc` was added to the
+build container for that. vip's own card was updated by hand (its config.txt predates the
+mechanism, and does not even carry the `dtoverlay=uart0` line vip-boot has written since
+2026-10-05), so after the next reboot a wedged bus is freed by the driver instead of by a reboot.
+What that reboot has to show is `running with GPIO recovery mode! scl,sda` in `dmesg`; the arming
+was already seen once at runtime. Commands and the revert:
+[bench-results/2026-10-06-boot-overlay-installed.md](bench-results/2026-10-06-boot-overlay-installed.md).
 
 **And the audio-level half landed in namchain** the same day (namchain `a69d315`): `engine.levels`
 is a read-only method returning the device's input and output levels per channel, each chain's, and
