@@ -81,7 +81,32 @@ before any service runs, and the pedal's own `pedal-uart.service` is the belt to
 card written before this line keeps the link regardless. rtpi's harness now builds the rescue
 partition as well and asserts both configs carry `enable_uart=1` and `dtoverlay=uart0` (42 tests).
 
-One thing is still open, and it is the interesting one: **why `enable_uart=1` stopped being
-honoured.** The bootloader's version cannot be read from the pedal root — `vcgencmd` is not
-installed and neither is the eeprom package — so whether the 2026-10-05 card work changed the
-firmware is unknown. If it did, other firmware behaviour may have moved with it.
+**The bootloader question, answered** (2026-10-05, after `raspi-utils` and `rpi-eeprom` were
+installed): the bootloader has **not** changed. `vcgencmd bootloader_version` reports
+`66f33f7e651cf482a26fb2c931a7587bb14e71db`, built `2026-05-11 12:20:02`, `update-time 0` — which
+matches the `EEPROM 66f33f7e (2026-05-11)` that `rtpi/devices/vip/device.env` recorded when vip was
+set up — and `rpi-eeprom-update` says "up to date" with nothing pending. The earlier hypothesis,
+that the card work updated the bootloader and moved its behaviour, is **withdrawn**.
+
+The EEPROM's own configuration is worth having on the record, and `rpi-eeprom-config` reads it now:
+
+```
+[all]
+BOOT_UART=1
+BOOT_ORDER=0xf461
+NET_INSTALL_AT_POWER_ON=1
+```
+
+`BOOT_UART=1` means the *firmware* talks on the header UART at boot, before the kernel exists, so
+those bytes arrive on the Pico's RX. They are not protocol frames, so the Pico's parser resyncs and
+ignores them — harmless in practice, but the wire does carry text at boot, which
+`docs/uart-protocol.md` says it should not. `BOOT_UART=0` would be the tidy answer; it is an EEPROM
+write, so it is the owner's call.
+
+**Still unexplained, and left that way honestly:** the DTB, the template, the appended config
+(`devices/vip/config-pedal.txt` — its whole history never had a UART line), the EEPROM and its
+config are all accounted for and unchanged, yet `ttyAMA0` existed on 2026-10-04 and not on
+2026-10-05. The old card's `config.txt` was overwritten by the rewrite, so it cannot be compared
+now. What matters for the pedal is that it no longer depends on the answer: the node is enabled by
+the boot config (rtpi `f44864d`) *and* by the pedal's own overlay, and the second is covered by a
+test.

@@ -17,6 +17,11 @@ fstrim.service
 fstrim.timer
 motd-news.service
 motd-news.timer
+# rpi-eeprom ships this and enables it: `rpi-eeprom-update -s -a` at every boot, which *applies* a
+# pending bootloader update. The tooling is wanted (vcgencmd, rpi-eeprom-config); flashing the
+# EEPROM is the owner's decision, made where the board can be reached, not a side effect of an
+# image build.
+rpi-eeprom-update.service
 #
 # Deliberately NOT masked:
 #   systemd-timesyncd   vip has no RTC battery; without it the clock starts wherever it stopped.

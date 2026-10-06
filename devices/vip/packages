@@ -40,6 +40,15 @@ raspi-utils-dt
 device-tree-compiler
 alsa-utils
 
+# Reading the board itself: `vcgencmd` (firmware config, throttling, the bootloader's own report)
+# and `rpi-eeprom-config`/`rpi-eeprom-update`. Added 2026-10-05 to answer whether the bootloader
+# had changed under a UART fault that was not the firmware's fault after all (pedal.project
+# bench-results/2026-10-05-header-uart-disabled.md). Note that rpi-eeprom ships a unit which
+# *applies* a pending bootloader update at every boot; it is listed in etc/pedal/masked-units,
+# because flashing the EEPROM is a decision rather than a side effect of an image.
+raspi-utils
+rpi-eeprom
+
 # pedal-tune, pedal-device, pedald (chown and stty are coreutils).
 procps
 util-linux
