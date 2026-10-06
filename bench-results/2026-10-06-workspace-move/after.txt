@@ -1,0 +1,112 @@
+============================================================
+## pedal.project  (/Users/rik/code.local/pedal.project)
+date: 2026-10-06T12:05:43Z
+head:      44f049b28c4b3c2bf5f08a0ee952cd91f5de9eac
+short:     44f049b
+branch:    main
+origin:    https://github.com/rikkus/pedal.project.git
+upstream:  origin/main (behind 0, ahead 1)
+dirty:     12 entries
+tracked:   497 files
+gitlinks:  
+--- branches ---
+  * main                             44f049b [origin/main: ahead 1] workspace: the pedal's five repos move into one folder a session is opened on
+    pico-service-review              c4b0296 [origin/pico-service-review] docs/pedal-service.md: Claude's review (R1-R15); plan, AGENTS.md, working-across-repos follow it
+    x/pi-debug-probe-tib-003455      b5f494a tib: soak ended in a thermal shutdown at 90 °C after 23 min, then it stopped booting again; work on it stopped
+    x/pi5-sd-card-image-build-d9f6d2 214f69e vip runs namchain 2e1a63a (meta, bypass as a ramp), deployed by deploy-engine; ljoss's check-streaming passes against it: 580 ramps over a 201-step drag, a bypass without a rebuild
+    x/vibrant-borg-bbd68d            a19e52b devices/piv: namchain's finished isolation A/B harness is removed from piv
+--- status --porcelain ---
+  ?? "Pasted 03-10-2026 at 7.57.04\342\200\257pm.png"
+  ?? bench-results/2026-10-06-workspace-move/after.txt
+  ?? devices/vip/backups/20261002T090452Z/
+  ?? devices/vip/backups/20261004T201744Z/
+  ?? devices/vip/backups/20261004T212412Z/
+  ?? devices/vip/backups/20261004T212716Z/
+  ?? devices/vip/backups/20261005T185119Z/
+  ?? devices/vip/backups/20261005T205105Z/
+  ?? devices/vip/backups/20261005T214019Z/
+  ?? diag.jsonl
+  ?? imaginings/
+  ?? stripboard/photos/
+--- worktree list ---
+  /Users/rik/code.local/pedal.project 44f049b [main]
+
+============================================================
+## namchain  (/Users/rik/code.local/namchain)
+date: 2026-10-06T12:05:43Z
+head:      3933713fe1b2f00d2f3a63d47eba63afd1d5c64d
+short:     3933713
+branch:    main
+origin:    https://github.com/rikkus/namchain
+upstream:  origin/main (behind 0, ahead 1)
+dirty:     1 entries
+tracked:   663 files
+gitlinks:  vendor/NeuralAmpModelerCore 
+--- branches ---
+    local-engine 7f1eedc [origin/local-engine: ahead 31, behind 1] coreaudio: capture from a live input device, and join two devices with a private aggregate
+  * main         3933713 [origin/main: ahead 1] AGENTS.md: the pedal's system context is at ~/code.local/pedal/pedal.project
+--- status --porcelain ---
+  ?? update-vendored-core-to-all-optimisations-tip.sh
+--- worktree list ---
+  /Users/rik/code.local/namchain 3933713 [main]
+--- submodule status ---
+   d0339874b42fa4dd1d89931e84bc60e1a44474f6 vendor/NeuralAmpModelerCore (v0.6.0-12-gd033987)
+
+============================================================
+## ljoss  (/Users/rik/code.local/ljoss)
+date: 2026-10-06T12:05:44Z
+head:      175f925c72e6cbcbeec2a22f6610153e15e2bdf7
+short:     175f925
+branch:    main
+origin:    git@github.com:rikkus/ljoss.git
+upstream:  origin/main (behind 0, ahead 1)
+dirty:     0 entries
+tracked:   127 files
+gitlinks:  
+--- branches ---
+    local-engine 0c077b3 [origin/local-engine: ahead 11, behind 1] Connect to this computer: run namchaind here, and pick the audio in and out
+  * main         175f925 [origin/main: ahead 1] workspace: the local engine's default namchaind is found through the workspace
+--- status --porcelain ---
+--- worktree list ---
+  /Users/rik/code.local/ljoss 175f925 [main]
+
+============================================================
+## rtpi  (/Users/rik/code.local/rtpi)
+date: 2026-10-06T12:05:44Z
+head:      5940267c920412b6303a00ef19af2b16060e128a
+short:     5940267
+branch:    main
+origin:    git@github.com:rikkus/rtpi.git
+upstream:  origin/main (behind 0, ahead 1)
+dirty:     0 entries
+tracked:   105 files
+gitlinks:  
+--- branches ---
+  * main 5940267 [origin/main: ahead 1] AGENTS.md: the pedal's system context is at ~/code.local/pedal/pedal.project
+--- status --porcelain ---
+--- worktree list ---
+  /Users/rik/code.local/rtpi 5940267 [main]
+
+============================================================
+## NAMBench  (/Users/rik/code.local/NAMBench)
+date: 2026-10-06T12:05:45Z
+head:      dbe7e122c12919dd5ea17ba4fade956cbae1570b
+short:     dbe7e12
+branch:    main
+origin:    git@github.com:rikkus/NAMBench.git
+upstream:  origin/main (behind 0, ahead 1)
+dirty:     6 entries
+tracked:   270 files
+gitlinks:  
+--- branches ---
+  * main dbe7e12 [origin/main: ahead 1] AGENTS.md: what NAMBench is, how it is built, and what must not be committed
+--- status --porcelain ---
+   M Sources/AUv3/Host/NBAUHost.h
+   M Sources/AUv3/Host/NBAUHost.mm
+   M Sources/AUv3/Host/main.mm
+  ?? Scripts/contention-summary.py
+  ?? Sources/AUv3/Host/NBContention.h
+  ?? Sources/AUv3/Host/NBContention.mm
+--- worktree list ---
+  /Users/rik/code.local/NAMBench dbe7e12 [main]
+

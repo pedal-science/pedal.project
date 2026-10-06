@@ -269,7 +269,13 @@ report_entries() {
 }
 
 report_guard() {
-  local ws=$1 want=$ROOT/tools/git-hooks name path url branch kind full got checked=0
+  local ws=$1 want name path url branch kind full got checked=0 pedal_path
+  # The guard lives in pedal.project, wherever the manifest says that is — not in whichever
+  # checkout this script happens to be running from. From a worktree under .worktrees/ the two
+  # differ, and every repository compares against the wrong path if this is not resolved here.
+  pedal_path=$(manifest_lines | awk -F'|' '$1 == "pedal.project" { print $2; exit }')
+  want=$(canon "$ws/${pedal_path:-pedal.project}/tools/git-hooks")
+  [[ -d $want ]] || want=$ROOT/tools/git-hooks
   for f in "${HOOK_NAMES[@]}"; do
     [[ -x $want/$f ]] || report_fail "$want/$f is missing or not executable"
   done

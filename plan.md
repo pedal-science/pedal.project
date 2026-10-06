@@ -134,6 +134,7 @@ six choices for you at the end.
 | D10 | Every rig one interaction away is held ready: the current bank (the 4–8 rigs the footswitches step through) plus any rig MIDI can jump to. A switch takes **≤ 50 ms** from footswitch or MIDI to the new sound, crossfaded, with **no dropout and no click** | you, 2026-09-26 | 3.8 is required, not optional, and comes before 3.5. namchain's M3 (warm start) moves onto the critical path. Whole rigs are held ready: compiled plans, loaded models and prepared IRs. vip's 1 GB bounds the bank. *How* each rig is kept ready is a tier (`docs/rig-switch-strategies.md`), set by experiments E1 and E2 |
 | D11 | The Core host runs the pedal's own Wi-Fi network; the Pico advertises over BLE and the phone joins with `NEHotspotConfigurationManager.joinAccessoryHotspot` | you, 2026-10-01 | Phase 5 ([docs/pairing.md](docs/pairing.md)). The pedal root retires its station config, the bench reaches the pedal over Ethernet, and neither `sftp` nor a typed address is needed for the app |
 | D12 | The first pairing gets an out-of-band code on the pedal's screen, before the pedal releases its BLE bundle. v1 pairs without it | you, 2026-10-01 | 3.7's display carries a security job, not only a nice one; the code is the Mac's way in too, and the QR stays the fallback |
+| D13 | The five repositories live in one workspace, `~/code.local/pedal/`, which is deliberately **not** a repository; a guard installed by path refuses an embedded checkout that nothing declares | you + recommendation, 2026-10-06 | [docs/workspace.md](docs/workspace.md). A session opened on the workspace writes in all five with no extra permissions; `scripts/workspace check` and `scripts/status` keep the layout, the declaration and the guard from rotting silently |
 
 **On storage (D3).** The existing design already keeps models and IRs on the pedal, in
 `namchaind`'s `models_root` and `irs_root` on the SD card. D3 and D4 bring in the four things it
@@ -1101,6 +1102,46 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**The five repositories are one workspace now** (2026-10-06). Everything the pedal is made of
+lives in `~/code.local/pedal/`: `pedal.project/` beside `namchain/`, `ljoss/`, `rtpi/` and
+`NAMBench/`. A session opened on that directory can read and write all five with no extra
+permissions, because a session's cwd *is* the sandbox's writable root and there is exactly one of
+it — which is why the per-machine `.claude/settings.local.json` that listed them as additional
+directories is gone, and why the DeepSeek harness needs no per-write approval. The directory is
+deliberately **not** a repository: a checkout inside one is recorded as a gitlink and clones as an
+empty directory that says nothing about what is missing, and at the workspace root that mistake
+would be available for all five at once. Design, and the alternatives with the measurements that
+ruled them out: [docs/workspace.md](docs/workspace.md). Evidence, and what was established about
+the harnesses before anything moved:
+[bench-results/2026-10-06-workspace-move.md](bench-results/2026-10-06-workspace-move.md).
+
+`workspace.repos` declares what the workspace holds; `scripts/workspace check` asserts it, and
+`scripts/status` prints it at the start of every session rather than leaving it to be assumed.
+`tools/git-hooks/` refuses a commit or a push that embeds a repository **nothing declares** —
+"nothing declares" being the point, since namchain's vendored fork is a declared submodule and
+still commits. It is installed by path through an `includeIf` block in `~/.gitconfig`, so every
+clone and every worktree under the workspace gets it with no step of its own; its failure mode is
+silent (git ignores an include target that is not there), which is what the check exists for.
+`tools/tests/test-workspace-guards` proves both directions, and it was also proved once in the
+live workspace (`bench-results/2026-10-06-workspace-move/guard-acceptance.txt`).
+
+The move was a rename within one volume, with nothing copied: the before/after snapshots
+(`bench-results/2026-10-06-workspace-move/{before,after}.txt`) differ only by this session's
+commits, four worktrees removed and the root files added. Every branch survived, including the
+local-only `x/*` and `local-engine` ones, and the vendored submodule is at the same commit.
+
+Commits, **all local and unpushed, waiting for your say-so**: pedal.project `44f049b` (declaration,
+guard, `scripts/workspace`, docs, path fixes), namchain `3933713`, ljoss `175f925` (its compiled
+default `namchaind` path now resolves from its own file path, so a moved workspace needs no edit
+there), rtpi `5940267`, NAMBench `dbe7e12` (the one family repo that had neither `AGENTS.md` nor
+`CLAUDE.md`).
+
+**One thing only the owner can confirm, and it is the point of the exercise:** open a session on
+`~/code.local/pedal` and write a file in each of the five repositories. The guard, the layout, the
+instruction files, the worktree rule and every script have been checked from here; a session rooted
+*at the workspace* is the half that needs a session rooted there. Two housekeeping notes for the
+same moment: the DSH workspace list still holds entries for the old paths, and Claude Code will
+start a fresh per-project entry for the new one.
 **The card carries both kernels, so vip is re-paveable without losing the pedal's kernel**
 (2026-10-05). `make-card --remote` had refused a root swap: vip runs rtpi's rebuild
 (`7.0.0-1017-raspi-realtime-numaemu1-trimmed`), the image built the stock kernel, and `--remote`

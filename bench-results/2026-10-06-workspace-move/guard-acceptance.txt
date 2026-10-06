@@ -1,0 +1,40 @@
+The guard, in the real workspace (not a test harness). 2026-10-06T12:06:23Z
+
+hooksPath this repository sees: ~/code.local/pedal/pedal.project/tools/git-hooks
+
+--- an ordinary commit is allowed ---
+committed: 525dc27 base
+
+--- a dependency cloned into a tracked directory ---
+warning: adding embedded git repository: vendor-dep
+hint: You've added another git repository inside your current repository.
+hint: Clones of the outer repository will not contain the contents of
+hint: the embedded repository and will not know how to obtain it.
+hint: If you meant to add a submodule, use:
+hint:
+hint: 	git submodule add <url> vendor-dep
+hint:
+hint: If you added this path by mistake, you can remove it from the
+hint: index with:
+hint:
+hint: 	git rm --cached vendor-dep
+hint:
+hint: See "git help submodule" for more information.
+hint: Disable this message with "git config set advice.addEmbeddedRepo false"
+--- and the commit ---
+
+ERROR: refusing to commit a repository nothing declares:
+
+  vendor-dep
+
+A clone of this repository would get an empty directory there. Either declare it:
+
+  git submodule add <url> vendor-dep
+
+or take it out of the index:
+
+  git rm --cached -f -r vendor-dep
+
+If it is a fetched vendor tree, ignore that path and let the fetch script own it.
+
+(refused, exit 1)
