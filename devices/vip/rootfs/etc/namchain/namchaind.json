@@ -20,6 +20,8 @@
   "fade_ms": 5,
   "model_budget_kb": 448,
   "device_retry_ms": 250,
+  "levels_publish_period": true,
+  "levels_rate_hz": 8,
   "tcp_listen": true,
   "tcp_address": "0.0.0.0",
   "tcp_port": 47810,
