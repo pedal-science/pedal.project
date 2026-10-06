@@ -1206,6 +1206,23 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**E2 is measured; the tiers wait on one listening test** (2026-10-06). All four of 3.8's open
+questions are answered — Lite against Full over the whole library, catch-up for chains, warm
+density on vip, and an IR kept as a record — and the reading is
+[bench-results/2026-10-06-e2-tiers.md](bench-results/2026-10-06-e2-tiers.md), with the tables in
+namchain's `bench-results/e2-*.txt`. The one thing left is a judgement no bench makes: **is a Lite
+standing in for a Full audible?** That is what decides whether tier 2 survives as designed or the
+bank has to be tier 1, and it is 40 MB of WAVs in `build/e2/audition/24bit/` made by
+[bench-results/2026-10-06-e2-listening](bench-results/2026-10-06-e2-listening/README.md) — play
+`-full`, then `-lite`, then `-handover`, for the six models listed there. Everything else it needs
+is a decision, not a measurement: the tier table, and the limits the service enforces from it.
+
+Two loose ends from the same session, neither blocking: the bench's per-candidate memory came out
+larger for a Lite than a Full (fixed to fault the buffers in first, but worth a look at whether
+`SetSlimmableSize` before a rig's `Reset` — which is what `nc.nam` does too — leaves the selected
+submodel with the container's pre-`Reset` buffer sizing), and E1's default replay was `max()` of a
+rig's two stages where a series chain's memory is the *sum*.
+
 **3.3's last open item is decided, and it unblocks 3.5** (2026-10-06, U8). The footswitches send
 `cc` 80–82 — what the MIDI Commander's own buttons send — so a press on the pedal and a press on
 the Commander are the same message apart from `source`, and the trigger-to-action map stays in the
