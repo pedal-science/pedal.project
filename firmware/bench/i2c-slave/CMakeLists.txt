@@ -27,6 +27,7 @@ target_link_libraries(i2c-slave
     pico_stdlib
     hardware_i2c
     pico_i2c_slave
+    pico_cyw43_arch_none
 )
 
 # USB CDC for the console, no UART stdio: on this board the UART pins are free, but the console over

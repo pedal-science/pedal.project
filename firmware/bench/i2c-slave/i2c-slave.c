@@ -37,6 +37,7 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include "pico/i2c_slave.h"
+#include "pico/cyw43_arch.h"
 
 #define SDA_PIN 4
 #define SCL_PIN 5
@@ -119,6 +120,12 @@ int main(void) {
 
     i2c_slave_init(i2c0, SLAVE_ADDRESS, i2c_slave_handler);
 
+    // The LED is the only sign of life when it is powered from the header with the USB lead out,
+    // and "is the firmware running at all" is the first question when nothing answers on the bus.
+    // On a W board the LED lives on the wireless chip, so this needs cyw43; it is not needed for
+    // anything else here.
+    bool led_ready = cyw43_arch_init() == 0;
+
     printf("i2c-slave: up, SDA=GP%d SCL=GP%d, address 0x%02x\n", SDA_PIN, SCL_PIN, SLAVE_ADDRESS);
     printf("i2c-slave: R0=0x%04x R1=0x%04x (complements), R2 counts seconds, R3 takes writes\n",
            regs[0], regs[1]);
@@ -131,6 +138,9 @@ int main(void) {
         if (time_reached(next)) {
             next = delayed_by_ms(next, 1000);
             regs[2] = ++seconds;
+            if (led_ready) {
+                cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, seconds % 2);
+            }
             if (seconds % 5 == 0) {
                 printf("i2c-slave: up %u s, R2=0x%04x, selections=%u\n", seconds, regs[2],
                        have_selection);
