@@ -339,11 +339,32 @@ class TheInterfaceModelIsEnoughToNameWires(unittest.TestCase):
             self.assertTrue(signal.get("fault_symptom"), signal)
             self.assertTrue(signal.get("check"), signal)
 
-    def test_the_id_in_the_model_is_the_wm8960s(self):
+    def test_the_model_does_not_invent_a_device_id_register(self):
+        """The WM8960 has no ID register: R0 is LINVOL, and a real read returns a volume. The model
+        claimed 0x8960 at register 0 until 2026-10-06, which would have made any real read look
+        like the wrong chip (sound/soc/codecs/wm8960.h)."""
         interface, _ = pd.load_interface()
-        self.assertEqual(interface["codec"]["id_value_hex"], "0x8960")
-        self.assertEqual(interface["codec"]["id_value"], 0x8960)
-        self.assertEqual(interface["codec"]["i2c_address_hex"], "0x1a")
+        codec = interface["codec"]
+        self.assertEqual(codec["i2c_address_hex"], "0x1a")
+        self.assertIs(codec["has_id_register"], False)
+        self.assertNotIn("id_value", codec)
+        self.assertTrue(codec.get("why_no_id"), "the model must say why there is no id to read")
+
+    def test_the_register_map_names_the_registers_the_driver_names(self):
+        """The table used to be one register out from R5 on, which labelled the audio interface as
+        a clocking register. R7 is IFACE1, and it is where the codec's I2S master bit lives."""
+        regs = {0x00: 0x0117, 0x02: 0x0173, 0x05: 0x0000, 0x06: 0x0000, 0x07: 0x004E,
+                0x08: 0x01C4, 0x0F: 0x0000}
+        names = pd.decode_codec_registers(regs)
+        labels = {int(k.split()[0], 16): k for k in names}
+        self.assertIn("left input volume", labels[0x00])
+        self.assertIn("headphone", labels[0x02])
+        self.assertIn("DAC control 1", labels[0x05])
+        self.assertIn("DAC control 2", labels[0x06])
+        self.assertIn("audio interface", labels[0x07])
+        self.assertIn("master/slave", labels[0x07])
+        self.assertIn("clocking (2)", labels[0x08])
+        self.assertIn("software reset", labels[0x0F])
 
     def test_a_missing_model_says_so_rather_than_guessing(self):
         report = pd.build_report(sample(), None, None)
@@ -417,6 +438,97 @@ class TheInvariants(unittest.TestCase):
             if f["severity"] in ("fail", "warn"):
                 self.assertTrue(f.get("check"), "no check for %s" % f["key"])
                 self.assertTrue(f.get("likely"), "no cause for %s" % f["key"])
+
+
+class TheChipsOwnRegisters(unittest.TestCase):
+    """--probe asks the codec for its registers, and what comes back is a finding either way.
+
+    On this pedal the read does not complete (2026-10-06: every register aborts with lost
+    arbitration and SDA stuck at low, while writes are clean), so the failure itself is what the
+    report has to carry — with the controller's own words, and without pretending the driver's
+    cache is the chip.
+    """
+
+    def probe(self, s, **kw):
+        s["i2c_probe"] = dict({"requested": True, "attempted": True, "tool": "/usr/sbin/i2cget",
+                               "client": "1-001a", "bus": "1", "address": "0x1a",
+                               "aborts_before": 0, "aborts_after": 0, "abort_lines": []}, **kw)
+        return s
+
+    def test_a_successful_read_is_reported_as_the_chips_own_words(self):
+        s = self.probe(sample(), reads={"0x00": {"value": 0x0117, "raw": "0x0117"},
+                                        "0x07": {"value": 0x004E, "raw": "0x004e"}})
+        f = finding(report_for(s).findings, "codec.read")
+        self.assertIsNotNone(f)
+        self.assertEqual(f["severity"], "ok")
+        self.assertIn("audio interface", f["evidence"])
+        self.assertIn("0x004e", f["evidence"])
+
+    def test_a_read_that_disagrees_with_the_cache_is_a_warning(self):
+        s = sample()
+        s["codec"]["registers"] = "00: 0117\n07: 004e\n"      # the driver's cache
+        s = self.probe(s, reads={"0x00": {"value": 0x0117, "raw": "0x0117"},
+                                 "0x07": {"value": 0x0000, "raw": "0x0000"}})
+        findings = report_for(s).findings
+        self.assertIsNotNone(finding(findings, "codec.read"))
+        differs = finding(findings, "codec.cache_differs")
+        self.assertIsNotNone(differs)
+        self.assertEqual(differs["severity"], "warn")
+        self.assertIn("0x07", differs["evidence"])
+        # and no "everything agrees" line while something does not
+        self.assertIsNone(finding(findings, "codec.read_agrees"))
+
+    def test_a_read_that_the_controller_aborts_carries_the_abort_reason(self):
+        s = self.probe(sample(), reads={"0x00": {"error": "Error: Read failed"},
+                                        "0x07": {"error": "Error: Read failed"}},
+                       aborts_before=22, aborts_after=26,
+                       abort_lines=["i2c_designware 1f00074000.i2c: i2c_dw_handle_tx_abort: lost arbitration",
+                                    "i2c_designware 1f00074000.i2c: i2c_dw_handle_tx_abort: SDA stuck at low"])
+        f = finding(report_for(s).findings, "codec.read_failed")
+        self.assertIsNotNone(f)
+        self.assertEqual(f["severity"], "warn")
+        self.assertIn("lost arbitration", f["evidence"])
+        self.assertIn("SDA stuck at low", f["evidence"])
+        self.assertIn("4 controller abort(s)", f["evidence"])
+        self.assertIn("i2cget", f["evidence"])
+        # and it must not blame the SDA hold time, which was tried and changed nothing
+        self.assertIn("SDA hold time", " ".join(f["likely"]))
+
+    def test_a_probe_that_could_not_ask_says_why_rather_than_guessing(self):
+        s = sample()
+        s["i2c_probe"] = {"requested": True, "attempted": False,
+                          "why": "i2cget is not installed on this host"}
+        f = finding(report_for(s).findings, "codec.read_unavailable")
+        self.assertIsNotNone(f)
+        self.assertEqual(f["severity"], "info")
+        self.assertIn("i2cget", f["evidence"])
+
+    def test_an_ordinary_sample_asks_nothing_and_says_nothing(self):
+        findings = report_for(sample()).findings
+        for key in ("codec.read", "codec.read_failed", "codec.read_unavailable"):
+            self.assertIsNone(finding(findings, key), key)
+
+    def test_a_card_that_failed_to_probe_is_not_blamed_on_the_i2s_leads_first(self):
+        """What actually happened on 2026-10-06: the driver could not issue its reset write over a
+        wedged I2C bus, and the report was naming ADCLRC and BCLK."""
+        s = sample()
+        s["alsa"]["cards"] = ""
+        s["kmsg_lines"] = ["[  123.456] wm8960 1-001a: Failed to issue reset",
+                           "[  123.456] i2c_designware 1f00074000.i2c: controller timed out"]
+        f = finding(report_for(s).findings, "codec.no_card")
+        self.assertIsNotNone(f)
+        self.assertIn("Failed to issue reset", f["likely"][0])
+        self.assertIn("I2C bus", f["likely"][1])
+        self.assertIn("Failed to issue reset", f["evidence"])
+        self.assertIn("dmesg for 'wm8960 1-001a' first", f["check"])
+
+    def test_with_nothing_in_dmesg_the_leads_are_still_the_place_to_look(self):
+        s = sample()
+        s["alsa"]["cards"] = ""
+        s["kmsg_lines"] = []
+        s["kmsg_interesting"] = []
+        f = finding(report_for(s).findings, "codec.no_card")
+        self.assertIn("ADCLRC", f["likely"][0])
 
 
 class ProbesAndTheLink(unittest.TestCase):
@@ -581,6 +693,14 @@ class TheProbeParsers(unittest.TestCase):
         target, _ = pd.classify_serial_bytes(b"\r\nUbuntu 26.04 resolute vip ttyAMA10\r\n")
         self.assertEqual(target, "a Linux console")
 
+    def test_kernel_log_lines_identify_a_console(self):
+        """What the Debug Probe's UART lead caught when it was on vip's 3-pin header: the kernel's
+        own log lines, timestamps and all."""
+        target, because = pd.classify_serial_bytes(
+            b"[  557.694768] OF: overlay: WARNING: memory leak will occur if overlay removed\n")
+        self.assertEqual(target, "a Linux console")
+        self.assertIn("kernel log lines", because)
+
     def test_silence_is_reported_as_silence_and_not_as_a_target(self):
         """An idle console and a link nobody is talking to both look like nothing, and the tool
         must not turn its own timing into a diagnosis."""
@@ -639,7 +759,7 @@ class TheRendering(unittest.TestCase):
         self.assertEqual(registers[0x04], 0x0005)
 
     def test_the_register_decoder_names_the_registers_that_matter(self):
-        decoded = pd.decode_codec_registers({0x00: 0x0117, 0x04: 0x0005, 0x06: 0x0000})
+        decoded = pd.decode_codec_registers({0x00: 0x0117, 0x04: 0x0005, 0x07: 0x004E})
         self.assertTrue(any("clocking" in k for k in decoded), decoded)
         self.assertTrue(any("audio interface" in k for k in decoded), decoded)
 

@@ -14,19 +14,23 @@
     "Those documents stay the explanation; this file is the form a tool can check. Change both",
     "together, or a diagnostic will confidently name the wrong wire."
   ],
-
   "codec": {
     "part": "WM8960",
     "board": "SparkFun WM8960 Audio Codec Breakout v1.0",
     "i2c_bus": 1,
     "i2c_address": 26,
     "i2c_address_hex": "0x1a",
-    "id_register": 0,
-    "id_value": 35168,
-    "id_value_hex": "0x8960",
+    "has_id_register": false,
+    "why_no_id": "The WM8960 has no device ID register: R0 is LINVOL (left input volume) and the driver writes 0x0117 into it, so a read of R0 returns a volume and never a part number. The model claimed an id of 0x8960 at register 0 until 2026-10-06, which no read could ever have produced (sound/soc/codecs/wm8960.h; bench-results/2026-10-06-codec-i2c-reads-and-the-sda-hold-time.md).",
     "regmap": "/sys/kernel/debug/regmap/1-001a/registers",
     "regmap_access": "/sys/kernel/debug/regmap/1-001a/access",
-    "register_ranges": ["0-b", "10-1d", "20-22"],
+    "register_ranges": [
+      "0-b",
+      "10-1d",
+      "20-22",
+      "25-31",
+      "33-37"
+    ],
     "mixer_state": "/etc/pedal/codec/wm8960.mixer",
     "i2s_role": "master",
     "host_i2s_role": "slave",
@@ -56,7 +60,9 @@
         "carries": "the onboard LDO (U3, XC6222B331MR-G) into AVDD, and SPKVDD",
         "fault_symptom": "the board answers on I2C (3V3 is fine) but AVDD is dead: the card appears, the stream runs, and capture is digital silence or very low",
         "check": "meter 5 V at VIN and 3.3 V at the codec's AVDD-ISO side; check the lead in header pin 2",
-        "notes": ["Header pin 2 also feeds the Pico's VSYS through its 1N5817 since 2026-10-05. Pins 1, 2, 3 and 5 are neighbours, so a second lead in pin 2 sits a lead's width from 3.3 V, SDA and SCL. The Pico's feed belongs on pin 4 so pin 2 keeps the codec's lead alone (plan.md 3.6)."]
+        "notes": [
+          "Header pin 2 also feeds the Pico's VSYS through its 1N5817 since 2026-10-05. Pins 1, 2, 3 and 5 are neighbours, so a second lead in pin 2 sits a lead's width from 3.3 V, SDA and SCL. The Pico's feed belongs on pin 4 so pin 2 keeps the codec's lead alone (plan.md 3.6)."
+        ]
       },
       {
         "signal": "SDA",
@@ -124,12 +130,14 @@
       }
     ]
   },
-
   "pico_link": {
     "host_device": "/dev/ttyAMA0",
     "host_baud": 115200,
     "protocol": "docs/uart-protocol.md",
-    "session": ["HELLO", "WELCOME"],
+    "session": [
+      "HELLO",
+      "WELCOME"
+    ],
     "line": "8N1, raw, no getty on this port (the console is ttyAMA10)",
     "enabled_by": {
       "unit": "pedal-uart.service",
@@ -176,16 +184,28 @@
       "device_on_host_usb": "/dev/ttyACM0",
       "usb_id": "2e8a:0009",
       "baud": 115200,
-      "queries": ["?", "h"],
+      "queries": [
+        "?",
+        "h"
+      ],
       "banners": {
-        "boot": ["fw: <version>, protocol <major>.<minor> on UART0 GP0/GP1 at 115200 baud"],
-        "uptime": ["fw: up <n> s", "session=<u>", "frames ok=<n> bad=<n>"],
-        "counters": ["proto: frames ok=<n> bad=<n> events lost=<n> session=<u> rig=<d> name='<s>'"]
+        "boot": [
+          "fw: <version>, protocol <major>.<minor> on UART0 GP0/GP1 at 115200 baud"
+        ],
+        "uptime": [
+          "fw: up <n> s",
+          "session=<u>",
+          "frames ok=<n> bad=<n>"
+        ],
+        "counters": [
+          "proto: frames ok=<n> bad=<n> events lost=<n> session=<u> rig=<d> name='<s>'"
+        ]
       },
-      "notes": ["The console is the firmware's own account of what it has seen, which is not the same as what the host has seen: pedald's counters are the other half. Read both."]
+      "notes": [
+        "The console is the firmware's own account of what it has seen, which is not the same as what the host has seen: pedald's counters are the other half. Read both."
+      ]
     }
   },
-
   "host": {
     "expected_hostname": "vip",
     "audio": {
@@ -206,12 +226,18 @@
       "faults": [
         {
           "symptom": "no card 0 wm8960 in /proc/asound/cards",
-          "likely": ["the codec is not answering on I2C (see codec.signals: 3V3 first, then SDA/SCL)", "the overlay did not load: check dmesg for 'wm8960 1-001a' and 'card wm8960 did not appear'"],
+          "likely": [
+            "the codec is not answering on I2C (see codec.signals: 3V3 first, then SDA/SCL)",
+            "the overlay did not load: check dmesg for 'wm8960 1-001a' and 'card wm8960 did not appear'"
+          ],
           "check": "sudo cat /sys/kernel/debug/regmap/1-001a/registers — if this file exists the driver bound the codec, and the problem is later"
         },
         {
           "symptom": "the card exists and the engine cannot open it",
-          "likely": ["another process holds the PCM (check the owner pid in the status file)", "hw_params do not match: the engine asks for an exact period size and refuses a device that cannot give it"],
+          "likely": [
+            "another process holds the PCM (check the owner pid in the status file)",
+            "hw_params do not match: the engine asks for an exact period size and refuses a device that cannot give it"
+          ],
           "check": "compare /proc/asound/card0/pcm0p/sub0/hw_params with this file's audio block, field by field"
         }
       ]
@@ -229,28 +255,54 @@
     },
     "thermal": {
       "zone": "/sys/class/thermal/thermal_zone0",
-      "trip_active": [50000, 60000, 67500, 75000],
+      "trip_active": [
+        50000,
+        60000,
+        67500,
+        75000
+      ],
       "trip_critical": 110000,
-      "notes": ["The active trips are where the firmware starts pulling the clock back, so the number that matters is the distance to 50 C, not the 110 C critical trip."]
+      "notes": [
+        "The active trips are where the firmware starts pulling the clock back, so the number that matters is the distance to 50 C, not the 110 C critical trip."
+      ]
     },
     "engine": {
       "config": "/etc/namchain/namchaind.json",
       "token": "/etc/namchain/token",
-      "tcp": {"address": "0.0.0.0", "port": 47810},
+      "tcp": {
+        "address": "0.0.0.0",
+        "port": 47810
+      },
       "unix_socket": "/run/namchain/namchaind.sock",
       "protocol": 2,
-      "methods_read_only": ["engine.hello", "engine.schema", "engine.status", "engine.levels", "rig.get", "engine.record"],
-      "methods_mutating": ["rig.load", "rig.apply", "rig.patch", "engine.mute", "engine.panic"],
+      "methods_read_only": [
+        "engine.hello",
+        "engine.schema",
+        "engine.status",
+        "engine.levels",
+        "rig.get",
+        "engine.record"
+      ],
+      "methods_mutating": [
+        "rig.load",
+        "rig.apply",
+        "rig.patch",
+        "engine.mute",
+        "engine.panic"
+      ],
       "wire": "a 4-byte little-endian length prefix then one JSON object, both directions; the token goes at the TOP LEVEL of engine.hello, and the id is a string"
     },
     "service": {
       "config": "/etc/pedal/pedald.json",
-      "http": {"address": "0.0.0.0", "port": 47820, "auth": "Authorization: Bearer <the engine's token>"},
+      "http": {
+        "address": "0.0.0.0",
+        "port": 47820,
+        "auth": "Authorization: Bearer <the engine's token>"
+      },
       "status_route": "/status",
       "poll": "engine.status, once a second"
     }
   },
-
   "levels": {
     "method": "engine.levels",
     "floor_db": -200.0,
@@ -261,7 +313,6 @@
       "printing zeros that look like silence."
     ]
   },
-
   "attached_aids": [
     {
       "name": "Raspberry Pi Debug Probe",
@@ -302,8 +353,16 @@
       ]
     }
   ],
-
   "known_fault_seeds": [
+    {
+      "id": "codec-read-aborts",
+      "seen": "2026-10-06",
+      "from": "bench-results/2026-10-06-codec-i2c-reads-and-the-sda-hold-time.md",
+      "symptom": "every read of the codec fails while writes are clean: i2cget -f -y 1 0x1a <reg> w returns 'Error: Read failed', and dmesg carries i2c_dw_handle_tx_abort: lost arbitration and SDA stuck at low",
+      "discriminator": "a read of an unused address (0x20) completes with a plain NAK and no abort, and a write through the driver (amixer, same value plus one step) succeeds with no abort either — so the bus and the codec are both alive and only this codec's read aborts",
+      "meaning": "the driver's register file is a cache because the controller cannot complete a read from this codec, not because anything is missing from userspace. i2c-tools is installed and issues the codec's own protocol; i2c-sda-hold-time-ns at 300, 1000 and 3000 ns changes nothing; and a single-message read with no repeated start fails the same way, so it is not the restart. Suspect the RP1 controller's read path or the codec's read protocol",
+      "check": "a second I2C device with a known ID register on the same bus (reads failing on it too means the controller) or a scope on SDA and SCL during one read. Do NOT set a large i2c-sda-hold-time-ns: 10 us is a whole bit period at 100 kHz and wedged the controller holding SDA low, which needed a reboot (the node has no scl-gpios/sda-gpios, so i2c_recover_bus() is a no-op)"
+    },
     {
       "id": "i2c-nack-vs-timeout",
       "seen": "2026-10-05",
@@ -346,7 +405,6 @@
       "check": "scripts/pico-power-test --leg read, before and after: the counter runs from the Pico's reset"
     }
   ],
-
   "cannot_be_seen_from_software": [
     "Which socket a lead is in, physically. The tool narrows the fault to a signal and names the pin; a meter or a photo closes it.",
     "A lead that is fitted but making poor contact: intermittent, so it shows as noise, occasional framing errors or an occasional device loss rather than a clean absence.",

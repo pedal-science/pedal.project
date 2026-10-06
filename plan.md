@@ -1144,6 +1144,18 @@ UART0 disabled; `pedal-uart.service` owns the overlay, named from `pico_link.ena
 kernel has it and `/dev` has no node for it, which is udev's business and not the device tree's.
 Tests: `devices/common/tests/test_diag.py`, 11 more of them.
 
+**The codec's registers still cannot be read, and now the tool says so out loud** (2026-10-06):
+`i2c-tools` is on vip, so `--probe` asks the chip itself (`i2cget -f -y 1 0x1a <reg> w`) and
+reports either the chip's own words beside the driver's cache (`codec.cache_differs` is a write
+that never landed) or the controller's abort reason from `dmesg` (`codec.read_failed`, which is
+what happens today: every read aborts with lost arbitration and SDA stuck at low while writes are
+clean). The SDA hold time is ruled out (300/1000/3000 ns, honoured and ineffective), and the two
+measurements that would separate the controller from the codec are a second I2C device with a
+known ID register, or a scope on SDA/SCL during one read. rtpi now carries the other half:
+`devices/vip/dt/rp1-i2c1-recovery.dts`, which arms the driver's GPIO bus recovery — **not yet in
+either boot partition**, so until it is, a wedged bus still needs a reboot. Full evidence:
+[bench-results/2026-10-06-codec-i2c-reads-and-the-sda-hold-time.md](bench-results/2026-10-06-codec-i2c-reads-and-the-sda-hold-time.md).
+
 **And the audio-level half landed in namchain** the same day (namchain `a69d315`): `engine.levels`
 is a read-only method returning the device's input and output levels per channel, each chain's, and
 every plan node's labelled with its `element` and `role` — which is what "every macro in the running

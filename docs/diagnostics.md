@@ -44,7 +44,7 @@ measurement that closes it**.
 |---|---|---|
 | a report (`scripts/diag`) | reads everything once, prints the findings | write anything, anywhere |
 | `--watch` | samples continuously, one compact line per sample, plus a full sample every tenth | fork per sample, open a bus, talk to the codec |
-| `--probe` | the invasive checks: the Pico's console, the Debug Probe's UART bridge on this machine (the only way to say what that probe is watching), and anything else that changes what is measured | run while the engine is playing — it checks, and refuses |
+| `--probe` | the invasive checks: a real read of the codec's registers (`i2cget`), the Pico's console, the Debug Probe's UART bridge on this machine (the only way to say what that probe is watching), and anything else that changes what is measured | run while the engine is playing — it checks, and refuses |
 
 The split is the design, not a convenience. A diagnostic that changed the thing it was measuring
 would be worse than no diagnostic, so the passive reading and the active poking are separate
@@ -204,6 +204,16 @@ through the driver's own `SDA Hold Time TX:RX` line), and a read can leave the R
 a wedged controller gives timeouts. That is what a reboot is for, and the whole episode, with the
 numbers, is in
 [bench-results/2026-10-06-codec-i2c-reads-and-the-sda-hold-time.md](../bench-results/2026-10-06-codec-i2c-reads-and-the-sda-hold-time.md).
+
+So `--probe` **asks the chip anyway**, and reports what comes back either way. A register read is
+the tool's one write-free transaction on that bus, and the answer is a finding in both directions:
+the chip's own words beside the driver's cache (the only way to see a write that never landed —
+`codec.cache_differs`), or the controller's abort reason, quoted from `dmesg` (`codec.read_failed`,
+which is what this pedal produces today). A report without `--probe` never touches the bus, and
+says the register map is the driver's cache. The other half of that answer lives in rtpi:
+`devices/vip/dt/rp1-i2c1-recovery.dts` gives the driver the two lines as GPIOs so
+`i2c_recover_bus()` can bit-bang a stuck bus free — and it has to be in the boot device tree,
+because the controller binds long before any service runs.
 
 ## The interface model
 

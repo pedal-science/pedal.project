@@ -21,7 +21,8 @@ at a conclusion it cannot cite: every finding carries the evidence it came from.
 Read-only, and it stays that way. It opens no sound device, writes nothing to the codec, the
 I2C bus or the Pico's serial line, and the only file it ever creates is --watch's own log.
 --watch samples cheaply and never more often than once a second; --probe does the invasive
-things (a deep register read, a read of the Pico's console, and a read of the Debug Probe's UART
+things (a real read of the codec's registers over I2C, a read of the Pico's console, and a
+read of the Debug Probe's UART
 bridge here, which is how the tool can say what that probe is watching) and refuses to run while
 the engine is playing. The two are separate modes on purpose: a diagnostic that changed what it
 was measuring would be worse than no diagnostic.
@@ -1034,10 +1035,67 @@ INTERESTING = ("wm8960", "did not appear", "undervolt", "throttl", "i2c", "snd",
 out["kmsg_interesting"] = [l.strip() for l in kmsg.splitlines() if any(m in l for m in INTERESTING)][-60:]
 out["kmsg_lines"] = [l for l in kmsg.splitlines() if l.strip()][-400:] if deep else None
 
-# --- nothing touches a bus: the I2C attempt failed, see the note above -------------
-out["i2c_probe"] = {"requested": bool(PROBE), "attempted": False,
-                    "why": "reading the chip needs i2c-tools or a working I2C_RDWR ioctl; neither "
-                           "is on vip today (see this tool's source or docs/diagnostics.md)"}
+# --- the codec's own registers, when asked to look (--probe) -----------------
+# Read-only, and only under --probe: this is real traffic on the bus the codec sits on, and the one
+# transaction this pedal's controller has been seen to abort (see the note at the top of this file).
+# Nothing is written — `i2cget` with a register and word mode IS the WM8960's read protocol, the
+# same two messages the driver's regmap would use if it read the chip back. The registers are the
+# ones that say what the codec is configured as; the report names them.
+I2C_PROBE_REGISTERS = ("0x00", "0x04", "0x05", "0x06", "0x07", "0x08", "0x0f")
+
+out["i2c_probe"] = {"requested": bool(PROBE), "attempted": False}
+
+
+def _aborts(text):
+    return [l.strip() for l in (text or "").splitlines() if "i2c_dw_handle_tx_abort" in l]
+
+
+if PROBE:
+    _client = None
+    for _d in sorted(glob.glob("/sys/bus/i2c/devices/*-001a")):
+        _client = os.path.basename(_d)
+    _tool = None
+    for _cand in ("/usr/sbin/i2cget", "/usr/bin/i2cget"):
+        if os.path.exists(_cand):
+            _tool = _cand
+            break
+    if not _tool:
+        _text, _rc = run(["sh", "-c", "command -v i2cget"], timeout=5)
+        _tool = (_text or "").strip().splitlines()[0] if _text and _text.strip() else None
+    if _client and _tool:
+        _bus, _addr = _client.split("-", 1)
+        _before_text, _ = run(["dmesg"], timeout=8)
+        if not _before_text:
+            _before_text, _ = run(["sudo", "-n", "dmesg"], timeout=8)
+        reads = {}
+        for _reg in I2C_PROBE_REGISTERS:
+            _text, _rc = run([_tool, "-f", "-y", _bus, "0x" + _addr, _reg, "w"], timeout=10)
+            _out = (_text or "").strip().splitlines()
+            _last = _out[-1].strip() if _out else ""
+            if _rc == 0 and _last.lower().startswith("0x"):
+                try:
+                    reads[_reg] = {"value": int(_last, 16), "raw": _last}
+                    continue
+                except ValueError:
+                    pass
+            reads[_reg] = {"error": _last or ("rc=%s" % _rc)}
+        _after_text, _ = run(["dmesg"], timeout=8)
+        if not _after_text:
+            _after_text, _ = run(["sudo", "-n", "dmesg"], timeout=8)
+        out["i2c_probe"] = {
+            "requested": True, "attempted": True, "tool": _tool, "client": _client,
+            "bus": _bus, "address": "0x%02x" % int(_addr, 16), "reads": reads,
+            "aborts_before": len(_aborts(_before_text)),
+            "aborts_after": len(_aborts(_after_text)),
+            "abort_lines": _aborts(_after_text)[-4:],
+        }
+    elif not _tool:
+        out["i2c_probe"] = {"requested": True, "attempted": False,
+                            "why": "i2cget is not installed on this host (i2c-tools), so the chip "
+                                   "cannot be asked: the driver's register cache is all there is"}
+    else:
+        out["i2c_probe"] = {"requested": True, "attempted": False,
+                            "why": "no i2c client at 0x1a to read from"}
 
 out["pico"] = {"probed": False}
 
@@ -1322,6 +1380,13 @@ def classify_serial_bytes(data):
     for marker in markers:
         if marker in text:
             return "a Linux console", "%r is on it" % marker
+    # Kernel log lines as they appear on a console: "[   12.345678] ...". This is what the pedal's
+    # own debug header carries, and it is how this classifier earned its keep: the Debug Probe's
+    # UART lead was on vip's 3-pin header, and the first thing it caught was the kernel's own
+    # overlay warning (docs/diagnostics.md).
+    stamped = [l for l in text.splitlines() if re.match(r"^\[\s*[0-9]+\.[0-9]+\]", l.strip())]
+    if stamped:
+        return "a Linux console", "kernel log lines are on it: %r" % stamped[0].strip()[:60]
     printable = sum(1 for c in text if c.isprintable() or c in "\r\n\t")
     if printable > 0.9 * len(text):
         return None, "printable text, but nothing that names the line: %r" % text[:60]
@@ -1377,43 +1442,18 @@ class Report(object):
         else:
             regs_raw = codec.get("registers")
             regs = parse_registers(regs_raw)
-            probed_id = (self.sample.get("i2c_probe") or {}).get("id")
-            probe_error = (self.sample.get("i2c_probe") or {}).get("error")
-            want = iface.get("id_value")
+            probed = self.sample.get("i2c_probe") or {}
             names = decode_codec_registers(regs)
 
-            if probed_id is not None and want is not None and probed_id != want:
-                self.add("fail", "codec.wrong_id",
-                         "the chip at 0x1a answers, but its device id is not the WM8960's",
-                         "a real I2C read of register 0x00 returns 0x%04x; a WM8960 returns 0x%04x" % (
-                             probed_id, want),
-                         likely=["something else is answering at 0x1a",
-                                 "the codec board's 3V3 is low enough that the part misbehaves"],
-                         check="meter 3.3 V at the codec board's 3V3 pin, and check no other board "
-                               "is on the bus")
-            elif probed_id is not None:
-                self.add("ok", "codec.answers",
-                         "the WM8960 is on I2C and a real register read returns its device id",
-                         "0x1a register 0x00 = 0x%04x; %d registers in the driver's map" % (
-                             probed_id, len(regs)),
-                         check="nothing: this is the branch that has to be true for audio to exist")
-            elif regs_raw:
+            if regs_raw:
                 detail = "; ".join("%s = %s" % (k, v) for k, v in list(names.items())[:6])
                 self.add("ok", "codec.answers",
                          "the driver has the codec bound and its register map is readable",
                          "%d registers; %s" % (len(regs), detail or "no named registers"),
                          likely=[],
                          check="these are the driver's CACHE, not a chip read: the codec is "
-                               "configured to what the driver wrote, which is the useful half. A "
-                               "real chip read needs i2cget (see docs/diagnostics.md)")
-                if probe_error:
-                    self.add("info", "codec.probe_failed",
-                             "the chip did not answer a direct register read",
-                             probe_error,
-                             likely=["the kernel driver holds the bus and the read needs the "
-                                     "adapter's own arbitration",
-                                     "the codec is between power transitions (DAPM) and NAKs"],
-                             check="--probe again in a moment; if it persists, the I2C section above")
+                               "configured to what the driver wrote, which is the useful half. "
+                               "--probe asks the chip itself (see below)")
             else:
                 self.add("warn", "codec.registers_unreadable",
                          "the codec is on the bus but its registers were not readable",
@@ -1424,17 +1464,43 @@ class Report(object):
                          check="run with sudo on the host (the tool does this itself unless "
                                "PEDAL_DIAG_NO_SUDO=1)")
 
+            # A real read of the chip, when --probe was asked to try one. The WM8960 has no device
+            # ID register (R0 is LINVOL, and the driver writes 0x0117 into it), so there is nothing
+            # to check the part against: what a real read buys is the chip's own words beside the
+            # driver's cache, which is the only way to see a driver that thinks it wrote something
+            # it did not.
+            self.write_codec_read_findings(probed, regs)
+
         # The card list being EMPTY is the case that matters most ("card wm8960 did not appear"),
         # so it is a fault as much as a list without wm8960 in it.
         if "wm8960" not in (cards or ""):
+            failed = self.kmsg_bus_lines("Failed to issue reset")
+            failed += self.kmsg_bus_lines("probe with driver wm8960 failed")
+            failed += self.kmsg_bus_lines("controller timed out")
+            likely = []
+            if failed:
+                # The driver's own account first. On 2026-10-06 the card was missing because the
+                # codec's probe could not issue its reset write over a wedged I2C bus, and this
+                # finding was naming the I2S leads instead (bench-results/2026-10-06-codec-i2c-
+                # reads-and-the-sda-hold-time.md). A fault in the control bus and a fault in the
+                # audio clocks look nothing alike in dmesg, and dmesg was right there.
+                likely.append("the codec's driver failed to probe: %s" % failed[0])
+                likely.append("the I2C bus is held or unreadable: the reset write is the driver's "
+                              "first transaction, and nothing else can run without it")
+            likely += ["ADCLRC or BCLK wired when it should be (or the reverse): the card binds only "
+                       "when the DAI's clocks agree",
+                       "the overlay's simple-card node did not match the codec's compatible"]
             self.add("fail", "codec.no_card",
                      "the codec is on the bus but no ALSA card appeared",
-                     "/proc/asound/cards: %s" % (cards.replace("\n", " / ") or "(empty)"),
-                     likely=["ADCLRC or BCLK wired when it should be (or the reverse): the card "
-                             "binds only when the DAI's clocks agree",
-                             "the overlay's simple-card node did not match the codec's compatible"],
-                     check="dmesg for the card's bind, and the four I2S leads against "
-                           "devices/common/pedal-interface.json")
+                     "/proc/asound/cards: %s%s" % (
+                         cards.replace("\n", " / ") or "(empty)",
+                         "; dmesg: %s" % failed[0] if failed else ""),
+                     likely=likely,
+                     check="dmesg for 'wm8960 1-001a' first — a driver that could not probe says so "
+                           "there. If it is a timed-out transaction, the I2C bus is the fault and "
+                           "not the audio leads (docs/diagnostics.md, and the recovery overlay in "
+                           "rtpi devices/vip/dt/rp1-i2c1-recovery.dts); otherwise the four I2S leads "
+                           "against devices/common/pedal-interface.json")
 
         # The historical discriminator, worth naming whenever the error is visible at all — and
         # only from a line about the codec or the I2C bus, because "-121" appears in other
@@ -1457,6 +1523,97 @@ class Report(object):
                      "a timeout is a held line, not an absent chip",
                      likely=["a short or a crossed lead on SDA/SCL, or a device holding the bus"],
                      check="meter SDA and SCL: both should sit at 3.3 V when idle")
+
+    def kmsg_bus_lines(self, needle):
+        """dmesg lines about the codec or the I2C bus that carry this needle, in order.
+
+        The filter matters: "-121" and "controller timed out" appear in other drivers' messages,
+        and a report that quotes the wrong line is worse than one that says nothing.
+        """
+        return [l.strip() for l in (self.dig("kmsg_lines") or self.dig("kmsg_interesting") or [])
+                if needle in l and ("wm8960" in l or "i2c" in l.lower() or "1-001a" in l)]
+
+    def write_codec_read_findings(self, probed, cache):
+        """What a real read of the chip said, when --probe was asked to try one.
+
+        The cache is the driver's view; this is the chip's. Neither is the other's substitute: a
+        write that never landed leaves the cache saying one thing and the codec another, and only
+        a read can show it. When the read cannot be completed, the *reason* is the finding — on
+        this pedal the controller aborts every read of this codec, and that is a fact worth
+        carrying in the report rather than a diagnostic giving up quietly.
+        """
+        if not probed:
+            return
+        if not probed.get("attempted"):
+            if probed.get("requested"):
+                self.add("info", "codec.read_unavailable",
+                         "the chip was not asked for its own registers",
+                         probed.get("why") or "no reason recorded",
+                         check="i2c-tools on the host, and a client at 0x1a")
+            return
+
+        reads = probed.get("reads") or {}
+        values = {reg: entry["value"] for reg, entry in reads.items()
+                  if isinstance(entry, dict) and isinstance(entry.get("value"), int)}
+        tried = ", ".join(sorted(reads))
+        tool = os.path.basename(probed.get("tool") or "i2cget")
+
+        if values:
+            named = decode_codec_registers({int(r, 16): v for r, v in values.items()})
+            agree = [r for r, v in values.items() if int(r, 16) in cache and cache[int(r, 16)] == v]
+            differ = [r for r, v in values.items() if int(r, 16) in cache and cache[int(r, 16)] != v]
+            self.add("ok", "codec.read",
+                     "the codec answered a real register read: %d register(s) from the chip" % len(values),
+                     "; ".join("%s = %s" % (k, v) for k, v in named.items()) or
+                     "; ".join("%s=%#06x" % (r, v) for r, v in sorted(values.items())),
+                     connected_to=None,
+                     check="these are the chip's own words, not the driver's cache; the names come "
+                           "from the WM8960's register map (sound/soc/codecs/wm8960.h)")
+            if differ:
+                self.add("warn", "codec.cache_differs",
+                         "the chip's registers differ from the driver's cache in %d place(s)" % len(differ),
+                         "; ".join("%s chip=%#06x cache=%#06x" % (r, values[r], cache[int(r, 16)])
+                                   for r in differ),
+                         likely=["a write did not land: the driver's cache advanced and the codec "
+                                 "did not",
+                                 "something else wrote to the codec (another tool, or a by-hand "
+                                 "i2cset)"],
+                         check="read the same registers again after a mixer change; a register that "
+                               "follows the driver is fine, one that does not is a write path fault")
+            elif agree:
+                self.add("ok", "codec.read_agrees",
+                         "the chip and the driver's cache agree on all %d register(s) read" % len(agree),
+                         ", ".join(sorted(agree)),
+                         check="nothing: the driver's view of the codec is the codec's view")
+        else:
+            aborts = 0
+            if isinstance(probed.get("aborts_after"), int) and isinstance(probed.get("aborts_before"), int):
+                aborts = max(0, probed["aborts_after"] - probed["aborts_before"])
+            reasons = []
+            for line in probed.get("abort_lines") or []:
+                reason = line.rsplit(":", 1)[-1].strip()
+                if reason and reason not in reasons:
+                    reasons.append(reason)
+            self.add("warn", "codec.read_failed",
+                     "a real read of the codec was attempted and the controller aborted every time",
+                     "%s -f -y %s %s <register> w: %d read(s) tried, all failed%s%s" % (
+                         tool, probed.get("bus"), probed.get("address"), len(reads),
+                         "; %d controller abort(s)" % aborts if aborts else "",
+                         "; dmesg: %s" % ", ".join(reasons) if reasons else ""),
+                     likely=["this controller's read of this codec does not complete: writes ACK "
+                             "for hours while every read aborts with lost arbitration and SDA "
+                             "stuck at low (bench-results/2026-10-06-codec-i2c-reads-and-the-sda-"
+                             "hold-time.md)",
+                             "not a userspace problem and not a missing package: i2c-tools is "
+                             "installed and issues the codec's own protocol",
+                             "not the SDA hold time: 300, 1000 and 3000 ns were each tried and "
+                             "changed nothing",
+                             "the codec may ACK a read address it cannot serve, or the RP1 "
+                             "controller may not complete a read on this bus at all"],
+                     check="a second I2C device with a known ID register on the same bus (reads "
+                           "failing on it too means the controller), or a scope on SDA and SCL "
+                           "during one read. Both are cheaper than another theory",
+                     seed=(find_seed(self.iface, "codec-read-aborts") or {}).get("id"))
 
     def write_audio_findings(self):
         pcm = self.dig("alsa", "pcm") or {}
@@ -2240,28 +2397,68 @@ def parse_registers(text):
 # wherever the operator is: --probe embeds it in the sample and the host executes it. It is
 # deliberately absent from --watch, which must never touch a bus.
 def decode_codec_registers(registers):
-    """The registers worth naming, from the regmap dump (which is the cache, see i2c_read)."""
+    """The registers worth naming, from a register map — the driver's cache, or a real read.
+
+    The map is the driver's own (sound/soc/codecs/wm8960.h): the previous version of this table was
+    a register off from R5 onwards, which put the audio interface's value under a clocking label
+    and named R0 (a volume) as if the part had a device ID there. R7 is IFACE1, and it is the
+    register that carries whether the codec is the I2S master — the design's central fact — so a
+    wrong name there is not cosmetic.
+    """
     wanting = {
-        0x00: ("left input volume", None),
-        0x02: ("right input volume", None),
-        0x04: ("clocking 1 (PLL, SYSCLK)", None),
-        0x05: ("clocking 2 (DAC/ADC sample rate)", None),
-        0x06: ("audio interface (format, word length, master/slave)", None),
-        0x07: ("clocking (SYSCLK divide, DAC/ADC clocks, PLL enable)", None),
-        0x08: ("DAC control 1", None),
-        0x0A: ("DAC volume", None),
-        0x0D: ("ADC control 1 (ADCHPD)", None),
-        0x0F: ("ADC volume", None),
-        0x1A: ("power management 1 (VMID)", None),
-        0x1B: ("power management 2 (DAC, PLL, MICB, BOOST, LINE)", None),
-        0x1C: ("power management 3 (ADCs, input/output mixers)", None),
-        0x2F: ("class D control 1", None),
-        0x3A: ("class D control 3", None),
+        0x00: "left input volume",
+        0x01: "right input volume",
+        0x02: "headphone (LOUT1) volume",
+        0x03: "headphone (ROUT1) volume",
+        0x04: "clocking (1): PLL, SYSCLK",
+        0x05: "DAC control 1",
+        0x06: "DAC control 2",
+        0x07: "audio interface: format, word length, master/slave",
+        0x08: "clocking (2): SYSCLK divide, DAC/ADC clocks",
+        0x09: "audio interface 2: LR swap, ADCLRC/BCLK direction",
+        0x0A: "left DAC volume",
+        0x0B: "right DAC volume",
+        0x0F: "software reset (reads 0x000)",
+        0x10: "3D enhance",
+        0x11: "ALC 1",
+        0x12: "ALC 2",
+        0x13: "ALC 3",
+        0x14: "noise gate",
+        0x15: "left ADC volume",
+        0x16: "right ADC volume",
+        0x17: "additional control 1",
+        0x18: "additional control 2",
+        0x19: "power management 1: VMID, VREF, MICB",
+        0x1A: "power management 2: DAC, PLL, BOOST, LINE, headphone",
+        0x1B: "additional control 3",
+        0x1C: "anti-pop 1",
+        0x1D: "anti-pop 2",
+        0x20: "left input path: LINPUT1/2/3 boost",
+        0x21: "right input path: RINPUT1/2/3 boost",
+        0x22: "left output mixer",
+        0x25: "right output mixer",
+        0x26: "mono output mixer 1",
+        0x27: "mono output mixer 2",
+        0x28: "speaker (LOUT2) volume",
+        0x29: "speaker (ROUT2) volume",
+        0x2A: "mono output volume",
+        0x2B: "input boost mixer 1",
+        0x2C: "input boost mixer 2",
+        0x2D: "bypass 1: LINPUT1 to output",
+        0x2E: "bypass 2: RINPUT1 to output",
+        0x2F: "power management 3: LN/RN outputs",
+        0x30: "additional control 4",
+        0x31: "class D control 1",
+        0x33: "class D control 3",
+        0x34: "PLL 1",
+        0x35: "PLL 2",
+        0x36: "PLL 3",
+        0x37: "PLL 4",
     }
     out = {}
     for address, value in sorted((registers or {}).items()):
-        if address in wanting:
-            label, _ = wanting[address]
+        label = wanting.get(address)
+        if label:
             out["0x%02x %s" % (address, label)] = "0x%04x" % value
     return out
 
@@ -2710,7 +2907,19 @@ def mode_probe(args, interface, interface_path):
     say = (lambda *a: None) if args.json_out else print
     say("%s --probe on %s" % (TOOL, (sample.get("host") or {}).get("hostname")))
     probed = sample.get("i2c_probe") or {}
-    say("  codec chip: read from the driver's register cache only (%s)" % (probed.get("why") or "no chip read"))
+    if probed.get("attempted"):
+        values = {r: e.get("value") for r, e in (probed.get("reads") or {}).items()
+                  if isinstance(e, dict) and isinstance(e.get("value"), int)}
+        if values:
+            say("  codec chip: %d register(s) read from the chip itself (%s)" % (
+                len(values), ", ".join("%s=%#06x" % (r, v) for r, v in sorted(values.items()))))
+        else:
+            say("  codec chip: a real read was attempted and failed on every register")
+            for line in (probed.get("abort_lines") or [])[-2:]:
+                say("    %s" % line)
+    else:
+        say("  codec chip: read from the driver's register cache only (%s)"
+            % (probed.get("why") or "no chip read"))
     if playing:
         say("  the engine is running: the Pico's console is NOT being opened, and neither is")
         say("  anything else that could disturb a live stream. Stop the engine to probe it.")
