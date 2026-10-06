@@ -1,0 +1,3 @@
+{"condition": 1, "label": "minimal-off-nonehz", "series": "minimal", "levels": "off", "rig": "/etc/namchain/rigs/levels-minimal.json", "nodes": 2, "hz": null, "seconds": 60, "cpu_ticks": 124, "ticks": 0}
+{"condition": 10, "label": "heavy-off-nonehz", "series": "heavy", "levels": "off", "rig": "/etc/namchain/rigs/levels-heavy.json", "nodes": 34, "hz": null, "seconds": 60, "cpu_ticks": 134, "ticks": 0}
+{"condition": 11, "label": "heavy-on-nonehz", "series": "heavy", "levels": "on", "rig": "/etc/namchain/rigs/levels-heavy.json", "nodes": 34, "hz": null, "seconds": 60, "cpu_ticks": 271, "ticks": 0}

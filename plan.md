@@ -1208,6 +1208,29 @@ PCM `format` and gives ALSA a real `backend_diagnostics`, splitting the one `xru
 have. `pedal-diag` reads it already and stops saying "levels unavailable". **Remaining: the meters
 in ljoss** (a 20 Hz `engine.levels` poll and the views), which is the next piece.
 
+**The meters in ljoss were already there, and the measurement half is done** (2026-10-06). The note
+above was stale: ljoss has the 20 Hz poll (`Ljoss/Engine/EngineLevels.swift`), the shared decay and
+the bars (`Ljoss/Views/LevelMeters.swift`), and a campaign of its own measuring what the numbers mean
+at the jack (ljoss `60e70d8`, `Tools/levels/`). What this session added is the other side of the
+question — what measuring *costs* — and the switch to stop paying it:
+
+- **namchain `f00714d`**: `--levels` / `--no-levels` (config key `"levels"`), which turns the feature
+  off **at the source**. `CompileOptions::levels: false` leaves a plan's probe vector empty, so
+  `measure_node` sees a null probe and the render path does no per-sample level work at all. With it
+  off, `engine.levels` is refused (`levels_disabled`), `engine.status` omits the levels object, and
+  `features` omits `"levels"` — three absences, so a client degrades to having no meters rather than
+  polling a method that cannot answer. Decided once, at construction and at each plan's compile,
+  because a local transition compiles a plan on the render path.
+- **Measured on vip**, and written up with its method, its stability check and its caveats:
+  [bench-results/2026-10-06-levels-switch.md](bench-results/2026-10-06-levels-switch.md). The short
+  version: measuring a 34-node rig costs **2.2% of one core with the switch off and 4.5% with it on**,
+  the per-sample cost being ~0.7–1.5 ms/s of a core per measured node; a client polling
+  `engine.levels` costs **~0.06 ms a poll on a 2-node rig and ~0.13 ms on a 34-node rig**, linear in
+  the rate, and so small beside the per-sample cost that the reply's size is most of it. The heaviest
+  condition in the campaign — a 34-node rig with a client polling at 20 Hz — still cost only 4.8% of
+  one core. This is an upper bound rather than a real rig's number: a rig with an A2 model in it
+  would show a smaller *share*, because an inference swamps a probe.
+
 **3.6's power question is answered: the header feed holds, the USB-A port does not — and the codec is
 down** (2026-10-05). The instrument is the pedal's own: the Pico prints `fw: up N s` on its USB
 console every 5 s, and `N` counts from the Pico's own reset, so it measures **power** where `dmesg`
