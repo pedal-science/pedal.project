@@ -109,8 +109,15 @@ class Service:
         if kind == protocol.HELLO:
             self.pico = {"fw": message.get("fw"), "major": message.get("major"),
                          "minor": message.get("minor"), "caps": message.get("caps")}
-            self.log(f"Pico says hello: fw {self.pico['fw']!r}, protocol "
-                     f"{self.pico['major']}.{self.pico['minor']}, caps 0x{self.pico['caps']:04x}")
+            if message.get("refused"):
+                # The major differs: `protocol.Session` sent ERROR and holds no session, so the
+                # pedal stays where it is until the two ends match (docs/uart-protocol.md).
+                self.log(f"Pico speaks protocol {self.pico['major']}.{self.pico['minor']}, this "
+                         f"service speaks {protocol.VERSION_MAJOR}.{protocol.VERSION_MINOR}: "
+                         f"refused with ERROR, no session")
+            else:
+                self.log(f"Pico says hello: fw {self.pico['fw']!r}, protocol "
+                         f"{self.pico['major']}.{self.pico['minor']}, caps 0x{self.pico['caps']:04x}")
             self.state_key = None                       # one STATE per session
         elif kind == protocol.EVENT:
             self.on_event(message)
@@ -195,6 +202,7 @@ class Service:
 
         return {
             "device": self.cfg.uart_device, "baud": self.cfg.uart_baud,
+            "protocol": "%d.%d" % (protocol.VERSION_MAJOR, protocol.VERSION_MINOR),
             "open": self.link.open, "session": self.session.session_up,
             "frames_ok": self.session.frames_ok,
             "frames_bad": self.session.frames_bad,

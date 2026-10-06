@@ -73,7 +73,7 @@ static void send_frame(uint8_t type, const uint8_t *payload, uint8_t len) {
 }
 
 static void send_hello(void) {
-    uint8_t payload[4 + sizeof(fw_version)];
+    uint8_t payload[4 + 1 + sizeof(fw_version)];
     payload[0] = PROTO_VERSION_MAJOR;
     payload[1] = PROTO_VERSION_MINOR;
     payload[2] = (uint8_t)(caps & 0xFF);
@@ -82,10 +82,25 @@ static void send_hello(void) {
     if (n > sizeof(fw_version) - 1) {
         n = sizeof(fw_version) - 1;
     }
-    memcpy(&payload[4], fw_version, n);
-    send_frame(PROTO_MSG_HELLO, payload, (uint8_t)(4 + n));
+    payload[4] = (uint8_t)n;  // str8: one length byte, then the bytes (draft 2, U2)
+    memcpy(&payload[5], fw_version, n);
+    send_frame(PROTO_MSG_HELLO, payload, (uint8_t)(5 + n));
     printf("proto: hello sent (v%u.%u caps=0x%04x)\n", PROTO_VERSION_MAJOR, PROTO_VERSION_MINOR,
            (unsigned)caps);
+}
+
+// ERROR carries a code and a str8 text (docs/uart-protocol.md, Messages). Long text is cut
+// on a byte boundary: everything this end says in one is ASCII.
+static void send_error(uint8_t code, const char *text) {
+    uint8_t payload[1 + 48];
+    size_t n = strlen(text);
+    if (n > sizeof(payload) - 2) {
+        n = sizeof(payload) - 2;
+    }
+    payload[0] = code;
+    payload[1] = (uint8_t)n;
+    memcpy(&payload[2], text, n);
+    send_frame(PROTO_MSG_ERROR, payload, (uint8_t)(2 + n));
 }
 
 static void send_event(void) {
@@ -94,22 +109,27 @@ static void send_event(void) {
 }
 
 static void handle_state(const uint8_t *p, uint8_t len) {
-    if (len < 4) {
+    if (len < 5) {  // flags, rig i8, bank i8, bank size, then the name's length byte
         return;
     }
     state_flags = p[0];
     state_rig = (int8_t)p[1];
     state_bank = (int8_t)p[2];
     state_bank_size = p[3];
-    size_t n = len - 4;
+    // The name is a str8: one length byte, then that many bytes. Anything after it is
+    // ignored, which is what lets STATE grow at its end (docs/uart-protocol.md, U2).
+    size_t n = p[4];
+    if (n > (size_t)(len - 5)) {
+        n = (size_t)(len - 5);
+    }
     if (n > NAME_MAX) {
         n = NAME_MAX;
     }
-    memcpy(state_name, &p[4], n);
+    memcpy(state_name, &p[5], n);
     state_name[n] = '\0';
-    printf("proto: state audio_ready=%u bypass=%u health=%u rig=%d bank=%d/%u name='%s'\n",
+    printf("proto: state audio_ready=%u muted=%u health=%u rig=%d bank=%d/%u name='%s'\n",
            (unsigned)(state_flags & PROTO_STATE_AUDIO_READY ? 1 : 0),
-           (unsigned)(state_flags & PROTO_STATE_ENGINE_BYPASS ? 1 : 0),
+           (unsigned)(state_flags & PROTO_STATE_ENGINE_MUTED ? 1 : 0),
            (unsigned)((state_flags & PROTO_STATE_HEALTH_MASK) >> 2), (int)state_rig,
            (int)state_bank, (unsigned)state_bank_size, state_name);
 }
@@ -118,6 +138,14 @@ static void handle_frame(uint8_t type, const uint8_t *p, uint8_t len) {
     last_rx_ms = now_ms;
     frames_ok++;
 
+    // Everything but the handshake belongs to a session: with none, the Core's PINGs, STATEs
+    // and ACKs are not answered. A Core we cannot talk to therefore sees the link go down
+    // rather than a half-session it cannot use (docs/uart-protocol.md, Session).
+    if (!session_up && type != PROTO_MSG_WELCOME && type != PROTO_MSG_ERROR) {
+        printf("proto: ignoring type 0x%02x with no session\n", (unsigned)type);
+        return;
+    }
+
     switch (type) {
         case PROTO_MSG_WELCOME:
             if (len < 4) {
@@ -125,7 +153,15 @@ static void handle_frame(uint8_t type, const uint8_t *p, uint8_t len) {
                 return;
             }
             if (p[0] != PROTO_VERSION_MAJOR) {
-                printf("proto: version mismatch (service %u.%u)\n", (unsigned)p[0], (unsigned)p[1]);
+                // A protocol error, not a session: say so with ERROR and stay out of the
+                // session, so a half-swapped or wrong service is visible at both ends.
+                char text[48];
+                snprintf(text, sizeof(text), "Pico speaks %u.%u, service %u.%u",
+                         PROTO_VERSION_MAJOR, PROTO_VERSION_MINOR, (unsigned)p[0],
+                         (unsigned)p[1]);
+                printf("proto: version mismatch (%s)\n", text);
+                session_up = false;
+                send_error(PROTO_ERR_VERSION, text);
                 return;
             }
             heartbeat_ms = (uint16_t)(p[2] | (p[3] << 8));
@@ -161,10 +197,16 @@ static void handle_frame(uint8_t type, const uint8_t *p, uint8_t len) {
             }
             break;
 
-        case PROTO_MSG_ERROR:
-            printf("proto: error code=%u text='%.*s'\n", len >= 1 ? (unsigned)p[0] : 0u,
-                   len > 1 ? (int)(len - 1) : 0, len > 1 ? (const char *)&p[1] : "");
+        case PROTO_MSG_ERROR: {
+            // code, then a str8 text.
+            size_t n = len >= 2 ? p[1] : 0u;
+            if (n > (size_t)(len >= 2 ? len - 2 : 0u)) {
+                n = (size_t)(len >= 2 ? len - 2 : 0u);
+            }
+            printf("proto: error code=%u text='%.*s'\n", len >= 1 ? (unsigned)p[0] : 0u, (int)n,
+                   len >= 2 ? (const char *)&p[2] : "");
             break;
+        }
 
         default:
             printf("proto: ignoring type 0x%02x len=%u\n", (unsigned)type, (unsigned)len);

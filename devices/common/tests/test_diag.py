@@ -150,6 +150,20 @@ class UnpluggedLeads(unittest.TestCase):
         self.assertIsNotNone(f)
         self.assertIn("pin 8", " ".join(f["likely"]))
 
+    def test_a_protocol_version_mismatch_is_named_first(self):
+        # Both ends refuse a different major (uart-protocol.md, Session), so a half-swapped pair
+        # shows as frames with no session. Say which two versions, rather than listing wires.
+        s = sample()
+        s["service"]["link"]["session"] = False
+        s["service"]["link"]["frames_ok"] = 500
+        s["service"]["link"]["protocol"] = "2.0"
+        s["service"]["link"]["pico"] = {"fw": "0.1", "major": 1, "minor": 0, "caps": 0x0003}
+        f = finding(report_for(s).findings, "link.no_session")
+        self.assertIsNotNone(f)
+        self.assertIn("version mismatch", f["likely"][0])
+        self.assertIn("1.0", f["likely"][0])
+        self.assertIn("2.0", f["likely"][0])
+
     def test_a_link_that_is_up_and_silent_is_a_failure_not_an_absence(self):
         s = sample()
         s["service"]["link"]["last_rx_s_ago"] = 42.0

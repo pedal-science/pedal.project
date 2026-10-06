@@ -1,9 +1,9 @@
 """Tests for pedald.protocol, the Core-host end of the Pico link protocol.
 
-The bytes asserted here are the firmware's, not the document's: draft 1 payloads carry no
-`str8` length prefix, and `firmware/src/protocol.c` is the other end of every claim made
-in this file. Nothing here needs a Pico — the Session under test is the whole Core side,
-and `Link` stands in for the UART.
+The bytes asserted here are the firmware's, not the document's: draft 2 payloads carry every
+string as a `str8` (one length byte, then the bytes), and `firmware/src/protocol.c` is the
+other end of every claim made in this file. Nothing here needs a Pico — the Session under
+test is the whole Core side, and `Link` stands in for the UART.
 """
 
 import pathlib
@@ -15,7 +15,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "rootfs/usr
 from pedald import protocol
 from pedald.protocol import (
     ACK, CFG, ERROR, EVENT, HELLO, LOG, PING, PONG, STATE, WELCOME,
-    Session, crc16, frame,
+    Session, crc16, frame, str8,
 )
 
 SYNC = b"\xA5\x5A"
@@ -50,9 +50,9 @@ class Link:
         return [payload for kind, payload in self.frames if kind == msg_type]
 
 
-def hello(major=1, minor=0, caps=0x0003, fw=b"v1.2.3"):
-    """A draft 1 HELLO: major, minor, caps u16 LE, then firmware bytes to the end."""
-    return frame(HELLO, bytes([major, minor, caps & 0xFF, caps >> 8]) + fw)
+def hello(major=2, minor=0, caps=0x0003, fw="v1.2.3"):
+    """A draft 2 HELLO: major, minor, caps u16 LE, then the firmware version as a `str8`."""
+    return frame(HELLO, bytes([major, minor, caps & 0xFF, caps >> 8]) + str8(fw, 16))
 
 
 def event(seq, source=1, kind=0x01, a=0, b=0):
@@ -121,7 +121,7 @@ class DecoderTests(unittest.TestCase):
     def test_resync_from_the_byte_after_the_first_sync_byte(self):
         # The bench's case (docs/uart-protocol.md, Framing; U3): a header whose length
         # swallows the start of a good frame must not cost the good one.
-        good = frame(STATE, bytes([0x04, 1, 0, 4]) + b"resync ok")
+        good = frame(STATE, bytes([0x04, 1, 0, 4, 9]) + b"resync ok")
         self.assertEqual(
             [m["type"] for m in self.session.feed(SYNC + bytes([STATE, 8]) + good)],
             [STATE],
@@ -170,21 +170,48 @@ class SessionTests(unittest.TestCase):
 
     def test_hello_answers_exactly_one_welcome_and_a_state(self):
         self.assertFalse(self.session.session_up)
-        returned = self.session.feed(hello(caps=0x0003, fw=b"v1.2.3"))
+        returned = self.session.feed(hello(caps=0x0003, fw="v1.2.3"))
         self.assertTrue(self.session.session_up)
         self.assertEqual(
             returned,
-            [{"type": HELLO, "major": 1, "minor": 0, "caps": 0x0003, "fw": "v1.2.3"}],
+            [{"type": HELLO, "major": 2, "minor": 0, "caps": 0x0003, "fw": "v1.2.3"}],
         )
         self.assertEqual(self.link.types(), [WELCOME, STATE])
-        # WELCOME is v1.0 with our heartbeat, then the service string to the end (draft 1).
-        self.assertEqual(self.link.payloads(WELCOME), [bytes([1, 0, 250, 0]) + b"pedald 0.1"])
+        # WELCOME is v2.0 with our heartbeat, then the service string as a `str8` (draft 2).
+        self.assertEqual(self.link.payloads(WELCOME), [bytes([2, 0, 250, 0, 10]) + b"pedald 0.1"])
 
-    def test_a_second_hello_while_up_gets_no_second_welcome(self):
+    def test_a_second_hello_gets_another_welcome_and_state(self):
+        # A HELLO is the Pico (re)starting the handshake — at boot, or after it reset. Answering
+        # only the first would leave a rebooted Pico hunting for ever, because its HELLOs are
+        # themselves valid frames and keep this end's link timer alive (Session). WELCOME is
+        # idempotent at the far end, so answering every one is safe.
         self.session.feed(hello())
         self.session.feed(hello())
-        self.assertEqual(self.link.types().count(WELCOME), 1)
-        self.assertEqual(self.link.types().count(STATE), 1)
+        self.assertEqual(self.link.types().count(WELCOME), 2)
+        self.assertEqual(self.link.types().count(STATE), 2)
+
+    def test_a_hello_from_another_major_is_refused_with_error_and_no_session(self):
+        returned = self.session.feed(hello(major=1, fw="0.1"))
+        self.assertFalse(self.session.session_up)
+        self.assertEqual(self.link.types(), [ERROR])        # no WELCOME, no STATE
+        self.assertEqual(returned[0]["refused"], True)
+        self.assertEqual(returned[0]["major"], 1)
+        code, payload = self.link.frames[0][1][0], self.link.frames[0][1]
+        self.assertEqual(code, protocol.ERR_VERSION)
+        self.assertIn("2.0", payload[2:].decode())          # the str8 text names both versions
+        self.assertIn("1.0", payload[2:].decode())
+
+    def test_a_matching_hello_after_a_refusal_still_brings_the_session_up(self):
+        self.session.feed(hello(major=1))
+        self.session.feed(hello())
+        self.assertTrue(self.session.session_up)
+        self.assertIn(WELCOME, self.link.types())
+
+    def test_a_hello_from_another_major_drops_a_session_already_held(self):
+        self.session.feed(hello())
+        self.assertTrue(self.session.session_up)
+        self.session.feed(hello(major=3, minor=1))
+        self.assertFalse(self.session.session_up)
 
     def test_event_is_applied_once_and_acknowledged_again_on_repeat(self):
         self.session.feed(hello())
@@ -260,11 +287,11 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(self.link.types().count(WELCOME), 1)
 
     def test_state_payload_is_what_the_firmware_parses(self):
-        # firmware/src/protocol.c, handle_state: flags, rig i8, bank i8, bank size, name to
-        # the end of the payload.
+        # firmware/src/protocol.c, handle_state: flags, rig i8, bank i8, bank size, then the
+        # name as a `str8`.
         self.session.send_state(flags=0x04 | 0x01, rig_index=-1, bank=-1, bank_size=0,
                                 name="Ampeg VT-40 + cab")
-        expected = bytes([0x05, 0xFF, 0xFF, 0x00]) + b"Ampeg VT-40 + cab"
+        expected = bytes([0x05, 0xFF, 0xFF, 0x00, 17]) + b"Ampeg VT-40 + cab"
         self.assertEqual(self.link.payloads(STATE), [expected])
         self.assertEqual(self.link.raw[-1], frame(STATE, expected))
 
@@ -272,20 +299,37 @@ class SessionTests(unittest.TestCase):
         self.session.send_state(flags=0x05, rig_index=2, bank=1, bank_size=4, name="Twin")
         self.session.feed(hello())
         self.assertEqual(self.link.payloads(STATE),
-                         [bytes([0x05, 2, 1, 4]) + b"Twin"] * 2)
+                         [bytes([0x05, 2, 1, 4, 4]) + b"Twin"] * 2)
 
     def test_state_name_is_cut_to_48_bytes_on_a_character_boundary(self):
         self.session.send_state(flags=0, rig_index=0, bank=0, bank_size=1,
                                 name="a" * 47 + "é" + "b" * 10)
         payload = self.link.payloads(STATE)[0]
-        self.assertEqual(payload[4:], b"a" * 47)        # é would make 49 bytes
+        self.assertEqual(payload[4], 47)                # é would make 49 bytes
+        self.assertEqual(payload[5:], b"a" * 47)
         self.assertLessEqual(len(payload), protocol.MAX_PAYLOAD)
+
+    def test_trailing_bytes_after_a_string_are_ignored(self):
+        # U2's point: a field added after the name must not be read as part of it.
+        grown = frame(STATE, bytes([0x05, 2, 0, 3, 4]) + b"Twin" + b"\xAA\xBB")
+        self.assertEqual(self.session.feed(grown),
+                         [{"type": STATE, "flags": 0x05, "rig_index": 2, "bank": 0,
+                           "bank_size": 3, "name": "Twin"}])
+
+    def test_a_short_state_does_not_invent_a_name(self):
+        self.assertEqual(self.session.feed(frame(STATE, bytes([0x05, 0, 0, 1]))),
+                         [{"type": STATE, "flags": 0x05, "rig_index": 0, "bank": 0,
+                           "bank_size": 1, "name": None}])
 
     def test_error_text_is_decoded(self):
         self.assertEqual(
-            self.session.feed(frame(ERROR, bytes([3]) + b"version")),
+            self.session.feed(frame(ERROR, bytes([3]) + str8("version", 32))),
             [{"type": ERROR, "code": 3, "text": "version"}],
         )
+
+    def test_battery_is_ignored_until_phase_four_speaks_it(self):
+        # 0x0B is reserved for Phase 4's battery meter and neither end decodes it yet.
+        self.assertEqual(self.session.feed(frame(0x0B, bytes([1, 0x2C, 0x12]))), [])
 
     def test_reserved_messages_decode_to_their_type(self):
         self.assertEqual(self.session.feed(frame(LOG, b"\x01")), [{"type": LOG}])

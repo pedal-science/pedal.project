@@ -226,12 +226,15 @@ service derives it, and it is not the same thing as a bank.
   `bypass_toggle`, …), or a parameter. A MIDI controller's "next" button arrives as a `cc` or a
   `pc`, and has to reach the same action as the footswitch: the service is the one place that
   knows the map, so this is where the two meet.
-- **The footswitches are triggers too** (proposed in `uart-protocol.md` draft 2, U8; yours to
-  choose). They send `cc` 80, 81 and 82, as a MIDI controller would, and the default map sends 80
+- **The footswitches are triggers too** (`uart-protocol.md` draft 2, U8 — **decided 2026-10-06**).
+  They send `cc` 80, 81 and 82, as a MIDI controller would, and the default map sends 80
   to `rig_down` and 81 to `rig_up`, with 82 the assignable one. Assigning it is a line in
   `midi-map.json`: a rig, a bank, a toggle. No new kind, no protocol change, and the same line
   serves a MIDI pedal sending the same controller. A switch acts on its press (127); the release
-  (0) is there for a momentary action later.
+  (0) is there for a momentary action later. `source` stays on every event, so a map that wants a
+  footswitch to mean something different from the same controller over MIDI can key on it without
+  a wire change. The firmware half is 3.5's (there are no switches to send it yet); the map here
+  already does it.
 - **Names, not indexes, in the map.** A PC entry names a rig; indexes are positions in a bank and
   a reordering must not silently repoint a MIDI pedal. `pc` may name a rig in another bank: the
   window moves to that bank and that position. A rig in no bank is legal — it joins the ready

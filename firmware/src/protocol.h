@@ -1,4 +1,4 @@
-// The Pico end of docs/uart-protocol.md, protocol version 1.0.
+// The Pico end of docs/uart-protocol.md, protocol version 2.0.
 //
 // Framing, the HELLO/WELCOME session, PING/PONG, EVENTs with ACK and retry,
 // and STATE. main.c feeds it bytes from the link UART and calls proto_tick().
@@ -10,7 +10,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define PROTO_VERSION_MAJOR 1u
+#define PROTO_VERSION_MAJOR 2u
 #define PROTO_VERSION_MINOR 0u
 
 #define PROTO_SYNC0 0xA5u
@@ -53,8 +53,12 @@ enum proto_event_source {
 };
 
 #define PROTO_STATE_AUDIO_READY (1u << 0)
-#define PROTO_STATE_ENGINE_BYPASS (1u << 1)
+#define PROTO_STATE_ENGINE_MUTED (1u << 1)
 #define PROTO_STATE_HEALTH_MASK (3u << 2)
+
+// ERROR codes (docs/uart-protocol.md, Messages). 1 is the one this end sends: a WELCOME
+// whose major version is not ours, which is a protocol error and not a session.
+#define PROTO_ERR_VERSION 1u
 
 typedef void (*proto_send_fn)(const uint8_t *data, size_t len);
 

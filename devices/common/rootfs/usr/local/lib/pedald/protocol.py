@@ -1,10 +1,10 @@
 """The Core-host end of the Pico link protocol.
 
-`docs/uart-protocol.md` is the contract, and the deployed firmware
-(`firmware/src/protocol.c`) speaks **draft 1**, so that is what this implements: a string
-at the end of a payload runs to the end of the frame, with no `str8` length byte. Draft 2
-(the document as written today) adds that length byte and a `BATTERY` message; neither end
-speaks it yet, and the wire here is the firmware's, not the document's.
+`docs/uart-protocol.md` is the contract, and both ends speak **draft 2** since 2026-10-06,
+version 2.0: every string is a `str8` — one length byte, then that many bytes — and a different
+major version is refused with `ERROR` rather than half-spoken. Draft 1 (a string ran to the end
+of the frame) is what the deployed pair spoke before that, and the wire here and the firmware's
+move together; a half-swapped link is a version mismatch, not a garbled rig name.
 
 A frame is
 
@@ -26,12 +26,17 @@ no `termios`, no sockets, no `hmac`. The UART itself (open, `stty`, `select`) be
 the caller, which hands `send` one complete frame to write.
 """
 
-# WELCOME's version. Draft 1 firmware checks the major and refuses a different one itself.
-VERSION_MAJOR = 1
+# WELCOME's version. The firmware refuses a WELCOME from another major itself, and this end
+# refuses a HELLO from one: the two ends move together, so a mismatch has to be loud
+# (docs/uart-protocol.md, Session).
+VERSION_MAJOR = 2
 VERSION_MINOR = 0
 
-# Draft 1's message types. Draft 2's BATTERY (0x0B) is deliberately absent: the deployed
-# firmware does not speak it.
+# ERROR codes (docs/uart-protocol.md, Messages).
+ERR_VERSION = 1
+
+# Draft 2's BATTERY (0x0B) is deliberately absent: it belongs to Phase 4's battery meter, and
+# until then both ends ignore an unknown type rather than half-decoding it.
 HELLO, WELCOME, EVENT, ACK, STATE, PING, PONG, ERROR, LOG, CFG = range(0x01, 0x0B)
 
 SYNC = b"\xA5\x5A"
@@ -100,6 +105,27 @@ def _truncate_utf8(text: str, limit: int) -> bytes:
     return data[:limit].decode("utf-8", "ignore").encode("utf-8")
 
 
+def str8(text: str, limit: int) -> bytes:
+    """A string as the wire carries it: one length byte, then at most `limit` bytes of UTF-8.
+
+    Every string in draft 2 is one of these, so any message can grow a field at its end and a
+    receiver ignores what it does not know (`uart-protocol.md`, U2).
+    """
+    data = _truncate_utf8(text, min(int(limit), 255))
+    return bytes((len(data),)) + data
+
+
+def str8_at(payload: bytes, index: int):
+    """The `str8` starting at `index`, or None if the payload ends before the string does."""
+    length = _byte_at(payload, index)
+    if length is None:
+        return None
+    data = payload[index + 1:index + 1 + length]
+    if len(data) < length:
+        return None
+    return data.decode("utf-8", "replace")
+
+
 class Session:
     """One run of the link, from the first `HELLO` to the silence that ends it.
 
@@ -158,9 +184,9 @@ class Session:
             # cannot come, while its PONG replies keep the Pico up for ever. Measured on the
             # bench, 2026-10-04: the Pico read session=1 and `pong` lines while /status read
             # session false, with no way back. Re-WELCOME instead; the firmware's WELCOME
-            # handler is idempotent, and a HELLO lands here too (it starts the session below
-            # in `_handle`, which is a no-op once this has run).
-            if not self._up:
+            # handler is idempotent. HELLO is the one exception: it is the handshake itself,
+            # and `_handle` answers it — or refuses its version — rather than auto-starting.
+            if not self._up and msg_type != HELLO:
                 self._start_session()
             out.extend(self._handle(msg_type, payload))
         return out
@@ -207,11 +233,14 @@ class Session:
     def _handle(self, msg_type: int, payload: bytes) -> list[dict]:
         """Act on one valid frame and decode it for the caller."""
         if msg_type == HELLO:
-            # The document makes a different major a protocol error; the firmware checks
-            # WELCOME's major itself, so refusing here would only lose the handshake. One
-            # WELCOME per HELLO: a HELLO while the session is up is ignored.
-            if not self._up:
-                self._start_session()
+            if _byte_at(payload, 0) != VERSION_MAJOR:
+                return self._refuse_version(payload)
+            # A HELLO is the Pico (re)starting the handshake: at boot, then once a second while
+            # it has no session — and never again once it is up. Answer every one of them.
+            # WELCOME is idempotent at the far end, and a Core that answered only the first
+            # could wait for ever after a Pico reboot, because the HELLOs themselves keep this
+            # end's link timer alive (Session).
+            self._start_session()
             return [self._hello(payload)]
 
         if msg_type == EVENT:
@@ -235,7 +264,7 @@ class Session:
                 "major": _byte_at(payload, 0),
                 "minor": _byte_at(payload, 1),
                 "heartbeat_ms": (payload[2] | (payload[3] << 8)) if len(payload) >= 4 else None,
-                "service": payload[4:].decode("utf-8", "replace"),
+                "service": str8_at(payload, 4),
             }]
 
         if msg_type == STATE:
@@ -245,14 +274,14 @@ class Session:
                 "rig_index": _int8_at(payload, 1),
                 "bank": _int8_at(payload, 2),
                 "bank_size": _byte_at(payload, 3),
-                "name": payload[4:].decode("utf-8", "replace"),
+                "name": str8_at(payload, 4),
             }]
 
         if msg_type == ERROR:
             return [{
                 "type": ERROR,
                 "code": _byte_at(payload, 0),
-                "text": payload[1:].decode("utf-8", "replace"),
+                "text": str8_at(payload, 1),
             }]
 
         if msg_type in (LOG, CFG):
@@ -269,7 +298,7 @@ class Session:
             "major": _byte_at(payload, 0),
             "minor": _byte_at(payload, 1),
             "caps": (payload[2] | (payload[3] << 8)) if len(payload) >= 4 else None,
-            "fw": payload[4:].decode("utf-8", "replace"),
+            "fw": str8_at(payload, 4),
         }
 
     def _event(self, payload: bytes) -> list[dict]:
@@ -299,8 +328,21 @@ class Session:
         self._last_tx_ms = self._now_ms
         self._write(frame(WELCOME, bytes((VERSION_MAJOR, VERSION_MINOR,
                                           self._heartbeat_ms & 0xFF, self._heartbeat_ms >> 8))
-                          + _truncate_utf8(self._service_version, MAX_PAYLOAD - 4)))
+                          + str8(self._service_version, MAX_PAYLOAD - 5)))
         self._emit_state()
+
+    def _refuse_version(self, payload: bytes) -> list:
+        """ERROR and no session: a different major is a protocol error (Session).
+
+        The link stays usable for the next HELLO — a Pico hunting for a service sends one a
+        second — but nothing else is answered, so a half-swapped pair goes quiet and shows a
+        fault instead of trading frames one end cannot read.
+        """
+        theirs = "%s.%s" % (_byte_at(payload, 0), _byte_at(payload, 1))
+        text = "service speaks %d.%d, Pico %s" % (VERSION_MAJOR, VERSION_MINOR, theirs)
+        self._drop_session()
+        self._write(frame(ERROR, bytes((ERR_VERSION,)) + str8(text, MAX_PAYLOAD - 2)))
+        return [dict(self._hello(payload), refused=True)]
 
     def _drop_session(self):
         """Back to waiting for a HELLO. An EVENT still in the Pico's hand is its to drop."""
@@ -338,10 +380,10 @@ class Session:
         self._write(frame(PING, bytes((int(nonce) & 0xFF,))))
 
     def _emit_state(self):
-        """Draft 1 STATE: flags, rig_index i8, bank i8, bank_size, name to the end."""
+        """Draft 2 STATE: flags, rig_index i8, bank i8, bank_size, then the name as a `str8`."""
         flags, rig_index, bank, bank_size, name = self._state
         payload = bytes((flags & 0xFF, rig_index & 0xFF, bank & 0xFF, bank_size & 0xFF))
-        self._write(frame(STATE, payload + _truncate_utf8(name, NAME_MAX)))
+        self._write(frame(STATE, payload + str8(name, NAME_MAX)))
 
     def _write(self, data: bytes):
         self._send(data)

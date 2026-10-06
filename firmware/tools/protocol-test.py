@@ -4,7 +4,9 @@
 This plays the pedal service's side of docs/uart-protocol.md against the
 firmware: it answers HELLO with WELCOME, replies to PINGs and sends its own,
 deliberately drops one EVENT's ACK to watch the retry, sends STATE, then goes
-silent to watch the session drop and come back.
+silent to watch the session drop and come back, and finally offers a WELCOME
+from another major version to watch it be refused with ERROR. The bytes are
+protocol 2.0's (draft 2): every string is a str8.
 
 The Pico's USB console is the bench's control stand-in: the script types 'e'
 there to make the firmware send an EVENT.
@@ -26,6 +28,25 @@ SYNC = b"\xA5\x5A"
 
 EVENT_NAMES = {0x01: "rig_up", 0x02: "rig_down", 0x07: "bypass_set", 0x08: "bypass_toggle"}
 SOURCE_NAMES = {0: "bench", 1: "footswitch", 2: "midi", 3: "panel", 4: "service"}
+
+# This plays the Core's side of protocol 2.0 (draft 2): every string is a str8, and a WELCOME
+# from another major is refused with ERROR (docs/uart-protocol.md).
+VERSION = (2, 0)
+
+
+def str8(text, limit=48):
+    """One length byte, then at most `limit` bytes: how draft 2 carries every string."""
+    data = text.encode("utf-8")[:limit].decode("utf-8", "ignore").encode("utf-8")
+    return bytes((len(data),)) + data
+
+
+def welcome(service="protocol-test 0.1", heartbeat_ms=250):
+    return (bytes([VERSION[0], VERSION[1], heartbeat_ms & 0xFF, heartbeat_ms >> 8])
+            + str8(service, 59))
+
+
+def state_payload(flags, rig, bank, size, name):
+    return bytes([flags, rig, bank, size]) + str8(name)
 
 
 def crc16(data):
@@ -147,12 +168,18 @@ class Console:
         self.text += read_bytes(self.fd, timeout).decode(errors="replace")
 
     def wait_line(self, needle, timeout):
+        """Wait for `needle` in what arrives from now on.
+
+        From now on, and not in the whole buffer: the console prints "session up" again after
+        every re-handshake, and an earlier one must not satisfy a later check.
+        """
+        base = len(self.text)
         deadline = time.time() + timeout
         while time.time() < deadline:
-            if needle in self.text:
+            if needle in self.text[base:]:
                 return True
             self.pump(0.1)
-        return needle in self.text
+        return needle in self.text[base:]
 
     def write(self, data):
         os.write(self.fd, data)
@@ -217,12 +244,12 @@ def main():
     payload = frame[1]
     major, minor = payload[0], payload[1]
     caps = payload[2] | (payload[3] << 8)
-    fw = payload[4:].decode(errors="replace")
+    fw = payload[5:5 + payload[4]].decode(errors="replace") if len(payload) >= 5 else ""
     print("      v%d.%d caps=0x%04x firmware=%r" % (major, minor, caps, fw))
-    checks.check("HELLO is version 1.x", major == 1, "major=%d" % major)
+    checks.check("HELLO is version %d.x" % VERSION[0], major == VERSION[0], "major=%d" % major)
 
-    probe.send(WELCOME, bytes([1, 0, 250, 0]) + b"protocol-test 0.1")
-    probe.send(STATE, bytes([0x04 | 0x01, 2, 0, 4]) + b"Ampeg VT-40 + cab")
+    probe.send(WELCOME, welcome())
+    probe.send(STATE, state_payload(0x04 | 0x01, 2, 0, 4, "Ampeg VT-40 + cab"))
     checks.check("session up on the Pico", console.wait_line("session up", 2.0))
 
     # 2. PING/PONG both ways.
@@ -243,7 +270,7 @@ def main():
     # 3b. Resync: a header whose length swallows the start of a good STATE must not cost the
     # STATE. The parser has to rescan from the byte after the bad frame's first sync byte
     # (docs/uart-protocol.md, Framing); one that carries on from the next byte loses it.
-    good = make_frame(STATE, bytes([0x04 | 0x01, 1, 0, 4]) + b"resync ok")
+    good = make_frame(STATE, state_payload(0x04 | 0x01, 1, 0, 4, "resync ok"))
     os.write(probe.fd, SYNC + bytes([STATE, 8]) + good)
     checks.check("a good frame behind a bad length survives (resync)",
                  console.wait_line("name='resync ok'", 2.0))
@@ -285,8 +312,24 @@ def main():
         hello = probe.next(timeout=0.5, types={HELLO})
     checks.check("Pico drops the session and hunts again", hello is not None)
     checks.check("link down noted on the console", console.wait_line("link down", 1.0))
-    probe.send(WELCOME, bytes([1, 0, 250, 0]) + b"protocol-test 0.1")
+    probe.send(WELCOME, welcome())
     checks.check("session back up", console.wait_line("session up", 2.0))
+
+    # 7. A WELCOME from another major is a protocol error, not a session: the Pico answers
+    # ERROR, drops the session, and does not half-speak it (docs/uart-protocol.md, Session).
+    # This is the check behind version 2.0: a half-swapped pair must be refused, not garbled.
+    probe.send(WELCOME, bytes([1, 0, 250, 0]) + str8("protocol-test 0.1"))
+    frame = probe.next(timeout=2.0, types={ERROR})
+    checks.check("a WELCOME from another major is refused with ERROR",
+                 frame is not None and frame[1][:1] == bytes([1]),
+                 "payload=%r" % (frame[1] if frame else None))
+    checks.check("the console says version mismatch", console.wait_line("version mismatch", 2.0))
+    checks.check("the refused session stays down",
+                 not console.wait_line("session up", 1.0))
+
+    # Leave the link as it was found: a matching WELCOME brings the session back.
+    probe.send(WELCOME, welcome())
+    checks.check("session back up after the refusal", console.wait_line("session up", 2.0))
 
     print()
     if checks.failed:

@@ -1809,12 +1809,24 @@ class Report(object):
                          check="nothing — but check the firmware version against a real commit: "
                                "'fw 0.1' matches no checkout's git describe")
             elif frames_ok and not session:
+                # A version mismatch is refused on purpose (uart-protocol.md, Session): the two
+                # ends move together, so name it rather than leaving it as one possibility among
+                # several that all point at wires.
+                pico_speaks = "%s.%s" % (pico.get("major"), pico.get("minor"))
+                host_speaks = link.get("protocol")
+                mismatch = (host_speaks and pico.get("major") is not None
+                            and pico_speaks != host_speaks)
+                likely = ["a protocol version mismatch: the Pico speaks %s and this host speaks "
+                          "%s, and both ends refuse a different major with ERROR (code 1) until "
+                          "the firmware and pedald are swapped together" % (pico_speaks, host_speaks)
+                          ] if mismatch else []
+                likely += ["the Pico's RX does not reach it: HELLO arrives, WELCOME does not "
+                           "(header pin 8 -> GP1)",
+                           "the Pico's firmware version speaks a protocol this host does not"]
                 self.add("fail", "link.no_session",
                          "the Core→Pico UART link carries frames and the session never comes up",
                          "frames_ok=%s frames_bad=%s, session=%s" % (frames_ok, frames_bad, session),
-                         likely=["the Pico's RX does not reach it: HELLO arrives, WELCOME does not "
-                                 "(header pin 8 -> GP1)",
-                                 "the Pico's firmware version speaks a protocol this host does not"],
+                         likely=likely,
                          check="the lead in header pin 8, and the '? ' counter line on the Pico's "
                                "own console (pedal-diag --probe)")
             elif frames_bad and frames_ok and frames_bad * 10 > frames_ok:

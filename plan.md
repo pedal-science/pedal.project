@@ -772,11 +772,19 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      come later with no wire change, and `pedald` needs no change for the decision at all
      (`mapping.py`'s `DEFAULT_CC` already maps 80 `rig_down`, 81 `rig_up`, 82 assignable). That
      was the last item of draft 2 that blocked 3.5; the firmware sends the `cc` when 3.5 builds
-     the switches. **What 3.3 still holds** is the swap itself: both ends leave draft 1 for draft
-     2 **together** — `str8` is a wire change and `pedald` is in service on vip — with
-     `protocol-test.py` run again on the bench on the way, and the version question the doc now
-     carries under Open settled as part of it (reflash the Pico from a known commit first: it
-     still reports `fw '0.1'`, which no checkout produces).
+     the switches. **And draft 2 is written into both ends** (2026-10-06): `str8` strings, the
+     `engine_muted` flag, `ERROR` on a version mismatch, `HELLO` answered every time (a Pico that
+     reset says so with `HELLO`, and answering only the first left it hunting), and no `PING`,
+     `STATE` or `ACK` answered without a session — so a pair that disagrees goes quiet on both
+     sides instead of propping up half a link. The version is **2.0**: what a mismatch costs was
+     read off both ends (the strings are wrong, nothing else is), and that is a failure worth
+     refusing rather than diagnosing. Evidence: `firmware/src/protocol.c` + `protocol.h`,
+     `pedald`'s `protocol.py`, the firmware builds clean, and `devices/common/test-pedald` is 193
+     tests. **What 3.3 still holds is the board**: the Pico reports `fw '0.1'`, which no checkout
+     produces, so it is reflashed from a known commit, `firmware/tools/protocol-test.py` runs on
+     the bench against the 2.0 firmware (it now also checks the refusal), and `pedald` goes to vip
+     in the same stop — the flashed pair and the deployed service move together, which is the
+     whole reason for the major bump.
 4. **The Core host side** (`tib`'s UART1 went with `tib`).
    - A UART on the Pi's 40-pin header that carries nothing but the link: no kernel console, no
      getty, no SysRq. On piv, pins 8/10 are `ttyAMA0`, and its kernel console is there
@@ -1154,14 +1162,15 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 the Commander are the same message apart from `source`, and the trigger-to-action map stays in the
 one place D4 gives it: `pedald`'s `mapping.py`, which already maps them (`DEFAULT_CC`: 80
 `rig_down`, 81 `rig_up`, 82 the assignable one). **Nothing in the service changes.** `source` is
-kept on every event, so a per-source map can come later without a wire change. What 3.3 still
-holds is the swap: both ends leave draft 1 for draft 2 **together**, because `str8` is a wire
-change and `pedald` is in service on vip, and `protocol-test.py` runs again on the bench on the
-way — reflash the Pico from a known commit first, since it still reports `fw '0.1'`, which no
-checkout produces. The one question the swap has to settle (1.x and a coordinated stop, or a
-major bump so a mismatched end is refused) is written up under Open in
-[docs/uart-protocol.md](docs/uart-protocol.md); what a mismatch actually costs was read off both
-ends and is recorded there with it.
+kept on every event, so a per-source map can come later without a wire change. **Draft 2 itself is
+now in both ends** (version 2.0, same day): `str8` strings, `engine_muted`, `ERROR` on a version
+mismatch, `HELLO` answered every time, and no `PING`/`STATE`/`ACK` answered without a session
+([docs/uart-protocol.md](docs/uart-protocol.md) has the rules and why each one exists). What 3.3
+still holds is the **board**: the Pico reports `fw '0.1'`, which no checkout produces, so it is
+reflashed from a known commit, `firmware/tools/protocol-test.py` runs on the bench against the
+2.0 firmware, and `pedald` goes to vip in the same stop — the two ends move together, which is
+the reason the major went to 2 rather than staying 1.x with a garbled rig name on a
+half-swapped link. Nothing else waits on it.
 
 **The five repositories are one workspace now** (2026-10-06). Everything the pedal is made of
 lives in `~/code.local/pedal/`: `pedal.project/` beside `namchain/`, `ljoss/`, `rtpi/` and

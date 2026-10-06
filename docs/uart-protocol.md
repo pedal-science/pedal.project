@@ -1,11 +1,12 @@
 # The Pico ↔ Core host UART protocol
 
-**Status:** draft 2, **agreed 2026-10-06**: the review's eight points stand and U8 is decided
-(both below). Draft 1 is what both ends speak today — the firmware, and since 2026-10-04 `pedald`
-(v1) as well, holding a live session on vip (plan Phase 3.2 and 3.4, both now in service) — so
-this text is the target, not the wire. The two ends move to it **together**, because `str8` is a
-wire change and `pedald` is in service, and the bench loopback runs again on the way (the version
-question is under Open, below). This is the contract for plan Phase 3 step 3, and it
+**Status:** draft 2, **agreed 2026-10-06** — the review's eight points stand and U8 is decided
+(both below) — and implemented at both ends the same day as **version 2.0**: the firmware
+(`firmware/src/protocol.c`) and `pedald` (`devices/common/rootfs/usr/local/lib/pedald/protocol.py`)
+now speak it, and a different major is refused with `ERROR` rather than half-spoken. What is still
+owed is the board: the flashed Pico speaks draft 1 until it is reflashed from a known commit, the
+two ends then swap in one stop, Pico first (see Messages, below), and `firmware/tools/protocol-test.py` runs
+again on the bench. This is the contract for plan Phase 3 step 3, and it
 is kept here because both ends live here: the Pico firmware (`firmware/`) and the pedal service
 (Phase 3.2). The Core-side port is Phase 3 step 4 (see Transport); the port is not part of this
 contract. Engine control is not here either — that is namchain's protocol 2 over TCP, and the
@@ -95,12 +96,44 @@ hunts:
    and a steady stream of `pong` lines, and neither end could escape on its own. The firmware's
    `WELCOME` handler is idempotent, so re-`WELCOME`ing is safe in both directions. (Measured
    rule, not a proposal: `pedald` implements it and the bench needs it.)
+5. **A `HELLO` is answered with `WELCOME` and `STATE` every time, session or not** (2026-10-06).
+   The other half of the same asymmetry: a Pico that resets sends `HELLO`, and those `HELLO`s are
+   themselves valid frames that keep the Core's link timer alive, so a Core that answered only the
+   first one would leave the rebooted Pico hunting until the Core was restarted — the same
+   deadlock with the ends swapped. Answering every `HELLO` costs one `WELCOME` per second while a
+   Pico hunts, and the far end's `WELCOME` handler is idempotent, so nothing is disturbed.
+6. **With no session the Pico answers only `HELLO`, `WELCOME` and `ERROR`.** A `PING`, `STATE` or
+   `ACK` that reaches the Pico while it holds no session is ignored, so a Core it has refused
+   cannot keep it half-alive; its own `HELLO` every second is unaffected. The Core keeps rule 4's
+   re-establishment — a Pico whose session outlived a service restart holds it with `PING`s and
+   will never send `HELLO` again, which is the deadlock rule 4 exists for — but it refuses a
+   `HELLO` from another major and drops the session it holds (below). The two rules are not
+   symmetric on purpose: each end refuses to be propped up by a peer it cannot read, and neither
+   gives up the recovery path that was measured.
 
 `HELLO` and `WELCOME` both carry `version_major` and `version_minor`. Same major is required. A
-different major is a protocol error: the Core sends `ERROR` and stops talking; the Pico shows a
-fault and keeps its local controls, and with no session the relay follows the link-down rule. A
-newer minor is fine: unknown message types are ignored, and unknown bytes at the end of a
-payload are ignored.
+different major is a protocol error: the end that sees it sends `ERROR` (code 1, its own version
+and the other's in the text) and holds no session; the Pico shows a fault and keeps its local
+controls, and with no session the relay follows the link-down rule. A newer minor is fine:
+unknown message types are ignored, and unknown bytes at the end of a payload are ignored.
+
+**What a mismatch costs, measured rather than assumed** (2026-10-06). Draft 1's premise —
+nothing outside the bench speaks it — died when `pedald` went into service, so draft 2 moved the
+major to 2 and both ends refuse rather than half-speak. A pair that ignored the version would not
+lose frames: the Core's `STATE` name and the Pico's `HELLO` firmware string are the only fields
+that differ, and a draft-1 reader takes the `str8` length byte for the first character while a
+draft-2 reader takes the first character for a length. The rig name is then wrong on the panel
+and the firmware version wrong in the log, with everything else working — which is exactly the
+failure that would waste an afternoon. Refusing is one `ERROR` a second while the pair disagrees,
+and `pedal-diag` names it (`link.no_session`, plus the two versions in the line above it).
+
+**Which end goes first.** Flash the Pico before deploying the service. New firmware with the old
+service still deployed is refused at the Pico: `ERROR`, no session, the relay holding bypass, and
+the pedal simply silent until the deploy. The other order is the worse one — the deployed
+firmware is draft 1, whose `WELCOME` handler prints a version mismatch and **keeps the session it
+already has**, so the new service sees a session, sends draft-2 `STATE`, and the panel shows a
+garbled rig name until the flash. That is the afternoon the major exists to prevent, and it is
+available only to whoever swaps the ends the other way round.
 
 ## Messages
 
@@ -113,19 +146,25 @@ payload are ignored.
 | 0x05 | `STATE` | Core → Pico | `flags`, `rig_index` i8, `bank_index` i8, `bank_size` u8, `rig_name` str8 |
 | 0x06 | `PING` | either | `nonce` |
 | 0x07 | `PONG` | either | `nonce` |
-| 0x08 | `ERROR` | Core → Pico | `code`, `text` str8 |
+| 0x08 | `ERROR` | either | `code`, `text` str8 |
 | 0x09 | `LOG` | Pico → Core | reserved |
 | 0x0A | `CFG` | Core → Pico | reserved |
 | 0x0B | `BATTERY` | Pico → Core | `psu_present` u8, `rail_mv` u16 LE — proposed (battery meter, plan Phase 4) |
 | other | — | — | ignore |
 
-Version 1.0 is this document. Draft 2's changes kept the number on the assumption that nothing
-outside the bench spoke draft 1; `pedald` has spoken it in service since 2026-10-04, so that
-assumption is stale and the swap has to be considered rather than assumed — see Open, below.
+**Version 2.0 is this document**, and it is a wire change, not a formality. Draft 2's changes
+were first written to keep 1.x, on the premise that nothing outside the bench spoke draft 1;
+`pedald` had spoken it in service since 2026-10-04, so the major went to **2** instead: a
+half-swapped pair is then refused rather than left trading frames it reads wrongly (what a
+mismatch actually costs is under Session, and how the swap is made is under Testing).
 
 `caps` bits: 0 relay, 1 MIDI DIN in, 2 display, 3 expression jack, 4–7 footswitch count
 (0–15). The service uses them to refuse a mapping the board cannot honour instead of silently
 doing nothing.
+
+`ERROR.code`: **1 is a version mismatch**, the only one either end sends, and the field is a
+`str8` text naming both versions ("service speaks 2.0, Pico 1.0"). The code space is otherwise
+reserved; a code a reader does not know is a log line, not a fault.
 
 `fw_version` is `git describe --always --dirty` of the tree the firmware was built from
 (`working-across-repos.md`, rule 5).
@@ -223,27 +262,15 @@ At 115200, 10 bits per byte:
 | Frame | Bytes | Time |
 |---|---|---|
 | `ACK`, `PING`, `PONG` | 7 | 0.6 ms |
-| `EVENT` | 10 | 0.9 ms |
+| `EVENT` | 11 | 1.0 ms |
 | `STATE`, 24-character rig name | 35 | 3.0 ms |
 | longest possible | 70 | 6.1 ms |
 
-Events add under a millisecond to D10's 50 ms; that budget belongs to the service and the
+Events add about a millisecond to D10's 50 ms; that budget belongs to the service and the
 engine. Heartbeats at 250 ms with nothing else happening are about 0.4% of the link.
 
 ## Open, and deliberately not settled here
 
-- **The version draft 2 takes, and how the swap is made.** Draft 1's premise ("nothing outside the
-  bench speaks it") stopped being true on 2026-10-04, when `pedald` went into service on vip, so
-  the `str8` change now lands on a link that is carrying a live session. What a mismatch costs was
-  read off both ends rather than assumed: the firmware's `handle_state` copies the name from the
-  byte after `bank_size` to the end of the payload (draft 1) and `pedald` reads its `HELLO`'s
-  `fw_version` the same way, so a draft-1 reader takes the `str8` length byte as the first
-  character and a draft-2 reader takes the first character as a length — **the strings are wrong
-  either way and nothing else is**: no frame is dropped, `HELLO`/`WELCOME` still meet on major 1,
-  and the link keeps its session. Either keep 1.x and swap both ends in one stop (flash the
-  firmware, then start the new `pedald`, with the rig name briefly wrong if the order slips), or
-  take major 2 so a mismatched end is refused with `ERROR` and the Pico's fault path instead of
-  showing a garbled name. Decide it with the swap, not before: nothing else waits on it.
 - The baud rate, if step 4 measures that 115200 is too slow (it will not be, for events).
 - MIDI channel: `cc`/`pc` ignore it today (one controller). A second controller needs a field,
   and a minor version bump. **Settled 2026-09-28** (`docs/pedal-service.md`): ignored for now;
@@ -260,14 +287,16 @@ engine. Heartbeats at 250 ms with nothing else happening are about 0.4% of the l
   `FW_ECHO=1 firmware/build.sh`. Evidence: `bench-results/2026-09-28-pico-uart-echo.txt`.
 - `firmware/tools/protocol-test.py` is the frame-level loopback: it plays the service side
   over the Debug Probe and checks the session, heartbeats both ways, an EVENT whose ACK is
-  deliberately dropped (retransmit, then no further copies), STATE, and link-down recovery.
-  The firmware implements this document today (`firmware/src/protocol.c`); the service end was a
-  test script until v1 was built — it is now `pedald`
-  (`devices/common/rootfs/usr/local/lib/pedald/`, design: `docs/pedal-service.md`, its v1), with
-  156 unit tests of its own (`devices/common/test-pedald`) and a live session against the Pico on
-  vip (`bench-results/2026-10-04-pedald-on-vip.md`).
-  Evidence:
-  `bench-results/2026-09-28-pico-protocol-loopback.txt`.
+  deliberately dropped (retransmit, then no further copies), STATE, link-down recovery, and
+  since 2026-10-06 a `WELCOME` from another major being refused with `ERROR` and no session.
+  Both ends implement this document now — the firmware (`firmware/src/protocol.c`) and `pedald`
+  (`devices/common/rootfs/usr/local/lib/pedald/`, design: `docs/pedal-service.md`), whose own
+  suite is `devices/common/test-pedald` (193 tests, no Pico needed). The live session on vip
+  (`bench-results/2026-10-04-pedald-on-vip.md`) is on **draft 1** until the swap: the Pico
+  reports `fw '0.1'`, which no checkout produces, so it is reflashed from a known commit first,
+  the loopback runs, and `pedald` goes out in the same stop. Evidence:
+  `bench-results/2026-09-28-pico-protocol-loopback.txt` (draft 1), and this swap's own run when
+  it happens.
 - It also sends a frame header whose length swallows the start of a good `STATE`, and checks
   that the `STATE` still arrives (Resync, U3). The firmware before U3's fix fails that check.
 
