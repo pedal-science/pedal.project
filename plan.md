@@ -1388,8 +1388,17 @@ twice. A reader can now see a window up to one period old — 1.33 ms at q=64.
 Measured at 1 Hz on the 34-node rig, 90 s windows, both controls taken on the day: **2.22% off,
 5.40% measuring, 3.66% publishing per period** (+1.43 pp), and **3.06%** with the rate limit stacked
 (+0.83 pp) — 55% and 74% of the cost recovered. Stability at 60 s reproduced to 0.18 pp on the
-largest figure. **Off by default**: the case for turning it on is the table, ljoss's display being
-unaffected, and accepting one period of latency — the report's Part 4 says so explicitly.
+largest figure.
+
+**Both are now the defaults** (namchain `663d0c9`, same day, on the owner's call): publishing once per
+period, and an **8 Hz** drain rate — half what ljoss's 20 Hz meter can show, so five reads in six are
+answered from the held window and a level is at most 125 ms old. `devices/vip/rootfs/etc/namchain/
+namchaind.json` names both explicitly, so the appliance does not depend on remembering what a binary's
+defaults are, and vip is applied and running them. **Measured as it ships, against the running
+service, polled at ljoss's real 20 Hz: 3.31% of one core, against ~5.6% for the per-sample path** —
+about 2.3 pp, with every sample still measured (227 real measurements out of 1,801 reads, none empty).
+Both keep an off-switch: `--no-levels-publish-period` and `--no-levels-rate-hz`. The sparse fold
+stayed off, because it compromises what a meter reads and this gets a comparable saving without that.
 
 One instrument lesson worth keeping: CPU is counted in 10 ms ticks, so a measurement window resolves
 `10 ms ÷ window` of a core. At the 30 s a five-minute sweep allows, the rate limit's 0.60 pp is under
