@@ -1,16 +1,16 @@
 # What measuring audio levels costs namchaind
 
-**Measured:** 2026-10-06, on **vip** (Raspberry Pi 5, 1 GB, Cortex-A76). Engine `5eff47e`, where
-`--levels`/`--no-levels` and the two finer switches below all landed; the daemon reported `5eff47e`
-for every run. An earlier run of conditions 1–18 on `f00714d` is superseded by this one and is not
-quoted: the two agree to within the tick resolution, and quoting one binary is simpler than
-explaining two.
+**Measured:** 2026-10-06, on **vip** (Raspberry Pi 5, 1 GB, Cortex-A76). Engine `dd8d480`, where
+`--levels`, `--levels-rate-hz`, `--levels-first-frame` and `--levels-publish-period` all landed; the
+daemon reported it for every run. Parts 1–3 were measured on `5eff47e` and are quoted as they were
+taken; Part 4 on `dd8d480`, and its two controls were re-measured on the day so that no comparison
+crosses a commit.
 **Instrument:** [`poll-levels.py`](poll-levels.py) — a TCP `engine.levels` client, the same shape as
 the meter in ljoss. **Campaign:** [`run-campaign.sh`](run-campaign.sh). **Arithmetic:**
 [`analyse.py`](analyse.py). **Charts:** [`charts.py`](charts.py). **Raw results:**
-[`results.jsonl`](results.jsonl).
+[`results.jsonl`](results.jsonl), [`stability.jsonl`](stability.jsonl).
 
-![What each way of measuring costs](overhead-by-mode.svg)
+![What each way of measuring costs, parts 1–3](overhead-by-mode-part3.svg)
 
 ![What a client polling costs, by rate and by rig](overhead-by-poll-rate.svg)
 
@@ -181,6 +181,73 @@ that the campaign measured a steady state rather than a warming board:
 | 20 — measuring, 1 Hz | 5.12% | 5.12% (307 ticks / 60 s) | 0.00 pp |
 | 23 — both finer switches, 1 Hz | 2.30% | 2.30% (138 ticks / 60 s) | 0.00 pp |
 
+## Part 4 — publishing once a period, so the render thread stops sharing cache lines
+
+![What publishing per period buys](overhead-by-mode-part4.svg)
+
+The per-sample fold writes the probe's atomics, and the control thread reads them. The probes are
+plain `std::atomic` members with no padding, so they share cache lines; every sample the render
+thread stores into one of those lines is a line it may no longer own. That is where a meter's cost
+actually is — Part 3's `--levels-first-frame` proved it by recovering 2.25 pp while throwing away 63
+of every 64 samples.
+
+`--levels-publish-period` (namchain `dd8d480`) gets the same kind of saving **without measuring
+less**: the render thread folds samples into `level::Window`, plain memory no other thread has ever
+touched, and adds that window to the probe's atomics **once per period** — the shape
+`account_render_time` has always used.
+
+The meter reads the same thing, and that is a property rather than a hope: a publish **adds** (raises
+the peak, `fetch_add`s the sum, frame count and clip count) instead of setting. Add and max against
+the zeroed reset a reader performs are order-independent, so any interleaving of a publish and a
+`take` still answers "the samples since the last read" — no sample lost, none counted twice. Pinned by
+tests that fold, publish and read in both orders.
+
+Measured at 1 Hz client polling on the 34-node rig, 90 s windows, with **both controls taken on the
+day** so that a slow drift on the board cannot read as an effect of the change:
+
+| Condition | Mode | CPU (one core) | vs `--no-levels` |
+|---|---|---|---|
+| 28 | `--no-levels` | **2.22%** | baseline |
+| 29 | measuring (sample publish — today's control) | **5.40%** | +3.18 pp |
+| 30 | `--levels-publish-period` | **3.66%** | +1.43 pp |
+| 31 | `--levels-publish-period --levels-rate-hz 1` | **3.06%** | +0.83 pp |
+
+- **Measuring costs 3.18 pp** over not measuring (2.22 → 5.40), which is today's behaviour.
+- **Publishing per period recovers 1.74 pp of it — 55%** — and measures **every sample**: same 34
+  probes, same 64 frames per period, same peak and same rms. What is left (1.43 pp) is the atomic
+  work itself and the fold, which no amount of batching removes.
+- **Stacked with the rate limit it recovers 2.34 pp — 74%** of the whole cost of having meters, and
+  the two still combine because they act on different resources: the publish mode is the render
+  thread's traffic, the rate limit is the control thread's conversions.
+
+**The price, stated plainly:** a reader can see a window that closed up to one period ago — 1.33 ms
+at 64 frames and 48 kHz. Nothing meters at that resolution. The switch is **off by default**, so the
+shipped behaviour is unchanged until you decide otherwise; the case for turning it on is this table
+plus ljoss's display being unaffected, which it is: the reply's shape, `frames`, and the
+read-and-reset rule are all as they were, and only `cache.publish` is new.
+
+### Stability
+
+The two controls were re-run at the end of the series with a **60 s** window:
+
+| Condition | 90 s window | 60 s re-run | Agreement |
+|---|---|---|---|
+| 28 — `--no-levels` | 2.22% | 2.22% (133 ticks / 60 s) | 0.00 pp |
+| 29 — measuring (sample) | 5.40% | 5.22% (313 ticks / 60 s) | 0.18 pp |
+| 30 — publishing per period | 3.66% | 3.63% (218 ticks / 60 s) | 0.03 pp |
+
+The 1.74 pp effect is ten times the disagreement between the two window lengths, so it is not an
+artefact of when the runs happened.
+
+### What a smaller budget would have cost
+
+CPU is counted in 10 ms ticks, so a window resolves `10 ms ÷ window` of one core: **0.83 pp at
+120 s**, **0.56 pp at 90 s**, **0.17 pp at 30 s**. The series above fits in about six minutes only
+because 90 s still resolves the effects. At the 30 s a five-minute eight-condition sweep would have
+allowed, the publish mode's own saving would be about nine ticks but the *rate limit's* 0.60 pp would
+be under half a tick — visible as a number, meaningless as a measurement. The budget was spent on
+window length rather than on conditions, which is the trade this instrument makes.
+
 ## Reproducing it
 
 ```sh
@@ -188,12 +255,18 @@ scripts/host-lock --host vip -- env SECONDS_PER_RUN=120 SETTLE_SECONDS=8 \
   bench-results/2026-10-06-levels-switch/run-campaign.sh
 python3 bench-results/2026-10-06-levels-switch/analyse.py \
   bench-results/2026-10-06-levels-switch/results.jsonl
+# The by-mode chart needs one row per mode: point it at the conditions that differ only in the mode.
 python3 bench-results/2026-10-06-levels-switch/charts.py \
-  bench-results/2026-10-06-levels-switch/results.jsonl --only 19,20,21,22,23
+  bench-results/2026-10-06-levels-switch/results.jsonl --only 19,20,21,22,23   # part 3; and 28,29,30,31 for part 4
+# Part 4 on its own, in about six minutes rather than an hour:
+scripts/host-lock --host vip -- env SECONDS_PER_RUN=90 SETTLE_SECONDS=5 \
+  bench-results/2026-10-06-levels-switch/run-campaign.sh --only 28,29,30,31
 ```
 
 `--only 19,22` runs a subset and `SECONDS_PER_RUN` shortens the window, both for a smoke test.
 `analyse.py --only` needs no special handling for the baseline: it is looked up in the whole run.
+`charts.py --only` does: without it the by-mode chart takes whichever row comes first for each mode,
+and several conditions share a mode.
 
 ## Things that went wrong, and what they cost
 
@@ -213,10 +286,21 @@ Recorded because each one was a trap that produced plausible numbers:
   arbitrary — it measured 8.0 frames per period where the answer should have been 64, and 0.0 where it
   should have been 1. The mode is now gated on the daemon's declared configuration, and the *behaviour*
   is pinned where it can be pinned exactly: in the unit tests.
-- **A pre-existing test flaked on the aarch64 build container, twice, for two different reasons.**
-  `engine.levels reports the device, the chain and every node` polled for a non-empty window with a
-  budget of 200 attempts of (a read + 2 ms) — about 400 ms, which is a deadline in disguise whose real
-  length depends on how loaded the machine is. The second failure was the same race one level down: it
-  waited only for a *node's* window and then asserted the *device's* had samples, and any drain in
-  between empties the device's probe. Both now wait on a 10 s deadline for the whole reply they are
-  about to assert on.
+- **A pre-existing test flaked on the aarch64 build container, three times, for one race in three
+  places.** `engine.levels reports the device, the chain and every node` polled for a non-empty window
+  with a budget of 200 attempts of (a read + 2 ms) — about 400 ms, which is a deadline in disguise
+  whose real length depends on how loaded the machine is. The second and third failures were the same
+  race one level down: it waited only for a *node's* window and then asserted the *device's* had
+  samples, and later the same for one node against another. Every read takes every probe, so a test
+  that polls for one and asserts about another is asserting that nothing else is using the daemon.
+  All three now poll for the whole reply they are about to assert on, on a 10 s deadline.
+- **The publish mode has one invariant that the design turns on, and it needed writing down.**
+  `publish_window` must *add* to the probe's atomics, never *set* them: the reader zeroes them as it
+  reads, so a publish that stored would lose whichever period lost the race against that reset. It is
+  now the subject of its own test rather than a property of the code that happens to be true.
+- **A one-line answer about the periodic-window publish would have been wrong twice.** This started
+  as the question "isn't it a memcpy to the control thread?" — and the useful part of the answer was
+  not the mechanism (aggregate scalars, no samples cross) but the diagnosis: probes share cache lines
+  with each other, so the cost is coherency rather than bandwidth. That is what made the fix
+  obvious, and it is the reason `level::Window` exists instead of a lock-free sample ring.
+

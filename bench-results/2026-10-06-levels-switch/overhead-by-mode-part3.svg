@@ -35,5 +35,5 @@
 <text x="796.2" y="231.8" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="middle" font-weight="400">+0.04 pp</text>
 <text x="796.2" y="388.0" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#334155" text-anchor="middle" font-weight="400">both</text>
 <line x1="78.0" y1="257.8" x2="876.0" y2="257.8" stroke="#94a3b8" stroke-width="1.0" stroke-dasharray="4 3"/>
-<text x="82.0" y="251.8" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="start" font-weight="400">switch off: 2.26%</text>
+<text x="82.0" y="271.8" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="11" fill="#64748b" text-anchor="start" font-weight="400">switch off: 2.26%</text>
 </svg>

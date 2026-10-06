@@ -29,26 +29,37 @@ MARGIN_L, MARGIN_R, MARGIN_T, MARGIN_B = 78, 24, 56, 92
 COLOUR = {
     "off": "#94a3b8",
     "on": "#2563eb",
+    "on-period": "#059669",
     "on-rate": "#0d9488",
     "on-sparse": "#d97706",
     "on-rate-sparse": "#7c3aed",
+    "on-period-rate": "#be185d",
 }
 LABEL = {
     "off": "levels off",
     "on": "measuring",
+    "on-period": "measuring, published per period",
     "on-rate": "measuring, drained at poll rate",
     "on-sparse": "measuring, one frame per period",
     "on-rate-sparse": "both",
+    "on-period-rate": "published per period + drained",
 }
 BASELINE = "#94a3b8"
 
 
 def mode_key(row: dict) -> str:
-    """Which of the five measurement modes a row is, from what the daemon was started with."""
+    """Which measurement mode a row is, from what the daemon was started with.
+
+    Kept in step with analyse.py's, deliberately: the charts and the tables must name the same modes
+    the same way, or the same bar and the same row read as two different things.
+    """
     if row.get("levels") == "off":
         return "off"
     rate = row.get("rate_hz") or 0
     sparse = bool(row.get("first_frame"))
+    period = row.get("publish") == "period"
+    if period:
+        return "on-period-rate" if rate else "on-period"
     if rate and sparse:
         return "on-rate-sparse"
     if rate:
@@ -127,7 +138,8 @@ def chart_by_mode(rows: list[dict], clk: int) -> str:
     """Bars: the five modes, all at the same client rate, against the switch-off baseline."""
     rows = [r for r in rows if "cpu_ticks" in r]
     baseline = next((r for r in rows if mode_key(r) == "off"), None)
-    order = ["off", "on", "on-rate", "on-sparse", "on-rate-sparse"]
+    order = ["off", "on", "on-period", "on-rate", "on-sparse", "on-rate-sparse",
+             "on-period-rate"]
     present = [m for m in order if any(mode_key(r) == m for r in rows)]
     values = {}
     for mode in present:
@@ -172,7 +184,9 @@ def chart_by_mode(rows: list[dict], clk: int) -> str:
         canvas.line(plot_left, y, plot_right, y, BASELINE, 1.0, dash="4 3")
         # Just above the line and hard left: at the right-hand end it collided with the last bar's
         # label, which is the one place this chart is guaranteed to have something else drawn.
-        canvas.text(plot_left + 4, y - 6, f"switch off: {base_value:.2f}%", size=11, fill="#64748b")
+        # Below the line, hard left: the leftmost bar usually *is* the baseline, so a label above the
+        # line lands on that bar's own value, and two texts at one height is what that looks like.
+        canvas.text(plot_left + 4, y + 14, f"switch off: {base_value:.2f}%", size=11, fill="#64748b")
     return canvas.svg()
 
 
@@ -189,6 +203,11 @@ def chart_by_rate(rows: list[dict], clk: int) -> str:
     series: dict[str, list[tuple[float, float]]] = {}
     for row in rows:
         if row.get("hz") and mode_key(row) != "on":
+            continue
+        # Conditions 19 and up are the switch comparisons, and several of them are 1 Hz as well: left
+        # in, they stack three more points on the 1 Hz tick and the sweep stops being a sweep. The
+        # by-mode chart is where they belong, and where they are plotted.
+        if row["condition"] > 18:
             continue
         rate = float(row["hz"]) if row.get("hz") else 0.0
         series.setdefault(row.get("series", "?"), []).append((rate, cpu_percent(row, clk)))
@@ -247,6 +266,9 @@ def main() -> None:
                         help="condition numbers for the by-mode chart, comma separated. Needed "
                              "because several conditions share a mode: without it the chart takes "
                              "whichever row comes first, which is a different client rate")
+    parser.add_argument("--name", default=None,
+                        help="output filename for the by-mode chart, so a report can carry one chart "
+                             "per comparison instead of overwriting a single file")
     parser.add_argument("--mode-only", action="store_true",
                         help="the by-mode chart needs one row per mode; point it at that series")
     args = parser.parse_args()
@@ -258,7 +280,7 @@ def main() -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     written = []
-    path = out_dir / "overhead-by-mode.svg"
+    path = out_dir / (args.name or "overhead-by-mode.svg")
     path.write_text(chart_by_mode(rows, args.clk_tck))
     written.append(path)
 

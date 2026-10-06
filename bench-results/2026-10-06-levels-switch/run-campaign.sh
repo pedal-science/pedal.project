@@ -90,13 +90,16 @@ restore_unit() {
 trap restore_unit EXIT
 
 # --- one condition ---------------------------------------------------------
-# start_daemon <levels:on|off> <rig path> <expected nodes> <levels_rate_hz: 0 = unlimited> <first_frame: 0|1>
+# start_daemon <levels:on|off> <rig path> <expected nodes> <levels_rate_hz: 0 = unlimited>
+#              <first_frame: 0|1> <publish: sample|period>
 start_daemon() {
-  local levels=$1 rig=$2 expected_nodes=$3 rate=$4 first_frame=$5 flags=("${UNIT_FLAGS[@]}")
+  local levels=$1 rig=$2 expected_nodes=$3 rate=$4 first_frame=$5 publish=${6:-sample}
+  local flags=("${UNIT_FLAGS[@]}")
   [[ $levels == off ]] && flags+=(--no-levels) || flags+=(--levels)
   flags+=(--rig "$rig")
   [[ $rate != 0 ]] && flags+=(--levels-rate-hz "$rate")
   [[ $first_frame == 1 ]] && flags+=(--levels-first-frame)
+  [[ $publish == period ]] && flags+=(--levels-publish-period)
 
   ssh "$HOST" "sudo -n install -d /etc/systemd/system/namchaind.service.d && printf '%s\n' '[Service]' 'ExecStart=' 'ExecStart=$UNIT_PATH ${flags[*]}' | sudo -n tee $DROPIN >/dev/null && sudo -n systemctl daemon-reload && sudo -n systemctl reset-failed namchaind 2>/dev/null; sudo -n systemctl restart namchaind" >/dev/null
 
@@ -159,12 +162,15 @@ import json, sys
 p = json.load(sys.stdin)
 cache = p.get('cache') or {}
 rate, first = cache.get('rate_hz'), cache.get('first_frame')
-want_rate, want_first = float('$rate'), bool($first_frame)
+publish = cache.get('publish')
+want_rate, want_first, want_publish = float('$rate'), bool($first_frame), '$publish'
 problems = []
 if rate != want_rate:
     problems.append(f'rate_hz is {rate}, asked for {want_rate}')
 if bool(first) != want_first:
     problems.append(f'first_frame is {first}, asked for {want_first}')
+if publish != want_publish:
+    problems.append(f'publish is {publish}, asked for {want_publish}')
 print('; '.join(problems) if problems else 'ok')
 " > /tmp/campaign-mode-check.txt 2>&1
   if ! grep -q '^ok$' /tmp/campaign-mode-check.txt; then
@@ -197,15 +203,18 @@ poll_run() {
   ssh "$HOST" "sudo -n python3 /tmp/poll-levels.py --seconds $SECONDS_PER_RUN --hz $1 --pid \$(pgrep -x namchaind | head -1) --token-file /etc/namchain/token.campaign --label '$2'"
 }
 
-# run_condition <n> <series> <levels on|off> <rig path> <expected nodes> <hz|none> <rate_hz> <first_frame 0|1>
+# run_condition <n> <series> <levels on|off> <rig path> <expected nodes> <hz|none> <rate_hz>
+#               <first_frame 0|1> <publish sample|period>
 run_condition() {
-  local n=$1 series=$2 levels=$3 rig=$4 expected_nodes=$5 hz=$6 rate=${7:-0} first_frame=${8:-0} label
+  local n=$1 series=$2 levels=$3 rig=$4 expected_nodes=$5 hz=$6 rate=${7:-0} first_frame=${8:-0}
+  local publish=${9:-sample} label
   wanted "$n" || return 0
   label=$(printf '%s-%s-%s' "$series" "$levels" "${hz}hz")
   [[ $rate != 0 ]] && label="$label-rate${rate}"
   [[ $first_frame == 1 ]] && label="$label-sparse"
-  log "condition $n: $label (rig=$rig, $expected_nodes nodes, rate=${rate}Hz, first_frame=$first_frame)"
-  if ! start_daemon "$levels" "$rig" "$expected_nodes" "$rate" "$first_frame"; then
+  [[ $publish == period ]] && label="$label-period"
+  log "condition $n: $label (rig=$rig, $expected_nodes nodes, rate=${rate}Hz, first_frame=$first_frame, publish=$publish)"
+  if ! start_daemon "$levels" "$rig" "$expected_nodes" "$rate" "$first_frame" "$publish"; then
     echo "{\"condition\": $n, \"label\": \"$label\", \"error\": \"the condition never became ready\"}" >> "$RESULTS"
     return 1
   fi
@@ -216,7 +225,7 @@ run_condition() {
   local ticks
   if [[ $hz == none ]]; then
     ticks=$(cpu_sample "$SECONDS_PER_RUN")
-    echo "{\"condition\": $n, \"label\": \"$label\", \"series\": \"$series\", \"levels\": \"$levels\", \"rig\": \"$rig\", \"nodes\": $expected_nodes, \"hz\": null, \"rate_hz\": $rate, \"first_frame\": $first_frame, \"seconds\": $SECONDS_PER_RUN, \"cpu_ticks\": $ticks, \"ticks\": 0}" >> "$RESULTS"
+    echo "{\"condition\": $n, \"label\": \"$label\", \"series\": \"$series\", \"levels\": \"$levels\", \"rig\": \"$rig\", \"nodes\": $expected_nodes, \"hz\": null, \"rate_hz\": $rate, \"first_frame\": $first_frame, \"publish\": \"$publish\", \"seconds\": $SECONDS_PER_RUN, \"cpu_ticks\": $ticks, \"ticks\": 0}" >> "$RESULTS"
   else
     local out
     out=$(poll_run "$hz" "$label")
@@ -229,6 +238,7 @@ r['levels'] = '$levels'
 r['rig'] = '$rig'
 r['rate_hz'] = $rate
 r['first_frame'] = $first_frame
+r['publish'] = '$publish'
 r['daemon_pid'] = $daemon_pid
 print(json.dumps(r))
 " >> "$RESULTS"
@@ -288,5 +298,23 @@ run_condition 20 heavy on  "$RIG_HEAVY" 34 1
 run_condition 21 heavy on  "$RIG_HEAVY" 34 1 1
 run_condition 22 heavy on  "$RIG_HEAVY" 34 1 0 1
 run_condition 23 heavy on  "$RIG_HEAVY" 34 1 1 1
+
+# --- series E: publishing once a period, at 1 Hz. -------------------------
+# The per-sample fold writes atomics the control thread reads, so the two cores trade cache lines on
+# every sample. `--levels-publish-period` folds into plain private memory instead and adds the window
+# to those atomics once a period, which should remove the render thread's share of that traffic while
+# measuring *every* sample -- unlike series D's first-frame switch, which bought the same kind of
+# saving by throwing transients away.
+#
+#   28 -- off, measured again on the day, so the series has a same-day floor rather than series B's
+#         from an earlier hour.
+#   29 -- the sample control, also measured on the day: without it a slow drift in the board would
+#         show up as an effect of the change, which is the mistake this series exists to avoid.
+#   30 -- publishing per period. The comparison that matters: 29 against 30, both taken today.
+#   31 -- and with the rate limit, to see whether the control thread's saving still stacks.
+run_condition 28 heavy off "$RIG_HEAVY" 34 1
+run_condition 29 heavy on  "$RIG_HEAVY" 34 1 0 0 sample
+run_condition 30 heavy on  "$RIG_HEAVY" 34 1 0 0 period
+run_condition 31 heavy on  "$RIG_HEAVY" 34 1 1 0 period
 
 log "done: $RESULTS"

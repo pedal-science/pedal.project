@@ -42,14 +42,16 @@ SERIES_NOTE = {
     "heavy": "The same conditions over a rig whose own cost is one multiply per node, so what the "
              "conditions differ by is dominated by the probes rather than by the audio.",
 }
-# The five ways of measuring this campaign compares, in the order the report discusses them.
-MODE_ORDER = ["off", "on", "on-rate", "on-sparse", "on-rate-sparse"]
+# The ways of measuring this campaign compares, in the order the report discusses them.
+MODE_ORDER = ["off", "on", "on-period", "on-rate", "on-sparse", "on-rate-sparse"]
 MODE_LABEL = {
     "off": "`--no-levels`",
     "on": "measuring (default)",
+    "on-period": "measuring, `--levels-publish-period`",
     "on-rate": "measuring, `--levels-rate-hz 1`",
     "on-sparse": "measuring, `--levels-first-frame`",
     "on-rate-sparse": "both finer switches",
+    "on-period-rate": "period publish + rate limit",
 }
 
 
@@ -67,10 +69,19 @@ def pct(row: dict) -> float:
 
 
 def mode_key(row: dict) -> str:
+    """A short key for how a row was measuring.
+
+    One key per combination this campaign actually ran, rather than the full cross-product: three
+    independent switches make eight combinations, and a naming scheme for all of them is one nobody
+    reads. `how()` spells out any row in full, which is what the detail tables use.
+    """
     if row.get("levels") == "off":
         return "off"
     rate = row.get("rate_hz") or 0
     sparse = bool(row.get("first_frame"))
+    period = row.get("publish") == "period"
+    if period:
+        return "on-period-rate" if rate else "on-period"
     if rate and sparse:
         return "on-rate-sparse"
     if rate:
@@ -78,6 +89,20 @@ def mode_key(row: dict) -> str:
     if sparse:
         return "on-sparse"
     return "on"
+
+
+def how(row: dict) -> str:
+    """The row's measurement configuration, spelled out -- for tables that name every condition."""
+    if row.get("levels") == "off":
+        return "`--no-levels`"
+    parts = []
+    if row.get("publish") == "period":
+        parts.append("publish per period")
+    if row.get("first_frame"):
+        parts.append("one frame per period")
+    if row.get("rate_hz"):
+        parts.append(f"drain at {row['rate_hz']:g} Hz")
+    return "measuring" + (", " + ", ".join(parts) if parts else " (default)")
 
 
 def baseline(all_rows: list[dict], series: str) -> dict | None:
@@ -172,6 +197,8 @@ def modes_table(rows: list[dict], all_rows: list[dict], series: str) -> None:
             "on-rate": "unchanged: this switch only limits the *reading*",
             "on-sparse": "a fold per period instead of per sample",
             "on-rate-sparse": "a fold per period, read once a second",
+            "on-period": "a fold into private memory, added to the probe once a period",
+            "on-period-rate": "a fold per period, added once a period, read once a second",
         }[mode]
         delta = "—" if row is base else f"{pct(row) - pct(base):+.2f} pp"
         print(f"| {MODE_LABEL[mode]} | **{pct(row):.2f}%** | {delta} | {cost} |")
