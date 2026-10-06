@@ -1,0 +1,19 @@
+# The pedal workspace: which repositories it holds and where each one lives
+# (pedal.project/docs/workspace.md). Read by scripts/workspace; the paths are relative to the
+# workspace root, which is the directory carrying .pedal-workspace.
+#
+#   name|path|url|branch|kind
+#
+# kind=repo      an independent checkout, a direct child of the workspace root
+# kind=submodule a repository another one vendors, declared in its .gitmodules at a pinned commit
+#
+# Nothing else belongs under the workspace root. A repository that appears here is either a
+# sibling of the others or a declared submodule of one of them; there is no third shape, because
+# a checkout that is merely *inside* another repository is the accident the guard refuses
+# (tools/git-hooks/README.md).
+pedal.project|pedal.project|https://github.com/rikkus/pedal.project.git|main|repo
+namchain|namchain|https://github.com/rikkus/namchain|main|repo
+namchain/vendor/NeuralAmpModelerCore|namchain/vendor/NeuralAmpModelerCore|https://github.com/rikkus/OptimisationWorkOnNeuralAmpModelerCore|all-optimisations|submodule
+ljoss|ljoss|git@github.com:rikkus/ljoss.git|main|repo
+rtpi|rtpi|git@github.com:rikkus/rtpi.git|main|repo
+NAMBench|NAMBench|git@github.com:rikkus/NAMBench.git|main|repo

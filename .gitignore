@@ -1,5 +1,9 @@
 .DS_Store
 .claude/settings.local.json
+# A git worktree for a second agent on this repo. It used to live in .git/info/exclude, which is
+# local to one clone and invisible to the next; here it travels. ripgrep skips `.claude` anyway
+# (hidden), so ignoring it costs no search.
+.claude/worktrees/
 firmware/build/
 # draw.io temp and backup files
 .$*.dtmp

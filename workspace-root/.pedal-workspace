@@ -1,0 +1,52 @@
+# The pedal workspace
+
+This directory is the workspace root: the directory an agent session is opened on, and the root
+the file sandbox grants. Everything the pedal is made of is inside it, which is what makes working
+across the repositories ordinary rather than a series of permission requests.
+
+It is deliberately **not a git repository**, and must never become one. The five repositories
+below are independent, and a repository here could only record them as gitlinks — pointers to
+commits that clone as empty directories. There is nothing to commit at this level, so there is
+nothing to get wrong; `git init` here is the one mistake with no upside.
+
+Whichever harness you are using: open **this** folder, not a repository inside it. A session
+opened on `namchain/` can read its siblings but cannot write them.
+
+## What is here
+
+| Directory | What it is |
+|---|---|
+| `pedal.project/` | The pedal as a system: goal, hardware design, diagrams, decisions, plan, the Core host's configuration as code, the Pico firmware and `pedald` |
+| `namchain/` | The engine: the `namchaind` library and daemon, `namchainctl`, the control protocol, the soak and bench tools |
+| `namchain/vendor/NeuralAmpModelerCore/` | The planar-NEON fork of NeuralAmpModelerCore, vendored as a **declared submodule** on `all-optimisations` |
+| `ljoss/` | The rig designer (macOS/iOS) and the front end that drives the engine |
+| `rtpi/` | The Core host's PREEMPT_RT kernel, its boot-slot safety net, and device-tree work |
+| `NAMBench/` | NAM and IR kernel research; it reaches the pedal through `namchain` |
+
+`.worktrees/` holds per-session git worktrees, when two agents need one repository at once. It is
+hidden, so ripgrep skips it.
+
+## Before you do anything
+
+Read `pedal.project/AGENTS.md`. It is canonical for the whole project — the hardware constraints,
+the commands, the working rules — and `pedal.project/docs/working-across-repos.md` says which
+repository owns what and how a change reaches the pedal.
+
+**Work in the repository that owns the change.** Each repository's own `AGENTS.md` is
+authoritative inside that repository; this file only says where they are.
+
+Start a session with `pedal.project/scripts/status`, which reports every checkout, the Core host's
+lock and what it is running. `pedal.project/scripts/workspace check` asserts the layout, the root
+files and the git guard.
+
+## The one rule about git here
+
+A repository may be inside another repository **only when it is declared** — `git submodule add`,
+which records the URL and pins the commit in `.gitmodules`. A checkout dropped into a tracked
+directory is the accident that clones as an empty directory and never says so, and it is refused
+by a hook (`pedal.project/tools/git-hooks/`) rather than left to be remembered. If a tool fetches
+dependencies into a repository, that path belongs in the repository's `.gitignore` and its fetch
+script owns it.
+
+`pedal.project/docs/workspace.md` is the design: why this shape, what `scripts/workspace` does,
+and what everything here is checked against.

@@ -1,0 +1,73 @@
+#!/usr/bin/env bash
+# Refuse to commit a repository embedded without a declaration.
+#
+# In force for every repository under the pedal workspace: the includeIf block in ~/.gitconfig
+# points git at this directory as core.hooksPath for anything under the workspace root, so no
+# checkout has to install it (docs/workspace.md).
+#
+# The rule is not "no gitlinks". namchain vendors OptimisationWorkOnNeuralAmpModelerCore as a
+# declared submodule -- a real dependency at a pinned commit -- and that must keep working. The
+# rule is that a gitlink *nothing declares* is a checkout that clones as an empty directory, and
+# never says so: the silent failure lifeload's ADR-0011 measured. This refuses it at the earliest
+# moment, with the two commands that fix it.
+#
+# A gitlink already committed is warned about rather than refused: the damage is in the history
+# either way, and blocking every later commit in that repository would be the worse outcome.
+set -euo pipefail
+
+links=$(git ls-files --stage | awk '$1 == "160000" { print $4 }')
+[[ -n $links ]] || exit 0
+
+# The declaration as it will be committed, which is the staged .gitmodules on an ordinary commit.
+decl=$(mktemp)
+trap 'rm -f "$decl"' EXIT
+if git cat-file -e :.gitmodules 2>/dev/null; then
+  git show :.gitmodules > "$decl"
+else
+  : > "$decl"
+fi
+
+# path -> declared with a URL. A submodule entry with a path and no url is as broken as no entry:
+# a clone cannot fetch it.
+declare -A declared=()
+declare -A unurl=()
+while read -r key value; do
+  [[ -n $key ]] || continue
+  name=${key#submodule.}; name=${name%.path}
+  if git config -f "$decl" --get "submodule.$name.url" >/dev/null 2>&1; then
+    declared["$value"]=1
+  else
+    unurl["$value"]=1
+  fi
+done < <(git config -f "$decl" --get-regexp '^submodule\..*\.path$' 2>/dev/null || true)
+
+have_head=$(git rev-parse --verify -q HEAD >/dev/null && echo yes || echo no)
+status=0
+while IFS= read -r path; do
+  [[ -n $path ]] || continue
+  [[ -n ${declared[$path]:-} ]] && continue
+
+  if [[ -n ${unurl[$path]:-} ]]; then
+    printf '\nERROR: "%s" is a submodule with no url in .gitmodules.\n\n' "$path" >&2
+    printf 'A clone cannot fetch it, so it arrives empty. Add the url:\n\n' >&2
+    printf '  git config -f .gitmodules submodule.%s.url <url>\n\n' "${path##*/}" >&2
+    status=1
+    continue
+  fi
+
+  if [[ $have_head == yes ]] && git ls-tree HEAD -- "$path" | grep -q '^160000'; then
+    printf 'warning: "%s" is already committed as an undeclared repository; leaving this commit alone\n' "$path" >&2
+    continue
+  fi
+
+  printf '\nERROR: refusing to commit a repository nothing declares:\n\n' >&2
+  printf '  %s\n\n' "$path" >&2
+  printf 'A clone of this repository would get an empty directory there. Either declare it:\n\n' >&2
+  printf '  git submodule add <url> %s\n\n' "$path" >&2
+  printf 'or take it out of the index:\n\n' >&2
+  printf '  git rm --cached -f -r %s\n\n' "$path" >&2
+  printf 'If it is a fetched vendor tree, ignore that path and let the fetch script own it.\n\n' >&2
+  status=1
+done <<< "$links"
+
+exit $status

@@ -1,0 +1,11 @@
+# The pedal workspace's git guards (pedal.project/docs/workspace.md).
+#
+# This file is what ~/.gitconfig's includeIf block points at, for anything under the workspace
+# root. It is the whole reason a checkout needs no setup of its own: git reads it because of
+# where the repository is, not because anyone remembered to install something.
+#
+# `~/` is expanded here: measured with git 2.54, a hook at `~/.../pre-commit` runs from a commit
+# as it does from an absolute path. scripts/workspace check expands the same way before it
+# compares this value with the directory it found.
+[core]
+	hooksPath = ~/code.local/pedal/pedal.project/tools/git-hooks

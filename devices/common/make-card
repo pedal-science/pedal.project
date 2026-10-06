@@ -35,8 +35,8 @@ HERE=$(cd "$(dirname "$0")" && pwd)          # devices/<host>, through the link
 HOST=$(basename "$HERE")
 REPO=$(git -C "$HERE" rev-parse --show-toplevel)
 COMMON=$REPO/devices/common
-RTPI_REPO=${RTPI_REPO:-$HOME/code.local/rtpi}
-NAMCHAIN_REPO=${NAMCHAIN_REPO:-$HOME/code.local/namchain}
+RTPI_REPO=${RTPI_REPO:-$("$REPO/scripts/workspace" root --repo rtpi)}
+NAMCHAIN_REPO=${NAMCHAIN_REPO:-$("$REPO/scripts/workspace" root --repo namchain)}
 LOCK=$HERE/image.lock
 
 IMAGE_ONLY=0; DISK=(); DEV=0; DO_LOCK=0; REMOTE=0; PREVIOUS=0; FROM=""

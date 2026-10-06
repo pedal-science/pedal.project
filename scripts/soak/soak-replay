@@ -21,7 +21,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
-NAMCHAIN_DIR="${NAMCHAIN_DIR:-$HOME/code.local/namchain}"
+NAMCHAIN_DIR="${NAMCHAIN_DIR:-$("$REPO/scripts/workspace" root --repo namchain)}"
 REPLAY="$NAMCHAIN_DIR/tools/session/namchain-session-replay"
 
 HOST=vip

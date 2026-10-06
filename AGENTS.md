@@ -24,19 +24,27 @@ schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-hando
 
 ## How to start a session
 
+- **Open the workspace, not a repository inside it.** Everything the pedal is made of lives in
+  `~/code.local/pedal/`: this repository as `pedal.project/` beside `namchain/`, `ljoss/`, `rtpi/`
+  and `NAMBench/`. A session opened on that folder can read and write all of them with no extra
+  permissions; one opened on a single repository cannot write its siblings. Open the container for
+  cross-repo work, and one repository only when the change is confined to it. The directory is
+  deliberately not a repository and must never become one — [docs/workspace.md](docs/workspace.md)
+  is the design, and `scripts/workspace check` asserts it.
 - **Sync this checkout first.** Pull it to `origin/main` before doing anything. Pushes
   happen only when the owner asks for one; work stays local until then.
-- **There are two checkouts on the Mac.** The docs name `~/code.local/pedal.project`
-  (Claude Code's); Cursor/DeepSeek sessions run from `~/cursor-projects/pedal.project`. Before
-  touching a file, check the other checkout's uncommitted work so you don't clobber it.
-  Two agents on one repo each get a git worktree.
+- **Two agents on one repo** each get a git worktree, under
+  `<workspace>/.worktrees/<name>/<repo>` — inside the sandbox, hidden from search, and outside
+  every repository, so it needs no `.git/info/exclude` entry. There is one checkout of each
+  repository on the Mac (the second one, `~/cursor-projects/pedal.project`, was retired on
+  2026-10-06).
 - **Read the plan's "Next session starts with"** (`plan.md`) — it names the exact next
   steps and what changed last.
-- **Check the machines.** Run `scripts/status`: every repo on the Mac and piv, who holds
-  the Core host's lock, what `namchaind` reports, and whether `devices/<host>/components.lock`
-  and the deployed engine and `devices/` tree are current. Every script defaults to vip
-  (`--host piv` for piv). Ask before touching either board's hardware or starting anything
-  heavy on it (quiet and shared, rule 8).
+- **Check the machines.** Run `scripts/status`: every repo on the Mac and piv, the workspace's
+  layout and git guard, who holds the Core host's lock, what `namchaind` reports, and whether
+  `devices/<host>/components.lock` and the deployed engine and `devices/` tree are current. Every
+  script defaults to vip (`--host piv` for piv). Ask before touching either board's hardware or
+  starting anything heavy on it (quiet and shared, rule 8).
 
 ## Commands
 
@@ -127,8 +135,9 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
 
 - **One home per fact.** Pedal-level material lives here and nowhere else; component
   repos link to it. A contract lives with whoever implements it.
-- **Work in the repo that owns the change.** Cross-repo sessions start here, with the
-  other repos added as extra directories. Cross-repo changes land in dependency order
+- **Work in the repo that owns the change.** Cross-repo sessions are opened on the workspace
+  (`~/code.local/pedal/`), which is where the other repos are — [docs/workspace.md](docs/workspace.md).
+  Cross-repo changes land in dependency order
   (engine before app, bridge before firmware), each commit green on its own.
 - **Commit to `main`** (no pull requests for these repos); from this harness, pushes
   wait for the owner's say-so.
@@ -141,9 +150,12 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
 ## Where things are
 
 - `plan.md` — the plan and its history; start at "Next session starts with".
+- `workspace.repos`, `scripts/workspace`, `workspace-root/`, `tools/git-hooks/` — the workspace:
+  what it holds, the files at its root, and the guard that stops a checkout being embedded in a
+  repository. [docs/workspace.md](docs/workspace.md) is the design.
 - `firmware/` — the Pico firmware; [docs/uart-protocol.md](docs/uart-protocol.md) is the
   Pico ↔ Core host contract.
-- `docs/`: `working-across-repos.md` (repos, machines, rules), `hardware-handoff.md`
+- `docs/`: `workspace.md` (the workspace and its guard), `working-across-repos.md` (repos, machines, rules), `hardware-handoff.md`
   (schematic findings and reasoning), `codec-bringup-2a.md` (the 2a bench walkthrough), `codec-bringup-2c.md` (2c: the
   shunt swap and the supply and ground legs, with `scripts/codec-noise.py` reading its captures),
   `build-board1-breadboard.md` and `build-board1.md` (board 1 on the breadboard, then soldered), `rig-switch-strategies.md`, `uart-protocol.md`, `pedal-service.md` (the service's design: what

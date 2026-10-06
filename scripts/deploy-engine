@@ -97,7 +97,7 @@ printf 'commit=%s\nrev=%s\nbuilt=%s\nhost=%s\nkernel=%s\n' "$(git rev-parse HEAD
 bash ~/pedal-build/install.sh "$stage" "$commit"
 REMOTE
 else
-  NC=${NAMCHAIN_REPO:-$HOME/code.local/namchain}
+  NC=${NAMCHAIN_REPO:-$("$REPO/scripts/workspace" root --repo namchain)}
   # shellcheck disable=SC1091
   source "$REPO/devices/$HOST/image.env"
   SNAPSHOT=$(sed -n 's/^snapshot=//p' "$REPO/devices/$HOST/image.lock")

@@ -42,7 +42,8 @@ if [[ $fetch == 1 ]]; then
 fi
 for spec in "$@"; do
   name=${spec%%=*}; p=${spec#*=}; p=${p/#\~/$HOME}
-  if [[ ! -d $p/.git ]]; then printf '%s\t-\t-\t-\tmissing\n' "$name"; continue; fi
+  # git rev-parse, not a .git directory: a worktree's .git is a file, and it is a checkout too.
+  if ! git -C "$p" rev-parse --git-dir >/dev/null 2>&1; then printf '%s\t-\t-\t-\tmissing\n' "$name"; continue; fi
   branch=$(git -C "$p" symbolic-ref -q --short HEAD || echo detached)
   head=$(git -C "$p" rev-parse --short=7 HEAD)
   ab=-
@@ -58,8 +59,11 @@ done
 EOF
 )
 
-MAC_REPOS=(pedal.project="$ROOT" namchain=~/code.local/namchain ljoss=~/code.local/ljoss
-           rtpi=~/code.local/rtpi NAMBench=~/code.local/NAMBench)
+# Where each repository is, asked of scripts/workspace: inside the workspace when there is one,
+# and at the legacy $HOME/code.local/<name> on a checkout that has not moved yet or on piv.
+repo_path() { "$SCRIPTS/workspace" root --repo "$1" 2>/dev/null || printf '%s' "$HOME/code.local/${1##*/}"; }
+MAC_REPOS=(pedal.project="$ROOT" namchain="$(repo_path namchain)" ljoss="$(repo_path ljoss)"
+           rtpi="$(repo_path rtpi)" NAMBench="$(repo_path NAMBench)")
 # piv is also the build host: its dev checkouts, and deploy-engine's build tree (detached by design).
 PIV_REPOS=('namchain=~/code.local/namchain' 'ljoss=~/code.local/ljoss' 'rtpi=~/code.local/rtpi'
            'NAMBench=~/NAMBench' 'build tree=~/pedal-build/namchain')
@@ -75,6 +79,16 @@ rows() { sed "s/^/$1"$'\t'"/"; }
   fi
   wait
 } | column -t -s $'\t' | sed '1{s/^/\x1b[1m/;s/$/\x1b[0m/;}'
+
+# The workspace itself: is the layout what workspace.repos declares, are the root files current,
+# and is the git guard in force for every checkout? A guard that has gone missing (the workspace
+# moved, the includeIf edited) is silent otherwise, which is the whole reason this is checked.
+if out=$("$SCRIPTS/workspace" check --brief 2>&1); then
+  note "$out"
+else
+  bad "workspace: the layout or the git guard needs attention"
+  printf '%s\n' "$out" | sed 's/^/    /'
+fi
 
 head_ "Core host: $HOST"
 if ! on "$HOST" true 2>/dev/null; then
@@ -104,8 +118,9 @@ fi
 
 # Has anything been committed that the host doesn't have yet?
 engine=$(on "$HOST" "sed -n 's/^commit=//p' /opt/namchain/current/MANIFEST" 2>/dev/null || true)
-if [[ -n $engine ]] && git -C ~/code.local/namchain cat-file -e "$engine" 2>/dev/null; then
-  n=$(git -C ~/code.local/namchain rev-list --count "$engine..origin/main")
+NC=$(repo_path namchain)
+if [[ -n $engine ]] && git -C "$NC" cat-file -e "$engine" 2>/dev/null; then
+  n=$(git -C "$NC" rev-list --count "$engine..origin/main")
   (( n == 0 )) && note "engine: ${engine:0:7}, origin/main" \
                || note "engine: ${engine:0:7}, $n commit(s) behind origin/main (scripts/deploy-engine)"
 fi

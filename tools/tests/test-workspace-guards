@@ -1,0 +1,202 @@
+#!/usr/bin/env bash
+# tools/tests/test-workspace-guards — prove the git guards refuse the accident and allow the
+# declaration (docs/workspace.md).
+#
+# Everything happens in a throwaway tree with its own HOME and git config, so this can run on a
+# machine where the workspace exists, where it does not, or where the guard is not installed yet.
+# It proves three things:
+#
+#   1. the rule itself -- an undeclared embedded repository is refused, a declared submodule is
+#      not, and a declaration with no url is refused like no declaration at all;
+#   2. pre-push, which judges the tip tree, refuses a gitlink that reached a commit some other way;
+#   3. the machine side -- an includeIf block matching the workspace gives a repository there (and
+#      a worktree of one) this hooks directory as its effective core.hooksPath, `~/` in that value
+#      runs the hook, and a repository outside the workspace is left alone.
+#
+# Run it: tools/tests/test-workspace-guards
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+HOOKS="$ROOT/tools/git-hooks"
+[[ -x $HOOKS/pre-commit ]] || { echo "no guard at $HOOKS" >&2; exit 2; }
+
+TMP=$(mktemp -d "${TMPDIR:-/tmp}/pedal-guards.XXXXXX")
+trap 'rm -rf "$TMP"' EXIT
+
+pass=0 fail=0
+ok()  { printf '  ok    %s\n' "$1"; pass=$((pass + 1)); }
+no()  { printf '  FAIL  %s\n' "$1"; fail=$((fail + 1)); }
+head_() { printf '\n%s\n' "$1"; }
+
+# The test's own git environment: no signing, no user's config, local paths allowed so that a
+# submodule can be added from a directory rather than over the network.
+export GIT_CONFIG_SYSTEM=/dev/null
+mkdir -p "$TMP/home"
+cat > "$TMP/global.gitconfig" <<EOF
+[user]
+	name = guard test
+	email = guard@example.com
+[init]
+	defaultBranch = main
+[protocol "file"]
+	allow = always
+[advice]
+	addEmbeddedRepo = false
+EOF
+export GIT_CONFIG_GLOBAL="$TMP/global.gitconfig"
+export GIT_AUTHOR_NAME="guard test" GIT_AUTHOR_EMAIL=guard@example.com
+export GIT_COMMITTER_NAME="guard test" GIT_COMMITTER_EMAIL=guard@example.com
+
+git init -q --bare "$TMP/dep.git"
+git init -q "$TMP/dep-src"
+( cd "$TMP/dep-src" && echo dep > f.txt && git add -A && git commit -qm dep \
+  && git push -q "$TMP/dep.git" HEAD:refs/heads/main )
+git init -q --bare "$TMP/dep2.git"
+git init -q "$TMP/dep2-src"
+( cd "$TMP/dep2-src" && echo dep2 > g.txt && git add -A && git commit -qm dep2 \
+  && git push -q "$TMP/dep2.git" HEAD:refs/heads/main )
+
+# ---------------------------------------------------------------------------------------------
+head_ "1. the rule (a repository with its own hooksPath, no includeIf involved)"
+
+repo=$TMP/rule
+git init -q "$repo"
+( cd "$repo" && mkdir -p vendor && echo tracked > vendor/README && git add -A && git commit -qm init )
+
+run_commit() { # directory, message
+  ( cd "$1" && git -c core.hooksPath="$HOOKS" commit -q -m "$2" )
+}
+
+( cd "$repo" && git clone -q "$TMP/dep.git" vendor/dep && git add -A )
+if run_commit "$repo" "oops" 2>"$TMP/out1"; then
+  no "an undeclared clone is refused"
+else
+  if grep -q 'vendor/dep' "$TMP/out1"; then
+    ok "an undeclared clone is refused, naming the path"
+  else
+    no "an undeclared clone is refused but the message does not name the path"
+  fi
+  if grep -q 'git submodule add' "$TMP/out1" && grep -q 'git rm --cached' "$TMP/out1"; then
+    ok "the refusal says how to fix it either way"
+  else
+    no "the refusal does not say how to fix it"
+  fi
+fi
+( cd "$repo" && git rm --cached -qf -r vendor/dep && rm -rf vendor/dep )
+
+( cd "$repo" && git submodule add -q "$TMP/dep.git" vendor/dep >/dev/null 2>&1 )
+if run_commit "$repo" "declared submodule"; then
+  ok "a declared submodule commits"
+else
+  no "a declared submodule was refused"
+fi
+
+( cd "$repo" && git clone -q "$TMP/dep2.git" vendor/dep2 && git add -A )
+if run_commit "$repo" "mixed" 2>"$TMP/out2"; then
+  no "an undeclared clone beside a declared submodule is refused"
+else
+  if grep -q 'vendor/dep2' "$TMP/out2" && ! grep -q '^  vendor/dep$' "$TMP/out2"; then
+    ok "only the undeclared one is named"
+  else
+    no "the refusal names the wrong path"
+  fi
+fi
+( cd "$repo" && git rm --cached -qf -r vendor/dep2 && rm -rf vendor/dep2 )
+
+# A declaration with a path but no url is as unfetchable as no declaration. The hook judges the
+# .gitmodules the commit would contain, so the edited file is staged here, as it would be.
+git init -q "$TMP/nourl"
+( cd "$TMP/nourl" && echo a > a.txt && git add -A && git commit -qm base \
+  && git clone -q "$TMP/dep.git" dep && git add -A \
+  && git config -f .gitmodules submodule.dep.path dep && git add .gitmodules )
+if run_commit "$TMP/nourl" "no url" 2>"$TMP/out3"; then
+  no "a submodule declared without a url is refused"
+else
+  grep -q 'no url' "$TMP/out3" && ok "a submodule declared without a url is refused" \
+                                || no "refused, but not for the right reason"
+fi
+
+git init -q "$TMP/plain"
+( cd "$TMP/plain" && echo x > x.txt && git add -A && git commit -qm plain ) \
+  && ok "an ordinary commit is untouched" || no "an ordinary commit was refused"
+
+# ---------------------------------------------------------------------------------------------
+head_ "2. pre-push"
+
+# A gitlink that got in without the commit hook -- the case the backstop exists for.
+( cd "$TMP/plain" && git clone -q "$TMP/dep.git" sneaked \
+  && git -c core.hooksPath=/dev/null add -A \
+  && git -c core.hooksPath=/dev/null commit -qm "sneaked in" )
+git init -q --bare "$TMP/plain.git"
+( cd "$TMP/plain" && git remote add origin "$TMP/plain.git" )
+push_out=$TMP/push.out
+if ( cd "$TMP/plain" && git -c core.hooksPath="$HOOKS" push -q origin main ) 2>"$push_out"; then
+  no "pre-push refuses a pushed tip holding an undeclared repository"
+else
+  grep -q 'sneaked' "$push_out" && ok "pre-push refuses it, naming the path" \
+                                || no "pre-push refused, but did not name the path"
+fi
+
+# ---------------------------------------------------------------------------------------------
+head_ "3. the machine side (includeIf, ~ in hooksPath, worktrees, and elsewhere)"
+
+# The guard as a repository under the workspace would really see it: the same includeIf block
+# that goes into ~/.gitconfig, and a hooks directory reached through ~.
+mkdir -p "$TMP/home/hooks"
+cp "$HOOKS/pre-commit" "$HOOKS/pre-push" "$TMP/home/hooks/"
+cat > "$TMP/home/hooks/hooks.gitconfig" <<'EOF'
+[core]
+	hooksPath = ~/hooks
+EOF
+cat > "$TMP/home/.gitconfig" <<'EOF'
+[user]
+	name = guard test
+	email = guard@example.com
+[init]
+	defaultBranch = main
+[protocol "file"]
+	allow = always
+[includeIf "gitdir:~/code.local/pedal/"]
+	path = ~/hooks/hooks.gitconfig
+EOF
+
+export HOME="$TMP/home"
+export GIT_CONFIG_GLOBAL="$TMP/home/.gitconfig"
+ws="$TMP/home/code.local/pedal"
+mkdir -p "$ws"
+git init -q "$ws/namchain"
+( cd "$ws/namchain" && echo a > a.txt && git add -A && git commit -qm init )
+
+if [[ $(git -C "$ws/namchain" config --get core.hooksPath) == '~/hooks' ]]; then
+  ok "a repository under the workspace gets the guard's hooksPath"
+else
+  no "core.hooksPath is not set for a repository under the workspace"
+fi
+
+( cd "$ws/namchain" && git clone -q "$TMP/dep.git" embedded && git add -A )
+if ( cd "$ws/namchain" && git commit -q -m "embedded" ) 2>/dev/null; then
+  no "the hook runs through includeIf and ~ (the commit should have been refused)"
+else
+  ok "the hook runs through includeIf and ~"
+fi
+( cd "$ws/namchain" && git rm --cached -qf -r embedded && rm -rf embedded )
+
+worktree="$ws/.worktrees/session/namchain"
+mkdir -p "$(dirname "$worktree")"
+( cd "$ws/namchain" && git worktree add -q "$worktree" -b session-test )
+if [[ $(git -C "$worktree" config --get core.hooksPath) == '~/hooks' ]]; then
+  ok "a worktree under the workspace gets it too"
+else
+  no "a worktree under the workspace does not get the guard"
+fi
+
+git init -q "$TMP/home/elsewhere"
+if [[ -z $(git -C "$TMP/home/elsewhere" config --get core.hooksPath || true) ]]; then
+  ok "a repository outside the workspace is left alone"
+else
+  no "the guard leaked outside the workspace"
+fi
+
+# ---------------------------------------------------------------------------------------------
+printf '\n%s passed, %s failed\n' "$pass" "$fail"
+(( fail == 0 ))

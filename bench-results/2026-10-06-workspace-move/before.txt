@@ -1,0 +1,116 @@
+============================================================
+## pedal.project  (/Users/rik/code.local/pedal.project)
+date: 2026-10-06T11:56:41Z
+head:      fc5734b1de3bbfd2ff48d2eae5ef3a8f158b593b
+short:     fc5734b
+branch:    main
+origin:    https://github.com/rikkus/pedal.project.git
+upstream:  origin/main (behind 0, ahead 0)
+dirty:     12 entries
+tracked:   485 files
+gitlinks:  
+--- branches ---
+  * main                             fc5734b [origin/main] bench-results: the input stage's scale, its clipping, and 48 V on the jacks
+  + pico-service-review              c4b0296 (/Users/rik/code.local/pedal.project/.claude/worktrees/pico-service-review) [origin/pico-service-review] docs/pedal-service.md: Claude's review (R1-R15); plan, AGENTS.md, working-across-repos follow it
+    x/pi-debug-probe-tib-003455      b5f494a tib: soak ended in a thermal shutdown at 90 °C after 23 min, then it stopped booting again; work on it stopped
+    x/pi5-sd-card-image-build-d9f6d2 214f69e vip runs namchain 2e1a63a (meta, bypass as a ramp), deployed by deploy-engine; ljoss's check-streaming passes against it: 580 ramps over a 201-step drag, a bypass without a rebuild
+    x/vibrant-borg-bbd68d            a19e52b devices/piv: namchain's finished isolation A/B harness is removed from piv
+--- status --porcelain ---
+  ?? "Pasted 03-10-2026 at 7.57.04\342\200\257pm.png"
+  ?? bench-results/2026-10-06-workspace-move/
+  ?? devices/vip/backups/20261002T090452Z/
+  ?? devices/vip/backups/20261004T201744Z/
+  ?? devices/vip/backups/20261004T212412Z/
+  ?? devices/vip/backups/20261004T212716Z/
+  ?? devices/vip/backups/20261005T185119Z/
+  ?? devices/vip/backups/20261005T205105Z/
+  ?? devices/vip/backups/20261005T214019Z/
+  ?? diag.jsonl
+  ?? imaginings/
+  ?? stripboard/photos/
+--- worktree list ---
+  /Users/rik/code.local/pedal.project                                             fc5734b [main]
+  /private/tmp/base                                                               b19a613 (detached HEAD)
+  /Users/rik/code.local/pedal.project/.claude/worktrees/pi-debug-probe-tib-003455 214f69e (detached HEAD)
+  /Users/rik/code.local/pedal.project/.claude/worktrees/pico-service-review       c4b0296 [pico-service-review]
+  /Users/rik/code.local/pedal.project/.claude/worktrees/vibrant-borg-bbd68d       a19e52b (detached HEAD)
+
+============================================================
+## namchain  (/Users/rik/code.local/namchain)
+date: 2026-10-06T11:56:41Z
+head:      6f9c0f71814b487e05bfe96ad499110f36c56dfa
+short:     6f9c0f7
+branch:    main
+origin:    https://github.com/rikkus/namchain
+upstream:  origin/main (behind 0, ahead 0)
+dirty:     1 entries
+tracked:   663 files
+gitlinks:  vendor/NeuralAmpModelerCore 
+--- branches ---
+    local-engine 7f1eedc [origin/local-engine: ahead 31, behind 1] coreaudio: capture from a live input device, and join two devices with a private aggregate
+  * main         6f9c0f7 [origin/main] levels: true RMS, one window per entry, and frames on the device
+--- status --porcelain ---
+  ?? update-vendored-core-to-all-optimisations-tip.sh
+--- worktree list ---
+  /Users/rik/code.local/namchain 6f9c0f7 [main]
+--- submodule status ---
+   d0339874b42fa4dd1d89931e84bc60e1a44474f6 vendor/NeuralAmpModelerCore (v0.6.0-12-gd033987)
+
+============================================================
+## ljoss  (/Users/rik/code.local/ljoss)
+date: 2026-10-06T11:56:42Z
+head:      60e70d8d022b86f2ef92fa07ef1119714b4c42ef
+short:     60e70d8
+branch:    main
+origin:    git@github.com:rikkus/ljoss.git
+upstream:  origin/main (behind 0, ahead 0)
+dirty:     0 entries
+tracked:   127 files
+gitlinks:  
+--- branches ---
+    local-engine 0c077b3 [origin/local-engine: ahead 11, behind 1] Connect to this computer: run namchaind here, and pick the audio in and out
+  * main         60e70d8 [origin/main] Measure what the level numbers mean at the jack, not just in dBFS
+--- status --porcelain ---
+--- worktree list ---
+  /Users/rik/code.local/ljoss 60e70d8 [main]
+
+============================================================
+## rtpi  (/Users/rik/code.local/rtpi)
+date: 2026-10-06T11:56:42Z
+head:      537e23dd8792b17c3254ed64020bd63d15c9a221
+short:     537e23d
+branch:    main
+origin:    git@github.com:rikkus/rtpi.git
+upstream:  origin/main (behind 0, ahead 0)
+dirty:     0 entries
+tracked:   105 files
+gitlinks:  
+--- branches ---
+  * main 537e23d [origin/main] vip: an overlay for I2C1 bus recovery, because a stuck bus needed a reboot
+--- status --porcelain ---
+--- worktree list ---
+  /Users/rik/code.local/rtpi 537e23d [main]
+
+============================================================
+## NAMBench  (/Users/rik/code.local/NAMBench)
+date: 2026-10-06T11:56:42Z
+head:      4404c5e6c58ad2c0d8102e0204c7a7fcd88ecbd7
+short:     4404c5e
+branch:    main
+origin:    git@github.com:rikkus/NAMBench.git
+upstream:  origin/main (behind 0, ahead 0)
+dirty:     6 entries
+tracked:   268 files
+gitlinks:  
+--- branches ---
+  * main 4404c5e [origin/main] Pin linearplus to the ir-optimisation commit, 010a0e5
+--- status --porcelain ---
+   M Sources/AUv3/Host/NBAUHost.h
+   M Sources/AUv3/Host/NBAUHost.mm
+   M Sources/AUv3/Host/main.mm
+  ?? Scripts/contention-summary.py
+  ?? Sources/AUv3/Host/NBContention.h
+  ?? Sources/AUv3/Host/NBContention.mm
+--- worktree list ---
+  /Users/rik/code.local/NAMBench 4404c5e [main]
+

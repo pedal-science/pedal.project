@@ -12,13 +12,20 @@ rather than a rule.
 
 | Repo (GitHub `rikkus/…`) | Checkout on the Mac | Owns |
 |---|---|---|
-| `pedal.project` | `~/code.local/pedal.project` | The pedal as a system: goal, hardware design, diagrams, decisions, plan. The Core host's appliance configuration (`devices/`), the Pico firmware (`firmware/`), and the pedal service (`pedald`, in `devices/common/rootfs/usr/local/lib/pedald/`) beside `namchaind` |
-| `namchain` | `~/code.local/namchain` | The engine library, `namchaind`, `namchainctl`, the soak and bench tools, and **the control protocol** (protocol 2) |
-| `ljoss` | `~/code.local/ljoss` | The rig designer (macOS/iOS), including flattening the rig tree into an engine graph |
-| `rtpi` | `~/code.local/rtpi` | `tib`'s kernel, the boot-slot safety net, RT tuning, and so any **device-tree** change such as the WM8960 sound card |
-| `NAMBench` | `~/code.local/NAMBench` | NAM and IR kernel research. It reaches the pedal only through `namchain`, as a vendor patch or a port |
-| `OptimisationWorkOnNeuralAmpModelerCore`, `AudioDSPTools` (forks) | not checked out here | The planar NEON kernels (upstream PR #313, which `namchain` carries as a vendor patch) and the partitioned-FFT IR branch. `namchain`'s `nc.cab.ir` doesn't use AudioDSPTools, so that branch reaches the pedal as a port |
-| `midi-commander-custom` (fork) | `~/code.local/comidi/midi-commander-custom-rikkus` | The MIDI Commander's firmware and button configuration |
+| `pedal.project` | `~/code.local/pedal/pedal.project` | The pedal as a system: goal, hardware design, diagrams, decisions, plan. The Core host's appliance configuration (`devices/`), the Pico firmware (`firmware/`), and the pedal service (`pedald`, in `devices/common/rootfs/usr/local/lib/pedald/`) beside `namchaind` |
+| `namchain` | `~/code.local/pedal/namchain` | The engine library, `namchaind`, `namchainctl`, the soak and bench tools, and **the control protocol** (protocol 2) |
+| `ljoss` | `~/code.local/pedal/ljoss` | The rig designer (macOS/iOS), including flattening the rig tree into an engine graph |
+| `rtpi` | `~/code.local/pedal/rtpi` | `tib`'s kernel, the boot-slot safety net, RT tuning, and so any **device-tree** change such as the WM8960 sound card |
+| `NAMBench` | `~/code.local/pedal/NAMBench` | NAM and IR kernel research. It reaches the pedal only through `namchain`, as a vendor patch or a port |
+| `OptimisationWorkOnNeuralAmpModelerCore` (fork) | `~/code.local/pedal/namchain/vendor/NeuralAmpModelerCore` | The planar NEON kernels (upstream PR #313). It is **vendored into `namchain` as a declared submodule** at `all-optimisations`, so there is one checkout of it, not two |
+| `AudioDSPTools` (fork) | not checked out here | The partitioned-FFT IR branch, which `namchain` carries as a port — `nc.cab.ir` doesn't use AudioDSPTools. `rikkus/AudioDSPTools` no longer exists on GitHub; the only copy of `partitioned-ir` is `~/code.local/nam/AudioDSPTools-spread` |
+| `midi-commander-custom` (fork) | `~/code.local/comidi/midi-commander-custom-rikkus` | The MIDI Commander's firmware and button configuration. Deliberately outside the workspace: it is a peripheral, and its two sibling clones in `comidi/` are other people's |
+
+Those four rows above `AudioDSPTools` are the ones the workspace holds, plus this repository: the
+five checkouts under `~/code.local/pedal/` are the accepted layout since 2026-10-06, declared in
+`workspace.repos` and checked by `scripts/workspace`. [docs/workspace.md](workspace.md) says why
+they are arranged that way and what the guard around them does. The NAM research checkouts stay
+where they are, in `~/code.local/nam/`.
 
 **Where a new thing goes.** If it only makes sense for this pedal, it lives in `pedal.project`. If
 it stands on its own (an engine, an app, a kernel), it gets its own repo or goes in the one it
@@ -30,9 +37,9 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 
 | Host | Role | Notes |
 |---|---|---|
-| **M2** (MacBook Air) | Where editing and agent sessions happen, and where every deploy is started. Xcode, macOS builds of the engine | Holds every repo |
+| **M2** (MacBook Air) | Where editing and agent sessions happen, and where every deploy is started. Xcode, macOS builds of the engine | Holds every repo, all five of them under `~/code.local/pedal/` |
 | **vip** (Pi 5, 1 GB, aarch64) | **The Core host** (from 2026-10-01), and nothing else. Built from an image (`devices/vip/make-card`, `docs/vip-image.md`); where testing happens until it's a pedal nobody should disrupt | Same rules `tib` had: no compiler, everything arrives built (the engine in colima on the Mac, `scripts/deploy-engine`) |
-| **piv** (Pi 500, aarch64) | Stood in as the Core host until vip arrived; not updated meanwhile. The ARM build host: native aarch64, armv7 cross-compiler (GCC 15.2), `qemu-arm-static` for running armv7 tests | Allowed to be busy or down, so every build that runs on it also needs a fallback (colima on the Mac, which `rtpi` and vip's image already use) |
+| **piv** (Pi 500, aarch64) | Stood in as the Core host until vip arrived; not updated meanwhile. The ARM build host: native aarch64, armv7 cross-compiler (GCC 15.2), `qemu-arm-static` for running armv7 tests | Allowed to be busy or down, so every build that runs on it also needs a fallback (colima on the Mac, which `rtpi` and vip's image already use). Its dev checkouts stay at `~/code.local/<repo>`: the workspace is the Mac's layout, and `scripts/workspace root --repo` falls back to that path, so the scripts work in both |
 | ~~**tib**~~ (Tinker Board S, armv7) | **Retired 2026-09-26** (stopped working 2026-09-25). "`tib`" in the rules below now means the Core host | History only: `devices/tib/` and its backups |
 
 ## The rules
@@ -43,9 +50,9 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
    `namchain`'s (`docs/daemon.md`, `docs/ui-integration-plan.md` §1), and `ljoss/docs/ENGINE.md`
    already follows this rule. The Pico ↔ Core host UART protocol lives here
    (`docs/uart-protocol.md`), beside both ends.
-3. **Work in the repo that owns the change.** Cross-cutting sessions start here, with the other
-   repos added as extra directories (below). A session that is deep in one component starts in that
-   component's repo.
+3. **Work in the repo that owns the change.** Cross-cutting sessions are opened on the workspace
+   (`~/code.local/pedal/`), which holds every repo as a sibling (below). A session that is deep in
+   one component is opened on that component's repository.
 4. **Work lands on each repo's default branch**, committed and pushed, with no pull requests. That's
    how you work on your own repos; forks and other people's repos still go through PRs. An aspect
    you ask to keep separate gets its own branch, named the same in every repo it touches, and its
@@ -84,18 +91,15 @@ Rollback on `tib` is the previous symlink. For the kernel it is `rtpi`'s known-g
 
 ## Setting up an agent session
 
-- **Here, for cross-repo work:** `.claude/settings.local.json` (per machine, gitignored) lists the
-  other checkouts as extra directories, and sets the variable that makes Claude Code load their
-  `CLAUDE.md` files too. Without it, extra directories are readable but their instructions are not
-  loaded:
-
-  ```json
-  { "env": { "CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD": "1" },
-    "permissions": { "additionalDirectories": [
-      "/Users/rik/code.local/namchain", "/Users/rik/code.local/ljoss",
-      "/Users/rik/code.local/rtpi", "/Users/rik/code.local/NAMBench" ] } }
-  ```
-
+- **Open the workspace for cross-repo work.** `~/code.local/pedal/` holds all five repositories as
+  siblings, so a session opened on that folder can read and write every one of them with no extra
+  permissions and nothing to configure — no `additionalDirectories`, no per-machine settings file.
+  That is the whole point of the layout ([docs/workspace.md](workspace.md)); the
+  `.claude/settings.local.json` block that used to list the other checkouts as extra directories
+  was deleted with the move on 2026-10-06.
+- **Open one repository only when the change is confined to it.** A session rooted at
+  `~/code.local/pedal/namchain` can read its siblings but not write them: the session's cwd is the
+  sandbox's writable root, and there is exactly one of those.
 - **In each component repo:** an `AGENTS.md` (purpose, build and test commands, constraints) and a
   `CLAUDE.md` that is just `@AGENTS.md`. Cursor and the DeepSeek harness read the former, and
   Claude Code reads the latter. Each ends with one line pointing here for system context.
@@ -103,21 +107,23 @@ Rollback on `tib` is the previous symlink. For the kernel it is `rtpi`'s known-g
   `pedal.project` is the same since 2026-09-29: its `AGENTS.md` is canonical and its `CLAUDE.md`
   imports it and `docs/hardware-handoff.md`. The 2026-09-27 split, with two briefs, drifted
   within a day. This is the rule for all of the owner's work, not just these repos.
-- **`pedal.project` has two checkouts on the Mac.** The one these docs name,
-  `~/code.local/pedal.project` (Claude Code's), and a second for Cursor/DeepSeek sessions (e.g.
-  `~/cursor-projects/pedal.project`). Pull the session's checkout to `origin/main` before
-  starting, push only when asked, and check the other checkout's uncommitted work before touching
-  the same files.
-- **Two agents on one repo** each get a git worktree, so neither sees or clobbers the other's
-  uncommitted work.
+- **There is one checkout of each repository on the Mac.** The second `pedal.project`
+  (`~/cursor-projects/pedal.project`) was retired with the move on 2026-10-06; pull the workspace's
+  checkouts to `origin/main` before starting, and push only when asked.
+- **Two agents on one repo** each get a git worktree, under
+  `~/code.local/pedal/.worktrees/<name>/<repo>` — inside the sandbox, hidden from search, and
+  outside every repository, so neither sees or clobbers the other's uncommitted work and neither
+  needs a `.git/info/exclude` entry.
 - **Every session starts with `scripts/status`**, which reports each repo on each host (branch,
-  HEAD, ahead/behind, dirty), who holds the Core host's lock, and what `namchaind` there reports.
+  HEAD, ahead/behind, dirty), the workspace's layout and git guard, who holds the Core host's lock,
+  and what `namchaind` there reports.
 
 ## Tooling this needs (built in Phase 0 of the plan)
 
 | Tool | Does |
 |---|---|
-| `scripts/status` | The table above, in one screen. Exists: repos on the Mac and piv, the lock, `namchaind`'s status, and whether `devices/<host>/components.lock`, the engine and `devices/` are current |
+| `scripts/status` | The table above, in one screen. Exists: repos on the Mac and piv, the workspace's layout and guard, the lock, `namchaind`'s status, and whether `devices/<host>/components.lock`, the engine and `devices/` are current |
+| `scripts/workspace` | The repositories the workspace holds (`workspace.repos`), the files at its root, and the checks that keep both honest — added with the move on 2026-10-06 ([docs/workspace.md](workspace.md)) |
 | `scripts/host-lock` | `flock` on the Core host, held from the Mac for as long as a command runs. Every soak, benchmark and deploy goes through it. Exists; `deploy-engine` and `devices/<host>/apply` take it themselves, and a nested call for the same host just runs its command |
 | `scripts/deploy-engine` | Build a `namchain` commit, never from a dev checkout: for vip in colima on the Mac, exactly as its image builds it; for piv in a dedicated tree on piv. Run the tests, install into a versioned directory, write the manifest, restart. Exists; the armv7-NEON cross build for `tib` went with `tib` |
 | `devices/tib/` | The appliance configuration and its idempotent apply/backup scripts |

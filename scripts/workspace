@@ -1,0 +1,375 @@
+#!/usr/bin/env bash
+# scripts/workspace [<command>] [--root <dir>] — the pedal workspace: which repositories it holds,
+# the files that sit at its root, and the checks that keep it honest (docs/workspace.md).
+#
+#   check [--brief]          assert the invariants; exit 1 and say what is wrong
+#   apply [--dry-run]        install .pedal-workspace, AGENTS.md and CLAUDE.md at the root
+#   clone                    clone what workspace.repos declares and is missing, then submodules
+#   add <url> <path> [-b <branch>]   add a repository, refusing a path inside another one
+#   root [--repo <name>]     print the workspace root, or one repository's path
+#
+# The workspace root is the directory carrying .pedal-workspace: this walks up for it, first from
+# the current directory and then from this checkout, so it works from the root, from a repository
+# inside it, and from a worktree under .worktrees/. Before a workspace exists, pass --root.
+#
+# `root --repo <name>` falls back to the legacy $HOME/code.local/<path> when there is no workspace
+# marker, which is what keeps the scripts that ask it working on a checkout that has not moved yet
+# and on piv.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+MANIFEST=$ROOT/workspace.repos
+ROOT_FILES=$ROOT/workspace-root
+MARKER=.pedal-workspace
+ROOT_FILES_LIST=(.pedal-workspace AGENTS.md CLAUDE.md)
+HOOK_NAMES=(pre-commit pre-push)
+
+COMMAND="" ROOT_OPT="" REPO="" BRANCH="" BRIEF=0 DRY=0
+POSITIONAL=()
+args=("$@")
+i=0
+while (( i < ${#args[@]} )); do
+  a=${args[i]}
+  case $a in
+    --root)    i=$((i + 1)); ROOT_OPT=${args[i]:-} ;;
+    --repo)    i=$((i + 1)); REPO=${args[i]:-} ;;
+    -b|--branch) i=$((i + 1)); BRANCH=${args[i]:-} ;;
+    --brief)   BRIEF=1 ;;
+    --dry-run) DRY=1 ;;
+    -h|--help) sed -n '2,18p' "$0"; exit 0 ;;
+    -*)        printf 'workspace: unknown option: %s\n' "$a" >&2; exit 2 ;;
+    *)         if [[ -z $COMMAND ]]; then COMMAND=$a; else POSITIONAL+=("$a"); fi ;;
+  esac
+  i=$((i + 1))
+done
+COMMAND=${COMMAND:-check}
+
+die() { printf 'workspace: %s\n' "$*" >&2; exit 2; }
+
+report_good() { printf 'ok    %s\n' "$*"; }
+report_note() { printf 'note  %s\n' "$*"; }
+report_fail() { printf 'FAIL  %s\n' "$*"; }
+
+# The workspace root, walking up from a directory for the marker. It comes back canonical
+# (`pwd -P`) because that is the spelling git reports paths in, and on macOS `/tmp` is a symlink
+# to `/private/tmp`: without this, every comparison against a worktree path fails.
+canon() { ( cd "$1" 2>/dev/null && pwd -P ) || printf '%s' "$1"; }
+
+root_above() {
+  local dir=$1
+  while :; do
+    [[ -e $dir/$MARKER ]] && { printf '%s' "$dir"; return 0; }
+    [[ $dir == / ]] && return 1
+    dir=$(dirname "$dir")
+  done
+}
+
+workspace_root() {
+  local found
+  if [[ -n $ROOT_OPT ]]; then canon "${ROOT_OPT/#\~/$HOME}"; return 0; fi
+  if found=$(root_above "$PWD"); then canon "$found"; return 0; fi
+  if found=$(root_above "$ROOT"); then canon "$found"; return 0; fi
+  return 1
+}
+
+# name|path|url|branch|kind, comments and blank lines removed.
+manifest_lines() {
+  [[ -f $MANIFEST ]] || die "no $MANIFEST"
+  sed -e 's/#.*//' -e 's/[[:space:]]*$//' -e '/^[[:space:]]*$/d' "$MANIFEST"
+}
+
+entry_for() { # name -> its manifest line
+  manifest_lines | awk -F'|' -v n="$1" '$1 == n { print; exit }'
+}
+
+# A URL without its scheme, user and .git suffix, so the https and ssh spellings of one
+# repository compare equal. That is the comparison that matters: which repository it is, not how
+# this checkout happens to spell the remote.
+norm_url() {
+  printf '%s' "$1" | sed -e 's#^git@\([^:]*\):#\1/#' -e 's#^[a-zA-Z][a-zA-Z0-9+.-]*://##' \
+                          -e 's#^[^/@]*@##' -e 's#\.git$##' -e 's#/$##'
+}
+
+is_repo() { git -C "$1" rev-parse --git-dir >/dev/null 2>&1; }
+
+dirty_count() {
+  local n
+  n=$(git -C "$1" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+  [[ $n == 0 ]] && printf 'clean' || printf '%s dirty' "$n"
+}
+
+# A repository's own .gitmodules: the paths it declares, and the url for one of those paths.
+declared_paths() {
+  git -C "$1" config -f .gitmodules --get-regexp '^submodule\..*\.path$' 2>/dev/null \
+    | awk '{ print $2 }' || true
+}
+
+declared_name_for() { # repo, path -> the submodule's section name
+  git -C "$1" config -f .gitmodules --get-regexp '^submodule\..*\.path$' 2>/dev/null \
+    | awk -v p="$2" '$2 == p { sub(/^submodule\./, "", $1); sub(/\.path$/, "", $1); print $1; exit }' || true
+}
+
+# ---------------------------------------------------------------------------------------------
+
+cmd_root() {
+  local path
+  if [[ -n $REPO ]]; then
+    local line
+    line=$(entry_for "$REPO") || true
+    [[ -n $line ]] || die "no '$REPO' in workspace.repos"
+    IFS='|' read -r _ path _ _ _ <<< "$line"
+    if ws=$(workspace_root) && is_repo "$ws/$path"; then printf '%s\n' "$ws/$path"; return 0; fi
+    [[ -d $HOME/code.local/$path ]] && { printf '%s\n' "$HOME/code.local/$path"; return 0; }
+    die "no checkout for '$REPO': not at <workspace>/$path and not at \$HOME/code.local/$path"
+  fi
+  workspace_root || die "no workspace: no $MARKER above $PWD or $ROOT"
+}
+
+cmd_apply() {
+  local ws f src dst
+  ws=$(workspace_root) || die "no workspace here; pass --root <dir> to create one"
+  (( DRY )) || mkdir -p "$ws"
+  for f in "${ROOT_FILES_LIST[@]}"; do
+    src=$ROOT_FILES/$f
+    dst=$ws/$f
+    [[ -f $src ]] || die "no $src in this checkout"
+    if [[ -f $dst ]] && cmp -s "$src" "$dst"; then printf 'same      %s\n' "$dst"; continue; fi
+    if (( DRY )); then
+      printf 'would     %s\n' "$dst"
+    else
+      install -m 644 "$src" "$dst"
+      printf 'installed %s\n' "$dst"
+    fi
+  done
+}
+
+cmd_clone() {
+  local ws name path url branch kind parent
+  ws=$(workspace_root) || die "no workspace here; pass --root <dir>"
+  mkdir -p "$ws"
+  while IFS='|' read -r name path url branch kind; do
+    case $kind in
+      repo)
+        if is_repo "$ws/$path"; then printf 'present   %s\n' "$path"; continue; fi
+        [[ -e $ws/$path ]] && die "$ws/$path exists and is not a checkout"
+        printf 'cloning   %s (%s)\n' "$path" "$branch"
+        git clone --branch "$branch" "$url" "$ws/$path"
+        ;;
+      submodule) : ;;   # after the repositories that declare them
+      *) die "workspace.repos: unknown kind '$kind' for $name" ;;
+    esac
+  done < <(manifest_lines)
+  while IFS='|' read -r name path url branch kind; do
+    [[ $kind == submodule ]] || continue
+    parent=${path%%/*}
+    is_repo "$ws/$parent" || die "$parent is missing, so $path cannot be initialised"
+    printf 'submodule %s in %s\n' "${path#*/}" "$parent"
+    git -C "$ws/$parent" submodule update --init -- "$path"
+  done < <(manifest_lines)
+}
+
+cmd_add() {
+  local ws url path owner dir rel name
+  ws=$(workspace_root) || die "no workspace here; pass --root <dir>"
+  url=${POSITIONAL[0]:-}
+  path=${POSITIONAL[1]:-}
+  [[ -n $url && -n $path ]] || die "usage: workspace add <url> <path> [--branch <branch>]"
+  [[ $path != /* ]] || die "$path must be relative to the workspace root"
+  [[ -e $ws/$path ]] && die "$ws/$path already exists"
+
+  # Which repository already owns the directory this would land in? A checkout that is merely
+  # inside another repository is the accident the guard refuses to commit (tools/git-hooks), so
+  # it is refused here too, before it exists.
+  owner=""
+  dir=$(dirname "$ws/$path")
+  while [[ $dir == "$ws"/* ]]; do
+    if is_repo "$dir"; then owner=$dir; break; fi
+    dir=$(dirname "$dir")
+  done
+  if [[ $owner == "$ws" ]]; then
+    die "the workspace root is a git repository; it must not be (docs/workspace.md)"
+  fi
+  if [[ -n $owner ]]; then
+    rel=${path#${owner#"$ws"/}/}
+    die "$path is inside $owner: declare it instead:
+  git -C $owner submodule add $url $rel
+or, if $owner fetches it as a vendor tree, add the path to its .gitignore and let its fetch script
+own it."
+  fi
+
+  name=$(basename "$path")
+  [[ -z $(entry_for "$name") ]] || die "'$name' is already in workspace.repos"
+  git clone ${BRANCH:+--branch "$BRANCH"} "$url" "$ws/$path"
+  printf '%s|%s|%s|%s|repo\n' "$name" "$path" "$url" "${BRANCH:-main}" >> "$MANIFEST"
+  printf 'added %s at %s to workspace.repos\n' "$name" "$path"
+}
+
+# ---------------------------------------------------------------------------------------------
+
+report_root() {
+  local ws=$1 top
+  if top=$(git -C "$ws" rev-parse --show-toplevel 2>/dev/null); then
+    report_fail "the workspace root is inside the git repository $top"
+  else
+    report_good "the workspace root is not inside a git repository"
+  fi
+  if [[ -e $ws/.git ]]; then
+    report_fail "the workspace root has a .git: it must not be a repository"
+  else
+    report_good "the workspace root is not itself a repository"
+  fi
+}
+
+report_entries() {
+  local ws=$1 name path url branch kind full origin got decl link sub
+  while IFS='|' read -r name path url branch kind; do
+    full=$ws/$path
+    if [[ $kind == submodule ]]; then
+      sub=${path%%/*}
+      if ! is_repo "$full"; then
+        report_fail "$path: not checked out (git -C $sub submodule update --init -- ${path#*/})"
+        continue
+      fi
+      if ! is_repo "$ws/$sub"; then report_fail "$path: its parent $sub is missing"; continue; fi
+      local nm; nm=$(declared_name_for "$ws/$sub" "${path#*/}")
+      if [[ -z $nm ]]; then
+        report_fail "$path: $sub does not declare it in .gitmodules"
+        continue
+      fi
+      if ! git -C "$ws/$sub" config -f .gitmodules --get "submodule.$nm.url" >/dev/null 2>&1; then
+        report_fail "$path: declared in $sub/.gitmodules with no url"
+        continue
+      fi
+    elif ! is_repo "$full"; then
+      report_fail "$path: no checkout"
+      continue
+    fi
+
+    origin=$(git -C "$full" remote get-url origin 2>/dev/null || true)
+    got=$(norm_url "$origin")
+    if [[ $got != "$(norm_url "$url")" ]]; then
+      # Recorded, not fatal to the rest of this entry: an embedded repository is still worth
+      # finding in a checkout whose remote is spelled differently.
+      report_fail "$path: origin is $origin, workspace.repos says $url"
+    else
+      printf 'ok    %-34s %-9s %-8s %s\n' "$path" \
+        "$(git -C "$full" symbolic-ref -q --short HEAD || echo '(detached)')" \
+        "$(git -C "$full" rev-parse --short HEAD)" "$(dirty_count "$full")"
+    fi
+
+    decl=$(declared_paths "$full")
+    # The index and HEAD, deduplicated: a gitlink that is both staged and committed is one finding.
+    for link in $({ git -C "$full" ls-files --stage 2>/dev/null | awk '$1 == "160000" { print $4 }'
+                    git -C "$full" ls-tree -r HEAD 2>/dev/null | awk '$1 == "160000" { print $4 }'
+                  } | sort -u); do
+      [[ -n $decl ]] && printf '%s\n' "$decl" | grep -qxF "$link" && continue
+      report_fail "$path: $link is an embedded repository nothing declares"
+    done
+  done < <(manifest_lines)
+}
+
+report_guard() {
+  local ws=$1 want=$ROOT/tools/git-hooks name path url branch kind full got checked=0
+  for f in "${HOOK_NAMES[@]}"; do
+    [[ -x $want/$f ]] || report_fail "$want/$f is missing or not executable"
+  done
+  while IFS='|' read -r name path url branch kind; do
+    full=$ws/$path
+    is_repo "$full" || continue
+    got=$(git -C "$full" config --get core.hooksPath 2>/dev/null || true)
+    got=${got/#\~/$HOME}
+    if [[ -z $got ]]; then
+      report_fail "$path: no git guard — core.hooksPath is unset (is the includeIf block in ~/.gitconfig there?)"
+    elif [[ $got != "$want" ]]; then
+      report_fail "$path: core.hooksPath is $got, not $want"
+    else
+      checked=$((checked + 1))
+    fi
+  done < <(manifest_lines)
+  (( checked == 0 )) || report_good "the git guard is in force for $checked repositories"
+}
+
+report_root_files() {
+  local ws=$1 f src dst ok=1
+  for f in "${ROOT_FILES_LIST[@]}"; do
+    src=$ROOT_FILES/$f
+    dst=$ws/$f
+    if [[ ! -f $dst ]]; then report_fail "$f is missing from the workspace root"; ok=0
+    elif ! cmp -s "$src" "$dst"; then
+      report_fail "$f at the workspace root differs from pedal.project/workspace-root/$f"; ok=0
+    fi
+  done
+  (( ok == 0 )) || report_good "the workspace root files match pedal.project/workspace-root/"
+}
+
+report_worktrees() {
+  local ws=$1 name path url branch kind full wt
+  while IFS='|' read -r name path url branch kind; do
+    full=$ws/$path
+    is_repo "$full" || continue
+    while IFS= read -r wt; do
+      [[ -n $wt ]] || continue
+      [[ $wt == "$ws"/* ]] && continue
+      report_fail "$path: the worktree $wt is outside the workspace (git -C $full worktree prune)"
+    done < <(git -C "$full" worktree list --porcelain 2>/dev/null | sed -n 's/^worktree //p')
+  done < <(manifest_lines)
+}
+
+report_nested() {
+  local ws=$1 name path url branch kind full g n=0 ignored=0 decl sub_paths
+  while IFS='|' read -r name path url branch kind; do
+    [[ $kind == repo ]] || continue
+    full=$ws/$path
+    is_repo "$full" || continue
+    # A declared submodule is a nested repository by design, not a finding.
+    sub_paths=$(manifest_lines | awk -F'|' -v p="$path/" '$2 ~ "^"p { n=$2; sub("^"p, "", n); print n }')
+    n=0 ignored=0
+    while IFS= read -r g; do
+      [[ -n $g ]] || continue
+      local rel=${g#"$full"/}
+      rel=${rel%/.git}
+      [[ -n $sub_paths ]] && printf '%s\n' "$sub_paths" | grep -qxF "$rel" && continue
+      n=$((n + 1))
+      git -C "$full" check-ignore -q "$rel" 2>/dev/null && ignored=$((ignored + 1))
+    done < <(find "$full" -maxdepth 4 -name .git -not -path "$full/.git" 2>/dev/null)
+    (( n == 0 )) || report_note "$path: $n nested repositories, $ignored of them gitignored (fetched dependencies, not accidents)"
+  done < <(manifest_lines)
+}
+
+cmd_check() {
+  local ws tmp problems
+  if ! ws=$(workspace_root); then
+    printf 'FAIL  no workspace: no %s above %s or %s\n' "$MARKER" "$PWD" "$ROOT"
+    exit 1
+  fi
+  tmp=$(mktemp)
+  trap 'rm -f "${tmp:-}"' EXIT
+  { report_root "$ws"; report_entries "$ws"; report_guard "$ws"; report_root_files "$ws"
+    report_worktrees "$ws"; report_nested "$ws"; } > "$tmp" 2>&1 || true
+  problems=$(grep -c '^FAIL' "$tmp" || true)
+  problems=${problems:-0}
+  if (( BRIEF )); then
+    if (( problems == 0 )); then
+      printf 'workspace ok: %s\n' "$ws"
+    else
+      printf 'workspace: %s problem(s) in %s\n' "$problems" "$ws"
+      grep '^FAIL' "$tmp"
+    fi
+  else
+    cat "$tmp"
+    if (( problems == 0 )); then printf '\n%s: every check passed\n' "$ws"
+    else printf '\n%s: %s problem(s)\n' "$ws" "$problems"; fi
+  fi
+  (( problems == 0 ))
+}
+
+# ---------------------------------------------------------------------------------------------
+
+case $COMMAND in
+  root)   cmd_root ;;
+  apply)  cmd_apply ;;
+  clone)  cmd_clone ;;
+  add)    cmd_add ;;
+  check)  cmd_check ;;
+  *)      die "unknown command '$COMMAND' (check, apply, clone, add, root)" ;;
+esac
