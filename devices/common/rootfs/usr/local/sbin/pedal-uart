@@ -20,7 +20,9 @@ dev=/dev/ttyAMA0
 if ! compgen -G "/sys/kernel/config/device-tree/overlays/*_$name" >/dev/null; then
   tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
   dtc -q -@ -I dts -O dtb -o "$tmp/$name.dtbo" "$dir/$name.dts"
-  dtoverlay -d "$tmp" "$name"
+  # Through dtoverlay-locked: two services loading an overlay at boot race for dtoverlay's stack
+  # directory, which is not reentrant (see that script's comment).
+  dtoverlay-locked -d "$tmp" "$name"
 fi
 
 for _ in $(seq 50); do

@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# dtoverlay-locked — run dtoverlay with the lock its stack directory needs.
+#
+# dtoverlay is not reentrant. It keeps its stack of applied overlays in /tmp/.dtoverlays and refuses
+# to start when that directory is already there, so two services loading an overlay at boot race for
+# it: on 2026-10-06 pedal-uart failed with
+#
+#   * Failed to create '/tmp/.dtoverlays' - 17
+#
+# (EEXIST) while pedal-codec was running. The UART came up anyway only because the firmware had
+# honoured `enable_uart=1` on its own that boot, which is luck, not design.
+#
+# Ordering the two units would fix that pair and nothing more, and it would couple two unrelated
+# peripherals to each other. The lock is on the thing they actually share, so any number of callers
+# is safe and a new caller cannot forget it: every caller in this tree goes through here, which
+# devices/common/tests/test_overlays.py holds.
+#
+# The lock lives in /run/lock, which is tmpfs — it cannot survive a reboot, so it can never be
+# stale. flock is a declared dependency of the image (devices/vip/test-offline-apply checks for it).
+#
+# PEDAL_DTOVERLAY_LOCK overrides the lock file, which is how the test above exercises this without
+# a device.
+set -euo pipefail
+
+lock=${PEDAL_DTOVERLAY_LOCK:-/run/lock/pedal-dtoverlay.lock}
+
+exec 9>"$lock"
+flock 9
+# exec keeps fd 9 open, so the lock is held for exactly as long as dtoverlay runs and released by
+# the kernel when it exits — including when it fails.
+exec dtoverlay "$@"

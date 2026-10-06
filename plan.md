@@ -1272,13 +1272,25 @@ back and the pedal reports 10 ok, 1 info. Its writes never stopped working, whic
 succeeds. `pedal-uart.service` still fails at boot on a `dtoverlay` race (see below) although the
 link is up.
 
-**A boot-time race between the two overlay services** (2026-10-06): `pedal-uart.service` failed with
-`* Failed to create '/tmp/.dtoverlays' - 17` — `dtoverlay`'s temporary directory already existing,
-which is what two of them starting at once looks like. `pedal-uart` and `pedal-codec` both call
-`dtoverlay` and neither is ordered after the other, so they race for one shared directory. Nothing
-was lost this boot — the firmware honoured `enable_uart=1` on its own and the link came up — but the
-same race can hit the codec's overlay, which is not harmless. The fix belongs in the units: order
-them (`After=`/`Before=`) or serialise the overlay step so the collision cannot happen.
+**A boot-time race between the two overlay services, and the lock that ends it** (2026-10-06):
+`pedal-uart.service` failed at boot with `* Failed to create '/tmp/.dtoverlays' - 17`. `dtoverlay` is
+not reentrant: it keeps its stack of applied overlays in that one directory and refuses to start when
+it is already there, and `pedal-uart` and `pedal-codec` both call it with nothing ordering them.
+Nothing was lost this boot — the firmware honoured `enable_uart=1` by itself, so the link came up
+anyway — but the same race can hit the codec's overlay, which is not harmless. Fixed with
+`dtoverlay-locked`: both callers go through a helper that takes a `flock` on
+`/run/lock/pedal-dtoverlay.lock` and then `exec`s dtoverlay, so the lock is held for exactly as long
+as the load takes and the kernel releases it. Ordering the units would have fixed that pair, coupled
+two unrelated peripherals, and left a third caller free to reintroduce the race; the lock is on the
+resource they share. `devices/common/tests/test_overlays.py` (4 tests, and run on vip where `flock`
+exists) holds both halves: that nothing in the image's rootfs invokes dtoverlay directly, and that
+the helper really waits. Putting it on the card needs `devices/common/apply`, which refuses while the
+engine is running, so it applies at the next convenient stop.
+
+**A flaky test in the common suite, caught on the way** (2026-10-06):
+`test_httpd.HttpdTest.test_stop_is_safe_twice_and_leaves_no_thread_running` failed once in seven runs
+of `devices/common/tests` (186 tests) while the bench was busy and passed the other six. Timing in a
+thread shutdown; worth making deterministic rather than living with.
 
 **And the audio-level half landed in namchain** the same day (namchain `a69d315`): `engine.levels`
 is a read-only method returning the device's input and output levels per channel, each chain's, and
