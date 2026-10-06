@@ -1,0 +1,48 @@
+{
+  "session": "ambient-wash-two-amp-steady",
+  "source": "derived",
+  "target": "vip:47810",
+  "speed": 1.0,
+  "writes_only": false,
+  "loops": 1,
+  "seconds": 600.0,
+  "sent": {
+    "engine.mute": 2,
+    "engine.status": 1196,
+    "rig.apply": 1
+  },
+  "answered": 1199,
+  "kinds": {},
+  "errors": {},
+  "unanswered": 0,
+  "reply_ms": {
+    "engine.mute": {
+      "n": 2,
+      "p50": 10.56,
+      "p99": 12.82,
+      "max": 12.82
+    },
+    "engine.status": {
+      "n": 1196,
+      "p50": 18.59,
+      "p99": 118.45,
+      "max": 276.08
+    },
+    "rig.apply": {
+      "n": 1,
+      "p50": 15.08,
+      "p99": 15.08,
+      "max": 15.08
+    }
+  },
+  "send_lag_ms": {
+    "p50": 1.18,
+    "p99": 2.39,
+    "max": 42.65
+  },
+  "max_in_flight": 1,
+  "generations": [
+    1,
+    1
+  ]
+}
