@@ -1372,6 +1372,29 @@ The report, with charts and the measured caveats:
 the host lock while the I2C bench firmware was being written in this repo, and the half-window
 stability re-runs reproduced to 0.02 pp.
 
+**Publishing a probe once a period recovers 55% of the cost of having meters, and measures every
+sample** (2026-10-06, namchain `dd8d480`). The per-sample fold was writing the probe's `std::atomic`
+fields, which share cache lines with each other, and the control thread reads them — so the render
+thread was losing those lines on every sample. The cost was coherency, not arithmetic, which is why
+`--levels-first-frame` could buy 2.25 pp by not looking at 63 samples in 64.
+
+`--levels-publish-period` gets the same saving without looking away: the render thread folds into
+`level::Window`, plain memory no other thread has touched, and adds the window to the probe's atomics
+once a period — the shape `account_render_time` has always used. The meter reads the same thing
+because a publish *adds* (raise the peak, `fetch_add` the rest) rather than setting: add and max
+against the zeroed reset a reader performs are order-independent, so no sample is lost or counted
+twice. A reader can now see a window up to one period old — 1.33 ms at q=64.
+
+Measured at 1 Hz on the 34-node rig, 90 s windows, both controls taken on the day: **2.22% off,
+5.40% measuring, 3.66% publishing per period** (+1.43 pp), and **3.06%** with the rate limit stacked
+(+0.83 pp) — 55% and 74% of the cost recovered. Stability at 60 s reproduced to 0.18 pp on the
+largest figure. **Off by default**: the case for turning it on is the table, ljoss's display being
+unaffected, and accepting one period of latency — the report's Part 4 says so explicitly.
+
+One instrument lesson worth keeping: CPU is counted in 10 ms ticks, so a measurement window resolves
+`10 ms ÷ window` of a core. At the 30 s a five-minute sweep allows, the rate limit's 0.60 pp is under
+half a tick — a number, not a measurement. Spend the budget on window length before condition count.
+
 **3.6's power question is answered: the header feed holds, the USB-A port does not — and the codec is
 down** (2026-10-05). The instrument is the pedal's own: the Pico prints `fw: up N s` on its USB
 console every 5 s, and `N` counts from the Pico's own reset, so it measures **power** where `dmesg`
