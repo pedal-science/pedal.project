@@ -440,13 +440,18 @@ numbers need re-measuring on piv.
      its journal dates the first entries 2026-07-27 before the clock jumps.
    - The Pico's own boot is milliseconds and belongs to 3.1/3.4, on its USB console, not on this
      probe.
-   - **Record the EEPROM config as well**, since it is boot behaviour nothing in `devices/vip/`
-     owns yet: `rpi-eeprom-config` and `vcgencmd` are both absent from the image, but Linux can
-     read the config through the device tree — `/proc/device-tree/aliases/blconfig` →
-     `/sys/bus/nvmem/devices/rmem4/nvmem`. `check` should diff it (`BOOT_UART`, `BOOT_ORDER`,
-     `NET_INSTALL_AT_POWER_ON`); that last one spends about a second at cold boot on keyboard and
-     network-install probing (`NET_INSTALL_KEYBOARD_WAIT` defaults to 900 ms) which the pedal
-     does not need.
+   - **Done, 2026-10-07: the EEPROM is recorded and diffed.** The pin and the board's state live in
+     `devices/vip/rootfs/usr/local/lib/rpi-eeprom/eeprom.lock` (upstream commit, image and
+     recovery by sha256, version, timestamp, the three keys), `check` diffs all of it (`vcgencmd`,
+     or the nvmem device this note named, which reads the same thing without root — `rpi-eeprom`
+     and `raspi-utils` arrived in `devices/vip/packages` on 2026-10-05), and `vip-eeprom` is the
+     one way to change it. The board went from the factory `66f33f7e` (2026-05-11) to `1accd665`
+     (2026-09-25) with the configuration carried across
+     (bench-results/2026-10-07-eeprom-update.md; docs/vip-image.md, "The bootloader EEPROM"). What
+     is still open is the *choice*, not the record: `NET_INSTALL_AT_POWER_ON=1` spends about a
+     second at cold boot on keyboard and network-install probing (`NET_INSTALL_KEYBOARD_WAIT`
+     defaults to 900 ms) which the pedal does not need, and turning it off is a configuration write
+     (`rpi-eeprom-config --apply`), not an image update — and still an EEPROM write.
    - Take the host's lock for the reads around it, and **power-cycle** vip rather than `reboot`ing
      it: a cold boot is what this step asks for. The lock cannot span the power loss — it is an
      `flock` held by an ssh session on the host, so pulling the power drops it. Evidence:
