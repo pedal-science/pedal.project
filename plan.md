@@ -971,9 +971,13 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
       and heard as a short thud. No glitch rule can see a level bump: it is continuous, is not a
       dropout, adds no out-of-band energy and converges. Compensating the weights for the
       correlation (`sqrt(1+2ρg₁g₂)`, ρ clamped to [0,1]) takes all 104 rows to 0.00 dB and clears
-      the two findings as well — namchain `bench-results/e2-fade-thump.txt`. The engine's
-      `rt::Crossfade` is the same law, so a bypass toggle (where the two sides are the same audio)
-      has this today; it wants its own change and its own transition tests. So tier 2's
+      the two findings as well — namchain `bench-results/e2-fade-thump.txt`. **The engine's fade is
+      fixed the same way** (2026-10-07): `rt::Crossfade` measures ρ from the first block it is handed
+      and normalises the weights as it reads them, measured through the class, through `nc.xfade` and
+      through a plan-level transition at **+3.0 dB before and 0.00 after**. It also turned up a
+      second defect — `prewarm` ran a silent block through `nc.xfade` despite its `skip_prewarm`, so
+      every local transition was 3.7 ms of crossfade where 5 ms was asked for — and that is fixed
+      too, with tests for both. So tier 2's
       "a Lite takes over at once" plays a different-sounding rig for the catch-up, and the branch
       above applies: it needs a listening test, and the files are made by
       [bench-results/2026-10-06-e2-listening](bench-results/2026-10-06-e2-listening/README.md).
