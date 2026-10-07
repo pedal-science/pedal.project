@@ -1,0 +1,44 @@
+# vip's bootloader EEPROM: the image tree the board is updated from, and the state the board is
+# expected to carry. Read by devices/vip/eeprom-fetch (on the Mac), by vip-eeprom on the host, and
+# by devices/vip/check. Plain KEY=value, sourced by bash — keep it that way.
+#
+# Why the images are not from Ubuntu's rpi-eeprom package: the package's newest image is older than
+# this board's factory EEPROM (2026-05-11), so /usr/bin/rpi-eeprom-update reports "up to date" and
+# can never see a newer release. The tree below is fetched from upstream at a commit and verified
+# by sha256; the tool that does the work is still the packaged one, pointed here with
+# FIRMWARE_ROOT (vip-eeprom does that). None of this is on the card: the EEPROM is on the board
+# (docs/vip-image.md, "The bootloader EEPROM").
+#
+# Upstream, as received, kept as the rollback reference: firmware-2712/old/default/
+# pieeprom-2026-05-11.bin, VERSION:66f33f7e, BUILD_TIMESTAMP=1778498402, MFG_VER 1, not A/B
+# capable. `sudo rpi-eeprom-update -d -f <that file>` would put it back — see the docs for why
+# that is the last resort and not the first.
+EEPROM_COMMIT=3da76c3b6fe6272d0c54b32ffa4dfe8ed0deddbb
+EEPROM_RELEASE=default
+EEPROM_IMAGE=pieeprom-2026-09-25.bin
+EEPROM_IMAGE_SHA256=02c4daa25df5af66af50da63ee97dfd03b21a40ac5b495a1c447979a2aa00edd
+EEPROM_IMAGE_SIZE=2097152
+EEPROM_RECOVERY_SHA256=29bbbbba21b532fbde8943adf6ad1e657c8ac0013b66e6d60f8212894d86b024
+EEPROM_RECOVERY_SIZE=104314
+
+# What the board carries, and therefore what check diffs. `version` and the timestamp are what the
+# bootloader reports and what rpi-eeprom-update compares; the three config keys are boot behaviour
+# nothing else in this tree owns: BOOT_UART=1 puts the firmware's own boot log on the header UART
+# the Pico's link shares (bench-results/2026-10-05-header-uart-disabled.md), BOOT_ORDER=0xf461
+# tries the SD card first, and NET_INSTALL_AT_POWER_ON=1 spends about a second of cold boot in
+# keyboard and network-install probing (plan.md, "Record the EEPROM config as well"). These are
+# facts about the board that only an EEPROM write changes: edit them in the same change that moves
+# the board. Until that update is applied this is the factory image, the same one the rollback
+# reference above names.
+EEPROM_VERSION=66f33f7e
+EEPROM_TIMESTAMP=1778498402
+EEPROM_DATE="2026-05-11 11:20:02"
+EEPROM_MFG_VER=1
+EEPROM_CONFIG_BOOT_UART=1
+EEPROM_CONFIG_BOOT_ORDER=0xf461
+EEPROM_CONFIG_NET_INSTALL_AT_POWER_ON=1
+
+# Where the tree lives on the host. FIRMWARE_ROOT is this path, so rpi-eeprom-update reads
+# <dir>-2712/<release>/ and falls back to <dir>/<release> when that is absent. The two image files
+# are not in git: eeprom-fetch puts them there from the commit above, pinned by sha256.
+EEPROM_DIR=/usr/local/lib/rpi-eeprom/bootloader

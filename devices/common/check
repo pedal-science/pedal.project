@@ -76,6 +76,51 @@ else
   done
 fi
 
+# The bootloader EEPROM: what it runs and how it is configured is boot behaviour, and the pinned
+# image tree is what a future update installs from. Nothing in devices/ owned either until now
+# (docs/vip-image.md, "The bootloader EEPROM"). The image files are deliberately not in git, so an
+# absent tree is reported rather than failed: eeprom-fetch puts it back from eeprom.lock.
+lock="$DEV_DIR/rootfs/usr/local/lib/rpi-eeprom/eeprom.lock"
+if [[ -f $lock ]]; then
+  log "bootloader EEPROM: eeprom.lock against what $DEV_HOST carries"
+  # shellcheck disable=SC1090
+  . "$lock"
+  live_ver=$(dev "tr -d '\\0' < /proc/device-tree/chosen/bootloader/version" 2>/dev/null | cut -c1-8)
+  live_ts=$(dev "od -An -tu4 --endian=big /proc/device-tree/chosen/bootloader/build-timestamp" 2>/dev/null | tr -d ' ')
+  if [[ $live_ver == "$EEPROM_VERSION" && $live_ts == "$EEPROM_TIMESTAMP" ]]; then
+    printf '  ok    %s\n' "version $live_ver, built $EEPROM_DATE"
+  else
+    printf '  FAIL  %-50s %s\n' "version $live_ver (${live_ts:-?}), eeprom.lock says $EEPROM_VERSION ($EEPROM_TIMESTAMP)" \
+      "the board is not on the recorded bootloader: see docs/vip-image.md"
+    bad=1
+  fi
+  live_cfg=$(dev "sudo -n vcgencmd bootloader_config" 2>/dev/null || true)
+  cfg_bad=""
+  for pair in "BOOT_UART:$EEPROM_CONFIG_BOOT_UART" "BOOT_ORDER:$EEPROM_CONFIG_BOOT_ORDER" \
+              "NET_INSTALL_AT_POWER_ON:$EEPROM_CONFIG_NET_INSTALL_AT_POWER_ON"; do
+    k=${pair%%:*}; want=${pair#*:}
+    got=$(awk -F= -v k="$k" '$1 == k { print $2 }' <<< "$live_cfg")
+    [[ $got == "$want" ]] || cfg_bad+=" $k=$got(want $want)"
+  done
+  if [[ -z $cfg_bad ]]; then
+    printf '  ok    %s\n' "config $EEPROM_CONFIG_BOOT_UART/$EEPROM_CONFIG_BOOT_ORDER/$EEPROM_CONFIG_NET_INSTALL_AT_POWER_ON"
+  else
+    printf '  FAIL  %-50s%s\n' "config differs from eeprom.lock" "$cfg_bad"; bad=1
+  fi
+  tree_hashes=$(dev "sha256sum $EEPROM_DIR-2712/$EEPROM_RELEASE/$EEPROM_IMAGE \
+                     $EEPROM_DIR-2712/$EEPROM_RELEASE/recovery.bin 2>/dev/null" || true)
+  if [[ -z $tree_hashes ]]; then
+    printf '  --    %-50s %s\n' "pinned image tree" "not installed; devices/vip/eeprom-fetch puts it there"
+  else
+    for pair in "$EEPROM_IMAGE:$EEPROM_IMAGE_SHA256" "recovery.bin:$EEPROM_RECOVERY_SHA256"; do
+      f=${pair%%:*}; want=${pair#*:}
+      got=$(awk -v f="$f" '$2 ~ "/" f "$" { print $1 }' <<< "$tree_hashes")
+      if [[ $got == "$want" ]]; then printf '  ok    %s\n' "pinned $f"
+      else printf '  FAIL  %-50s %s\n' "pinned $f" "sha256 ${got:-missing} is not eeprom.lock's"; bad=1; fi
+    done
+  fi
+fi
+
 log "state on $DEV_HOST"
 dev "sudo -n /usr/local/sbin/pedal-device status" || bad=1
 printf '  --    %-34s %s\n' "repo tree" "$(tree_commit)"

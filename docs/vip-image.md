@@ -165,6 +165,48 @@ default pedal that plays with no network is healthy.
 - A corrupt `bootsel` partition, a corrupt EEPROM or a dead card. The spare card is the floor.
 - Firmware files at the root of a boot partition, which the slots don't cover (as on piv).
 
+### The bootloader EEPROM
+
+Everything above is card-level; the EEPROM is the one piece of vip they cannot reach, and it holds
+the bootloader that reads `autoboot.txt`, `tryboot_a_b` and the slots. It is recorded rather than
+left to apt, and it is never changed as a side effect (the package's `rpi-eeprom-update.service`,
+which would apply a pending update at every boot, is masked in `devices/vip/rootfs/etc/pedal/`).
+
+- **The image is pinned, not package-managed.** Ubuntu's `rpi-eeprom` (28.14, from the snapshot)
+  ships images *older* than this board's factory EEPROM — 2025-12-08 in `default` and 2026-02-23 in
+  `latest`, against the board's 2026-05-11 — so the packaged tool reports "up to date" and can
+  never see a newer release. `devices/vip/rootfs/usr/local/lib/rpi-eeprom/eeprom.lock` pins one
+  upstream commit, `pieeprom-2026-09-25.bin` and `recovery.bin` by sha256, and the version and
+  config the board is expected to carry; `devices/vip/eeprom-fetch` fetches it there and verifies
+  both ends. The image files are not in git, for the same reason the pedal kernel's artefacts are
+  not ([vip-kernel-image.md](vip-kernel-image.md)).
+- **One tool on the board, `vip-eeprom`** (`/usr/local/sbin/vip-eeprom`): `status`, `verify`,
+  `apply`, `clean`. It points the packaged `rpi-eeprom-update` at the pinned tree with
+  `FIRMWARE_ROOT`, mounts the pedal boot partition before writing (fstab has it `noauto`; unmounted,
+  `-a` writes `recovery.bin` and `pieeprom.upd` into the empty directory on the root filesystem, says
+  "updates pending", and the firmware never sees them), and refuses the two flags that would lose
+  information: `-d` (which discards the EEPROM's configuration for the image's own) and `-f` (which
+  skips the version check).
+- **`devices/vip/check` diffs three things**: the version and timestamp the bootloader reports, the
+  three config keys, and the pinned tree's bytes. It compares against `eeprom.lock`'s state block,
+  which is the board's own history: the factory `66f33f7e` (2026-05-11) as received — upstream keeps
+  that image as `firmware-2712/old/default/pieeprom-2026-05-11.bin` — and the new version in the
+  same change that moves the board.
+- **An EEPROM write is the one act with no card-level fallback.** The firmware this board came with
+  has no A/B EEPROM (upstream added it on 2026-05-13; the 2026-09-25 image has it), so a power cut
+  during the write needs a PC: Raspberry Pi Imager's `Misc utility images → Bootloader → SD Card
+  Boot` card, or `rpiboot` over USB-C. `apply` only *stages*: the next boot's ROM runs
+  `recovery.bin` from the boot partition, writes the EEPROM and resets, so Linux never runs that
+  boot and `bootsel`, the slot markers and the guard counter are untouched. `clean` afterwards
+  removes what the flash leaves behind (`recovery.000`, `pieeprom.upd`, `pieeprom.sig`), which
+  nothing else would: the service that does it on Raspberry Pi OS is the masked one.
+- **The config is upstream's stock default, not bespoke**: `BOOT_UART=1` (the bootloader's own log
+  on the header UART the Pico's link shares, [2026-10-05-header-uart-disabled.md](../bench-results/2026-10-05-header-uart-disabled.md)),
+  `BOOT_ORDER=0xf461` (the SD card first) and `NET_INSTALL_AT_POWER_ON=1`, which spends about a
+  second of cold boot in keyboard and network-install probing the pedal does not need. Changing
+  that last one is `rpi-eeprom-config --apply` — a configuration write, a different act from an
+  image update, and still an EEPROM write.
+
 **Console.** Unlike the Pi 500, the Pi 5 has a 3-pin UART debug header. The Debug Probe plugs
 straight into it, the kernel console goes there (`ttyAMA10`), and `BOOT_UART=1` in the EEPROM
 adds the bootloader's own output. That gives a remote read of a failed boot and, for Phase 1
@@ -269,9 +311,9 @@ confirmation).
   rd.retry=60 rd.timeout=90`) and `panic=10` on every command line.
 - No apt timers, no snapd, no cloud-init, no unattended upgrades: they're not installed, rather
   than masked. `masked-units` for vip gets shorter as a result.
-- The EEPROM isn't on the card. `devices/vip/check` reports its version and config, and a
-  one-off `vip-eeprom` sets `BOOT_UART=1` and the boot order with `rpi-eeprom-config`, recorded
-  in `devices/vip/`.
+- The EEPROM isn't on the card. `vip-eeprom` is the one way to change it, and `devices/vip/check`
+  diffs its version and configuration against `devices/vip/`'s pin — see "The bootloader EEPROM"
+  above for the pin, the procedure and what a failed write costs.
 
 ## Who owns what
 

@@ -1,0 +1,217 @@
+#!/usr/bin/env bash
+# vip-eeprom — the Core host's bootloader EEPROM: what it is, and the one way to change it.
+#
+#     vip-eeprom status            what the board carries and what the pinned tree offers
+#     vip-eeprom verify            the pinned tree's bytes against eeprom.lock
+#     vip-eeprom apply [--reboot]  stage the pinned image into the pedal boot partition (root)
+#     vip-eeprom clean             remove what a completed update left behind (root)
+#
+# The work is done by the package's own tooling (/usr/bin/rpi-eeprom-update): this sets the two
+# things it cannot know here, and refuses the two ways to get them wrong.
+#
+#   * Which tree to read. FIRMWARE_ROOT points at /usr/local/lib/rpi-eeprom/bootloader, whose
+#     images devices/vip/eeprom-fetch put there from a pinned upstream commit. Ubuntu's own
+#     directory is older than this board's factory EEPROM, so the tool reports "up to date" there
+#     and can never see a newer release (bench-results/2026-10-07-eeprom-update.md).
+#   * That the pedal boot partition is mounted. It is `noauto` in fstab: unmounted, `-a` writes
+#     recovery.bin and pieeprom.upd into the empty directory on the root filesystem, says
+#     "updates pending", and the firmware never sees them. Nothing is written until config.txt is
+#     there to prove it is the right filesystem.
+#
+# It never passes -d (that discards the EEPROM's configuration and uses the image's own) or -f
+# (that skips the version check): an update carries the running config forward, and the version
+# comparison is what stops an older image being flashed.
+#
+# After `apply`: reboot. The ROM runs recovery.bin from the boot partition, writes the EEPROM and
+# resets; Linux never runs that boot, so the slot markers and the guard counter are untouched. The
+# running EEPROM (2026-05-11) has no A/B redundancy — that arrived upstream on 2026-05-13 — so a
+# power cut during the write is the one failure this board cannot recover from on its own: keep the
+# Raspberry Pi Imager bootloader-restore card to hand (docs/vip-image.md, "The bootloader EEPROM").
+set -euo pipefail
+
+LOCK=${VIP_EEPROM_LOCK:-/usr/local/lib/rpi-eeprom/eeprom.lock}
+UPDATE=${VIP_EEPROM_UPDATE:-/usr/bin/rpi-eeprom-update}
+MOUNT=${VIP_EEPROM_MOUNT:-/boot/firmware}
+DT=${VIP_EEPROM_DT:-/proc/device-tree/chosen/bootloader}
+
+die() { printf '[x] %s\n' "$*" >&2; exit 1; }
+log() { printf '==> %s\n' "$*" >&2; }
+
+load_lock() {
+  [[ -r $LOCK ]] || die "$LOCK is missing: apply devices/vip first (it ships with eeprom.lock)"
+  # shellcheck disable=SC1090
+  source "$LOCK"
+  TREE="${EEPROM_DIR}-2712/${EEPROM_RELEASE}"
+  [[ -d $TREE ]] || TREE="${EEPROM_DIR}/${EEPROM_RELEASE}"
+}
+
+# What the bootloader reports it is. Read from the device tree rather than vcgencmd so `status`
+# needs no root: the same numbers rpi-eeprom-update prefers (it reads this file too).
+live_version()  { tr -d '\0' < "$DT/version" | cut -c1-8; }
+live_timestamp() { od -An -tu4 --endian=big "$DT/build-timestamp" | tr -d ' '; }
+
+# The live configuration block, without root: /proc/device-tree/aliases/blconfig names the nvmem
+# node the bootloader's config lives in. vcgencmd says the same thing and needs root, so it is only
+# a fallback if the alias cannot be resolved.
+live_config() {
+  local target node path
+  if [[ -r /proc/device-tree/aliases/blconfig ]]; then
+    target=$(tr -d '\0' < /proc/device-tree/aliases/blconfig)
+    for node in /sys/bus/nvmem/devices/*/of_node; do
+      [[ -e $node ]] || continue
+      path=$(readlink -f "$node")
+      if [[ $path == *"${target}" ]]; then cat "${node%/of_node}/nvmem"; return 0; fi
+    done
+  fi
+  vcgencmd bootloader_config 2>/dev/null || return 1
+}
+
+# The newest image the tool would pick, by the tool's own rule: a 2 MiB pieeprom-YYYY-MM-DD.bin,
+# highest name first. Anything else in the directory is ignored by rpi-eeprom-update too.
+newest_image() {
+  { find "$TREE" -maxdepth 1 -type f -size "${EEPROM_IMAGE_SIZE}c" \
+         -name 'pieeprom-[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].bin' 2>/dev/null || true; } \
+    | sort -r | head -n1
+}
+
+# What a flush or a cancelled update would have left in the boot partition, if it is mounted.
+leftovers() {
+  [[ -d $MOUNT ]] || return 0
+  { find "$MOUNT" -maxdepth 1 \( -iname 'pieeprom.*' -o -iname 'recovery.*' \) 2>/dev/null || true; } | sort
+}
+
+image_field() { strings -n 6 "$1" | sed -n "s/^$2//p" | head -n1; }
+
+mounted() { mountpoint -q "$MOUNT"; }
+
+require_mount() {
+  mounted && return 0
+  log "mounting $MOUNT (noauto in fstab)"
+  mount "$MOUNT" || die "cannot mount $MOUNT: refusing to write where the firmware will not look"
+  MOUNTED_HERE=1
+  [[ -r $MOUNT/config.txt ]] || die "$MOUNT has no config.txt: that is not the pedal boot partition"
+}
+
+unmount_if_ours() {
+  [[ ${MOUNTED_HERE:-} == 1 ]] || return 0
+  umount "$MOUNT" && log "unmounted $MOUNT again"
+}
+
+cmd_status() {
+  load_lock
+  [[ -r $DT/version ]] || die "$DT is not there: this is not a Raspberry Pi bootloader host"
+  local ts ver cfg img its
+  ts=$(live_timestamp); ver=$(live_version)
+  printf 'current    %s   built %s UTC   update-time %s\n' \
+    "$ver" "$(date -u -d "@$ts" '+%Y-%m-%d %H:%M:%S')" \
+    "$(od -An -tu4 --endian=big "$DT/update-timestamp" | tr -d ' ')"
+  if cfg=$(live_config); then printf '           %s\n' "$(printf '%s' "$cfg" | grep -v '^$' | paste -sd' ' -)"
+  else printf '           config unreadable (run as root, or vcgencmd)\n'; fi
+  printf 'expected   %s   %s   (eeprom.lock: %s)\n' \
+    "$EEPROM_VERSION" "$EEPROM_DATE" "$EEPROM_RELEASE"
+
+  img=$(newest_image)
+  if [[ -z $img ]]; then
+    printf 'pinned     none: %s has no %s image\n' "$TREE" "$EEPROM_IMAGE"
+  else
+    printf 'pinned     %s\n' "$img"
+    printf '           %s  %s  %s\n' "$(basename "$img")" \
+      "$(image_field "$img" 'VERSION:')" "MFG_VER: $(image_field "$img" 'MFG_VER: ')"
+    its=$(image_field "$img" 'BUILD_TIMESTAMP=')
+    if [[ -z $its ]]; then
+      printf 'verdict    cannot read BUILD_TIMESTAMP from %s\n' "$(basename "$img")"
+    elif [[ $its == "$ts" ]]; then
+      printf 'verdict    up to date: the pinned image is the running one\n'
+    elif (( its > ts )); then
+      printf 'verdict    update available: %s UTC (running %s is older)\n' \
+        "$(date -u -d "@$its" '+%Y-%m-%d %H:%M:%S')" "$ver"
+    else
+      printf 'verdict    the pinned image is older than the board: rpi-eeprom-update would not install it\n'
+    fi
+  fi
+
+  if mounted; then
+    local left
+    left=$(leftovers)
+    if [[ -z $left ]]; then printf 'boot part  mounted; nothing pending\n'
+    else printf 'boot part  mounted; left over: %s\n' "$(paste -sd' ' <<< "$left")"; fi
+  else
+    printf 'boot part  not mounted (nothing pending can be seen; apply mounts it)\n'
+  fi
+}
+
+cmd_verify() {
+  load_lock
+  local bad=0 f want
+  for pair in "$EEPROM_IMAGE:$EEPROM_IMAGE_SHA256:$EEPROM_IMAGE_SIZE" \
+              "recovery.bin:$EEPROM_RECOVERY_SHA256:$EEPROM_RECOVERY_SIZE"; do
+    f=${pair%%:*}; rest=${pair#*:}; want=${rest%%:*}; size=${rest##*:}
+    if [[ ! -f $TREE/$f ]]; then
+      printf '  FAIL  %-28s missing from %s\n' "$f" "$TREE"; bad=1; continue
+    fi
+    local got got_size
+    got=$(sha256sum "$TREE/$f" | cut -d' ' -f1)
+    got_size=$(stat -c %s "$TREE/$f")
+    if [[ $got == "$want" && $got_size == "$size" ]]; then
+      printf '  ok    %-28s %s bytes, sha256 %s\n' "$f" "$size" "${want:0:16}…"
+    else
+      printf '  FAIL  %-28s %s bytes sha256 %s (want %s bytes %s)\n' \
+        "$f" "$got_size" "${got:0:16}…" "$size" "${want:0:16}…"; bad=1
+    fi
+  done
+  (( bad == 0 )) || die "the pinned tree is not what eeprom.lock records: re-run devices/vip/eeprom-fetch"
+  log "$TREE matches eeprom.lock"
+}
+
+cmd_apply() {
+  [[ $(id -u) == 0 ]] || die "must be root: sudo vip-eeprom apply"
+  local reboot=0
+  [[ ${1:-} == --reboot ]] && reboot=1
+  load_lock
+  cmd_verify
+
+  MOUNTED_HERE=0
+  require_mount
+  trap unmount_if_ours EXIT
+
+  local img
+  img=$(newest_image)
+  [[ -n $img ]] || die "no $EEPROM_IMAGE in $TREE"
+
+  log "staging $(basename "$img") with FIRMWARE_ROOT=$EEPROM_DIR"
+  FIRMWARE_ROOT="$EEPROM_DIR" "$UPDATE" -a
+
+  if [[ ! -e $MOUNT/pieeprom.upd ]]; then
+    log "nothing staged: the board is on (or ahead of) the pinned image — see vip-eeprom status"
+    return 0
+  fi
+  log "staged into $MOUNT:"
+  ls -l "$MOUNT"/pieeprom.upd "$MOUNT"/pieeprom.sig "$MOUNT"/recovery.bin | sed 's/^/    /'
+  printf '    staged image: %s, BUILD_TIMESTAMP=%s\n' \
+    "$(image_field "$MOUNT/pieeprom.upd" 'VERSION:')" \
+    "$(image_field "$MOUNT/pieeprom.upd" 'BUILD_TIMESTAMP=')"
+  log "reboot to apply; then vip-eeprom status, then vip-eeprom clean"
+  if (( reboot )); then log "rebooting now"; sync; systemctl reboot; fi
+}
+
+cmd_clean() {
+  [[ $(id -u) == 0 ]] || die "must be root: sudo vip-eeprom clean"
+  load_lock
+  MOUNTED_HERE=0
+  require_mount
+  trap unmount_if_ours EXIT
+  FIRMWARE_ROOT="$EEPROM_DIR" "$UPDATE" -r
+  local left
+  left=$(leftovers)
+  [[ -z $left ]] || die "leftovers remain: $(paste -sd' ' <<< "$left")"
+  log "$MOUNT is clean"
+}
+
+case "${1:-status}" in
+  status)  shift || true; cmd_status "$@" ;;
+  verify)  shift || true; cmd_verify "$@" ;;
+  apply)   shift;        cmd_apply "$@" ;;
+  clean)   shift;        cmd_clean "$@" ;;
+  -h|--help|help) sed -n '2,8p' "$0" | sed 's/^# \{0,1\}//' ;;
+  *) die "unknown command: $1 (status, verify, apply, clean)" ;;
+esac

@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+# devices/vip/eeprom-fetch [--dest DIR] — fetch vip's pinned bootloader images and put them where
+# rpi-eeprom-update reads them.
+#
+#   eeprom-fetch              install on vip, at the tree eeprom.lock names (root there, via ssh)
+#   eeprom-fetch --dest DIR   write the two files into DIR instead: offline use, or a card build
+#
+# The pin is devices/vip/rootfs/usr/local/lib/rpi-eeprom/eeprom.lock — one upstream commit and the
+# sha256 of both files. Nothing is installed until both match. Re-running is safe.
+#
+# Why a fetch at all, rather than Ubuntu's rpi-eeprom package: the package's newest image is older
+# than this board's factory EEPROM, so the packaged tool reports "up to date" and can never see a
+# newer release. See docs/vip-image.md, "The bootloader EEPROM".
+source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+
+lock="$DEV_DIR/rootfs/usr/local/lib/rpi-eeprom/eeprom.lock"
+[[ -r $lock ]] || die "no $lock"
+# shellcheck disable=SC1090
+source "$lock"
+
+dest=""
+while (($#)); do
+  case $1 in
+    --dest)  dest=${2:?--dest needs a directory}; shift 2 ;;
+    -h|--help) sed -n '2,9p' "$0"; exit 0 ;;
+    *) die "unknown argument: $1" ;;
+  esac
+done
+
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+base="https://raw.githubusercontent.com/raspberrypi/rpi-eeprom/$EEPROM_COMMIT/firmware-2712/$EEPROM_RELEASE"
+log "pinned at raspberrypi/rpi-eeprom ${EEPROM_COMMIT:0:12} ($EEPROM_RELEASE)"
+
+for pair in "$EEPROM_IMAGE:$EEPROM_IMAGE_SHA256:$EEPROM_IMAGE_SIZE" \
+            "recovery.bin:$EEPROM_RECOVERY_SHA256:$EEPROM_RECOVERY_SIZE"; do
+  f=${pair%%:*}; rest=${pair#*:}; want=${rest%%:*}; size=${rest##*:}
+  curl -fsSL --retry 3 -o "$tmp/$f" "$base/$f" || die "download failed: $base/$f"
+  got_size=$(stat -f %z "$tmp/$f"); got=$(shasum -a 256 "$tmp/$f" | cut -d' ' -f1)
+  if [[ $got_size != "$size" || $got != "$want" ]]; then
+    die "$f is not what eeprom.lock records: got $got_size bytes, sha256 $got"
+  fi
+  ok "$f, $size bytes, sha256 ${got:0:16}…"
+done
+
+if [[ -n $dest ]]; then
+  install -d "$dest"
+  cp -p "$tmp/$EEPROM_IMAGE" "$tmp/recovery.bin" "$dest/"
+  log "wrote $dest/$EEPROM_IMAGE and $dest/recovery.bin"
+  exit 0
+fi
+
+require_dev
+target="$EEPROM_DIR-2712/$EEPROM_RELEASE"
+log "installing into $DEV_HOST:$target"
+dev "sudo -n install -d -o root -g root -m 755 '$target'"
+COPYFILE_DISABLE=1 tar -C "$tmp" -cf - "$EEPROM_IMAGE" recovery.bin \
+  | dev "sudo -n tar -C '$target' -xf - && sudo -n chown root:root '$target'/* && sudo -n chmod 644 '$target'/*"
+
+remote=$(dev "cd '$target' && sha256sum $EEPROM_IMAGE recovery.bin" 2>/dev/null || true)
+for pair in "$EEPROM_IMAGE:$EEPROM_IMAGE_SHA256" "recovery.bin:$EEPROM_RECOVERY_SHA256"; do
+  f=${pair%%:*}; want=${pair#*:}
+  got=$(awk -v f="$f" '$2 == f { print $1 }' <<< "$remote")
+  [[ $got == "$want" ]] || die "$DEV_HOST:$target/$f reads back as '${got:-missing}', not ${want:0:16}…"
+done
+ok "$DEV_HOST carries the pinned tree; sudo vip-eeprom verify checks it there"
