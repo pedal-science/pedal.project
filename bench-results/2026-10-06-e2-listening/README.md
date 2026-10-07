@@ -43,3 +43,18 @@ The two commands, for the record:
 
 `--ir <cab.wav>` moves every relative null by 1-2 dB and is not used for either: 35 of the 52
 models already carry their own cab, and the question is the models.
+
+## The thud, and the fixed set
+
+The six `-handover` files were made with an **equal-power** fade, and that is what a fade wants only
+when the two signals are uncorrelated. Two submodels of one rig are correlated at 0.97-1.00, and the
+power of `g1*a + g2*b` is `g1^2 + g2^2 + 2*rho*g1*g2` -- so equal power adds 2*rho*g1*g2 at the
+midpoint, +2.6 to +3.0 dB measured on every one of 104 model-directions, in the low end because
+that is where two amp models put their energy. Heard: "a quiet, short thud at each switch from full
+to lite". `../../namchain/bench-results/e2-fade-thump.txt` has the measurement.
+
+`build/e2/audition-fixed/24bit/` is the same six models with `--fade-shape compensated`: both
+weights divided by `sqrt(1 + 2*rho*g1*g2)`, rho clamped to [0, 1], which is constant amplitude where
+the two are alike and equal power where they are not. All 104 rows come out at 0.00 dB excess and
+zero detector findings. The `-full` and `-lite` references are identical in both sets; only the
+`-handover` file differs.

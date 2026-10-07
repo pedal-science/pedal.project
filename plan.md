@@ -963,9 +963,17 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
       sample), and 9 to 40 dB apart (median 21.7 dB below the signal, worst the Ampeg SVT VR 8x10
       Beta52A+DI at 9.2). They are **two separately trained networks**, not one at two widths: the
       worst model shares 56 of the Lite's 1871 weights with its Full, the vendored `A2.nam` 4. Its
-      "small change of sound" is wrong on every model in the library. **The crossfade is not the
-      problem** — 102 of 104 model-directions were clean at all 11 switch points, and the two that
-      were not are 20–40% over the second-difference bar in the DI's decaying tail. So tier 2's
+      "small change of sound" is wrong on every model in the library. **The crossfade does not
+      click** — 102 of 104 model-directions were clean at all 11 switch points, and the two that
+      were not are 20–40% over the second-difference bar in the DI's decaying tail — **but it
+      thumped**: the fade was equal-power, which for correlated signals (Lite and Full are ρ 0.97 to
+      1.00) adds `2ρg₁g₂` at the midpoint, measured at +2.6 to +3.0 dB on every one of the 104 rows
+      and heard as a short thud. No glitch rule can see a level bump: it is continuous, is not a
+      dropout, adds no out-of-band energy and converges. Compensating the weights for the
+      correlation (`sqrt(1+2ρg₁g₂)`, ρ clamped to [0,1]) takes all 104 rows to 0.00 dB and clears
+      the two findings as well — namchain `bench-results/e2-fade-thump.txt`. The engine's
+      `rt::Crossfade` is the same law, so a bypass toggle (where the two sides are the same audio)
+      has this today; it wants its own change and its own transition tests. So tier 2's
       "a Lite takes over at once" plays a different-sounding rig for the catch-up, and the branch
       above applies: it needs a listening test, and the files are made by
       [bench-results/2026-10-06-e2-listening](bench-results/2026-10-06-e2-listening/README.md).
@@ -1216,6 +1224,18 @@ bank has to be tier 1, and it is 40 MB of WAVs in `build/e2/audition/24bit/` mad
 [bench-results/2026-10-06-e2-listening](bench-results/2026-10-06-e2-listening/README.md) — play
 `-full`, then `-lite`, then `-handover`, for the six models listed there. Everything else it needs
 is a decision, not a measurement: the tier table, and the limits the service enforces from it.
+
+**The fade thumped, and that is a fix you have heard the reason for** (2026-10-06, later the same
+day). The handover files the listening test uses had an equal-power fade, which is right for
+uncorrelated signals and +3 dB at the midpoint for correlated ones — and Lite and Full are correlated
+at 0.97–1.00, so every handover added 2.6–3.0 dB of low end for 5 ms. That was the thud. It is
+measured, fixed in the bench (`--fade-shape compensated`, all 104 rows at 0.00 dB, zero findings) and
+re-recorded: `build/e2/audition-fixed/24bit/` is the same six models to A/B against
+`build/e2/audition/24bit/`. The engine's `rt::Crossfade` is the same law, so this is every `nc.xfade`
+of a bypass flip and every whole-chain fade between two similar rigs — **it wants its own change,
+with the transition tests**, and `namchain bench-results/e2-fade-thump.txt` is the measurement to
+work from. What the glitch detector cannot see is the wider lesson: it has four rules for
+discontinuities, dropouts, high frequencies and convergence, and none of them is a level check.
 
 Two loose ends from the same session, neither blocking: the bench's per-candidate memory came out
 larger for a Lite than a Full (fixed to fault the buffers in first, but worth a look at whether
