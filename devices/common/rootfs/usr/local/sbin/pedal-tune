@@ -132,6 +132,17 @@ check() {
       local aff; aff=$(cat "/proc/irq/$irq/effective_affinity_list" 2>/dev/null)
       [[ -n $aff ]] || aff=$(cat "/proc/irq/$irq/smp_affinity_list")
       expect "IRQ $irq affinity" "$aff" "$AUDIO_IRQ_CPU"
+      # D5, and the reason for it: this handler runs SCHED_FIFO 85, above the render thread's 80,
+      # so wherever it lands it preempts, and on a render core that preemption is the render
+      # thread's deadline. The core the tree asks for is therefore checked against ISOLATED_CPUS
+      # as an overlap, not an equality — a cpuset is a range and one core inside it is enough to
+      # do the damage (docs/audio-dma-irq.md). The run above catches drift; this catches a tree
+      # that has been pointed at a render core.
+      if cpus_overlap "$AUDIO_IRQ_CPU" "$ISOLATED_CPUS"; then
+        fail "IRQ $irq affinity vs isolated" "cpu $AUDIO_IRQ_CPU is in ISOLATED_CPUS=$ISOLATED_CPUS; the audio IRQ must stay on a housekeeping core"
+      else
+        okay "IRQ $irq affinity vs isolated" "cpu $AUDIO_IRQ_CPU is outside $ISOLATED_CPUS"
+      fi
     fi
     for tid in $(irq_threads "$irq"); do
       expect "thread $(cat "/proc/$tid/comm") prio" "$(chrt -p "$tid" | awk '/priority/ {print $NF}')" "$AUDIO_IRQ_PRIO"

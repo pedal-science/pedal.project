@@ -128,7 +128,21 @@ The places that describe the reserved set must all agree — the repo already wa
 
 On **piv** the audio IRQ is the SSL 2+'s xHCI controller, currently core 2 at prio 85. If core 2
 becomes a render core, the IRQ moves to a housekeeping core (or a dedicated non-DSP core). That is
-a benchmark arm, not a default. vip's WM8960 DMA IRQ decision is a later, separate step.
+a benchmark arm, not a default.
+
+**vip's WM8960 DMA IRQ — decided: core 0, a housekeeping core (P7, 2026-10-07).** This is the
+deferred step, and the arm this section named is what it runs. The interrupt is the highest-priority
+realtime thread on the box (SCHED_FIFO 85, against the render thread's 80), so it preempts whatever
+it lands on, and an isolated render core is exactly what must not be preempted. Core 0 is where the
+kernel's own `irqaffinity=0-1` already allows it, and it is a housekeeping core, so its ~5% of a
+core stays out of render headroom; the five places that describe the reserved set (above) agree.
+What it costs is the other side of the same coin — the interrupt's wake-to-completion tail now
+shares a core with WiFi, the SD card and every service — and that is what **T6** measures: both
+placements, the IRQ thread's tail, the render tail, and the footswitch-to-sound path with WiFi and
+the SD card busy. *Falsifier:* if the IRQ's latency degrades on the busy housekeeping core, this
+decision is wrong and the IRQ needs a core of its own, which changes how many cores the rules can
+spend on rendering. See `pedal.project/docs/audio-dma-irq.md`, "Which core it lands on (P7)", and
+D5 of `managing-processing-power-and-optimising-for-fast-switching.md`.
 
 ### Memory (the binding constraint)
 
@@ -447,7 +461,9 @@ Evidence goes in `namchain/bench-results/`, never `/tmp`.
   the answer is admission control / Lite, stated explicitly rather than claimed as a win.
 - **Assumption:** isolated cores remain contiguous, so `cpu` + `render_threads` suffices.
 - **Open (Phase 0):** the exact integration surface of the IR optimisation.
-- **Open (measured):** audio-IRQ placement once core 2 renders.
+- **Decided (P7):** vip's audio-IRQ placement — core 0, a housekeeping core, with T6 as the
+  measurement that confirms or reverses it; see "Interrupt placement" above. piv's arm stays as
+  measured: core 2 renders and the SSL 2+'s IRQ was left where it was.
 - **Open (Phase A data):** whether axis 2 is needed at all.
 - **Open (unverified, gated):** DSU-110 L3 way-locking on BCM2712.
 - **Dependency order:** core (`all-optimisations`) → engine (namchain) → device config

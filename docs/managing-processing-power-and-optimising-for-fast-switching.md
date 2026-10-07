@@ -87,11 +87,17 @@ rig per core wastes the resource the whole scheme exists to protect: a core hold
 the current bank plus anything MIDI can jump to), rather than only the two immediate neighbours.
 *Ruled out:* one warm rig per core.
 
-**D5 — The audio IRQ lives on the housekeeping core** (2026-10-07, to be checked — see P7). It is
-the highest-priority realtime thread on the box (SCHED_FIFO 85, above the render thread's 80) and
-must always preempt whatever it lands on, so it must not land on a render core. *Evidence:*
-`docs/audio-dma-irq.md`; `devices/vip/rootfs/etc/pedal/tune.conf` currently pins its *delivery* to
-core 2, which is a render core under these rules. **Open until P7 is run.**
+**D5 — The audio IRQ lives on the housekeeping core** (2026-10-07, decided in P7 — the pins are in
+the tree; T6 is the measurement that confirms or reverses it). It is the highest-priority realtime
+thread on the box (SCHED_FIFO 85, above the render thread's 80) and must always preempt whatever it
+lands on, so it must not land on a render core. Its *delivery* therefore goes to core 0 — a
+housekeeping core that the kernel's own `irqaffinity=0-1` already allows — not to core 2, which is
+a render core under these rules. *Evidence:* `docs/audio-dma-irq.md`; `AUDIO_IRQ_CPU="0"` and
+`AUDIO_IRQ_PRIO="85"` in `devices/vip/rootfs/etc/pedal/tune.conf`, with `pedal-tune check` failing
+if the core it finds is inside `ISOLATED_CPUS`; `pedal-interface.json` (`audio_irq_cpu`), which is
+what `pedal-diag` reads to report a wrong placement. *Ruled out:* leaving the pin at core 2.
+*Open question the measurement answers:* whether the interrupt's tail survives sharing a core with
+WiFi and the SD card — if it does not, D5 is wrong and the IRQ needs a core of its own (T6).
 
 **D6 — Trimming is Full → Lite, applied only as far as it needs to be, and it is visible**
 (2026-10-07). Lite and Full are two separately trained networks, measured 9 to 40 dB apart (E2), so a
@@ -261,10 +267,15 @@ latency at the jack.
 **P7 — move the audio IRQ to the housekeeping core (rt, pp).** `AUDIO_IRQ_CPU=0` in
 `devices/vip/rootfs/etc/pedal/tune.conf`, with the other four places that describe the reserved set
 updated to agree (cmdline, slice drop-ins, `pedal-rt.slice`, `namchaind.service`'s `CPUAffinity`),
-and `pedal-tune check` extended to assert it. Then measure, because this is the one change that could
-make things *worse*: the IRQ's own wake-to-completion tail, the render tail, and the footswitch path
-while WiFi and the SD card are busy (T6). **This is the arm `docs/multi-core.md` deferred for vip.**
-*Verification:* the measurements, plus a decision recorded either way.
+and `pedal-tune check` extended to assert it. Those four already agreed on 0-1 for housekeeping and
+2-3 for the render set, so the only value that moved is the pin itself: `AUDIO_IRQ_CPU` and its
+twin in `pedal-interface.json`, which is what `pedal-diag` reads to notice a wrong placement.
+`pedal-tune check` now fails if the IRQ's core is inside `ISOLATED_CPUS` — the one assertion that
+makes D5 checkable. **Done in the tree 2026-10-07**; the measurement is what remains, and it is the
+one that could make things *worse*: the IRQ's own wake-to-completion tail, the render tail, and the
+footswitch path while WiFi and the SD card are busy (T6). **This is the arm `docs/multi-core.md`
+deferred for vip**, and that section now carries the decision. *Verification:* the measurements,
+plus a decision recorded either way.
 
 **P8 — catch-up, end to end (nc).** Lite-first catch-up on an inactive core, staged by depth, with
 the measured 170 ms per model; the path must be exercised by a real switch, not only by the bench.
@@ -312,6 +323,8 @@ worker stack and buffer, no new-page churn beside the engine).
 thread's tail, the render tail, and the footswitch-to-sound latency with WiFi and SD busy.
 *Falsifier:* if the IRQ's latency degrades on the busy housekeeping core, D5 is wrong and the IRQ
 needs a core of its own — which changes how many cores the rules can spend on rendering.
+*Result:* <!-- parent: P7's change is in the tree; fill this in with the result in
+`pedal.project/bench-results/` and say what D5 becomes. -->
 
 **T7 — rotation and refill.** Switch repeatedly so that every switch also loads and warms a new
 neighbour: the warm set slides while the player plays. *Measured:* the active rig's p99 during

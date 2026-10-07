@@ -309,7 +309,8 @@ second.
    `docs/transitions.md`, "What is next", item 1).
 - "In parallel" here means inside one audio block, on one core: the two plans run one after the
   other within 1.33 ms. Rendering the incoming plan on a second core would make it truly parallel;
-  vip's core 2 is isolated beside the render thread's core 3. It costs a hand-over between cores
+  vip's core 2 is isolated beside the render thread's core 3, and P7 moved the codec's DMA
+  interrupt off it to core 0, so core 2 is free for that. It costs a hand-over between cores
   every block, and this soak doesn't need it.
 
 **C4, bypass as a ramp.** It works, and namchain is closer to it than this doc said.

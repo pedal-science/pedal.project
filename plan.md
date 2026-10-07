@@ -1878,7 +1878,8 @@ the bootloader's first byte on a plug pull, and the engine's `published` agrees 
    All three: 0 xruns, overruns, guard trips. The sync costs nothing measurable; the tail is the edits'
    (rebuilds and ramps), not WiFi's.
 3. **The same three soaks on vip, with the WM8960** (2026-10-01; namchain d4fb8e5, q64, vip's image
-   with the tuning as built: cores 2-3 isolated, the codec's DMA interrupt on core 2, 2.4 GHz).
+   with the tuning as built: cores 2-3 isolated, the codec's DMA interrupt on core 2, 2.4 GHz —
+   that pin is core 0 since P7; `docs/audio-dma-irq.md`, "Which core it lands on (P7)").
    `soak-monitor.sh` reads the thermal zone and the core clocks there (vip has no `vcgencmd`).
    | vip, Crunch Lead, q64, d4fb8e5 | load p50 / p99 / p99.9 | worst block | blocks ≥ 30% | gate |
    |---|---|---|---|---|

@@ -372,6 +372,12 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
    `devices/common` (both Pi hosts). `pedal-device apply --root <dir>` applies offline, with the
    root's own systemctl; `devices/vip/test-offline-apply` builds a root from the package list and
    checks the result. The step's plan said `--offline`; it's `--root`, since it needs the root.
+
+   **Changed, P7.** That pin is now core 0, a housekeeping core: the interrupt runs SCHED_FIFO 85,
+   above the render thread's 80, so it must not land on an isolated core. Core 2 was the standing
+   design when this step was written, not a measurement; see `docs/audio-dma-irq.md`, "Which core
+   it lands on (P7)", and D5 of
+   `docs/managing-processing-power-and-optimising-for-fast-switching.md`.
 4. **The build:** the container, both roots, namchain, the image, the manifest. Done when
    `make-card --image-only` produces an image from pinned inputs, and a second run with the same
    pins produces the same package list and file tree.

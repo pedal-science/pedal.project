@@ -245,7 +245,7 @@
     "cpu": {
       "isolated": "2-3",
       "render_cpu": "3",
-      "audio_irq_cpu": "2",
+      "audio_irq_cpu": "0",
       "audio_irq_match": "dw_axi_dmac_platform",
       "audio_irq_prio": 85,
       "housekeeping": "0-1",

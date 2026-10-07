@@ -329,12 +329,20 @@ class HeatAndPressure(unittest.TestCase):
         self.assertEqual(f["severity"], "warn")
 
     def test_an_audio_irq_on_the_wrong_core_is_a_warning(self):
+        """D5: the IRQ belongs on a housekeeping core, and the report must notice when it is not.
+        The mutation has to be derived, not remembered: `affinity_mask` is hex, and the core the
+        design gives the IRQ moved from 2 to 0 in P7, so a hardcoded "wrong" value goes stale the
+        moment the design does."""
         s = sample()
-        s["audio_irq"]["affinity_mask"] = "1"      # cpu 0, and the design says cpu 2
+        interface, _ = pd.load_interface()
+        want = interface["host"]["cpu"]["audio_irq_cpu"]
+        wrong = next(c for c in range(4) if str(c) != want)
+        s["audio_irq"]["affinity_mask"] = "%x" % (1 << wrong)   # "%x" % 1 is cpu 0
         f = finding(report_for(s).findings, "host.irq_affinity")
         self.assertIsNotNone(f)
         self.assertEqual(f["severity"], "warn")
-        self.assertEqual(f["severity"], "warn")
+        self.assertIn("cores %s" % wrong, f["evidence"])
+        self.assertIn("design says core %s" % want, f["evidence"])
 
     def test_the_irq_mask_is_hex_not_binary(self):
         """`4` means cpu 2. Reading it as a binary string is the trap this covers."""
