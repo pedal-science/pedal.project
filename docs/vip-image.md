@@ -189,9 +189,13 @@ which would apply a pending update at every boot, is masked in `devices/vip/root
   skips the version check).
 - **`devices/vip/check` diffs three things**: the version and timestamp the bootloader reports, the
   three config keys, and the pinned tree's bytes. It compares against `eeprom.lock`'s state block,
-  which is the board's own history: the factory `66f33f7e` (2026-05-11) as received — upstream keeps
-  that image as `firmware-2712/old/default/pieeprom-2026-05-11.bin` — and the new version in the
-  same change that moves the board.
+  which carries the board's own history: it left the factory on `66f33f7e` (2026-05-11) — upstream
+  keeps that image as `firmware-2712/old/default/pieeprom-2026-05-11.bin` — and went to `1accd665`
+  (2026-09-25) on 2026-10-07, the configuration carried across unchanged
+  ([2026-10-07-eeprom-update.md](../bench-results/2026-10-07-eeprom-update.md)). The `tryboot`
+  one-shot was re-verified under the new firmware the same day, since `autoboot.txt`,
+  `tryboot_a_b`, `os_prefix` and `include` are all firmware behaviour and were last proven on the
+  factory image.
 - **An EEPROM write is the one act with no card-level fallback.** The firmware this board came with
   has no A/B EEPROM (upstream added it on 2026-05-13; the 2026-09-25 image has it), so a power cut
   during the write needs a PC: Raspberry Pi Imager's `Misc utility images → Bootloader → SD Card

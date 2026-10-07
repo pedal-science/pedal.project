@@ -28,12 +28,12 @@ EEPROM_RECOVERY_SIZE=104314
 # tries the SD card first, and NET_INSTALL_AT_POWER_ON=1 spends about a second of cold boot in
 # keyboard and network-install probing (plan.md, "Record the EEPROM config as well"). These are
 # facts about the board that only an EEPROM write changes: edit them in the same change that moves
-# the board. Until that update is applied this is the factory image, the same one the rollback
-# reference above names.
-EEPROM_VERSION=66f33f7e
-EEPROM_TIMESTAMP=1778498402
-EEPROM_DATE="2026-05-11 11:20:02"
-EEPROM_MFG_VER=1
+# the board (bench-results/2026-10-07-eeprom-update.md). The factory image above was replaced on
+# 2026-10-07; the rollback reference is the one line of history that stays.
+EEPROM_VERSION=1accd665
+EEPROM_TIMESTAMP=1790351949
+EEPROM_DATE="2026-09-25 15:59:09"
+EEPROM_MFG_VER=2
 EEPROM_CONFIG_BOOT_UART=1
 EEPROM_CONFIG_BOOT_ORDER=0xf461
 EEPROM_CONFIG_NET_INSTALL_AT_POWER_ON=1

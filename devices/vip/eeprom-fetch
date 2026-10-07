@@ -53,7 +53,7 @@ require_dev
 target="$EEPROM_DIR-2712/$EEPROM_RELEASE"
 log "installing into $DEV_HOST:$target"
 dev "sudo -n install -d -o root -g root -m 755 '$target'"
-COPYFILE_DISABLE=1 tar -C "$tmp" -cf - "$EEPROM_IMAGE" recovery.bin \
+COPYFILE_DISABLE=1 tar -C "$tmp" --no-xattrs --no-mac-metadata -cf - "$EEPROM_IMAGE" recovery.bin \
   | dev "sudo -n tar -C '$target' -xf - && sudo -n chown root:root '$target'/* && sudo -n chmod 644 '$target'/*"
 
 remote=$(dev "cd '$target' && sha256sum $EEPROM_IMAGE recovery.bin" 2>/dev/null || true)
