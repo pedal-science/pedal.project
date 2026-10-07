@@ -347,6 +347,13 @@ from. If it does, the table needs a temperature caveat.
 ## Open
 
 * **P7 (the IRQ's core)** is the one decision here that a measurement could reverse.
+* **What to keep warm is a guess, and knowingly so.** D4 fills the warm set from what the player can
+  reach in one action — the footswitch neighbours, the bank, anything MIDI can map to. Nothing here
+  can know what a *pointer* will pick: ljoss puts several rigs on screen and a click is as likely as a
+  footswitch press. Making the warm set follow the player instead of guessing is a deliberate piece of
+  future work, **after the pedal is gig-ready and not a dependency of it** — the `predict` node in
+  [diagrams/plan-dependency-graph.html](diagrams/plan-dependency-graph.html) and the "Tracks off the
+  critical path" entry in `plan.md`. It would change which rigs are warm, not how warmth works.
 * **The bank's size.** These rules cover the current bank and anything MIDI can jump to; the 16 × 16
   case (E2) is 240 instances and fits no scheme in this document — that is a separate decision about
   what the pedal promises.

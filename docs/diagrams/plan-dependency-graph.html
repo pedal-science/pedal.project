@@ -23,7 +23,7 @@ h1{margin:0 0 6px;font-size:28px}
 svg text{font-family:system-ui,-apple-system,sans-serif}
 </style></head><body>
 <header><h1>Pedal plan — dependency graph</h1>
-<p style="margin:0 0 10px;color:var(--muted)">Updated 2026-10-06 from <code>plan.md</code> and the docs it names.</p>
+<p style="margin:0 0 10px;color:var(--muted)">Updated 2026-10-07 from <code>plan.md</code> and the docs it names.</p>
 <div class="legend">
 <span><i class="sw" style="background:var(--doneFill);border-color:var(--done)"></i>Done</span>
 <span><i class="sw" style="background:var(--nextFill);border-color:var(--next)"></i>Next up</span>
@@ -93,6 +93,7 @@ const N={
  buy:[10,12,'todo','Buy: USB-C extension,','FR4 plate, standoffs, PP3 snap'],
  p4:[12,7,'todo','Phase 4 Enclosure,','power and hardening'],
  goal:[13,7,'mile','THE PEDAL','gig-ready'],
+ predict:[14,7,'todo','Rig switch prediction',"after gig-ready: what's warm"],
 };
 const E=[['docs','scripts'],['park','scripts'],['neon','scripts'],['agent','scripts'],
 ['scripts','deploy'],['devtib','deploy'],['byname','deploy'],['tibdown','rerun'],['tibdown','vip'],['rerun','deploy'],['vip','deploy'],
@@ -103,8 +104,11 @@ const E=[['docs','scripts'],['park','scripts'],['neon','scripts'],['agent','scri
 ['parts','boards'],['resume','service'],['service','proto'],['service','pedald1'],['pedald1','models'],['dtree','tibuart'],['boards','fw'],['proto','fw'],['tibuart','fw'],['tibuart','plays'],
 ['csoak','plays'],['plays','p3'],['boards','picopwr'],['picopwr','relay'],['fw','relay'],['fw','display'],['measure','models'],['e1','e2'],['e2','models'],['models','fw'],['service','models'],['relay','p3'],['models','p3'],['target','p3'],
 ['encl','p4'],['power','buy'],['buy','p4'],['target','p4'],['p2','p4'],['p3','p4'],['thermal','p4'],
-['power','singlecable'],['power','battery'],['singlecable','p4'],['battery','p4'],['p4','goal']];
-const cols=14,rows=14,SW=PX*2+(cols-1)*CW+W,SH=PY*2+(rows-1)*RH+H+30;
+['power','singlecable'],['power','battery'],['singlecable','p4'],['battery','p4'],['p4','goal'],
+// After the pedal is gig-ready, and not a dependency of it: predicting which rig the player will
+// ask for next, so the warm set can be chosen rather than guessed at.
+['goal','predict']];
+const cols=15,rows=14,SW=PX*2+(cols-1)*CW+W,SH=PY*2+(rows-1)*RH+H+30;
 const g=document.getElementById('g');g.setAttribute('width',SW);g.setAttribute('height',SH);g.setAttribute('viewBox',`0 0 ${SW} ${SH}`);
 const pos=k=>{const[c,r]=N[k];return{x:PX+c*CW,y:PY+30+r*RH}};
 let s=`<defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--line)"/></marker></defs>`;

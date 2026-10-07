@@ -1149,6 +1149,17 @@ cannot be tested from a shell, and the design turns on what the spikes find):
 ## Tracks off the critical path
 
 - namchain M2: admission control. (M3, warm start, is on the critical path now: D10 and 3.8.)
+- **Rig switch prediction** (2026-10-07). Which rigs are kept warm is chosen today from what the
+  player can reach in one action: the footswitch neighbours, the current bank, anything MIDI can map
+  to (D10; [docs/managing-processing-power-and-optimising-for-fast-switching.md](docs/managing-processing-power-and-optimising-for-fast-switching.md) D4). That is a *guess* about what
+  comes next, and for a pointer it is barely a guess at all: ljoss puts several rigs on screen at
+  once and a click or tap is exactly as likely as a footswitch press. Getting cleverer — what the
+  list is showing, where the pointer or the eye is, what was played last, the set list — would let
+  the warm set follow the player instead of guessing. **Explicitly after THE PEDAL is gig-ready, and
+  not a dependency of it**: the `predict` node in
+  [docs/diagrams/plan-dependency-graph.html](docs/diagrams/plan-dependency-graph.html), which the goal
+  gate points to. It would change *which* rigs are warm, not how warmth works — the cost model, the
+  packing and the catch-up path are the same either way.
 - DSP when you want it: noise gate, tuner, reverb, compressor, modulation.
 - ljoss on iOS: it compiles, but the touch path has never been run.
 
@@ -1167,7 +1178,7 @@ exactly this: think about them now, fix them after the higher-priority work.
 | Only program and control changes get mapped at first | Enough to change rigs | A mapping table in the pedal service: PC → rig, CC → parameter (streamed only when `engine.schema` marks it rampable), bank select, notes |
 | Mono engine: pan and stereo effects are refused. Two chains give dual mono | namchain decision: declare and refuse | namchain's stereo work, when a stereo effect is actually wanted. The outputs are already two channels |
 | Two power inputs: 5 V USB-C for vip and a separate 9 V for the analogue side (Cioks), so the pedal depends on a multi-outlet PSU and has two panel cut-outs | Decided 2026-10-01 and measured on the bench; the single-cable route needs an isolated converter that must be measured before it is trusted | Collapse to one USB-C input: an isolated DC-DC (5 V → 9 V) + LDO off vip's 5 V header for the analogue rail. The two-battery alternative is rejected — see Phase 4 Power |
-| The whole rig renders on one core (core 3), and A2-Full alone takes ~58% of it | namchain renders single-threaded. Parallel rendering is its M4, off by default | Two chains on two isolated cores: isolate core 2 too, and admit namchain's parallel mode only once it passes soak and glitch tests. A2-Lite, or slimmed models, where a rig is too big |
+| The whole rig renders on one core (core 3), and A2-Full alone takes ~58% of it | **Deliberate since 2026-10-07, not just where we are**: a rig is atomic and the other real-time core exists to keep rigs warm, because switching latency is what the pedal is for. Spending a second core on one rig would cost the warmth that makes a switch instant (D1–D4, [docs/managing-processing-power-and-optimising-for-fast-switching.md](docs/managing-processing-power-and-optimising-for-fast-switching.md)) | A rig too big for one core is trimmed to Lite or refused — the cost model's job (D2, D3, D6). namchain's parallel rendering (M4) stays in the engine, off and unused by the policy; the heaviest rig measured is a single chain it could not help anyway |
 | No resampler for models: a NAM model must already be at 48 kHz | IRs no longer need one: `nc.cab.ir` resamples 44.1 and 96 kHz (Phase 1.2) | Resample at load in namchain, or convert on upload in the pedal service. Until then its upload API refuses a model that declares another rate (`docs/pedal-service.md`) |
 | One instrument input | D5 | A mic stage on RINPUT1, and a decision on phantom power (a DC-DC converter beside the ADC) |
 | WM8960 replaces HDMI audio on the one I2S controller | Nothing uses HDMI audio | None needed. A second codec would mean TDM or USB |
