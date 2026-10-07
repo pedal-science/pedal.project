@@ -59,6 +59,13 @@ schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-hando
   host's configuration as code. Run `backup` before changing anything. `pedal-device apply <stage> --root
   <dir>` applies the same tree to a root that isn't running (vip's image build);
   `devices/vip/test-offline-apply` checks that in the build container.
+- `devices/vip/eeprom-fetch` and, on the host, `sudo vip-eeprom status|verify|apply|clean`: the
+  bootloader EEPROM, which the card's fallbacks cannot reach. Ubuntu's `rpi-eeprom` package ships
+  images older than the board, so the image is pinned by commit and sha256 in
+  `devices/vip/rootfs/usr/local/lib/rpi-eeprom/eeprom.lock`; `eeprom-fetch` installs that tree,
+  `vip-eeprom` stages an update from it (never `-d`, never `-f`), and `check` diffs the version,
+  the three config keys and the pinned bytes. An EEPROM write is the one act with no card-level
+  fallback: docs/vip-image.md, "The bootloader EEPROM".
 - `devices/common/test-pedald`: the pedal service's tests (config, the engine client, the Pico link
   over a pty, the mapping, resume, the HTTP server) plus `test_diag.py` for the diagnostics tool's
   report logic over captured fixtures — 156 of them, and they run on the Mac; the Core host could
