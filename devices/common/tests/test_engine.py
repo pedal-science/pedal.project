@@ -193,8 +193,68 @@ class EngineClientTest(unittest.TestCase):
         self.assertEqual(engine.requests[-1][1]["rig"], "nope.json")
         self.assertEqual(engine.connections, 1)     # a refusal is an answer, not a failure
 
-    # ------------------------------------------------------------------ arrival shapes
+    # ------------------------------------------------------------------ rig.cost
 
+    def test_rig_cost_asks_for_the_rig_and_returns_the_engines_verdict(self):
+        def cost(conn, request, connection, index):
+            conn.sendall(frame({"ok": True, "id": request["id"], "rig": "/rigs/Big Lead.json",
+                                "cost": {"cost": 1.02, "full_cost": 1.02, "headroom": 0.8,
+                                         "over": True, "verdict": "over", "trimmed": True,
+                                         "table": "/etc/namchain/cost.json", "table_ok": True,
+                                         "nodes": [{"node": "amp", "cost": 0.6, "row": "NAM.A2.full"}]},
+                                "slimmed_models": [], "missing_assets": []}))
+
+        engine = self.start_engine(cost)
+        client = self.start_client(engine)
+
+        reply = client.rig_cost("Big Lead.json")
+
+        request = engine.requests[-1][1]
+        self.assertEqual(request["method"], "rig.cost")
+        self.assertEqual(request["rig"], "Big Lead.json")   # as rig.load takes it, name and all
+        self.assertTrue(reply["ok"])
+        self.assertEqual(reply["cost"]["verdict"], "over")
+        self.assertEqual(reply["cost"]["cost"], 1.02)
+        self.assertEqual(len(reply["cost"]["nodes"]), 1)    # the engine's detail is passed through
+        self.assertEqual(engine.connections, 1)
+
+    def test_rig_cost_turns_a_refusal_into_an_engine_error(self):
+        # The codes this route can answer with are the engine's: rig_not_found, bad_request,
+        # asset_missing and compile_failed (namchain docs/daemon.md, "rig.cost"), and the
+        # service must not read any of them as a cost.
+        def refuse(conn, request, connection, index):
+            conn.sendall(frame({"ok": False, "id": request["id"],
+                                "error": {"code": "asset_missing",
+                                          "message": "no model 'amp.nam'"}}))
+
+        engine = self.start_engine(refuse)
+        client = self.start_client(engine)
+
+        with self.assertRaises(EngineError) as caught:
+            client.rig_cost("Big Lead.json")
+
+        self.assertEqual(caught.exception.code, "asset_missing")
+        self.assertEqual(caught.exception.message, "no model 'amp.nam'")
+        self.assertEqual(engine.connections, 1)     # a refusal is an answer, not a failure
+
+    def test_rig_cost_reports_what_the_engine_could_not_find(self):
+        # A missing asset is not a refusal: `ok: true` with `missing_assets` is how the engine
+        # says it costed the rig against what it could resolve, and the caller decides.
+        def missing(conn, request, connection, index):
+            conn.sendall(frame({"ok": True, "id": request["id"],
+                                "cost": {"cost": 0.4, "headroom": 0.8, "over": False,
+                                         "verdict": "fits", "trimmed": False},
+                                "slimmed_models": [],
+                                "missing_assets": [{"node": "amp", "reference": "amp.nam"}]}))
+
+        engine = self.start_engine(missing)
+        client = self.start_client(engine)
+
+        reply = client.rig_cost("Big Lead.json")
+
+        self.assertEqual(reply["missing_assets"], [{"node": "amp", "reference": "amp.nam"}])
+
+    # ------------------------------------------------------------------ arrival shapes
     def test_a_reply_in_two_pieces_is_reassembled(self):
         def split(conn, request, connection, index):
             data = frame({"ok": True, "id": request["id"], "method": request["method"]})

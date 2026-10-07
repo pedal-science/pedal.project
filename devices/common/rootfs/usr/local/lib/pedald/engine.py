@@ -121,6 +121,19 @@ class EngineClient:
         """Load a rig by name, resolved under the daemon's `rigs_root`."""
         return self.call("rig.load", rig=rig)
 
+    def rig_cost(self, rig):
+        """What a rig would cost on this device, without playing or compiling it.
+
+        The engine costs the document exactly as a publish would — the same table, the same
+        headroom and the same Full→Lite trimming — on a copy it throws away, so a caller
+        learns the verdict for a rig nobody has loaded. The reply is
+        `{"cost": {...}, "slimmed_models": [...], "missing_assets": [...]}`, and the cost
+        object's own words are the engine's (`fits`, `trimmed` or `over`); nothing here
+        interprets them. This is the service's only cost model (D9): pedald never reads
+        cost.json and never sums a cost itself.
+        """
+        return self.call("rig.cost", rig=rig)
+
     def assets(self, refresh=False):
         """The model and impulse-response library; `refresh` rescans the roots first."""
         return self.call("engine.assets", refresh=bool(refresh))

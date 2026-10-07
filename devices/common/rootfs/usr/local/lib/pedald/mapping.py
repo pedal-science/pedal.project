@@ -13,6 +13,14 @@ by name, eight to a bank (R15), so the service works with nothing configured.
 
 Names, not indexes: a CC or PC entry names a rig, because indexes are positions in a bank and
 a reordering must not silently repoint a MIDI pedal.
+
+**Unusable rigs are skipped.** The engine costs every rig and says whether it can play one
+(`rig.cost`, D9); the daemon keeps those verdicts in `verdicts` and hands them here. A press
+then lands on the next rig that can play rather than on the one next in the file — the rig the
+engine would refuse is not a place to be, so `next` walks past it and a bank with none left
+does nothing at all. A rig with **no verdict** is usable: it has not been costed (yet), and the
+engine still refuses a publish it cannot play, so a rig nobody has asked about is not this
+module's to refuse. A pressed rig is still a press: nothing here reaches the engine.
 """
 import json
 import os
@@ -36,6 +44,10 @@ class Mapping:
         self.rig = self._start_rig(bank)
         self.hint = self.rig
         self.bypass = False
+        # The engine's verdicts, rig name -> {"verdict", "cost", "headroom", "trimmed", "over"},
+        # or None for a rig it has not answered for. The daemon fills this in (daemon.RigCost);
+        # empty means nothing is known, so everything is usable.
+        self.verdicts = {}
         self.map = dict(midi_map or {})
         self.map.setdefault("cc", {})
         for number, action in DEFAULT_CC.items():
@@ -101,6 +113,35 @@ class Mapping:
     def position_state(self):
         return {"bank": self.bank, "rig": self.rig, "banks": self.banks}
 
+    # ------------------------------------------------------------------ what the engine says
+    def is_usable(self, name):
+        """Whether a press may land on this rig. No verdict yet is usable (see the module)."""
+        verdict = self.verdicts.get(name)
+        return not (isinstance(verdict, dict) and verdict.get("verdict") == "over")
+
+    def first_usable(self, bank=None):
+        """The index of the bank's first rig the engine will play, or None if there is none."""
+        for index, rig in enumerate(self.current_bank() if bank is None else bank):
+            if self.is_usable(rig):
+                return index
+        return None
+
+    def _refused(self, name, index=None):
+        """A line for a rig the engine will not play, and always False so it reads as a guard.
+
+        The same message everywhere, because it is the same fact: an `over` verdict is the
+        engine's, not this module's, and the player is owed the reason as well as the silence.
+        """
+        verdict = self.verdicts.get(name)
+        where = "" if index is None else f" (bank position {index})"
+        if isinstance(verdict, dict):
+            why = f"the engine says {verdict.get('verdict')} (cost {verdict.get('cost')} " \
+                  f"against a headroom of {verdict.get('headroom')})"
+        else:
+            why = "the engine has no verdict for it"
+        self.log(f"rig {name!r}{where} is unusable: {why}; skipped")
+        return False
+
     # ------------------------------------------------------------------ events
     def action(self, kind, a=0, b=0):
         """What an event means, as `{"action": ...}` for the daemon to carry out, or None."""
@@ -125,23 +166,38 @@ class Mapping:
         return None
 
     def _step(self, delta):
+        """The next rig that can play, in this bank and wrapping; None if none of them can.
+
+        The walk is the whole point of P5's skip: `next` from a usable rig lands on the next
+        usable one, past any the engine says are over, and a press that finds nothing leaves
+        the position — and the player's rig — exactly where they were.
+        """
         bank = self.current_bank()
         if not bank:
             return None
         start = self.rig if self.rig >= 0 else self.hint
         if start < 0:
-            start = 0 if delta > 0 else len(bank) - 1
-            index = start
-        else:
-            index = (start + delta) % len(bank)
-        self.rig = index
-        return {"action": "load", "rig": bank[index]}
+            # No position at all: the first press starts at the bank's first usable rig, which
+            # is this same walk from before the beginning (or the end, going backwards).
+            start = -1 if delta > 0 else 0
+        for offset in range(1, len(bank) + 1):
+            index = (start + delta * offset) % len(bank)
+            if not self.is_usable(bank[index]):
+                self._refused(bank[index], index)
+                continue
+            self.rig = index
+            return {"action": "load", "rig": bank[index]}
+        self.log(f"every rig in bank {self.bank} is unusable; the press does nothing")
+        return None
 
     def _select(self, index):
         bank = self.current_bank()
         if not bank:
             return None
         if 0 <= index < len(bank):
+            if not self.is_usable(bank[index]):
+                self._refused(bank[index], index)
+                return None
             self.rig = index
             return {"action": "load", "rig": bank[index]}
         self.log(f"rig_select {index}: the bank has {len(bank)} rigs")
@@ -158,8 +214,16 @@ class Mapping:
         self.bank = target
         if not self.current_bank():
             return None
-        self.rig = 0
-        return {"action": "load", "rig": self.current_bank()[0]}
+        index = self.first_usable()
+        if index is None:
+            # The window moved so the panel can show the bank, but nothing in it can play: no
+            # load, and no position either — the index belongs to the bank it was taken in, so
+            # keeping it would say the new window is at the old window's rig.
+            self.rig = -1
+            self.log(f"every rig in bank {target} is unusable; the window moved and nothing loaded")
+            return None
+        self.rig = index
+        return {"action": "load", "rig": self.current_bank()[index]}
 
     def _resolve(self, spec):
         """A trigger's action: a rig by name, a bank, another kind, or nothing."""
@@ -180,17 +244,21 @@ class Mapping:
         return self._by_name(text)
 
     def _by_name(self, name):
-        if name in self.rigs:
-            index = self.index_of(name)
-            if index < 0:
-                # A rig in no bank of ours: the window moves to the bank that has it.
-                for number, bank in enumerate(self.banks):
-                    if name in bank:
-                        self.bank, self.rig = number, bank.index(name)
-                        break
-            return {"action": "load", "rig": name}
-        self.log(f"map entry names {name!r}, which is not in the library")
-        return None
+        """A rig named outright — by a MIDI entry, or by another action — is refused too."""
+        if name not in self.rigs:
+            self.log(f"map entry names {name!r}, which is not in the library")
+            return None
+        index = self.index_of(name)
+        if not self.is_usable(name):
+            self._refused(name, index if index >= 0 else None)
+            return None
+        if index < 0:
+            # A rig in no bank of ours: the window moves to the bank that has it.
+            for number, bank in enumerate(self.banks):
+                if name in bank:
+                    self.bank, self.rig = number, bank.index(name)
+                    break
+        return {"action": "load", "rig": name}
 
 
 def load_json(path, log=None):

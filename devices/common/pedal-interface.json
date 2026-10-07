@@ -300,7 +300,17 @@
         "auth": "Authorization: Bearer <the engine's token>"
       },
       "status_route": "/status",
-      "poll": "engine.status, once a second"
+      "poll": "engine.status, once a second",
+      "cost_poll_s": 60,
+      "status_body": {
+        "service": "version, uptime_s, pid",
+        "engine": "reachable, the engine's own state/health/rig/generation/xruns/issues",
+        "link": "the UART: open/session, frame and byte counters, drops, ages, the Pico's hello",
+        "bank": "banks (the rig names, in the order the bank lays them out), bank, position, current, size, verdicts, verdict_max_age_s",
+        "bank.verdicts": "rig name -> {verdict, cost, headroom, trimmed, over} from the engine's rig.cost, or null for a rig it has not answered for. 'over' is a rig namchaind would refuse to publish, so pedald skips it when stepping (P5; docs/pedal-service.md, \"The bank's verdicts\"). pedald never reads cost.json itself: the engine owns what a cost means (D9)",
+        "bank.verdict_max_age_s": "how old a verdict may be before the engine is asked again; a null verdict is 'not known', which is not 'unusable'",
+        "bypass": "the relay state the service is mirroring for the panel"
+      }
     }
   },
   "levels": {

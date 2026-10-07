@@ -115,5 +115,92 @@ class Map(unittest.TestCase):
         self.assertIsNone(mapping.load_json("/nonexistent/bank.json"))
 
 
+class Over(unittest.TestCase):
+    """The engine's verdicts, and the skip (P5, D9): a rig the engine will not play is not a
+    place a press may land, and a rig it has not answered for yet is usable.
+
+    The names are prefixed so they sort into bank order: `Mapping` sorts the library by name,
+    so `d-over` is the fourth rig, not the second one written down.
+    """
+
+    def setUp(self):
+        self.logs = []
+        self.rigs = ["a-usable", "b-over", "c-usable", "d-over"]
+        self.m = mapping.Mapping(self.rigs, log=self.logs.append)
+
+    def over(self, cost=1.02, headroom=0.8):
+        return {"verdict": "over", "cost": cost, "headroom": headroom, "trimmed": True,
+                "over": True}
+
+    def test_a_press_lands_past_an_unusable_rig(self):
+        self.m.verdicts["b-over"] = self.over()
+        self.m.note_rig("a-usable")
+        self.assertEqual(self.m.action("rig_up")["rig"], "c-usable")
+        self.assertEqual(self.m.rig, 2)
+        self.assertTrue(any("b-over" in line for line in self.logs))
+
+    def test_stepping_backwards_skips_too_and_wraps(self):
+        self.m.verdicts["d-over"] = self.over()
+        self.m.verdicts["b-over"] = self.over()
+        self.m.note_rig("a-usable")
+        self.assertEqual(self.m.action("rig_down")["rig"], "c-usable")   # past d-over, wrapping
+        self.assertEqual(self.m.action("rig_down")["rig"], "a-usable")   # past b-over
+
+    def test_a_bank_where_every_rig_is_unusable_does_nothing(self):
+        for rig in self.rigs:
+            self.m.verdicts[rig] = self.over()
+        self.m.note_rig("a-usable")
+        self.assertIsNone(self.m.action("rig_up"))
+        self.assertIsNone(self.m.action("rig_down"))
+        self.assertEqual(self.m.current_name(), "a-usable")     # nothing moved
+        self.assertTrue(any("every rig in bank" in line for line in self.logs))
+
+    def test_a_rig_with_no_verdict_is_usable(self):
+        # The engine still refuses a publish it cannot play, so an unasked rig is not the
+        # service's to refuse: only "over" skips.
+        self.m.verdicts["b-over"] = None
+        self.m.note_rig("a-usable")
+        self.assertEqual(self.m.action("rig_up")["rig"], "b-over")
+        self.m.verdicts["b-over"] = {"verdict": "trimmed", "cost": 0.67, "headroom": 0.8,
+                                     "trimmed": True, "over": False}
+        self.assertEqual(self.m.action("rig_up")["rig"], "c-usable")
+
+    def test_select_refuses_an_unusable_position(self):
+        self.m.verdicts["b-over"] = self.over()
+        self.m.note_rig("a-usable")
+        self.assertIsNone(self.m.action("rig_select", 1))
+        self.assertEqual(self.m.current_name(), "a-usable")
+        self.assertTrue(any("b-over" in line for line in self.logs))
+
+    def test_a_bank_whose_rigs_are_all_unusable_moves_nothing(self):
+        m = mapping.Mapping(["a", "b", "c", "d"],
+                            bank={"banks": [["a", "b"], ["c", "d"]], "bank": 0, "rig": 0},
+                            log=self.logs.append)
+        for rig in ("c", "d"):
+            m.verdicts[rig] = self.over()
+        self.assertIsNone(m.action("bank_up"))
+        self.assertEqual(m.bank, 1)                    # the window moved: the panel shows it
+        self.assertIsNone(m.current_name())            # no position in a bank that cannot play
+        self.assertTrue(any("every rig in bank" in line for line in self.logs))
+
+    def test_a_bank_move_lands_on_its_first_usable_rig(self):
+        m = mapping.Mapping(["a", "b", "c", "d"],
+                            bank={"banks": [["a", "b"], ["c", "d"]], "bank": 0, "rig": 0})
+        m.verdicts["c"] = self.over()
+        self.assertEqual(m.action("bank_up")["rig"], "d")
+
+    def test_a_midi_entry_naming_an_unusable_rig_is_refused(self):
+        m = mapping.Mapping(["a", "b"], midi_map={"pc": {"1": "b"}}, log=self.logs.append)
+        m.verdicts["b"] = self.over()
+        self.assertIsNone(m.action("pc", 1))
+        m.verdicts["b"] = {"verdict": "fits", "cost": 0.4, "headroom": 0.8, "trimmed": False,
+                           "over": False}
+        self.assertEqual(m.action("pc", 1)["rig"], "b")
+
+    def test_first_usable_names_the_position_a_bank_move_gets(self):
+        self.m.verdicts["a-usable"] = self.over()
+        self.assertEqual(self.m.first_usable(), 1)
+
+
 if __name__ == "__main__":
     unittest.main()

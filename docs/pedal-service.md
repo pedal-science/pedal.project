@@ -6,7 +6,9 @@ and how it fails. It also answers the two questions [`uart-protocol.md`](uart-pr
 deferred here: the MIDI channel, settled, and the relay's rule, proposed and yours to decide.
 The service's v0 was [`pedal-resume`](../devices/common/rootfs/usr/local/sbin/pedal-resume), which
 **retired on 2026-10-04**; **v1 is `pedald`**, landed the same day (783a8de, dcaf0e2), deployed on
-vip, and running against a live Pico — see "What is staged" at the end.
+vip, and running against a live Pico — see "What is staged" at the end. Since 2026-10-07 the
+service also costs the bank through the engine's `rig.cost`, keeps the verdicts, and skips a rig
+the engine would refuse when stepping ("The bank's verdicts (P5)", below).
 
 **Reviewed by Claude, 2026-09-28.** The comments are at the end (R1–R15). The text already
 carries the changes they propose, and where a choice is yours, it says so.
@@ -22,6 +24,7 @@ tables, the Pico link, and — once namchain's M3 lands — the rigs one press a
 | The rig document: library, editing, flattening into a graph | ljoss |
 | The running plan, ramps, transitions, the device and its health | `namchaind` |
 | The library on the pedal, the bank, resume, uploads, the mapping tables | **the service** |
+| Which rigs in the bank can play, and skipping the ones that cannot | **the service**, answered by `namchaind`'s `rig.cost` (below) |
 | Keeping rigs ready and switching to one (`rig.ready_set`/`rig.switch`, M3) | `namchaind`, asked for by the service |
 | The physical controls, the relay, the display | the Pico |
 | Audio | nobody in this table: no part of the service is in the signal path |
@@ -213,14 +216,23 @@ service derives it, and it is not the same thing as a bank.
 
 | Kind | Default action |
 |---|---|
-| `rig_up`, `rig_down` | step through the current bank, wrapping at the ends |
-| `rig_select` | index within the current bank |
+| `rig_up`, `rig_down` | step through the current bank, wrapping at the ends, **skipping unusable rigs** |
+| `rig_select` | index within the current bank, refused if that rig is unusable |
 | `bank_up`, `bank_down` | the next/previous bank, landing on its first rig |
 | `bank_select` | that bank, its first rig |
 | `bypass_set`, `bypass_toggle` | mirror the relay's state for the panel and the app; no engine call |
 | `cc` | the map: an action, or a parameter on the running rig (below) |
 | `pc` | the map: an action, usually a rig **by name**; the jump may move the bank window, and the ready set follows |
 | `expression` | reserved — mapped like `cc` if the expression jack survives the debt register |
+
+**Skipping is part of stepping (P5).** Every action that lands on a rig — `rig_up`, `rig_down`,
+`rig_select`, a bank move, a map entry by name — refuses a rig the engine says is `over`, logs
+which rig and why, and does nothing else: `next` walks on to the next rig that can play, and a
+bank where no rig can leaves the position and the player's rig exactly where they were. The
+position is never moved onto a rig that will not play, because a rig the engine will refuse is
+not a place to be. A rig with no verdict yet is usable here (see "The bank's verdicts"): the
+mapping skips only what the engine has refused, and `rig.load` is refused by the engine itself
+if it comes to that.
 
 - **The map goes from a trigger to an action** (R8). A trigger is `pc` *n* (with its bank) or
   `cc` *n*; an action is a rig by name, a bank, any kind in the table above (`rig_up`,
@@ -302,10 +314,56 @@ decision the contract deferred, and it is **yours to make** (R4). Proposed:
   requested rig name in a pending colour until `STATE` confirms it; the protocol's flags have
   free bits if a `switch_pending` bit is ever wanted, and this does not need one.
 
+## The bank's verdicts (P5)
+
+The service costs the bank through the engine's `rig.cost` and keeps the verdicts, because D9
+gives the engine what a cost *means* and gives the service the bank. It never reads
+`devices/<host>/cost.json`, never sums a unit's cost and never decides for itself that a rig is
+too big: a second cost model at this end is exactly what D9 rules out.
+
+- **What is asked.** `rig.cost {"rig": "<name>.json"}` for every rig in the library, one at a
+  time, and the reply's `cost` object is kept as it stands. The service reads only the engine's
+  own `verdict` (`fits`, `trimmed`, `over`) and the three numbers beside it for display; `over`
+  is the one that means "the engine would refuse to publish this", and `trimmed` is *usable* —
+  D6's Lite submodel is a different-sounding rig, not a broken one. `rig.cost` publishes
+  nothing, compiles nothing and loads no model, so costing a hundred rigs does not disturb the
+  rig that is playing.
+- **What is remembered.** A verdict per rig, and when the engine was asked. A rig the engine
+  will not describe (`rig_not_found`, `asset_missing`, `compile_failed`) keeps **no** verdict —
+  that is not a failure of the service, one rig must not stop the sweep of the others, and the
+  failure is logged once per kind rather than once per second. An engine that will not answer at
+  all drops the *whole* map, for the same reason: a verdict is only ever the engine's word, and
+  an engine that is gone has none.
+- **What invalidates a verdict.** The cost table changes when the engine reloads it (SIGHUP, or
+  a restart); a rig changes when the library is rescanned; the engine may come back as a new
+  process with a different table. So: at startup everything is asked for; a rig that appears in
+  the library is asked for at once; a rig that goes drops its verdict; an engine reconnect drops
+  the whole map and rebuilds it; and every verdict is asked for again once it is `COST_POLL_S`
+  (60 s) old, which is the backstop for a change nobody told the service about — a hand-edited
+  table and a SIGHUP, a rescan driven straight at the engine by ljoss or `namchainctl`. The
+  1 Hz status poll does **not** re-ask: the sweep asks about two rigs a tick while anything is
+  due, so a large bank is covered in order rather than in one stall.
+- **What it is for.** The mapping skips an unusable rig when stepping (below), `load_rig`
+  refuses to activate one at all (the belt to that brace, since `resume` and a MIDI entry can
+  name a rig too), and `/status` reports the verdicts so the panel and ljoss can show them and
+  refuse to make one active. **A rig with no verdict is usable**: the engine still refuses a
+  publish it cannot play, so a rig nobody has asked about yet is not the service's to refuse.
+  And an engine that has gone away leaves no verdict either — a verdict is only ever the
+  engine's word, and with the engine gone there is no word to keep.
+
+`/status`'s `bank` block carries `verdicts` — a map of rig name to `{"verdict", "cost",
+"headroom", "trimmed", "over"}`, or `null` for a rig the engine has not answered for — and
+`verdict_max_age_s`, so a reader can tell "no verdict" from "stale". It is a map beside `banks`
+rather than a field inside its entries: `banks` is the list the Pico's `STATE` and the mapping
+already speak, and a panel wants the verdicts for the whole library, not only for the window the
+current bank shows. The engine's per-node `nodes` array is deliberately **not** carried here —
+it is tens of entries per rig, and this route is polled; `namchainctl` is the tool for that.
+
 ## The ready set, and the split with namchain (3.8)
 
 - **The service owns** the bank, the MIDI map, and which rigs must be ready: the current bank
-  plus every rig a PC can jump to (D10).
+  plus every rig a PC can jump to (D10). Since P5, it also owns *which of them can play* — asked
+  of the engine with `rig.cost`, never derived here ("The bank's verdicts", above).
 - **namchain owns** how: the tiers, the cost model, the memory and the threads
   ([rig-switch-strategies.md](rig-switch-strategies.md), E1/E2). The service does not measure RTF
   and does not guess what fits.
@@ -433,6 +491,16 @@ pedal changes rigs for real only from v2 (R1):
     unprivileged (`User=pedal`, `ProtectSystem=strict`, the only writable path
     `/var/lib/pedal`, the token through `LoadCredential`), and the bearer is compared with
     `hmac.compare_digest` and fails closed.
+- **v1.1 — the bank's verdicts (P5 of
+  [`managing-processing-power-and-optimising-for-fast-switching.md`](managing-processing-power-and-optimising-for-fast-switching.md))**:
+  `engine.py`'s `rig_cost`, `daemon.RigCost` (cost every rig with `rig.cost`, cache the verdicts,
+  refresh them on a library change, an engine reconnect and a 60 s backstop), the mapping's skip,
+  `load_rig`'s refusal, and the verdicts in `/status`'s `bank`. **Landed 2026-10-07** in
+  `devices/common/rootfs/usr/local/lib/pedald/`, 244 tests under `devices/common/tests` (35 of
+  them new: the skip, the sweep and `/status`'s verdicts in `test_daemon.py` and
+  `test_mapping.py`, and `rig_cost` in `test_engine.py`). Service only: it needs namchain's
+  `rig.cost` (P3, landed) and nothing else, and it changes no audio path. ljoss's half — showing
+  the indicator and refusing to make an unusable rig active — is still owed (P5's `lj`).
 - **v2** (with Phase 3.8, once namchain's M3 answers): the ready set and `rig.switch`. From here
   the footswitches and MIDI change rigs for real, and firmware v1 (3.5) has something to drive.
 - **v3** (no plan step yet; it pays off the debt register's "no way to upload from the app"): the
