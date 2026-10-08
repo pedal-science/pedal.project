@@ -4,7 +4,8 @@
 by item below: P1, P2, P3, P5, P7 and P9 are done, with vip's cost table measured on vip
 ([bench-results/2026-10-08-cost-table-vip](bench-results/2026-10-08-cost-table-vip/README.md): 14 rows,
 E2 reproduced, T2 not falsified over 16 rigs); **P4, P6 and P8 are not** — each says what it waits on,
-and P6 is the one the rest of the warm-set scheme depends on. The measurements it leans on are E1, E2
+and P6 is the one the rest of the warm-set scheme depends on. T1, T2, T3 (three of its four), T6 and
+T10 have been run; T4's three paths are unit tests; T5, T7, T8, T9 and T11 have not. The measurements it leans on are E1, E2
 and the two-amp work, cited per item. The one decision a measurement could still reverse is D5 (the
 audio IRQ's core) — P7 is in the tree and T6 is the measurement that confirms or reverses it.
 
@@ -102,6 +103,14 @@ if the core it finds is inside `ISOLATED_CPUS`; `pedal-interface.json` (`audio_i
 what `pedal-diag` reads to report a wrong placement. *Ruled out:* leaving the pin at core 2.
 *Open question the measurement answers:* whether the interrupt's tail survives sharing a core with
 WiFi and the SD card — if it does not, D5 is wrong and the IRQ needs a core of its own (T6).
+**Measured 2026-10-08, T6: the falsifier did not fire.** With a CPU spinner on core 0 and an SD write
+and a WiFi upload running, the IRQ's own wait to run was 7.4 ns per wake on core 2 against 7.7 ns on
+core 0, the render's distribution was the same either way, and both arms ended with zero xruns, zero
+guard trips and no block over the deadline. Sharing the housekeeping core costs the interrupt nothing
+measurable, so the IRQ needs no core of its own and the render set keeps both its cores. Two caveats
+stand: core 2 is not rendering today (`render_threads: 1`), so what D5 protects against is only
+measurable once P6 puts a rig there; and the interrupt thread cannot be pinned
+(`PF_NO_SETAFFINITY`), so the *delivery* affinity is the only lever — which is the one P7 moves.
 
 **D6 — Trimming is Full → Lite, applied only as far as it needs to be, and it is visible**
 (2026-10-07). Lite and Full are two separately trained networks, measured 9 to 40 dB apart (E2), so a
@@ -437,6 +446,14 @@ worker stack and buffer, no new-page churn beside the engine).
 thread's tail, the render tail, and the footswitch-to-sound latency with WiFi and SD busy.
 *Falsifier:* if the IRQ's latency degrades on the busy housekeeping core, D5 is wrong and the IRQ
 needs a core of its own — which changes how many cores the rules can spend on rendering.
+**Run 2026-10-08** (four minutes an arm, a CPU spinner on core 0, a 200 MB SD write and a 200 MB WiFi
+upload, the same amp-and-cab rig playing through the codec): the render's distribution is identical
+(54% of blocks at 7% of the deadline, 33% at 8%, 13% at 9%), blocks over 10% came to 1,222 against
+886, the IRQ thread's wait to run was 7.4 ns per wake against 7.7, and both arms ended with zero
+xruns, zero guard trips and no block over the deadline — **the falsifier did not fire**. The
+footswitch-to-sound leg was not measured: it needs the Pico in the loop. The interrupt thread costs
+4.8% of one core, confirming `docs/audio-dma-irq.md`'s 4-5% and correcting its per-interrupt figure
+(31 µs of thread time per wake here, over 3,008 interrupts a second).
 *Result:* <!-- parent: P7's change is in the tree; fill this in with the result in
 `pedal.project/bench-results/` and say what D5 becomes. -->
 
@@ -456,9 +473,12 @@ being real.
 **T10 — the hour.** The whole scheme for an hour: switching between rigs, refills, warm cores at
 0.8, catch-ups, `xruns` at zero, guard trips at zero, temperature and throttle recorded. This is the
 only test that validates the offline table against the live device (D7).
-**Not run, and it is the one that matters most:** nothing here yet says a rig admitted at 0.8 has zero
-xruns for an hour on the pedal. The table's bar is an offline p99 (D2 step 4 as amended), so D7's
-"zero overruns, confirmed live" is exactly what T10 is for.
+**Run 2026-10-08**: sixty minutes on the pedal through the WM8960, switching between four admitted
+rigs every 30 seconds (118 loads, 2,864,049 blocks, 120 samples), with **`xruns` at zero in every
+sample**, no block over the deadline, the worst at 60.1% of it, 51-55 °C, 2400 MHz, never throttled.
+**D7 holds for what the table admits.** What the hour does not cover is the rest of the scheme — the
+warm set, the refills and the catch-ups are P6's and P8's — and it switched the way the engine
+switches today: by publishing.
 
 **T11 — thermal and clock.** One hour at full load; confirm 2.4 GHz uncapped holds on vip's cooling
 (`tune.conf` says unverified on vip) and that no throttle changes the numbers the table was built
