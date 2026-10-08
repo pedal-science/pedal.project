@@ -1,0 +1,28 @@
+T6: the audio IRQ's core. Rig: 
+irqaffinity=0-1 at boot; tune.conf pins 138 to core 2 today; pedal-tune's own check is the authority.
+
+== arm A: render core (today): the DMA interrupt delivered on core 2, 240 s of CPU, SD and WiFi load
+    affinity now: 2
+    render: {"worst_us": 327.665, "worst_percent": 24.57, "over_deadline": 0, "over_90_percent": 0, "histogram": [[1, 20071200], [2, 262822], [3, 1], [7, 3531011], [8, 1772433], [9, 761083], [10, 3813], [11, 702], [12, 451], [13, 286], [14, 152], [15, 135], [16, 84], [17, 46], [18, 23], [19, 27], [20, 11], [21, 9], [22, 7], [23, 2], [24, 1]]}
+    xruns 0  guard_trips 0  blocks 26404299  queue {"capture_bursts": 0, "floor_insertions": 0, "output_drops": 0, "output_queue_floor_periods": 2, "output_queue_periods": 4, "output_target_drops": 0}
+138:   11308820          0  232705245          0 rp1_irq_chip  40 Level     dw_axi_dmac_platform
+    thread 270: 3870274138180 282233963 122202849  (exec_ns run_delay_ns wakes)
+    render: {"worst_us": 327.665, "worst_percent": 24.57, "over_deadline": 0, "over_90_percent": 0, "histogram": [[1, 20071200], [2, 262822], [3, 1], [7, 3628747], [8, 1831124], [9, 783891], [10, 4461], [11, 940], [12, 584], [13, 385], [14, 186], [15, 170], [16, 103], [17, 50], [18, 28], [19, 30], [20, 11], [21, 11], [22, 8], [23, 2], [24, 2]]}
+    xruns 0  guard_trips 0  blocks 26584756  queue {"capture_bursts": 0, "floor_insertions": 0, "output_drops": 0, "output_queue_floor_periods": 2, "output_queue_periods": 4, "output_target_drops": 0}
+138:   11308820          0  233427069          0 rp1_irq_chip  40 Level     dw_axi_dmac_platform
+    thread 270: 3881796322591 284906852 122563986  (exec_ns run_delay_ns wakes)
+/dev/mmcblk0p5  2.9G 1007M  1.8G  37% /
+
+== arm B: housekeeping core (P7): the DMA interrupt delivered on core 0, 240 s of CPU, SD and WiFi load
+    affinity now: 0
+    render: {"worst_us": 327.665, "worst_percent": 24.57, "over_deadline": 0, "over_90_percent": 0, "histogram": [[1, 20071200], [2, 262822], [3, 1], [7, 3628885], [8, 1831383], [9, 784042], [10, 4539], [11, 962], [12, 598], [13, 387], [14, 187], [15, 172], [16, 103], [17, 50], [18, 28], [19, 30], [20, 11], [21, 11], [22, 8], [23, 2], [24, 2]]}
+    xruns 0  guard_trips 0  blocks 26585423  queue {"capture_bursts": 0, "floor_insertions": 0, "output_drops": 0, "output_queue_floor_periods": 2, "output_queue_periods": 4, "output_target_drops": 0}
+138:   11310016          0  233428525          0 rp1_irq_chip  40 Level     dw_axi_dmac_platform
+    thread 270: 3881839323609 285099795 122565317  (exec_ns run_delay_ns wakes)
+    render: {"worst_us": 327.665, "worst_percent": 24.57, "over_deadline": 0, "over_90_percent": 0, "histogram": [[1, 20071200], [2, 262822], [3, 1], [7, 3726269], [8, 1890681], [9, 806954], [10, 5120], [11, 1059], [12, 680], [13, 436], [14, 215], [15, 193], [16, 110], [17, 60], [18, 32], [19, 33], [20, 11], [21, 12], [22, 10], [23, 3], [24, 2]]}
+    xruns 0  guard_trips 0  blocks 26765903  queue {"capture_bursts": 0, "floor_insertions": 0, "output_drops": 0, "output_queue_floor_periods": 2, "output_queue_periods": 4, "output_target_drops": 0}
+138:   12031928          0  233428525          0 rp1_irq_chip  40 Level     dw_axi_dmac_platform
+    thread 270: 3892929591456 287890679 122927009  (exec_ns run_delay_ns wakes)
+/dev/mmcblk0p5  2.9G 1007M  1.8G  37% /
+
+== done: the tree has not been touched; /proc/irq/138/smp_affinity_list is now 0, df 1.8G free

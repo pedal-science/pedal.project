@@ -7,8 +7,9 @@ cost render time?
 **In one line:** the measure mode reproduces E2 (9 Full and 30 Lite against its 8 and 30), the table's
 14 rows are measured on vip with their provenance, **T2 did not falsify the additive model over 16
 heterogeneous rigs** — every rig the table admitted stayed inside the deadline, with the prediction on
-the safe side by about 1.7× — and the level probes do cost render time, roughly doubling a biquad's
-p99 at 128 nodes when publishing per period.
+the safe side by about 1.7× — the level probes do cost render time, roughly doubling a biquad's p99 at
+128 nodes when publishing per period, the audio IRQ costs nothing measurable on the housekeeping core
+(T6), and **an hour of playing and switching on the pedal produced zero xruns** (T10).
 
 Evidence: `vip-fragments.jsonl` (the 14 rows, each with its whole curve), `curves.txt` (the same
 curves, readable), `t2-rigs.jsonl` (the 16 rigs), `p9-biquad-arms.jsonl` (the meter's three arms).
@@ -143,7 +144,80 @@ actually pays for. Excluding the probes from rigs that must fit is ruled out bec
 with the meter on, and the cost of that decision is in these three numbers: a rig of 128 biquads pays
 10.3% of a core for its meters rather than 4.5%.
 
-## 6. What the table does not cover
+## 6. T6: the audio IRQ's core (P7, D5)
+
+The document's falsifier: "if the IRQ's latency degrades on the busy housekeeping core, D5 is wrong".
+Two four-minute arms, each with a CPU spinner on core 0, a 200 MB SD write and a 200 MB WiFi upload,
+playing the same amp-and-cab rig (`t10-model-cab`, 0.14882 of a core) through the codec. The DMA
+interrupt's delivery was moved by hand, the way `pedal-tune apply` moves it; the tree was not touched
+during the measurement.
+
+| | A: delivered on core 2 (a render core) | B: delivered on core 0 (housekeeping, P7) |
+|---|---|---|
+| interrupts taken | 721,824 on core 2, 0 on core 0 | 721,912 on core 0, 0 on core 2 |
+| blocks rendered | 180,457 | 180,480 |
+| render p50 / p99 band | 54% at 7%, 33% at 8%, 13% at 9% | 54% at 7%, 33% at 8%, 13% at 9% |
+| blocks over 10% of the deadline | 1,222 (0.68%) | 886 (0.49%) |
+| blocks over the deadline | **0** | **0** |
+| xruns / guard trips | 0 / 0 | 0 / 0 |
+| IRQ thread's wait to run | 7.4 ns per wake | 7.7 ns per wake |
+| IRQ thread's own cost | 31.9 µs per wake, 4.8% of one core | 30.7 µs per wake, 4.6% of one core |
+
+**Nothing degrades**, in either direction: the IRQ's own wait-to-run is the same to within 0.3 ns on
+the busy housekeeping core, the render's distribution is the same, and both arms finish with zero
+xruns, zero guard trips and no block over the deadline. So **D5 is not reversed and P7's change costs
+nothing measurable** — which is the decision the document asked for.
+
+Two things this arm does *not* settle, both recorded because they matter:
+
+- **Core 2 was not rendering.** vip runs `render_threads: 1`, so the only render core in use is core 3.
+  D5's reason for moving the IRQ — "it must not land on a render core" — becomes measurable only when
+  core 2 carries a rig, which is P6's warm set. What this arm shows is that the change is free today,
+  not that it is necessary.
+- **The interrupt thread cannot be pinned.** `taskset` on `irq/138-dw_axi_dmac_platform` fails with
+  `PF_NO_SETAFFINITY`, and its `Cpus_allowed_list` is 0-3: it runs wherever it is woken. So the
+  delivery affinity is the only lever, which is what P7 moves, and the thread's own placement follows
+  the wakeup rather than a mask.
+
+A number worth keeping from the same run: the IRQ thread costs **4.8% of one core** (11.5 s of thread
+time in 240 s, at 3,008 interrupts a second). `docs/audio-dma-irq.md`'s "~4–5%" is confirmed; its
+"13–15 µs per interrupt" is not — measured here it is 31 µs of thread time per wake, which is the
+same total spread over the same interrupts, so the difference is how the figure was derived rather
+than what the thread costs.
+
+## 7. T10: the hour
+
+D7's bar -- "every block within the deadline, zero overruns, confirmed by a live soak with the
+device's `xruns` at zero" -- is only confirmed live. Sixty minutes on the pedal, through the WM8960,
+switching between four admitted rigs every 30 seconds (118 loads), sampled every 30 seconds
+(`t10-hour.txt`):
+
+| | |
+|---|---|
+| blocks rendered | 2,864,049 |
+| `xruns` | **0** in all 120 samples |
+| guard trips | 0 |
+| blocks over the deadline / over 90% | 0 / 0 |
+| worst block | 801.7 µs, 60.1% of the deadline |
+| temperature | 51.3–55.1 °C (first trip 110 °C) |
+| clock | 2400 MHz throughout, `get_throttled` `0x0` |
+| rigs, with what the engine charged | `t10-model-cab` 0.14882, `t10-two-amp` 0.23762, `t10-three-chains` 0.40987, `t10-effects` ~0.02 |
+
+The four rigs are the shapes T2 measured, now played rather than rendered offline: a model and a
+cab, two amps in series, an effects-only chain, and three chains at once. **D7 holds for what the
+table admits.**
+
+One `warn` sample at 20:54 is a fixture of mine, not the engine: `t10-three-chains` was generated
+before the T2 set's stale model path was fixed, so for the first few loads it named a model the host
+does not have. The engine did exactly what D8 and the asset registry say -- the node played as if
+bypassed, charged `unknown.node`, and the once-per-node `cost_unknown` warning appeared because the
+device *does* have a table -- and the path was fixed while the soak ran. Worth keeping as the one
+live look at what an unmeasured unit does to a playing rig.
+
+**What this hour does not cover:** the warm set, the refills and the catch-ups. Those are P6 and P8;
+this soak switched by publishing, which is what the engine does today.
+
+## 8. What the table does not cover
 
 - **One row per architecture family.** Every model in vip's library is a `SlimmableContainer` of
   WaveNets, so the family is one row; a different architecture costs `unknown.NAM` (0.25) until it is
@@ -152,8 +226,9 @@ with the meter on, and the cost of that decision is in these three numbers: a ri
   runs one render thread.
 - **Warm work is not measured here.** Every number in this note is a unit's own cost on a quiet core.
   What a warm set costs beside a live rig is E2's contention arm and `docs/multi-core.md`'s subject.
-- **The live soak (T10) has not been run.** D7's bar is confirmed live, not offline: nothing here says
-  a rig admitted at 0.8 has zero xruns for an hour on the pedal.
+- **The soak is a soak, not a gig.** T10 played four admitted rigs for an hour with switches and no
+  xruns; it did not run the *whole scheme* -- there was no warm set and no catch-up, because P6 is not
+  implemented. What it validates is D7 for what the table admits and the engine does today.
 
 ## Reproducing it
 

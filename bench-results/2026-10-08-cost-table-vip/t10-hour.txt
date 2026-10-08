@@ -1,0 +1,359 @@
+T10: 60 minutes, switching every 30s between: t10-model-cab t10-two-amp t10-effects t10-three-chains
+start: 20:52:43 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=144626 worst_us=514.4 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+20:52:43 load t10-model-cab -> {"chains":1,"generation":3,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"cha
+20:52:43 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=145160 worst_us=514.4 over_deadline=0 over_90=0 issues=-
+temp=54550 kHz=2400000 throttled=throttled=0x0
+20:53:14 load t10-two-amp -> {"chains":1,"generation":4,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chain
+20:53:14 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=168195 worst_us=514.4 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+20:53:45 load t10-effects -> {"chains":1,"generation":5,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chain
+20:53:45 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=191185 worst_us=514.4 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+20:54:15 load t10-three-chains -> {"chains":3,"generation":6,"missing_assets":[{"chain":"two","element":"bamp","kind":"model","message":"no model '/var/li
+20:54:16 rig=t10-three-chains cost=0.34887 health=warn xruns=0 guard=0 blocks=214250 worst_us=514.4 over_deadline=0 over_90=0 issues=asset_missing,cost_unknown
+temp=54000 kHz=2400000 throttled=throttled=0x0
+20:54:46 load t10-model-cab -> {"chains":1,"generation":7,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"cha
+20:54:46 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=237258 worst_us=514.4 over_deadline=0 over_90=0 issues=-
+temp=54550 kHz=2400000 throttled=throttled=0x0
+20:55:17 load t10-two-amp -> {"chains":1,"generation":8,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chain
+20:55:17 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=260393 worst_us=514.4 over_deadline=0 over_90=0 issues=-
+temp=55100 kHz=2400000 throttled=throttled=0x0
+20:55:48 load t10-effects -> {"chains":1,"generation":10,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+20:55:48 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=283571 worst_us=703.3 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+20:56:19 load t10-three-chains -> {"chains":3,"generation":11,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+20:56:19 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=306681 worst_us=703.3 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+20:56:49 load t10-model-cab -> {"chains":1,"generation":12,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+20:56:49 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=329705 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=54550 kHz=2400000 throttled=throttled=0x0
+20:57:20 load t10-two-amp -> {"chains":1,"generation":13,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+20:57:20 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=352759 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+20:57:51 load t10-effects -> {"chains":1,"generation":14,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+20:57:51 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=375806 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+20:58:21 load t10-three-chains -> {"chains":3,"generation":15,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+20:58:22 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=398832 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+20:58:52 load t10-model-cab -> {"chains":1,"generation":16,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+20:58:52 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=421814 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+20:59:23 load t10-two-amp -> {"chains":1,"generation":17,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+20:59:23 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=444786 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+20:59:53 load t10-effects -> {"chains":1,"generation":18,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+20:59:54 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=467764 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:00:24 load t10-three-chains -> {"chains":3,"generation":19,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:00:24 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=490787 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:00:55 load t10-model-cab -> {"chains":1,"generation":20,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:00:55 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=513739 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=54550 kHz=2400000 throttled=throttled=0x0
+21:01:25 load t10-two-amp -> {"chains":1,"generation":21,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:01:26 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=536766 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=54550 kHz=2400000 throttled=throttled=0x0
+21:01:56 load t10-effects -> {"chains":1,"generation":22,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:01:56 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=559784 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:02:27 load t10-three-chains -> {"chains":3,"generation":23,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:02:27 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=582776 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:02:57 load t10-model-cab -> {"chains":1,"generation":24,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:02:58 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=605784 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:03:28 load t10-two-amp -> {"chains":1,"generation":25,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:03:28 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=628802 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:03:59 load t10-effects -> {"chains":1,"generation":26,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:03:59 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=651776 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+21:04:29 load t10-three-chains -> {"chains":3,"generation":27,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:04:30 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=674882 worst_us=782.4 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:05:00 load t10-model-cab -> {"chains":1,"generation":28,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:05:00 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=697900 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54550 kHz=2400000 throttled=throttled=0x0
+21:05:31 load t10-two-amp -> {"chains":1,"generation":29,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:05:31 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=720943 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:06:02 load t10-effects -> {"chains":1,"generation":30,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:06:02 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=743980 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:06:32 load t10-three-chains -> {"chains":3,"generation":31,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:06:33 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=767038 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=55100 kHz=2400000 throttled=throttled=0x0
+21:07:03 load t10-model-cab -> {"chains":1,"generation":32,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:07:03 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=790048 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:07:34 load t10-two-amp -> {"chains":1,"generation":33,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:07:34 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=813051 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+21:08:04 load t10-effects -> {"chains":1,"generation":34,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:08:05 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=836098 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:08:35 load t10-three-chains -> {"chains":3,"generation":35,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:08:35 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=859138 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:09:06 load t10-model-cab -> {"chains":1,"generation":36,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:09:06 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=882167 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54550 kHz=2400000 throttled=throttled=0x0
+21:09:37 load t10-two-amp -> {"chains":1,"generation":37,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:09:37 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=905306 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:10:07 load t10-effects -> {"chains":1,"generation":38,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:10:08 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=928307 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:10:38 load t10-three-chains -> {"chains":3,"generation":39,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:10:39 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=951615 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:11:09 load t10-model-cab -> {"chains":1,"generation":40,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:11:09 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=974687 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54550 kHz=2400000 throttled=throttled=0x0
+21:11:40 load t10-two-amp -> {"chains":1,"generation":41,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:11:40 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=997709 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:12:11 load t10-effects -> {"chains":1,"generation":42,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:12:11 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=1020702 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+21:12:41 load t10-three-chains -> {"chains":3,"generation":43,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:12:42 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=1043758 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:13:12 load t10-model-cab -> {"chains":1,"generation":44,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:13:13 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=1066974 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:13:43 load t10-two-amp -> {"chains":1,"generation":45,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:13:43 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=1090021 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:14:14 load t10-effects -> {"chains":1,"generation":46,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:14:14 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=1113071 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:14:44 load t10-three-chains -> {"chains":3,"generation":47,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:14:45 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=1136120 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:15:15 load t10-model-cab -> {"chains":1,"generation":48,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:15:15 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=1159169 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+21:15:46 load t10-two-amp -> {"chains":1,"generation":49,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:15:46 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=1182179 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:16:17 load t10-effects -> {"chains":1,"generation":50,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:16:17 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=1205161 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:16:47 load t10-three-chains -> {"chains":3,"generation":51,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:16:47 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=1228214 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:17:18 load t10-model-cab -> {"chains":1,"generation":52,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:17:18 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=1251242 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:17:49 load t10-two-amp -> {"chains":1,"generation":53,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:17:49 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=1274236 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+21:18:19 load t10-effects -> {"chains":1,"generation":54,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:18:19 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=1297182 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:18:50 load t10-three-chains -> {"chains":3,"generation":55,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:18:50 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=1320198 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:19:21 load t10-model-cab -> {"chains":1,"generation":56,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:19:21 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=1343185 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+21:19:51 load t10-two-amp -> {"chains":1,"generation":57,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:19:51 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=1366185 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+21:20:22 load t10-effects -> {"chains":1,"generation":58,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:20:22 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=1389162 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:20:53 load t10-three-chains -> {"chains":3,"generation":59,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:20:53 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=1412175 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:21:23 load t10-model-cab -> {"chains":1,"generation":60,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:21:23 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=1435150 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:21:54 load t10-two-amp -> {"chains":1,"generation":61,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:21:54 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=1458178 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=51800 kHz=2400000 throttled=throttled=0x0
+21:22:25 load t10-effects -> {"chains":1,"generation":62,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:22:25 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=1481169 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:22:55 load t10-three-chains -> {"chains":3,"generation":63,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:22:55 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=1504197 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:23:26 load t10-model-cab -> {"chains":1,"generation":64,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:23:26 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=1527167 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+21:23:57 load t10-two-amp -> {"chains":1,"generation":65,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:23:57 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=1550139 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:24:27 load t10-effects -> {"chains":1,"generation":66,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:24:27 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=1573136 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:24:58 load t10-three-chains -> {"chains":3,"generation":67,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:24:58 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=1596402 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=51800 kHz=2400000 throttled=throttled=0x0
+21:25:29 load t10-model-cab -> {"chains":1,"generation":68,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:25:30 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=1619766 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:26:00 load t10-two-amp -> {"chains":1,"generation":69,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:26:00 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=1642853 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=51800 kHz=2400000 throttled=throttled=0x0
+21:26:31 load t10-effects -> {"chains":1,"generation":70,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:26:31 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=1665813 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:27:01 load t10-three-chains -> {"chains":3,"generation":71,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:27:02 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=1688824 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:27:32 load t10-model-cab -> {"chains":1,"generation":72,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:27:32 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=1711879 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:28:03 load t10-two-amp -> {"chains":1,"generation":73,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:28:03 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=1734926 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=51800 kHz=2400000 throttled=throttled=0x0
+21:28:34 load t10-effects -> {"chains":1,"generation":74,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:28:34 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=1757929 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=51800 kHz=2400000 throttled=throttled=0x0
+21:29:04 load t10-three-chains -> {"chains":3,"generation":75,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:29:04 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=1780958 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:29:35 load t10-model-cab -> {"chains":1,"generation":76,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:29:35 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=1803950 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:30:06 load t10-two-amp -> {"chains":1,"generation":77,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:30:06 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=1826940 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:30:36 load t10-effects -> {"chains":1,"generation":78,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:30:36 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=1849889 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:31:07 load t10-three-chains -> {"chains":3,"generation":79,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:31:07 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=1872930 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:31:38 load t10-model-cab -> {"chains":1,"generation":80,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:31:38 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=1895950 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+21:32:08 load t10-two-amp -> {"chains":1,"generation":81,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:32:08 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=1918953 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:32:39 load t10-effects -> {"chains":1,"generation":82,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:32:39 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=1941923 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:33:10 load t10-three-chains -> {"chains":3,"generation":83,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:33:10 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=1964929 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:33:40 load t10-model-cab -> {"chains":1,"generation":84,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:33:41 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=1987981 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:34:11 load t10-two-amp -> {"chains":1,"generation":85,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:34:11 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=2011050 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:34:42 load t10-effects -> {"chains":1,"generation":86,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:34:42 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=2034030 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:35:12 load t10-three-chains -> {"chains":3,"generation":87,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:35:13 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=2057090 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:35:43 load t10-model-cab -> {"chains":1,"generation":88,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:35:43 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=2080159 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:36:14 load t10-two-amp -> {"chains":1,"generation":89,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:36:14 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=2103186 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=51800 kHz=2400000 throttled=throttled=0x0
+21:36:45 load t10-effects -> {"chains":1,"generation":90,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:36:45 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=2126178 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=51800 kHz=2400000 throttled=throttled=0x0
+21:37:15 load t10-three-chains -> {"chains":3,"generation":91,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:37:15 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=2149200 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:37:46 load t10-model-cab -> {"chains":1,"generation":92,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:37:46 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=2172202 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+21:38:17 load t10-two-amp -> {"chains":1,"generation":93,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:38:17 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=2195221 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:38:47 load t10-effects -> {"chains":1,"generation":94,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:38:47 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=2218221 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:39:18 load t10-three-chains -> {"chains":3,"generation":95,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:39:18 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=2241236 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:39:49 load t10-model-cab -> {"chains":1,"generation":96,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"ch
+21:39:49 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=2264198 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54550 kHz=2400000 throttled=throttled=0x0
+21:40:19 load t10-two-amp -> {"chains":1,"generation":97,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:40:20 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=2287260 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:40:50 load t10-effects -> {"chains":1,"generation":98,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"chai
+21:40:50 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=2310218 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:41:21 load t10-three-chains -> {"chains":3,"generation":99,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[{
+21:41:21 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=2333212 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:41:51 load t10-model-cab -> {"chains":1,"generation":100,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"c
+21:41:51 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=2356187 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:42:22 load t10-two-amp -> {"chains":1,"generation":101,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"cha
+21:42:22 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=2379198 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:42:53 load t10-effects -> {"chains":1,"generation":102,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"cha
+21:42:53 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=2402148 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=51800 kHz=2400000 throttled=throttled=0x0
+21:43:23 load t10-three-chains -> {"chains":3,"generation":103,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[
+21:43:23 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=2425132 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:43:54 load t10-model-cab -> {"chains":1,"generation":104,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"c
+21:43:54 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=2448098 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:44:24 load t10-two-amp -> {"chains":1,"generation":105,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"cha
+21:44:25 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=2471074 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:44:55 load t10-effects -> {"chains":1,"generation":106,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"cha
+21:44:56 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=2494328 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:45:26 load t10-three-chains -> {"chains":3,"generation":107,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[
+21:45:27 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=2517498 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=51800 kHz=2400000 throttled=throttled=0x0
+21:45:57 load t10-model-cab -> {"chains":1,"generation":108,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"c
+21:45:57 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=2540609 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=55100 kHz=2400000 throttled=throttled=0x0
+21:46:28 load t10-two-amp -> {"chains":1,"generation":109,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"cha
+21:46:28 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=2563713 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:46:59 load t10-effects -> {"chains":1,"generation":110,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"cha
+21:46:59 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=2586791 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:47:29 load t10-three-chains -> {"chains":3,"generation":111,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[
+21:47:30 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=2609896 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+21:48:00 load t10-model-cab -> {"chains":1,"generation":112,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"c
+21:48:01 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=2632990 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+21:48:31 load t10-two-amp -> {"chains":1,"generation":113,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"cha
+21:48:31 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=2656104 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:49:02 load t10-effects -> {"chains":1,"generation":114,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"cha
+21:49:02 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=2679187 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=51250 kHz=2400000 throttled=throttled=0x0
+21:49:33 load t10-three-chains -> {"chains":3,"generation":115,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[
+21:49:33 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=2702359 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=51800 kHz=2400000 throttled=throttled=0x0
+21:50:04 load t10-model-cab -> {"chains":1,"generation":116,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"c
+21:50:04 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=2725507 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=53450 kHz=2400000 throttled=throttled=0x0
+21:50:35 load t10-two-amp -> {"chains":1,"generation":117,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"cha
+21:50:35 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=2748688 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:51:05 load t10-effects -> {"chains":1,"generation":118,"missing_assets":[],"name":"t10-effects","ok":true,"slimmed_models":[],"transitions":[{"cha
+21:51:06 rig=t10-effects cost=0.07809999999999999 health=ok xruns=0 guard=0 blocks=2771779 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52350 kHz=2400000 throttled=throttled=0x0
+21:51:36 load t10-three-chains -> {"chains":3,"generation":119,"missing_assets":[],"name":"t10-three-chains","ok":true,"slimmed_models":[],"transitions":[
+21:51:36 rig=t10-three-chains cost=0.40986999999999996 health=ok xruns=0 guard=0 blocks=2794889 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=51800 kHz=2400000 throttled=throttled=0x0
+21:52:07 load t10-model-cab -> {"chains":1,"generation":120,"missing_assets":[],"name":"t10-model-cab","ok":true,"slimmed_models":[],"transitions":[{"c
+21:52:07 rig=t10-model-cab cost=0.14882 health=ok xruns=0 guard=0 blocks=2818002 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=54000 kHz=2400000 throttled=throttled=0x0
+21:52:38 load t10-two-amp -> {"chains":1,"generation":121,"missing_assets":[],"name":"t10-two-amp","ok":true,"slimmed_models":[],"transitions":[{"cha
+21:52:38 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=2841152 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
+end: 21:53:09 rig=t10-two-amp cost=0.23762000000000003 health=ok xruns=0 guard=0 blocks=2864049 worst_us=801.7 over_deadline=0 over_90=0 issues=-
+temp=52900 kHz=2400000 throttled=throttled=0x0
