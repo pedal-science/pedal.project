@@ -1,8 +1,12 @@
 # Managing processing power and optimising for fast switching
 
-**Status:** rules and decisions D1–D9 agreed 2026-10-07. Nothing below is implemented yet except
-where it says so; the measurements it leans on are E1, E2 and the two-amp work, cited per item. The
-one decision a measurement could still reverse is D5 (the audio IRQ's core) — P7 and T6 are how.
+**Status:** rules and decisions D1–D9 agreed 2026-10-07. **Implemented and measured 2026-10-08**, item
+by item below: P1, P2, P3, P5, P7 and P9 are done, with vip's cost table measured on vip
+([bench-results/2026-10-08-cost-table-vip](bench-results/2026-10-08-cost-table-vip/README.md): 14 rows,
+E2 reproduced, T2 not falsified over 16 rigs); **P4, P6 and P8 are not** — each says what it waits on,
+and P6 is the one the rest of the warm-set scheme depends on. The measurements it leans on are E1, E2
+and the two-amp work, cited per item. The one decision a measurement could still reverse is D5 (the
+audio IRQ's core) — P7 is in the tree and T6 is the measurement that confirms or reverses it.
 
 The goal is a Core device that plays quite large rigs **and** switches between rigs one press away
 in under 50 ms (D10). Those two goals compete for the same resource — a warm rig costs CPU that a
@@ -133,46 +137,66 @@ device's; there is one of each.
 One file per Core device, in that device's tree, so it is configuration as code and it is versioned
 with the kernel and engine commits it was measured against.
 
+The implemented format is `devices/common/cost.schema.json`; vip's own table is
+`devices/vip/rootfs/etc/namchain/cost.json` (and `devices/vip/cost.json` is a symlink to it, the path
+this document names), installed at `/etc/namchain/cost.json`. Its shape, with vip's measured numbers:
+
 ```json
 {
   "host": "vip",
-  "measured": "2026-10-07T15:00:00Z",
-  "engine_commit": "c0e3f37",
+  "measured": "2026-10-08T09:22:07Z",
+  "engine_commit": "becd0f2",
   "kernel": "7.0.0-1017-raspi-realtime-numaemu1-trimmed",
+  "rate": 48000,
   "quantum": 64,
-  "deadline_us": 1333.3,
+  "deadline_us": 1333.333,
   "headroom": 0.8,
-  "bar": "p99 under the deadline and zero overruns, paced offline, confirmed live",
+  "bar": "p99 under the deadline, overruns recorded, paced offline; the live soak confirms zero xruns",
   "core_percent": {
     "NAM": {
-      "A2": { "full": 0.125, "lite": 0.0333 }
+      "WaveNet": { "full": 0.111, "lite": 0.0333 }
     },
     "IR": {
-      "8192": 0.0, "4096": 0.0, "2048": 0.0, "1024": 0.0, "512": 0.0
+      "8192": 0.0222, "4096": 0.0222, "2048": 0.01, "1024": 0.00781, "512": 0.00781
     },
     "node": {
-      "nc.gain": 0.0, "nc.eq.biquad": 0.0, "nc.delay": 0.0,
-      "nc.mix": 0.0, "nc.split": 0.0, "level_probe": 0.0
+      "nc.input": 0.00781, "nc.output": 0.00781, "nc.gain": 0.00781,
+      "nc.eq.biquad": 0.00781, "nc.delay": 0.00781, "nc.mix": 0.00781, "nc.split": 0.00781
     }
   },
   "unknown": {
     "NAM": 0.25, "IR": 0.1, "node": 0.05
   },
   "sources": {
-    "NAM.A2.full": { "n": 8, "p99_at_n": 0.891, "p99_at_n_plus_1": 1.129 },
-    "NAM.A2.lite": { "n": 30, "p99_at_n": 0.974, "p99_at_n_plus_1": 1.412 }
+    "NAM.WaveNet.full": {
+      "n": 9, "p99_at_n": 0.974, "overruns_at_n": 153,
+      "p99_at_n_plus_1": 1.109, "overruns_at_n_plus_1": 1185, "blocks_behind_at_n_plus_1": 1
+    }
   }
 }
 ```
 
 * Every unit carries the `n` it came from and what happened one past it, so the cliff is recorded
-  with the number rather than folklore.
-* IRs are not free and are not one row: E1 measured a cab at roughly half a rig's render cost, and
-  the taps matter (an 8192-tap cab reads more per block than a 512-tap one). The `0.0`s above are
-  placeholders for P1/P2 to fill in.
-* `unknown` is D8: what admission charges for something not yet measured.
+  with the number rather than folklore. A row whose bisection stopped at the bench's own ceiling
+  carries `at_most: true` and a `why`, and is an upper bound rather than a cliff — vip's node rows and
+  its two shortest IR rows are all of that kind, because no node type reaches a whole core at 128
+  copies.
+* **The unit keys are the engine's** (D9): a NAM row is keyed by the architecture the file declares —
+  `NAM.<family>.<full|lite>` — and for a `SlimmableContainer`, which is a wrapper and not a network,
+  by its submodels' architecture. Vip's library is all containers of WaveNets, so it has one NAM row;
+  this document's earlier `NAM.A2` was the pedal's name for that family, which no file says.
+* IRs are not free and are not one row: an IR is charged the cheapest row that is not shorter than it,
+  so a 6000-tap cab pays the 8192 row. Measured on vip a cab is **a fifth** of a Full model
+  (0.0222 against 0.111), not the half E1 guessed from a rig's cost on piv.
+* `unknown` is D8: what admission charges for something not yet measured, and `cost-check` fails a
+  table whose `unknown` is cheaper than any measured row of its kind.
 
 ## Measuring a Core
+
+`namchain-warm-bench measure` is the procedure below, and `scripts/measure-core` runs it for a device:
+it builds the bench in the image's container, takes the host lock, stops `namchaind`, measures each
+unit detached (a dropped ssh must not take an hour of measurements with it), and writes one JSON
+fragment per unit, which `devices/common/cost-merge` folds into the table and `cost-check` validates.
 
 For each unit (a `.nam` at a submodel size, an IR at N taps, a node type with a given parameter set):
 
@@ -181,9 +205,18 @@ For each unit (a `.nam` at a submodel size, an IR at N taps, a node type with a 
 2. Render paced to the wall clock at the device's quantum, for long enough to be meaningful (E2 used
    30 s; the cliff shows within that).
 3. Record p50, p99, p99.9, max, blocks over the deadline, and (for warm work) the worst lag.
-4. `n` is the largest count with p99 < deadline and zero overruns. Bisect: start at 1, double until
-   it fails, then narrow. **Record `n+1` and `n+2` as well** — the cliff's shape is part of the
-   measurement, not a by-product (E2's Full curve: 6.6%, 13.9%, 30.4%, 56.7%, 89.1%, 112.9%).
+4. `n` is the largest count with **p99 < deadline**. Bisect: start at 1, double until it fails, then
+   narrow. **Record `n+1` and `n+2` as well** — the cliff's shape is part of the measurement, not a
+   by-product (E2's Full curve: 6.6%, 13.9%, 30.4%, 56.7%, 89.1%, 112.9%).
+   *Amended 2026-10-08, from the measurement.* This read "p99 < deadline **and zero overruns**", and
+   D7 said the same. Measured, the overrun count at the fit point is not monotone in `n`: one Lite
+   model on vip's core 2 overran twice at n = 22, never at 23, three times at 24 and never again at
+   25, while p99 climbed smoothly through 64.5, 67.5, 72.7 and 76.4 per cent over the same four
+   points. A bar that one late block in 22,500 decides is a bar the environment decides, and it moved
+   the answer by three when nothing about the unit changed. So the bisection fits on p99, and the
+   overruns, the max and the worst lag are recorded as the curve's shape
+   (`namchain-warm-bench measure --bar strict` asks for D7's reading and prints both). D7's "every
+   block within the deadline, zero overruns" is what the **live soak** (T10) confirms.
 5. Store the fraction `1/n` with its provenance.
 
 Three things this procedure has to get right, all of which have bitten:
@@ -209,62 +242,101 @@ measurement waits — an unmeasured unit is a candidate for refusal, which is th
 2. **Admit the active rig** if its cost ≤ 0.8 (D3). If not, trim Full → Lite on as few NAM nodes as
    it takes, largest first, and re-check. If it still does not fit, mark the rig unusable: ljoss shows
    it (editable, not selectable), and the pedal's mapping skips it — pressing "next" lands on the next
-   usable rig, and if there is none the press does nothing.
+   usable rig, and if there is none the press does nothing. **Implemented** (P3 in the engine, P5 in
+   the service and the app): the refusal is `over_budget` with the total and every node's row, the
+   service asks `rig.cost` for each rig in the bank, and ljoss marks a rig it will not publish.
 3. **An edit that pushes the live rig over budget is refused at publish**, with the reason reported
    (the engine already refuses a publish over its model budget). The player must not be able to wedge
    themselves by editing the rig they are hearing.
 4. **Pack the warm set** (D4): fill the inactive cores' 0.8 with the rigs one interaction away — the
    footswitch neighbours and any rig MIDI can jump to — dearest first, and prefer that rigs inside the
-   *bank* are warm over rigs outside it. Whatever does not fit is left for catch-up.
+   *bank* are warm over rigs outside it. Whatever does not fit is left for catch-up. **Not
+   implemented** (P6).
 5. **Switch**: the incoming rig's core becomes the active one; the outgoing rig stays warm where it
    is; the warm set slides and the newly-adjacent rig is loaded and warmed. No rig migrates between
-   cores, and nothing is loaded, parsed or allocated on a render thread.
+   cores, and nothing is loaded, parsed or allocated on a render thread. **Not implemented** (P6): a
+   switch today is a publish, which compiles the incoming rig and crossfades to it.
 6. **Catch-up** where warmth is not available: replay recent input into the target (Lite first, in the
    background, then Full), staged by chain depth. Measured: 170 ms of replay per model is
    bit-exact at depths 1–4, and on vip it costs 9.8 ms (depth 1), 29.4 (2), 58.8 (3), 98.2 (4) at low
    priority; a Lite catch-up is roughly a third of that. The catch-up runs on an inactive core, never
    on the active one.
 7. **The transition needs headroom of its own**: during a Lite→Full handover both run, so the switch
-   window costs about 1.2× the rig. This is what the 0.8 is for.
+   window costs about 1.2× the rig. This is what the 0.8 is for. **The 0.8 is in force** (the table's
+   `headroom`, applied by the engine); the handover it pays for is P6's and P8's.
 
 ## Plan
 
 Ordered, so each item is useful on its own. Repos: **nc** = `namchain`, **pp** = `pedal.project`,
 **lj** = `ljoss`, **rt** = `rtpi`.
 
-**P1 — the measurement bench (nc).** A `measure` mode for `namchain-warm-bench`: bisect a unit to
+**P1 — the measurement bench (nc). DONE 2026-10-08.** A `measure` mode for `namchain-warm-bench`: bisect a unit to
 `n`, print the curve, and emit the table's JSON fragment. Reuse what is already there — the mode
 already builds N candidate rigs on a chosen core, paces the render thread, and reports p50/p99/max,
 overruns and lag. *Deliverable:* `tools/warm/namchain-warm-bench.cpp`, a new mode.
 *Verification:* reproduce E2's 8 Full and 30 Lite within ±1 on vip, and E1's 5 model+cab rigs on piv.
+**Measured: 9 Full and 30 Lite** on vip (the p99 bar D2 step 4 now names), and the E1 shape is the
+`rig` mode's one-model-plus-cab rig rather than a piv run: piv is a version behind and was not
+disturbed. See [bench-results/2026-10-08-cost-table-vip](bench-results/2026-10-08-cost-table-vip/README.md).
 
-**P2 — the table and its plumbing (pp, nc).** `devices/<host>/cost.json`, a schema in
+**P2 — the table and its plumbing (pp, nc). DONE 2026-10-08.** `devices/<host>/cost.json`, a schema in
 `devices/common`, the same file installed on the pedal where the engine reads it.
 *Verification:* `devices/<host>/check` fails if the file is missing, malformed, or measured against a
 different engine commit than the one installed; `pedal-device status` prints it.
+**Both do**, through `devices/common/cost-check` (the schema plus the invariants a JSON schema cannot
+state: every row's provenance, the cost is 1/n, n+1 missed, `unknown` never cheaper than a measured
+row, the deadline is quantum/rate). The table lives at `devices/<host>/rootfs/etc/namchain/cost.json`,
+so the rootfs install and the file hashes cover it, with `devices/<host>/cost.json` a symlink to it so
+the path this document names resolves.
 
-**P3 — cost model, admission and trimming in the engine (nc).** Replace the single
+**P3 — cost model, admission and trimming in the engine (nc). DONE 2026-10-08.** Replace the single
 `model_budget_kb` with the table's per-unit costs; refuse a publish over 0.8; report the cost, the
 verdict and what was trimmed (`model_slimmed` already exists; add the cost to `engine.status`).
 *Verification:* the boundary tests (T4) and the service tests.
+**Done**: `model_budget_kb` is gone, `cost_table` is read at startup and on SIGHUP, every node is
+charged, the dearest models are trimmed Full -> Lite, a client's publish over the headroom is refused
+as `over_budget` with the total and every node's row, and `engine.status.cost` carries the cost, the
+verdict and the nodes. A new `rig.cost` answers the same question for a rig that is not playing, which
+is how the service costs its bank without a second cost model (D9). The boundary itself is T4 below.
 
-**P4 — first-sight measurement (nc).** Unknown units cost `unknown` (D8) and are measured
+**P4 — first-sight measurement (nc). NOT IMPLEMENTED.** Unknown units cost `unknown` (D8) and are measured
 opportunistically on an inactive core; the result is written to the table and reported.
 *Verification:* install a model the table has never seen, play, and watch the cost resolve without a
 single xrun (T5).
+**What is in place:** D8's half -- an unmeasured unit is charged `unknown`, never nothing, at the
+dearest value of its kind, and every node charged that way raises a `cost_unknown` warning naming it
+and the row it should have. **What is not:** the measurement itself. It needs a core the player is not
+using to bisect on, which is P6's inactive core; without one it would run beside the live render, and
+T5 is exactly the test that says how bad that is. The engine also cannot rewrite `cost.json` --
+`devices/<host>/check` compares the installed file's hash with the tree's -- so a first-sight
+measurement has to land as a fragment the operator merges (`cost-merge`), a deliberate difference from
+"written to the table".
 
-**P5 — the bank's verdicts and the pedal's mapping (pp, lj).** `pedald` costs every rig, packs the
+**P5 — the bank's verdicts and the pedal's mapping (pp, lj). DONE 2026-10-08.** `pedald` costs every rig, packs the
 warm set, and skips unusable rigs when stepping; ljoss shows the indicator and refuses to activate
 one. *Verification:* `devices/common/test-pedald` for the skip logic (it already tests the mapping),
 plus a manual pass in ljoss with one rig deliberately made too big.
+**Both**: `pedald` asks the engine's `rig.cost` for every rig in the bank (at most two rigs per poll,
+re-asked at most once a minute), skips an unusable rig when stepping, refuses to load one, and reports
+the verdicts in `/status`; ljoss shows a "Lite: <blocks>" chip while the running rig is trimmed (D6),
+refuses to publish a rig the engine would refuse, and marks it too big for the device while keeping it
+editable. 244 pedald tests and 507 ljoss assertions, both green.
 
 **P6 — the warm set and role rotation in the engine (nc).** namchain M3: several documents resident
 and rendering at once, one of them audible, the rest warm; a switch rotates which is audible and
 crossfades. Start with exactly one warm rig (two documents), then N packed by cost. This is the
 biggest item and M3 is already on the plan's critical path. *Verification:* T7, T8, and the switch
-latency at the jack.
+latency at the jack. **NOT IMPLEMENTED, and this is the item everything else warm waits on.**
+The rules say no rig migrates between cores: each core renders its own rig, and a switch changes
+*which core's output is audible*. namchain has the opposite shape today -- one document, one set of
+plans, the render thread executing whichever document was published last, and a publish that compiles
+the incoming rig and crossfades to it. A faithful P6 is therefore not an addition to the render path
+but a change of it: one render thread per core, each with its own resident document and its own bus
+buffer, and the device-owning thread mixing the selected one (one block behind, well inside D10's
+50 ms). P4's inactive core and P8's catch-up both wait on it.
 
-**P7 — move the audio IRQ to the housekeeping core (rt, pp).** `AUDIO_IRQ_CPU=0` in
+**P7 — move the audio IRQ to the housekeeping core (rt, pp). DONE IN THE TREE 2026-10-07; T6 PENDING.**
+`AUDIO_IRQ_CPU=0` in
 `devices/vip/rootfs/etc/pedal/tune.conf`, with the other four places that describe the reserved set
 updated to agree (cmdline, slice drop-ins, `pedal-rt.slice`, `namchaind.service`'s `CPUAffinity`),
 and `pedal-tune check` extended to assert it. Those four already agreed on 0-1 for housekeeping and
@@ -275,29 +347,57 @@ makes D5 checkable. **Done in the tree 2026-10-07**; the measurement is what rem
 one that could make things *worse*: the IRQ's own wake-to-completion tail, the render tail, and the
 footswitch path while WiFi and the SD card are busy (T6). **This is the arm `docs/multi-core.md`
 deferred for vip**, and that section now carries the decision. *Verification:* the measurements,
-plus a decision recorded either way.
+plus a decision recorded either way. **The tree is changed and `devices/vip/apply` has not been run**,
+so the board is still on the old pin: T6 has not been taken, and the decision above is the tree's, not
+a measurement's, until it is.
 
-**P8 — catch-up, end to end (nc).** Lite-first catch-up on an inactive core, staged by depth, with
+**P8 — catch-up, end to end (nc). NOT IMPLEMENTED.** Lite-first catch-up on an inactive core, staged by depth, with
 the measured 170 ms per model; the path must be exercised by a real switch, not only by the bench.
 *Verification:* T9 and the convergence numbers re-measured through the live engine.
+**What is in place:** the mechanism is measured (E1/E2: 170 ms of replay per model is bit-exact at
+depths 1-4, and a Lite catch-up is about a third of that) and the engine's publish path is where a
+catch-up would run. **What is missing:** the tiers and the inactive core. "Lite first, in the
+background, then Full" needs a second instance playing while the first catches up, which is P6's
+machinery -- and E2 left the question that decides whether that design survives: whether a Lite
+standing in for a Full is audible (they are 9 to 40 dB apart, and the listening test is the owner's).
 
-**P9 — the level probes as a table row (nc, pp).** The meter costs render-core time and is not free
+**P9 — the level probes as a table row (nc, pp). DECIDED 2026-10-08, BY MEASUREMENT.** The meter costs render-core time and is not free
 (publishing per period already recovered 55% of it). Either it appears as a per-node row in the table
 or it is excluded from rigs that must fit — decide with a measurement, not by assumption.
+**Measured** (128 biquads, 30 s, vip's core 2): 4.5% of a core with the probes off, **10.3%** in the
+device's own configuration (`levels_publish_period`), 20.7% with a sample-per-frame probe published on
+read. Publishing per period recovered just under half, as the 2026-10-06 switch found. **Decision: the
+probes are part of the rows** -- every node row in vip's table was measured with the shipped
+configuration, so a rig that must fit pays for the meter it has. Excluding the probes from rigs that
+must fit is ruled out because the pedal ships with the meter on.
 
 ## Test plan: where the edges and the cliffs are
 
 Each test names what it pushes past the limit. The point is to find the edge *before* a player does,
 and to record the shape of the failure rather than a pass/fail.
 
+**Run so far** (2026-10-08, [bench-results/2026-10-08-cost-table-vip](bench-results/2026-10-08-cost-table-vip/README.md)):
+T1 (**every unit's curve**), T2 (**16 rigs, nothing falsified**), three of T3's four adversaries, and
+P9's measurement. **Not run:** T4 beyond its unit tests, T5, T6, T7-T11 — each needs either the live
+engine's warm set (P6) or a soak on the device, and none is claimed.
+
 **T1 — the cliff, per unit.** For each unit, run n−2 … n+4 and record p50/p99/max/overruns/lag.
 *Expected:* not linear. E2's Full: 89% at 8, 113% at 10, and at 12 the warm thread 2,621 blocks
 behind and never catching up — the failure is not graceful, which is why D3 leaves 20%.
 *Recorded as:* the `sources` block in the table.
+**Run 2026-10-08**: every row's whole curve is in `vip-fragments.jsonl` and readable in `curves.txt`.
+The expectation holds: vip's Full unit goes 82.2% at 8, 97.4% at 9 (the fit point), 110.9% at 10 and
+124.9% at 11, with the lag climbing 1, 1, 1, 779 blocks — and Lite goes 39.7% at 16, 76.4% at 25,
+106.4% at 32 with 1,184 blocks over the deadline. What the sweeps also showed is the *overrun* count
+at the edge being non-monotone in n (section 1 of the bench note), which is why the fit bar is p99.
 
 **T2 — does the cost model predict? (the make-or-break test.)** 12–20 heterogeneous rigs — mixed
 Full/Lite, mixed IR lengths, effects-heavy, one rig of each known adversary — costed from the table
-alone, then measured. *Falsifier:* any rig predicted ≤ 0.8 that misses the deadline. If that happens,
+alone, then measured. **Run 2026-10-08, and it did not fire**: sixteen heterogeneous rigs — one and two models, cabs at
+four lengths, effects-heavy, effects-only, parallel lanes, three chains at once, eight and sixteen
+Lite models in series — costed from the table by the engine's own model and measured on vip's core 2.
+Every prediction was above its measurement (1.2x to 1.9x), the heaviest rig measuring 64.1% of the
+deadline against 74.8% predicted. *Falsifier:* any rig predicted ≤ 0.8 that misses the deadline. If that happens,
 the additive model needs a term the table does not have (the working-set sum against L2 is the
 obvious candidate: two A2-Full's ~450 KB ring buffers already exceed a 512 KB L2), and the fix is
 either a per-class interaction term or more headroom — decided by the size of the error.
@@ -307,10 +407,24 @@ flagged unreliable in `docs/multi-core.md` because they ran under load — re-me
 lock first), a 16-model rig, N × 8192-tap IRs, and an effects-only rig (which today's table would
 score as nearly free). *Expected:* the two-amp rig is one chain and will be refused unless trimmed to
 Lite; the effects-only rig exposes P9.
+**Three of the four run 2026-10-08**, under the host lock with `namchaind` stopped: the two-amp rig
+(predicted 0.238, measured p99 13.3% — and *not* refused, because D2's table charges two Fulls at
+0.222 where the old L2 budget refused them at 587 KiB), the sixteen-model rig (predicted 0.782,
+measured 62.3% — inside, and the rig nearest the fit point of the whole set), and the effects-only rig
+(predicted 0.078, measured 0.7%, which is P9's answer and D8's conservatism in one line). **N x
+8192-tap IRs has not been run**: the IR rows exist (0.0222 each) but a rig of several 8192-tap cabs
+has not been measured.
 
 **T4 — the boundary.** Rigs costed at 0.79, 0.81 and 1.00: the first must publish, the second must be
 refused, the third must trim. Then the same three *while switching*, because the transition window
 costs ~1.2× — the rig that fits at rest may not fit mid-handover.
+**Half run:** the three paths are unit tests in namchain (`tests/test_cost_table.cpp`: a rig under the
+headroom is admitted as written; one over it with nothing to trim is `over`; one over it with a
+slimmable model is trimmed, dearest first, exactly as far as it takes), plus `tests/test_daemon.cpp`
+over a real daemon — the publish, the refusal with the total and the rows in the message, and the
+configured rig admitted with a `cost_over` warning. **The "while switching" half has not been run**:
+it needs two rigs rendering at once, which is P6's dual render. `namchain-warm-bench rig --reps 2`
+measures the cost of two copies of one rig, not a real handover.
 
 **T5 — housekeeping starvation.** `dd` on the housekeeping core, a WiFi upload of models and IRs, an
 SD write, all while the active rig renders at 0.8 with the warm cores packed. *Expected:* this is
@@ -342,6 +456,9 @@ being real.
 **T10 — the hour.** The whole scheme for an hour: switching between rigs, refills, warm cores at
 0.8, catch-ups, `xruns` at zero, guard trips at zero, temperature and throttle recorded. This is the
 only test that validates the offline table against the live device (D7).
+**Not run, and it is the one that matters most:** nothing here yet says a rig admitted at 0.8 has zero
+xruns for an hour on the pedal. The table's bar is an offline p99 (D2 step 4 as amended), so D7's
+"zero overruns, confirmed live" is exactly what T10 is for.
 
 **T11 — thermal and clock.** One hour at full load; confirm 2.4 GHz uncapped holds on vip's cooling
 (`tune.conf` says unverified on vip) and that no throttle changes the numbers the table was built
@@ -359,7 +476,9 @@ from. If it does, the table needs a temperature caveat.
 
 ## Open
 
-* **P7 (the IRQ's core)** is the one decision here that a measurement could reverse.
+* **P7 (the IRQ's core)** is the one decision here that a measurement could reverse. It is decided in
+  the tree and **T6 has not been taken**, so nothing yet says the IRQ is happy on the busy housekeeping
+  core. That measurement is the next thing this scheme owes.
 * **What to keep warm is a guess, and knowingly so.** D4 fills the warm set from what the player can
   reach in one action — the footswitch neighbours, the bank, anything MIDI can map to. Nothing here
   can know what a *pointer* will pick: ljoss puts several rigs on screen and a click is as likely as a
