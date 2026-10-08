@@ -63,7 +63,7 @@ I = lambda name: os.path.join(irs, name)
 AMP = M("NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam")
 AMP2 = M("Ampeg SVT Classic with 6x10/Ampeg SVT - Gain 10 Ultra Lo and Hi MD 421.nam")
 PEDAL = M("Boss SD-1 Super Overdrive/APP-SD1-Drive-I.nam")
-CLEAN = M("000 Unsorted/Deluxe Reverb.nam")
+CLEAN = M("Ampeg GVT52 - Channel 2/AMPEG_CH 2 NEUTRAL G5.nam")
 CAB = I("Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/"
         "Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav")
 
@@ -182,7 +182,9 @@ for taps in (512, 2048, 4096):
 for name, document in rigs.items():
     text = json.dumps(document, indent=2)
     for taps in (512, 2048, 4096):
-        text = text.replace('"__IR%d__"' % taps, json.dumps(os.path.join(out, "cab-%d.nam" % taps)))
+        # The cab travels with the rigs, so the document names it where it will be on the device:
+        # __CABS__ is replaced with the device's directory once that is known.
+        text = text.replace('"__IR%d__"' % taps, json.dumps("__CABS__/cab-%d.nam" % taps))
     with open(os.path.join(out, name + ".json"), "w") as fh:
         fh.write(text + "\n")
 print("  %d rigs, 3 truncated cabs" % len(rigs))
@@ -216,7 +218,10 @@ DEST=/var/tmp/measure-rigs
 log "copying the bench, the table and $(ls "$OUT/rigs" | wc -l | tr -d ' ') documents to $HOST:$DEST"
 ssh "$HOST" "rm -rf $DEST; mkdir -p $DEST/out"
 scp -q "$OUT/namchain-warm-bench" "$ROOT/guitar-di.wav" "$TABLE" "$HOST:$DEST/"
-scp -q -r "$OUT/rigs" "$HOST:$DEST/"
+mkdir -p "$OUT/rigs-device"
+for f in "$OUT"/rigs/*.json; do sed "s|__CABS__|$DEST/rigs|g" "$f" > "$OUT/rigs-device/$(basename "$f")"; done
+cp "$OUT"/rigs/cab-*.nam "$OUT/rigs-device/"
+scp -q -r "$OUT/rigs-device" "$HOST:$DEST/rigs"
 
 log "running each rig on $HOST under the host lock"
 "$ROOT/scripts/host-lock" --host "$HOST" --wait 300 -- ssh "$HOST" "bash -s" <<EOF

@@ -25,7 +25,7 @@
     }
   },
   "deadline_us": 1333.3333333333333,
-  "engine_commit": "becd0f2",
+  "engine_commit": "87f3cb9",
   "headroom": 0.8,
   "host": "vip",
   "kernel": "7.0.0-1017-raspi-realtime-numaemu1-trimmed",

@@ -295,7 +295,10 @@ do_status() {
 			try:
 			    doc = json.load(open(sys.argv[1]))
 			    core = doc.get("core_percent") or {}
-			    rows = sum(len(v) for v in core.values() if isinstance(v, dict))
+			    # A NAM row is nested one level deeper than the others (family -> size), so the
+			    # count is what the engine would charge for, not the number of top-level keys.
+			    rows = sum(len(sizes) for family, sizes in (core.get("NAM") or {}).items())
+			    rows += sum(len(v) for kind, v in core.items() if kind != "NAM" and isinstance(v, dict))
 			    print("  ok    %-34s %s" % ("cost table",
 			          "%s, measured %s, engine %s, %s, headroom %.2f, %d row(s)"
 			          % (doc.get("host"), doc.get("measured"), doc.get("engine_commit"),
