@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Runs INSIDE the build container (devices/common/image). Builds namchain's bench tools for the Core
+# host and leaves them in the log directory's bin/, the way build-namchain leaves the engine:
+#
+#   build-bench <source dir> <cxxflags> <log dir>
+#
+# `scripts/measure-core` and the image build both use it, so the binary that measures a device's cost
+# table is the one the image would carry: Release, the planar NEON kernels, the same toolchain.
+set -euo pipefail
+die() { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
+SRC=${1:?}; FLAGS=${2:?}; LOGS=${3:?}
+mkdir -p "$LOGS"
+cd "$SRC"
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_CXX_FLAGS=$FLAGS" \
+  -DNAMCHAIN_BUILD_TESTS=OFF -DNAMCHAIN_BUILD_TOOLS=ON > "$LOGS/bench-configure.log" 2>&1 \
+  || { tail -30 "$LOGS/bench-configure.log" >&2; exit 1; }
+grep -q 'A2 planar NEON:  ON' "$LOGS/bench-configure.log" || die "planar NEON kernels are off"
+cmake --build build --target namchain-warm-bench -j"$(nproc)" > "$LOGS/bench-build.log" 2>&1 \
+  || { tail -40 "$LOGS/bench-build.log" >&2; exit 1; }
+mkdir -p "$LOGS/bin"
+cp build/namchain-warm-bench "$LOGS/bin/"

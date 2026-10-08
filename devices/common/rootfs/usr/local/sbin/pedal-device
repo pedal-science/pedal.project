@@ -286,6 +286,27 @@ do_status() {
     if [[ $wifi == "wlan0: power saving off" ]]; then printf '  ok    %-34s %s\n' "wlan0 power saving" "off"
     else printf '  FAIL  %-34s %s (want off)\n' "wlan0 power saving" "${wifi#wlan0: power saving }"; bad=1; fi
   fi
+  # This device's measured cost table (P2). Printed rather than asserted: the table is a measurement,
+  # and whether it is the right one for what the device runs is `devices/<host>/check`'s question
+  # (it compares the engine commit and the kernel with the host's own).
+  if [[ -r /etc/namchain/cost.json ]] && command -v python3 >/dev/null 2>&1; then
+    python3 - /etc/namchain/cost.json <<-'PY' || bad=1
+			import json, sys
+			try:
+			    doc = json.load(open(sys.argv[1]))
+			    core = doc.get("core_percent") or {}
+			    rows = sum(len(v) for v in core.values() if isinstance(v, dict))
+			    print("  ok    %-34s %s" % ("cost table",
+			          "%s, measured %s, engine %s, %s, headroom %.2f, %d row(s)"
+			          % (doc.get("host"), doc.get("measured"), doc.get("engine_commit"),
+			             doc.get("kernel"), doc.get("headroom", 0.0), rows)))
+			except Exception as exc:
+			    print("  FAIL  %-34s %s" % ("cost table", "cannot be read: %s" % exc))
+			    sys.exit(1)
+		PY
+  else
+    printf '  --    %-34s %s\n' "cost table" "not installed: the engine charges every unit its unknown cost"
+  fi
   printf '  --    %-34s %s\n' "pedal-tune.service" "$(systemctl is-enabled pedal-tune.service 2>/dev/null) / $(systemctl is-active pedal-tune.service 2>/dev/null)"
   [[ -x /usr/local/sbin/pedal-tune ]] && /usr/local/sbin/pedal-tune check || bad=1
   return $bad

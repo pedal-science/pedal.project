@@ -121,6 +121,21 @@ if [[ -f $lock ]]; then
   fi
 fi
 
+# The cost table: this device's own numbers, measured on this device, and the provenance they were
+# taken with (P2 of docs/managing-processing-power-and-optimising-for-fast-switching.md). A table
+# measured against another engine or another kernel is not this device's table, and a table that is
+# not there is a device nobody has measured -- the engine still plays, charging every unit its unknown
+# cost (D8), which is why this is the check that says so.
+cost="$DEV_DIR/rootfs/etc/namchain/cost.json"
+if [[ -f $cost ]]; then
+  log "cost table: devices/$DEV_NAME against what $DEV_HOST runs"
+  engine_rev=$(dev "sed -n 's/^rev=//p' /opt/namchain/current/MANIFEST 2>/dev/null" | tr -d '[:space:]' || true)
+  kernel=$(dev "uname -r" | tr -d '[:space:]' || true)
+  "$COMMON_DIR/cost-check" "$cost" --host "$DEV_NAME" --engine-commit "$engine_rev" --kernel "$kernel" || bad=1
+else
+  printf '  FAIL  %-50s %s\n' "cost.json" "missing: devices/$DEV_NAME/rootfs/etc/namchain/cost.json"; bad=1
+fi
+
 log "state on $DEV_HOST"
 dev "sudo -n /usr/local/sbin/pedal-device status" || bad=1
 printf '  --    %-34s %s\n' "repo tree" "$(tree_commit)"

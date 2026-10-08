@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pedal.local/devices/common/cost.schema.json",
+  "title": "A Core device's cost table",
+  "description": "What each unit costs on one core of one Core device (pedal.project docs/managing-processing-power-and-optimising-for-fast-switching.md, D2/D9). One file per device, at devices/<host>/rootfs/etc/namchain/cost.json (devices/<host>/cost.json is a symlink to it), installed as /etc/namchain/cost.json, which is where namchaind reads it. The format is the engine's: the engine decides what a unit is and what a cost means; the numbers are the device's, measured by tools/warm/namchain-warm-bench.cpp's `measure` mode on that device (P1). `devices/common/cost-check` validates a table against this schema and the invariants a JSON Schema cannot state.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "host", "measured", "engine_commit", "kernel", "rate", "quantum",
+    "deadline_us", "headroom", "bar", "core_percent", "unknown", "sources"
+  ],
+  "properties": {
+    "host": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "The Core device this table is for: the name of the directory it lives in under devices/."
+    },
+    "measured": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
+      "description": "When the table was last measured, UTC."
+    },
+    "engine_commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$",
+      "description": "The namchain commit the numbers were measured with. devices/<host>/check fails when the installed engine is not this commit: the numbers are only as good as the code that produced them."
+    },
+    "kernel": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The kernel release (uname -r) they were measured on. devices/<host>/check fails when the running kernel is not this one."
+    },
+    "rate": {
+      "type": "number",
+      "const": 48000,
+      "description": "The engine's rate. Here so that deadline_us can be checked against quantum/rate."
+    },
+    "quantum": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4096,
+      "description": "The block size (frames) the numbers are for."
+    },
+    "deadline_us": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "One block's deadline: quantum / rate * 1e6. Every p99 in `sources` is a fraction of this."
+    },
+    "headroom": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1,
+      "description": "The largest cost a rig may have and still be admitted (D3: 0.8). The fit point is a cliff and the transition itself briefly runs two rigs, so admitting a rig that scores 1.0 is ruled out."
+    },
+    "bar": {
+      "type": "string",
+      "minLength": 1,
+      "description": "What 'fits' meant when the numbers were taken (D7), in words, so a later table can be read against it."
+    },
+    "core_percent": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The measured rows: the cost of one unit, as a fraction of one core. Only measured rows belong here -- a unit with no row costs `unknown` (D8), which is the safe direction.",
+      "properties": {
+        "NAM": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "One row per architecture family, from namchain's model_family_from_file() (a SlimmableContainer's family is its submodels'). `full` is the submodel the model loads at, `lite` the one SetSlimmableSize(0.0) selects.",
+          "patternProperties": {
+            "^[A-Za-z][A-Za-z0-9_]*$": {
+              "type": "object",
+              "additionalProperties": false,
+              "minProperties": 1,
+              "properties": {
+                "full": { "$ref": "#/$defs/cost" },
+                "lite": { "$ref": "#/$defs/cost" }
+              }
+            }
+          }
+        },
+        "IR": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "One row per tap count. A cab IR is charged the cheapest row that is not shorter than it, so a 6000-tap IR costs the 8192 row; 8192 is the longest nc.cab.ir supports.",
+          "patternProperties": {
+            "^[0-9]+$": { "$ref": "#/$defs/cost" }
+          }
+        },
+        "node": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "One row per node type, keyed by the type's own name (nc.gain, nc.eq.biquad, ...). The levels probe belongs here too: level_probe is a row when the meter is on (P9).",
+          "patternProperties": {
+            "^[a-z0-9][a-z0-9_.]*$": { "$ref": "#/$defs/cost" }
+          }
+        }
+      }
+    },
+    "unknown": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["NAM", "IR", "node"],
+      "description": "D8: what admission charges for a unit that is not in the table. Each must be at least the dearest measured row of its kind, so an unmeasured unit can never be waved through as the cheapest thing in the rig.",
+      "properties": {
+        "NAM": { "$ref": "#/$defs/cost" },
+        "IR": { "$ref": "#/$defs/cost" },
+        "node": { "$ref": "#/$defs/cost" }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Where each row's number came from: the n it was bisected to, what happened at n, and -- because the cliff's shape is part of the measurement, not a by-product (D2 step 4) -- at the next point past it. Every row in core_percent must have an entry here.",
+      "patternProperties": {
+        "^(NAM\\.[A-Za-z][A-Za-z0-9_]*\\.(full|lite)|IR\\.[0-9]+|node\\.[a-z0-9][a-z0-9_.]*)$": {
+          "$ref": "#/$defs/source"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "cost": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1,
+      "description": "1/n: one unit of this kind, as a fraction of one core. Zero is not a cost -- a unit nobody can measure the cost of is `unknown`, not free."
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["n", "p99_at_n"],
+      "properties": {
+        "n": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The largest number of copies of this unit that rendered within the deadline with zero overruns on one core: the row's cost is 1/n."
+        },
+        "p99_at_n": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The p99 of one block's work at n copies, as a fraction of deadline_us. Under 1.0, or it would not have fitted: this is the bar the bisection used."
+        },
+        "overruns_at_n": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Blocks at n whose work went past the deadline, recorded rather than required: measured, the count at the fit point is not monotone in n (namchain's namchain-warm-bench.cpp has the four points that show it), so it cannot decide n. D7's 'zero overruns' is what the live soak (T10) confirms."
+        },
+        "p99_at_n_plus_1": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The same one copy further. Over 1.0 unless `at_most` is true: that is what makes n the largest that fitted."
+        },
+        "overruns_at_n_plus_1": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "How many blocks at n+1 went past the deadline. Recorded, like overruns_at_n."
+        },
+        "p99_at_n_plus_2": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "blocks_behind_at_n_plus_1": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "How far behind the paced run was at n+1, in blocks. E2's Full curve reached 2,621 blocks at 12: past the cliff the failure is not graceful."
+        },
+        "at_most": {
+          "type": "boolean",
+          "description": "True when the bisection stopped at its own ceiling without a miss: the row's cost is then an upper bound, not the cliff. Such a row must say why."
+        },
+        "why": {
+          "type": "string",
+          "description": "What bounded the measurement, when `at_most` is true."
+        }
+      }
+    }
+  }
+}

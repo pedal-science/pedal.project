@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+"""devices/common/cost-merge — fold measured fragments into a device's cost table.
+
+`scripts/measure-core` runs `namchain-warm-bench measure` once per unit on the device and leaves one
+JSON fragment per unit; this puts them into `devices/<host>/rootfs/etc/namchain/cost.json`, which is
+the table the engine reads (P1 -> P2 of
+pedal.project docs/managing-processing-power-and-optimising-for-fast-switching.md).
+
+    cost-merge --device vip --fragments build/vip/measure/<stamp>/fragments.jsonl \\
+               [--fragments ...] [--engine-commit SHA] [--kernel REL] [--measured ISO] [--dry-run]
+
+Only the rows a fragment names are touched, so a re-measurement of one unit updates one row and
+leaves the rest of the table alone. A row is its `core_percent` value plus its `sources` entry: the
+fragment's `curve` is not part of the table (T1's record is the fragment, kept in bench-results/).
+`null` points -- a curve point that was not measured -- are dropped rather than written as a row the
+schema would refuse.
+
+The result is validated with `devices/common/cost-check` before it is written, so a merge that would
+leave the table inconsistent fails instead of landing.
+"""
+
+import argparse
+import importlib.util
+import json
+import os
+import subprocess
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_UNKNOWN = {"NAM": 0.25, "IR": 0.1, "node": 0.05}
+# The bar the numbers were taken with. Not D7's wording, deliberately: measured, the overrun count at
+# the fit point is not monotone in n (see namchain's namchain-warm-bench.cpp), so the bisection fits on
+# p99 and the overruns are part of the curve's shape. D7's "zero overruns" is what the live soak
+# confirms (T10).
+DEFAULT_BAR = "p99 under the deadline, overruns recorded, paced offline; the live soak confirms zero xruns"
+
+
+def die(message):
+    print("cost-merge: %s" % message, file=sys.stderr)
+    sys.exit(2)
+
+
+def table_path(device, root):
+    return os.path.join(root, "devices", device, "rootfs/etc/namchain/cost.json")
+
+
+def place(table, unit, value, source):
+    """Put one fragment's row where the schema keeps it."""
+    core = table.setdefault("core_percent", {})
+    if unit.startswith("NAM.") and unit.endswith((".full", ".lite")):
+        family, _, size = unit[len("NAM."):].rpartition(".")
+        core.setdefault("NAM", {}).setdefault(family, {})[size] = value
+    elif unit.startswith("IR.") and unit[len("IR."):].isdigit():
+        core.setdefault("IR", {})[unit[len("IR."):]] = value
+    elif unit.startswith("node.") and len(unit) > len("node."):
+        # A node type's own name has dots in it (nc.eq.biquad), so the key is everything after the
+        # prefix rather than one component of a split.
+        core.setdefault("node", {})[unit[len("node."):]] = value
+    else:
+        die("fragment names '%s', which is not NAM.<family>.<full|lite>, IR.<taps> or node.<type>" % unit)
+    table.setdefault("sources", {})[unit] = {k: v for k, v in source.items() if v is not None}
+
+
+def main():
+    ap = argparse.ArgumentParser(description="fold measured fragments into a device's cost table")
+    ap.add_argument("--device", required=True, help="the Core device, e.g. vip")
+    ap.add_argument("--fragments", action="append", default=[], help="a fragments.jsonl (repeatable)")
+    ap.add_argument("--root", default=os.path.dirname(os.path.dirname(HERE)),
+                    help="the pedal.project checkout (default: this file's)")
+    ap.add_argument("--engine-commit", default=None, help="the namchain commit the numbers came from")
+    ap.add_argument("--kernel", default=None, help="the kernel release they came from")
+    ap.add_argument("--measured", default=None, help="UTC timestamp (default: now)")
+    ap.add_argument("--dry-run", action="store_true", help="print the table, write nothing")
+    args = ap.parse_args()
+
+    path = table_path(args.device, args.root)
+    if os.path.exists(path):
+        with open(path) as fh:
+            table = json.load(fh)
+    else:
+        print("cost-merge: %s does not exist yet; writing a new table" % path, file=sys.stderr)
+        table = {
+            "host": args.device,
+            "measured": "",
+            "engine_commit": "",
+            "kernel": "",
+            "rate": 48000,
+            "quantum": 64,
+            "deadline_us": 64 / 48000 * 1e6,
+            "headroom": 0.8,
+            "bar": DEFAULT_BAR,
+            "core_percent": {"NAM": {}, "IR": {}, "node": {}},
+            "unknown": dict(DEFAULT_UNKNOWN),
+            "sources": {},
+        }
+
+    rows = 0
+    for fragment_path in args.fragments:
+        with open(fragment_path) as fh:
+            for line in fh:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    fragment = json.loads(line)
+                except ValueError as exc:
+                    die("%s: %s" % (fragment_path, exc))
+                unit = fragment.get("unit")
+                if not unit or "core_percent" not in fragment or "sources" not in fragment:
+                    die("%s: a fragment needs unit, core_percent and sources" % fragment_path)
+                place(table, unit, fragment["core_percent"], fragment["sources"])
+                rows += 1
+                print("  %-28s %-8s n=%s" % (unit, fragment["core_percent"], fragment["sources"].get("n")))
+
+    if rows == 0:
+        die("no fragments: nothing to merge")
+    import datetime
+    table["measured"] = args.measured or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    if args.engine_commit:
+        table["engine_commit"] = args.engine_commit
+    if args.kernel:
+        table["kernel"] = args.kernel
+    for key in ("NAM", "IR", "node"):
+        table["core_percent"].setdefault(key, {})
+
+    text = json.dumps(table, indent=2, sort_keys=True) + "\n"
+    if args.dry_run:
+        print(text)
+        return 0
+
+    # Validate before writing: a table that fails cost-check must not land in the tree.
+    tmp = path + ".new"
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(tmp, "w") as fh:
+        fh.write(text)
+    result = subprocess.run([sys.executable, os.path.join(HERE, "cost-check"), tmp, "--host", args.device,
+                             "--engine-commit", table["engine_commit"], "--kernel", table["kernel"]],
+                            capture_output=True, text=True)
+    sys.stdout.write(result.stdout)
+    if result.returncode != 0:
+        os.unlink(tmp)
+        die("the merged table is not valid; nothing was written")
+    os.replace(tmp, path)
+    print("wrote %s (%d row(s) merged)" % (path, rows))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

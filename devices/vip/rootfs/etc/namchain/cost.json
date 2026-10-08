@@ -1,0 +1,155 @@
+{
+  "bar": "p99 under the deadline, overruns recorded, paced offline; the live soak confirms zero xruns",
+  "core_percent": {
+    "IR": {
+      "1024": 0.00781,
+      "2048": 0.01,
+      "4096": 0.0222,
+      "512": 0.00781,
+      "8192": 0.0222
+    },
+    "NAM": {
+      "WaveNet": {
+        "full": 0.111,
+        "lite": 0.0333
+      }
+    },
+    "node": {
+      "nc.delay": 0.00781,
+      "nc.eq.biquad": 0.00781,
+      "nc.gain": 0.00781,
+      "nc.input": 0.00781,
+      "nc.mix": 0.00781,
+      "nc.output": 0.00781,
+      "nc.split": 0.00781
+    }
+  },
+  "deadline_us": 1333.3333333333333,
+  "engine_commit": "becd0f2",
+  "headroom": 0.8,
+  "host": "vip",
+  "kernel": "7.0.0-1017-raspi-realtime-numaemu1-trimmed",
+  "measured": "2026-10-08T09:22:07Z",
+  "quantum": 64,
+  "rate": 48000,
+  "sources": {
+    "IR.1024": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.956,
+      "why": "--max 128 reached without a miss"
+    },
+    "IR.2048": {
+      "at_most": false,
+      "blocks_behind_at_n_plus_1": 1,
+      "n": 100,
+      "overruns_at_n": 83,
+      "overruns_at_n_plus_1": 3237,
+      "p99_at_n": 0.998,
+      "p99_at_n_plus_1": 1.008,
+      "p99_at_n_plus_2": 1.021
+    },
+    "IR.4096": {
+      "at_most": false,
+      "blocks_behind_at_n_plus_1": 1,
+      "n": 45,
+      "overruns_at_n": 0,
+      "overruns_at_n_plus_1": 318,
+      "p99_at_n": 0.978,
+      "p99_at_n_plus_1": 1.001,
+      "p99_at_n_plus_2": 1.022
+    },
+    "IR.512": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.479,
+      "why": "--max 128 reached without a miss"
+    },
+    "IR.8192": {
+      "at_most": false,
+      "blocks_behind_at_n_plus_1": 1,
+      "n": 45,
+      "overruns_at_n": 0,
+      "overruns_at_n_plus_1": 2026,
+      "p99_at_n": 0.987,
+      "p99_at_n_plus_1": 1.007,
+      "p99_at_n_plus_2": 1.034
+    },
+    "NAM.WaveNet.full": {
+      "at_most": false,
+      "blocks_behind_at_n_plus_1": 1,
+      "n": 9,
+      "overruns_at_n": 153,
+      "overruns_at_n_plus_1": 1185,
+      "p99_at_n": 0.974,
+      "p99_at_n_plus_1": 1.109,
+      "p99_at_n_plus_2": 1.249
+    },
+    "NAM.WaveNet.lite": {
+      "at_most": false,
+      "blocks_behind_at_n_plus_1": 1,
+      "n": 30,
+      "overruns_at_n": 149,
+      "overruns_at_n_plus_1": 256,
+      "p99_at_n": 0.959,
+      "p99_at_n_plus_1": 1.003,
+      "p99_at_n_plus_2": 1.048
+    },
+    "node.nc.delay": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.041,
+      "why": "--max 128 reached without a miss"
+    },
+    "node.nc.eq.biquad": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.103,
+      "why": "--max 128 reached without a miss"
+    },
+    "node.nc.gain": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.02,
+      "why": "--max 128 reached without a miss"
+    },
+    "node.nc.input": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.012,
+      "why": "--max 128 reached without a miss"
+    },
+    "node.nc.mix": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.025,
+      "why": "--max 128 reached without a miss"
+    },
+    "node.nc.output": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.011,
+      "why": "--max 128 reached without a miss"
+    },
+    "node.nc.split": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.035,
+      "why": "--max 128 reached without a miss"
+    }
+  },
+  "unknown": {
+    "IR": 0.1,
+    "NAM": 0.25,
+    "node": 0.05
+  }
+}

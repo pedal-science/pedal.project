@@ -1,0 +1,289 @@
+#!/usr/bin/env python3
+"""devices/common/cost-check — validate a Core device's cost table.
+
+The table is `devices/<host>/rootfs/etc/namchain/cost.json` (with `devices/<host>/cost.json` a
+symlink to it), installed on the device at `/etc/namchain/cost.json`, where `namchaind` reads it.
+`devices/common/cost.schema.json` is its format; the format is the engine's, the numbers are the
+device's (pedal.project docs/managing-processing-power-and-optimising-for-fast-switching.md, D9).
+
+    cost-check [--host NAME] [--engine-commit SHA] [--kernel REL] [--quiet] TABLE
+
+Reads TABLE against the schema, then checks the invariants a JSON Schema cannot state:
+
+  * `deadline_us` is `quantum / rate`
+  * every measured row has a `sources` entry, and the two agree: the cost is `1/n`
+  * a row that is not `at_most` missed at n+1 -- on p99, which is the bar the bisection used, and
+    which is what makes n the largest that fitted
+  * `at_most` says what bounded it
+  * `unknown` is at least the dearest measured row of its kind (D8: an unmeasured unit may never be
+    admitted as the cheap one)
+  * `headroom` is a headroom and not a fit point (D3: 0.8; above 0.9 is not a headroom)
+
+With `--engine-commit` and `--kernel`, the table's provenance is compared with what the device is
+running: numbers are only as good as the code and the kernel that produced them.
+
+Exits 1 on any finding, 2 on a usage error. Its output is in `devices/common/check`'s idiom, so it
+is run from there and its exit status is what `check` reports.
+"""
+
+import argparse
+import json
+import re
+import sys
+
+SCHEMA = "cost.schema.json"
+
+
+def say(kind, what, detail=""):
+    print("  %-5s %-52s %s" % (kind, what, detail))
+
+
+class Findings:
+    def __init__(self):
+        self.bad = 0
+
+    def fail(self, what, detail=""):
+        say("FAIL", what, detail)
+        self.bad += 1
+
+    def ok(self, what, detail=""):
+        say("ok", what, detail)
+
+    def note(self, what, detail=""):
+        say("--", what, detail)
+
+
+# --- a small JSON Schema validator ---------------------------------------------------------------
+#
+# Only the keywords cost.schema.json uses, so that the schema stays the one description of the
+# format rather than a document beside a second, hand-written one. Descriptions and titles are
+# ignored; $ref resolves inside the document (`#/$defs/...`).
+
+_TYPE = {
+    "object": dict,
+    "array": list,
+    "string": str,
+    "boolean": bool,
+    "number": (int, float),
+    "integer": int,
+}
+
+
+def type_ok(value, name):
+    if name == "number":
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    if name == "integer":
+        return isinstance(value, int) and not isinstance(value, bool)
+    if name == "boolean":
+        return isinstance(value, bool)
+    return isinstance(value, _TYPE[name])
+
+
+def resolve(schema, root):
+    seen = 0
+    while "$ref" in schema:
+        ref = schema["$ref"]
+        if not ref.startswith("#/"):
+            raise ValueError("only in-document $ref is supported: %s" % ref)
+        node = root
+        for part in ref[2:].split("/"):
+            node = node[part]
+        schema = node
+        seen += 1
+        if seen > 8:
+            raise ValueError("$ref loop at %s" % ref)
+    return schema
+
+
+def validate(value, schema, root, path, f):
+    schema = resolve(schema, root)
+    where = path or "(root)"
+    if "type" in schema:
+        names = schema["type"] if isinstance(schema["type"], list) else [schema["type"]]
+        if not any(type_ok(value, n) for n in names):
+            f.fail(where, "expected %s, got %s" % ("/".join(names), type(value).__name__))
+            return
+    if "const" in schema and value != schema["const"]:
+        f.fail(where, "must be %r" % (schema["const"],))
+    if "enum" in schema and value not in schema["enum"]:
+        f.fail(where, "must be one of %r" % (schema["enum"],))
+    if isinstance(value, bool):
+        pass
+    elif isinstance(value, (int, float)):
+        if "minimum" in schema and value < schema["minimum"]:
+            f.fail(where, "%g is below %g" % (value, schema["minimum"]))
+        if "maximum" in schema and value > schema["maximum"]:
+            f.fail(where, "%g is above %g" % (value, schema["maximum"]))
+        if "exclusiveMinimum" in schema and value <= schema["exclusiveMinimum"]:
+            f.fail(where, "%g is not above %g" % (value, schema["exclusiveMinimum"]))
+        if "exclusiveMaximum" in schema and value >= schema["exclusiveMaximum"]:
+            f.fail(where, "%g is not below %g" % (value, schema["exclusiveMaximum"]))
+    if isinstance(value, str):
+        if "minLength" in schema and len(value) < schema["minLength"]:
+            f.fail(where, "shorter than %d characters" % schema["minLength"])
+        if "pattern" in schema and not re.search(schema["pattern"], value):
+            f.fail(where, "%r does not match %s" % (value, schema["pattern"]))
+    if isinstance(value, list):
+        if "minItems" in schema and len(value) < schema["minItems"]:
+            f.fail(where, "needs at least %d items" % schema["minItems"])
+        if "items" in schema:
+            for i, item in enumerate(value):
+                validate(item, schema["items"], root, "%s[%d]" % (path, i), f)
+    if isinstance(value, dict):
+        props = schema.get("properties", {})
+        patterns = schema.get("patternProperties", {})
+        for name in schema.get("required", []):
+            if name not in value:
+                f.fail(where, "missing %r" % name)
+        if "minProperties" in schema and len(value) < schema["minProperties"]:
+            f.fail(where, "needs at least %d keys" % schema["minProperties"])
+        for key, item in value.items():
+            matched = False
+            if key in props:
+                validate(item, props[key], root, "%s.%s" % (path, key), f)
+                matched = True
+            for pattern, sub in patterns.items():
+                if re.search(pattern, key):
+                    validate(item, sub, root, "%s.%s" % (path, key), f)
+                    matched = True
+            if not matched:
+                extra = schema.get("additionalProperties", True)
+                if extra is False:
+                    f.fail("%s.%s" % (path, key), "not a key of this table")
+                elif isinstance(extra, dict):
+                    validate(item, extra, root, "%s.%s" % (path, key), f)
+
+
+# --- the invariants the schema cannot state ------------------------------------------------------
+
+
+def rows(doc):
+    """Every measured row as (key, cost), keyed the way `sources` is."""
+    out = []
+    core = doc.get("core_percent", {})
+    for family, sizes in (core.get("NAM") or {}).items():
+        for size, cost in sizes.items():
+            out.append(("NAM.%s.%s" % (family, size), cost))
+    for taps, cost in (core.get("IR") or {}).items():
+        out.append(("IR.%s" % taps, cost))
+    for node, cost in (core.get("node") or {}).items():
+        out.append(("node.%s" % node, cost))
+    return out
+
+
+def invariants(doc, host, engine_commit, kernel, f):
+    quantum, rate = doc["quantum"], doc["rate"]
+    want_deadline = quantum / rate * 1e6
+    if abs(doc["deadline_us"] - want_deadline) > 0.005 * want_deadline:
+        f.fail("cost.json deadline_us", "%.3f is not quantum/rate (%.3f)" % (doc["deadline_us"], want_deadline))
+    if doc["headroom"] > 0.9:
+        f.fail("cost.json headroom", "%.3f is not a headroom (D3: 0.8, and the transition itself runs two rigs)"
+               % doc["headroom"])
+    if host and doc["host"] != host:
+        f.fail("cost.json host", "%s is not the device this table is in (devices/%s)" % (doc["host"], host))
+    if engine_commit and doc["engine_commit"] != engine_commit:
+        f.fail("cost.json engine_commit",
+               "%s, but the device runs %s: re-measure or re-deploy" % (doc["engine_commit"], engine_commit))
+    if kernel and doc["kernel"] != kernel:
+        f.fail("cost.json kernel",
+               "%s, but the device runs %s: re-measure or re-deploy" % (doc["kernel"], kernel))
+
+    sources = doc.get("sources", {})
+    seen = rows(doc)
+    for taps in (doc.get("core_percent", {}).get("IR") or {}):
+        # "IRs longer than 8192 taps ... not supported; measured as such rather than left undefined"
+        # (the same document, "Not doing"): a row above the ceiling would be a cost nothing can pay.
+        if not 1 <= int(taps) <= 8192:
+            f.fail("cost.json IR.%s" % taps, "nc.cab.ir convolves at most 8192 taps")
+    for key, cost in seen:
+        src = sources.get(key)
+        if src is None:
+            f.fail("cost.json sources.%s" % key,
+                   "no provenance: every measured row carries the n it came from (D2)")
+            continue
+        n = src["n"]
+        if abs(cost * n - 1.0) > 0.005:
+            f.fail("cost.json %s" % key, "core_percent %g is not 1/n for n=%d" % (cost, n))
+        # The bar is p99 under the deadline (namchain's namchain-warm-bench.cpp says why: measured,
+        # the overrun count at the fit point is not monotone in n, so it cannot decide n). Overruns
+        # are recorded beside it -- they are part of the cliff's shape, and the live soak (T10) is
+        # what confirms zero xruns.
+        if src["p99_at_n"] > 1.0:
+            f.fail("cost.json sources.%s" % key,
+                   "p99_at_n %.3f is not under the deadline, so %d did not fit" % (src["p99_at_n"], n))
+        if src.get("at_most"):
+            if not src.get("why"):
+                f.fail("cost.json sources.%s" % key, "at_most needs a why: an upper bound must say what bounded it")
+        elif "p99_at_n_plus_1" in src and src["p99_at_n_plus_1"] <= 1.0:
+            f.fail("cost.json sources.%s" % key,
+                   "n+1 fitted too (p99 %.3f), so n=%d is not the largest that fits"
+                   % (src["p99_at_n_plus_1"], n))
+
+    for key, _ in sources.items():
+        if key not in [k for k, _ in seen]:
+            f.fail("cost.json sources.%s" % key, "provenance for a row that is not in core_percent")
+
+    for kind in ("NAM", "IR", "node"):
+        known = [cost for key, cost in seen
+                 if (key.startswith("NAM.") and kind == "NAM")
+                 or (key.startswith("IR.") and kind == "IR")
+                 or (key.startswith("node.") and kind == "node")]
+        if known and doc["unknown"][kind] < max(known):
+            f.fail("cost.json unknown.%s" % kind,
+                   "%g is below the dearest measured row (%g): an unmeasured unit would be the cheap one (D8)"
+                   % (doc["unknown"][kind], max(known)))
+
+
+def main():
+    ap = argparse.ArgumentParser(description="validate a Core device's cost table")
+    ap.add_argument("table")
+    ap.add_argument("--schema", default=None, help="the format (default: cost.schema.json beside this)")
+    ap.add_argument("--host", default=None, help="the device name this table must be for")
+    ap.add_argument("--engine-commit", default=None)
+    ap.add_argument("--kernel", default=None)
+    ap.add_argument("--quiet", action="store_true", help="only the findings, not the summary")
+    args = ap.parse_args()
+
+    import os
+    schema_path = args.schema or os.path.join(os.path.dirname(os.path.abspath(__file__)), SCHEMA)
+    try:
+        with open(schema_path) as fh:
+            schema = json.load(fh)
+    except (OSError, ValueError) as exc:
+        say("FAIL", "cost.schema.json", "cannot be read: %s" % exc)
+        return 2
+    try:
+        with open(args.table) as fh:
+            doc = json.load(fh)
+    except OSError as exc:
+        say("FAIL", "cost.json", "cannot be read: %s" % exc)
+        return 1
+    except ValueError as exc:
+        say("FAIL", "cost.json", "is not JSON: %s" % exc)
+        return 1
+
+    f = Findings()
+    validate(doc, schema, schema, "", f)
+    if f.bad:
+        # The invariants below read fields the schema has just said may not be there: report what
+        # the schema found and stop, rather than a cascade about a table that is not the shape.
+        return 1
+
+    invariants(doc, args.host, args.engine_commit, args.kernel, f)
+
+    if not args.quiet:
+        seen = rows(doc)
+        kinds = {"NAM": 0, "IR": 0, "node": 0}
+        for key, _ in seen:
+            kinds["node" if key.startswith("node.") else key.split(".")[0]] += 1
+        f.ok("cost.json host %s, measured %s" % (doc["host"], doc["measured"]))
+        f.ok("cost.json engine %s, kernel %s" % (doc["engine_commit"], doc["kernel"]))
+        f.ok("cost.json %d row(s): NAM %d, IR %d, node %d; headroom %.2f"
+             % (len(seen), kinds["NAM"], kinds["IR"], kinds["node"], doc["headroom"]))
+        if args.engine_commit or args.kernel:
+            f.ok("cost.json provenance matches what the device runs")
+    return 1 if f.bad else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

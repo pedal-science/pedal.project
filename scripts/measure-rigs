@@ -1,0 +1,265 @@
+#!/usr/bin/env bash
+# scripts/measure-rigs [--host vip] [--seconds S] [--out DIR] [--no-build] [--dry-run]
+#                      -- T2 and T3: does the cost model predict?
+#
+# P1 measures units; this measures **rigs**. The table's whole claim is that a rig's cost is the sum
+# of its units' costs (D2), and T2 is the test that can falsify it: 12-20 heterogeneous rigs, costed
+# from the table alone, then measured. The falsifier is one line in the output -- "any rig predicted
+# <= 0.8 that misses the deadline" -- and namchain-warm-bench's `rig` mode exits 1 for exactly that
+# rig, having costed it with the engine's own model.
+#
+# T3's adversaries are in the same set: the two-amp chain (one chain with two models in series,
+# which no form of parallel rendering helps), a 16-model rig, N x 8192-tap IRs, and an effects-only
+# rig (which the table would score as nearly free, which is what P9 is about).
+#
+# Every rig is a *document*, as a client would publish it, so what is measured is what the engine
+# would run: the same compiler, the same nodes, the same IR truncation.
+set -euo pipefail
+
+HOST=vip
+SECONDS_PER_RIG=30
+OUT=""
+BUILD=1
+DRY=0
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --seconds) SECONDS_PER_RIG=$2; shift ;;
+    --out) OUT=$2; shift ;;
+    --no-build) BUILD=0 ;;
+    --dry-run) DRY=1 ;;
+    -h|--help) sed -n '2,18p' "$0"; exit 0 ;;
+    *) echo "measure-rigs: unknown argument $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+HERE="$ROOT/devices/$HOST"
+NC="$(cd "$ROOT/.." && pwd)/namchain"
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+OUT=${OUT:-$ROOT/build/$HOST/rigs/$STAMP}
+mkdir -p "$OUT"; OUT=$(cd "$OUT" && pwd)   # absolute: the rigs it writes name files by full path
+die() { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
+log() { printf '\033[1m==\033[0m %s\n' "$*" >&2; }
+
+[[ -d $HERE ]] || die "no devices/$HOST"
+models_root=$(sed -n 's/.*"models_root"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$HERE/rootfs/etc/namchain/namchaind.json")
+irs_root=$(sed -n 's/.*"irs_root"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$HERE/rootfs/etc/namchain/namchaind.json")
+[[ -n $models_root && -n $irs_root ]] || die "devices/$HOST/rootfs/etc/namchain/namchaind.json names no models_root/irs_root"
+TABLE="$HERE/rootfs/etc/namchain/cost.json"
+[[ -f $TABLE ]] || die "no cost table at $TABLE: scripts/measure-core and cost-merge make one"
+
+mkdir -p "$OUT/rigs"
+
+log "writing the rig set to $OUT/rigs"
+python3 - "$models_root" "$irs_root" "$OUT/rigs" <<'PY'
+import json, os, sys
+
+models, irs, out = sys.argv[1], sys.argv[2], sys.argv[3]
+M = lambda name: os.path.join(models, name)
+I = lambda name: os.path.join(irs, name)
+
+AMP = M("NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam")
+AMP2 = M("Ampeg SVT Classic with 6x10/Ampeg SVT - Gain 10 Ultra Lo and Hi MD 421.nam")
+PEDAL = M("Boss SD-1 Super Overdrive/APP-SD1-Drive-I.nam")
+CLEAN = M("000 Unsorted/Deluxe Reverb.nam")
+CAB = I("Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/"
+        "Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav")
+
+def chain(nodes, connections, id="main", name=None):
+    entry = {"id": id, "nodes": nodes, "connections": connections}
+    if name:
+        entry["name"] = name
+    return entry
+
+def amp_chain(prefix="a", model=AMP, cab=None, effects=(), id="main"):
+    """input -> [model] -> effects -> [cab] -> output, as a chain."""
+    nodes = [{"id": prefix + "in", "type": "nc.input"}]
+    conns = []
+    previous = prefix + "in"
+    if model:
+        nodes.append({"id": prefix + "amp", "type": "nc.nam", "model": model})
+        conns.append({"from": previous, "to": prefix + "amp"})
+        previous = prefix + "amp"
+    for i, (kind, params) in enumerate(effects):
+        node = {"id": "%sfx%d" % (prefix, i), "type": kind}
+        node.update(params)
+        nodes.append(node)
+        conns.append({"from": previous, "to": node["id"]})
+        previous = node["id"]
+    if cab:
+        nodes.append({"id": prefix + "cab", "type": "nc.cab.ir", "ir": cab})
+        conns.append({"from": previous, "to": prefix + "cab"})
+        previous = prefix + "cab"
+    nodes.append({"id": prefix + "out", "type": "nc.output"})
+    conns.append({"from": previous, "to": prefix + "out"})
+    return chain(nodes, conns, id=id)
+
+EQ = ("nc.eq.biquad", {"mode": "peaking", "freq": 800.0, "q": 1.1, "gain_db": 3.0})
+SHELF = ("nc.eq.biquad", {"mode": "highshelf", "freq": 3200.0, "gain_db": -4.0})
+# nc.delay is a plain delay line -- samples, ms, ramp_ms, max_samples, max_ms, and no feedback or
+# mix (a feedback echo is a graph of split/mix/delay, which is a rig's business and not a node's).
+DELAY = ("nc.delay", {"ms": 120.0})
+GAIN = ("nc.gain", {"gain_db": -3.0})
+
+def doc(chains, meta=None):
+    out = {"chains": chains}
+    if meta:
+        out["meta"] = meta
+    return out
+
+def series_chain(models_list, cab=None, effects=(), id="main"):
+    nodes = [{"id": "in", "type": "nc.input"}]
+    conns = []
+    previous = "in"
+    for i, model in enumerate(models_list):
+        node = {"id": "amp%d" % (i + 1), "type": "nc.nam", "model": model}
+        nodes.append(node)
+        conns.append({"from": previous, "to": node["id"]})
+        previous = node["id"]
+    for i, (kind, params) in enumerate(effects):
+        node = {"id": "fx%d" % i, "type": kind}
+        node.update(params)
+        nodes.append(node)
+        conns.append({"from": previous, "to": node["id"]})
+        previous = node["id"]
+    if cab:
+        nodes.append({"id": "cab", "type": "nc.cab.ir", "ir": cab})
+        conns.append({"from": previous, "to": "cab"})
+        previous = "cab"
+    nodes.append({"id": "out", "type": "nc.output"})
+    conns.append({"from": previous, "to": "out"})
+    return chain(nodes, conns, id=id)
+
+# The set. Covers: one model and two, Lite and Full, no cab and three cab lengths, effects-heavy,
+# an effects-only rig, parallel lanes, and three chains at once -- plus T3's four adversaries.
+rigs = {
+    "01-model-full": doc([amp_chain(model=AMP)]),
+    "02-model-cab8192": doc([amp_chain(model=AMP, cab=CAB)]),
+    "03-two-amp-chain": doc([series_chain([AMP, AMP2])]),
+    "04-two-amp-cab": doc([series_chain([AMP, AMP2], cab=CAB)]),
+    "05-pedal-amp-cab": doc([series_chain([PEDAL, AMP], cab=CAB)]),
+    "06-amp-3fx-cab": doc([amp_chain(model=AMP, cab=CAB, effects=(EQ, SHELF, DELAY))]),
+    "07-amp-5fx": doc([amp_chain(model=AMP, effects=(EQ, SHELF, DELAY, GAIN, EQ))]),
+    "08-effects-only": doc([series_chain([], effects=(GAIN, EQ, SHELF, DELAY, EQ, GAIN, SHELF, DELAY))]),
+    "09-eight-lite": doc([series_chain([CLEAN] * 8)]),
+    "10-sixteen-lite": doc([series_chain([CLEAN] * 16)]),
+    "11-three-chains": doc([amp_chain(prefix="a", model=AMP, cab=CAB, id="one"),
+                            amp_chain(prefix="b", model=CLEAN, id="two"),
+                            amp_chain(prefix="c", model=PEDAL, effects=(EQ,), id="three")]),
+    "12-mixed": doc([series_chain([PEDAL, AMP], cab=CAB, effects=(EQ, DELAY))]),
+    "13-amp-cab512": doc([amp_chain(model=AMP, cab="__IR512__")]),
+    "14-amp-cab2048": doc([amp_chain(model=AMP, cab="__IR2048__")]),
+    "15-amp-cab4096": doc([amp_chain(model=AMP, cab="__IR4096__")]),
+    "16-two-lanes": doc([{"id": "main", "nodes": [
+        {"id": "in", "type": "nc.input"},
+        {"id": "split", "type": "nc.split", "outputs": 2},
+        {"id": "a1", "type": "nc.nam", "model": AMP},
+        {"id": "a2", "type": "nc.nam", "model": AMP2},
+        {"id": "mix", "type": "nc.mix", "inputs": 2},
+        {"id": "cab", "type": "nc.cab.ir", "ir": CAB},
+        {"id": "out", "type": "nc.output"}],
+        "connections": [
+            {"from": "in", "to": "split"},
+            {"from": "split", "from_port": 0, "to": "a1"},
+            {"from": "split", "from_port": 1, "to": "a2"},
+            {"from": "a1", "to": "mix", "to_port": 0},
+            {"from": "a2", "to": "mix", "to_port": 1},
+            {"from": "mix", "to": "cab"},
+            {"from": "cab", "to": "out"}]}]),
+}
+
+# The truncated cabs: a Linear .nam whose weights are the row's tap count, so a rig can carry a
+# 512-, 2048- or 4096-tap cab without a WAV the core's loader might refuse. The file is a real,
+# supported IR container (nc.cab.ir loads it), just a short one.
+for taps in (512, 2048, 4096):
+    path = os.path.join(out, "cab-%d.nam" % taps)
+    with open(path, "w") as fh:
+        json.dump({"architecture": "Linear", "config": {"receptive_field": taps},
+                   "weights": [0.0] * taps, "sample_rate": 48000.0}, fh)
+
+for name, document in rigs.items():
+    text = json.dumps(document, indent=2)
+    for taps in (512, 2048, 4096):
+        text = text.replace('"__IR%d__"' % taps, json.dumps(os.path.join(out, "cab-%d.nam" % taps)))
+    with open(os.path.join(out, name + ".json"), "w") as fh:
+        fh.write(text + "\n")
+print("  %d rigs, 3 truncated cabs" % len(rigs))
+PY
+
+if (( BUILD )); then
+  log "building namchain-warm-bench for $HOST"
+  source "$HERE/image.env"
+  SNAPSHOT=$(sed -n 's/^snapshot=//p' "$HERE/image.lock")
+  W="$OUT/build"
+  mkdir -p "$W"
+  # shellcheck disable=SC1091
+  source "$ROOT/devices/common/image/export.sh"
+  rm -rf "$W/src"
+  export_tree "$NC" worktree "$W/src"
+  TAG=pedal-build:$SNAPSHOT
+  docker image inspect "$TAG" >/dev/null 2>&1 \
+    || docker build -q -t "$TAG" --build-arg SNAPSHOT="$SNAPSHOT" "$ROOT/devices/common/image" >/dev/null
+  docker run --rm -v "$W:/w" -v "$ROOT:/in/pedal:ro" "$TAG" \
+    /in/pedal/devices/common/image/build-bench /w/src "$NAMCHAIN_CXXFLAGS" /w
+  cp "$W/bin/namchain-warm-bench" "$OUT/namchain-warm-bench"
+fi
+[[ -x $OUT/namchain-warm-bench ]] || die "no bench binary in $OUT"
+
+if (( DRY )); then
+  log "--dry-run: wrote $OUT/rigs and the bench; nothing was run on $HOST"
+  exit 0
+fi
+
+DEST=/var/tmp/measure-rigs
+log "copying the bench, the table and $(ls "$OUT/rigs" | wc -l | tr -d ' ') documents to $HOST:$DEST"
+ssh "$HOST" "rm -rf $DEST; mkdir -p $DEST/out"
+scp -q "$OUT/namchain-warm-bench" "$ROOT/guitar-di.wav" "$TABLE" "$HOST:$DEST/"
+scp -q -r "$OUT/rigs" "$HOST:$DEST/"
+
+log "running each rig on $HOST under the host lock"
+"$ROOT/scripts/host-lock" --host "$HOST" --wait 300 -- ssh "$HOST" "bash -s" <<EOF
+set -u
+restore() { sudo -n systemctl start namchaind; sleep 3; }
+trap restore EXIT
+sudo -n systemctl stop namchaind
+sleep 2
+cd $DEST
+: > out/fragments.jsonl
+for f in rigs/*.json; do
+  name=\$(basename "\$f" .json)
+  echo "### \$name" >> out/session.log
+  sudo -n systemd-run --quiet --scope --slice=pedal-bench.slice ./namchain-warm-bench rig \\
+    --input $DEST/guitar-di.wav --document \$f --table $DEST/cost.json \\
+    --seconds $SECONDS_PER_RIG > out/\$name.txt 2>&1 || true
+  grep -h '^fragment: ' out/\$name.txt | sed 's/^fragment: //' >> out/fragments.jsonl || true
+  grep -h '^predicted ' out/\$name.txt >&2
+  grep -h 'T2 FALSIFIED' out/\$name.txt >&2 || true
+done
+EOF
+
+scp -q "$HOST:$DEST/out/fragments.jsonl" "$OUT/fragments.jsonl"
+scp -q -r "$HOST:$DEST/out" "$OUT/out"
+rm -f "$OUT/out/fragments.jsonl" 2>/dev/null || true
+
+log "summary"
+python3 - "$OUT/fragments.jsonl" <<'PY'
+import json, sys
+falsified = []
+rows = 0
+for line in open(sys.argv[1]):
+    line = line.strip()
+    if not line:
+        continue
+    d = json.loads(line)
+    rows += 1
+    flag = "T2 FALSIFIED" if d.get("falsified") else ""
+    if flag:
+        falsified.append(d["document"])
+    print("  %-34s predicted %.3f (%-8s) measured p99 %.0f%%  %s" %
+          (d["document"].split("/")[-1], d["predicted_cost"], d["predicted_verdict"],
+           100 * d["measured_p99_fraction"], flag))
+print("\n%d rig(s) measured, %d falsified the model" % (rows, len(falsified)))
+sys.exit(1 if falsified else 0)
+PY

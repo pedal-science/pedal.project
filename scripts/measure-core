@@ -1,0 +1,198 @@
+#!/usr/bin/env bash
+# scripts/measure-core [--host vip] [--seconds S] [--units FILE] [--out DIR] [--no-build] [--dry-run]
+#                     -- measure a Core device's cost table where it matters: on the device.
+#
+# P1 and P2 of docs/managing-processing-power-and-optimising-for-fast-switching.md. The rule is
+# "measure every Core device before using it": a device's numbers are measured, not assumed, and
+# stored with it in devices/<host>/cost.json. This builds namchain's bench for the host, takes the
+# host's lock, stops namchaind so the device is quiet, runs each unit's `measure` mode, and writes
+# what came back to <out> (default: build/<host>/measure/<stamp>/):
+#
+#   fragments.jsonl   one cost-table fragment per unit, as namchain-warm-bench emits it
+#   <unit>.txt        the full run log for that unit, curve and all
+#   units             the commands that were run, verbatim
+#
+# The table itself is not rewritten here: devices/common/cost-merge folds the fragments into
+# devices/<host>/rootfs/etc/namchain/cost.json, and devices/common/cost-check validates the result.
+#
+# A units file is one `measure` argument list per line (after the mode), '#' comments and blank lines
+# ignored, with $M and $I standing for the host's models/ and irs/ roots. With none, the standard set
+# below is used: the two NAM submodel sizes off one model, the IR ladder, and the node types.
+set -euo pipefail
+
+HOST=vip
+SECONDS_PER_POINT=30
+UNITS=""
+OUT=""
+BUILD=1
+DRY=0
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --seconds) SECONDS_PER_POINT=$2; shift ;;
+    --units) UNITS=$2; shift ;;
+    --out) OUT=$2; shift ;;
+    --no-build) BUILD=0 ;;
+    --dry-run) DRY=1 ;;
+    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    *) echo "measure-core: unknown argument $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+HERE="$ROOT/devices/$HOST"
+NC="$(cd "$ROOT/.." && pwd)/namchain"
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+OUT=${OUT:-$ROOT/build/$HOST/measure/$STAMP}
+mkdir -p "$OUT"; OUT=$(cd "$OUT" && pwd)   # absolute: the rigs it writes name files by full path
+die() { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
+log() { printf '\033[1m==\033[0m %s\n' "$*" >&2; }
+
+[[ -d $HERE ]] || die "no devices/$HOST"
+[[ -d $NC ]] || die "no namchain checkout beside $ROOT"
+
+# The device's library roots, from its own engine configuration: what to measure is the models and
+# IRs the pedal actually carries, not a copy on the Mac.
+models_root=$(sed -n 's/.*"models_root"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$HERE/rootfs/etc/namchain/namchaind.json")
+irs_root=$(sed -n 's/.*"irs_root"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$HERE/rootfs/etc/namchain/namchaind.json")
+[[ -n $models_root && -n $irs_root ]] || die "devices/$HOST/rootfs/etc/namchain/namchaind.json names no models_root/irs_root"
+
+# The default unit set. One model per family is what the table keys on (NAM.<family>.<full|lite>), so
+# the model named here must be one of the family the table already has or is about to gain; the IR
+# ladder is the five rows nc.cab.ir can be charged for, and the node types are the primitives a rig
+# is built from. `nc.delay` needs one of 'samples' or 'ms' -- it has no default -- so it is measured
+# at 4800 samples (100 ms): the row is per node type, and a delay's own length is its parameter, not
+# a different kind of unit.
+# A units file is one unit per line; --units names one whose lines are read (comments and blanks
+# dropped), which is how the remaining units of a long run are measured without redoing the first ones.
+if [[ -n $UNITS ]]; then
+  [[ -f $UNITS ]] || { echo "measure-core: no units file $UNITS" >&2; exit 2; }
+  UNIT_LINES=$(cat "$UNITS")
+else
+UNIT_LINES=$(cat <<'EOF'
+# NAM: the two submodel sizes, off one model of the library's one family.
+--unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0
+--unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 0.0
+# IR: the tap ladder. The file below is 8192 taps; --taps takes the row.
+--unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 8192
+--unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 4096
+--unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 2048
+--unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 1024
+--unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 512
+# Node types: the primitives. The levels probes are measured twice, because whether the meter costs
+# render-core time is P9's question and it is answered by a measurement, not an assumption.
+--unit node --node nc.input --no-levels
+--unit node --node nc.output --no-levels
+--unit node --node nc.gain --no-levels
+--unit node --node nc.eq.biquad --no-levels
+--unit node --node nc.delay --node-param samples=4800 --no-levels
+--unit node --node nc.mix --no-levels
+--unit node --node nc.split --no-levels
+--unit node --node nc.eq.biquad --levels-publish-period
+EOF
+)
+fi
+
+mkdir -p "$OUT"
+printf '%s\n' "$UNIT_LINES" | sed '/^[[:space:]]*#/d; /^[[:space:]]*$/d' > "$OUT/units"
+
+if (( BUILD )); then
+  log "building namchain-warm-bench for $HOST in the image's container"
+  source "$HERE/image.env"
+  SNAPSHOT=$(sed -n 's/^snapshot=//p' "$HERE/image.lock")
+  W="$OUT/build"
+  mkdir -p "$W"
+  # shellcheck disable=SC1091
+  source "$ROOT/devices/common/image/export.sh"
+  rm -rf "$W/src"
+  export_tree "$NC" worktree "$W/src"
+  TAG=pedal-build:$SNAPSHOT
+  docker image inspect "$TAG" >/dev/null 2>&1 \
+    || docker build -q -t "$TAG" --build-arg SNAPSHOT="$SNAPSHOT" "$ROOT/devices/common/image" >/dev/null
+  docker run --rm -v "$W:/w" -v "$ROOT:/in/pedal:ro" "$TAG" \
+    /in/pedal/devices/common/image/build-bench /w/src "$NAMCHAIN_CXXFLAGS" /w
+  cp "$W/bin/namchain-warm-bench" "$OUT/namchain-warm-bench"
+fi
+[[ -x $OUT/namchain-warm-bench ]] || die "no bench binary (build it, or --no-build with one already in $OUT)"
+
+# The bench runs on the device, from the device's own library, with the device quiet: namchaind
+# stopped and the host lock held, so nothing else is playing while the numbers are taken.
+DEST=/var/tmp/measure-core
+log "copying the bench and the DI to $HOST:$DEST"
+ssh "$HOST" "mkdir -p $DEST"
+scp -q "$OUT/namchain-warm-bench" "$ROOT/guitar-di.wav" "$HOST:$DEST/"
+
+RUN="set -u
+export M='$models_root' I='$irs_root'
+cd $DEST
+run_one() { # run_one <file> <args...>
+  local file=\$1; shift
+  echo \"### \$*\" >> $DEST/session.log
+  sudo -n systemd-run --quiet --scope --slice=pedal-bench.slice ./namchain-warm-bench measure \
+    --input $DEST/guitar-di.wav --seconds $SECONDS_PER_POINT \"\$@\" > $DEST/out/\$file.txt 2>&1 || true
+  grep -h '^fragment: ' $DEST/out/\$file.txt | sed 's/^fragment: //' >> $DEST/out/fragments.jsonl || true
+  tail -n 3 $DEST/out/\$file.txt >&2
+}
+rm -rf $DEST/out; mkdir -p $DEST/out
+: > $DEST/session.log
+n=0
+while IFS= read -r line; do
+  n=\$((n+1))
+  eval \"set -- \$line\"
+  run_one \"unit-\$n\" \"\$@\"
+done < $DEST/units
+"
+
+# What to measure, and the quiet the measurement needs, on the device.
+ssh "$HOST" "cat > $DEST/units" < "$OUT/units"
+if (( DRY )); then
+  log "--dry-run: wrote $OUT/units and the binary; nothing was run on $HOST"
+  exit 0
+fi
+
+# The run is a long one -- fifteen units at half a minute a point is over an hour -- and it happens
+# over WiFi, so it is detached on the device and polled: a dropped ssh session must not take an hour
+# of measurements with it (it did, once). The *lock* is held by a second session for as long as the
+# run lasts, so the device is still nobody else's while it is being measured.
+ssh "$HOST" "cat > $DEST/run.sh" <<EOF
+set -u
+restore() { sudo -n systemctl start namchaind; sleep 3; systemctl is-active namchaind; }
+trap restore EXIT
+sudo -n systemctl stop namchaind
+sleep 2
+$RUN
+echo DONE > $DEST/out/DONE
+EOF
+
+log "running $(wc -l < "$OUT/units" | tr -d ' ') units on $HOST under the host lock"
+ssh "$HOST" "rm -f $DEST/out/DONE"
+"$ROOT/scripts/host-lock" --host "$HOST" --wait 120 -- ssh "$HOST" "sleep 21600" &
+lock_pid=$!
+trap 'kill $lock_pid 2>/dev/null || true' EXIT
+sleep 5
+ssh "$HOST" "setsid nohup bash $DEST/run.sh > $DEST/run.log 2>&1 < /dev/null & echo started"
+while true; do
+  sleep 60
+  done_units=$(ssh "$HOST" "ls $DEST/out/unit-*.txt 2>/dev/null | wc -l" 2>/dev/null || echo "?")
+  log "  $done_units of $(wc -l < "$OUT/units" | tr -d ' ') units done"
+  ssh "$HOST" "test -f $DEST/out/DONE" 2>/dev/null && break
+  ssh "$HOST" "pgrep -f 'namchain-warm-bench measure' >/dev/null" 2>/dev/null || {
+    # Nothing running and no DONE: the run died. Say so and stop waiting.
+    ssh "$HOST" "test -f $DEST/out/DONE" 2>/dev/null || { log "the run on $HOST is not running and did not finish"; break; }
+  }
+done
+kill $lock_pid 2>/dev/null || true
+wait $lock_pid 2>/dev/null || true
+trap - EXIT
+ssh "$HOST" "sudo -n systemctl start namchaind" || true
+
+mkdir -p "$OUT/out"
+scp -q "$HOST:$DEST/out/fragments.jsonl" "$OUT/fragments.jsonl" 2>/dev/null || : > "$OUT/fragments.jsonl"
+for f in $(ssh "$HOST" "ls $DEST/out/*.txt 2>/dev/null" | xargs -n1 basename); do
+  scp -q "$HOST:$DEST/out/$f" "$OUT/out/$f"
+done
+scp -q "$HOST:$DEST/session.log" "$OUT/session.log" 2>/dev/null || true
+
+log "wrote $(wc -l < "$OUT/fragments.jsonl" | tr -d ' ') fragment(s) to $OUT/fragments.jsonl"
+log "next: devices/common/cost-merge --device $HOST --fragments $OUT/fragments.jsonl"
