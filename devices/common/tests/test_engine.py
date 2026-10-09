@@ -254,6 +254,123 @@ class EngineClientTest(unittest.TestCase):
 
         self.assertEqual(reply["missing_assets"], [{"node": "amp", "reference": "amp.nam"}])
 
+    # ------------------------------------------------------------------ the warm set
+    #
+    # `rig.warm`, `rig.cool` and `rig.switch` are the calls P5's warm half makes (namchain
+    # docs/warm-set.md). What matters here is the shape the service sends and the codes it can
+    # be told apart by: warming is off on some devices, a cold switch is a success, and a
+    # refusal is an answer.
+
+    def test_rig_warm_asks_for_the_rig_and_returns_the_engines_account(self):
+        def warm(conn, request, connection, index):
+            conn.sendall(frame({"ok": True, "id": request["id"], "rig": "/rigs/next.json",
+                                "name": "next", "doc": 1, "core": 1, "generation": 7,
+                                "state": "warming", "replaced": "/rigs/last.json",
+                                "cost": {"cost": 0.41, "verdict": "fits"}}))
+
+        engine = self.start_engine(warm)
+        client = self.start_client(engine)
+
+        reply = client.rig_warm("next.json")
+
+        request = engine.requests[-1][1]
+        self.assertEqual(request["method"], "rig.warm")
+        self.assertEqual(request["rig"], "next.json")
+        self.assertNotIn("replace", request)        # the engine's default: displace what is warm
+        self.assertEqual(reply["state"], "warming")  # compiled is not the same claim as rendering
+        self.assertEqual(reply["replaced"], "/rigs/last.json")
+        self.assertEqual(reply["cost"]["verdict"], "fits")
+        self.assertEqual(engine.connections, 1)
+
+    def test_rig_warm_turns_a_refusal_into_an_engine_error(self):
+        # The codes this route answers with are the engine's: warm_disabled, warm_full,
+        # warm_not_ready, rig_not_found, asset_missing, over_budget and compile_failed.
+        def refuse(conn, request, connection, index):
+            conn.sendall(frame({"ok": False, "id": request["id"],
+                                "error": {"code": "over_budget",
+                                          "message": "costs 1.02 of a core"}}))
+
+        engine = self.start_engine(refuse)
+        client = self.start_client(engine)
+
+        with self.assertRaises(EngineError) as caught:
+            client.rig_warm("Big Lead.json")
+
+        self.assertEqual(caught.exception.code, "over_budget")
+        self.assertEqual(engine.connections, 1)     # a refusal is an answer, not a failure
+
+    def test_rig_cool_names_the_rig_or_cools_whatever_is_warm(self):
+        engine = self.start_engine()
+        client = self.start_client(engine)
+
+        client.rig_cool("next.json")
+        client.rig_cool()
+
+        named, bare = engine.requests[-2][1], engine.requests[-1][1]
+        self.assertEqual(named["method"], "rig.cool")
+        self.assertEqual(named["rig"], "next.json")
+        self.assertNotIn("rig", bare)               # "nothing should be warm", whatever we believe
+
+    def test_rig_switch_asks_with_the_fallback_and_reports_a_cold_one(self):
+        def cold(conn, request, connection, index):
+            conn.sendall(frame({"ok": True, "id": request["id"], "switched": "cold",
+                                "rig": "/rigs/c.json", "generation": 9,
+                                "reason": "nothing is warm"}))
+
+        engine = self.start_engine(cold)
+        client = self.start_client(engine)
+
+        reply = client.rig_switch("c.json")
+
+        request = engine.requests[-1][1]
+        self.assertEqual(request["method"], "rig.switch")
+        self.assertEqual(request["rig"], "c.json")
+        self.assertTrue(request["fallback"])        # a press must never end in silence
+        self.assertEqual(reply["switched"], "cold")
+        self.assertEqual(reply["reason"], "nothing is warm")
+        self.assertEqual(engine.connections, 1)
+
+    def test_rig_switch_reports_a_handover(self):
+        def warm(conn, request, connection, index):
+            conn.sendall(frame({"ok": True, "id": request["id"], "switched": "warm",
+                                "rig": "/rigs/b.json", "doc": 1, "core": 3,
+                                "handover_blocks": 3, "fade_ms": 5, "completed": True}))
+
+        engine = self.start_engine(warm)
+        client = self.start_client(engine)
+
+        reply = client.rig_switch("b.json")
+
+        self.assertEqual(reply["switched"], "warm")
+        self.assertEqual(reply["handover_blocks"], 3)
+        self.assertTrue(reply["completed"])
+
+    def test_rig_switch_can_ask_to_be_refused_rather_than_load(self):
+        engine = self.start_engine()
+        client = self.start_client(engine)
+
+        client.rig_switch("b.json", fallback=False)
+
+        self.assertFalse(engine.requests[-1][1]["fallback"])
+
+    def test_a_device_without_warm_cores_says_so_by_code(self):
+        # `warm_disabled` is a configuration rather than a fault, and it is the one thing the
+        # service reads: with no warm cores the engine's switch is off altogether, so a caller
+        # that must make sound asks for `rig.load` instead.
+        def refuse(conn, request, connection, index):
+            conn.sendall(frame({"ok": False, "id": request["id"],
+                                "error": {"code": "warm_disabled",
+                                          "message": "warming is off: no warm_cpus are configured"}}))
+
+        engine = self.start_engine(refuse)
+        client = self.start_client(engine)
+
+        for call in (lambda: client.rig_warm("b.json"),
+                     lambda: client.rig_switch("b.json")):
+            with self.assertRaises(EngineError) as caught:
+                call()
+            self.assertEqual(caught.exception.code, "warm_disabled")
+
     # ------------------------------------------------------------------ arrival shapes
     def test_a_reply_in_two_pieces_is_reassembled(self):
         def split(conn, request, connection, index):

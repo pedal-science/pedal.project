@@ -157,17 +157,55 @@ class FakeEngine:
     the surrounding object is the one that runs (`close()` still closes a socket that was never
     opened, which is what the loop does at shutdown). `costs` is rig name -> reply body; the
     default is a rig that fits, and `NO_COSTS` is an engine that answers with no cost object.
+
+    The warm half is *modelled* rather than stubbed, because the policy is about the difference
+    between what the service believes and what the engine holds. `warm_rig` is the one rig held
+    warm and `rig_name` the audible one, both without ".json"; `rig_switch` swaps them the way
+    the engine's handover does (`sync_warm_switch`); `status()` reports the pair, and
+    `engine.status.warm` is the authority the service reconciles against.
+
+    `warm_enabled=False` is a device with no `warm_cpus`: every warm call refuses
+    `warm_disabled`, the status carries no `warm` object, and `rig_switch` refuses too — the
+    engine's switch is off altogether there, which is the shape the service must keep working
+    through.
     """
 
-    def __init__(self, costs=None, status=None, error=None):
+    def __init__(self, costs=None, status=None, error=None, warm=None, warm_error=None,
+                 warm_enabled=True):
         self.costs = costs
         self.status_report = status if status is not None else {"state": "running"}
         self.error = error                  # an EngineError for every rig.cost, if set
+        self.warm_enabled = warm_enabled
+        self.warm_error = warm_error        # an EngineError for every rig.warm, if set
+        self.rig_name = None                # the rig the engine is playing, without ".json"
+        self.warm_rig = warm                # the rig it holds warm, without ".json"
+        self.warm_doc_name = None           # the warm document's own name, when it differs
         self.asked = []                     # every rig name rig.cost was called with
-        self.loaded = []                    # every rig name rig.load was called with
+        self.loaded = []                    # every rig made audible, by either call
+        self.load_calls = []                # every rig.load
+        self.switched = []                  # every rig.switch
+        self.warmed = []                    # every rig.warm
+        self.cooled = []                    # every rig.cool (None for the no-argument form)
 
     def status(self):
-        return {"ok": True, "status": self.status_report}
+        report = dict(self.status_report)
+        if self.rig_name is not None:
+            report.setdefault("rig_name", self.rig_name)
+        if self.warm_enabled:
+            report["warm"] = self.warm_json()
+        return {"ok": True, "status": report}
+
+    def warm_json(self):
+        """`engine.status.warm` as the engine writes it: every document with content, the audible
+        one marked, and the warm entry named after the rig it holds."""
+        entries = [{"doc": 0, "generation": 1, "audible": True, "state": "audible", "core": 3,
+                    "name": self.rig_name}]
+        if self.warm_rig is not None:
+            entries.append({"doc": 1, "generation": 2, "audible": False, "state": "warm",
+                            "core": 1, "name": self.warm_doc_name or self.warm_rig,
+                            "rig": f"/rigs/{self.warm_rig}.json"})
+        return {"enabled": True, "device_core": 3, "cores": [1, 2], "priority": 70,
+                "active_doc": 0, "switches": 0, "set": entries}
 
     def rig_cost(self, rig):
         self.asked.append(rig)
@@ -178,8 +216,50 @@ class FakeEngine:
         return (self.costs or {}).get(rig, engine_cost())
 
     def rig_load(self, rig):
+        self.load_calls.append(rig)
         self.loaded.append(rig)
+        self.rig_name = _name(rig)
         return {"ok": True, "rig": rig}
+
+    def rig_switch(self, rig, fallback=True):
+        self.switched.append(rig)
+        if not self.warm_enabled:
+            raise EngineError("warm_disabled", "warming is off: no warm_cpus are configured")
+        name = _name(rig)
+        if self.warm_rig == name:
+            # The handover: the two compiled documents swap, so what was audible is warm now and
+            # nothing is compiled or freed.
+            self.warm_rig, self.rig_name = self.rig_name, name
+            return {"ok": True, "switched": "warm", "rig": rig, "doc": 1, "core": 3,
+                    "handover_blocks": 3, "fade_ms": 5, "completed": True}
+        self.rig_name = name
+        self.loaded.append(rig)
+        return {"ok": True, "switched": "cold", "rig": rig, "reason": "nothing is warm"}
+
+    def rig_warm(self, rig):
+        self.warmed.append(rig)
+        if not self.warm_enabled:
+            raise EngineError("warm_disabled", "warming is off: no warm_cpus are configured")
+        if self.warm_error is not None:
+            raise self.warm_error
+        name = _name(rig)
+        replaced = self.warm_rig
+        self.warm_rig = name
+        return {"ok": True, "rig": rig, "name": name, "doc": 1, "core": 1, "generation": 2,
+                "state": "warming", "replaced": replaced}
+
+    def rig_cool(self, rig=None):
+        self.cooled.append(rig)
+        if not self.warm_enabled:
+            raise EngineError("warm_disabled", "warming is off: no warm_cpus are configured")
+        cooled = [] if self.warm_rig is None else [self.warm_rig]
+        self.warm_rig = None
+        return {"ok": True, "cooled": cooled}
+
+
+def _name(rig):
+    """A rig name without the ".json" the calls carry (the engine's status reports the name)."""
+    return rig[:-5] if rig.endswith(".json") else rig
 
 
 def engine_cost(verdict="fits", cost=0.4, headroom=0.8, **extra):
@@ -190,8 +270,9 @@ def engine_cost(verdict="fits", cost=0.4, headroom=0.8, **extra):
     return {"cost": body, "slimmed_models": [], "missing_assets": []}
 
 
-def cost_service(rigs, costs=None, error=None, status=None, poll_s=daemon.COST_POLL_S, now=None):
-    """A Service with a real RigCost, a fake engine and a temporary state root.
+def cost_service(rigs, costs=None, error=None, status=None, poll_s=daemon.COST_POLL_S, now=None,
+                 warm=None, warm_error=None, warm_enabled=True):
+    """A Service with a real RigCost and WarmSet, a fake engine and a temporary state root.
 
     `now` is the clock the service starts on; a test that passes its own passes the same value,
     and then owns every deadline the sweep compares against. `service.engine` and
@@ -207,12 +288,157 @@ def cost_service(rigs, costs=None, error=None, status=None, poll_s=daemon.COST_P
     service.status, service.positions_at, service.state_key = {}, 0.0, None
     service.bank_at = now if now is not None else time.monotonic()
     service.mapping = mapping.Mapping(rigs, log=logs.append)
-    service.engine = FakeEngine(costs, status, error)
+    service.engine = FakeEngine(costs, status, error, warm=warm, warm_error=warm_error,
+                                warm_enabled=warm_enabled)
     service.cost = daemon.RigCost(service.engine, poll_s=poll_s, log=logs.append)
     service.cost.note_rigs(rigs, time.monotonic() if now is None else now)
     service.mapping.verdicts = service.cost.verdicts
+    service.warm = daemon.WarmSet(service.engine, log=logs.append)
     service.resume = types.SimpleNamespace(tick=lambda *_a: None)
     return service
+
+
+class WarmNeighbour(unittest.TestCase):
+    """The warm half of P5: the rig the footswitches reach next is the rig the engine holds warm,
+    and a press makes the rig audible with `rig.switch` (D4, D9, D10)."""
+
+    def setUp(self):
+        self.now = time.monotonic()
+        self.service = cost_service(["a", "b", "c"], now=self.now)
+        self.engine = self.service.engine
+        self.engine.rig_name = "a"
+        self.service.mapping.note_rig("a")
+
+    def _poll(self, at=None):
+        self.service.poll_engine(self.now if at is None else at)
+
+    def _press(self, kind):
+        """A press, as the daemon does it: the mapping decides, then the rig is made audible."""
+        action = self.service.mapping.action(kind)
+        self.assertIsNotNone(action)
+        self.service.load_rig(action["rig"])
+        return action["rig"]
+
+    # ------------------------------------------------------------------ the neighbour
+    def test_the_rig_one_press_away_is_warmed(self):
+        self._poll()
+        self.assertEqual(self.engine.warmed, ["b.json"])
+        self.assertEqual(self.service.warm.rig, "b")
+        self.assertTrue(any("warming b.json" in line for line in self.service.logs))
+
+    def test_the_warm_set_follows_the_press_and_drops_the_old_neighbour(self):
+        # Warming displaces: the engine holds one warm rig, so the rig that is no longer one
+        # press away leaves by being replaced — its reply names it — and nothing is cooled. A
+        # `rig.cool` naming a rig that is no longer warm is refused (`warm_not_ready`), so
+        # displacing is the only way to do this in one round trip and with no empty window.
+        self._poll()
+        self.assertEqual(self.engine.warm_rig, "b")
+        self._press("rig_up")                       # a -> b; b was warm, so this is a handover
+        self.assertEqual(self.engine.warm_rig, "c")
+        self.assertEqual(self.engine.cooled, [])
+        self.assertTrue(any("switched to b.json (warm)" in line for line in self.service.logs))
+
+    def test_the_warm_set_is_emptied_when_nothing_is_one_press_away(self):
+        service = cost_service(["a", "b"], now=self.now)
+        service.engine.rig_name = "a"
+        service.mapping.note_rig("a")
+        service.poll_engine(self.now)
+        self.assertEqual(service.engine.warm_rig, "b")
+        # The engine now says b cannot play: the walk from a skips it and lands back on a, which
+        # is the rig already playing. Nothing is next, so nothing should be held — and the
+        # no-argument `rig.cool` is right whatever the service believes.
+        service.cost.verdicts["b"] = {"verdict": "over", "cost": 1.02, "over": True}
+        service.poll_engine(self.now + 1.0)
+        self.assertEqual(service.engine.cooled, [None])
+        self.assertIsNone(service.warm.rig)
+
+    def test_a_warm_the_engine_refuses_is_logged_once_and_asked_again_later(self):
+        self.engine.warm_error = EngineError("over_budget", "costs 1.02 of a core")
+        self._poll()
+        self.assertEqual(self.engine.warmed, ["b.json"])
+        self._poll(self.now + 1.0)
+        self._poll(self.now + 2.0)
+        self.assertEqual(self.engine.warmed, ["b.json"])            # not every tick
+        self.assertTrue(any("over_budget" in line for line in self.service.logs))
+        self._poll(self.now + daemon.WARM_RETRY_S + 1.0)
+        self.assertEqual(self.engine.warmed, ["b.json", "b.json"])  # the backstop asks again
+
+    # ------------------------------------------------------------------ the switch
+    def test_a_cold_answer_is_still_a_switch(self):
+        # Nothing has been warmed, so the engine answers `cold` and loads the rig itself: the
+        # service asked once, for `rig.switch`, and the sound happened. That fallback is the
+        # engine's own, which is why the service never chooses between a handover and a load.
+        self.service.load_rig("c")
+        self.assertEqual(self.engine.switched, ["c.json"])
+        self.assertEqual(self.engine.load_calls, [])
+        self.assertEqual(self.engine.rig_name, "c")
+        self.assertTrue(any("switched to c.json (cold" in line for line in self.service.logs))
+
+    def test_a_press_still_switches_when_warming_is_off(self):
+        # A device with no warm cores: `rig.warm` is refused `warm_disabled` — which is a
+        # configuration, not a failure — and the engine's `rig.switch` is off with it, so a press
+        # is answered by `rig.load`. A press always makes sound (D10).
+        service = cost_service(["a", "b"], now=self.now, warm_enabled=False)
+        service.engine.rig_name = "a"
+        service.mapping.note_rig("a")
+        service.poll_engine(self.now)
+        self.assertEqual(service.engine.warmed, ["b.json"])         # asked once
+        self.assertTrue(service.warm.disabled)
+        self.assertTrue(any("warming is off" in line for line in service.logs))
+        service.poll_engine(self.now + 1.0)
+        service.poll_engine(self.now + daemon.COST_POLL_S + 1.0)
+        self.assertEqual(service.engine.warmed, ["b.json"])         # and never asked again
+        service.load_rig("b")
+        self.assertEqual(service.engine.switched, ["b.json"])       # asked, and refused
+        self.assertEqual(service.engine.load_calls, ["b.json"])     # so the load is the switch
+        self.assertEqual(service.engine.rig_name, "b")
+        self.assertTrue(any("loading b.json" in line for line in service.logs))
+
+    # ------------------------------------------------------------------ what the engine holds
+    def test_a_rig_the_engine_already_holds_is_not_compiled_again(self):
+        # A bank of two, and the press swaps it: the handover leaves the rig the press left warm,
+        # so asking for it — which the walk does, since it is the only other rig — would compile
+        # a rig that is already warm. The service says what it knows instead of asking.
+        service = cost_service(["a", "b"], now=self.now)
+        service.engine.rig_name = "a"
+        service.mapping.note_rig("a")
+        service.poll_engine(self.now)
+        self.assertEqual(service.engine.warmed, ["b.json"])
+        action = service.mapping.action("rig_up")
+        service.load_rig(action["rig"])
+        self.assertEqual(service.engine.warm_rig, "a")              # what the handover left warm
+        self.assertEqual(service.engine.warmed, ["b.json"])         # nothing more was asked for
+
+    def test_a_poll_believes_the_engines_own_warm_set(self):
+        # A handover the service did not make — ljoss switched the rig, or an operator warmed
+        # something — leaves the engine holding what it was playing. The status is the authority
+        # for what is warm, so the rig it names is not compiled again by a service that still
+        # believes the rig it asked for.
+        service = cost_service(["a", "b"], now=self.now)
+        service.engine.rig_name = "a"
+        service.mapping.note_rig("a")
+        service.poll_engine(self.now)
+        self.assertEqual(service.engine.warmed, ["b.json"])
+        service.engine.rig_name, service.engine.warm_rig = "b", "a"   # the handover, from outside
+        service.poll_engine(self.now + daemon.WARM_ADOPT_S + 1.0)
+        self.assertEqual(service.mapping.current_name(), "b")       # the position followed it
+        self.assertEqual(service.engine.warmed, ["b.json"])         # a is warm: nothing asked
+
+    def test_a_warm_rig_is_identified_by_its_path_not_its_document_name(self):
+        # The engine's `name` is the document's own name, and a rig file need not share it: the
+        # pedal's `last.json` holds a document called `soak-three-chains`, and ljoss names the
+        # documents it writes. The bank knows a rig by its file, so the path is what decides
+        # whether the rig the engine holds is the one the walk wants — believing the name would
+        # leave the service asking, every grace period, for a rig it already has.
+        service = cost_service(["a", "b"], now=self.now)
+        service.engine.rig_name = "a"
+        service.mapping.note_rig("a")
+        service.poll_engine(self.now)
+        self.assertEqual(service.engine.warmed, ["b.json"])
+        service.engine.warm_doc_name = "B Lead"                     # the document's own name
+        service.poll_engine(self.now + daemon.WARM_ADOPT_S + 1.0)
+        self.assertEqual(service.warm.rig, "b")
+        self.assertEqual(service.engine.warmed, ["b.json"])
 
 
 class LoadRig(unittest.TestCase):
@@ -464,6 +690,25 @@ class StatusVerdicts(unittest.TestCase):
                      "over": True}})
         _, body = service.handle_status(None)
         self.assertEqual(list(body["bank"]["verdicts"]), ["Crunch Lead"])
+
+
+class StatusWarm(unittest.TestCase):
+    """`/status` carries the engine's own warm object (P5's warm half): it is the authority for
+    what is warm, and a summary here would be a second copy of it to keep true."""
+
+    def test_the_engines_warm_object_is_reported_as_it_stands(self):
+        warm = {"enabled": True, "device_core": 3, "cores": [1, 2], "priority": 70,
+                "active_doc": 0, "switches": 4, "cold_switches": 1,
+                "set": [{"doc": 1, "audible": False, "state": "warm", "name": "next",
+                         "core": 1, "behind_blocks": 0, "blocks_dropped": 0}]}
+        _, body = fake_service(status={"state": "running", "warm": warm}).handle_status(None)
+        self.assertEqual(body["engine"]["warm"], warm)
+
+    def test_a_device_with_no_warm_cores_reports_nothing(self):
+        # The engine leaves the object out when warming is off, which is how the panel tells
+        # "this device cannot warm" from "nothing is warm yet".
+        _, body = fake_service().handle_status(None)
+        self.assertIsNone(body["engine"]["warm"])
 
 
 if __name__ == "__main__":

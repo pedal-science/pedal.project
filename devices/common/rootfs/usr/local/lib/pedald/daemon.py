@@ -40,6 +40,20 @@ STATE_S = 1.0
 #: did not hear, a rescan driven straight at the engine by ljoss or `namchainctl`).
 COST_POLL_S = 60.0
 
+#: How long after a warm request the engine's own account of the warm set is believed over ours.
+#:
+#: `engine.status.warm` is the authority for what is warm, but a status read *before* a `rig.warm`
+#: reached the engine would not mention the rig that was asked for, and believing it would ask the
+#: engine to compile that rig a second time. A warm is installed by the engine's warm thread rather
+#: than by the call that asked for it, so two status polls is longer than that takes to show up.
+WARM_ADOPT_S = 2 * STATUS_POLL_S
+
+#: How long a warm that failed is left alone before it is tried again — a rig the engine will not
+#: compile, an engine that has gone away. A failure is never a failure of the *switch* (a press is
+#: answered by the engine, cold if it must be), so this only bounds how often the service asks; a
+#: different neighbour, or the engine coming back, is a different question and is asked at once.
+WARM_RETRY_S = COST_POLL_S
+
 #: One engine call, then report: the cost object is per rig, and the bank is `banks`, not `costs`.
 #: Everything here is for display, so a second key that says nothing new is a second key to keep
 #: true; ljoss reads `verdict` to decide whether a rig may be activated.
@@ -281,6 +295,185 @@ class RigCost:
         return self.verdicts
 
 
+def _warm_entry_name(entry):
+    """A warm document's rig as *this* service names it: the stem of the rig file.
+
+    Not the engine's `name`, which is the document's own name and need not be the file's: the
+    pedal's `last.json` holds a document called `soak-three-chains`, and ljoss names the documents
+    it writes. The service and its bank know a rig by its path under `rigs_root` (`<stem>.json`),
+    which is also what it warms by, so the path is what is compared. A document published from a
+    client with no file behind it has only a name, and that is better than nothing.
+    """
+    path = entry.get("rig")
+    if isinstance(path, str) and path.endswith(".json"):
+        return os.path.basename(path)[:-len(".json")]
+    name = entry.get("name")
+    return name if isinstance(name, str) and name else None
+
+
+class WarmSet:
+    """The warm set: the rig the footswitches reach next, held warm by the engine (P5, D4, D9, D10).
+
+    A switch is instant because the rig it lands on is already rendering: the engine compiles a
+    document, pins a thread to an inactive core and hands it over when the press comes, and the
+    press costs a crossfade instead of a compile (namchain `docs/warm-set.md`). Which rig that is
+    is D9's split — the engine owns the mechanism, the service owns the bank — and the answer is
+    D10's, as amended: **the rigs the footswitches reach next**, one rig, in the direction the
+    player last stepped (`Mapping.neighbour`). Nothing else is warmed: a jump outside the
+    neighbours is a catch-up (P8), and filling the inactive cores with more of the bank is
+    optimisation, after the pedal is gig-ready.
+
+    The whole policy is four rules, and each is here because the alternative is wrong:
+
+    - **Warm the neighbour** when it is not the rig we believe is warm. Warming *displaces* what
+      was warm — the engine's own default, and its reply names what left in `replaced` — so a rig
+      that has stopped being a neighbour leaves the warm set by being replaced. Nothing calls
+      `rig.cool` for it: a cool naming a rig that is no longer warm is refused
+      (`warm_not_ready`), and cooling first would empty the set between two presses for no gain.
+    - **Empty the set when nothing is next** — `rig.cool` with no rig, which is exact whatever we
+      believe (it cools what is warm and says what that was). Nothing is next when a press would
+      land on the rig already playing: a bank with one usable rig in it, or a bank whose other
+      rigs the engine refuses.
+    - **The engine's word beats ours.** `engine.status.warm` is read on every poll and, once it is
+      old enough to include our own last request (`WARM_ADOPT_S`), what it says is warm is what we
+      believe. That is how a *warm switch* is followed: it swaps the two documents, so the rig the
+      press landed on becomes audible and the rig it left becomes warm — not the rig that was
+      asked for. Nothing is mirrored into `/status`; the engine's own object goes there, and this
+      is only what the next decision is made from.
+    - **Never raise, and never ask every second.** Warming is an optimisation: a refusal or an
+      unreachable engine logs once, leaves the switch path exactly as it was, and is tried again
+      when the neighbour changes, when the engine comes back, or after `WARM_RETRY_S`. Every
+      attempt is a compile on the engine's control thread, which is why "once a tick" is too
+      often. `warm_disabled` is not even a failure: a device with no `warm_cpus` has warming
+      off, which is a configuration — it is logged once and nothing is asked again until the
+      engine comes back as a different process, the only thing that can change it.
+    """
+
+    def __init__(self, engine, log=None, adopt_s=WARM_ADOPT_S, retry_s=WARM_RETRY_S):
+        self.engine = engine
+        self.log = log or (lambda _message: None)
+        self.adopt_s = adopt_s
+        self.retry_s = retry_s
+        self.rig = None         # the rig we believe the engine holds warm, without ".json"
+        self.disabled = False   # the engine says this device has no warm cores
+        self.failed = None      # the code last logged, so it is logged once per kind
+        self.failed_rig = None  # what that failure was about, so a new rig is tried at once
+        self.asked_at = None    # when a `rig.warm` last succeeded, or None
+        self.retry_at = 0.0     # a failed warm is not asked for again before this
+
+    def lost(self):
+        """The engine has gone, or come back: nothing we believed about its warm set survives.
+
+        A new process starts with an empty warm set and may be configured differently — warm
+        cores where there were none, or the other way round — so the belief, the disabled flag
+        and the failure all go, and the next tick asks again.
+        """
+        self.rig = None
+        self.disabled = False
+        self.failed = None
+        self.failed_rig = None
+        self.asked_at = None
+        self.retry_at = 0.0
+
+    def tick(self, mapping, now, status=None, holding=None):
+        """One pass: point the engine's warm set at the rig a press would reach next.
+
+        `status` is an `engine.status` report the caller has just read, and it is the authority
+        for what is warm. `holding` is for the one moment the caller knows the answer without
+        asking: a *warm* switch hands the document over, so the engine now holds the rig the
+        press left, not the one it landed on. Saying so is what stops that rig — the neighbour
+        again, in a bank of two — from being compiled a second time. Never raises.
+        """
+        if self.disabled:
+            return
+        if holding is not None:
+            self.rig = holding           # newer than any status the caller is holding
+        elif status is not None:
+            self._adopt(status, now)
+        wanted = self._next(mapping)
+        if wanted == self.rig:
+            return
+        if wanted is None:
+            if self.rig is not None:
+                self._cool(now)
+            return
+        if wanted != self.failed_rig or now >= self.retry_at:
+            self._warm(wanted, now)
+
+    # ------------------------------------------------------------------ the decision
+    def _next(self, mapping):
+        """The rig the next press reaches, or None: `mapping.neighbour`, not a second order.
+
+        Nothing is next when that is the rig already playing (a bank with one usable rig in it):
+        the engine would be asked to hold the document it is rendering.
+        """
+        wanted = mapping.neighbour()
+        return None if wanted == mapping.current_name() else wanted
+
+    def _adopt(self, status, now):
+        """What the engine says is warm, once the answer can be about now. See the class."""
+        warm = status.get("warm") if isinstance(status, dict) else None
+        if not isinstance(warm, dict) or not warm.get("enabled"):
+            return
+        if self.asked_at is not None and now - self.asked_at < self.adopt_s:
+            return          # a status read before our own warm: it cannot know about it yet
+        names = [_warm_entry_name(entry) for entry in warm.get("set", [])
+                 if isinstance(entry, dict) and not entry.get("audible")]
+        names = [name for name in names if name]
+        if names and self.rig not in names:
+            # What we believed is not warm any more — a handover moved it, or somebody else
+            # warmed over it — and this slice holds one warm rig, so the engine's one is ours.
+            self.rig = names[0]
+        elif not names:
+            self.rig = None
+
+    # ------------------------------------------------------------------ the calls
+    def _warm(self, name, now):
+        """One `rig.warm`, and the belief to keep for it. Never raises."""
+        rig = name if name.endswith(".json") else f"{name}.json"
+        try:
+            reply = self.engine.rig_warm(rig)
+        except EngineError as exc:
+            if exc.code == "warm_disabled":
+                # This device has no warm cores. Not a failure and not a switch: log it once and
+                # stop asking, because only a new engine process can change it (`lost`).
+                self.disabled = True
+                self.log(f"rig.warm {rig}: warming is off on this device ({exc.message})")
+                return
+            self.failed_rig = name
+            self.retry_at = now + self.retry_s
+            if self.failed != exc.code:
+                self.failed = exc.code
+                self.log(f"rig.warm {rig} refused: {exc.code}: {exc.message}; "
+                         f"a switch to it is a cold one")
+            return
+        self.failed = None
+        self.failed_rig = None
+        self.rig = name
+        self.asked_at = now
+        replaced = reply.get("replaced") if isinstance(reply, dict) else None
+        self.log(f"warming {rig}" + (f", replacing {replaced}" if replaced else ""))
+
+    def _cool(self, now):
+        """`rig.cool` with no rig: nothing is one press away any more. Never raises."""
+        try:
+            reply = self.engine.rig_cool()
+        except EngineError as exc:
+            self.failed_rig = None
+            self.retry_at = now + self.retry_s
+            if self.failed != exc.code:
+                self.failed = exc.code
+                self.log(f"rig.cool refused: {exc.code}: {exc.message}")
+            return
+        self.failed = None
+        self.failed_rig = None
+        self.rig = None
+        self.asked_at = None
+        cooled = reply.get("cooled") if isinstance(reply, dict) else None
+        if cooled:
+            self.log("cooled %s: no rig is one press away" % ", ".join(str(rig) for rig in cooled))
+
+
 class Service:
     def __init__(self, cfg, log):
         self.cfg = cfg
@@ -322,6 +515,10 @@ class Service:
         self.cost = RigCost(self.engine, poll_s=COST_POLL_S, log=log)
         self.cost.note_rigs(rigs, time.monotonic())
         self.mapping.verdicts = self.cost.verdicts
+        # The ready set, asked of the engine (D9, D10): the rig one press away is held compiled and
+        # rendering on an inactive core, so a press is a handover rather than a compile (P5's warm
+        # half). A device with no warm cores says so once and the press path is what it always was.
+        self.warm = WarmSet(self.engine, log=log)
         self.resume = resume_mod.Resume(self.engine, cfg.rigs_root, state_root=cfg.state_root, log=log)
         self.http = Server(cfg.http_host, cfg.http_port, token,
                            {"/status": self.handle_status}, log=log,
@@ -385,14 +582,25 @@ class Service:
             self.load_rig(action["rig"])
 
     def load_rig(self, name):
-        """The bench path, as staged: `rig.load`. D10 keeps this off the stage until the
-        ready set (v2) lands, because the first 170–340 ms of a cold load sound wrong.
+        """Make a rig audible, with `rig.switch`: a handover if the engine holds it warm, a
+        publish if it does not.
 
-        The belt to the mapping's braces: the mapping skips an unusable rig when stepping, but
-        `rig_select`, `resume` and a MIDI map entry can all name one too, so the refusal is
-        repeated here — where every path to the engine goes through — rather than trusted to
-        each caller. A rig with no verdict is loaded: only the engine may refuse a rig, and it
-        refuses the publish if it cannot play it.
+        This is where every path that changes the playing rig ends: the mapping resolves a
+        trigger — a footswitch `cc`, a MIDI `pc`, a bank move — to the rig it lands on, and this
+        makes that rig audible with the engine's switch, which is the call that cannot end in
+        silence. With its own `fallback` a rig that is not warm is loaded and crossfaded exactly
+        as `rig.load` does it, so the service does not choose between a handover and a load; it
+        asks for a switch and the reply says which it got (`switched`, and `reason` when cold).
+
+        One device has no switch to ask for: with no `warm_cpus` the engine answers
+        `warm_disabled` and refuses even the cold path, so there the load *is* the switch and the
+        service asks for it by name. That is the only case in which this calls `rig.load`.
+
+        The belt to the mapping's braces: the mapping walks past an unusable rig when stepping,
+        but a `rig_select`, a bank move and a map entry naming a rig outright can each land on
+        one too, so the refusal is repeated here — where every path to the engine goes through —
+        rather than trusted to each caller. A rig with no verdict is loaded: only the engine may
+        refuse a rig, and it refuses the publish if it cannot play it.
         """
         rig = name if name.endswith(".json") else f"{name}.json"
         verdict = self.cost.verdict(rig[:-len(".json")])
@@ -401,14 +609,36 @@ class Service:
             self.log(f"not loading {rig}: the engine says {why} (cost {verdict.get('cost')} "
                      f"against a headroom of {verdict.get('headroom')})")
             return
+        # What the engine is playing before this switch, which is also what a warm switch leaves
+        # in the warm set (its reply does not say, and the warm set would compile it again).
+        playing = self.status.get("rig_name") if isinstance(self.status, dict) else None
         try:
-            self.engine.rig_load(rig)
+            reply = self.engine.rig_switch(rig)
         except EngineError as exc:
-            self.log(f"rig.load {rig} refused: {exc.code}: {exc.message}")
-            return
-        self.log(f"loading {rig}")
+            if exc.code != "warm_disabled":
+                self.log(f"rig.switch {rig} refused: {exc.code}: {exc.message}")
+                return
+            try:
+                self.engine.rig_load(rig)
+            except EngineError as exc:
+                self.log(f"rig.load {rig} refused: {exc.code}: {exc.message}")
+                return
+            self.log(f"loading {rig}: warming is off on this device, so there is no switch")
+            reply = None
+        if reply is not None:
+            how = reply.get("switched") if isinstance(reply, dict) else None
+            reason = reply.get("reason") if isinstance(reply, dict) else None
+            # `warm` is the handover P6 exists for; `cold` is a load, and its reason says which
+            # kind ("nothing is warm", "that rig is not the warm one"). Both are successes.
+            self.log(f"switched to {rig} ({how or 'unknown'}"
+                     + (f": {reason}" if reason else "") + ")")
         self._save_position()
         self.state_key = None
+        # The rig a press reaches next has moved with the position, so the warm set follows now
+        # rather than at the next poll. A warm switch swapped the two documents, so the engine
+        # holds the rig this press left — said here, so it is not asked for again.
+        holding = playing if reply is not None and reply.get("switched") == "warm" else None
+        self.warm.tick(self.mapping, time.monotonic(), holding=holding)
 
     # ------------------------------------------------------------------ engine
     def poll_engine(self, now, refresh=True):
@@ -429,6 +659,7 @@ class Service:
             # In this order: `lost()` clears the fault the verdicts are gated on, so - it must
             # come before the log line that reads it.
             self.cost.lost()
+            self.warm.lost()
             if not self.engine_down:
                 self.log(f"engine status failed: {exc.code}: {exc.message}; "
                          f"the bank's verdicts are dropped until it answers again")
@@ -438,6 +669,7 @@ class Service:
             # It was down and it is not now: a new process may have loaded a different cost
             # table, so no verdict from before it is worth keeping (`RigCost`).
             self.cost.forget()
+            self.warm.lost()
             self.log("engine recovered: the bank's verdicts are being asked for again")
         self.engine_down = False
         name = self.status.get("rig_name") or ""
@@ -450,6 +682,11 @@ class Service:
         if refresh:
             self.relist_rigs(now)
             self.cost.tick(now)
+            # And point the warm set at the rig a press reaches next (P5's warm half, D10). Here
+            # rather than on its own timer, because the status read just above is what says what
+            # the engine holds warm — a poll is when the service learns it, and the policy is
+            # written so that asking about the same rig twice costs nothing.
+            self.warm.tick(self.mapping, now, self.status)
         # Milliseconds: the settle window is in ms, and passing seconds here would make it
         # 2000 seconds, which is a save that never happens (found by the local smoke test).
         self.resume.tick(int(now * 1000), self.status)
@@ -528,6 +765,11 @@ class Service:
                 "params_stale": status.get("params_stale"),
                 "xruns": status.get("xruns"), "guard_trips": status.get("guard_trips"),
                 "issues": status.get("issues", []),
+                # The engine's own warm-set object (P5's warm half), passed through as it
+                # stands: it is the authority for what is warm, its `set` is per document, and a
+                # summary here would be a second thing to keep true. Absent on a device with no
+                # warm cores, which is how the engine says warming is off.
+                "warm": status.get("warm"),
             },
             "link": self.link_status(time.monotonic()),
             "bank": {"banks": self.mapping.banks, "bank": self.mapping.bank,

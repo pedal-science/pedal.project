@@ -202,5 +202,69 @@ class Over(unittest.TestCase):
         self.assertEqual(self.m.first_usable(), 1)
 
 
+class Neighbour(unittest.TestCase):
+    """The ready set's one rig: what the next press reaches, without moving (D10, P5's warm
+    half). It is the same walk `_step` takes, and asking must not move the position."""
+
+    def setUp(self):
+        self.rigs = ["a", "b", "c"]
+        self.m = mapping.Mapping(self.rigs)
+
+    def test_the_neighbour_is_the_rig_the_next_press_reaches(self):
+        self.m.note_rig("a")
+        self.assertEqual(self.m.neighbour(), "b")
+        self.m.action("rig_up")
+        self.assertEqual(self.m.neighbour(), "c")
+        self.assertEqual(self.m.action("rig_up")["rig"], "c")     # and the press agrees
+        self.assertEqual(self.m.neighbour(), "a")                 # wrapping
+
+    def test_the_direction_is_the_one_the_player_last_stepped_in(self):
+        self.m.note_rig("a")
+        self.assertEqual(self.m.neighbour(), "b")                 # up, before any press
+        self.m.action("rig_down")
+        self.assertEqual(self.m.current_name(), "c")              # down from a wraps to c
+        self.assertEqual(self.m.neighbour(), "b")                 # the way the press went
+        self.m.action("rig_up")
+        self.assertEqual(self.m.current_name(), "a")              # up from c wraps to a
+        self.assertEqual(self.m.neighbour(), "b")
+
+    def test_asking_does_not_move_the_position(self):
+        self.m.note_rig("a")
+        self.m.neighbour()
+        self.m.neighbour(delta=-1)
+        self.assertEqual(self.m.current_name(), "a")
+        self.assertEqual(self.m.direction, 1)
+
+    def test_a_rig_the_engine_refuses_is_walked_past(self):
+        # The engine's verdict, not this module's: a rig it will not play is not a place a press
+        # may land, so it is not a rig to hold warm either — the same walk decides both.
+        self.m.verdicts["b"] = {"verdict": "over", "cost": 1.02, "over": True}
+        self.m.note_rig("a")
+        self.assertEqual(self.m.neighbour(), "c")
+        self.assertEqual(self.m.action("rig_up")["rig"], "c")
+        self.assertEqual(self.m.neighbour(), "a")                 # wrapping, still skipping b
+
+    def test_a_bank_with_one_usable_rig_is_its_own_neighbour(self):
+        # The walk wraps onto the rig the player is on. The bank's order is all this knows; the
+        # daemon decides that there is then nothing to hold warm.
+        m = mapping.Mapping(["a", "b"])
+        m.verdicts["b"] = {"verdict": "over", "cost": 1.02, "over": True}
+        m.note_rig("a")
+        self.assertEqual(m.neighbour(), "a")
+
+    def test_no_position_walks_from_where_the_first_press_would_land(self):
+        # Nothing has told the service which rig is running (R3): the first press lands on the
+        # first usable rig, so that is what the neighbour is — and the press lands on it too.
+        self.assertIsNone(self.m.current_name())
+        self.assertEqual(self.m.neighbour(), "a")
+        self.assertEqual(self.m.action("rig_up")["rig"], "a")
+
+    def test_a_bank_with_nothing_usable_has_no_neighbour(self):
+        for rig in self.rigs:
+            self.m.verdicts[rig] = {"verdict": "over", "cost": 1.02, "over": True}
+        self.m.note_rig("a")
+        self.assertIsNone(self.m.neighbour())
+
+
 if __name__ == "__main__":
     unittest.main()

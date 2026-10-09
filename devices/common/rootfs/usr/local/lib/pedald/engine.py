@@ -134,6 +134,52 @@ class EngineClient:
         """
         return self.call("rig.cost", rig=rig)
 
+    def rig_warm(self, rig):
+        """Hold a rig ready to switch to: compiled, prewarmed and rendering on another core.
+
+        The reply is the engine's acknowledgement rather than the warmth itself —
+        `rig`, `name`, `doc`, `core`, `generation` and a `cost` object like `rig.cost`'s, with
+        `state` `warming` until the document has rendered its first block and `warm` after that.
+        `engine.status.warm` is the authority for what is warm *now*; this only says the engine
+        took it. Warming **displaces** whatever was warm (the engine holds one warm set), and
+        `replaced` names the rig that left — which is how the rig a footswitch no longer reaches
+        stops being warm, without a second call.
+
+        The refusals a caller acts on: `warm_disabled` (this device configures no `warm_cpus`,
+        so warming is off — a configuration, not a fault), `warm_full` (nothing free to warm),
+        and the four a publish answers with — `rig_not_found`, `asset_missing`, `over_budget`
+        and `compile_failed` — because a rig that could not play could not be switched to either.
+        """
+        return self.call("rig.warm", rig=rig)
+
+    def rig_cool(self, rig=None):
+        """Stop holding a rig warm; with no rig, cool whatever is warm.
+
+        The reply is `cooled`: the rigs that stopped being warm, empty when none were, which is
+        the state the caller asked for rather than an error. A *named* rig that is not the warm
+        one is refused (`warm_not_ready`) rather than obeyed, so "nothing should be warm" is
+        asked with no rig at all — that form is right even when the caller's belief is stale.
+        """
+        if rig is None:
+            return self.call("rig.cool")
+        return self.call("rig.cool", rig=rig)
+
+    def rig_switch(self, rig, fallback=True):
+        """Make a rig audible: a handover when it is warm, a publish when it is not.
+
+        This is what a footswitch press asks for. A warm rig answers `switched` `warm` with
+        `handover_blocks` and `fade_ms` and costs no compile; a rig that is not warm is loaded
+        and crossfaded exactly as `rig.load` does it — with `fallback`, which is the engine's own
+        default, because a press must never end in silence — and answers `switched` `cold` with
+        the `reason`. With `fallback` false the engine refuses (`warm_not_ready`) instead of
+        loading, for a client that would rather not switch at all.
+
+        One refusal is about the device rather than the rig: `warm_disabled` means this device
+        has no `warm_cpus` and the engine's switch is off *entirely* — it will not fall back
+        either — so a caller that must make sound asks for `rig_load` on that one code.
+        """
+        return self.call("rig.switch", rig=rig, fallback=bool(fallback))
+
     def assets(self, refresh=False):
         """The model and impulse-response library; `refresh` rescans the roots first."""
         return self.call("engine.assets", refresh=bool(refresh))

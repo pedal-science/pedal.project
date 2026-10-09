@@ -8,7 +8,9 @@ The service's v0 was [`pedal-resume`](../devices/common/rootfs/usr/local/sbin/pe
 **retired on 2026-10-04**; **v1 is `pedald`**, landed the same day (783a8de, dcaf0e2), deployed on
 vip, and running against a live Pico — see "What is staged" at the end. Since 2026-10-07 the
 service also costs the bank through the engine's `rig.cost`, keeps the verdicts, and skips a rig
-the engine would refuse when stepping ("The bank's verdicts (P5)", below).
+the engine would refuse when stepping ("The bank's verdicts (P5)", below). Since 2026-10-09 it
+also holds the rig one footswitch press away warm in the engine and switches with `rig.switch`,
+so a press is a handover rather than a compile ("The ready set", below).
 
 **Reviewed by Claude, 2026-09-28.** The comments are at the end (R1–R15). The text already
 carries the changes they propose, and where a choice is yours, it says so.
@@ -17,7 +19,8 @@ carries the changes they propose, and where a choice is yours, it says so.
 
 One process on the Core host (`piv` today, `vip` when it arrives), beside `namchaind`. It is the
 pedal's control plane: the library and the bank on the device, resume, uploads, the mapping
-tables, the Pico link, and — once namchain's M3 lands — the rigs one press away.
+tables, the Pico link, and the rig the footswitches reach next, held warm in the engine (M3,
+"The ready set" below).
 
 | Job | Owner |
 |---|---|
@@ -25,7 +28,8 @@ tables, the Pico link, and — once namchain's M3 lands — the rigs one press a
 | The running plan, ramps, transitions, the device and its health | `namchaind` |
 | The library on the pedal, the bank, resume, uploads, the mapping tables | **the service** |
 | Which rigs in the bank can play, and skipping the ones that cannot | **the service**, answered by `namchaind`'s `rig.cost` (below) |
-| Keeping rigs ready and switching to one (`rig.ready_set`/`rig.switch`, M3) | `namchaind`, asked for by the service |
+| Which rig is held warm: the one a press reaches next | **the service** (D9, D10) |
+| Holding it warm, and switching to it (`rig.warm`/`rig.cool`/`rig.switch`, M3) | `namchaind`, asked for by the service |
 | The physical controls, the relay, the display | the Pico |
 | Audio | nobody in this table: no part of the service is in the signal path |
 
@@ -168,7 +172,7 @@ app" and ljoss's "send to pedal" were waiting for.
 
 | Method | Path | Body | Answer |
 |---|---|---|---|
-| `GET` | `/status` | — | service version and uptime; engine state, health and generations; the link; the bank and position; library counts; the ready set when M3 exists |
+| `GET` | `/status` | — | service version and uptime; engine state, health, generations and the warm set; the link; the bank, the position and the verdicts; library counts |
 | `GET` | `/library/models`, `/library/irs` | — | the engine's `engine.assets` scan, ids and all — there is no second scan |
 | `GET` | `/library/rigs` | — | the rig names, and which one is running |
 | `PUT` | `/library/models/<file>` | the `.nam` bytes | 201 and whether it replaced; a declared rate other than 48000 is refused |
@@ -211,8 +215,10 @@ The UART contract fixes the vocabulary (`kind`, `a`, `b`) and says the service's
 `kind`, never on `source`. This is the policy those tables implement.
 
 A **bank** is 4–8 rigs the footswitches step through, in order (`bank.json`); the last position
-is remembered. The **ready set** is the current bank plus every rig a PC can jump to (D10); the
-service derives it, and it is not the same thing as a bank.
+is remembered. The **ready set** is the rigs the footswitches reach next — the rig one press
+away, in the direction the player last stepped (D10, amended 2026-10-09): the service derives it,
+holds it warm in the engine, and it is neither the bank nor "everything MIDI could jump to",
+which is unbounded and is a catch-up (P8) rather than a switch.
 
 | Kind | Default action |
 |---|---|
@@ -222,7 +228,7 @@ service derives it, and it is not the same thing as a bank.
 | `bank_select` | that bank, its first rig |
 | `bypass_set`, `bypass_toggle` | mirror the relay's state for the panel and the app; no engine call |
 | `cc` | the map: an action, or a parameter on the running rig (below) |
-| `pc` | the map: an action, usually a rig **by name**; the jump may move the bank window, and the ready set follows |
+| `pc` | the map: an action, usually a rig **by name**; the jump may move the bank window, and the ready set follows the position it lands on (a jump outside the neighbours is a catch-up) |
 | `expression` | reserved — mapped like `cc` if the expression jack survives the debt register |
 
 **Skipping is part of stepping (P5).** Every action that lands on a rig — `rig_up`, `rig_down`,
@@ -231,8 +237,9 @@ which rig and why, and does nothing else: `next` walks on to the next rig that c
 bank where no rig can leaves the position and the player's rig exactly where they were. The
 position is never moved onto a rig that will not play, because a rig the engine will refuse is
 not a place to be. A rig with no verdict yet is usable here (see "The bank's verdicts"): the
-mapping skips only what the engine has refused, and `rig.load` is refused by the engine itself
-if it comes to that.
+mapping skips only what the engine has refused, and `rig.switch` is refused by the engine itself
+if it comes to that. The same walk decides the ready set, so a rig held warm is a rig a press
+can reach.
 
 - **The map goes from a trigger to an action** (R8). A trigger is `pc` *n* (with its bank) or
   `cc` *n*; an action is a rig by name, a bank, any kind in the table above (`rig_up`,
@@ -361,35 +368,44 @@ it is tens of entries per rig, and this route is polled; `namchainctl` is the to
 
 ## The ready set, and the split with namchain (3.8)
 
-- **The service owns** the bank, the MIDI map, and which rigs must be ready: the current bank
-  plus every rig a PC can jump to (D10). Since P5, it also owns *which of them can play* — asked
-  of the engine with `rig.cost`, never derived here ("The bank's verdicts", above).
-- **namchain owns** how: the tiers, the cost model, the memory and the threads
-  ([rig-switch-strategies.md](rig-switch-strategies.md), E1/E2). The service does not measure RTF
-  and does not guess what fits.
-  This moves the budget. `rig-switch-strategies.md` ("Limits") and plan 3.8 have the service
-  working out each rig's cost and dropping candidates a tier when the budget is full. The engine
-  is where costs are measured and where admission control (M2) will live, so this gives it to
-  namchain, which D4's "keeping models loaded and ready" allows. **Yours to confirm**; if you do,
-  those two places change to match (R14).
-- **The calls the service needs** (a proposal for namchain's M3; the names are namchain's to
-  choose, and they land engine-before-service per rule 4):
-  - `rig.ready_set {"rigs": [names, in priority order]}` — hold these. The reply says what it
-    granted, at which tier, and what it dropped, with the reason (budget, an all-on-infeasible
-    rig, a missing model).
-  - `rig.switch {"rig": name}` — crossfade to a ready rig now. Adoption is asynchronous as
-    everywhere else: the reply is an acknowledgement and `audible_generation` is the truth.
-  - `engine.status.ready` — per rig: tier, state (cold, loading, warm, catching up), and the
-    same refusal reasons, so `/status` and the panel can show them.
-- **One switch in flight, one pending.** A newer request replaces the pending target
-  ([rig-switch-strategies.md](rig-switch-strategies.md)); the service implements it by keeping
-  exactly one pending name. A bank change sends a new `ready_set`; the refill happens off the
-  render core, in the engine.
-- **Until M3 exists** the service can only switch with `rig.load`. That is fast, ~25–35 ms to
-  the new rig on piv (plan 1.7), but the rig starts from NAM's silence-state prewarm and sounds
-  wrong for its first 170–340 ms, up to +15 dBFS from what it should be (E1). D10 rules that out
-  on stage and puts 3.8 before the footswitches (3.5), so v1 switches this way on the bench only,
-  to test the loop from a press to the engine (R1).
+**Landed 2026-10-09** (engine `a0a9cf0`, namchain's M3; the engine's design is
+`namchain/docs/warm-set.md`). A rig that is held warm is compiled, prewarmed and *rendering* on
+an inactive core by a thread of its own, so a switch to it is a handover and a crossfade rather
+than a load — which is what D10's 50 ms and E1's "the first 170–340 ms sound wrong" are about.
+
+- **The service owns which rig**: the one the footswitches reach next, in the direction the
+  player last stepped — one rig, `Mapping.neighbour`, the same walk a press takes (D10, amended
+  2026-10-09; the neighbours, not everything MIDI could jump to). It is asked for again whenever
+  the position, the bank or the library changes, and the engine is never left guessing: a rig
+  that stops being a neighbour leaves the warm set.
+- **namchain owns how**: `rig.warm` compiles and holds a rig, `rig.cool` releases one, and
+  `rig.switch` makes one audible — as a handover when it is warm and as a plain publish when it
+  is not, because a press must never end in silence. The engine's reply says which happened
+  (`switched`: `warm` or `cold`, with `reason`), so the service does not choose between the two
+  paths; it asks for a switch. **`engine.status.warm`** is the authority for what is warm
+  (per document: `state`, `core`, `blocks`, `behind_blocks`, the issue `warm_behind`), and
+  `/status` carries that object as it stands rather than a summary of it.
+- **Three calls, and no more.** `rig.warm <rig>` when the neighbour is not the rig we believe is
+  warm — which *displaces* the old one, so nothing is cooled to make room; `rig.cool` with no rig
+  when nothing is one press away (a bank with one usable rig in it); and `rig.switch <rig>` for
+  every press. The service sums no cost, holds no document and knows nothing about threads or
+  tiers (D9, R14): it says *which* rig, the engine says what that costs and whether it fits.
+- **Warming is an optimisation and never a failure.** `warm_disabled` (a device with no
+  `warm_cpus`) is a configuration: it is logged once and the service stops asking, and every
+  press is then answered by `rig.load`, because the engine's switch is off with it. Any other
+  refusal (`over_budget`, `compile_failed`, `asset_missing`, an unreachable engine) is logged
+  once per kind and tried again when the neighbour changes, when the engine comes back, or after
+  60 s — never every second, because every attempt is a compile on the machine's other core. In
+  no case does it reach the player: the switch still happens, cold.
+- **D4's packing is not here.** One warm rig per inactive core, and the *neighbours*: several
+  rigs packed into one core by cost, and a rig that has to catch up rather than hand over (P8),
+  are both later work (D4, scoped 2026-10-09). The mechanism takes them; this slice does not.
+
+The proposals that used to be here — `rig.ready_set {"rigs": [...]}` and a per-rig
+`engine.status.ready` — were namchain's to name and it named them `rig.warm`/`rig.cool`/`rig.switch`
+and `engine.status.warm`, each holding one document rather than a list of tiers. R14 is settled
+the way this section argued: the engine measures what fits (its cost table, `devices/<host>/cost.json`)
+and the service asks for a rig, never derives a budget.
 
 ## Failure modes
 
@@ -406,6 +422,7 @@ not in the audio path and the engine is a separate process with its own service 
 | The Core host reboots while the Pico stays powered | silent for ~20 s | restarts with it | link down; bypass after 5 s; engages again on `audio_ready` |
 | The Pico resets or crashes | plays on; the de-energised relay passes dry guitar meanwhile | sees the link drop; the session returns on `HELLO` | a moment of dry guitar, then the rig once `audio_ready` has held for 1 s |
 | A rig in the bank won't load (`asset_missing`, `compile_failed`) | plays the rig it had: a failed load leaves the plan as it was | keeps the old position; reports the rig and the reason | the rig's name and the error on the panel; the next press moves on |
+| A warm request fails (`over_budget`, `warm_disabled`, the engine gone) | plays on; the press that follows is a cold switch | logs it once per kind, stops asking (`warm_disabled`) or asks again at the backstop, and keeps the warm switch path out of the press | nothing: warmth is the only thing lost, and `/status`'s `warm` shows what the engine really holds |
 | The UART device disappears on the Core host | plays on | reopens with backoff; logs once per state change, not per attempt | link fault on the panel |
 | The SD card is full or read-only | plays on | uploads 507, the resume log says what failed, the last good `last.json` stands | nothing audible; uploads refused in the app |
 | Power cut mid-write | off, then on | temp-file staging means the pedal comes back to the last good rig and library | the last upload or the last 2 s of edits are gone; nothing is corrupt |
@@ -503,6 +520,18 @@ pedal changes rigs for real only from v2 (R1):
   the indicator and refusing to make an unusable rig active — is still owed (P5's `lj`).
 - **v2** (with Phase 3.8, once namchain's M3 answers): the ready set and `rig.switch`. From here
   the footswitches and MIDI change rigs for real, and firmware v1 (3.5) has something to drive.
+  **Landed 2026-10-09** in `devices/common/rootfs/usr/local/lib/pedald/`, 272 tests under
+  `devices/common/tests` (25 of them new: the warm-set policy and the switch path in
+  `test_daemon.py`, `neighbour` in `test_mapping.py`, the three calls in `test_engine.py`).
+  What the design above asked for and the engine did not build is worth naming: there is no
+  `rig.ready_set`, so the service warms **one** rig — the neighbour — with `rig.warm`, and no
+  per-rig `engine.status.ready`, so the engine reports the warm *documents* it holds
+  (`engine.status.warm`) rather than a tier per candidate rig. D4 was scoped to the neighbours on
+  2026-10-09, so that is the whole of what this version owes; packing more rigs into an inactive
+  core by cost is optimisation, after the pedal is gig-ready. Service only: it needs namchain's
+  M3 (`a0a9cf0`) and changes no audio path. ljoss's half of P5 — the trimmed indicator and
+  refusing to activate an unusable rig — is still owed, and so is R6 (below), which v2 puts under
+  the player's feet.
 - **v3** (no plan step yet; it pays off the debt register's "no way to upload from the app"): the
   upload API and the refresh path, the `/bank` and `/midi-map` endpoints, ljoss's "send to
   pedal" and the library listing, and `sync-library` moving onto the API.
@@ -535,18 +564,21 @@ times are the owner's to confirm** (bypass after 5 s without the link or 2 s wit
 Phase 3's "the relay covers boot and failure".
 
 **3. v2: the ready set and `rig.switch`** (with Phase 3.8, once namchain's M3 answers).
+**Landed 2026-10-09** — "What is staged", below, names what it includes and what it leaves out.
 
-- **Engine first** (rule 4): `rig.ready_set {"rigs": [... in priority order]}`, `rig.switch
-  {"rig": name}`, and `engine.status.ready` per rig (tier, state, refusal reason). The names are
-  namchain's to choose.
-- **Service**: derive the ready set (the current bank plus every rig a PC can jump to, D10),
-  keep one switch in flight and one pending, send a new `ready_set` on a bank change, and surface
-  the per-rig state in `/status` so the panel and ljoss can show it.
-- **Confirm R14 first**: this design gives "what fits" to namchain; `rig-switch-strategies.md`
-  ("Limits") and plan 3.8 give it to the service. One of the two must change, and it changes
-  before this step is written.
-- **Acceptance**: the 3.8 switching soak — a switch every few seconds through a bank, the glitch
-  detector, the render tail.
+- **Engine first** (rule 4), as it landed: `rig.warm`/`rig.cool`/`rig.switch` and
+  `engine.status.warm` — namchain's names, one document rather than a list of tiers, which is the
+  shape D4's 2026-10-09 scoping asks for. `rig.ready_set` and a per-rig `engine.status.ready` are
+  not needed by this version and are not built.
+- **Service**, as it landed: the neighbour policy (`Mapping.neighbour` — the walk a press takes, in
+  the direction last stepped), the warm set following the position, the bank and the library, a
+  switch on every press, and the engine's own `warm` object in `/status`. R14 is settled the way
+  this section argued: the engine measures what fits, the service asks for a rig.
+- **What remains of the step**: the acceptance is the 3.8 switching soak (a switch every few
+  seconds through a bank, the glitch detector, the render tail — T7/T10 in
+  [`managing-processing-power-and-optimising-for-fast-switching.md`](managing-processing-power-and-optimising-for-fast-switching.md)).
+  R6 is now the live risk rather than a prerequisite: v2 has put rig changes under the player's
+  feet, and ljoss still applies its own document on connect.
 
 **4. v3: the upload API and the library** (no plan step; the debt register's "no way to upload
 from the app"). Service only — no engine change.
@@ -567,10 +599,11 @@ from the app"). Service only — no engine change.
   it up, and play a rig that names the new id; then the refusals above.
 - ljoss's "send to pedal" is the client of this, and lands in ljoss after it.
 
-**5. What other repos owe this.** R6 (ljoss "my document wins" on connect) must be decided
-*before* v2 puts switches under the player's feet. The MIDI channel wait for a second controller.
-The map's learn UI waits for ljoss to name targets stably. The silent-input liveness check is
-namchain's, and the service surfaces it as an issue once it exists.
+**5. What other repos owe this.** R6 (ljoss "my document wins" on connect) was to be decided
+*before* v2 put switches under the player's feet; v2 landed 2026-10-09, so it is owed now. The
+MIDI channel wait for a second controller. The map's learn UI waits for ljoss to name targets
+stably. The silent-input liveness check is namchain's, and the service surfaces it as an issue
+once it exists.
 
 **6. Housekeeping that keeps the above honest.** New routes arrive with tests, and the transport
 rules (401, 404/405, 411, 413, the three-failures close, the `"GET /path"` key convention) stay
@@ -636,8 +669,8 @@ one, by design.
 
 - **ljoss on connect** (`rig-edits.md` C12). Today ljoss applies its own document when it
   connects ("my document wins"), which would undo a rig the player chose on the pedal. ljoss
-  should follow the device's rig, or ask; that is ljoss's change and your decision, and it is
-  needed before v2 puts rig changes under the player's feet (R6).
+  should follow the device's rig, or ask; that is ljoss's change and your decision, and v2 landed
+  on 2026-10-09, so the switches it protects are now under the player's feet (R6).
 - **The silent-input liveness check** (debt register, the I2S fault). It needs the capture
   stream, so it belongs in namchain; the service surfaces it as an issue and the Pico shows it
   when it exists. The relay rule can't see that fault either: the engine says it is running.

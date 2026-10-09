@@ -21,6 +21,11 @@ engine would refuse is not a place to be, so `next` walks past it and a bank wit
 does nothing at all. A rig with **no verdict** is usable: it has not been costed (yet), and the
 engine still refuses a publish it cannot play, so a rig nobody has asked about is not this
 module's to refuse. A pressed rig is still a press: nothing here reaches the engine.
+
+**The ready set is that same walk** (D10, amended 2026-10-09): `neighbour` is the rig the next
+press would reach, in the direction the player last stepped, and the daemon holds it warm in the
+engine. It is one rig — the neighbours, not everything MIDI could jump to, which is unbounded
+and is a catch-up (P8) — and it is asked for here rather than derived again elsewhere.
 """
 import json
 import os
@@ -44,6 +49,9 @@ class Mapping:
         self.rig = self._start_rig(bank)
         self.hint = self.rig
         self.bypass = False
+        # The direction the player last stepped in, which is the direction the ready set is in
+        # (D10): `neighbour` reads it, `_step` writes it. Up, before any press.
+        self.direction = 1
         # The engine's verdicts, rig name -> {"verdict", "cost", "headroom", "trimmed", "over"},
         # or None for a rig it has not answered for. The daemon fills this in (daemon.RigCost);
         # empty means nothing is known, so everything is usable.
@@ -113,6 +121,46 @@ class Mapping:
     def position_state(self):
         return {"bank": self.bank, "rig": self.rig, "banks": self.banks}
 
+    def neighbour(self, delta=None):
+        """The rig the next press reaches, without moving: the ready set's one rig (D10).
+
+        `delta` is a direction, or — the usual case — the direction the player last stepped in
+        (`self.direction`), so the rig held ready is the one the footswitch under the player's
+        foot would land on. This is `_step`'s own walk and not a second opinion about the bank's
+        order: a rig the engine refuses is walked past here exactly as a press walks past it, so
+        a rig held warm can never be one the next press would not reach.
+
+        The rig already playing is returned when it is the only one a press could reach (a bank
+        with one usable rig in it): the walk wraps onto it. Callers that would ask the engine to
+        hold something decide what to do about that; the bank's order is all this knows.
+        """
+        index = self._walk(self.direction if delta is None else delta)
+        return None if index is None else self.current_bank()[index]
+
+    def _walk(self, delta, start=None, log_skips=False):
+        """The index a step in `delta` would land on, without moving; None if there is none.
+
+        One walk serves both the press (`_step`) and the ready set (`neighbour`), so the two can
+        never disagree about where the footswitches go next. Only a press logs the rigs it walks
+        past: a policy asks this repeatedly, and the same refusal every second is noise.
+        """
+        bank = self.current_bank()
+        if not bank:
+            return None
+        if start is None:
+            start = self.rig if self.rig >= 0 else self.hint
+        if start < 0:
+            # No position at all: the first press starts at the bank's first usable rig, which
+            # is this same walk from before the beginning (or the end, going backwards).
+            start = -1 if delta > 0 else 0
+        for offset in range(1, len(bank) + 1):
+            index = (start + delta * offset) % len(bank)
+            if self.is_usable(bank[index]):
+                return index
+            if log_skips:
+                self._refused(bank[index], index)
+        return None
+
     # ------------------------------------------------------------------ what the engine says
     def is_usable(self, name):
         """Whether a press may land on this rig. No verdict yet is usable (see the module)."""
@@ -170,25 +218,19 @@ class Mapping:
 
         The walk is the whole point of P5's skip: `next` from a usable rig lands on the next
         usable one, past any the engine says are over, and a press that finds nothing leaves
-        the position — and the player's rig — exactly where they were.
+        the position — and the player's rig — exactly where they were. The direction is
+        remembered, because it is also the direction the ready set is in (D10): the rig a
+        second press would reach is on the far side of this one.
         """
-        bank = self.current_bank()
-        if not bank:
+        if not self.current_bank():
             return None
-        start = self.rig if self.rig >= 0 else self.hint
-        if start < 0:
-            # No position at all: the first press starts at the bank's first usable rig, which
-            # is this same walk from before the beginning (or the end, going backwards).
-            start = -1 if delta > 0 else 0
-        for offset in range(1, len(bank) + 1):
-            index = (start + delta * offset) % len(bank)
-            if not self.is_usable(bank[index]):
-                self._refused(bank[index], index)
-                continue
-            self.rig = index
-            return {"action": "load", "rig": bank[index]}
-        self.log(f"every rig in bank {self.bank} is unusable; the press does nothing")
-        return None
+        self.direction = 1 if delta > 0 else -1
+        index = self._walk(delta, log_skips=True)
+        if index is None:
+            self.log(f"every rig in bank {self.bank} is unusable; the press does nothing")
+            return None
+        self.rig = index
+        return {"action": "load", "rig": self.current_bank()[index]}
 
     def _select(self, index):
         bank = self.current_bank()
