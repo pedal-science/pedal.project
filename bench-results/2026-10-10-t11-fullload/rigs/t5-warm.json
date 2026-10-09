@@ -1,0 +1,143 @@
+{
+ "chains": [
+  {
+   "connections": [
+    {
+     "from": "in",
+     "from_port": 0,
+     "to": "amp0",
+     "to_port": 0
+    },
+    {
+     "from": "amp0",
+     "from_port": 0,
+     "to": "cab",
+     "to_port": 0
+    },
+    {
+     "from": "cab",
+     "from_port": 0,
+     "to": "out",
+     "to_port": 0
+    }
+   ],
+   "id": "one",
+   "input_channel": 0,
+   "nodes": [
+    {
+     "element": "in",
+     "id": "in",
+     "type": "nc.input"
+    },
+    {
+     "element": "amp0",
+     "id": "amp0",
+     "model": "/var/lib/pedal/library/models/000 Unsorted/Ampeg SVT VR _ 8x10 _ Beta52A + DI.nam",
+     "type": "nc.nam"
+    },
+    {
+     "element": "cab",
+     "id": "cab",
+     "ir": "/var/lib/pedal/library/irs/Ampeg 4x10/York Audio AMPG 410 HS v1.01/48k (Fractal, Line 6, Suhr, etc.)/Mixes/YA AMPG 410 HS Mix 01.wav",
+     "type": "nc.cab.ir"
+    },
+    {
+     "element": "out",
+     "id": "out",
+     "type": "nc.output"
+    }
+   ],
+   "output_channel": 0
+  },
+  {
+   "connections": [
+    {
+     "from": "in",
+     "from_port": 0,
+     "to": "amp0",
+     "to_port": 0
+    },
+    {
+     "from": "amp0",
+     "from_port": 0,
+     "to": "out",
+     "to_port": 0
+    }
+   ],
+   "id": "two",
+   "input_channel": 0,
+   "nodes": [
+    {
+     "element": "in",
+     "id": "in",
+     "type": "nc.input"
+    },
+    {
+     "element": "amp0",
+     "id": "amp0",
+     "model": "/var/lib/pedal/library/models/000 Unsorted/Ampeg SVT VR _ 8x10 _ Beta52A + DI.nam",
+     "type": "nc.nam"
+    },
+    {
+     "element": "out",
+     "id": "out",
+     "type": "nc.output"
+    }
+   ],
+   "output_channel": 0
+  },
+  {
+   "connections": [
+    {
+     "from": "in",
+     "from_port": 0,
+     "to": "amp0",
+     "to_port": 0
+    },
+    {
+     "from": "amp0",
+     "from_port": 0,
+     "to": "fx0",
+     "to_port": 0
+    },
+    {
+     "from": "fx0",
+     "from_port": 0,
+     "to": "out",
+     "to_port": 0
+    }
+   ],
+   "id": "three",
+   "input_channel": 0,
+   "nodes": [
+    {
+     "element": "in",
+     "id": "in",
+     "type": "nc.input"
+    },
+    {
+     "element": "amp0",
+     "id": "amp0",
+     "model": "/var/lib/pedal/library/models/000 Unsorted/Ampeg SVT VR _ 8x10 _ Beta52A + DI.nam",
+     "type": "nc.nam"
+    },
+    {
+     "element": "fx0",
+     "freq": 800.0,
+     "gain_db": 3.0,
+     "id": "fx0",
+     "mode": "peaking",
+     "q": 1.1,
+     "type": "nc.eq.biquad"
+    },
+    {
+     "element": "out",
+     "id": "out",
+     "type": "nc.output"
+    }
+   ],
+   "output_channel": 0
+  }
+ ],
+ "name": "t5-warm"
+}

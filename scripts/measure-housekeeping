@@ -110,6 +110,11 @@ irq_stat() { ssh "$HOST" 't=$(pgrep -f "irq/138-dw_axi" | head -1); cat /proc/$t
 cpu_stat() { ssh "$HOST" 'awk "/^cpu[0-9]/{u=\$2+\$3+\$4+\$7+\$8+\$9; i=\$5; print \$1, u, u+i}" /proc/stat'; }
 temp_c() { ssh "$HOST" 'awk "{printf \"%.1f\", \$1/1000}" /sys/class/thermal/thermal_zone0/temp'; }
 
+# The clock and the firmware's low-voltage flag, which are what T11 is about: an hour at full load is
+# only a fair measurement if the cores kept their frequency and the rail did not sag.
+clock_mhz() { ssh "$HOST" 'awk "{printf \"%d\", \$1/1000}" /sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq 2>/dev/null'; }
+volt_alarm() { ssh "$HOST" 'cat /sys/class/hwmon/hwmon*/in0_lcrit_alarm 2>/dev/null | head -1'; }
+
 busy_delta() { # busy_delta <before> <after>
   python3 - "$1" "$2" <<'EOF'
 import sys
@@ -275,8 +280,11 @@ esac
 
 # Wait for the warm side to be a document that is not the audible one and has rendered a block, and
 # say so plainly when it never happens: an arm with no warm work measures less than it claims.
+# 90 s, not 20: pedald polls its status on a timer and only then asks for a warm, so a fresh restart
+# can take tens of seconds to have a document rendering -- and the 2026-10-10 T11 run started with no
+# warm document at all because this loop gave up first (the arm then measured without it).
 warm_ready=no
-for _ in $(seq 1 20); do
+for _ in $(seq 1 90); do
   n=$(status | python3 -c "
 import json,sys
 s = json.load(sys.stdin)['status']
@@ -368,6 +376,7 @@ dw, dd = b[1] - a[1], b[2] - a[2]
 print("    irq thread   %d ns of wait to run over %d wakes = %.1f ns/wake" % (dw, dd, dw / dd if dd else 0))
 print("    temperature  %s C -> %s C" % (sys.argv[3], sys.argv[4]))
 EOF
+  echo "    clock        $(clock_mhz) MHz now, low-voltage alarm $(volt_alarm)"
 }
 
 WHAT="spinner, SD reads, the app's traffic, compile burst"

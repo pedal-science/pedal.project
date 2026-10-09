@@ -1,0 +1,28 @@
+T5: what one housekeeping core costs the render cores.
+host vip, 1800 s an arm, load: spinner + SD reads + compile burst + app traffic (ljoss), target cost 0.60
+
+== setup
+    restarting namchaind for fresh counters
+    playing      /var/lib/pedal/library/rigs/last.json
+last.json
+last.prev.json
+    candidate    3 chains -> cost 0.40986999999999996
+    candidate    4 chains -> cost 0.5586899999999999
+    candidate    5 chains -> cost 0.6853099999999999
+    active rig   4 chains, cost 0.5586899999999999
+    restarting pedald so its bank includes the test rigs
+    making the active rig audible
+    WARNING: no warm document is rendering; the arms measure the render cores without warm work beside them
+    rig          /var/lib/pedal/library/rigs/t5-heavy.json  (cost 0.559, fits)
+    render       worst 2871.7 us = 215.4%  over_deadline 9  over_90 14
+    histogram    [[20, 1847], [21, 1429], [22, 843], [23, 135], [24, 38], [25, 46], [26, 71], [27, 74], [28, 99], [29, 6495], [30, 6980], [31, 1641], [32, 1191], [33, 1117], [34, 237], [35, 173], [36, 128], [37, 78], [38, 90], [39, 132], [40, 152], [41, 137], [42, 109], [43, 86], [44, 50], [45, 78], [46, 55], [47, 53], [48, 29], [49, 21], [50, 22], [51, 16], [52, 11], [53, 14], [54, 11], [55, 17], [56, 10], [57, 16], [58, 7], [59, 14], [60, 6], [61, 8], [62, 11], [63, 6], [64, 16], [65, 31], [66, 24], [67, 21], [68, 19], [69, 17], [70, 9], [71, 11], [72, 10], [73, 7], [74, 4], [75, 5], [76, 2], [78, 1], [80, 1], [82, 1], [83, 1], [84, 1], [90, 1], [92, 1], [93, 1], [98, 1], [99, 1], [100, 9]]
+    xruns 0  guard_trips 0  blocks 23978
+    second renderer on core 2: t5-warm2.json (the bench's rig mode, priority 70)
+23593 /opt/namchain/current/bin/namchain-warm-bench rig --input /var/tmp/t5/guitar-di.wav --document /var/lib/pedal/library/rigs/t5-warm2.json --seconds 3780 --cpu 2 --priority 70
+
+
+== arm A: quiet (nothing on core 0)
+    rig          /var/lib/pedal/library/rigs/t5-heavy.json  (cost 0.559, fits)
+    render       worst 2871.7 us = 215.4%  over_deadline 9  over_90 14
+    histogram    [[20, 1847], [21, 1429], [22, 843], [23, 135], [24, 38], [25, 46], [26, 71], [27, 74], [28, 99], [29, 6515], [30, 7008], [31, 1691], [32, 1254], [33, 1324], [34, 644], [35, 854], [36, 346], [37, 202], [38, 248], [39, 239], [40, 210], [41, 164], [42, 146], [43, 108], [44, 88], [45, 107], [46, 94], [47, 105], [48, 58], [49, 37], [50, 42], [51, 23], [52, 18], [53, 21], [54, 15], [55, 20], [56, 12], [57, 19], [58, 10], [59, 17], [60, 10], [61, 9], [62, 17], [63, 8], [64, 17], [65, 32], [66, 27], [67, 25], [68, 22], [69, 18], [70, 9], [71, 13], [72, 10], [73, 7], [74, 6], [75, 6], [76, 2], [77, 2], [78, 1], [80, 1], [82, 1], [83, 1], [84, 1], [86, 1], [90, 1], [92, 1], [93, 1], [98, 1], [99, 1], [100, 9]]
+    xruns 0  guard_trips 0  blocks 26481
