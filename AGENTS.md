@@ -71,6 +71,15 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
   itself is `devices/common/rootfs/usr/local/lib/pedald/`, run by `pedald.service`; `docs/pedal-service.md`
   is its design and what each version is for. `sudo systemctl start pedal-diag` samples everything
   the host, the codec and the link are doing (docs/diagnostics.md, `scripts/diag`).
+- `sudo systemctl start pedal-measure` measures the cost rows this device has no number for (P4):
+  it reads `/status`'s `engine.needs_measuring` — the units the engine is charging the `unknown`
+  cost (D8) — refuses when the pedal is unhappy (xruns, blocks over the deadline, the warm failsafe
+  holding, or the audible rig at the headroom), runs the deployed bench for **one** row on a core the
+  player is not using inside `pedal-bench.slice`, and writes the fragment to
+  `/var/lib/pedal/cost-fragments/<row>.json`. It does not merge: `devices/common/cost-merge` does that,
+  by hand, because a device's numbers are the device's and `devices/<host>/check` hashes the installed
+  table. `--dry-run` says what it would measure. It is a root oneshot, not part of `pedald`, because the
+  service runs as `User=pedal` on `CPUAffinity=0` and cannot enter that slice or pin to those cores.
 - `devices/vip/make-card [--image-only] [--disk /dev/diskN] [--dev]` (links to
   `devices/common/make-card`): build vip's whole card in colima from the commits in
   `devices/vip/image.lock` (namchain built and tested there, both roots, the boot partitions),
