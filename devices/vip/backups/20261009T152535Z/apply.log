@@ -1,0 +1,10 @@
+  installed /etc/pedal/tune.conf
+  installed /etc/security/limits.d/90-pedal-rt.conf
+  installed /etc/systemd/system/namchaind.service.d/10-pedal.conf
+  installed /etc/systemd/system/system.slice.d/10-pedal-cpuset.conf
+  installed /etc/systemd/system/user.slice.d/10-pedal-cpuset.conf
+  installed /usr/local/sbin/pedal-device
+  installed /usr/local/sbin/pedal-tune
+  masked by someone else, left alone: rpi-eeprom-update.service
+Unit /etc/systemd/system/pedal-wifi.service is added as a dependency to a non-existent unit sys-subsystem-net-devices-wlan0.device.
+pedal-device: done. Manifest: /var/lib/pedal/manifest

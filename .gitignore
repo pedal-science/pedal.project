@@ -18,3 +18,10 @@ __pycache__/
 
 # pedal-diag --watch writes its log here when run from a checkout
 scratch/
+
+# A backup's restore payload. `devices/<host>/backup` writes state.txt beside files.tar: the settings
+# are the readable, small record of what the host looked like before a change and belong in git; the
+# tar is every file it captured, ~320 KB per apply, and nothing reads it. The tars already tracked
+# stay tracked -- untracking them would rewrite nothing in history and gain nothing -- but no new one
+# is added, so a backup commit carries the record and not the payload.
+devices/*/backups/*/files.tar

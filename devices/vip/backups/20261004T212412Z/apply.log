@@ -1,0 +1,23 @@
+  installed /etc/pedal/pedald.json
+  installed /etc/systemd/system/namchaind.service.d/10-pedal.conf
+  installed /etc/systemd/system/pedald.service
+  installed /usr/lib/sysusers.d/pedal.conf
+  installed /usr/local/lib/pedald/__init__.py
+  installed /usr/local/lib/pedald/config.py
+  installed /usr/local/lib/pedald/daemon.py
+  installed /usr/local/lib/pedald/engine.py
+  installed /usr/local/lib/pedald/httpd.py
+  installed /usr/local/lib/pedald/link.py
+  installed /usr/local/lib/pedald/mapping.py
+  installed /usr/local/lib/pedald/protocol.py
+  installed /usr/local/lib/pedald/resume.py
+  installed /usr/local/sbin/pedal-device
+  installed /usr/local/sbin/pedald
+Removed '/etc/systemd/system/multi-user.target.wants/pedal-resume.service'.
+  retired   /etc/systemd/system/pedal-resume.service
+  retired   /usr/local/sbin/pedal-resume
+Creating group 'pedal' with GID 988.
+Creating user 'pedal' (pedal service) with UID 988 and GID 988.
+Created symlink '/etc/systemd/system/multi-user.target.wants/pedald.service' → '/etc/systemd/system/pedald.service'.
+Unit /etc/systemd/system/pedal-wifi.service is added as a dependency to a non-existent unit sys-subsystem-net-devices-wlan0.device.
+pedal-device: done. Manifest: /var/lib/pedal/manifest

@@ -1,0 +1,118 @@
+  ok    /etc/namchain/cost.json
+  ok    /etc/namchain/namchaind.json
+  ok    /etc/pedal/codec/wm8960-codec-master.dts
+  ok    /etc/pedal/codec/wm8960.mixer
+  ok    /etc/pedal/default-rig.json
+  ok    /etc/pedal/masked-units
+  ok    /etc/pedal/pedald.json
+  ok    /etc/pedal/tune.conf
+  ok    /etc/pedal/uart/uart0-enable.dts
+  ok    /etc/security/limits.d/90-pedal-rt.conf
+  ok    /etc/ssh/sshd_config.d/10-pedal-keys-only.conf
+  ok    /etc/sysctl.d/90-pedal.conf
+  ok    /etc/systemd/journald.conf.d/10-pedal.conf
+  ok    /etc/systemd/network/20-eth0.network
+  ok    /etc/systemd/network/20-wlan0.network
+  ok    /etc/systemd/resolved.conf.d/10-pedal-mdns.conf
+  ok    /etc/systemd/system/namchaind.service.d/10-pedal.conf
+  ok    /etc/systemd/system/pedal-codec.service
+  ok    /etc/systemd/system/pedal-diag.service
+  ok    /etc/systemd/system/pedal-maint.target
+  ok    /etc/systemd/system/pedal-rt.slice
+  ok    /etc/systemd/system/pedal-tune.service
+  ok    /etc/systemd/system/pedal-uart.service
+  ok    /etc/systemd/system/pedal-wifi.service
+  ok    /etc/systemd/system/pedald.service
+  ok    /etc/systemd/system/system.slice.d/10-pedal-cpuset.conf
+  ok    /etc/systemd/system/user.slice.d/10-pedal-cpuset.conf
+  ok    /usr/lib/sysusers.d/pedal.conf
+  ok    /usr/local/bin/pedal-rt
+  ok    /usr/local/lib/pedald/__init__.py
+  ok    /usr/local/lib/pedald/config.py
+  ok    /usr/local/lib/pedald/daemon.py
+  ok    /usr/local/lib/pedald/engine.py
+  ok    /usr/local/lib/pedald/httpd.py
+  ok    /usr/local/lib/pedald/link.py
+  ok    /usr/local/lib/pedald/mapping.py
+  ok    /usr/local/lib/pedald/protocol.py
+  ok    /usr/local/lib/pedald/resume.py
+  ok    /usr/local/lib/rpi-eeprom/eeprom.lock
+  ok    /usr/local/sbin/dtoverlay-locked
+  ok    /usr/local/sbin/pedal-codec
+  ok    /usr/local/sbin/pedal-device
+  ok    /usr/local/sbin/pedal-diag
+  ok    /usr/local/sbin/pedal-tune
+  ok    /usr/local/sbin/pedal-uart
+  ok    /usr/local/sbin/pedal-wifi
+  ok    /usr/local/sbin/pedald
+  ok    /usr/local/sbin/vip-eeprom
+  ok    linux-image-7.0.0-1017-raspi-realtime
+  ok    linux-modules-7.0.0-1017-raspi-realtime
+  ok    linux-firmware-raspi
+  ok    wireless-regdb
+  ok    systemd
+  ok    systemd-sysv
+  ok    systemd-resolved
+  ok    systemd-timesyncd
+  ok    udev
+  ok    dbus
+  ok    dracut-core
+  ok    dosfstools
+  ok    e2fsprogs
+  ok    python3
+  ok    systemd-repart
+  ok    openssh-server
+  ok    sudo
+  ok    wpasupplicant
+  ok    iproute2
+  ok    iputils-ping
+  ok    ca-certificates
+  ok    rsync
+  ok    raspi-utils-dt
+  ok    device-tree-compiler
+  ok    alsa-utils
+  ok    raspi-utils
+  ok    rpi-eeprom
+  ok    procps
+  ok    util-linux
+  ok    kmod
+  ok    less
+  ok    i2c-tools
+  ok    /home/rik/.ssh/authorized_keys
+  ok    slot a: 7.0.0-1017-raspi-realtime-numaemu1-trimmed, good
+  ok    7.0.0-1017-raspi-realtime-numaemu1-trimmed: modules, kernel and initramfs in the root
+  ok    slot b: 7.0.0-1017-raspi-realtime, good
+  ok    7.0.0-1017-raspi-realtime: modules, kernel and initramfs in the root
+  ok    version 1accd665, built 2026-09-25 15:59:09
+  ok    config 1/0xf461/1
+  ok    pinned pieeprom-2026-09-25.bin
+  ok    pinned recovery.bin
+  ok    cost.json host vip, measured 2026-10-08T09:22:07Z    
+  ok    cost.json engine 87f3cb9, kernel 7.0.0-1017-raspi-realtime-numaemu1-trimmed 
+  ok    cost.json 14 row(s): NAM 2, IR 5, node 7; headroom 0.80 
+  ok    cost.json provenance matches what the device runs    
+commit=0295683-dirty
+applied=2026-10-08T20:48:41Z
+  ok    masked units                       14
+  ok    wlan0 power saving                 off
+  ok    cost table                         vip, measured 2026-10-08T09:22:07Z, engine 87f3cb9, 7.0.0-1017-raspi-realtime-numaemu1-trimmed, headroom 0.80, 13 row(s)
+  --    pedal-tune.service                 enabled / active
+== kernel isolation (rtpi)
+  ok    isolated cpus                      2-3
+  ok    nohz_full cpus                     2-3
+== clock
+  ok    policy0 governor                   performance
+  ok    policy0 max kHz                    2400000
+  --    policy0 cpus / now kHz             0 1 2 3 / 2400000
+  --    cpu-thermal temperature            56 C (first trip 110 C)
+== cpusets
+  ok    system.slice                       0-1
+  ok    user.slice                         0-1
+  ok    init.scope                         0-1
+  ok    pedal-rt.slice loads               loaded
+  ok    user tasks allowed on cpu 2-3      none outside pedal-rt.slice
+== audio interrupt (dw_axi_dmac_platform)
+  ok    IRQ 138 affinity                   0
+  ok    IRQ 138 affinity vs isolated       cpu 0 is outside 2-3
+  ok    thread irq/138-dw_axi_dmac_platform prio 85
+  --    repo tree                          0295683-dirty

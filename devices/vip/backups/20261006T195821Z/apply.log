@@ -1,0 +1,11 @@
+  installed /etc/namchain/namchaind.json
+  installed /etc/pedal/masked-units
+  installed /usr/local/lib/pedald/httpd.py
+  installed /usr/local/sbin/dtoverlay-locked
+  installed /usr/local/sbin/pedal-codec
+  installed /usr/local/sbin/pedal-device
+  installed /usr/local/sbin/pedal-diag
+  installed /usr/local/sbin/pedal-uart
+  masked by someone else, left alone: rpi-eeprom-update.service
+Unit /etc/systemd/system/pedal-wifi.service is added as a dependency to a non-existent unit sys-subsystem-net-devices-wlan0.device.
+pedal-device: done. Manifest: /var/lib/pedal/manifest
