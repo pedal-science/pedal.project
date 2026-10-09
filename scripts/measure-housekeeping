@@ -144,8 +144,11 @@ TOKEN=$(ssh "$HOST" "sudo cat /etc/namchain/token" 2>/dev/null | tr -d '\n')
 [[ -n $TOKEN ]] || { echo "could not read the engine's token on $HOST" >&2; exit 1; }
 # The bench's input: copied once into /var/tmp/t5 and reused, because it is 8 MB and the point of the
 # WiFi leg is the app's traffic, not this file.
-ssh "$HOST" "sudo mkdir -p /var/tmp/t5 && sudo test -s /var/tmp/t5/guitar-di.wav" 2>/dev/null \
-  || { echo "    copying the DI to $HOST once (8 MB)"; scp -q guitar-di.wav "$HOST:/var/tmp/t5-di.wav" && ssh "$HOST" "sudo mkdir -p /var/tmp/t5 && sudo mv /var/tmp/t5-di.wav /var/tmp/t5/guitar-di.wav"; }
+# Two homes: /var/tmp for this harness's own bench runs, and /var/lib/pedal for `pedal-measure`,
+# which measures a first-sight row later and must use the same signal the table was measured with
+# (the table now names it, hash and all). One copy, both places, and only when it is missing.
+ssh "$HOST" "sudo mkdir -p /var/tmp/t5 && sudo test -s /var/tmp/t5/guitar-di.wav && sudo test -s /var/lib/pedal/guitar-di.wav" 2>/dev/null \
+  || { echo "    copying the DI to $HOST once (8 MB, into /var/tmp/t5 and /var/lib/pedal)"; scp -q guitar-di.wav "$HOST:/var/tmp/t5-di.wav" && ssh "$HOST" "sudo mkdir -p /var/tmp/t5 && sudo mv /var/tmp/t5-di.wav /var/tmp/t5/guitar-di.wav && sudo install -m 644 /var/tmp/t5/guitar-di.wav /var/lib/pedal/guitar-di.wav"; }
 
 echo "== setup"
 
