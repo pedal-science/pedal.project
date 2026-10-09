@@ -23,7 +23,8 @@ CONF=/etc/pedal/tune.conf
 # shellcheck source=/dev/null
 source "$CONF"
 : "${RT_CPUS:?} ${HOUSEKEEPING_CPUS:?} ${CPU_GOVERNOR:?} ${CPU_MAX_KHZ:?}"
-# The cores the kernel isolates. piv and vip both isolate 2-3 and render on 3.
+# The cores the kernel isolates. Both hosts isolate 2-3 today -- vip's own tree says 1-3 (one
+# housekeeping core), and piv is behind on that (its layout is reconciled separately).
 ISOLATED_CPUS="${ISOLATED_CPUS:-$RT_CPUS}"
 AUDIO_IRQ_MATCH="${AUDIO_IRQ_MATCH:-}"
 AUDIO_IRQ_PRIO="${AUDIO_IRQ_PRIO:-85}"
@@ -44,6 +45,10 @@ audio_irqs() { [[ -n $AUDIO_IRQ_MATCH ]] || return 0; awk -v m="$AUDIO_IRQ_MATCH
 expand_cpus() { tr ',' '\n' <<< "$1" | awk -F- 'NF { e = ($2 == "" ? $1 : $2); for (c = $1; c <= e; c++) print c }'; }
 # True if the cpu list $1 includes any cpu in $2.
 cpus_overlap() { [[ -n $(comm -12 <(expand_cpus "$1" | sort) <(expand_cpus "$2" | sort)) ]]; }
+# How many cpus a cpu list names.
+cpus_count() { expand_cpus "$1" | wc -l | tr -d ' '; }
+# The cpu a thread last ran on: /proc/<tid>/stat field 39, which is field 37 after "(comm) ".
+cpu_of_thread() { sed 's/.*) //' "/proc/$1/stat" 2>/dev/null | awk '{print $37}'; }
 
 irq_threads() { ps -eLo tid=,comm= | awk -v p="irq/$1-" 'index($2, p) == 1 { print $1 }'; }
 
@@ -65,8 +70,10 @@ apply() {
       echo "$AUDIO_IRQ_CPU" > "/proc/irq/$irq/smp_affinity_list" 2>/dev/null \
         || say "WARNING: could not set IRQ $irq affinity"
     fi
-    # Interrupt threads refuse sched_setaffinity (PF_NO_SETAFFINITY); they follow the IRQ's own
-    # affinity, so only the priority is set here.
+    # Interrupt handler threads are kernel threads: they refuse sched_setaffinity
+    # (PF_NO_SETAFFINITY), and on this board they do NOT follow the IRQ's delivery affinity --
+    # observed at 0-3 while the IRQ was pinned to 0. So only the priority is set here; `check`
+    # reports the core each thread is actually on, and fails if it finds one on the active core.
     for tid in $(irq_threads "$irq"); do
       chrt -f -p "$AUDIO_IRQ_PRIO" "$tid" || say "WARNING: could not set priority on thread $tid"
     done
@@ -80,6 +87,19 @@ check() {
   echo "== kernel isolation (rtpi)"
   expect "isolated cpus" "$(cat /sys/devices/system/cpu/isolated)" "$ISOLATED_CPUS"
   expect "nohz_full cpus" "$(cat /sys/devices/system/cpu/nohz_full)" "$ISOLATED_CPUS"
+
+  # The core rules (2026-10-09): all but one core renders; the one that does not carries everything
+  # else and no interrupt; the audio interrupt is delivered to a render core, and never to the
+  # active one. Each of the four has been got wrong at least once, which is why they are asserted.
+  echo "== core roles"
+  local online; online=$(cat /sys/devices/system/cpu/online)
+  expect "non-render cores (R1)" "$(cpus_count "$HOUSEKEEPING_CPUS")" "1"
+  expect "render cores (R1)" "$(cpus_count "$ISOLATED_CPUS")" "$(( $(cpus_count "$online") - 1 ))"
+  if cpus_overlap "$HOUSEKEEPING_CPUS" "$ISOLATED_CPUS"; then
+    fail "housekeeping and render cores disjoint" "both name $(comm -12 <(expand_cpus "$HOUSEKEEPING_CPUS" | sort) <(expand_cpus "$ISOLATED_CPUS" | sort) | tr '\n' ' ')"
+  else
+    okay "housekeeping and render cores disjoint" "$HOUSEKEEPING_CPUS / $ISOLATED_CPUS"
+  fi
 
   echo "== clock"
   for p in /sys/devices/system/cpu/cpufreq/policy*; do
@@ -131,20 +151,32 @@ check() {
       local aff; aff=$(cat "/proc/irq/$irq/effective_affinity_list" 2>/dev/null)
       [[ -n $aff ]] || aff=$(cat "/proc/irq/$irq/smp_affinity_list")
       expect "IRQ $irq affinity" "$aff" "$AUDIO_IRQ_CPU"
-      # D5, and the reason for it: this handler runs SCHED_FIFO 85, above the render thread's 80,
-      # so wherever it lands it preempts, and on a render core that preemption is the render
-      # thread's deadline. The core the tree asks for is therefore checked against ISOLATED_CPUS
-      # as an overlap, not an equality — a cpuset is a range and one core inside it is enough to
-      # do the damage (docs/audio-dma-irq.md). The run above catches drift; this catches a tree
-      # that has been pointed at a render core.
+      # D5, and the reason for it: this handler runs SCHED_FIFO 85, above the render thread's 80, so
+      # wherever it lands it preempts. On the *active* render core that preemption is the render
+      # thread's deadline; on an inactive one it is a warm rig falling a block behind, which is what
+      # warm work is for. Hence "a render core, but never the active one" -- and both halves are
+      # checked (docs/audio-dma-irq.md).
       if cpus_overlap "$AUDIO_IRQ_CPU" "$ISOLATED_CPUS"; then
-        fail "IRQ $irq affinity vs isolated" "cpu $AUDIO_IRQ_CPU is in ISOLATED_CPUS=$ISOLATED_CPUS; the audio IRQ must stay on a housekeeping core"
+        okay "IRQ $irq affinity vs render set (R3)" "cpu $AUDIO_IRQ_CPU is inside $ISOLATED_CPUS"
       else
-        okay "IRQ $irq affinity vs isolated" "cpu $AUDIO_IRQ_CPU is outside $ISOLATED_CPUS"
+        fail "IRQ $irq affinity vs render set (R3)" "cpu $AUDIO_IRQ_CPU is not a render core; the audio IRQ belongs on one"
+      fi
+      if cpus_overlap "$AUDIO_IRQ_CPU" "$RT_CPUS"; then
+        fail "IRQ $irq is not on the active core (R4)" "cpu $AUDIO_IRQ_CPU is RT_CPUS=$RT_CPUS"
+      else
+        okay "IRQ $irq is not on the active core (R4)" "cpu $AUDIO_IRQ_CPU, active core $RT_CPUS"
       fi
     fi
     for tid in $(irq_threads "$irq"); do
       expect "thread $(cat "/proc/$tid/comm") prio" "$(chrt -p "$tid" | awk '/priority/ {print $NF}')" "$AUDIO_IRQ_PRIO"
+      # Not an expectation: the thread's affinity is not ours to set (see apply), so this is the one
+      # place that can notice it sitting on the active core, where it would preempt the renderer.
+      local tcore; tcore=$(cpu_of_thread "$tid")
+      if [[ -n $tcore ]] && cpus_overlap "$tcore" "$RT_CPUS"; then
+        fail "thread $(cat "/proc/$tid/comm") core" "$tcore — the interrupt handler is on the active render core"
+      else
+        note "thread $(cat "/proc/$tid/comm") core" "${tcore:-?} (observed; its mask cannot be set from here)"
+      fi
     done
   done
   return "$bad"

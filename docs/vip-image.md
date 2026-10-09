@@ -293,7 +293,7 @@ makes one if a host has none.
 
 ### Writing the card
 
-The same guards as rtpi's `restore-sd-on-mac.sh`:
+The guards `devices/common/write-card` owns:
 
 - List external physical disks, and refuse an internal disk and anything that isn't removable.
 - Show the name and size, and ask you to type `vip` before writing.

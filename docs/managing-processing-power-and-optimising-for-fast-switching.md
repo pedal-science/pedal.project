@@ -20,11 +20,20 @@ big active rig cannot have — and the rules below settle the competition in fav
   the first time.
 * **A rig renders on one core, all of its chains.** Rigs are atomic. A rig that does not fit one
   core is trimmed (Full → Lite), and if it still does not fit it is refused and skipped over.
-* **One core is housekeeping**, always: IRQs (highest priority on the box), `pedald`, the engine's
-  control side, and everything the OS does.
-* **Every other real-time core exists to keep rigs warm.** Exactly one render core at a time is the
-  *active* render core, playing the rig the player is hearing. The rest are *inactive render cores*
-  — free to keep other rigs warm, or to run a catch-up.
+* **All but one core is a render core** (amended 2026-10-09). Every core but the housekeeping one
+  exists to render: exactly one of them at a time is the *active* render core, playing the rig the
+  player is hearing, and the rest are *inactive render cores* — keeping other rigs warm, or running
+  a catch-up.
+* **The non-render core handles everything except interrupts**: `pedald`, the engine's control side,
+  the service's compiles, the OS, WiFi, the SD card, backups.
+* **The audio interrupt is delivered to a render core** (amended 2026-10-09), one designated for it
+  and never the active one. It is the highest-priority realtime thread on the box (SCHED_FIFO 85,
+  above the render thread's 80) and always preempts whatever it lands on; on the active core that
+  preemption is a missed deadline, on an inactive one it is a warm rig falling a block behind, which
+  is what warm work is for. It also keeps the interrupt's own tail off the one core that has to
+  carry everything else.
+* **The interrupt's core never becomes the active render core.** A rig warm there becomes audible by
+  handing its execution to the active core, not by that core becoming active.
 * **Warm rigs are packed by cost into the inactive cores**, not assigned one rig per core: a core
   holds as many warm rigs as its budget allows.
 * **Catch-up is a real path, not an afterthought.** Where a rig cannot be kept warm, switching to it
@@ -48,16 +57,18 @@ Measured (illustrative values):
 * Rig 2, 3, 4: the same.
 
 ```
-Core 0: housekeeping (IRQs, pedald, control)
-Core 1: ACTIVE   — the rig being heard
-Core 2: inactive — warm rigs, packed by cost
-Core 3: inactive — warm rigs, packed by cost
+Core 0: housekeeping — pedald, control, WiFi, the SD card, the OS
+Core 1: render — takes the audio interrupt; warm rigs only, never the audible one
+Core 2: render — warm rigs, packed by cost
+Core 3: ACTIVE — the rig being heard; no interrupt is delivered here
 ```
 
-With Rig 2 active and Rigs 1 and 3 adjacent, cores 2 and 3 hold Rigs 1 and 3 warm. Press "next" and
-the roles rotate: the incoming rig's core becomes the active one, the outgoing rig stays warm, and
-the newly-adjacent rig (Rig 4) is loaded and warmed. **No rig ever migrates between cores** — the
-only thing that changes on a switch is which core's output is audible.
+With Rig 2 active on core 3 and Rigs 1 and 3 adjacent, cores 1 and 2 hold Rigs 1 and 3 warm. Press
+"next" and the incoming rig's execution hands over to the active core, whose rig becomes warm on the
+core the incoming one leaves; the newly-adjacent rig (Rig 4) is loaded and warmed on an inactive
+core. What makes the switch fast is that the incoming rig was already rendering and its state is
+current — no load, no parse, no allocation on a render thread — not that a particular core stays with
+a particular rig. A rig's *execution* may move cores; a rig's *state* is never rebuilt.
 
 For comparison, vip's real measured numbers (E2, 2026-10-06) are **8 A2-Full or 30 A2-Lite per core**
 without cabs, so `full: 0.125`, `lite: 0.033`; E1 measured **5 rigs per core** when each rig is a
@@ -86,31 +97,33 @@ a cliff, not a plateau — vip: 8 Full at 89% of a quantum, 10 at 113%, 12 with 
 blocks (3.5 s) behind and never recovering — and the transition itself briefly runs two rigs
 (Lite and Full during a handover). *Ruled out:* admitting a rig that scores exactly 1.0.
 
-**D4 — Warm rigs are packed by cost into the inactive cores, up to the same 0.8** (2026-10-07). One
-rig per core wastes the resource the whole scheme exists to protect: a core holds ~8 Full or ~30 Lite
-*models* warm, i.e. several rigs' worth. Packing is what lets the whole bank stay warm (D10 asks for
-the current bank plus anything MIDI can jump to), rather than only the two immediate neighbours.
-*Ruled out:* one warm rig per core.
+**D4 — Warm rigs are packed by cost into the inactive cores, up to the same 0.8** (2026-10-07;
+scoped 2026-10-09). One rig per core wastes the resource the whole scheme exists to protect: a core
+holds ~8 Full or ~30 Lite *models* warm, i.e. several rigs' worth. **What ships is the rigs a
+footswitch reaches next, one per inactive core**: `rig.warm` and the packing rule are built to take
+more than one per core, but filling the core is optimisation and is left until after the pedal is
+gig-ready (2026-10-09). *Ruled out:* one warm rig per core as a **limit**; and, for now, warming the
+whole bank.
 
-**D5 — The audio IRQ lives on the housekeeping core** (2026-10-07, decided in P7 — the pins are in
-the tree; T6 is the measurement that confirms or reverses it). It is the highest-priority realtime
-thread on the box (SCHED_FIFO 85, above the render thread's 80) and must always preempt whatever it
-lands on, so it must not land on a render core. Its *delivery* therefore goes to core 0 — a
-housekeeping core that the kernel's own `irqaffinity=0-1` already allows — not to core 2, which is
-a render core under these rules. *Evidence:* `docs/audio-dma-irq.md`; `AUDIO_IRQ_CPU="0"` and
-`AUDIO_IRQ_PRIO="85"` in `devices/vip/rootfs/etc/pedal/tune.conf`, with `pedal-tune check` failing
-if the core it finds is inside `ISOLATED_CPUS`; `pedal-interface.json` (`audio_irq_cpu`), which is
-what `pedal-diag` reads to report a wrong placement. *Ruled out:* leaving the pin at core 2.
-*Open question the measurement answers:* whether the interrupt's tail survives sharing a core with
-WiFi and the SD card — if it does not, D5 is wrong and the IRQ needs a core of its own (T6).
-**Measured 2026-10-08, T6: the falsifier did not fire.** With a CPU spinner on core 0 and an SD write
-and a WiFi upload running, the IRQ's own wait to run was 7.4 ns per wake on core 2 against 7.7 ns on
-core 0, the render's distribution was the same either way, and both arms ended with zero xruns, zero
-guard trips and no block over the deadline. Sharing the housekeeping core costs the interrupt nothing
-measurable, so the IRQ needs no core of its own and the render set keeps both its cores. Two caveats
-stand: core 2 is not rendering today (`render_threads: 1`), so what D5 protects against is only
-measurable once P6 puts a rig there; and the interrupt thread cannot be pinned
-(`PF_NO_SETAFFINITY`), so the *delivery* affinity is the only lever — which is the one P7 moves.
+**D5 — The audio IRQ lives on a render core that is never the active one** (2026-10-07; **reversed
+2026-10-09**). It is the highest-priority realtime thread on the box (SCHED_FIFO 85, above the render
+thread's 80) and always preempts whatever it lands on, so the question is only *where that costs
+least*. An **inactive** render core is the answer: the only thing it can preempt there is a warm rig,
+which falls a block behind and catches up, and it keeps the interrupt's ~2% of a core and its
+wake-to-completion tail off the one core that carries `pedald`, the control side, WiFi and the SD
+card. Its *delivery* therefore goes to **core 1** on vip — a render core, and never the active one
+(core 3) — with `AUDIO_IRQ_CPU="1"` and `AUDIO_IRQ_PRIO="85"` in
+`devices/vip/rootfs/etc/pedal/tune.conf`, and `pedal-tune check` asserting that its core is *inside*
+`ISOLATED_CPUS` and is *not* `RT_CPUS`. *Evidence:* `docs/audio-dma-irq.md`; T6 measured both
+placements and found no difference to the interrupt or to the render (7.4 ns wait-to-run on a render
+core against 7.7 ns on the housekeeping core, identical render distributions, zero xruns either arm)
+— so the interrupt is not what decides this and the core layout is; and piv has run this shape since
+2026-09-25, its SSL 2+ interrupt pinned to isolated core 2 while the engine renders on core 3.
+*Ruled out:* the IRQ on the active core; and the IRQ on the housekeeping core, which is what P7
+chose and what this reverses. *Caveat that stands:* only the interrupt's **delivery** can be pinned.
+Its handler thread carries `0-3` on this kernel (`PF_NO_SETAFFINITY`), it is observed on core 1, and
+`isolcpus=domain` rather than the mask is what keeps it off the other render cores — so `pedal-tune
+check` reports the thread's actual core and fails if it is ever seen on the active one.
 
 **D6 — Trimming is Full → Lite, applied only as far as it needs to be, and it is visible**
 (2026-10-07). Lite and Full are two separately trained networks, measured 9 to 40 dB apart (E2), so a
@@ -331,34 +344,40 @@ the verdicts in `/status`; ljoss shows a "Lite: <blocks>" chip while the running
 refuses to publish a rig the engine would refuse, and marks it too big for the device while keeping it
 editable. 244 pedald tests and 507 ljoss assertions, both green.
 
-**P6 — the warm set and role rotation in the engine (nc).** namchain M3: several documents resident
-and rendering at once, one of them audible, the rest warm; a switch rotates which is audible and
-crossfades. Start with exactly one warm rig (two documents), then N packed by cost. This is the
-biggest item and M3 is already on the plan's critical path. *Verification:* T7, T8, and the switch
-latency at the jack. **NOT IMPLEMENTED, and this is the item everything else warm waits on.**
-The rules say no rig migrates between cores: each core renders its own rig, and a switch changes
-*which core's output is audible*. namchain has the opposite shape today -- one document, one set of
-plans, the render thread executing whichever document was published last, and a publish that compiles
-the incoming rig and crossfades to it. A faithful P6 is therefore not an addition to the render path
-but a change of it: one render thread per core, each with its own resident document and its own bus
-buffer, and the device-owning thread mixing the selected one (one block behind, well inside D10's
-50 ms). P4's inactive core and P8's catch-up both wait on it.
+**P6 — the warm set in the engine (nc).** namchain M3: more than one document resident and rendering
+at once, one of them audible, the rest warm; a switch makes a warm rig audible and crossfades to it.
+*Verification:* T7, T8, and the switch latency at the jack. **SCOPE AGREED, IN PROGRESS 2026-10-09**;
+this is the item everything else warm waits on.
 
-**P7 — move the audio IRQ to the housekeeping core (rt, pp). DONE IN THE TREE 2026-10-07; T6 PENDING.**
-`AUDIO_IRQ_CPU=0` in
-`devices/vip/rootfs/etc/pedal/tune.conf`, with the other four places that describe the reserved set
-updated to agree (cmdline, slice drop-ins, `pedal-rt.slice`, `namchaind.service`'s `CPUAffinity`),
-and `pedal-tune check` extended to assert it. Those four already agreed on 0-1 for housekeeping and
-2-3 for the render set, so the only value that moved is the pin itself: `AUDIO_IRQ_CPU` and its
-twin in `pedal-interface.json`, which is what `pedal-diag` reads to notice a wrong placement.
-`pedal-tune check` now fails if the IRQ's core is inside `ISOLATED_CPUS` — the one assertion that
-makes D5 checkable. **Done in the tree 2026-10-07**; the measurement is what remains, and it is the
-one that could make things *worse*: the IRQ's own wake-to-completion tail, the render tail, and the
-footswitch path while WiFi and the SD card are busy (T6). **This is the arm `docs/multi-core.md`
-deferred for vip**, and that section now carries the decision. *Verification:* the measurements,
-plus a decision recorded either way. **The tree is changed and `devices/vip/apply` has not been run**,
-so the board is still on the old pin: T6 has not been taken, and the decision above is the tree's, not
-a measurement's, until it is.
+What ships, in order: **one warm document** on an inactive core, rendering the same block the active
+one does and publishing its output; then `rig.switch`, which hands the warm rig's *execution* to the
+active core at a block boundary and crossfades to it; then the footswitch neighbours, one per
+inactive core (D4). A switch to a rig that is not warm **falls back** to today's path — publish,
+compile, cold crossfade — rather than refusing, so a press always produces sound. The difference a
+warm switch buys is that it does no load, no parse and no allocation on a render thread, which is
+what makes it fast and click-free.
+
+The architecture, because namchain has the opposite shape today (one document, one set of plans, the
+render thread executing whichever document was published last): per-**document** render state —
+chains, bus, transition state — of which one is owned by the device thread and the others by warm
+threads pinned to the inactive cores. Ownership moves by **swapping which document a thread owns**,
+not by moving a plan in memory, so a rig's state is never rebuilt. The device core is fixed
+(`cpu: 3`): the rules make the interrupt core (1) and the warm core (2) ineligible for the active
+role, so a switch is a handover between the device thread and a warm one. A rig's *execution* may
+therefore move cores; the withdrawn "no rig migrates" reading of the rules is not a constraint
+(2026-10-09). P4's inactive core and P8's catch-up both wait on it.
+
+**P7 — the audio IRQ's core (rt, pp). DONE 2026-10-07; MEASURED 2026-10-08; REVERSED 2026-10-09.**
+P7 moved the pin to core 0, a housekeeping core, on the reading that the interrupt must not land on a
+render core at all; `pedal-tune check` asserted that, and T6 then measured both placements and found
+no difference (D5 above carries the numbers). The reversal is not T6's doing: the rules changed on
+2026-10-09 so that all but one core renders, which leaves the interrupt with a render core as its
+home and makes the *active* core the one thing it must not touch. What P7 added stays — the pin by
+name, the priority, `pedal-interface.json`'s `audio_irq_cpu` (which `pedal-diag` reads), and the
+check — and the value moves from 0 to 1, with the assertion flipped from "outside `ISOLATED_CPUS`"
+to "inside it, and not `RT_CPUS`". *Verification:* T6 (done), the four layout assertions in
+`pedal-tune check` (one housekeeping core; the render set is every other core; the IRQ inside the
+render set; the IRQ outside `RT_CPUS`), and a re-run of T6's arms on the new placement.
 
 **P8 — catch-up, end to end (nc). NOT IMPLEMENTED.** Lite-first catch-up on an inactive core, staged by depth, with
 the measured 170 ms per model; the path must be exercised by a real switch, not only by the bench.
@@ -436,16 +455,22 @@ it needs two rigs rendering at once, which is P6's dual render. `namchain-warm-b
 measures the cost of two copies of one rig, not a real handover.
 
 **T5 — housekeeping starvation.** `dd` on the housekeeping core, a WiFi upload of models and IRs, an
-SD write, all while the active rig renders at 0.8 with the warm cores packed. *Expected:* this is
-where the headroom may prove too thin — the two-amp work measured another core's traffic *doubling*
-a rig's median, and isolation protects cores, not the memory system. *Recorded as:* the headroom and
-the mitigation it forces (a lower admission figure, or the memory discipline: `mlockall` for every
-worker stack and buffer, no new-page churn beside the engine).
+SD write, all while the active rig renders at 0.8 with the warm cores packed. Since 2026-10-09 that
+is **one** core (0) carrying `pedald`, the control side, WiFi and the SD card, with the audio
+interrupt moved off it (D5) — so the interrupt is not what this measures any more. *Expected:* this
+is where the headroom may prove too thin — the two-amp work measured another core's traffic
+*doubling* a rig's median, and isolation protects cores, not the memory system. *Falsifier:* a
+compile, an upload or a backup on core 0 moves the render cores' tail, or pushes the active rig over
+the deadline. *Recorded as:* the headroom and the mitigation it forces (a lower admission figure, or
+the memory discipline: `mlockall` for every worker stack and buffer, no new-page churn beside the
+engine). **Not run** — it wants P6's warm cores to be the thing that is being protected.
 
-**T6 — the IRQ arm (P7).** The audio IRQ on the housekeeping core vs on core 2, measuring the IRQ
-thread's tail, the render tail, and the footswitch-to-sound latency with WiFi and SD busy.
-*Falsifier:* if the IRQ's latency degrades on the busy housekeeping core, D5 is wrong and the IRQ
-needs a core of its own — which changes how many cores the rules can spend on rendering.
+**T6 — the IRQ arm (D5).** The audio IRQ on a render core (where it lives now, core 1) against the
+housekeeping core (what P7 chose, core 0), measuring the IRQ thread's tail, the render tail, and the
+footswitch-to-sound latency with WiFi and SD busy. *Falsifier:* if the interrupt's latency degrades
+on the core it shares with warm work, or a warm rig's lag grows without bound, D5 is wrong and the
+interrupt needs a core nothing else uses — which changes how many cores the rules can spend on
+rendering.
 **Run 2026-10-08** (four minutes an arm, a CPU spinner on core 0, a 200 MB SD write and a 200 MB WiFi
 upload, the same amp-and-cab rig playing through the codec): the render's distribution is identical
 (54% of blocks at 7% of the deadline, 33% at 8%, 13% at 9%), blocks over 10% came to 1,222 against

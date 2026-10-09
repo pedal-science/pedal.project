@@ -28,9 +28,9 @@
  },
  "at": 1791215315.6111276,
  "audio_irq": {
-  "affinity_mask": "4",
+  "affinity_mask": "2",
   "irq": "138",
-  "line": "138:          0          0   23648430          0 rp1_irq_chip  40 Level     dw_axi_dmac_platform"
+  "line": "138:          0    23648430          0          0 rp1_irq_chip  40 Level     dw_axi_dmac_platform"
  },
  "codec": {
   "access_summary": {
@@ -901,7 +901,7 @@
  "pedal_tune_check": {
   "age_samples": 0,
   "rc": 0,
-  "text": "== kernel isolation (rtpi)\n  ok    isolated cpus                      2-3\n  ok    nohz_full cpus                     2-3\n== clock\n  ok    policy0 governor                   performance\n  ok    policy0 max kHz                    2400000\n  --    policy0 cpus / now kHz             0 1 2 3 / 2400000\n  --    cpu-thermal temperature            59 C (first trip 110 C)\n== cpusets\n  ok    system.slice                       0-1\n  ok    user.slice                         0-1\n  ok    init.scope                         0-1\n  ok    pedal-rt.slice loads               loaded\n  ok    user tasks allowed on cpu 2-3      none outside pedal-rt.slice\n== audio interrupt (dw_axi_dmac_platform)\n  ok    IRQ 138 affinity                   2\n  ok    thread irq/138-dw_axi_dmac_platform prio 85\n"
+  "text": "== kernel isolation (rtpi)\n  ok    isolated cpus                      1-3\n  ok    nohz_full cpus                     1-3\n== core roles\n  ok    non-render cores (R1)              1\n  ok    render cores (R1)                  3\n  ok    housekeeping and render cores disjoint 0 / 1-3\n== clock\n  ok    policy0 governor                   performance\n  ok    policy0 max kHz                    2400000\n  --    policy0 cpus / now kHz             0 1 2 3 / 2400000\n  --    cpu-thermal temperature            59 C (first trip 110 C)\n== cpusets\n  ok    system.slice                       0\n  ok    user.slice                         0\n  ok    init.scope                         0\n  ok    pedal-rt.slice loads               loaded\n  ok    user tasks allowed on cpu 1-3      none outside pedal-rt.slice\n== audio interrupt (dw_axi_dmac_platform)\n  ok    IRQ 138 affinity                   1\n  ok    IRQ 138 affinity vs render set (R3) cpu 1 is inside 1-3\n  ok    IRQ 138 is not on the active core (R4) cpu 1, active core 3\n  ok    thread irq/138-dw_axi_dmac_platform prio 85\n  --    thread irq/138-dw_axi_dmac_platform core 1 (observed; its mask cannot be set from here)\n"
  },
  "pico": {
   "probed": false
@@ -1055,17 +1055,17 @@
  "tuning_cheap": {
   "cpus": "0 1 2 3",
   "cpusets": {
-   "init.scope": "0-1",
+   "init.scope": "0",
    "pedal.slice": "0-3",
-   "system.slice": "0-1",
-   "user.slice": "0-1"
+   "system.slice": "0",
+   "user.slice": "0"
   },
   "cur_khz": 2400000,
   "governor": "performance",
-  "isolated_cpus": "2-3",
-  "isolcpus_raw": "managed_irq,domain,2-3",
+  "isolated_cpus": "1-3",
+  "isolcpus_raw": "managed_irq,domain,1-3",
   "max_khz": 2400000,
-  "nohz_full": "2-3",
+  "nohz_full": "1-3",
   "wifi_power_save": "auto"
  },
  "units": {

@@ -243,12 +243,12 @@
       ]
     },
     "cpu": {
-      "isolated": "2-3",
+      "isolated": "1-3",
       "render_cpu": "3",
-      "audio_irq_cpu": "0",
+      "audio_irq_cpu": "1",
       "audio_irq_match": "dw_axi_dmac_platform",
       "audio_irq_prio": 85,
-      "housekeeping": "0-1",
+      "housekeeping": "0",
       "governor": "performance",
       "max_khz": 2400000,
       "source": "/etc/pedal/tune.conf, and /usr/local/sbin/pedal-tune check is the authority on whether it is in force"

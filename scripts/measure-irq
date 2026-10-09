@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 # scripts/measure-irq [--host vip] [--seconds 240] [--mb 200] [--out DIR]
-#                    — T6: does the audio IRQ belong on the housekeeping core? (P7, D5)
+#                    — T6: which core the audio IRQ belongs on (D5, amended 2026-10-09)
 #
-# The falsifier the document names: "if the IRQ's latency degrades on the busy housekeeping core, D5
-# is wrong". Each arm puts the same load on the housekeeping cores -- a CPU spinner on core 0, a
-# bounded SD write and a bounded WiFi upload -- plays the same amp-and-cab rig through namchaind, and
-# reads what the engine and the kernel say afterwards:
+# D5 now says: a render core, but never the *active* one. The interrupt preempts whatever it lands
+# on (SCHED_FIFO 85, above the render thread's 80), so on the active core that is a missed deadline
+# and on an inactive one it is a warm rig falling a block behind. Each arm puts the same load on the
+# housekeeping core -- a CPU spinner on core 0, a bounded SD write and a bounded WiFi upload --
+# plays the same amp-and-cab rig through namchaind, and reads what the engine and the kernel say
+# afterwards:
 #
 #   * engine.status: the render tail (worst_us, the load histogram, over_deadline) and xruns
 #   * /proc/interrupts: which core took the DMA interrupt, and how many
 #   * the IRQ thread's /proc/<tid>/schedstat: run_delay per wake, which is the wait to run
 #
-# Arm A is the board as it is (delivery on core 2, a render core under the rules). Arm B is P7's
-# (delivery on core 0, housekeeping). Nothing is changed permanently: the affinity is written the way
-# `pedal-tune apply` writes it, and the tree is untouched.
+# Arm A is the rule (delivery on core 1: a render core, not the active one). Arm B is the comparator
+# -- the placement P7 chose, and T6's original falsifier, where the interrupt shares the one core
+# that also carries WiFi, the SD card and every service. Nothing is changed permanently: the affinity
+# is written the way `pedal-tune apply` writes it, and the tree is untouched.
 #
 # The load is deliberately bounded -- 200 MB written and 200 MB uploaded per arm, both deleted after.
 # The first version of this script asked for 1.2 GB and a 700 MB upload on a 2.9 GB card and filled
@@ -85,8 +88,8 @@ arm() { # arm <cpu> <label>
 }
 
 echo "T6: the audio IRQ's core. Rig: $(ssh "$HOST" "sudo -n $CTL status --compact" | python3 -c "import json,sys; print(json.load(sys.stdin)['status']['rig'])")"
-echo "irqaffinity=0-1 at boot; tune.conf pins 138 to core 2 today; pedal-tune's own check is the authority."
-arm 2 "A: render core (today)"
-arm 0 "B: housekeeping core (P7)"
+echo "irqaffinity=0 at boot (1-3 isolated); tune.conf pins 138 to core 1; pedal-tune's own check is the authority."
+arm 1 "A: render core, never the active one (D5)"
+arm 0 "B: housekeeping core (the comparator)"
 echo
 echo "== done: the tree has not been touched; /proc/irq/138/smp_affinity_list is now $(ssh "$HOST" 'sudo -n cat /proc/irq/138/smp_affinity_list'), df $(ssh "$HOST" 'df -h / | tail -1 | awk "{print \$4\" free\"}"')"

@@ -3,11 +3,10 @@
 #
 #   devices/common/write-card --image <file.img> [--disk /dev/diskN] [--confirm <word>]
 #
-# The guards are rtpi's restore-sd-on-mac.sh's: external, removable, physical disks only; not
-# the disk the Mac booted from; the card must hold the image; you type the confirmation word
-# (default: the image's host, from the file name's first word) before anything is written.
-# Then it writes to the raw node and reads it back in the same open, compares hashes and ejects.
-# Needs sudo for the raw device.
+# The guards this owns: external, removable, physical disks only; not the disk the Mac booted
+# from; the card must hold the image; you type the confirmation word (default: the image's host,
+# from the file name's first word) before anything is written. Then it writes to the raw node and
+# reads it back in the same open, compares hashes and ejects. Needs sudo for the raw device.
 
 set -euo pipefail
 log()  { printf '\033[1;34m==>\033[0m %s\n' "$*" >&2; }
