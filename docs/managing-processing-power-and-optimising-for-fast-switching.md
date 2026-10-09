@@ -365,12 +365,17 @@ to hand the bench), which is what a panel shows and what a measurement loop cons
 
 **Settled design for the rest:**
 
-- **The service orchestrates; the bench measures.** `pedald` sees a row in `needs_measuring`, runs the
-  deployed bench for that one unit — `namchain-warm-bench measure --units <one line> --input <DI>
-  --seconds N --out DIR`, the invocation `scripts/measure-core` already uses — on an **inactive** core
-  (a warm core with no document on it), inside `pedal-bench.slice`, one unit at a time and abortable.
-  D9's boundary holds: the engine measures and enforces, the service packs and schedules, and the
-  *operator* merges.
+- **The service *says*, the measurer *measures* — and they are different processes** (checked on the
+  board, 2026-10-09). `pedald` is `User=pedal`, `CPUAffinity=0`, in `system.slice`, whose cpuset is the
+  housekeeping core: it **cannot** pin a bench to an inactive core (the affinity call fails, as it does
+  from an ssh session) and it has no privilege to enter `pedal-bench.slice` (which is exactly the slice
+  that exists to allow those cores). So the measurement is its own root oneshot — `pedal-measure`,
+  beside `pedal-diag` — triggered by a timer: it reads `/status` for `needs_measuring`, checks the
+  pedal is happy, runs the deployed bench for one row
+  (`namchain-warm-bench measure --units <one line> --input <DI> --seconds N --out DIR`, the invocation
+  `scripts/measure-core` already uses) inside `pedal-bench.slice` on a core the player is not using,
+  and writes the fragment. D9's boundary holds and is sharpened: the engine measures and enforces, the
+  service knows and says, a root oneshot does the privileged part, and the *operator* merges.
 - **The result is a fragment, not a table.** The bench prints a `fragment:` line; the service writes it
   to `/var/lib/pedal/cost-fragments/<row>.json` and reports it, and `devices/common/cost-merge` folds
   fragments into the device's table as it already does. The engine cannot write the table — a device's
@@ -384,9 +389,10 @@ to hand the bench), which is what a panel shows and what a measurement loop cons
   `over_deadline` are non-zero, when the failsafe is holding, or when the audible rig is above the
   charge — a pedal at its limit does not have an inactive core to spare, and T5 is the measurement
   that says so.
-- **What has to be built**: the measurement loop in the service (spawn, bound, abort, fragment), the
-  `measure` invocation's plumbing (the DI on the device, the output directory), and T5's verification
-  path (install an unseen model, play, watch the row resolve with no xrun).
+- **What has to be built**: `pedal-measure` (its unit, its timer, the happy-gate and the one-row
+  restriction), the DI asset on the device (`guitar-di.wav` is 8 MB; the measurement needs *an* input
+  and the bench takes any WAV), the fragment directory, and T5's verification path (install an unseen
+  model, play, watch the row resolve with no xrun).
 
 **P5 — the bank's verdicts and the pedal's mapping (pp, lj). DONE 2026-10-08; the warm half landed
 2026-10-09.** `pedald` costs every rig and skips unusable ones when stepping;
