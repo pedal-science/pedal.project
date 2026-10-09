@@ -1,4 +1,36 @@
-# T11: the full-load hour (launched 2026-10-09 21:52Z)
+# T11: the full-load hour — its quiet half, and a mistake worth recording
+
+**Arm A (quiet, 30 minutes) completed; arm B never ran, because the harness was edited while it was
+running.** Bash reads a script as it executes it, so the rewrite landed mid-flight and the shell
+stopped at a line that had moved (line 382, the app-traffic report) the moment arm A ended. The
+cleanup did not run either, so the stand-in renderer, three test rigs and the resume files were put
+back by hand afterwards. The lesson is cheap and now written down: **edit a running harness and bash
+will read your edit**. Arm B is owed, and a re-run must be started from a file nobody touches.
+
+## Arm A: thirty quiet minutes at full rig load
+
+The rig is 0.559 (five chains, admitted with the coexistence charge in force), a warm document on
+core 1, a stand-in second renderer on core 2, and the app's traffic — 3,472 library requests over
+WiFi during the half:
+
+| | before arm A | after arm A (30 min) |
+|---|---|---|
+| blocks over the deadline | 9 | **9** (all from the setup transient: **none added in half an hour**) |
+| worst block | 2871.7 µs = 215.4% | unchanged (a load-time spike, not a steady one) |
+| xruns / guard trips | 0 / 0 | **0 / 0** |
+| blocks rendered | 26,481 | 1,376,690 |
+| temperature | 62.2 °C | 66.7 °C |
+| clock | — | **2400 MHz**, low-voltage alarm **0** |
+| per-core busy | — | cpu0 6.8%, cpu1 0.6%, cpu2 25.5%, cpu3 37.4% |
+| IRQ thread | — | 8.4 ns of wait to run per wake over 2.7 M wakes |
+
+That is T11's question answered for the *quiet* half at this rig: half an hour of rendering beside a
+warm document and a second renderer costs nothing — no block over the deadline, no xrun, the clock at
+2400 MHz and the rail unflagged — and the only fault in the run is the spike when the heavy rig was
+first published (215% for one block, during the load, not after it). The loaded half is the one that
+says whether a busy housekeeping core changes that, and it is still owed.
+
+## The original note
 
 **This run is in progress.** `scripts/measure-housekeeping` was launched at 21:52:03Z under the
 host lock and writes its report to `t5.txt` beside this file when it finishes (about 22:55Z): thirty
