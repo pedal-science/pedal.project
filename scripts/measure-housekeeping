@@ -11,9 +11,10 @@
 # Two arms, the same rig playing and a warm document rendering on an inactive core in both:
 #
 #   arm A  quiet
-#   arm B  loaded on core 0: a CPU spinner, a bounded SD write, a bounded WiFi upload, and a compile
-#          burst — `rig.cost` over the heaviest rig, repeated, which the engine runs on the control
-#          thread pinned to core 0 (the ~20 ms of work a rig switch costs, per namchaind's drop-in)
+#   arm B  loaded on core 0: a CPU spinner, SD *reads* (a read walk of the models, no bulk writes —
+#          the card is the owner's), a compile burst (`cost` over the heaviest rig, repeated, which the
+#          engine runs on the control thread pinned to core 0), and WiFi traffic shaped like the app's:
+#          `GET /library/rigs` from the Mac over and over, which is ljoss reading the pedal's library
 #
 # Read for each arm:
 #
@@ -32,7 +33,8 @@
 # until `rig.cost` puts it just under the headroom (default 0.78), so the render core is as full as
 # admission allows. Both test rigs are removed at the end, and the warm set is cooled.
 #
-# The load is bounded: --mb written and --mb uploaded per arm (200 MB default), both deleted after.
+# The load is a spinner, SD reads, a compile burst and the app's own read traffic; nothing is
+# written in bulk (2026-10-09, the owner's SD card).
 # The first T6 harness asked for 1.2 GB on a 2.9 GB card and filled it; not again.
 #
 # Measured 2026-10-09: bench-results/2026-10-09-housekeeping-vip/README.md.
@@ -40,21 +42,25 @@ set -u
 CTL="/opt/namchain/current/bin/namchainctl --token-file /etc/namchain/token"
 HOST=vip
 RUN=240
-MB=200
 TARGET=0.78
 RIG=t5-heavy.json
 WARM=""
+WARM2=""
 NOWARM=no
+EXTRA=none
+WIFI=ljoss
 OUT=""
 while [[ $# -gt 0 ]]; do
   case $1 in
     --host) HOST=$2; shift ;;
     --seconds) RUN=$2; shift ;;
-    --mb) MB=$2; shift ;;
+    --mb) shift ;;                 # kept so older command lines still parse; the load reads, not writes
     --target) TARGET=$2; shift ;;
     --rig) RIG=$2; shift ;;
     --warm) WARM=$2; shift ;;
     --no-warm) NOWARM=yes ;;
+    --extra) EXTRA=$2; shift ;;    # renderer: a second renderer on warm_cpus[1], the second warm core
+    --wifi) WIFI=$2; shift ;;      # ljoss: read the bank from here, as the app does; none
     --out) OUT=$2; shift ;;
     -h|--help) sed -n '2,40p' "$0"; exit 0 ;;
     *) echo "measure-housekeeping: unknown argument $1" >&2; exit 2 ;;
@@ -125,10 +131,17 @@ EOF
 # ------------------------------------------------------------------ set up the rigs
 
 echo "T5: what one housekeeping core costs the render cores."
-echo "host $HOST, $RUN s an arm, $MB MB of SD and WiFi load, target cost $TARGET"
+echo "host $HOST, $RUN s an arm, load: spinner + SD reads + compile burst + app traffic ($WIFI), target cost $TARGET"
 echo
 
 PLAYING=$(status | python3 -c "import json,sys; print(json.load(sys.stdin)['status'].get('rig') or '')")
+TOKEN=$(ssh "$HOST" "sudo cat /etc/namchain/token" 2>/dev/null | tr -d '\n')
+[[ -n $TOKEN ]] || { echo "could not read the engine's token on $HOST" >&2; exit 1; }
+# The bench's input: copied once into /var/tmp/t5 and reused, because it is 8 MB and the point of the
+# WiFi leg is the app's traffic, not this file.
+ssh "$HOST" "sudo mkdir -p /var/tmp/t5 && sudo test -s /var/tmp/t5/guitar-di.wav" 2>/dev/null \
+  || { echo "    copying the DI to $HOST once (8 MB)"; scp -q guitar-di.wav "$HOST:/var/tmp/t5-di.wav" && ssh "$HOST" "sudo mkdir -p /var/tmp/t5 && sudo mv /var/tmp/t5-di.wav /var/tmp/t5/guitar-di.wav"; }
+
 echo "== setup"
 
 # A fresh engine: the counters (`xruns`, `over_deadline`, the histogram) are cumulative since
@@ -142,6 +155,7 @@ PLAYING=$(status | python3 -c "import json,sys; print(json.load(sys.stdin)['stat
 PLAY_NAME=$(basename "$PLAYING")
 echo "    playing      $PLAYING"
 [[ -n $WARM ]] || WARM=t5-warm.json
+[[ -n $WARM2 ]] || WARM2=t5-warm2.json
 
 # The pedal's resume state: pedald writes the document being played into the rigs root as `last.json`
 # (and the one before it as `last.prev.json`), so loading a test rig overwrites both. They are backed
@@ -159,9 +173,10 @@ ssh "$HOST" "rm -rf /var/tmp/t5-resume && mkdir -p /var/tmp/t5-resume && cp /var
 #           inactive core and pedald has a second rig for its bank.
 #
 # Written into the rigs root because `rig.cost` and `rig.load` resolve a rig by name there.
-ssh "$HOST" "sudo python3 - '$PLAY_NAME' '$RIG' '$WARM' '$TARGET' '$CTL'" <<'EOF'
+ssh "$HOST" "sudo python3 - '$PLAY_NAME' '$RIG' '$WARM' '$WARM2' '$TARGET' '$CTL'" <<'EOF'
 import copy, json, os, subprocess, sys
-playing, heavy, warm, target, ctl = sys.argv[1], sys.argv[2], sys.argv[3], float(sys.argv[4]), sys.argv[5].split()
+playing, heavy, warm, warm2 = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+target, ctl = float(sys.argv[5]), sys.argv[6].split()
 root = "/var/lib/pedal/library/rigs"
 MAX_CHAINS = 8          # daemon.h: a document may hold at most this many
 doc = json.load(open(os.path.join(root, playing)))
@@ -199,10 +214,12 @@ def clone(chain, k):
                 conn[key] = "%s-c%d" % (conn[key], k)
     return c
 
-# The neighbour first: it is the playing document as it stands.
-neighbour = copy.deepcopy(doc)
-neighbour["name"] = warm[:-5]
-place(os.path.join(root, warm), neighbour)
+# The neighbours first: they are the playing document as it stands. One is the engine's warm
+# document; the other is what the second renderer (the stand-in for a second warm core) renders.
+for path, name in ((warm, warm[:-5]), (warm2, warm2[:-5])):
+    neighbour = copy.deepcopy(doc)
+    neighbour["name"] = name
+    place(os.path.join(root, path), neighbour)
 
 def build(n):
     heavy_doc = copy.deepcopy(doc)
@@ -272,12 +289,38 @@ done
 [[ $warm_ready == yes ]] || echo "    WARNING: no warm document is rendering; the arms measure the" \
                                "render cores without warm work beside them"
 describe setup
-echo
 
-[[ -f /tmp/t5-payload ]] || { mkfile -n "${MB}m" /tmp/t5-payload 2>/dev/null || dd if=/dev/zero of=/tmp/t5-payload bs=1m count="$MB" 2>/dev/null; }
+# The second warm core. The engine holds *one* warm document (kMaxDocuments is 2: the audible one and
+# one warm), so warming two rigs -- one per inactive core, which is what D4 says ships for a pedal with
+# two footswitch neighbours -- cannot be measured through the daemon yet. What can be measured is the
+# question underneath it: what a *second* renderer on the other warm core (2) costs the audible one
+# through the same shared L3 and DRAM. The bench's `rig` mode is the stand-in -- a real model and cab
+# off the same library, at the priority the warm thread runs at, pinned to core 2 -- and the report
+# says so rather than pretending the daemon did it.
+if [[ $EXTRA == renderer ]]; then
+  echo "    second renderer on core 2: $WARM2 (the bench's rig mode, priority 70)"
+  ssh "$HOST" "sudo -n systemd-run --quiet --unit=t5-extra --slice=pedal-bench.slice --collect /opt/namchain/current/bin/namchain-warm-bench rig --input /var/tmp/t5/guitar-di.wav --document /var/lib/pedal/library/rigs/$WARM2 --seconds $((RUN * 2 + 180)) --cpu 2 --priority 70 > /var/tmp/t5-extra.log 2>&1" || true
+  ssh "$HOST" "sleep 2; tail -2 /var/tmp/t5-extra.log; pgrep -a -f 'namchain-warm-bench rig' | head -1"
+fi
+echo
 
 # ------------------------------------------------------------------ the arms
 
+# The load on the housekeeping core, and what is *not* in it:
+#
+#   * a CPU spinner (another process wanting the core);
+#   * SD *reads* -- a loop of `dd if=<model> of=/dev/null` over the library's models, which is what the
+#     engine itself does when it compiles a rig. There is deliberately no bulk write: the card is the
+#     pedal's, a measurement is not worth wearing it out, and a write loop is not something the pedal
+#     does while playing either (2026-10-09, the owner);
+#   * a compile burst: `cost` over the active rig, repeated, which the engine runs on the control
+#     thread pinned to core 0 -- the heaviest thing core 0 does;
+#   * and WiFi traffic shaped like the app's: from the Mac, `GET /library/rigs` and a rig document over
+#     and over, which is ljoss reading the pedal's library. The *upload* direction -- ljoss sending a
+#     model or a rig -- goes through pedald's routes; the model and IR routes are specced but not
+#     implemented yet (a `PUT /library/models/<file>` answers 404 today), so the leg that is exercised
+#     here is the read side, and an upload that *does* land is measured separately rather than mixed
+#     into an arm (it changes the bank, and the bank is what decides what is warm).
 arm() { # arm <label> <load: yes|no>
   local label=$1 load=$2
   echo
@@ -286,29 +329,35 @@ arm() { # arm <label> <load: yes|no>
   cpu0=$(cpu_stat); irq0=$(irq_stat); tmp0=$(temp_c)
   describe before
 
-  local dd scp_pid
+  local dd scp_pid wifi_pid
   rm -f /tmp/t5-stop
   if [[ $load == yes ]]; then
-    # The compile burst: `cost` over the heavy rig, repeated, pinned to core 0 like any other
-    # control-side work. This is what a publish costs and it is the heaviest thing core 0 does.
+    # The compile burst, pinned to core 0 like any other control-side work.
     ssh "$HOST" "taskset -c 0 timeout $RUN bash -c 'while :; do sudo -n $CTL cost $RIG >/dev/null; done' >/dev/null 2>&1 & echo \$! > /var/tmp/t5-burst.pid" || true
-    ssh "$HOST" "taskset -c 0 yes > /dev/null 2>&1 & echo \$! > /var/tmp/t5-yes.pid; taskset -c 0 dd if=/dev/zero of=/var/tmp/t5-dd.bin bs=1M count=$MB conv=fsync 2>/dev/null" &
-    dd=$!
-    # The upload repeats until the arm ends: one 200 MB scp finishes in a fraction of a four-minute
-    # arm, and a load that stops halfway is not the load this measures.
-    ( while [[ ! -f /tmp/t5-stop ]]; do scp -q -o ConnectTimeout=15 /tmp/t5-payload "$HOST:/var/tmp/t5-payload" || sleep 1; done ) &
-    scp_pid=$!
+    # Reads, not writes: the spinner and a read walk of the models.
+    ssh "$HOST" "taskset -c 0 yes > /dev/null 2>&1 & echo \$! > /var/tmp/t5-yes.pid; taskset -c 0 timeout $RUN bash -c 'while :; do for f in /var/lib/pedal/library/models/*/*.nam; do dd if=\"\$f\" of=/dev/null bs=1M 2>/dev/null || true; done; done' >/dev/null 2>&1 & echo \$! > /var/tmp/t5-read.pid" || true
+    dd=""
+    # The app's traffic: read the bank's listing and one document, over and over, from here.
+    if [[ $WIFI == ljoss ]]; then
+      ( n=0; while [[ ! -f /tmp/t5-stop ]]; do
+          curl -sS -o /dev/null -m 10 -H "Authorization: Bearer $TOKEN" "http://$HOST:47820/library/rigs" && n=$((n+1))
+          curl -sS -o /dev/null -m 10 -H "Authorization: Bearer $TOKEN" "http://$HOST:47820/library/rigs/$PLAY_NAME" && n=$((n+1))
+          echo "$n" > /tmp/t5-wifi-count
+        done ) &
+      wifi_pid=$!
+      rm -f /tmp/t5-wifi-count
+    fi
   fi
   sleep "$RUN"
   if [[ $load == yes ]]; then
     touch /tmp/t5-stop
-    kill "$dd" "$scp_pid" 2>/dev/null || true
-    wait "$dd" 2>/dev/null || true
-    wait "$scp_pid" 2>/dev/null || true
-    ssh "$HOST" 'for f in /var/tmp/t5-yes.pid /var/tmp/t5-burst.pid; do [ -f $f ] && kill "$(cat $f)" 2>/dev/null; rm -f $f; done; pkill -f t5-dd.bin 2>/dev/null; true' || true
+    kill ${wifi_pid:-0} 2>/dev/null || true
+    wait ${wifi_pid:-0} 2>/dev/null || true
+    ssh "$HOST" 'for f in /var/tmp/t5-yes.pid /var/tmp/t5-burst.pid /var/tmp/t5-read.pid; do [ -f $f ] && kill "$(cat $f)" 2>/dev/null; rm -f $f; done; pkill -f "dd if=" 2>/dev/null; true' || true
   fi
 
   describe after
+  [[ -f /tmp/t5-wifi-count ]] && echo "    app traffic  $(cat /tmp/t5-wifi-count) library requests over WiFi during the arm"
   busy_delta "$cpu0" "$(cpu_stat)"
   python3 - "$irq0" "$(irq_stat)" "$tmp0" "$(temp_c)" <<'EOF'
 import sys
@@ -321,8 +370,10 @@ print("    temperature  %s C -> %s C" % (sys.argv[3], sys.argv[4]))
 EOF
 }
 
+WHAT="spinner, SD reads, the app's traffic, compile burst"
+[[ $EXTRA == renderer ]] && WHAT="$WHAT; second renderer on core 2"
 arm "A: quiet (nothing on core 0)" no
-arm "B: loaded (spinner, SD write, WiFi upload, compile burst on core 0)" yes
+arm "B: loaded ($WHAT)" yes
 
 # ------------------------------------------------------------------ what it says
 
@@ -349,7 +400,7 @@ echo "== cleanup"
 # without the test rigs, pedald restarted so its bank forgets them, and the warm set cooled.
 ssh "$HOST" "sudo cp /var/tmp/t5-resume/last.json /var/lib/pedal/library/rigs/last.json 2>/dev/null; sudo cp /var/tmp/t5-resume/last.prev.json /var/lib/pedal/library/rigs/last.prev.json 2>/dev/null; sudo chown pedal:pedal /var/lib/pedal/library/rigs/last.json /var/lib/pedal/library/rigs/last.prev.json 2>/dev/null; true" || true
 ctl "cool" >/dev/null 2>&1 || true
-ssh "$HOST" "sudo rm -f /var/lib/pedal/library/rigs/$RIG /var/lib/pedal/library/rigs/$WARM; rm -rf /var/tmp/t5-resume; rm -f /var/tmp/t5-dd.bin /var/tmp/t5-payload; pkill -f t5-dd.bin 2>/dev/null; true" || true
+ssh "$HOST" "sudo systemctl stop t5-extra 2>/dev/null; sudo rm -f /var/lib/pedal/library/rigs/$RIG /var/lib/pedal/library/rigs/$WARM /var/lib/pedal/library/rigs/$WARM2; rm -rf /var/tmp/t5-resume; pkill -f 'dd if=' 2>/dev/null; true" || true
 restore=$(ctl "load last.json --compact" 2>&1)
 case "$restore" in
   *'"ok":true'*) echo "    restored last.json and its resume files" ;;
@@ -357,6 +408,6 @@ case "$restore" in
 esac
 ssh "$HOST" "sudo systemctl restart pedald" >/dev/null 2>&1 || true
 rm -f /tmp/t5-stop
-echo "    removed the test rigs ($RIG, $WARM), restarted pedald, cooled the warm set"
+echo "    removed the test rigs ($RIG, $WARM ${WARM2}), stopped the second renderer, restarted pedald, cooled the warm set"
 echo "    df: $(ssh "$HOST" 'df -h / | tail -1')"
 echo "    still running on the host: $(ssh "$HOST" 'pgrep -a -f "t5-|rig.cost|yes$" | grep -v pgrep | head -3')"
