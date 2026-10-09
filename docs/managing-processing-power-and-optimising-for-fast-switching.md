@@ -1,13 +1,16 @@
 # Managing processing power and optimising for fast switching
 
-**Status:** rules and decisions D1–D9 agreed 2026-10-07. **Implemented and measured 2026-10-08**, item
-by item below: P1, P2, P3, P5, P7 and P9 are done, with vip's cost table measured on vip
+**Status:** rules and decisions D1–D9 agreed 2026-10-07, **amended 2026-10-09** (the core rules and
+D5). **Implemented and measured**, item by item below: P1, P2, P3, P5, P6, P7 and P9 are done;
+**P4 and P8 are not**, and both were waiting on P6's inactive core, which now exists with a defined
+owner. vip's cost table was measured 2026-10-08
 ([bench-results/2026-10-08-cost-table-vip](bench-results/2026-10-08-cost-table-vip/README.md): 14 rows,
-E2 reproduced, T2 not falsified over 16 rigs); **P4, P6 and P8 are not** — each says what it waits on,
-and P6 is the one the rest of the warm-set scheme depends on. T1, T2, T3 (three of its four), T6 and
-T10 have been run; T4's three paths are unit tests; T5, T7, T8, T9 and T11 have not. The measurements it leans on are E1, E2
-and the two-amp work, cited per item. The one decision a measurement could still reverse is D5 (the
-audio IRQ's core) — P7 is in the tree and T6 is the measurement that confirms or reverses it.
+E2 reproduced, T2 not falsified over 16 rigs), and the core rules, T6 and P6 are measured in
+[bench-results/2026-10-09-core-rules-vip](bench-results/2026-10-09-core-rules-vip/README.md). T1, T2,
+T3 (three of its four), T6 and T10 have been run; T4's three paths are unit tests; T8's falsifier and
+T7's live half are measured (8 switches, 0 xruns, warm lag ≤ 1 block) while T7's offline harness runs
+but does not yet give a trustworthy verdict (see that document, §4); T5, T9 and T11 have not been
+run. The measurements it leans on are E1, E2 and the two-amp work, cited per item.
 
 The goal is a Core device that plays quite large rigs **and** switches between rigs one press away
 in under 50 ms (D10). Those two goals compete for the same resource — a warm rig costs CPU that a
@@ -120,7 +123,9 @@ core against 7.7 ns on the housekeeping core, identical render distributions, ze
 — so the interrupt is not what decides this and the core layout is; and piv has run this shape since
 2026-09-25, its SSL 2+ interrupt pinned to isolated core 2 while the engine renders on core 3.
 *Ruled out:* the IRQ on the active core; and the IRQ on the housekeeping core, which is what P7
-chose and what this reverses. *Caveat that stands:* only the interrupt's **delivery** can be pinned.
+chose and what this reverses. **Measured live 2026-10-09**: with a warm document rendering on core 1
+beside it, the warm rig's lag was 0 or 1 block (1.33 ms) across eight switches with 0 dropped blocks,
+so the preemption the rule sends there is visible exactly where it costs nothing. *Caveat that stands:* only the interrupt's **delivery** can be pinned.
 Its handler thread carries `0-3` on this kernel (`PF_NO_SETAFFINITY`), it is observed on core 1, and
 `isolcpus=domain` rather than the mask is what keeps it off the other render cores — so `pedal-tune
 check` reports the thread's actual core and fails if it is ever seen on the active one.
@@ -334,20 +339,35 @@ T5 is exactly the test that says how bad that is. The engine also cannot rewrite
 measurement has to land as a fragment the operator merges (`cost-merge`), a deliberate difference from
 "written to the table".
 
-**P5 — the bank's verdicts and the pedal's mapping (pp, lj). DONE 2026-10-08.** `pedald` costs every rig, packs the
-warm set, and skips unusable rigs when stepping; ljoss shows the indicator and refuses to activate
-one. *Verification:* `devices/common/test-pedald` for the skip logic (it already tests the mapping),
-plus a manual pass in ljoss with one rig deliberately made too big.
+**P5 — the bank's verdicts and the pedal's mapping (pp, lj). DONE 2026-10-08; the warm half follows
+P6 (2026-10-09).** `pedald` costs every rig and skips unusable ones when stepping;
+ljoss shows the indicator and refuses to activate one. *Verification:* `devices/common/test-pedald`
+for the skip logic (it already tests the mapping), plus a manual pass in ljoss with one rig
+deliberately made too big.
 **Both**: `pedald` asks the engine's `rig.cost` for every rig in the bank (at most two rigs per poll,
 re-asked at most once a minute), skips an unusable rig when stepping, refuses to load one, and reports
 the verdicts in `/status`; ljoss shows a "Lite: <blocks>" chip while the running rig is trimmed (D6),
 refuses to publish a rig the engine would refuse, and marks it too big for the device while keeping it
-editable. 244 pedald tests and 507 ljoss assertions, both green.
+editable. 244 pedald tests and 507 ljoss assertions, both green. **What it does not do yet**: it does
+not call `rig.warm`/`rig.cool`/`rig.switch`, so D9's "the service packs the warm set" is not true on
+the pedal — the engine's warm set works (P6, measured live) and nothing puts a rig in it. That wiring
+is the remaining half of P5, and it needs a neighbour-warming policy: warm the rig the footswitches
+reach next, cool what is no longer a neighbour, and switch with `rig.switch` so a warm target costs a
+handover instead of a compile.
 
 **P6 — the warm set in the engine (nc).** namchain M3: more than one document resident and rendering
 at once, one of them audible, the rest warm; a switch makes a warm rig audible and crossfades to it.
-*Verification:* T7, T8, and the switch latency at the jack. **SCOPE AGREED, IN PROGRESS 2026-10-09**;
-this is the item everything else warm waits on.
+*Verification:* T7, T8, and the switch latency at the jack. **IMPLEMENTED AND ON THE PEDAL
+2026-10-09** (engine `a0a9cf0`, `warm_cpus [1, 2]`, `warm_priority 70`, device core 3;
+`namchain/docs/warm-set.md` is the engine's design). Measured on vip: eight live switches, each
+`handover_blocks: 3` plus the 5 ms fade — about 9 ms from `rig.switch` to fully on the new rig — with
+**0 xruns, 0 blocks over the deadline, 0 dropped warm blocks**, and the warm document never more than
+one block (1.33 ms) behind while sharing core 1 with the audio IRQ. T7's offline harness runs and
+agrees on the load (render p99 8% of the deadline with a warm document beside it, warm lag 0 blocks)
+but its glitch verdict is not trusted yet; §4 of the bench-results document says why.
+**What is deliberately not here:** D4's packing (several warm rigs per core), P8's catch-up, and more
+than two documents — the mechanism generalises, the policy does not exist yet, and `pedald` does not
+call `rig.warm`/`rig.switch` at all, so the pedal's own bank is not warmed by itself.
 
 What ships, in order: **one warm document** on an inactive core, rendering the same block the active
 one does and publishing its output; then `rig.switch`, which hands the warm rig's *execution* to the
@@ -486,10 +506,21 @@ footswitch-to-sound leg was not measured: it needs the Pico in the loop. The int
 neighbour: the warm set slides while the player plays. *Measured:* the active rig's p99 during
 refills, the switch latency distribution, and whether a catch-up on an inactive core ever disturbs
 the active one.
+**Half run 2026-10-09**: eight live switches on the pedal, each `handover_blocks: 3` plus a 5 ms fade
+(~9 ms), zero xruns, zero blocks over the deadline, zero dropped warm blocks, and the warm document
+never more than a block behind while sharing core 1 with the audio IRQ — but the set does **not**
+slide yet, because nothing calls `rig.warm` for the incoming neighbour: the same rig is warmed and
+switched to. The offline arm (`namchain-warm-bench switch`) runs, pins correctly and agrees on the
+load (device p99 107 µs = 8% of the deadline with a warm document beside it, warm lag 0 blocks), but
+its glitch verdict fails on the harness's own crossfade in both arms with byte-identical output, so
+it is recorded as unproven rather than as evidence.
 
 **T8 — faster than a human.** Ten presses a second, newest wins. *Expected:* bounded work, no queue
 growth, no xruns, and the refill backlog visible in `engine.status`. *Falsifier:* a press storm that
 leaves the warm set permanently behind.
+**The falsifier's live half is measured**: over the eight switches of 2026-10-09 the warm document's
+`behind_blocks` was 0 or 1 with 0 dropped, and `warm_behind` never appeared. The press storm itself
+has not been run: it needs the warm set to slide, which is the missing half of T7.
 
 **T9 — cold, from nothing.** The first press after boot, nothing warm, SD card cold: the catch-up
 path's worst case, measured to the jack. This is the number that justifies D6 and the catch-up rules

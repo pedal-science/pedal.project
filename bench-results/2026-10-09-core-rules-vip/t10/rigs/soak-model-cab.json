@@ -1,0 +1,42 @@
+{
+  "chains": [
+    {
+      "id": "main",
+      "nodes": [
+        {
+          "id": "in",
+          "type": "nc.input"
+        },
+        {
+          "id": "amp0",
+          "type": "nc.nam",
+          "model": "/var/lib/pedal/library/models/000 Unsorted/Ampeg SVT VR _ 8x10 _ Beta52A + DI.nam"
+        },
+        {
+          "id": "cab",
+          "type": "nc.cab.ir",
+          "ir": "/var/lib/pedal/library/irs/Ampeg 4x10/York Audio AMPG 410 HS v1.01/48k (Fractal, Line 6, Suhr, etc.)/Mixes/YA AMPG 410 HS Mix 01.wav"
+        },
+        {
+          "id": "out",
+          "type": "nc.output"
+        }
+      ],
+      "connections": [
+        {
+          "from": "in",
+          "to": "amp0"
+        },
+        {
+          "from": "amp0",
+          "to": "cab"
+        },
+        {
+          "from": "cab",
+          "to": "out"
+        }
+      ]
+    }
+  ],
+  "name": "soak-model-cab"
+}

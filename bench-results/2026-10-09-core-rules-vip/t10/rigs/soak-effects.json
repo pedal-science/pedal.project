@@ -1,0 +1,69 @@
+{
+  "chains": [
+    {
+      "id": "main",
+      "nodes": [
+        {
+          "id": "in",
+          "type": "nc.input"
+        },
+        {
+          "id": "fx0",
+          "type": "nc.eq.biquad",
+          "mode": "peaking",
+          "freq": 800.0,
+          "q": 1.1,
+          "gain_db": 3.0
+        },
+        {
+          "id": "fx1",
+          "type": "nc.eq.biquad",
+          "mode": "peaking",
+          "freq": 800.0,
+          "q": 1.1,
+          "gain_db": 3.0
+        },
+        {
+          "id": "fx2",
+          "type": "nc.delay",
+          "ms": 120.0
+        },
+        {
+          "id": "fx3",
+          "type": "nc.eq.biquad",
+          "mode": "peaking",
+          "freq": 800.0,
+          "q": 1.1,
+          "gain_db": 3.0
+        },
+        {
+          "id": "out",
+          "type": "nc.output"
+        }
+      ],
+      "connections": [
+        {
+          "from": "in",
+          "to": "fx0"
+        },
+        {
+          "from": "fx0",
+          "to": "fx1"
+        },
+        {
+          "from": "fx1",
+          "to": "fx2"
+        },
+        {
+          "from": "fx2",
+          "to": "fx3"
+        },
+        {
+          "from": "fx3",
+          "to": "out"
+        }
+      ]
+    }
+  ],
+  "name": "soak-effects"
+}

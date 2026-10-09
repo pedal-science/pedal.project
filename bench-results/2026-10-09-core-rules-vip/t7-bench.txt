@@ -1,0 +1,20 @@
+== warm thread on core 1 (render on 3, IRQ on 1), 30 s, switch every 2 s
+  convergence  frame 672661  measured -8.792  limit -60  render is not the next chain at frame 672661: worst |difference| 0.363409 (-8.792080 dBFS) over 95280 settled frames
+  convergence  frame 796820  measured 11.07  limit -60  render is not the next chain at frame 796820: worst |difference| 3.575221 (11.066057 dBFS) over 95280 settled frames
+  convergence  frame 864662  measured -6.465  limit -60  render is not the next chain at frame 864662: worst |difference| 0.475076 (-6.464737 dBFS) over 95280 settled frames
+  convergence  frame 957601  measured 12.45  limit -60  render is not the previous chain at frame 957601: worst |difference| 4.193255 (12.451025 dBFS) over 95280 settled frames
+  convergence  frame 1056480  measured -5.493  limit -60  render is not the next chain at frame 1056480: worst |difference| 0.531300 (-5.493205 dBFS) over 95280 settled frames
+  convergence  frame 1201626  measured 13.49  limit -60  render is not the next chain at frame 1201626: worst |difference| 4.726805 (13.491354 dBFS) over 95280 settled frames
+  convergence  frame 1248588  measured -4.485  limit -60  render is not the next chain at frame 1248588: worst |difference| 0.596713 (-4.484687 dBFS) over 95280 settled frames
+  convergence  frame 1369774  measured 12.1  limit -60  render is not the next chain at frame 1369774: worst |difference| 4.027662 (12.101060 dBFS) over 95520 settled frames
+
+== warm thread on core 2 (render on 3, IRQ on 1), 30 s, switch every 2 s
+  convergence  frame 672661  measured -8.792  limit -60  render is not the next chain at frame 672661: worst |difference| 0.363409 (-8.792080 dBFS) over 95280 settled frames
+  convergence  frame 796820  measured 11.07  limit -60  render is not the next chain at frame 796820: worst |difference| 3.575221 (11.066057 dBFS) over 95280 settled frames
+  convergence  frame 864662  measured -6.465  limit -60  render is not the next chain at frame 864662: worst |difference| 0.475076 (-6.464737 dBFS) over 95280 settled frames
+  convergence  frame 957601  measured 12.45  limit -60  render is not the previous chain at frame 957601: worst |difference| 4.193255 (12.451025 dBFS) over 95280 settled frames
+  convergence  frame 1056480  measured -5.493  limit -60  render is not the next chain at frame 1056480: worst |difference| 0.531300 (-5.493205 dBFS) over 95280 settled frames
+  convergence  frame 1201626  measured 13.49  limit -60  render is not the next chain at frame 1201626: worst |difference| 4.726805 (13.491354 dBFS) over 95280 settled frames
+  convergence  frame 1248588  measured -4.485  limit -60  render is not the next chain at frame 1248588: worst |difference| 0.596713 (-4.484687 dBFS) over 95280 settled frames
+  convergence  frame 1369774  measured 12.1  limit -60  render is not the next chain at frame 1369774: worst |difference| 4.027662 (12.101060 dBFS) over 95520 settled frames
+

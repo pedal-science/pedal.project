@@ -1210,6 +1210,40 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**The core rules changed, P6 is on the pedal, and the hour is running** (2026-10-09). The owner
+amended the rules: **all but one core renders**, the non-render core carries everything *except*
+interrupts, the audio interrupt is **delivered to a render core**, and that core is **never the
+active one**. vip's tree had drifted from that since 2026-09-29 (two housekeeping cores, 0–1, copied
+from piv), which is what P7 had read D5 through. vip now isolates 1–3, keeps one housekeeping core
+(0), sends every interrupt there, and has the audio IRQ delivered to core 1; `pedal-tune check`
+asserts the four rules, and **`vip-boot set-args`** is new — it rewrites every slot's tuned command
+line from `device.env` on a board that is already up (`--restore` puts the old line back), where this
+used to need a whole staged kernel. Evidence:
+[bench-results/2026-10-09-core-rules-vip](bench-results/2026-10-09-core-rules-vip/README.md) —
+including T6's two arms, which came out identical (IRQ on core 1 or core 0: 16.8 ns against 17.0 ns
+per wake, same render distribution, zero xruns either way), so the reversal rests on the rules and on
+where the preemption lands, not on T6.
+
+**P6 (namchain M3) is implemented, tested and live**: per-document render state, a warm document
+rendering on an inactive core at priority 70, and a switch that hands it to the device thread
+(`namchain/docs/warm-set.md` is the engine's design; the pedal sets `warm_cpus [1, 2]`). Eight live
+switches on the pedal: `handover_blocks: 3` plus a 5 ms fade (~9 ms) each, **0 xruns, 0 blocks over
+the deadline, 0 dropped warm blocks**, warm lag 0–1 block while sharing core 1 with the interrupt.
+What is *not* there: nothing calls `rig.warm`/`rig.switch` yet, so the pedal does not warm its own
+neighbours and the warm set does not slide — that service wiring is the first thing to do, then T5
+(load on the one housekeeping core while a warm rig renders beside the audible one), then P4 and P8,
+which are unblocked now that an inactive core exists with a defined owner. T7's offline harness runs
+and agrees on the load but its glitch verdict fails on its own crossfade in both arms: recorded as
+unproven, not as evidence.
+
+Two faults were found by putting this on the board and are fixed: **`pedal-interface.json` was never
+installed** (it lived outside the rootfs, which is the only thing that installs anything, so
+`pedal-diag.service` had never started and every check that compares the board against the model had
+silently done nothing), and `pedal-diag --json` could not parse its own gatherer's `COST` line. `tib`
+is gone from all five repositories — device trees, tooling, kernel fragments, measurement data and
+prose — rather than marked retired, and `piv`'s layout is now the one device behind these rules
+(debt, to reconcile in its own session).
+
 **E2 is measured; the tiers wait on one listening test** (2026-10-06). All four of 3.8's open
 questions are answered — Lite against Full over the whole library, catch-up for chains, warm
 density on vip, and an IR kept as a record — and the reading is
