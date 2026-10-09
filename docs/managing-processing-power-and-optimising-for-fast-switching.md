@@ -394,11 +394,18 @@ refuse); the measurement itself is the bench's, and namchain tests that.
   `over_deadline` are non-zero, when the failsafe is holding, or when the audible rig is above the
   charge — a pedal at its limit does not have an inactive core to spare, and T5 is the measurement
   that says so.
-- **What has to be built**: the DI on the device (`/var/lib/pedal/guitar-di.wav` — not shipped in the
-  rootfs at 8 MB; the tool says so and takes `--input`), the apply that installs the oneshot, the
-  operator's merge step (`devices/common/cost-merge`), and T5's verification path: install a model the
-  table has never seen, play, run `pedal-measure`, merge the fragment, and watch the row resolve with
-  no xrun.
+- **A row measured with a different signal is not the same row** (found 2026-10-09): the table records
+  `bar`, `measured`, `host`, `kernel`, `quantum`, `rate` and its 14 rows, and **not the input it was
+  measured with** — the convention (`guitar-di.wav`, which `scripts/measure-core` always uses) lives
+  only in the tooling. `pedal-measure` defaults to `/var/lib/pedal/guitar-di.wav` and refuses to run
+  without an input, which encodes the convention but does not enforce it. What would: an `input` block
+  in the table (name, size, hash) with the measurer checking it before it writes a fragment, so a
+  measurement taken with a different signal cannot be merged into a table it does not belong to.
+- **What has to be built**: that `input` block and the check, the DI on the device
+  (`/var/lib/pedal/guitar-di.wav` — not shipped in the rootfs at 8 MB; the tool says so and takes
+  `--input`), the apply that installs the oneshot, the operator's merge step
+  (`devices/common/cost-merge`), and T5's verification path: install a model the table has never seen,
+  play, run `pedal-measure`, merge the fragment, and watch the row resolve with no xrun.
 
 **P5 — the bank's verdicts and the pedal's mapping (pp, lj). DONE 2026-10-08; the warm half landed
 2026-10-09.** `pedald` costs every rig and skips unusable ones when stepping;
