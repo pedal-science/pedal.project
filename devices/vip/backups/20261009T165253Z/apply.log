@@ -1,0 +1,8 @@
+  installed /etc/systemd/system/namchaind.service.d/10-pedal.conf
+  installed /etc/systemd/system/pedald.service
+  installed /usr/local/lib/pedald/daemon.py
+  installed /usr/local/lib/pedald/engine.py
+  installed /usr/local/lib/pedald/mapping.py
+  masked by someone else, left alone: rpi-eeprom-update.service
+Unit /etc/systemd/system/pedal-wifi.service is added as a dependency to a non-existent unit sys-subsystem-net-devices-wlan0.device.
+pedal-device: done. Manifest: /var/lib/pedal/manifest

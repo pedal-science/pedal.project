@@ -1,0 +1,7 @@
+  installed /usr/local/lib/pedald/daemon.py
+  installed /usr/local/lib/pedald/httpd.py
+  installed /usr/local/lib/pedald/library.py
+  installed /usr/local/lib/pedald/resume.py
+  masked by someone else, left alone: rpi-eeprom-update.service
+Unit /etc/systemd/system/pedal-wifi.service is added as a dependency to a non-existent unit sys-subsystem-net-devices-wlan0.device.
+pedal-device: done. Manifest: /var/lib/pedal/manifest
