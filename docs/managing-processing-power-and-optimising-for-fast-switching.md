@@ -103,8 +103,8 @@ a cliff, not a plateau — vip: 8 Full at 89% of a quantum, 10 at 113%, 12 with 
 blocks (3.5 s) behind and never recovering — and the transition itself briefly runs two rigs
 (Lite and Full during a handover). *Ruled out:* admitting a rig that scores exactly 1.0.
 **And a failsafe, because the charge is a measurement** (2026-10-09). The engine watches the render
-load's own histogram: if a window of blocks has *any* block over the deadline, or a hundredth of them
-past nine tenths of it, the warm set is cooled and no new warm is accepted for ten seconds —
+load's own histogram: if a window of blocks has *any* block over the deadline — D7's own bar — or a
+twentieth of them past 95% of it, the warm set is cooled and no new warm is accepted for ten seconds —
 `warm_pressure`, with `pressure_cools` and `pressure_holding` in `engine.status.warm`. The cost of
 being wrong is the right way round: a press costs a cold switch instead of the audible rig missing
 deadlines. This is the half of "charge the coexistence" that covers a table measured on one board
