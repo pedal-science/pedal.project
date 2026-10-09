@@ -58,3 +58,21 @@ weights divided by `sqrt(1 + 2*rho*g1*g2)`, rho clamped to [0, 1], which is cons
 the two are alike and equal power where they are not. All 104 rows come out at 0.00 dB excess and
 zero detector findings. The `-full` and `-lite` references are identical in both sets; only the
 `-handover` file differs.
+
+## The owner's verdict, 2026-10-09
+
+**"I can't hear an audible difference when Lite stands in for a Full."**
+
+That is the judgement this file existed to collect, and it was made on the *fixed* set
+(`build/e2/audition-fixed/24bit/`, the compensated fade): the six models' `-full`, `-lite` and
+`-handover` files through headphones. It settles the question P8 was waiting on — whether a Lite
+standing in for a Full while the Full catches up is something a player would hear — and it does not
+contradict the measurements above: the two submodels *are* different networks, 9 to 40 dB apart in
+their outputs and correlated at 0.97-1.00, and the earlier equal-power fade *was* audible as a thud
+at each switch. What the verdict says is that the difference between the two networks, crossfaded
+with the compensated shape, is not audible on this material.
+
+Two things it does not settle, and both are still recorded as such: D6's *visibility* rule (a
+trimmed rig is a different rig and the player must be able to see it — that is a display decision,
+not an audibility one), and the whole question on material other than these six models. A verdict on
+six models is a verdict on six models.

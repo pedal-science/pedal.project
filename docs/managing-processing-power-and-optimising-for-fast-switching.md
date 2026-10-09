@@ -147,6 +147,11 @@ check` reports the thread's actual core and fails if it is ever seen on the acti
 (2026-10-07). Lite and Full are two separately trained networks, measured 9 to 40 dB apart (E2), so a
 trimmed rig is a different-sounding rig. It is the capacity tool, but the player must be able to see
 that a rig is playing trimmed (the engine already reports `model_slimmed`; ljoss must show it).
+**Sharpened 2026-10-09 by the owner's listening verdict** (`bench-results/2026-10-06-e2-listening`):
+a Lite standing in for a Full, crossfaded with E2's compensated shape, is *not audible* on the six
+models the test used — so the rule's teeth are its **visibility**, not its sound. That is what makes
+P8's Lite-first catch-up acceptable, and it is why a temporary Lite must be *shown*: the difference
+is real in the networks even where it is not audible in the room.
 
 **D7 — One bar for "fits"** (2026-10-07): every block within the deadline, zero overruns, on a
 paced offline run, confirmed by a live soak with the device's `xruns` at zero. A looser bar for warm
@@ -415,15 +420,40 @@ to "inside it, and not `RT_CPUS`". *Verification:* T6 (done), the four layout as
 `pedal-tune check` (one housekeeping core; the render set is every other core; the IRQ inside the
 render set; the IRQ outside `RT_CPUS`), and a re-run of T6's arms on the new placement.
 
-**P8 — catch-up, end to end (nc). NOT IMPLEMENTED.** Lite-first catch-up on an inactive core, staged by depth, with
-the measured 170 ms per model; the path must be exercised by a real switch, not only by the bench.
-*Verification:* T9 and the convergence numbers re-measured through the live engine.
+**P8 — catch-up, end to end (nc). NOT IMPLEMENTED; design settled 2026-10-09.** Lite-first
+catch-up on an inactive core, staged by depth, with the measured 170 ms per model; the path must be
+exercised by a real switch, not only by the bench. *Verification:* T9 and the convergence numbers
+re-measured through the live engine.
 **What is in place:** the mechanism is measured (E1/E2: 170 ms of replay per model is bit-exact at
 depths 1-4, and a Lite catch-up is about a third of that) and the engine's publish path is where a
-catch-up would run. **What is missing:** the tiers and the inactive core. "Lite first, in the
-background, then Full" needs a second instance playing while the first catches up, which is P6's
-machinery -- and E2 left the question that decides whether that design survives: whether a Lite
-standing in for a Full is audible (they are 9 to 40 dB apart, and the listening test is the owner's).
+catch-up would run. **What is missing:** the tiers and the inactive core.
+
+**The question it was waiting on is answered: the owner listened to the fixed E2 audition set on
+2026-10-09 and cannot hear a difference when Lite stands in for a Full** (the verdict is recorded in
+`bench-results/2026-10-06-e2-listening/README.md`). So the design is the one E2's numbers pointed at,
+and it is now settled in this shape:
+
+- **A cold switch becomes two steps instead of one.** The press publishes the rig's **Lite** document
+  first — it compiles in about a third of the time, and (the verdict) a Lite standing in for a Full
+  is not something the player hears — and the engine then compiles the **Full** in the background and
+  crossfades to it with the compensated fade shape E2 measured. The promise becomes: *sound at the
+  press, the rig the player asked for within a second or two*, instead of silence or a wrong-sounding
+  first 170 ms.
+- **The catch-up is the replay, not the fade.** A cold instance starting mid-note is wrong for the
+  length of its receptive field; E1/E2 measured that replaying 170 ms per model into it makes it
+  bit-exact at depths 1-4. That is what the background step does before the crossfade, and it is why
+  the Lite is audible in the meantime rather than the Full being late.
+- **It costs one extra compile and one extra document, both off the audible path.** The Lite is
+  compiled and published on the control thread (already the case for any publish), the Full's compile
+  happens while the Lite plays, and the crossfade is the ordinary transition machinery. Nothing here
+  adds work to the render thread, which is what keeps D2's budget honest.
+- **It is visible, because D6 says a trimmed rig is a different rig.** While the Lite is standing in,
+  the engine reports it (`model_slimmed` and the cost object's `trimmed`/`verdict`), so ljoss and the
+  pedal's own UI can say "coming up to full" rather than pretending the rig is what it will be.
+- **What still has to be built**: the two-step publish in namchain (`rig.switch`'s cold path, or a
+  flag on it: Lite first, Full behind), the replay that catches the Full up, the service's
+  willingness to accept a temporary Lite (it already accepts a switch's `switched: cold` answer), and
+  T9 measuring press-to-full-rig through the pedal.
 
 **P9 — the level probes as a table row (nc, pp). DECIDED 2026-10-08, BY MEASUREMENT.** The meter costs render-core time and is not free
 (publishing per period already recovered 55% of it). Either it appears as a per-node row in the table
