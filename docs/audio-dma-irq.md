@@ -42,28 +42,35 @@ preempt the renderer: it is what tells the engine a buffer needs refilling, and 
 exactly what produces xruns. The audio DMA interrupt is the highest-priority realtime thing
 on the box, by design.
 
-## Which core it lands on (P7)
+## Which core it lands on (2026-10-09; P7's core 0 reversed)
 
-It must not land on a render core. The interrupt preempts whatever it lands on, and a render
-thread that is preempted is a render thread that can miss its deadline; the whole point of
-isolating cores 2–3 is that nothing else does that to them. So the tree pins the IRQ's delivery
-to **core 0**, a housekeeping core: `AUDIO_IRQ_CPU="0"` in
-`devices/vip/rootfs/etc/pedal/tune.conf`, and `pedal-tune check` fails if the core it finds is
-inside `ISOLATED_CPUS`. Core 0 is also what the kernel's own `irqaffinity=0-1` names
-(`rtpi/devices/vip/device.env`), so nothing here asks for anything the command line does not
-already allow. The interrupt's ~5% of a core comes out of housekeeping capacity either way.
+It must not land on the **active** render core. The interrupt preempts whatever it lands on, and the
+active render thread being preempted is a missed deadline; on an *inactive* render core the only
+thing it can preempt is a warm rig, which falls a block behind and catches up. That is the rule now —
+all but one core renders, so the interrupt's home is a render core, and the one it must not touch is
+the one playing what the player hears. The tree pins its delivery to **core 1**:
+`AUDIO_IRQ_CPU="1"` in `devices/vip/rootfs/etc/pedal/tune.conf`, and `pedal-tune check` asserts that
+the core is *inside* `ISOLATED_CPUS` and *not* `RT_CPUS`. Every interrupt that is not the audio one
+goes to the single housekeeping core (`irqaffinity=0` in `rtpi/devices/vip/device.env`).
 
-Moving it off a render core is not free — it parks the interrupt's wake-to-completion tail on
-the same core as WiFi, the SD card and every service, and the reason a render core looked
-attractive is that it is quiet. That trade is what **T6** measures (both placements, with WiFi
-and the SD card busy); the decision in
-[managing-processing-power-and-optimising-for-fast-switching.md](managing-processing-power-and-optimising-for-fast-switching.md)
-(D5) is recorded from that measurement, and D5 carries the result.
+P7 pinned the same interrupt to core 0 on the reading that no render core may carry it, and **T6
+then measured both placements**: 7.4 ns of wait-to-run per wake on a render core against 7.7 ns on
+the housekeeping core (2026-10-08), and 16.8 against 17.0 ns on 2026-10-09 with identical render
+distributions and zero xruns in either arm. So this decision does not rest on the interrupt's
+latency, which does not care; it rests on where the preemption lands, which T6 does not measure and
+P6's warm set does — 0 to 1 block of lag and no dropped blocks with a warm rig beside it.
+
+Only the interrupt's **delivery** can be pinned. Its handler thread carries `0-3` on this kernel
+(`PF_NO_SETAFFINITY`, and it does not follow the IRQ's affinity here), so `isolcpus=domain`, not the
+mask, is what keeps it off the other render cores; `pedal-tune check` reports the core it is on and
+fails if it is ever the active one.
 
 ## The tradeoff this represents
 
-The 32-frame period was chosen in the latency budget (plan.md, "real-time scheduling and a
-32-frame device buffer"). The interrupt rate — and this ~5% — is the direct price of it:
+The period is what sets the interrupt rate, and the pedal runs a **64-frame** period
+(`period_size` in `devices/vip/rootfs/etc/namchain/namchaind.json`), so the figures below are the
+2.5% row, not the 5% one — the 32-frame rates are what was measured on 2026-10-03, before the
+period moved:
 
 - 32-frame period → 1,500 IRQs/s per direction → ~5% of one core.
 - 64-frame → 750/s → ~2.5%. 128-frame → 375/s → ~1.3%.

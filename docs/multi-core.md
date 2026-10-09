@@ -119,8 +119,9 @@ The places that describe the reserved set must all agree — the repo already wa
 2. `devices/<host>/rootfs/etc/pedal/tune.conf` — `ISOLATED_CPUS`, `RT_CPUS`.
 3. `system.slice.d` / `user.slice.d` drop-ins — `AllowedCPUs` on the complement.
 4. `pedal-rt.slice` — `AllowedCPUs`, the only cpuset that may reach the render cores.
-5. `namchaind.service.d/10-pedal.conf` — `CPUAffinity=0-1` for the control thread (must stay, or
-   the unit's own `SCHED_FIFO` puts the compiling control thread on a render core).
+5. `namchaind.service.d/10-pedal.conf` — `CPUAffinity=0` for the control thread (must stay, or
+   the unit's own `SCHED_FIFO` puts the compiling control thread on a render core; the render and
+   warm threads widen their own masks from there, which `CAP_SYS_NICE` allows).
 
 `pedal-tune check` is extended to verify **N** isolated, tickless render cores.
 
@@ -130,19 +131,23 @@ On **piv** the audio IRQ is the SSL 2+'s xHCI controller, currently core 2 at pr
 becomes a render core, the IRQ moves to a housekeeping core (or a dedicated non-DSP core). That is
 a benchmark arm, not a default.
 
-**vip's WM8960 DMA IRQ — decided: core 0, a housekeeping core (P7, 2026-10-07).** This is the
-deferred step, and the arm this section named is what it runs. The interrupt is the highest-priority
-realtime thread on the box (SCHED_FIFO 85, against the render thread's 80), so it preempts whatever
-it lands on, and an isolated render core is exactly what must not be preempted. Core 0 is where the
-kernel's own `irqaffinity=0-1` already allows it, and it is a housekeeping core, so its ~5% of a
-core stays out of render headroom; the five places that describe the reserved set (above) agree.
-What it costs is the other side of the same coin — the interrupt's wake-to-completion tail now
-shares a core with WiFi, the SD card and every service — and that is what **T6** measures: both
-placements, the IRQ thread's tail, the render tail, and the footswitch-to-sound path with WiFi and
-the SD card busy. *Falsifier:* if the IRQ's latency degrades on the busy housekeeping core, this
-decision is wrong and the IRQ needs a core of its own, which changes how many cores the rules can
-spend on rendering. See `pedal.project/docs/audio-dma-irq.md`, "Which core it lands on (P7)", and
-D5 of `managing-processing-power-and-optimising-for-fast-switching.md`.
+**vip's WM8960 DMA IRQ — decided: core 1, a render core that is never the active one (2026-10-09,
+reversing P7's core 0).** The interrupt is the highest-priority realtime thread on the box
+(SCHED_FIFO 85, against the render thread's 80), so it preempts whatever it lands on; the question is
+only where that costs least. P7 moved it to a housekeeping core on the reading that no render core
+may carry it, and T6 then measured both placements and found no difference to the interrupt or to the
+render (7.4 ns against 7.7 ns wait-to-run on 2026-10-08; 16.8 against 17.0 on 2026-10-09, with
+identical render distributions and zero xruns either way) — so the interrupt is not what decides it.
+The *rules* do: all but one core renders, so the interrupt's home is a render core, and the one it
+must not touch is the **active** core. On an inactive one the only thing it can preempt is warm work,
+which falls a block behind and catches up — measured on the pedal at 0–1 block of lag with 0 dropped
+blocks — and it keeps its own tail off the single core that now carries `pedald`, the control side,
+WiFi and the SD card. *Falsifier:* a warm rig whose lag grows without bound, or an interrupt whose
+latency degrades beside warm work — T8 and T6. Only the interrupt's **delivery** is pinnable: its
+handler thread carries 0-3 (`PF_NO_SETAFFINITY`) and `isolcpus=domain` is what keeps it off the other
+render cores, so `pedal-tune check` reports the thread's core and fails if it is the active one. See
+`pedal.project/docs/audio-dma-irq.md` and D5 of
+`managing-processing-power-and-optimising-for-fast-switching.md`.
 
 ### Memory (the binding constraint)
 
@@ -461,8 +466,9 @@ Evidence goes in `namchain/bench-results/`, never `/tmp`.
   the answer is admission control / Lite, stated explicitly rather than claimed as a win.
 - **Assumption:** isolated cores remain contiguous, so `cpu` + `render_threads` suffices.
 - **Open (Phase 0):** the exact integration surface of the IR optimisation.
-- **Decided (P7):** vip's audio-IRQ placement — core 0, a housekeeping core, with T6 as the
-  measurement that confirms or reverses it; see "Interrupt placement" above. piv's arm stays as
+- **Decided (2026-10-09; P7's core 0 reversed):** vip's audio-IRQ placement — core 1, a render core
+  that is never the active one, with T6 measuring both placements (no difference) and P6's warm set
+  taking the preemption where it is cheap; see "Interrupt placement" above. piv's arm stays as
   measured: core 2 renders and the SSL 2+'s IRQ was left where it was.
 - **Open (Phase A data):** whether axis 2 is needed at all.
 - **Open (unverified, gated):** DSU-110 L3 way-locking on BCM2712.

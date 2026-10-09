@@ -85,10 +85,11 @@ the same reason.
   in, what the user reads when something is wrong, and small enough for `vip`'s 1 GB.
 - `pedald.service`: `Wants=namchaind.service` and `After=namchaind.service` (it follows the
   engine and never holds it up), `Restart=always`, `RestartSec=2`, `Nice=10`,
-  `IOSchedulingClass=idle`, `CPUAffinity=0-1` — housekeeping cores only. Core 3 renders, core 2
-  is where a second chain would go, and the audio interrupt is on core 0 with the rest of
-  housekeeping (`devices/vip/rootfs/etc/pedal/tune.conf`). It runs as its own user, sandboxed: see
-  Security (R11).
+  `IOSchedulingClass=idle`, `CPUAffinity=0` — the one housekeeping core. Cores 1–3 render: 3 is the
+  active render core, 1 and 2 keep rigs warm, and the audio interrupt is delivered to core 1, a
+  render core that is never the active one (`devices/vip/rootfs/etc/pedal/tune.conf`; the rules are
+  in [managing-processing-power-and-optimising-for-fast-switching.md](managing-processing-power-and-optimising-for-fast-switching.md)).
+  It runs as its own user, sandboxed: see Security (R11).
 - `/etc/pedal/pedald.json`, JSON like `namchaind.json` and with the same rule: an unknown key is
   an error, not a shrug. Keys: the UART device and baud, the HTTP bind/port, the size caps, the
   log level. The engine's port and token file and the three roots are read from
