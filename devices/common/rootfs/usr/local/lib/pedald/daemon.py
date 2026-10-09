@@ -524,6 +524,29 @@ class WarmSet:
             self.log("cooled %s: no rig is one press away" % ", ".join(str(rig) for rig in cooled))
 
 
+def _needs_measuring(issues):
+    """The rows this device has no measured cost for, from the engine's own issues.
+
+    `cost_unknown` is per node -- one warning for each node charged the unknown cost (D8) -- and a
+    rig can name the same row several times (two amps of one family, a rig played twice in a bank).
+    What P4 measures is a *row*, so this deduplicates by row and keeps the first reference as the
+    thing to hand the bench, with a count so a reader can tell "one node" from "the whole pedal".
+    """
+    rows = {}
+    for issue in issues or []:
+        if not isinstance(issue, dict) or issue.get("code") != "cost_unknown":
+            continue
+        row = issue.get("row") or "unknown"
+        entry = rows.setdefault(row, {"row": row, "count": 0, "reference": None, "chain": None,
+                                      "node": None})
+        entry["count"] += 1
+        if entry["reference"] is None and issue.get("reference"):
+            entry["reference"] = issue["reference"]
+            entry["chain"] = issue.get("chain")
+            entry["node"] = issue.get("node")
+    return [rows[row] for row in sorted(rows)]
+
+
 class Service:
     def __init__(self, cfg, log):
         self.cfg = cfg
@@ -840,6 +863,13 @@ class Service:
                 # `refused` with a reason is how "the rig playing is too heavy to keep a neighbour"
                 # reaches a panel instead of looking like nothing happened.
                 "warm_decision": self.warm.report(now=time.monotonic()),
+                # P4's worklist (2026-10-09): the units the engine is charging `unknown` because this
+                # device's table has no measured row for them, aggregated by row. The engine already
+                # says so per node (`issues`, code `cost_unknown`); what a panel and a measurement
+                # want is the list, deduplicated, with one reference to feed the bench. P4 is what
+                # acts on it -- measure the row on an inactive core and merge the fragment -- and this
+                # is the half the service owns: knowing, and saying.
+                "needs_measuring": _needs_measuring(status.get("issues", [])),
             },
             "link": self.link_status(time.monotonic()),
             "bank": {"banks": self.mapping.banks, "bank": self.mapping.bank,

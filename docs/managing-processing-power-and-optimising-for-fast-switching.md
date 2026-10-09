@@ -352,18 +352,41 @@ as `over_budget` with the total and every node's row, and `engine.status.cost` c
 verdict and the nodes. A new `rig.cost` answers the same question for a rig that is not playing, which
 is how the service costs its bank without a second cost model (D9). The boundary itself is T4 below.
 
-**P4 — first-sight measurement (nc). NOT IMPLEMENTED.** Unknown units cost `unknown` (D8) and are measured
-opportunistically on an inactive core; the result is written to the table and reported.
-*Verification:* install a model the table has never seen, play, and watch the cost resolve without a
-single xrun (T5).
-**What is in place:** D8's half -- an unmeasured unit is charged `unknown`, never nothing, at the
-dearest value of its kind, and every node charged that way raises a `cost_unknown` warning naming it
-and the row it should have. **What is not:** the measurement itself. It needs a core the player is not
-using to bisect on, which is P6's inactive core; without one it would run beside the live render, and
-T5 is exactly the test that says how bad that is. The engine also cannot rewrite `cost.json` --
-`devices/<host>/check` compares the installed file's hash with the tree's -- so a first-sight
-measurement has to land as a fragment the operator merges (`cost-merge`), a deliberate difference from
-"written to the table".
+**P4 — first-sight measurement (nc). HALF IMPLEMENTED; design settled 2026-10-09.** Unknown units cost
+`unknown` (D8) and are measured opportunistically on an inactive core; the result is written to the
+table and reported. *Verification:* install a model the table has never seen, play, and watch the cost
+resolve without a single xrun (T5).
+
+**In place:** D8's half — an unmeasured unit is charged `unknown`, never nothing, at the dearest value
+of its kind, and every node charged that way raises a `cost_unknown` warning naming it and the row it
+should have — and, since 2026-10-09, **the worklist**: `pedald` aggregates those warnings into
+`/status`'s `engine.needs_measuring` (one entry per *row*, deduplicated, with a count and one reference
+to hand the bench), which is what a panel shows and what a measurement loop consumes.
+
+**Settled design for the rest:**
+
+- **The service orchestrates; the bench measures.** `pedald` sees a row in `needs_measuring`, runs the
+  deployed bench for that one unit — `namchain-warm-bench measure --units <one line> --input <DI>
+  --seconds N --out DIR`, the invocation `scripts/measure-core` already uses — on an **inactive** core
+  (a warm core with no document on it), inside `pedal-bench.slice`, one unit at a time and abortable.
+  D9's boundary holds: the engine measures and enforces, the service packs and schedules, and the
+  *operator* merges.
+- **The result is a fragment, not a table.** The bench prints a `fragment:` line; the service writes it
+  to `/var/lib/pedal/cost-fragments/<row>.json` and reports it, and `devices/common/cost-merge` folds
+  fragments into the device's table as it already does. The engine cannot write the table — a device's
+  numbers are the device's, and `devices/<host>/check` hashes the installed file — so a pedal that
+  measured its own row still waits for the operator to accept it. That is deliberate: an unattended
+  measurement that rewrote admission would be a machine grading its own homework.
+- **Nothing waits for it.** The rig plays at the `unknown` cost meanwhile (D8 charges the dearest
+  value of its kind, so admission errs expensive, never permissive), and the measurement only ever
+  *frees* capacity.
+- **It never runs while the pedal is unhappy**: a measurement is skipped when `xruns` or
+  `over_deadline` are non-zero, when the failsafe is holding, or when the audible rig is above the
+  charge — a pedal at its limit does not have an inactive core to spare, and T5 is the measurement
+  that says so.
+- **What has to be built**: the measurement loop in the service (spawn, bound, abort, fragment), the
+  `measure` invocation's plumbing (the DI on the device, the output directory), and T5's verification
+  path (install an unseen model, play, watch the row resolve with no xrun).
 
 **P5 — the bank's verdicts and the pedal's mapping (pp, lj). DONE 2026-10-08; the warm half landed
 2026-10-09.** `pedald` costs every rig and skips unusable ones when stepping;

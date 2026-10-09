@@ -760,6 +760,42 @@ class StatusWarm(unittest.TestCase):
         self.assertIsNone(body["engine"]["warm"])
 
 
+class NeedsMeasuring(unittest.TestCase):
+    """P4's worklist: the rows this device has no measured cost for (2026-10-09).
+
+    The engine warns per node (`cost_unknown`); what a panel shows and what a measurement acts on
+    is the list of *rows*, deduplicated, with one reference to hand the bench.
+    """
+
+    def test_the_rows_are_deduplicated_and_counted(self):
+        issues = [
+            {"code": "cost_unknown", "row": "NAM.WaveNet.full", "chain": "one", "node": "amp0",
+             "reference": "/models/a.nam"},
+            {"code": "cost_unknown", "row": "NAM.WaveNet.full", "chain": "two", "node": "amp0",
+             "reference": "/models/b.nam"},
+            {"code": "cost_unknown", "row": "IR.8192", "chain": "one", "node": "cab",
+             "reference": "/irs/c.wav"},
+            {"code": "model_slimmed", "row": "NAM.WaveNet.lite"},
+        ]
+        self.assertEqual(daemon._needs_measuring(issues),
+                         [{"row": "IR.8192", "count": 1, "reference": "/irs/c.wav",
+                           "chain": "one", "node": "cab"},
+                          {"row": "NAM.WaveNet.full", "count": 2, "reference": "/models/a.nam",
+                           "chain": "one", "node": "amp0"}])
+
+    def test_a_measured_rig_has_an_empty_worklist(self):
+        self.assertEqual(daemon._needs_measuring([]), [])
+        self.assertEqual(daemon._needs_measuring(None), [])
+
+    def test_status_carries_the_worklist(self):
+        issues = [{"code": "cost_unknown", "row": "NAM.WaveNet.full", "chain": "one",
+                   "node": "amp0", "reference": "/models/a.nam"}]
+        _, body = fake_service(status={"state": "running", "issues": issues}).handle_status(None)
+        self.assertEqual(body["engine"]["needs_measuring"][0]["row"], "NAM.WaveNet.full")
+        _, body = fake_service().handle_status(None)
+        self.assertEqual(body["engine"]["needs_measuring"], [])
+
+
 class WarmDecision(unittest.TestCase):
     """What the service decided to do about the warm set, beside what is warm (2026-10-09).
 
