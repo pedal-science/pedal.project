@@ -708,6 +708,31 @@ the two hours side by side.
 **T11 — thermal and clock.** One hour at full load; confirm 2.4 GHz uncapped holds on vip's cooling
 (`tune.conf` says unverified on vip) and that no throttle changes the numbers the table was built
 from. If it does, the table needs a temperature caveat.
+**Run 2026-10-09/10 — an hour of full load across two halves, and nothing throttled the tail.** A
+**0.559** rig (admitted with the coexistence charge in force), a stand-in second renderer on the free
+warm core and the app's traffic on WiFi; 30 minutes quiet, then 30 with the housekeeping core at
+**100.0%** (spinner, SD reads, a compile burst in a loop):
+
+| half | blocks over the deadline | worst block | temperature | clock / low-voltage alarm |
+|---|---|---|---|---|
+| quiet | **+0** (9 before, 9 after: the setup transient's single spike) | 215.4% at the transient, flat after | 62.2 → 66.7 °C | 2400 MHz / 0 |
+| loaded | **+0** | 90.5% | 64.5 → **80.4 °C** | 2400 MHz / 0 |
+
+So the two things this test exists to check hold: **2400 MHz held for the hour** — the frequency is
+read at the end of each half and never moved — and **no throttle changed the numbers**, because the
+loaded half put nothing over the deadline while the temperature walked 16 °C up to 80.4 °C (first trip
+110 °C). One caveat about the *evidence* rather than the result: this kernel exposes no `/dev/vcio`, so
+`vcgencmd get_throttled` cannot be read and "uncapped" rests on the clock register, the temperature and
+the render tail rather than on the firmware's own flags; the low-voltage alarm via hwmon
+(`rpi_volt in0_lcrit_alarm`, which `pedal-diag` reads) is 0 at both ends. Consequence for the table:
+**no temperature caveat is needed** at this rig and this cooling.
+
+What this run does *not* settle, and what is owed: it never had the engine's own warm document
+(cpu1 ~0.7% in both halves; both setups printed `no warm document is rendering`, most likely the
+failsafe cooling it after the setup transient). The interference was present as the stand-in renderer
+on core 2 and the load was fully present, so T5's question is answered; "a warm document rendering" is
+not. [bench-results/2026-10-10-t11-fullload](bench-results/2026-10-10-t11-fullload/README.md) has both
+halves and the harness mistake that made the loaded half a re-run.
 
 ## Not doing, and why
 

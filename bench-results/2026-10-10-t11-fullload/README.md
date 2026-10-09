@@ -30,6 +30,38 @@ warm document and a second renderer costs nothing — no block over the deadline
 first published (215% for one block, during the load, not after it). The loaded half is the one that
 says whether a busy housekeeping core changes that, and it is still owed.
 
+## Arm B: the loaded half, re-run alone (landed 22:56Z) — PASS
+
+The same rig, warm set and second renderer, with the housekeeping core saturated for thirty minutes:
+
+| | before arm B | after arm B (30 min) |
+|---|---|---|
+| blocks over the deadline | 0 | **0 — none in half an hour** |
+| worst block | 1053.2 µs = 79.0% | 1206.2 µs = **90.5%** |
+| xruns / guard trips | 0 / 0 | **0 / 0** |
+| blocks rendered | 90,372 | 1,443,577 |
+| temperature | 64.5 °C | **80.4 °C** |
+| clock / low-voltage alarm | — | **2400 MHz / 0** |
+| per-core busy | — | cpu0 **100.0%**, cpu1 0.7%, cpu2 34.6%, cpu3 49.8% |
+| IRQ thread | — | 783.3 ns of wait to run per wake over 2.7 M wakes |
+| app traffic | — | 7,370 library requests over WiFi |
+
+That is T11's answer: **one housekeeping core at 100% — carrying `pedald`, the app's traffic, SD
+reads and a compile burst — did not put a single block over the deadline in half an hour**, with a
+0.559 rig playing beside a second renderer on the free warm core, worst block 90.5% of the deadline
+against D7's 100%. The cost of that load shows in the parts that are not the deadline: temperature
++15.9 °C in the half (80.4 °C, first trip 110 °C), and the interrupt thread's wait-to-run per wake
+up from 8.4 ns (quiet) to 783.3 ns.
+
+**What neither half had: the engine's own warm document.** cpu1 sits at ~0.7% in both, and both setups
+carried the harness's `WARNING: no warm document is rendering`. The second renderer (the bench's `rig`
+mode on core 2) was there, so the *interference* T5 measured was present, and the load was fully
+present — but "a warm document rendering" in T11's own words is not what was measured. The likely
+reason is the failsafe doing its job: the setup transient puts nine blocks over the deadline while the
+heavy rig is published, `warm_pressure` cools the warm set, and pedald's own retry is a minute later --
+which is a behaviour worth watching rather than a bug, but it means a run that wants a warm document
+present should wait for one *and* record that it did.
+
 ## The original note
 
 **This run is in progress.** `scripts/measure-housekeeping` was launched at 21:52:03Z under the
