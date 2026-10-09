@@ -47,6 +47,7 @@ RIG=t5-heavy.json
 WARM=""
 WARM2=""
 NOWARM=no
+SKIP_QUIET=no
 EXTRA=none
 WIFI=ljoss
 OUT=""
@@ -59,6 +60,7 @@ while [[ $# -gt 0 ]]; do
     --rig) RIG=$2; shift ;;
     --warm) WARM=$2; shift ;;
     --no-warm) NOWARM=yes ;;
+    --skip-quiet) SKIP_QUIET=yes ;;   # the loaded half alone: T11's question, without repeating arm A
     --extra) EXTRA=$2; shift ;;    # renderer: a second renderer on warm_cpus[1], the second warm core
     --wifi) WIFI=$2; shift ;;      # ljoss: read the bank from here, as the app does; none
     --out) OUT=$2; shift ;;
@@ -384,7 +386,7 @@ EOF
 
 WHAT="spinner, SD reads, the app's traffic, compile burst"
 [[ $EXTRA == renderer ]] && WHAT="$WHAT; second renderer on core 2"
-arm "A: quiet (nothing on core 0)" no
+[[ $SKIP_QUIET == yes ]] || arm "A: quiet (nothing on core 0)" no
 arm "B: loaded ($WHAT)" yes
 
 # ------------------------------------------------------------------ what it says
