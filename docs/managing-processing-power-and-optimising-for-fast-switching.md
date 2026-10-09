@@ -339,8 +339,8 @@ T5 is exactly the test that says how bad that is. The engine also cannot rewrite
 measurement has to land as a fragment the operator merges (`cost-merge`), a deliberate difference from
 "written to the table".
 
-**P5 — the bank's verdicts and the pedal's mapping (pp, lj). DONE 2026-10-08; the warm half follows
-P6 (2026-10-09).** `pedald` costs every rig and skips unusable ones when stepping;
+**P5 — the bank's verdicts and the pedal's mapping (pp, lj). DONE 2026-10-08; the warm half landed
+2026-10-09.** `pedald` costs every rig and skips unusable ones when stepping;
 ljoss shows the indicator and refuses to activate one. *Verification:* `devices/common/test-pedald`
 for the skip logic (it already tests the mapping), plus a manual pass in ljoss with one rig
 deliberately made too big.
@@ -348,12 +348,15 @@ deliberately made too big.
 re-asked at most once a minute), skips an unusable rig when stepping, refuses to load one, and reports
 the verdicts in `/status`; ljoss shows a "Lite: <blocks>" chip while the running rig is trimmed (D6),
 refuses to publish a rig the engine would refuse, and marks it too big for the device while keeping it
-editable. 244 pedald tests and 507 ljoss assertions, both green. **What it does not do yet**: it does
-not call `rig.warm`/`rig.cool`/`rig.switch`, so D9's "the service packs the warm set" is not true on
-the pedal — the engine's warm set works (P6, measured live) and nothing puts a rig in it. That wiring
-is the remaining half of P5, and it needs a neighbour-warming policy: warm the rig the footswitches
-reach next, cool what is no longer a neighbour, and switch with `rig.switch` so a warm target costs a
-handover instead of a compile.
+editable. 244 pedald tests and 507 ljoss assertions, both green. **The warm half (2026-10-09)**: the
+service holds the rig the footswitches reach next warm in the engine — `rig.warm` when the neighbour
+changes, `rig.cool` with no rig when nothing is one press away, and `rig.switch` on every press, which
+hands a warm rig over and publishes a cold one, so a press never ends in silence — and `/status`
+carries the engine's own `warm` object rather than a summary of it. 272 pedald tests, green
+(`WarmSet` and the switch path in `test_daemon.py`, `Mapping.neighbour` in `test_mapping.py`, the three
+calls in `test_engine.py`). **One rig**, as D4 was scoped: packing more of the bank into the inactive
+cores is optimisation, and a jump outside the neighbours is P8's catch-up.
+`docs/pedal-service.md` ("The ready set, and the split with namchain") is the design.
 
 **P6 — the warm set in the engine (nc).** namchain M3: more than one document resident and rendering
 at once, one of them audible, the rest warm; a switch makes a warm rig audible and crossfades to it.
@@ -366,8 +369,8 @@ one block (1.33 ms) behind while sharing core 1 with the audio IRQ. T7's offline
 agrees on the load (render p99 8% of the deadline with a warm document beside it, warm lag 0 blocks)
 but its glitch verdict is not trusted yet; §4 of the bench-results document says why.
 **What is deliberately not here:** D4's packing (several warm rigs per core), P8's catch-up, and more
-than two documents — the mechanism generalises, the policy does not exist yet, and `pedald` does not
-call `rig.warm`/`rig.switch` at all, so the pedal's own bank is not warmed by itself.
+than two documents — the mechanism generalises and the policy over it is pedald's, which warms the one
+rig a press reaches next (P5's warm half, 2026-10-09).
 
 What ships, in order: **one warm document** on an inactive core, rendering the same block the active
 one does and publishing its output; then `rig.switch`, which hands the warm rig's *execution* to the
