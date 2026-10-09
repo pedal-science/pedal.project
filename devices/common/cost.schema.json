@@ -52,6 +52,33 @@
       "maximum": 1,
       "description": "The largest cost a rig may have and still be admitted (D3: 0.8). The fit point is a cliff and the transition itself briefly runs two rigs, so admitting a rig that scores 1.0 is ruled out."
     },
+    "coexistence": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "What holding warm documents costs the rig the player is hearing (D3, 2026-10-09). The rows above are measured on a quiet core; with a warm document rendering on another core the same rig takes longer -- shared L3 and DRAM -- and T5 measured how much (pedal.project scripts/measure-housekeeping; bench-results/2026-10-09-housekeeping-vip). A rig is admitted for the way it will run, so its cost is multiplied by `factors[<warm documents held>]` and that charged figure is what trimming and the admission test work against. A table without this block charges nothing, which is every table measured before 2026-10-09 and every device that has not run T5.",
+      "required": ["factors", "measured", "note"],
+      "properties": {
+        "factors": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Warm documents held -> the multiplier on the audible rig's cost. The engine takes the largest measured factor at or below the count it holds, so more warm documents than anyone measured is charged the worst measured case, never less.",
+          "patternProperties": {
+            "^[1-9][0-9]*$": { "type": "number", "minimum": 1 }
+          },
+          "additionalProperties": false
+        },
+        "measured": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$",
+          "description": "The day the charge was measured, YYYY-MM-DD."
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1,
+          "description": "How the factors were derived from the measurement, in words: the rig costs where the deadline held and where it broke, and what factor those imply. A later table has to be readable against it."
+        }
+      }
+    },
     "bar": {
       "type": "string",
       "minLength": 1,

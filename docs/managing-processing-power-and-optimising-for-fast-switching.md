@@ -102,16 +102,16 @@ eighth model dearer than the first (measured: first Full 6.6% of a quantum, eigh
 a cliff, not a plateau — vip: 8 Full at 89% of a quantum, 10 at 113%, 12 with the warm thread 2,621
 blocks (3.5 s) behind and never recovering — and the transition itself briefly runs two rigs
 (Lite and Full during a handover). *Ruled out:* admitting a rig that scores exactly 1.0.
-**Undermined by T5 (2026-10-09), and this needs a decision.** The table charges units as if a core
-had them to itself. With a warm document rendering beside the audible one, a rig admitted at 0.735
-goes from +0 to +7 blocks over the deadline in 120 s quiet, and +1 to +61 with the housekeeping core
-loaded (worst block 100.7% → 151.8%) — so **`fits` does not mean "holds the deadline while warming
-is on"** above roughly 0.7, and D4's per-core independence is the assumption that fails: the sweep of
-2026-10-09 puts the knee at about **0.6** — 0.559 held the deadline, 0.685 was 72 blocks over it in a
-loaded two-minute arm against 0 with nothing warm. The options are in T5 below (charge the
-coexistence, lower the headroom while warming, let the service cool above a threshold, or record the
-narrower promise); the cheapest that can ship today is the service one, since `pedald` already costs
-every rig and chooses the warm rig.
+**Charged since 2026-10-09 (T5), instead of a smaller headroom.** The rows are measured on a quiet
+core and a rig does not get one while a warm document renders beside it, so the table now carries what
+that costs and the rig is admitted for the way it will run: `coexistence.factors` maps warm documents
+held to a multiplier on the audible rig's cost (vip: 1.25 for one, 1.4 for two), trimming targets
+`headroom / factor`, `over` is decided on `cost * factor`, and `rig.warm` is refused when the rig that
+is playing could not afford another warm document beside it. A table with no such block charges nothing
+and admits exactly as it always did. The factors come from T5's sweep: with nothing warm 0.735 holds the
+deadline; with one warm document 0.559 holds and 0.685 breaks; with two, 0.559 holds and 0.685 breaks
+fifty times worse. T5 below has the arms, and the runtime failsafe -- cool the warm set when the audible
+core's own blocks approach the deadline -- is what covers the cases the pre-calculation gets wrong.
 
 **D4 — Warm rigs are packed by cost into the inactive cores, up to the same 0.8** (2026-10-07;
 scoped 2026-10-09). One rig per core wastes the resource the whole scheme exists to protect: a core
@@ -527,12 +527,19 @@ at all**: the *same rig* with a warm neighbour goes from +0 to +7 overruns quiet
 loaded, worst block 100.7% → 125.0%. The cost model charges units as if a core were alone with them;
 with a warm rig rendering beside it, it is not. `fits` at 0.735 is therefore not a promise that the
 rig holds the deadline — D3's headroom, D4's per-core independence and the admission verdict all
-assume a quiet core. **The sweep puts the knee at about 0.6** (overruns in the loaded 120 s arm, warm
-against none): 0.410 → +1 against +0; 0.559 → +1; 0.685 → **+72 against +0**; 0.735 → **+61 against
-+1**. **What to do about it is a decision** (charge a coexistence term measured per rig class; lower
-the headroom to ~0.6 while warming is on; let `pedald` cool above a threshold — it already costs the
-bank and chooses the warm rig; or record that `fits` means "fits alone") — the cheapest that ships
-today is the service one, and the one that needs no measurement is the headroom.
+assume a quiet core. **The sweep puts the knee at about 0.6** (overruns in the loaded 120 s arm, warm against none):
+0.410 → +1 against +0; 0.559 → +1; 0.685 → **+72 against +0**; 0.735 → **+61 against +1**.
+**Two warm cores is a second, steeper step** — the same rigs with a *second* renderer on the other warm
+core (core 2; the engine holds one warm document today, so the second is the bench's `rig` mode pinned
+there, labelled as what it is): 0.410 → +1, 0.559 → +3, 0.685 → **+3543** against +72 for one. The
+cliff is in the same place; past it the damage is fifty times worse. **Decided and implemented
+2026-10-09: the coexistence is charged** (D3 above) rather than the headroom being lowered — warming is
+always on, so a lower headroom would cost capacity even with nothing warm — with vip's measured factors
+1.25 (one warm document) and 1.4 (two) written into its table, and the *runtime* failsafe (cool the warm
+set when the audible core's own blocks approach the deadline) as the thing that catches what the
+pre-calculation gets wrong. **Still open:** the engine holds one warm document, so a pedal with two
+footswitch neighbours cannot yet keep both warm — `kMaxDocuments` is 2, and the second warm document is
+D4's "one per inactive core" arriving as a real change to the warm set with its own measurement.
 [bench-results/2026-10-09-housekeeping-vip](bench-results/2026-10-09-housekeeping-vip/README.md) has
 the four arms, the sweep, the caveats and the reproduction.
 
