@@ -102,6 +102,14 @@ eighth model dearer than the first (measured: first Full 6.6% of a quantum, eigh
 a cliff, not a plateau — vip: 8 Full at 89% of a quantum, 10 at 113%, 12 with the warm thread 2,621
 blocks (3.5 s) behind and never recovering — and the transition itself briefly runs two rigs
 (Lite and Full during a handover). *Ruled out:* admitting a rig that scores exactly 1.0.
+**And a failsafe, because the charge is a measurement** (2026-10-09). The engine watches the render
+load's own histogram: if a window of blocks has *any* block over the deadline, or a hundredth of them
+past nine tenths of it, the warm set is cooled and no new warm is accepted for ten seconds —
+`warm_pressure`, with `pressure_cools` and `pressure_holding` in `engine.status.warm`. The cost of
+being wrong is the right way round: a press costs a cold switch instead of the audible rig missing
+deadlines. This is the half of "charge the coexistence" that covers a table measured on one board
+being asked about another, a rig nobody measured, and material nobody played.
+
 **Charged since 2026-10-09 (T5), instead of a smaller headroom.** The rows are measured on a quiet
 core and a rig does not get one while a warm document renders beside it, so the table now carries what
 that costs and the rig is admitted for the way it will run: `coexistence.factors` maps warm documents
