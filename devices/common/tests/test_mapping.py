@@ -268,3 +268,27 @@ class Neighbour(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class EmptyBanks(unittest.TestCase):
+    """A bank.json holding no rigs must not shadow the library (2026-10-10).
+
+    It is what a pedal that persisted its bank before any rig existed has on disk, and the empty
+    list is truthy: the pedal then reports `banks: [[]]`, warms nothing (nothing is one press away)
+    and a footswitch press has no neighbour to step to.
+    """
+
+    def test_only_empty_banks_falls_back_to_the_library(self):
+        m = mapping.Mapping(["a", "b", "c"], bank={"banks": [[]]})
+        self.assertEqual(m.banks, [["a", "b", "c"]])
+        # The press has somewhere to go, which is the point: nothing is playing, so the first rig
+        # of the bank is what a step reaches.
+        self.assertIsNotNone(m.neighbour())
+
+    def test_an_empty_bank_beside_a_real_one_is_dropped(self):
+        m = mapping.Mapping(["a", "b"], bank={"banks": [[], ["b"]]})
+        self.assertEqual(m.banks, [["b"]])
+
+    def test_a_real_bank_still_wins(self):
+        m = mapping.Mapping(["a", "b", "c"], bank={"banks": [["c"]]})
+        self.assertEqual(m.banks, [["c"]])

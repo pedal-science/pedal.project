@@ -76,9 +76,16 @@ class Mapping:
                         out.append([r for r in entry if r in self.rigs])
                     else:
                         self.log(f"bank.json: ignoring a bank that is not a list of rigs: {entry!r}")
+                # A bank with no rigs is what a bank.json written before the library arrived
+                # holds, and it must not shadow the library: `[[]]` is truthy, so returning it
+                # left the pedal with nothing one press away -- nothing warmed, and a footswitch
+                # with no neighbour to step to (found on the board, 2026-10-10).
+                out = [bank_rigs for bank_rigs in out if bank_rigs]
                 if out:
                     return out
-            self.log("bank.json has no usable 'banks'; falling back to the library")
+                self.log("bank.json holds only empty banks; falling back to the library")
+            else:
+                self.log("bank.json has no usable 'banks'; falling back to the library")
         return [self.rigs[i:i + 8] for i in range(0, len(self.rigs), 8)] or [[]]
 
     def _start_bank(self, bank):
