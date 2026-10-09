@@ -188,34 +188,37 @@ than what the thread costs.
 ## 7. T10: the hour
 
 D7's bar -- "every block within the deadline, zero overruns, confirmed by a live soak with the
-device's `xruns` at zero" -- is only confirmed live. Sixty minutes on the pedal, through the WM8960,
-switching between four admitted rigs every 30 seconds (118 loads), sampled every 30 seconds
-(`t10-hour.txt`):
+device's `xruns` at zero" -- is only confirmed live. **Run 2026-10-08 the way the repo soaks**
+(`scripts/soak/rig-switch-hour`: `soak-monitor.sh` on the host, four rigs built from the device's own
+library switched every 30 seconds, and `soak-summary.py` applying plan Phase 1 step 8's gate):
 
-| | |
-|---|---|
-| blocks rendered | 2,864,049 |
-| `xruns` | **0** in all 120 samples |
-| guard trips | 0 |
-| blocks over the deadline / over 90% | 0 / 0 |
-| worst block | 801.7 µs, 60.1% of the deadline |
-| temperature | 51.3–55.1 °C (first trip 110 °C) |
-| clock | 2400 MHz throughout, `get_throttled` `0x0` |
-| rigs, with what the engine charged | `t10-model-cab` 0.14882, `t10-two-amp` 0.23762, `t10-three-chains` 0.40987, `t10-effects` ~0.02 |
+```
+373 samples over 62.2 min (0 without an answer from namchaind)
+rig soak-three-chains, period 64, deadline 1333.3 us
+blocks 2799143 (timed 2799143)
+load: p50 13%, p99 23%, p99.9 30%, worst bucket 71%
+worst block: 951.5 us (71.4%), during the soak
+temperature 53.8..58.2 C, throttled flags seen: ['0x0']
+slowest core clock seen: 2400 MHz
+edits: generation 121 -> 247, transitions +126
+queue: drops +0, insertions +0, capture bursts +0
+gate: driver xruns 0, deadline overruns 0, guard trips 0, blocks over 90% 0, render errors 0, device lost 0
+PASS
+```
 
-The four rigs are the shapes T2 measured, now played rather than rendered offline: a model and a
-cab, two amps in series, an effects-only chain, and three chains at once. **D7 holds for what the
-table admits.**
+2,799,143 blocks, 126 transitions (the switches), **zero xruns, zero blocks over the deadline, zero
+over 90%**, never throttled, and the gate the repo's own summary applies says PASS. The four rigs are
+the shapes T2 measured -- a model and a cab, two amps in series, an effects-only chain, three chains
+at once -- now played through the codec rather than rendered offline. **D7 holds for what the table
+admits.**
 
-One `warn` sample at 20:54 is a fixture of mine, not the engine: `t10-three-chains` was generated
-before the T2 set's stale model path was fixed, so for the first few loads it named a model the host
-does not have. The engine did exactly what D8 and the asset registry say -- the node played as if
-bypassed, charged `unknown.node`, and the once-per-node `cost_unknown` warning appeared because the
-device *does* have a table -- and the path was fixed while the soak ran. Worth keeping as the one
-live look at what an unmeasured unit does to a playing rig.
+An earlier hand-rolled version of the same soak (an hour, 120 samples, four rigs, `xruns` zero in
+every sample, worst block 60.1% of the deadline, 51-55 °C, never throttled; `t10-hour.txt`) reached
+the same conclusion with a sampler written for the occasion. The committed harness supersedes it: the
+monitor runs on the host rather than being polled over WiFi, and the gate is the plan's own.
 
 **What this hour does not cover:** the warm set, the refills and the catch-ups. Those are P6 and P8;
-this soak switched by publishing, which is what the engine does today.
+this soak switched the way the engine switches today, by publishing.
 
 ## 8. What the table does not cover
 

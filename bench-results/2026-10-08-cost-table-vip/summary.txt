@@ -1,0 +1,12 @@
+373 samples over 62.2 min (0 without an answer from namchaind)
+rig soak-three-chains, period 64, deadline 1333.3 us
+blocks 2799143 (timed 2799143)
+load: p50 13%, p99 23%, p99.9 30%, worst bucket 71%
+worst block: 951.5 us (71.4%), during the soak
+tail: {30: 441, 31: 414, 32: 374, 33: 386, 34: 293, 35: 231, 36: 198, 37: 104, 38: 110, 39: 81, 40: 57, 41: 52, 42: 45, 43: 25, 44: 26, 45: 29, 46: 31, 47: 40, 48: 42, 49: 29, 50: 37, 51: 28, 52: 26, 53: 11, 54: 4, 55: 4, 56: 5, 57: 2, 58: 1, 59: 1, 62: 1, 64: 1, 70: 1, 71: 1}
+temperature 53.8..58.2 C, throttled flags seen: ['0x0']
+slowest core clock seen: 2400 MHz (the cap holds every core at its maximum; below it is throttling)
+edits: generation 121 -> 247, params_applied +0, transitions +126, max TCP connections seen 1
+queue: drops +0, insertions +0, capture bursts +0
+gate: driver xruns 0, deadline overruns 0, guard trips 0, blocks over 90% 0, render errors 0, device lost 0
+PASS

@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+# scripts/measure-irq [--host vip] [--seconds 240] [--mb 200] [--out DIR]
+#                    — T6: does the audio IRQ belong on the housekeeping core? (P7, D5)
+#
+# The falsifier the document names: "if the IRQ's latency degrades on the busy housekeeping core, D5
+# is wrong". Each arm puts the same load on the housekeeping cores -- a CPU spinner on core 0, a
+# bounded SD write and a bounded WiFi upload -- plays the same amp-and-cab rig through namchaind, and
+# reads what the engine and the kernel say afterwards:
+#
+#   * engine.status: the render tail (worst_us, the load histogram, over_deadline) and xruns
+#   * /proc/interrupts: which core took the DMA interrupt, and how many
+#   * the IRQ thread's /proc/<tid>/schedstat: run_delay per wake, which is the wait to run
+#
+# Arm A is the board as it is (delivery on core 2, a render core under the rules). Arm B is P7's
+# (delivery on core 0, housekeeping). Nothing is changed permanently: the affinity is written the way
+# `pedal-tune apply` writes it, and the tree is untouched.
+#
+# The load is deliberately bounded -- 200 MB written and 200 MB uploaded per arm, both deleted after.
+# The first version of this script asked for 1.2 GB and a 700 MB upload on a 2.9 GB card and filled
+# it, which is a way to stall a measurement and a bad thing to do to the pedal's root filesystem.
+#
+# The report is printed and kept in <out>/t6.txt (default build/<host>/t6).
+#
+# Measured 2026-10-08 for T6: bench-results/2026-10-08-cost-table-vip/README.md, section 6.
+set -u
+CTL="/opt/namchain/current/bin/namchainctl --token-file /etc/namchain/token"
+HOST=vip
+RUN=240
+MB=200
+OUT=""
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --seconds) RUN=$2; shift ;;
+    --mb) MB=$2; shift ;;
+    --out) OUT=$2; shift ;;
+    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    *) echo "measure-irq: unknown argument $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+OUT=${OUT:-$ROOT/build/$HOST/t6}
+mkdir -p "$OUT"
+# The report is the evidence, so it is kept as well as printed.
+exec > >(tee "$OUT/t6.txt") 2>&1
+
+[[ -f /tmp/t6-payload ]] || { mkfile -n "${MB}m" /tmp/t6-payload 2>/dev/null || dd if=/dev/zero of=/tmp/t6-payload bs=1m count="$MB" 2>/dev/null; }
+
+snapshot() { # snapshot <label>
+  ssh "$HOST" "sudo -n $CTL status --compact" | python3 -c "
+import json,sys
+s = json.load(sys.stdin)['status']
+r = s['render']
+print('    render: %s' % json.dumps({'worst_us': r['worst_us'], 'worst_percent': round(r['worst_percent'],2),
+      'over_deadline': r['over_deadline'], 'over_90_percent': r['over_90_percent'],
+      'histogram': r['load_histogram']}))
+print('    xruns %d  guard_trips %d  blocks %d  queue %s' % (s['xruns'], s['guard_trips'], s['blocks'],
+      json.dumps(s['queue'])))
+"
+  ssh "$HOST" 'grep -E "^ *138:" /proc/interrupts; t=$(pgrep -f "irq/138-dw_axi" | head -1); echo "    thread $t: $(cat /proc/$t/schedstat)  (exec_ns run_delay_ns wakes)"'
+}
+
+arm() { # arm <cpu> <label>
+  local cpu=$1 label=$2
+  echo
+  echo "== arm $label: the DMA interrupt delivered on core $cpu, $RUN s of CPU, SD and WiFi load"
+  ssh "$HOST" "echo $cpu | sudo -n tee /proc/irq/138/smp_affinity_list >/dev/null; echo -n '    affinity now: '; sudo -n cat /proc/irq/138/smp_affinity_list"
+  snapshot before
+
+  # The load: a spinner on core 0 (the housekeeping core the IRQ would share), one bounded SD write
+  # and one bounded WiFi upload.
+  ssh "$HOST" "taskset -c 0 yes > /dev/null 2>&1 & echo \$! > /var/tmp/t6-yes.pid; taskset -c 0 dd if=/dev/zero of=/var/tmp/t6-dd.bin bs=1M count=$MB conv=fsync 2>/dev/null" &
+  local dd=$!
+  scp -q -o ConnectTimeout=15 /tmp/t6-payload "$HOST:/var/tmp/t6-payload" &
+  local scp_pid=$!
+  sleep "$RUN"
+  kill "$dd" "$scp_pid" 2>/dev/null || true
+  wait "$dd" 2>/dev/null || true
+  wait "$scp_pid" 2>/dev/null || true
+  ssh "$HOST" 'kill "$(cat /var/tmp/t6-yes.pid)" 2>/dev/null; rm -f /var/tmp/t6-yes.pid' || true
+
+  snapshot after
+  ssh "$HOST" "rm -f /var/tmp/t6-dd.bin /var/tmp/t6-payload; df -h / | tail -1"
+}
+
+echo "T6: the audio IRQ's core. Rig: $(ssh "$HOST" "sudo -n $CTL status --compact" | python3 -c "import json,sys; print(json.load(sys.stdin)['status']['rig'])")"
+echo "irqaffinity=0-1 at boot; tune.conf pins 138 to core 2 today; pedal-tune's own check is the authority."
+arm 2 "A: render core (today)"
+arm 0 "B: housekeeping core (P7)"
+echo
+echo "== done: the tree has not been touched; /proc/irq/138/smp_affinity_list is now $(ssh "$HOST" 'sudo -n cat /proc/irq/138/smp_affinity_list'), df $(ssh "$HOST" 'df -h / | tail -1 | awk "{print \$4\" free\"}"')"

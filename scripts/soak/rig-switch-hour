@@ -1,0 +1,141 @@
+#!/usr/bin/env bash
+# scripts/soak/rig-switch-hour [--host vip] [--minutes 60] [--switch 30] [--out DIR]
+#                              — T10: the hour, with rigs being switched while it runs.
+#
+# T10 (pedal.project docs/managing-processing-power-and-optimising-for-fast-switching.md) is D7's live
+# confirmation: "every block within the deadline, zero overruns, on a paced offline run, confirmed by a
+# live soak with the device's `xruns` at zero". The offline table is what admits a rig; an hour on the
+# pedal is what says the admission was right.
+#
+# The sampling is this repo's own: `soak-monitor.sh` runs *on the host* (so the tooling's own ssh
+# traffic is not part of the measurement) and `soak-summary.py` applies plan Phase 1 step 8's gate to
+# the log. What this script adds is the switching: four rigs built from the device's own library, one
+# loaded every `--switch` seconds, so the hour covers publishing as well as playing.
+#
+# The rigs are written into the device's rigs root as `soak-*.json` and removed afterwards; the
+# document the pedal was playing is put back at the end.
+set -euo pipefail
+
+HOST=vip
+MINUTES=60
+SWITCH=30
+OUT=""
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --minutes) MINUTES=$2; shift ;;
+    --switch) SWITCH=$2; shift ;;
+    --out) OUT=$2; shift ;;
+    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
+    *) echo "rig-switch-hour: unknown argument $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+HERE="$ROOT/devices/$HOST"
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+OUT=${OUT:-$ROOT/build/$HOST/soak-hour/$STAMP}
+mkdir -p "$OUT"; OUT=$(cd "$OUT" && pwd)
+die() { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
+log() { printf '\033[1m==\033[0m %s\n' "$*" >&2; }
+
+CTL="/opt/namchain/current/bin/namchainctl --token-file /etc/namchain/token"
+models_root=$(sed -n 's/.*"models_root"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$HERE/rootfs/etc/namchain/namchaind.json")
+irs_root=$(sed -n 's/.*"irs_root"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$HERE/rootfs/etc/namchain/namchaind.json")
+rigs_root=$(sed -n 's/.*"rigs_root"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$HERE/rootfs/etc/namchain/namchaind.json")
+[[ -n $models_root && -n $irs_root && -n $rigs_root ]] || die "namchaind.json names no model/IR/rig roots"
+
+# Four shapes, so the hour covers more than one kind of rig: a model and a cab, two amps in series
+# (T3's adversary), an effects-only chain, and three chains at once. The first model and the first IR
+# the device's library lists are what they are built from -- this is a soak, not a measurement, and
+# what it is made of does not change what it is asking.
+# The library is the device's, so the two files to build the rigs from are chosen on the device; the
+# documents are written here and carry the device's own paths.
+amp=$(ssh "$HOST" "find $models_root -name '*.nam' | sort | head -1")
+cab=$(ssh "$HOST" "find $irs_root -path '*48k*' -name '*.wav' | sort | head -1")
+[[ -n $cab ]] || cab=$(ssh "$HOST" "find $irs_root -name '*.wav' | sort | head -1")
+[[ -n $amp ]] || die "no .nam in $models_root on $HOST"
+log "building four soak rigs from $(basename "$amp") and $(basename "$cab")"
+python3 - "$amp" "$cab" "$OUT/rigs" <<'PY'
+import json, os, sys
+amp, cab, out = sys.argv[1:4]
+os.makedirs(out, exist_ok=True)
+
+def node(i, kind, **params):
+    n = {"id": i, "type": kind}
+    n.update(params)
+    return n
+
+def chain(cid, nodes, conns):
+    return {"id": cid, "nodes": nodes, "connections": conns}
+
+def series(cid, models, cab_path=None, effects=()):
+    nodes = [node("in", "nc.input")]
+    conns = []
+    prev = "in"
+    for i, m in enumerate(models):
+        nodes.append(node("amp%d" % i, "nc.nam", model=m))
+        conns.append({"from": prev, "to": "amp%d" % i})
+        prev = "amp%d" % i
+    for i, (kind, params) in enumerate(effects):
+        nodes.append(node("fx%d" % i, kind, **params))
+        conns.append({"from": prev, "to": "fx%d" % i})
+        prev = "fx%d" % i
+    if cab_path:
+        nodes.append(node("cab", "nc.cab.ir", ir=cab_path))
+        conns.append({"from": prev, "to": "cab"})
+        prev = "cab"
+    nodes.append(node("out", "nc.output"))
+    conns.append({"from": prev, "to": "out"})
+    return chain(cid, nodes, conns)
+
+eq = ("nc.eq.biquad", {"mode": "peaking", "freq": 800.0, "q": 1.1, "gain_db": 3.0})
+delay = ("nc.delay", {"ms": 120.0})
+rigs = {
+    "soak-model-cab": {"chains": [series("main", [amp], cab)]},
+    "soak-two-amp": {"chains": [series("main", [amp, amp])]},
+    "soak-effects": {"chains": [series("main", [], None, (eq, eq, delay, eq))]},
+    "soak-three-chains": {"chains": [series("one", [amp], cab),
+                                     series("two", [amp]),
+                                     series("three", [amp], None, (eq,))]},
+}
+for name, document in rigs.items():
+    document["name"] = name
+    with open(os.path.join(out, name + ".json"), "w") as fh:
+        json.dump(document, fh, indent=2)
+print("  %d rigs" % len(rigs))
+PY
+
+scp -q -r "$OUT/rigs" "$HOST:/var/tmp/soak-rigs"
+ssh "$HOST" "sudo -n cp /var/tmp/soak-rigs/*.json $rigs_root/ && sudo -n chown pedal:pedal $rigs_root/soak-*.json"
+
+scp -q "$ROOT/scripts/soak/soak-monitor.sh" "$HOST:/var/tmp/soak-monitor.sh"
+seconds=$(( MINUTES * 60 ))
+
+log "running $MINUTES minutes, switching every ${SWITCH}s, under the host lock"
+"$ROOT/scripts/host-lock" --host "$HOST" --wait 600 -- ssh "$HOST" "bash -s" <<EOF | tee "$OUT/switch.log" >&2
+set -u
+trap 'kill \$monitor 2>/dev/null' EXIT
+# The monitor reads the daemon's socket, so it runs as root, the way its own header says.
+sudo -n /var/tmp/soak-monitor.sh /var/tmp/soak-hour.jsonl $seconds 10 &
+monitor=\$!
+i=0
+end=\$(( \$(date +%s) + $seconds ))
+rigs="soak-model-cab soak-two-amp soak-effects soak-three-chains"
+while [ \$(date +%s) -lt \$end ]; do
+  rig=\$(echo \$rigs | cut -d' ' -f\$(( i % 4 + 1 )))
+  echo "\$(date -u +%H:%M:%S) load \$rig"
+  sudo -n $CTL apply $rigs_root/\$rig.json --compact >/dev/null 2>&1 || true
+  i=\$(( i + 1 ))
+  sleep $SWITCH
+done
+wait \$monitor 2>/dev/null || true
+EOF
+
+scp -q "$HOST:/var/tmp/soak-hour.jsonl" "$OUT/soak-hour.jsonl"
+# The monitor runs as root, so its log and the copy of itself are root's to remove.
+ssh "$HOST" "sudo -n rm -f /var/tmp/soak-hour.jsonl /var/tmp/soak-monitor.sh; rm -rf /var/tmp/soak-rigs; sudo -n rm -f $rigs_root/soak-*.json; sudo -n $CTL apply $rigs_root/last.json --compact >/dev/null 2>&1 || true"
+
+log "sampled $(wc -l < "$OUT/soak-hour.jsonl" | tr -d ' ') points; the plan's own gate:"
+"$ROOT/scripts/soak/soak-summary.py" "$OUT/soak-hour.jsonl" | tee "$OUT/summary.txt"
