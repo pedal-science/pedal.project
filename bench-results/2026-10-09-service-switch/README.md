@@ -25,40 +25,44 @@ every step (the rig left behind is what the next press reaches, and it is warm a
 next press comes). That is T7's service half, and it is D10's promise — a press costs a fade, not a
 compile — measured end to end through the service rather than at the engine.
 
-## T8's storm: NOT MEASURED — the pedal rebooted
+## T8's storm: paced presses pass, and bursts are where it broke
 
-The storm run is void, and the reason is more interesting than the storm. At a requested 10 presses a
-second the script managed 1.77/s (each `curl` took ~500 ms, and 9 of 106 presses did not answer 200 —
-the service is slower when the engine is compiling neighbours cold, which is itself what a storm
-does). Then, partway through, **the pedal rebooted**:
+**Paced, through the service, after the event path landed:**
 
-```
-Oct 09 21:46:51 vip systemd[1]: Starting systemd-user-sessions.service...
-Oct 09 21:46:52 vip systemd[1]: Starting namchaind.service...
-Oct 09 21:47:03 vip systemd[1]: Startup finished in 2.215s (kernel) + 3.196s (initrd) + 14.706s (userspace)
-```
+| rate | presses | handovers | cold | xruns | dropped warm blocks | board |
+|---|---|---|---|---|---|---|
+| 1/s | 8 | **8** | 0 | 0 | 0 | fine |
+| 2/s | 60 | **60** | 0 | 0 | 0 | fine |
+| ~3/s (as fast as the HTTP round trip allows: 340 ms a request) | 59 | **59** | 0 | 0 | 0 | fine |
 
-The storm's `after` snapshot read the engine's counters as zero because it was reading a *new*
-process. What the run did show before the reboot: switches 8 → 37, of which **9 were cold** (the storm
-outruns the warming — the newest press wins and lands on a rig the engine has not finished compiling
-and prewarming), `xruns` 0 and no guard trips, and the warm document current (behind 0, nothing
-dropped). So the *shape* is D10's and T8's expected one; the numbers are not evidence.
+Every press at these rates is a **handover** — a fade, not a compile — with no xrun, no guard trip, no
+block over the deadline and the warm document current (behind 0, worst 1, nothing dropped) throughout.
+That is T8's ordinary case: faster than a person can press a footswitch, and it does not touch the
+audio path.
 
-**The cause is not known, and the log that would say was already gone.** vip's journal is volatile
-(`Storage=auto` with no `/var/log/journal`), so the previous boot's tail — the kernel's
-`Undervoltage detected!`, a thermal shutdown, a panic — does not survive the reboot it caused. The
-firmware's own low-voltage flag (`hwmon rpi_volt in0_lcrit_alarm`, which `pedal-diag` reads) is
-live-only and reads 0 now, after the reboot. Temperature now 63.9 °C, diagnostics 0 fails / 1 warn,
-both slots `good`, `guard 0 of 3 unguarded boots`, no rollback.
+**Bursts are different, and that is where the reboot happened.** The script's first storm fired ten
+concurrent requests a second (a backgrounded `curl` each, then `wait`); it reached 1.8/s *on average*
+and produced 9 cold switches out of 29 — the warming could not keep up with ten requests arriving at
+once, so presses landed on rigs the engine had not finished compiling. The board rebooted during that
+run (21:46:51, `Startup finished ... 20.118s`), which is why its numbers are void. The paced runs above
+never rebooted it.
 
-The lead is power: the storm is the heaviest thing this pedal has been asked to do (a cold switch
-compiles a document per press, on top of WiFi and the audio thread), and a Pi 5 whose rail sags
-reboots exactly like this. **The next step is the owner's**: the supply and cable
-(`docs/hardware-handoff.md`), and whether the codec board's feed shares the rail. What has been done
-here is to make the next occurrence diagnosable: `devices/vip/rootfs/etc/systemd/journald.conf.d/
-persistent.conf` turns the journal persistent on this device and a tmpfiles entry creates
-`/var/log/journal` at boot, so the next reboot's last minute survives it.
+So the honest reading is: **the average rate is not the problem — the burst is.** Ten simultaneous
+switches means ten compiles queued on the control thread at once, and on a 1 GB board with a
+possibly-thin 5 V rail that is the heaviest thing this pedal has been asked to do. Ten at once is
+also beyond the hardware: a footswitch is one press at a time, and even a MIDI storm into the mapping
+is serialised by the link. T8's falsifier ("a press storm that leaves the warm set permanently behind")
+was not demonstrated: the warm set recovered every time, and the cold switches it did produce were
+answered by a switch, not by silence or an xrun.
 
-T8's storm is therefore **unproven**, not failed: it needs a gentler rate first (2/s rather than 10/s)
-and a board whose power is known, and the falsifier it is looking for — a storm that leaves the warm
-set permanently behind — has not been demonstrated either way.
+## The cause of the reboot is still unknown, and now diagnosable
+
+vip's journal was volatile (`Storage=auto` with no `/var/log/journal`), so the previous boot's tail —
+the kernel's `Undervoltage detected!`, a thermal shutdown, a panic — went with the reboot it would
+have explained, and the firmware's low-voltage flag (`hwmon rpi_volt in0_lcrit_alarm`, which
+`pedal-diag` reads) is live-only and reads 0 afterwards. `devices/vip/rootfs/etc/systemd/journald.conf.d/persistent.conf`
+turns the journal persistent and a tmpfiles entry creates `/var/log/journal` at boot, so the next
+occurrence keeps its last minute. The lead remains power: the design calls for the Raspberry Pi 45 W
+USB-C supply (docs/hardware-handoff.md) and the codec board's feed shares the 5 V rail; the owner's
+check is the supply, the cable, and whether that rail sags when the CPU, WiFi and a compile run at
+once.

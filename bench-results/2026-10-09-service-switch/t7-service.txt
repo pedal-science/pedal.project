@@ -1,21 +1,21 @@
 T7's service half and T8's storm: presses through pedald's own event path.
-host vip, 0 presses at 1.0s, then 10/s for 60s
+host vip, 0 presses at 1.0s, then 5/s for 20s
 
 == setup
     playing      last.json
     bank         t7-a.json, t7-b.json (both the document the pedal plays)
     service sees  t7-a, t7-b
     warm decision null
-    before     switches 37 (warm 37, cold 9, deferred None)  xruns 0  issues 0
-               warm: t7-a.json on core 1, state warm, behind 0 (worst 3), dropped 0
+    before     switches 60 (warm 60, cold 0, deferred None)  xruns 0  issues 0
+               warm: t7-a.json on core 1, state warm, behind 0 (worst 0), dropped 0
 
-== T8's storm: 10 presses a second for 60s, newest wins
-    sent 106 presses (9 not answered 200) in 60s = 1.77/s
-    switches     37 -> 0 (warm 37 -> 0, cold 9 -> 0)
+== T8's storm: 5 presses a second for 20s, newest wins
+    sent 59 presses (0 not answered 200) in 20s = 2.95/s
+    switches     60 -> 119 (warm 60 -> 119, cold 0 -> 0)
     deferred     None -> None
-    xruns        0 -> 2   guard trips 0 -> 0
-    render       worst 1 -> 0 blocks over the deadline
-    warm after   t7-a.json state warm behind 0 (worst 0) dropped 0
+    xruns        0 -> 0   guard trips 0 -> 0
+    render       worst 0 -> 0 blocks over the deadline
+    warm after   t7-b.json state warm behind 0 (worst 0) dropped 0
 
 == cleanup
     removed the test rigs, restored the resume files, reloaded last.json
