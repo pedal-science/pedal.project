@@ -1,0 +1,29 @@
+== switch --live A.nam A.nam (30 s, switch every 2 s, render on 3, warm on 1)
+namchain-warm-bench 0.1.0  switch
+rigs:       A -> A (no ir), quantum 64 (deadline 1333 us), 30 s, switch every 2.0 s
+handover:   14 switches (0 deferred), last 5 blocks; blocks here are 1333 us
+            56 fade blocks mixed the newest available outgoing audio instead of this block's: the fade spans two moments of the input, which is the harness being late, not the engine
+render:     p50 94 us  p99 106 us  p99.9 113 us  max 159 us  over deadline 0
+warm:       p50 88 us  p99 102 us  max 156 us  blocks 22500  worst lag 0 blocks
+handover:   FAIL  convergence -1000.0 dBFS (limit -60), worst dropout 0.02 ms
+            the two rigs differ by up to -1000.0 dBFS (0.0000), so a convergence reading of that order across a switch between different rigs is the comparison, not the handover: run the same rig on both sides to judge the handover itself
+glitch:     FAIL (for reference)  continuity ref 0.0148 vs edit 0.244, hf excess 34.85 dB -- the detector's edit rules, which a rig switch is expected to trip
+exit=1
+== switch --live A.nam B.nam (30 s, switch every 2 s, render on 3, warm on 1)
+namchain-warm-bench 0.1.0  switch
+rigs:       A -> B (no ir), quantum 64 (deadline 1333 us), 30 s, switch every 2.0 s
+handover:   14 switches (0 deferred), last 5 blocks; blocks here are 1333 us
+            56 fade blocks mixed the newest available outgoing audio instead of this block's: the fade spans two moments of the input, which is the harness being late, not the engine
+render:     p50 93 us  p99 104 us  p99.9 113 us  max 152 us  over deadline 0
+warm:       p50 85 us  p99 95 us  max 156 us  blocks 22500  worst lag 0 blocks
+handover:   FAIL  convergence -3.0 dBFS (limit -60), worst dropout 0.25 ms
+            the two rigs differ by up to -3.0 dBFS (0.7076), so a convergence reading of that order across a switch between different rigs is the comparison, not the handover: run the same rig on both sides to judge the handover itself
+glitch:     FAIL (for reference)  continuity ref 0.0406 vs edit 0.318, hf excess 8.05 dB -- the detector's edit rules, which a rig switch is expected to trip
+  convergence  frame 202000  measured -6.272  limit -60  render is not the next chain at frame 202000: worst |difference| 0.485710 (-6.272455 dBFS) over 95280 settled frames
+  convergence  frame 457652  measured -4.765  limit -60  render is not the next chain at frame 457652: worst |difference| 0.577774 (-4.764847 dBFS) over 95280 settled frames
+  convergence  frame 668954  measured -6.554  limit -60  render is not the next chain at frame 668954: worst |difference| 0.470230 (-6.553795 dBFS) over 95280 settled frames
+  convergence  frame 796723  measured -6.057  limit -60  render is not the next chain at frame 796723: worst |difference| 0.497926 (-6.056697 dBFS) over 95280 settled frames
+  convergence  frame 957486  measured -5.733  limit -60  render is not the previous chain at frame 957486: worst |difference| 0.516823 (-5.733157 dBFS) over 95280 settled frames
+  convergence  frame 1201353  measured -3.005  limit -60  render is not the next chain at frame 1201353: worst |difference| 0.707550 (-3.004856 dBFS) over 95280 settled frames
+  convergence  frame 1369319  measured -3.732  limit -60  render is not the next chain at frame 1369319: worst |difference| 0.650744 (-3.731795 dBFS) over 95520 settled frames
+exit=1

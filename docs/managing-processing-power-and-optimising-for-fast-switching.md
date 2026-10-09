@@ -572,8 +572,19 @@ is the proposed one, and it would also let ljoss and rigpa step rigs without spe
 protocol). **Still to measure:** a step through the service, the neighbour changing under it, and the
 switch latency distribution over a run of presses. The offline arm (`namchain-warm-bench switch`) runs,
 pins correctly and agrees on the load (device p99 107 µs = 8% of the deadline with a warm document
-beside it, warm lag 0 blocks), but its glitch verdict fails on the harness's own crossfade in both
-arms with byte-identical output, so it is recorded as unproven rather than as evidence.
+beside it, warm lag 0 blocks). Its glitch verdict is **not** evidence for a cross-rig switch, and
+after four harness fixes the reason is measured rather than guessed
+([bench-results/2026-10-09-warm-bench-switch](bench-results/2026-10-09-warm-bench-switch/README.md)):
+on the *same* rig on both sides the handover is an **exact match** — convergence −1000 dBFS (the
+detector's sentinel for no difference at all), dropout 0.00 ms, 14 switches, 0 deferred, no block
+over the deadline — and on two *different* rigs the convergence reading is the two rigs' own
+difference to four digits (−3.0 dBFS against 0.7076 = −3.0 dBFS), which is the comparison deciding
+which rig the output should be, not a hole in the handover. What remains is the arm's own timing: it
+does not wait for the outgoing block before mixing (56 of ~70 fade blocks in a 30 s run), so its
+continuity and high-frequency numbers are the harness's, and the rules themselves are written for
+ramped parameter edits — the engine's own suite expects a hard switch to trip the spectral rule. So:
+**the arm's load numbers and the same-rig handover are evidence; a cross-rig verdict from it is not,
+and T7's offline half is closed as UNPROVEN for that case, with the reason recorded.**
 
 **T8 — faster than a human.** Ten presses a second, newest wins. *Expected:* bounded work, no queue
 growth, no xruns, and the refill backlog visible in `engine.status`. *Falsifier:* a press storm that
