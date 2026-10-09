@@ -5,9 +5,12 @@ D5). **Implemented and measured**, item by item below: P1, P2, P3, P5, P6, P7 an
 **P4 and P8 are not**, and both were waiting on P6's inactive core, which now exists with a defined
 owner. vip's cost table was measured 2026-10-08
 ([bench-results/2026-10-08-cost-table-vip](bench-results/2026-10-08-cost-table-vip/README.md): 14 rows,
-E2 reproduced, T2 not falsified over 16 rigs), and the core rules, T6 and P6 are measured in
+E2 reproduced, T2 not falsified over 16 rigs), and the core rules, T6, P6 and T10's second hour are
+measured in
 [bench-results/2026-10-09-core-rules-vip](bench-results/2026-10-09-core-rules-vip/README.md). T1, T2,
-T3 (three of its four), T6 and T10 have been run; T4's three paths are unit tests; T8's falsifier and
+T3 (three of its four), T6 and T10 have been run — T10 twice, the second time on the amended rules
+with the warm set live and a warm document rendering beside the audible one for the whole hour (gate
+PASS: 0 xruns, 0 overruns, worst block 78.4%); T4's three paths are unit tests; T8's falsifier and
 T7's live half are measured (8 switches, 0 xruns, warm lag ≤ 1 block) while T7's offline harness runs
 but does not yet give a trustworthy verdict (see that document, §4); T5, T9 and T11 have not been
 run. The measurements it leans on are E1, E2 and the two-amp work, cited per item.
@@ -538,6 +541,16 @@ sample**, no block over the deadline, the worst at 60.1% of it, 51-55 °C, 2400 
 **D7 holds for what the table admits.** What the hour does not cover is the rest of the scheme — the
 warm set, the refills and the catch-ups are P6's and P8's — and it switched the way the engine
 switches today: by publishing.
+**Run again 2026-10-09, on the amended rules and with the warm set live**: 359 samples over 60.0 min,
+120 transitions, 2,699,756 blocks, p50 12% / p99 29% / p99.9 42%, worst block 1045.5 µs (78.4%),
+57.6–63.7 °C, 2400 MHz and `throttled 0x0` throughout, gate **PASS** (xruns 0, deadline overruns 0,
+guard trips 0, blocks over 90% 0, render errors 0, device lost 0). This hour is the acceptance test
+for the core rules and for P6 together: one housekeeping core, the audio interrupt on core 1, and a
+second document rendering on core 1 beside it for the whole hour. The audio path's p99 is six points
+worse than the October 8 hour (29% against 23%, worst 78% against 71%, the board 5 °C warmer) — that
+is what a warm rig costs the audible one, and it is a fraction of the headroom D3 reserves.
+[bench-results/2026-10-09-core-rules-vip](bench-results/2026-10-09-core-rules-vip/README.md) §5 has
+the two hours side by side.
 
 **T11 — thermal and clock.** One hour at full load; confirm 2.4 GHz uncapped holds on vip's cooling
 (`tune.conf` says unverified on vip) and that no throttle changes the numbers the table was built

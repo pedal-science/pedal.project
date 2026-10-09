@@ -174,7 +174,57 @@ are not affected by that.
   compile: an unqualified `kMaxTransitionFrames` and an unused local. Fixed, and `namchain/AGENTS.md`
   now carries the seconds-long container check that catches this class of thing.
 
-## 5. What is not done
+**The service's half, live.** `pedald` holds the neighbour warm by itself: given a bank of two
+library rigs it logged `warming warmcheck-a.json`, the engine took it on core 1 (`state: warm`,
+`behind_blocks: 0`) and `pedald`'s `/status` carried the engine's own object under `engine.warm`.
+The pedal's library had **no** rigs at all before that — only the resume files `last.json` and
+`last.prev.json`, which `pedald` excludes from the bank by design — so there had been nothing for it
+to warm and the empty bank was correct rather than broken. A *press* through the service is
+unit-tested (25 new tests, including the `warm_disabled` fallback) but not measured on the pedal: a
+press arrives over the Pico link and no footswitch is attached to this bench.
+
+## 5. The hour, on the new layout with the warm set live
+
+`scripts/soak/rig-switch-hour --minutes 60 --switch 30` — the repo's own T10, run on the new
+layout with a warm document rendering on core 1 for the whole hour (the engine's journal shows the
+warm thread on core 1 at priority 70 and `last.prev.json` in document 1 from the first sample) and
+120 cold rig publishes on the device core.
+
+| | 2026-10-08 (2–3 isolated, IRQ on 0) | 2026-10-09 (1–3 isolated, IRQ on 1, warm set live) |
+|---|---|---|
+| samples / duration | 373 over 62.2 min | 359 over 60.0 min |
+| blocks | 2,799,143 | 2,699,756 |
+| render p50 / p99 / p99.9 | 13% / 23% / 30% | 12% / **29%** / 42% |
+| worst block | 951.5 µs (71.4%) | **1045.5 µs (78.4%)** |
+| temperature | 53.8–58.2 °C | 57.6–63.7 °C |
+| clock / throttle | 2400 MHz, `0x0` | 2400 MHz, `0x0` |
+| transitions, drops, bursts | 126, +0, +0 | 120, +0, +0 |
+| **gate** | **PASS** | **PASS** |
+
+Gate, both runs: driver xruns 0, deadline overruns 0, guard trips 0, blocks over 90% 0, render
+errors 0, device lost 0.
+
+**Reading it.** The hours are not like for like and the difference is the point: this one had a
+second document rendering on the core that also carries the audio IRQ, which the October 8 hour did
+not (there was no warm set then). The audio path's p99 moved from 23% to 29% of the deadline, the
+worst block from 71% to 78%, and the board ran 5 °C warmer — that is what a warm rig costs the
+audible one, and it is a fraction of the headroom D3 reserves. Nothing overran, nothing was dropped,
+and the clock held at its cap with no throttle flag.
+
+## 6. The cost table's provenance, moved without re-measuring
+
+`devices/vip/cost.json`'s `engine_commit` moved from `87f3cb9` to `a0a9cf0` on 2026-10-09, and the
+table's own `bar` field says so. It was **not** re-measured, deliberately: P6 adds a warm thread and
+a second document on an *inactive* core and adds nothing to the audible path, and namchain's golden
+tests — recorded before P6 — still pass, so no unit's cost has changed. Two things follow: the
+numbers stand, and a re-measurement is owed the next time a change touches the render path itself.
+
+The check that caught this (`devices/common/check` compares the table's `engine_commit` with what
+`/opt/namchain/current/MANIFEST` says) also found a wart in `deploy-engine`: it wrote the *argument*
+through as `rev=`, so a deploy made with `--commit HEAD` produced a manifest that says "HEAD" and a
+correct table failed its provenance check. Both build paths record the resolved commit now.
+
+## 7. What is not done
 
 * **T5 (housekeeping starvation)** has still not been run. With the warm set live it is now the test
   the document says it should be — load on the one housekeeping core while a warm rig renders beside
