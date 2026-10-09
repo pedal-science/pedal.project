@@ -796,6 +796,19 @@ class NeedsMeasuring(unittest.TestCase):
         self.assertEqual(body["engine"]["needs_measuring"], [])
 
 
+class LitePending(unittest.TestCase):
+    """P8: a rig that is Lite because it was asked for that is not the same as one trimmed to fit."""
+
+    def test_a_lite_first_rig_is_reported_as_coming_up_to_full(self):
+        _, body = fake_service(status={"state": "running", "cost": {"lite_first": True}}).handle_status(None)
+        self.assertTrue(body["engine"]["lite_pending"])
+
+    def test_a_rig_trimmed_to_fit_is_not(self):
+        _, body = fake_service(status={"state": "running",
+                                       "cost": {"trimmed": True, "lite_first": False}}).handle_status(None)
+        self.assertFalse(body["engine"]["lite_pending"])
+
+
 class WarmDecision(unittest.TestCase):
     """What the service decided to do about the warm set, beside what is warm (2026-10-09).
 

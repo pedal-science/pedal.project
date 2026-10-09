@@ -870,6 +870,11 @@ class Service:
                 # acts on it -- measure the row on an inactive core and merge the fragment -- and this
                 # is the half the service owns: knowing, and saying.
                 "needs_measuring": _needs_measuring(status.get("issues", [])),
+                # P8 (2026-10-09): the rig playing is Lite *on purpose* -- it was published that way
+                # so it could start now, with the Full being compiled behind it -- rather than because
+                # the budget made it. D6 requires that to be visible, and a panel reads this rather
+                # than the engine's cost object: "coming up to full", not "trimmed to fit".
+                "lite_pending": bool((status.get("cost") or {}).get("lite_first")),
             },
             "link": self.link_status(time.monotonic()),
             "bank": {"banks": self.mapping.banks, "bank": self.mapping.bank,
