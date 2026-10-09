@@ -430,10 +430,14 @@ must fit is ruled out because the pedal ships with the meter on.
 Each test names what it pushes past the limit. The point is to find the edge *before* a player does,
 and to record the shape of the failure rather than a pass/fail.
 
-**Run so far** (2026-10-08, [bench-results/2026-10-08-cost-table-vip](bench-results/2026-10-08-cost-table-vip/README.md)):
-T1 (**every unit's curve**), T2 (**16 rigs, nothing falsified**), three of T3's four adversaries, and
-P9's measurement. **Not run:** T4 beyond its unit tests, T5, T6, T7-T11 — each needs either the live
-engine's warm set (P6) or a soak on the device, and none is claimed.
+**Run so far.** 2026-10-08 ([bench-results/2026-10-08-cost-table-vip](bench-results/2026-10-08-cost-table-vip/README.md)):
+T1 (**every unit's curve**), T2 (**16 rigs, nothing falsified**), three of T3's four adversaries, T4's
+unit paths, and P9's measurement. 2026-10-09 ([bench-results/2026-10-09-core-rules-vip](bench-results/2026-10-09-core-rules-vip/README.md)):
+**T6** on both placements, **T10** twice (the second hour with the warm set live), and **T7's live
+half with T8's live falsifier** — eight switches through the engine, 0 xruns, warm lag 0–1 block.
+**Not run:** T4's "while switching" half, **T5**, **T7's service half** (a press through `pedald`,
+which needs an event path), **T8's press storm**, **T9** (it waits on P8) and **T11**. Each says
+where it is described what it waits on, and none is claimed.
 
 **T1 — the cliff, per unit.** For each unit, run n−2 … n+4 and record p50/p99/max/overruns/lag.
 *Expected:* not linear. E2's Full: 89% at 8, 113% at 10, and at 12 the warm thread 2,621 blocks
@@ -497,36 +501,46 @@ footswitch-to-sound latency with WiFi and SD busy. *Falsifier:* if the interrupt
 on the core it shares with warm work, or a warm rig's lag grows without bound, D5 is wrong and the
 interrupt needs a core nothing else uses — which changes how many cores the rules can spend on
 rendering.
-**Run 2026-10-08** (four minutes an arm, a CPU spinner on core 0, a 200 MB SD write and a 200 MB WiFi
-upload, the same amp-and-cab rig playing through the codec): the render's distribution is identical
-(54% of blocks at 7% of the deadline, 33% at 8%, 13% at 9%), blocks over 10% came to 1,222 against
-886, the IRQ thread's wait to run was 7.4 ns per wake against 7.7, and both arms ended with zero
-xruns, zero guard trips and no block over the deadline — **the falsifier did not fire**. The
-footswitch-to-sound leg was not measured: it needs the Pico in the loop. The interrupt thread costs
-4.8% of one core, confirming `docs/audio-dma-irq.md`'s 4-5% and correcting its per-interrupt figure
-(31 µs of thread time per wake here, over 3,008 interrupts a second).
-*Result:* <!-- parent: P7's change is in the tree; fill this in with the result in
-`pedal.project/bench-results/` and say what D5 becomes. -->
+**Run 2026-10-08** under the *old* split (four minutes an arm, a CPU spinner on core 0, a 200 MB SD
+write and a 200 MB WiFi upload, an amp-and-cab rig through the codec): a render core (2) against a
+housekeeping core (0). The render's distribution is identical (54% of blocks at 7% of the deadline,
+33% at 8%, 13% at 9%), blocks over 10% came to 1,222 against 886, the IRQ thread's wait to run was
+7.4 ns per wake against 7.7, and both arms ended with zero xruns, zero guard trips and no block over
+the deadline — **the falsifier did not fire**.
+**Run again 2026-10-09** on the amended rules (core 1, a render core that is never the active one,
+against core 0, with one housekeeping core and a three-chain rig whose worst block is 58.3% of the
+deadline): the render distributions are again identical between arms, zero xruns and zero blocks over
+the deadline either way, and the wait to run was **16.8 ns per wake on core 1 against 17.0 ns on core
+0**. So the interrupt does not care which core it is on, and the reversal rests on the rules (its home
+is a render core) and on where the preemption *lands* — which is P6's warm set, measured at 0–1 block
+of lag and 0 dropped blocks. **The footswitch-to-sound leg has still not been measured**: it needs
+the Pico in the loop (3.5). Both arms, both runs:
+[bench-results/2026-10-09-core-rules-vip](bench-results/2026-10-09-core-rules-vip/README.md), §2.
 
 **T7 — rotation and refill.** Switch repeatedly so that every switch also loads and warms a new
 neighbour: the warm set slides while the player plays. *Measured:* the active rig's p99 during
 refills, the switch latency distribution, and whether a catch-up on an inactive core ever disturbs
 the active one.
-**Half run 2026-10-09**: eight live switches on the pedal, each `handover_blocks: 3` plus a 5 ms fade
-(~9 ms), zero xruns, zero blocks over the deadline, zero dropped warm blocks, and the warm document
-never more than a block behind while sharing core 1 with the audio IRQ — but the set does **not**
-slide yet, because nothing calls `rig.warm` for the incoming neighbour: the same rig is warmed and
-switched to. The offline arm (`namchain-warm-bench switch`) runs, pins correctly and agrees on the
-load (device p99 107 µs = 8% of the deadline with a warm document beside it, warm lag 0 blocks), but
-its glitch verdict fails on the harness's own crossfade in both arms with byte-identical output, so
-it is recorded as unproven rather than as evidence.
+**Half run 2026-10-09**: eight live switches on the pedal through the *engine*, each
+`handover_blocks: 3` plus a 5 ms fade (~9 ms), zero xruns, zero blocks over the deadline, zero
+dropped warm blocks, and the warm document never more than a block behind while sharing core 1 with
+the audio IRQ. The service half has since landed: `pedald` holds the neighbour warm (`rig.warm`) and
+switches with `rig.switch` (P5, `24349e7`), so the set can slide — but nothing has *driven* a press
+through it yet, because pedald has no event path a bench can use (a token-authenticated `POST /event`
+is the proposed one, and it would also let ljoss and rigpa step rigs without speaking the engine's
+protocol). **Still to measure:** a step through the service, the neighbour changing under it, and the
+switch latency distribution over a run of presses. The offline arm (`namchain-warm-bench switch`) runs,
+pins correctly and agrees on the load (device p99 107 µs = 8% of the deadline with a warm document
+beside it, warm lag 0 blocks), but its glitch verdict fails on the harness's own crossfade in both
+arms with byte-identical output, so it is recorded as unproven rather than as evidence.
 
 **T8 — faster than a human.** Ten presses a second, newest wins. *Expected:* bounded work, no queue
 growth, no xruns, and the refill backlog visible in `engine.status`. *Falsifier:* a press storm that
 leaves the warm set permanently behind.
 **The falsifier's live half is measured**: over the eight switches of 2026-10-09 the warm document's
 `behind_blocks` was 0 or 1 with 0 dropped, and `warm_behind` never appeared. The press storm itself
-has not been run: it needs the warm set to slide, which is the missing half of T7.
+has not been run: the service now switches, so a storm is a matter of driving it (T7's event path),
+and the engine-level storm — many `rig.switch` calls a second — is the cheaper first cut.
 
 **T9 — cold, from nothing.** The first press after boot, nothing warm, SD card cold: the catch-up
 path's worst case, measured to the jack. This is the number that justifies D6 and the catch-up rules

@@ -1232,12 +1232,19 @@ rendering on an inactive core at priority 70, and a switch that hands it to the 
 (`namchain/docs/warm-set.md` is the engine's design; the pedal sets `warm_cpus [1, 2]`). Eight live
 switches on the pedal: `handover_blocks: 3` plus a 5 ms fade (~9 ms) each, **0 xruns, 0 blocks over
 the deadline, 0 dropped warm blocks**, warm lag 0–1 block while sharing core 1 with the interrupt.
-What is *not* there: nothing calls `rig.warm`/`rig.switch` yet, so the pedal does not warm its own
-neighbours and the warm set does not slide — that service wiring is the first thing to do, then T5
-(load on the one housekeeping core while a warm rig renders beside the audible one), then P4 and P8,
-which are unblocked now that an inactive core exists with a defined owner. T7's offline harness runs
-and agrees on the load but its glitch verdict fails on its own crossfade in both arms: recorded as
-unproven, not as evidence.
+What the service half added (`24349e7`, verified live): `pedald` holds the rig the footswitches reach
+next warm — `rig.warm` when the neighbour changes, `rig.switch` on every press, with a cold publish
+as the fallback — so the engine is no longer waiting for a caller. What is still owed, in the order
+the next session should take it: **T5** (load on the one housekeeping core while a warm rig renders
+beside the audible one — the test that says whether one housekeeping core is enough, which the
+amended rules assume); the **bench's switch verdict** (its own crossfade fails continuity and
+convergence in both arms, so it is unproven, not evidence); **T7's service half** (a press through
+`pedald`, which needs an event path — proposed: a token-authenticated `POST /event` — and would also
+let ljoss and rigpa step rigs without speaking the engine protocol); **P4**; **T11**; then **P8**,
+which waits on the owner's listening verdict about a Lite standing in for a Full; and **piv**, still
+the one device behind these rules. T7's offline harness agrees on the load (device p99 107 µs = 8% of
+the deadline with a warm document beside it, warm lag 0 blocks) and fails its glitch check; only the
+load numbers from it are quoted anywhere.
 
 Two faults were found by putting this on the board and are fixed: **`pedal-interface.json` was never
 installed** (it lived outside the rootfs, which is the only thing that installs anything, so
