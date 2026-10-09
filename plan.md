@@ -1267,6 +1267,16 @@ measurement detail. The sensible default is the one to argue about first: **a se
 and no bank has one bank, and it is the library** (D10's "the rigs the footswitches reach next"), set
 by the service when it finds no bank, with the app's own banks taking precedence once the API exists.
 
+**State of T11's warm-document half (2026-10-10).** The hour itself is measured and passes (both
+halves: no block over the deadline, 0 xruns, worst 90.5% and 85.3%, 80.4 °C, 2400 MHz, low-voltage
+alarm 0 — T11's block in the document has it). What no run has had yet is a warm document rendering
+(cpu1 0.7% throughout), and both causes are now fixed in the tree: the bank was empty (`mapping.py`
+drops empty banks and falls back to the library — **applied to the board**), and the failsafe fired on
+blocks *near* the deadline rather than over it, cooling the document every ten seconds (namchain
+`ee4c53d` — **not yet deployed**). To finish T11: deploy `ee4c53d`, run
+`scripts/measure-housekeeping --seconds 1800 --target 0.60 --extra renderer --skip-quiet`, and expect
+cpu1 busy. Evidence: `bench-results/2026-10-11-t11-warm/`.
+
 **Owed, in the order to take them.** (1) **T11** — the full-load hour, launched 21:52Z with a second
 renderer on the free warm core and the app's traffic, but *without* the engine's warm document (the
 harness's watch gave up at 20 s; it is 90 s now), so collect it and re-run if that gap matters.
