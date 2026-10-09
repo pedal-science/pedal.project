@@ -285,7 +285,7 @@ decision the contract deferred, and it is **yours to make** (R4). Proposed:
     ~20 ms a rig) or a device retry, so a blip is a moment of silence rather than two clicks.
   - What it covers that "leave it where it is" cannot: a Core host that hangs, or one that
     reboots while the Pico stays powered. Both run from the same 5 V, the Pico through its VSYS
-    diode (`bom.md`), so a reboot is ~20 s of silence otherwise. 3.6 wants a booting `tib` to
+    diode (`bom.md`), so a reboot is ~20 s of silence otherwise. 3.6 wants a booting Core host to
     fall back to bypass, and Phase 3 is done when "the relay covers boot and failure".
     **Measured 2026-10-05** (`scripts/pico-power-test`, plan Phase 3.6): the assumption holds —
     on the header feed the Pico does not reset across a vip reboot or a shutdown (uptime 100 s →
@@ -674,7 +674,7 @@ position, step from the hint.
 
 **R4. The relay rule — yours.** "Stay where it is on link loss, energise once at boot" leaves a
 hung Core host, or one rebooting under a powered Pico, silent until the panic press. 3.6 wants
-a booting `tib` to fall back to bypass, and Phase 3's "Done when" says "the relay covers boot
+a booting Core host to fall back to bypass, and Phase 3's "Done when" says "the relay covers boot
 and failure"; the failure table had no row for either case. Proposed: bypass after 5 s without the
 link or 2 s without `audio_ready`; engage again after 1 s of `audio_ready`. It costs a click
 each way, and dry guitar if the service crash-loops. The first answer is kept as the

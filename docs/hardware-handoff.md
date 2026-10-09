@@ -8,27 +8,25 @@ something is unverified it says so.
 
 ## Current status
 
-> **`tib` is retired (2026-09-26); the Core host is a Pi 5**: vip, from 2026-10-01 (piv stood in until then). Where this
-> doc says `tib`, read "the Core host". The RK3288-specific parts (the device tree, the one I2S
-> controller, UART1 on pins 8/10, and "What not to assume") are superseded. The Pi's header
-> equivalents still need to be worked out.
-
-- NAM **A2-full** kernel runs at **~53% of one core** on `tib`, with the armv7 NEON
-  build and the planar-kernel vendor patch.
+- **The Core host is a Pi 5** (vip, 1 GB, BCM2712, aarch64), with the WM8960 wired to it.
+- One NAM **A2-Full** (WaveNet) model costs **0.111 of one core** of vip, measured at 9 copies
+  with p99 just under the deadline (`devices/vip/cost.json`, from
+  [bench-results/2026-10-08-cost-table-vip/README.md](../bench-results/2026-10-08-cost-table-vip/README.md)).
+  An hour of playing and switching rigs on the pedal produced zero xruns (T10, same note).
 - PREEMPT_RT kernel built, running, and stress-tested — no dropouts or glitches
   on a quiet machine.
 - Performance risk is therefore **closed**. Remaining work is physical build and
   bring-up, not DSP optimisation.
-- In hand: piv (standing in as the Core host), the WM8960 board (stock, inspected 2026-09-26), the display module.
-  Due: RP2350-USB-A. The CPC order (2 × Pico 2 WH, the Debug Probe and the build parts) has
-  arrived, except the OPA2197, back-ordered until 4 Oct. See
+- In hand: the WM8960 board (stock, inspected 2026-09-26), the display module, and piv (the
+  bench device). Due: RP2350-USB-A. The CPC order (2 × Pico 2 WH, the Debug Probe and the build
+  parts) has arrived, except the OPA2197, back-ordered until 4 Oct. See
   [bom.md](bom.md) and `plan.md`.
 
 ## Hardware
 
 | Part | Notes |
 |---|---|
-| Core host | **vip**, a Raspberry Pi 5 (1 GB, BCM2712, aarch64), the Core host since 2026-10-01, with the WM8960 wired to it. **piv** (Pi 500, same SoC) stood in until then. `tib` (ASUS Tinker Board, RK3288, armhf) was the original Core and is **retired** (2026-09-26) |
+| Core host | **vip**, a Raspberry Pi 5 (1 GB, BCM2712, aarch64), the Core host since 2026-10-01, with the WM8960 wired to it. **piv** (Pi 500, same SoC) is the bench device and build host |
 | Codec | SparkFun WM8960 Audio Codec Breakout, schematic v1.0 (Eagle 9.4.2, Jan 2023). Retired product — consider a spare. |
 | Control MCU | Raspberry Pi Pico 2 (ordering). An RP2350-USB-A is due, but its 15 GPIO are short of the ~18 needed, so it's for experiments |
 | Display | 2.4" ST7789 320×240 SPI module with EC11 encoder + tactile button, board V1.2 (in hand) |
@@ -51,7 +49,7 @@ These were read off the drawing, not assumed.
   permanently. Output goes through R10 (10 Ω) into MCLK, pin 11.
 - **MCLK is not brought out to the header.** It cannot be supplied externally.
 - Consequence: the codec's converters are clocked from this local oscillator.
-  If `tib` were I2S master, its LRCLK and the codec's sample rate would come from
+  If vip were I2S master, its LRCLK and the codec's sample rate would come from
   independent references and drift. **The codec must be I2S master.**
 
 ### Inputs
@@ -115,9 +113,9 @@ pad → 100 Ω series → [47 nF to GND] → 1 µF series → codec pin
 - **SPKVDD bridged to VIN**, 3V3 side open (from the photo; confirm with a meter). With VIN
   powered, the class-D amp is live, so the mixer state must keep it disabled.
 - Two jumpers not in the schematic notes above, both bridged: **I2C** (enables the onboard
-  2.2 kΩ pull-ups; check against any on `tib`'s header bus) and **LED** (PWR LED on 3V3, the
+  2.2 kΩ pull-ups; check against any on the host header's bus) and **LED** (PWR LED on 3V3, the
   rail that also feeds Y1; a candidate to cut under D8).
-- A **Qwiic** connector carries I2C and 3V3. Leave it unused: `tib` is the only I2C master.
+- A **Qwiic** connector carries I2C and 3V3. Leave it unused: the Core host is the only I2C master.
 - Y1 marked 24.000 MHz. No headers fitted.
 
 ### Other
@@ -134,9 +132,9 @@ pad → 100 Ω series → [47 nF to GND] → 1 µF series → codec pin
 
 ### Clocking and buses
 
-- **Codec is I2S master; `tib` is I2S slave.** Non-negotiable, see above.
-- **`tib` owns the I2C bus.** The ASoC driver caches WM8960 register state. The Pico
-  must never write codec registers — it talks to `tib` over UART and `tib` applies
+- **Codec is I2S master; the Core host is I2S slave.** Non-negotiable, see above.
+- **The Core host owns the I2C bus.** The ASoC driver caches WM8960 register state. The Pico
+  must never write codec registers — it talks to the Core host over UART and the Core host applies
   changes through ALSA mixer controls.
 
 ### Jumpers (planned, D8)
@@ -188,7 +186,7 @@ Two inputs, deliberately:
 - **9 V centre-negative** from one isolated Cioks outlet → the buffer directly, and
   → a low-noise LDO → 3.3 V → AVDD.
 
-The point is that the analogue supply never carries `tib`'s current. Hum comes from
+The point is that the analogue supply never carries the Core host's current. Hum comes from
 current in shared ground paths; this arrangement means the two meet only at the
 **star ground point**, where PSU 0 V, codec GND, buffer GND and jack sleeves are
 joined at one place.
@@ -295,7 +293,7 @@ depleted. The one unavoidable droop is unplugging the barrel onto a *depleted* b
 enclosure must leave room for a PP3 (≈48.5 × 26.5 × 17.5 mm) and its snap, reachable for
 replacement, wired on the analogue side.
 
-### Control surface (all on the Pico — `tib` never sees any of it)
+### Control surface (all on the Pico — the Core host never sees any of it)
 
 **Display module** — 2.4" ST7789, 320×240, 4-wire SPI, board V1.2, with an EC11
 encoder and a separate tactile button on the same PCB. (There is no joystick: the
@@ -347,8 +345,8 @@ USB host on the RP2350 is possible later if wanted.
 retrofit into a drilled enclosure.
 
 **One internal message format.** Footswitch presses and incoming MIDI must converge
-in the Pico into the same UART messages to `tib`. A preset change is a preset change
-regardless of source; `tib`'s side is written once, and MIDI support is then a
+in the Pico into the same UART messages to the Core host. A preset change is a preset change
+regardless of source; the Core host's side is written once, and MIDI support is then a
 firmware-only change.
 
 ---
@@ -371,37 +369,34 @@ The order and the done-when checks are in `plan.md`. What matters for the hardwa
 
 Hardware-side work outstanding:
 
-1. **Device tree** (in `rtpi`). A `simple-audio-card` node: WM8960 at 0x1A, with
-   `bitclock-master` and `frame-master` on the codec DAI, and a 24 MHz fixed clock as
-   MCLK so the driver can set its PLL for 48 kHz. `tib` has **one** I2S controller,
-   held today by the HDMI card (`rockchip,tinker-codec`); the WM8960 card replaces
-   it. There is no ready-made overlay — the Pi's `wm8960-soundcard` does not apply.
-2. **Verify the I2S wiring** on this Tinker Board revision: which I2C bus the header
-   carries, and whether the RK3288 side provides separate TX and RX frame clocks (the
-   board breaks out ADCLRC and DACLRC separately, and the WM8960 can alternatively
-   slave the ADC to DACLRC).
-3. **ALSA mixer state as code** (`devices/tib/`). ALC **off** — it pumps audibly on
-   guitar dynamics. 3D enhancement off. Speaker amp and OUT3 off. Simplest possible
-   analogue routing. PGA near 0 dB, boost mixer at 0 dB (the boost stages are noisier
-   than the PGA).
-4. **Header UART** for the Pico link: UART1 on pins 8/10 (the console is ttyS2 on
-   32/33).
-5. **Pico firmware.** Three footswitches with long-press, DIN MIDI input, status LEDs,
+1. **Device tree** (in `rtpi`). A `simple-audio-card` node: WM8960 at 0x1A on I2C1 (GPIO2/3),
+   with `bitclock-master` and `frame-master` on the codec DAI, and a 24 MHz fixed clock as
+   MCLK so the driver can set its PLL for 48 kHz. The Pi's stock `wm8960-soundcard` overlay makes
+   the Pi the clock master at 12.288 MHz and does not apply; the overlay that does is
+   `devices/common/rootfs/etc/pedal/codec/wm8960-codec-master.dts`. The Pi has **one** I2S frame
+   clock, so DACLRC is wired and the ADC runs from it (`wlf,shared-lrclk`).
+2. **ALSA mixer state as code** (`devices/common/rootfs/etc/pedal/codec/wm8960.mixer`).
+   ALC **off** — it pumps audibly on guitar dynamics. 3D enhancement off. Speaker amp and OUT3
+   off. Simplest possible analogue routing. PGA near 0 dB, boost mixer at 0 dB (the boost stages
+   are noisier than the PGA).
+3. **Header UART** for the Pico link: pins 8/10 are `ttyAMA0` on vip, whose console is on
+   `ttyAMA10` (the debug connector), so nothing had to move.
+4. **Pico firmware.** Three footswitches with long-press, DIN MIDI input, status LEDs,
    bypass relay; display and encoder later. Footswitch and MIDI events produce
    identical UART messages.
-6. **Boot-time bypass.** ~30 s of boot before audio passes. A relay whose
-   **de-energised** state is bypass, energised by the Pico only once `tib` reports
+5. **Boot-time bypass.** ~30 s of boot before audio passes. A relay whose
+   **de-energised** state is bypass, energised by the Pico only once the Core host reports
    audio ready. This is the difference between a gig-usable pedal and a desk toy.
 
 ---
 
 ## Open questions
 
-- **Pico ↔ `tib` link**: UART chosen to avoid a USB gadget stack and an enumeration
+- **Pico ↔ Core host link**: UART chosen to avoid a USB gadget stack and an enumeration
   dependency at boot. Revisit if the Pico should also present as a USB MIDI device
   to a host computer.
-- **Codec 3V3 source**: currently `tib`'s header. A second LDO off the 9 V would take
-  the whole codec board — including the 24 MHz oscillator — off `tib`'s rails.
+- **Codec 3V3 source**: currently the Core host's 5 V header. A second LDO off the 9 V would take
+  the whole codec board — including the 24 MHz oscillator — off the host's rails.
   Defensible addition; left out of the first pass.
 - **Pico power**: from the Core host's 5 V (decided 2026-10-01, see Power). The Pico is
   live whenever the supply is, so it can hold the bypass relay and show progress through
@@ -415,11 +410,11 @@ Hardware-side work outstanding:
 
 ## What not to assume
 
-- ~~This is **not** a Raspberry Pi.~~ It is now (a Pi 5). Superseded 2026-09-26.
-- ~~This is **not** aarch64.~~ It is now. Superseded 2026-09-26.
 - Don't assume the codec board's modification state. It is stock today; D8 brings
   it up stock and modifies it afterwards, measuring each step. Inspect the jumpers
   before relying on either.
+- The Core host is a Pi 5, so the codec's device tree, ALSA card and the header's pin map are
+  the Pi's, not an earlier board's. `docs/codec-bringup-2a.md` has the wiring as built.
 
 ---
 

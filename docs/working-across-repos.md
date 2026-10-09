@@ -15,7 +15,7 @@ rather than a rule.
 | `pedal.project` | `~/code.local/pedal/pedal.project` | The pedal as a system: goal, hardware design, diagrams, decisions, plan. The Core host's appliance configuration (`devices/`), the Pico firmware (`firmware/`), and the pedal service (`pedald`, in `devices/common/rootfs/usr/local/lib/pedald/`) beside `namchaind` |
 | `namchain` | `~/code.local/pedal/namchain` | The engine library, `namchaind`, `namchainctl`, the soak and bench tools, and **the control protocol** (protocol 2) |
 | `ljoss` | `~/code.local/pedal/ljoss` | The rig designer (macOS/iOS), including flattening the rig tree into an engine graph |
-| `rtpi` | `~/code.local/pedal/rtpi` | `tib`'s kernel, the boot-slot safety net, RT tuning, and so any **device-tree** change such as the WM8960 sound card |
+| `rtpi` | `~/code.local/pedal/rtpi` | The Core host's kernel, the boot-slot safety net, RT tuning, and so any **device-tree** change such as the WM8960 sound card |
 | `NAMBench` | `~/code.local/pedal/NAMBench` | NAM and IR kernel research. It reaches the pedal only through `namchain`, as a vendor patch or a port |
 | `OptimisationWorkOnNeuralAmpModelerCore` (fork) | `~/code.local/pedal/namchain/vendor/NeuralAmpModelerCore` | The planar NEON kernels (upstream PR #313). It is **vendored into `namchain` as a declared submodule** at `all-optimisations`, so there is one checkout of it, not two |
 | `AudioDSPTools` (fork) | not checked out here | The partitioned-FFT IR branch, which `namchain` carries as a port — `nc.cab.ir` doesn't use AudioDSPTools. `rikkus/AudioDSPTools` no longer exists on GitHub; the only copy of `partitioned-ir` is `~/code.local/nam/AudioDSPTools-spread` |
@@ -29,7 +29,7 @@ where they are, in `~/code.local/nam/`.
 
 **Where a new thing goes.** If it only makes sense for this pedal, it lives in `pedal.project`. If
 it stands on its own (an engine, an app, a kernel), it gets its own repo or goes in the one it
-belongs to. So the Pico firmware and the `tib` process that talks to it live here: they share the
+belongs to. So the Pico firmware and the process that talks to it live here: they share the
 UART protocol and change together. A reverb goes in `namchain`, and a device-tree node goes in
 `rtpi`.
 
@@ -38,9 +38,8 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 | Host | Role | Notes |
 |---|---|---|
 | **M2** (MacBook Air) | Where editing and agent sessions happen, and where every deploy is started. Xcode, macOS builds of the engine | Holds every repo, all five of them under `~/code.local/pedal/` |
-| **vip** (Pi 5, 1 GB, aarch64) | **The Core host** (from 2026-10-01), and nothing else. Built from an image (`devices/vip/make-card`, `docs/vip-image.md`); where testing happens until it's a pedal nobody should disrupt | Same rules `tib` had: no compiler, everything arrives built (the engine in colima on the Mac, `scripts/deploy-engine`) |
-| **piv** (Pi 500, aarch64) | Stood in as the Core host until vip arrived; not updated meanwhile. The ARM build host: native aarch64, armv7 cross-compiler (GCC 15.2), `qemu-arm-static` for running armv7 tests | Allowed to be busy or down, so every build that runs on it also needs a fallback (colima on the Mac, which `rtpi` and vip's image already use). Its dev checkouts stay at `~/code.local/<repo>`: the workspace is the Mac's layout, and `scripts/workspace root --repo` falls back to that path, so the scripts work in both |
-| ~~**tib**~~ (Tinker Board S, armv7) | **Retired 2026-09-26** (stopped working 2026-09-25). "`tib`" in the rules below now means the Core host | History only: `devices/tib/` and its backups |
+| **vip** (Pi 5, 1 GB, aarch64) | **The Core host** (from 2026-10-01), and nothing else. Built from an image (`devices/vip/make-card`, `docs/vip-image.md`); where testing happens until it's a pedal nobody should disrupt | No compiler: everything arrives built (the engine in colima on the Mac, `scripts/deploy-engine`) |
+| **piv** (Pi 500, aarch64) | The live bench device and the ARM build host: native aarch64, armv7 cross-compiler (GCC 15.2), `qemu-arm-static` for running armv7 tests | Allowed to be busy or down, so every build that runs on it also needs a fallback (colima on the Mac, which `rtpi` and vip's image already use). Its dev checkouts stay at `~/code.local/<repo>`: the workspace is the Mac's layout, and `scripts/workspace root --repo` falls back to that path, so the scripts work in both |
 
 ## The rules
 
@@ -57,25 +56,24 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
    how you work on your own repos; forks and other people's repos still go through PRs. An aspect
    you ask to keep separate gets its own branch, named the same in every repo it touches, and its
    work is committed and pushed there until it merges. A change that spans repos lands in
-   dependency order (engine before app, `tib` bridge before Pico firmware), each commit green on its
+   dependency order (engine before app, bridge before Pico firmware), each commit green on its
    own. The plan names the commits that belong together, so "which ljoss goes with which namchain"
    is never a guess.
-5. **Nothing runs on tib from a state nobody recorded.** Every deployed binary carries the commit it
-   was built from, marked dirty if the tree was. A manifest on `tib` and a lock file here say what
-   is running. (Your MIDI Commander firmware already stamps its builds this way, and NAMBench pins
-   every variant it measures to a commit.)
-6. **Build configurations are committed.** Every `tib` number for `namchain` came from an armv7
-   **NEON** build that exists only as a `CMAKE_CXX_FLAGS` override cached on piv. The committed
-   toolchain file builds the `vfpv3-d16` variant, which can't run A2-Full in real time on `tib`
-   (133% of a core, against 52%). NAMBench gets this right: its `-mfpu=neon-vfpv4` is committed
-   and checked. A number you cannot rebuild is a number you cannot defend.
-7. **Device state is code.** Everything on `tib` above the kernel goes into idempotent scripts here
-   under `devices/tib/`, following `rtpi`'s layout: the `namchaind` unit, config and token, limits,
-   the model/IR/rig library, ALSA mixer state, and the bridge's unit. Kernel and device tree stay
-   in `rtpi`. Pull a backup before changing anything, as `rtpi` does.
-8. **tib is quiet and shared.** Only one measurement runs at a time, enforced by a lock. Check the
-   board is idle before starting, leave no processes behind, and write evidence into a repo's
-   `bench-results/`, never `/tmp`. `namchain` learned the last two the hard way.
+5. **Nothing runs on the Core host from a state nobody recorded.** Every deployed binary carries the
+   commit it was built from, marked dirty if the tree was. A manifest on the host and a lock file
+   here say what is running. (Your MIDI Commander firmware already stamps its builds this way, and
+   NAMBench pins every variant it measures to a commit.)
+6. **Build configurations are committed.** A number is only as good as the flags behind it: the one
+   that is not in git is the one you cannot rebuild. NAMBench gets this right — its
+   `-mfpu=neon-vfpv4` is committed and checked — and the pedal's boards are measured on builds whose
+   flags are committed the same way. A number you cannot rebuild is a number you cannot defend.
+7. **Device state is code.** Everything on the Core host above the kernel goes into idempotent
+   scripts here under `devices/<host>/`, following `rtpi`'s layout: the `namchaind` unit, config and
+   token, limits, the model/IR/rig library, ALSA mixer state, and the bridge's unit. Kernel and
+   device tree stay in `rtpi`. Pull a backup before changing anything, as `rtpi` does.
+8. **The Core host is quiet and shared.** Only one measurement runs at a time, enforced by a lock.
+   Check the board is idle before starting, leave no processes behind, and write evidence into a
+   repo's `bench-results/`, never `/tmp`. `namchain` learned the last two the hard way.
 
 ## How a change reaches the pedal
 
@@ -87,7 +85,7 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 | DSP research (`NAMBench`) | Fork branch → upstream PR, plus either a patch or pin in `namchain/vendor` or a port into one of `namchain`'s own nodes → `namchain`'s golden, parity or tolerance tests prove the swap |
 | Pico firmware (`firmware/`) | `firmware/build.sh` on the Mac (Pico SDK 2.3.1, Arm GNU 15.3.rel1) → `firmware/flash.sh` (picotool, or the UF2 volume) → the bench tests through the Debug Probe (`firmware/tools/`) → **and now the pedal service over the Core host's UART**: on vip the link is `ttyAMA0`, and `pedald` holds the session with it |
 
-Rollback on `tib` is the previous symlink. For the kernel it is `rtpi`'s known-good slot.
+Rollback on the Core host is the previous symlink. For the kernel it is `rtpi`'s known-good slot.
 
 ## Setting up an agent session
 
@@ -125,6 +123,6 @@ Rollback on `tib` is the previous symlink. For the kernel it is `rtpi`'s known-g
 | `scripts/status` | The table above, in one screen. Exists: repos on the Mac and piv, the workspace's layout and guard, the lock, `namchaind`'s status, and whether `devices/<host>/components.lock`, the engine and `devices/` are current |
 | `scripts/workspace` | The repositories the workspace holds (`workspace.repos`), the files at its root, and the checks that keep both honest — added with the move on 2026-10-06 ([docs/workspace.md](workspace.md)) |
 | `scripts/host-lock` | `flock` on the Core host, held from the Mac for as long as a command runs. Every soak, benchmark and deploy goes through it. Exists; `deploy-engine` and `devices/<host>/apply` take it themselves, and a nested call for the same host just runs its command |
-| `scripts/deploy-engine` | Build a `namchain` commit, never from a dev checkout: for vip in colima on the Mac, exactly as its image builds it; for piv in a dedicated tree on piv. Run the tests, install into a versioned directory, write the manifest, restart. Exists; the armv7-NEON cross build for `tib` went with `tib` |
-| `devices/tib/` | The appliance configuration and its idempotent apply/backup scripts |
+| `scripts/deploy-engine` | Build a `namchain` commit, never from a dev checkout: for vip in colima on the Mac, exactly as its image builds it; for piv in a dedicated tree on piv. Run the tests, install into a versioned directory, write the manifest, restart |
+| `devices/<host>/` | The appliance configuration and its idempotent apply/backup scripts |
 | `devices/<host>/components.lock` | The component commits that make up what a Core host is running (board, kernel, namchain, the `devices/` tree), written by `scripts/components-lock` after every deploy and apply. Exists |

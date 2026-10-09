@@ -12,7 +12,6 @@ gitlinks:
 --- branches ---
   * main                             fc5734b [origin/main] bench-results: the input stage's scale, its clipping, and 48 V on the jacks
   + pico-service-review              c4b0296 (/Users/rik/code.local/pedal.project/.claude/worktrees/pico-service-review) [origin/pico-service-review] docs/pedal-service.md: Claude's review (R1-R15); plan, AGENTS.md, working-across-repos follow it
-    x/pi-debug-probe-tib-003455      b5f494a tib: soak ended in a thermal shutdown at 90 °C after 23 min, then it stopped booting again; work on it stopped
     x/pi5-sd-card-image-build-d9f6d2 214f69e vip runs namchain 2e1a63a (meta, bypass as a ramp), deployed by deploy-engine; ljoss's check-streaming passes against it: 580 ramps over a 201-step drag, a bypass without a rebuild
     x/vibrant-borg-bbd68d            a19e52b devices/piv: namchain's finished isolation A/B harness is removed from piv
 --- status --porcelain ---
@@ -31,7 +30,6 @@ gitlinks:
 --- worktree list ---
   /Users/rik/code.local/pedal.project                                             fc5734b [main]
   /private/tmp/base                                                               b19a613 (detached HEAD)
-  /Users/rik/code.local/pedal.project/.claude/worktrees/pi-debug-probe-tib-003455 214f69e (detached HEAD)
   /Users/rik/code.local/pedal.project/.claude/worktrees/pico-service-review       c4b0296 [pico-service-review]
   /Users/rik/code.local/pedal.project/.claude/worktrees/vibrant-borg-bbd68d       a19e52b (detached HEAD)
 

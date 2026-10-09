@@ -1,182 +1,0 @@
-12:37:10 cpu=67692 gpu=65384 freq=1416000 up=543.95 units=[active active active ] memfail=0 last= Compare MUL : ok 
-12:38:13 cpu=70416 gpu=68076 freq=1416000 up=607.60 units=[active active active ] memfail=0 last= Sequential Increment: ok 
-12:39:18 cpu=75000 gpu=69615 freq=1416000 up=672.01 units=[active active active ] memfail=0 last= Sequential Increment: ok 
-12:40:22 cpu=78461 gpu=73750 freq=1512000 up=736.04 units=[active active active ] memfail=0 last=ok 
-12:41:26 cpu=80769 gpu=76153 freq=1416000 up=799.81 units=[active active active ] memfail=0 last=ok 
-12:42:30 cpu=73750 gpu=72083 freq=1200000 up=863.66 units=[active active active ] memfail=0 last=ok 
-12:43:35 cpu=79230 gpu=75769 freq=1512000 up=929.46 units=[active active active ] memfail=0 last=ok 
-12:44:40 cpu=77307 gpu=74166 freq=1608000 up=994.38 units=[active active active ] memfail=0 last=ok 
-12:45:46 cpu=75000 gpu=71666 freq=1200000 up=1060.14 units=[active active active ] memfail=0 last=ok 
-12:46:51 cpu=83846 gpu=79230 freq=1704000 up=1125.14 units=[active active active ] memfail=0 last=ok 
-12:47:57 cpu=76538 gpu=73333 freq=1008000 up=1191.05 units=[active active active ] memfail=0 last=ok 
-12:49:02 cpu=77307 gpu=74583 freq=1008000 up=1256.50 units=[active active active ] memfail=0 last=ok 
-12:50:08 cpu=77692 gpu=74583 freq=1200000 up=1321.58 units=[active active active ] memfail=0 last=ok 
-12:51:12 cpu=83461 gpu=78076 freq=1416000 up=1385.98 units=[active active active ] memfail=0 last=ok 
-12:52:18 cpu=78461 gpu=75769 freq=1200000 up=1452.25 units=[active active active ] memfail=0 last=ok 
-12:53:23 cpu=79230 gpu=76153 freq=1416000 up=1517.23 units=[active active active ] memfail=0 last=ok 
-12:54:29 cpu=80384 gpu=76538 freq=1608000 up=1582.93 units=[active active active ] memfail=0 last=ok 
-12:55:34 cpu=84615 gpu=81153 freq=1416000 up=1647.91 units=[active active active ] memfail=0 last=ok 
-12:56:39 cpu=79230 gpu=75769 freq=1200000 up=1712.91 units=[active active active ] memfail=0 last=ok 
-12:57:44 cpu=87692 gpu=82307 freq=1416000 up=1778.14 units=[active active active ] memfail=0 last=ok 
-12:58:50 cpu=84615 gpu=79615 freq=1704000 up=1843.48 units=[active active active ] memfail=0 last=ok 
-13:00:00 ssh: connect to host tib port 22: Operation timed out 
-13:01:07 cpu=69615 gpu=68076 freq=1608000 up=32.35 units=[inactive inactive inactive ] memfail=0 last=ok 
-13:02:09 cpu=67692 gpu=64583 freq=1800000 up=94.26 units=[inactive inactive inactive ] memfail=0 last=ok 
-13:03:11 cpu=64166 gpu=62500 freq=1800000 up=156.09 units=[inactive inactive inactive ] memfail=0 last=ok 
-13:04:13 cpu=62916 gpu=60416 freq=1800000 up=217.97 units=[inactive inactive inactive ] memfail=0 last=ok 
-13:05:15 cpu=60833 gpu=59545 freq=1800000 up=279.99 units=[inactive inactive inactive ] memfail=0 last=ok 
-13:06:25 ssh: connect to host tib port 22: Operation timed out 
-13:07:35 ssh: connect to host tib port 22: Operation timed out 
-13:08:45 ssh: connect to host tib port 22: Operation timed out 
-13:09:45 ssh: connect to host tib port 22: No route to host 
-13:10:55 ssh: connect to host tib port 22: Operation timed out 
-13:11:55 ssh: connect to host tib port 22: No route to host 
-13:13:05 ssh: connect to host tib port 22: Operation timed out 
-13:14:05 ssh: connect to host tib port 22: No route to host 
-13:15:15 ssh: connect to host tib port 22: Operation timed out 
-13:16:25 ssh: connect to host tib port 22: Operation timed out 
-13:17:35 ssh: connect to host tib port 22: Operation timed out 
-13:18:45 ssh: connect to host tib port 22: Operation timed out 
-13:19:56 ssh: connect to host tib port 22: Operation timed out 
-13:21:06 ssh: connect to host tib port 22: Operation timed out 
-13:22:06 ssh: connect to host tib port 22: No route to host 
-13:23:16 ssh: connect to host tib port 22: Operation timed out 
-13:24:16 ssh: connect to host tib port 22: No route to host 
-13:25:26 ssh: connect to host tib port 22: Operation timed out 
-13:26:26 ssh: connect to host tib port 22: No route to host 
-13:27:36 ssh: connect to host tib port 22: Operation timed out 
-13:28:36 ssh: connect to host tib port 22: No route to host 
-13:29:46 ssh: connect to host tib port 22: Operation timed out 
-13:30:46 ssh: connect to host tib port 22: No route to host 
-13:31:56 ssh: connect to host tib port 22: Operation timed out 
-13:33:06 ssh: connect to host tib port 22: Operation timed out 
-13:34:16 ssh: connect to host tib port 22: Operation timed out 
-13:35:26 ssh: connect to host tib port 22: Operation timed out 
-13:36:36 ssh: connect to host tib port 22: Operation timed out 
-13:37:47 ssh: connect to host tib port 22: Operation timed out 
-13:38:57 ssh: connect to host tib port 22: Operation timed out 
-13:39:57 ssh: connect to host tib port 22: No route to host 
-13:41:07 ssh: connect to host tib port 22: Operation timed out 
-13:42:07 ssh: connect to host tib port 22: No route to host 
-13:43:17 ssh: connect to host tib port 22: Operation timed out 
-13:44:17 ssh: connect to host tib port 22: No route to host 
-13:45:27 ssh: connect to host tib port 22: Operation timed out 
-13:46:27 ssh: connect to host tib port 22: No route to host 
-13:47:37 ssh: connect to host tib port 22: Operation timed out 
-13:48:37 ssh: connect to host tib port 22: No route to host 
-13:49:47 ssh: connect to host tib port 22: Operation timed out 
-13:50:57 ssh: connect to host tib port 22: Operation timed out 
-13:52:07 ssh: connect to host tib port 22: Operation timed out 
-13:53:17 ssh: connect to host tib port 22: Operation timed out 
-13:54:28 ssh: connect to host tib port 22: Operation timed out 
-13:55:38 ssh: connect to host tib port 22: Operation timed out 
-13:56:48 ssh: connect to host tib port 22: Operation timed out 
-13:57:48 ssh: connect to host tib port 22: No route to host 
-13:58:58 ssh: connect to host tib port 22: Operation timed out 
-13:59:58 ssh: connect to host tib port 22: No route to host 
-14:01:08 ssh: connect to host tib port 22: Operation timed out 
-14:02:08 ssh: connect to host tib port 22: No route to host 
-14:03:18 ssh: connect to host tib port 22: Operation timed out 
-14:04:18 ssh: connect to host tib port 22: No route to host 
-14:05:28 ssh: connect to host tib port 22: Operation timed out 
-14:06:28 ssh: connect to host tib port 22: No route to host 
-14:07:38 ssh: connect to host tib port 22: Operation timed out 
-14:08:48 ssh: connect to host tib port 22: Operation timed out 
-14:09:58 ssh: connect to host tib port 22: Operation timed out 
-14:11:09 ssh: connect to host tib port 22: Operation timed out 
-14:12:19 ssh: connect to host tib port 22: Operation timed out 
-14:13:19 ssh: connect to host tib port 22: No route to host 
-14:14:29 ssh: connect to host tib port 22: Operation timed out 
-14:15:29 ssh: connect to host tib port 22: No route to host 
-14:16:39 ssh: connect to host tib port 22: Operation timed out 
-14:17:39 ssh: connect to host tib port 22: No route to host 
-14:18:49 ssh: connect to host tib port 22: Operation timed out 
-14:19:49 ssh: connect to host tib port 22: No route to host 
-14:20:59 ssh: connect to host tib port 22: Operation timed out 
-14:22:09 ssh: connect to host tib port 22: Operation timed out 
-14:23:19 ssh: connect to host tib port 22: Operation timed out 
-14:24:30 ssh: connect to host tib port 22: Operation timed out 
-14:25:40 ssh: connect to host tib port 22: Operation timed out 
-14:26:50 ssh: connect to host tib port 22: Operation timed out 
-14:27:50 ssh: connect to host tib port 22: No route to host 
-14:29:00 ssh: connect to host tib port 22: Operation timed out 
-14:30:00 ssh: connect to host tib port 22: No route to host 
-14:31:10 ssh: connect to host tib port 22: Operation timed out 
-14:32:10 ssh: connect to host tib port 22: No route to host 
-14:33:20 ssh: connect to host tib port 22: Operation timed out 
-14:34:20 ssh: connect to host tib port 22: No route to host 
-14:35:30 ssh: connect to host tib port 22: Operation timed out 
-14:36:30 ssh: connect to host tib port 22: No route to host 
-14:37:40 ssh: connect to host tib port 22: Operation timed out 
-14:38:50 ssh: connect to host tib port 22: Operation timed out 
-14:40:00 ssh: connect to host tib port 22: Operation timed out 
-14:41:11 ssh: connect to host tib port 22: Operation timed out 
-14:42:21 ssh: connect to host tib port 22: Operation timed out 
-14:43:21 ssh: connect to host tib port 22: No route to host 
-14:44:31 ssh: connect to host tib port 22: Operation timed out 
-14:45:31 ssh: connect to host tib port 22: No route to host 
-14:46:41 ssh: connect to host tib port 22: Operation timed out 
-14:47:41 ssh: connect to host tib port 22: No route to host 
-14:48:51 ssh: connect to host tib port 22: Operation timed out 
-14:49:51 ssh: connect to host tib port 22: No route to host 
-14:51:01 ssh: connect to host tib port 22: Operation timed out 
-14:52:01 ssh: connect to host tib port 22: No route to host 
-14:53:11 ssh: connect to host tib port 22: Operation timed out 
-14:54:22 ssh: connect to host tib port 22: Operation timed out 
-14:55:32 ssh: connect to host tib port 22: Operation timed out 
-14:56:42 ssh: connect to host tib port 22: Operation timed out 
-14:57:42 ssh: connect to host tib port 22: No route to host 
-14:58:52 ssh: connect to host tib port 22: Operation timed out 
-14:59:52 ssh: connect to host tib port 22: No route to host 
-15:01:02 ssh: connect to host tib port 22: Operation timed out 
-15:02:02 ssh: connect to host tib port 22: No route to host 
-15:03:12 ssh: connect to host tib port 22: Operation timed out 
-15:04:12 ssh: connect to host tib port 22: No route to host 
-15:05:22 ssh: connect to host tib port 22: Operation timed out 
-15:06:32 ssh: connect to host tib port 22: Operation timed out 
-15:07:43 ssh: connect to host tib port 22: Operation timed out 
-15:08:53 ssh: connect to host tib port 22: Operation timed out 
-15:10:03 ssh: connect to host tib port 22: Operation timed out 
-15:11:03 ssh: connect to host tib port 22: No route to host 
-15:12:13 ssh: connect to host tib port 22: Operation timed out 
-15:13:13 ssh: connect to host tib port 22: No route to host 
-15:14:23 ssh: connect to host tib port 22: Operation timed out 
-15:15:23 ssh: connect to host tib port 22: No route to host 
-15:16:33 ssh: connect to host tib port 22: Operation timed out 
-15:17:33 ssh: connect to host tib port 22: No route to host 
-15:18:43 ssh: connect to host tib port 22: Operation timed out 
-15:19:53 ssh: connect to host tib port 22: Operation timed out 
-15:21:03 ssh: connect to host tib port 22: Operation timed out 
-15:22:14 ssh: connect to host tib port 22: Operation timed out 
-15:23:24 ssh: connect to host tib port 22: Operation timed out 
-15:24:24 ssh: connect to host tib port 22: No route to host 
-15:25:34 ssh: connect to host tib port 22: Operation timed out 
-15:26:34 ssh: connect to host tib port 22: No route to host 
-15:27:44 ssh: connect to host tib port 22: Operation timed out 
-15:28:44 ssh: connect to host tib port 22: No route to host 
-15:29:54 ssh: connect to host tib port 22: Operation timed out 
-15:30:54 ssh: connect to host tib port 22: No route to host 
-15:32:04 ssh: connect to host tib port 22: Operation timed out 
-15:33:04 ssh: connect to host tib port 22: No route to host 
-15:34:14 ssh: connect to host tib port 22: Operation timed out 
-15:35:24 ssh: connect to host tib port 22: Operation timed out 
-15:36:35 ssh: connect to host tib port 22: Operation timed out 
-15:37:45 ssh: connect to host tib port 22: Operation timed out 
-15:38:55 ssh: connect to host tib port 22: Operation timed out 
-15:39:55 ssh: connect to host tib port 22: No route to host 
-15:41:05 ssh: connect to host tib port 22: Operation timed out 
-15:42:05 ssh: connect to host tib port 22: No route to host 
-15:43:15 ssh: connect to host tib port 22: Operation timed out 
-15:44:15 ssh: connect to host tib port 22: No route to host 
-15:45:25 ssh: connect to host tib port 22: Operation timed out 
-15:46:25 ssh: connect to host tib port 22: No route to host 
-15:47:35 ssh: connect to host tib port 22: Operation timed out 
-15:48:45 ssh: connect to host tib port 22: Operation timed out 
-15:49:55 ssh: connect to host tib port 22: Operation timed out 
-15:51:06 ssh: connect to host tib port 22: Operation timed out 
-15:52:16 ssh: connect to host tib port 22: Operation timed out 
-15:53:26 ssh: connect to host tib port 22: Operation timed out 
-15:54:26 ssh: connect to host tib port 22: No route to host 
-15:55:36 ssh: connect to host tib port 22: Operation timed out 
-15:56:36 ssh: connect to host tib port 22: No route to host 
-15:57:46 ssh: connect to host tib port 22: Operation timed out 

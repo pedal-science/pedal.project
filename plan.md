@@ -5,28 +5,23 @@ across the repos, ask questions, write this. The repo strategy that came out of 
 [docs/working-across-repos.md](docs/working-across-repos.md). The questions and your answers are
 recorded under **Decisions**.
 
-**First target:** play guitar through `tib` using the SSL 2+ that is already attached, with ljoss
+**First target:** play guitar through the Core host using the SSL 2+ that is already attached, with ljoss
 editing the rig live over WiFi, and the pedal coming back with the same rig after a power cycle.
-
-> **2026-09-26: `tib` is retired.** It stopped working on 2026-09-25. The Core host is now a
-> Raspberry Pi 5: **piv** (Pi 500) stands in for the next few days, then **vip** (a Pi 5 with
-> 1 GB, on order) becomes the target. Read "`tib`" in the phases below as "the Core host". What
-> changes is under [The Core host moves to a Pi 5](#the-core-host-moves-to-a-pi-5).
 
 ---
 
 ## The Core host moves to a Pi 5
 
-**vip** (Raspberry Pi 5, 1 GB, aarch64) is the Core target once it arrives. Until then, **piv**
-stands in. The Pi 500 has the same SoC (BCM2712, 4 × Cortex-A76), so piv's performance numbers
-should carry over to vip. What won't carry over is memory: vip has 1 GB, and piv has more.
-
+**vip** (Raspberry Pi 5, 1 GB, aarch64, BCM2712, 4 × Cortex-A76) is the Core host since
+2026-10-01. **piv** (Pi 500, same SoC) was the host before it and is now the live bench device and
+build host. The two boards share an SoC, so performance measured on one carries to the other; what
+does not carry over is memory: vip has 1 GB, and piv has more.
 
 piv is a Raspberry Pi 500 (Cortex-A76, 4 cores, **aarch64**). Checked 2026-09-25:
 
 - Ubuntu kernel `7.0.0-1017-raspi-realtime`, **PREEMPT_RT**.
 - Cores **2–3 isolated** (`isolcpus=managed_irq,domain,2-3 nohz_full=2-3 rcu_nocbs=2-3`,
-  `irqaffinity=0-1`). `tib` isolated only core 3.
+  `irqaffinity=0-1`).
 - SSL 2+ attached 2026-09-26 as card id `II`, through a hub on the xHCI controller whose interrupt
   is `xhci-hcd:usb4`. Since 2026-09-28 it's direct on that controller's USB 3.0 port, on a new
   cable: the old cable corrupted packets (Phase 1 step 5, "Pops"). Root storage is on the other one (`usb2`). rtpi-audio-tune now finds the
@@ -35,41 +30,35 @@ piv is a Raspberry Pi 500 (Cortex-A76, 4 cores, **aarch64**). Checked 2026-09-25
 
 What this changes:
 
-- **Build.** namchain builds and tests natively for aarch64 on piv already, and the planar NEON
-  kernels are active there, so the armv7 cross build and qemu step leave the critical path.
-  `scripts/deploy-engine` gets an aarch64-native target. The armv7-NEON path is no longer
-  needed now that `tib` is retired.
-- **piv is no longer "allowed to be busy or down"** (`docs/working-across-repos.md`). Building on
-  the host that plays audio disturbs it: no builds on piv during a soak or while playing, and the
-  Mac (colima) is the fallback builder.
-- **Device configuration.** `devices/tib/` was written for `tib` (core 3, the RK3288 clock cap,
-  its interrupt layout). piv gets its own `devices/piv/`: render thread on core 3, core 2 free for
-  the audio interrupt or a second chain, its own thermal and clock policy. Take `tib`'s last
-  backup as the reference; don't copy it blind.
-- **Performance numbers.** Every `tib` figure (A2-Full ~53–58%, cab p99 9–10%, A2 + cab p99 70%)
-  is from a Cortex-A17. The A76 is much faster per clock, so re-measure A2-Full and A2 + cab on
-  piv before relying on anything. The "A2-Full alone overran" question for step 8 was about
-  `tib` and is dropped.
-- **Memory.** vip's 1 GB is new as a constraint. Measure `namchaind`'s resident size with a full
-  rig loaded, and with models held ready for switching, while still on piv.
-- **The hard constraints in `CLAUDE.md`** have been rewritten for a Pi 5 Core host. Phase 1 needs nothing Pi-specific, since it uses the SSL 2+
+- **Build.** namchain builds and tests natively for aarch64 on piv, with the planar NEON kernels
+  active, so the armv7 cross build and qemu step are off the critical path. `scripts/deploy-engine`
+  builds native aarch64 for each host.
+- **No builds on the host that plays audio.** Building on it disturbs it: no builds on vip or piv
+  during a soak or while playing, and the Mac (colima) is the fallback builder.
+- **Device configuration is vip's own** (`devices/vip/tune.conf`): the same CPU split as piv
+  (cores 2–3 isolated, render thread on core 3, core 2 held free for a warm rig or a second chain,
+  everything else on 0–1), the `performance` governor uncapped at the Pi 5's 2.4 GHz, and the audio
+  interrupt on the housekeeping core 0 at SCHED_FIFO 85.
+- **Performance numbers are vip's.** vip's cost table (`devices/vip/cost.json`, 14 rows, source and
+  method in [bench-results/2026-10-08-cost-table-vip/README.md](bench-results/2026-10-08-cost-table-vip/README.md))
+  is measured on vip:
+  `NAM.WaveNet.full` 0.111 of one core at n = 9, `lite` 0.0333 at n = 30, `IR.8192` 0.0222 at
+  n = 45. Where this plan still quotes a measurement from another board, it says so at the row.
+- **Memory.** vip's 1 GB is a real constraint. `namchaind`'s resident size with a full rig loaded,
+  and with models held ready for switching, is in Phase 1 step 7 below.
+- **The hard constraints in `CLAUDE.md`** are written for a Pi 5 Core host. Phase 1 needs nothing Pi-specific, since it uses the SSL 2+
   over USB.
-- **Phase 2 goes on a Pi.** The WM8960 goes on the 40-pin header, where Pi overlays apply.
-  rtpi's RK3288 device tree plan is dropped. The Pi's stock `wm8960-soundcard` overlay assumes
-  the Pi supplies clocks, so check it (or write a small overlay) to keep the codec as clock
-  master with a 24 MHz MCLK. Do the bring-up on vip, or on piv if vip is late.
-- **Phase 3.** The Pico's UART goes to piv's header UART instead of `tib`'s UART1 on pins 8/10.
-  The protocol doesn't change.
-- **Device configuration moves on again when vip arrives:** `devices/vip/`, with piv's as the
-  starting point. piv then goes back to being the build host.
-- **Debt, for the next few days only.** While piv is the Core host, it isn't a build host that's
-  "allowed to be busy". This ends when vip arrives.
+- **Phase 2 goes on a Pi.** The WM8960 goes on the 40-pin header, where Pi overlays apply. The Pi's
+  stock `wm8960-soundcard` overlay assumes the Pi supplies clocks, so the pedal uses its own
+  (`devices/common/rootfs/etc/pedal/codec/wm8960-codec-master.dts`) and keeps the codec as clock
+  master with a 24 MHz MCLK. The bring-up is on vip, or on piv when vip is busy.
+- **Phase 3.** The Pico's UART goes to the host's header UART on pins 8/10. The protocol doesn't
+  change.
 
-**Open:** which repo owns vip's kernel and boot configuration. piv runs Ubuntu's
-`raspi-realtime` kernel, not rtpi's. `tib`'s last config backup stays in `devices/tib/backups/`.
-**Proposed 2026-09-29** in [docs/vip-image.md](docs/vip-image.md), with how vip is built (one
-command on the Mac writes a blank card), its rescue and pedal roots, and the fallbacks. It has
-six choices for you at the end.
+**Baseline boot assets:** Ubuntu's `raspi-realtime` kernel with rtpi's rebuild on top
+(`docs/vip-kernel-image.md`). **Proposed 2026-09-29** in [docs/vip-image.md](docs/vip-image.md),
+with how vip is built (one command on the Mac writes a blank card), its rescue and pedal roots, and
+the fallbacks. It has six choices for you at the end.
 
 ## Where things stand
 
@@ -78,11 +67,11 @@ six choices for you at the end.
 | Goal | Today | Gap |
 |---|---|---|
 | Entirely digital effects | namchain renders NAM, cab IR, EQ (bands, tilt), cut filters, feedback delay, gain and lane mixing: 11 primitives and 7 macros. 27 of ljoss's 102 blocks map onto them | Nothing required for your own use (D7). The rest stay badged "unavailable" in ljoss |
-| A rig document becomes a virtual rig | ljoss encodes rigs and drives `namchaind` over TCP (protocol 2, token), proven against a daemon on macOS | Never run on `tib`. `namchaind` isn't installed there |
+| A rig document becomes a virtual rig | ljoss encodes rigs and drives `namchaind` over TCP (protocol 2, token), proven against a daemon on macOS and live against vip | Nothing: it runs on the Core host |
 | External MIDI controller | The MIDI Commander (USB and DIN out, your own firmware fork, its own two expression inputs sending CC11/CC4) | All of it: the DIN input on the Pico, the UART link, and mapping MIDI onto rigs |
-| Very low noise | Analogue design drafted in `docs/hardware-handoff.md`. `tib` currently uses the SSL 2+ | WM8960 in hand, inspected from photos (stock); input R/C mapping not yet checked. Analogue parts not bought. No noise-measurement method yet |
-| NAM models | One A2-Full on `tib` at q64: p99 ≈ 58.5% of the deadline, 0 xruns over an hour (`namchain/bench-results/tib-summary.txt`) | The NEON build behind that number isn't committed. Models load when a rig compiles, not held ready for switching. Switching crossfades; warm start is namchain's M3 |
-| IR | `nc.cab.ir` convolves the **whole** IR directly (`nam::Linear`, no length cap), and refuses any IR that isn't at 48 kHz because there is no resampler | **This blocks an amp + cab rig on `tib`.** Your library is mostly 500 ms files (about 24,000 taps), and two thirds of it is at 44.1 or 96 kHz. NAMBench measured direct convolution at 8,192 taps costing 42% of a `tib` core; your partitioned-FFT branch costs 5.3% on average, with a p99 of 21.7%. Beside A2-Full's ~58%, direct doesn't fit one core. namchain's own IR cost on `tib` is unmeasured |
+| Very low noise | Analogue design drafted in `docs/hardware-handoff.md`. Codec wired, measured and soaked on the bench ([docs/codec-bringup-2a.md](docs/codec-bringup-2a.md)) | Input R/C mapping not yet checked. Analogue parts not bought. No noise-measurement method yet |
+| NAM models | One A2-Full (WaveNet) model costs **0.111 of one core** on vip, measured at 9 copies with p99 97.4% of the deadline (`devices/vip/cost.json`; source and method in [bench-results/2026-10-08-cost-table-vip/README.md](bench-results/2026-10-08-cost-table-vip/README.md)) | Models load when a rig compiles, not held ready for switching. Switching crossfades; warm start is namchain's M3 |
+| IR | `nc.cab.ir` convolves the **whole** IR directly (`nam::Linear`, no length cap), and refuses any IR that isn't at 48 kHz because there is no resampler | Your library is mostly 500 ms files (about 24,000 taps), and two thirds of it is at 44.1 or 96 kHz. Measured on vip, an 8192-tap cab costs 0.0222 of a core and a 2048-tap one 0.010 (`devices/vip/cost.json`) — a fifth of a Full model, so direct convolution fits beside one. Resampling the library's other rates is namchain's |
 | Immune to glitches | PREEMPT_RT with core 3 isolated, clean hour-long soaks, crossfaded edits, per-node guards | Not yet shown under WiFi and app traffic, on the codec, through boot (no bypass yet), or across power loss (SD card) |
 
 ### Repos, machines and documents (surveyed 2026-09-23)
@@ -92,13 +81,6 @@ six choices for you at the end.
   checkout is 4 commits behind.
 - **ljoss** is checked out as `~/code.local/nodey`. It has one unpushed commit and about 30 files
   of LocalEngine and model-library work in progress. piv's copy is stale at `7618314` (11 Sep).
-- **tib** runs kernel `7.2.6-tib1` PREEMPT_RT with core 3 isolated, the SSL 2+ attached, on WiFi
-  only. Its namchain binaries are from 16 Sep, before TCP, schema, assets and macros existed. There
-  is no `namchaind` and no compiler.
-- **tib's audio device moves**: the SSL 2+ has been card 2 and card 1 on different boots, and
-  `alsa_raw` only accepts card *numbers*.
-- **tib has one I2S controller, and HDMI audio holds it**: a `simple-audio-card` named
-  `rockchip,tinker-codec`. The WM8960 card has to take it over.
 - **The documents have drifted:**
   - There are two hardware handoffs. The copy in namchain, `docs/research/`, has your notes that
     the codec and the RP2350 board hadn't arrived; the one here has the later control-surface
@@ -122,8 +104,8 @@ six choices for you at the end.
 
 | # | Decision | Source | Consequence |
 |---|---|---|---|
-| D1 | First target: play through `tib` with the SSL 2+, with ljoss over WiFi | you | Phase 1 comes before the codec and the Pico |
-| D2 | ljoss talks to `namchaind` on `tib` directly over WiFi. The Pico does physical controls only | you + recommendation | No app traffic over the UART. WiFi load gets soak-tested. Pico WiFi stays possible with a Pico 2 W (see Shopping), but it would never carry rigs or models |
+| D1 | First target: play through the Core host with the SSL 2+, with ljoss over WiFi | you | Phase 1 comes before the codec and the Pico |
+| D2 | ljoss talks to `namchaind` on the Core host directly over WiFi. The Pico does physical controls only | you + recommendation | No app traffic over the UART. WiFi load gets soak-tested. Pico WiFi stays possible with a Pico 2 W (see Shopping), but it would never carry rigs or models |
 | D3 | Rigs, models and IRs are stored on the pedal. It resumes the last rig, with its models, at power-up, and changes rigs with no app connected | you | A rig library on the device, a path for uploads, resume, and models held ready for fast switching |
 | D4 | A **pedal service** beside `namchaind`, in this repo, owns the rig library, resume, uploads and the footswitch/MIDI mapping. namchain stays a generic engine | you | namchain's only new job is keeping models loaded and ready (plus any small hooks the service needs) |
 | D5 | Mic input: leave room, build later | you | Reserve a panel position and the codec's right input (RINPUT1) |
@@ -157,8 +139,8 @@ Small and first, because every later phase deploys from it.
    - Add D2 and D4 as architecture lines, and a pointer to the repo map.
 2. **One hardware handoff.** Done 2026-09-25; namchain's copy is a pointer.
    - Merge your notes from `namchain/docs/research/namchain-hardware-handoff.md` into
-     `docs/hardware-handoff.md`: arrival status, the note that a Pi could stand in for `tib`, the
-     schematic path, and your note about keeping the diagram's formatting.
+     `docs/hardware-handoff.md`: arrival status, the note that a Pi 5-class board is the Core host,
+     the schematic path, and your note about keeping the diagram's formatting.
    - Rewrite its software section: `namchaind` on `alsa_raw` instead of JACK/LV2, plus D2–D6.
    - In namchain, replace the research copy with a one-line pointer here.
 3. **One diagram.** Done 2026-09-25: `docs/diagrams/nam-pedal-block-diagram.drawio`. The App
@@ -184,9 +166,7 @@ Small and first, because every later phase deploys from it.
 6. **Commit the armv7-NEON build** in namchain. Done 2026-09-25 (namchain `907ef81`):
    `cmake/toolchains/armv7-neon-linux-gnueabihf.cmake`, a CI job that runs the tests and the
    planar parity gate under qemu-arm, and a configure summary that compiles `a2_planar.h`'s own
-   gate. Verified on piv: 261/261 tests pass and the parity test runs. The committed armv7 build (`-mfpu=vfpv3-d16`)
-   can't run A2-Full in real time on `tib` at all: 133% of a core, against 52% with NEON
-   (`bench-results/tib-summary.txt` §1–2).
+   gate. Verified on piv: 261/261 tests pass and the parity test runs.
    - A toolchain file or `CMakePresets.json` entry for NEON-guaranteed boards (`-mfpu=neon-vfpv4`),
      keeping the generic `vfpv3-d16` one for redistributable builds. NAMBench already does this
      with `NAMBENCH_ARM_FPU`.
@@ -201,7 +181,7 @@ Small and first, because every later phase deploys from it.
    - Check whether Claude Code reads `CLAUDE.md` from extra directories.
 8. **Scripts here:** `scripts/status`, `scripts/host-lock`, `scripts/deploy-engine` and
    `components.lock`, as specified in the repo doc. Done 2026-09-28. `scripts/deploy-engine`
-   (piv only, native aarch64; tib's cross build went with tib) and `scripts/sync-library` came
+   (native aarch64 for each host) and `scripts/sync-library` came
    first.
    - `scripts/host-lock` holds a `flock` on the host (`/run/lock/pedal-host.lock`) through an ssh
      session with a heartbeat, so a sleeping Mac or a dropped network lets go within 30 s. The lock
@@ -220,40 +200,31 @@ Small and first, because every later phase deploys from it.
 - `scripts/deploy-engine` rebuilds the NEON configuration from a commit.
 - `CLAUDE.md`, the handoff and the diagram each exist once and agree.
 
-## Phase 1 — Play through tib
+## Phase 1 — Play through the Core host
 
-On piv until vip arrives (see [The Core host moves to a Pi 5](#the-core-host-moves-to-a-pi-5)). Steps 1 and 2 were done on `tib`; step 2's
-numbers need re-measuring on piv.
+On piv before vip arrived, then on vip (see [The Core host moves to a Pi 5](#the-core-host-moves-to-a-pi-5)). Step 1's recorded id is the SSL 2+'s on piv; step 2's measurements were piv's, and vip's
+replaced them. The first target was reached on vip through the codec (below).
 
 1. **Open devices by name** (namchain). `alsa_raw` resolves `hw:CARD=<id>` or `hw:<id>,<dev>`
    through `/proc/asound/<id>`, so a reboot can't point the engine at the wrong card. This is
    needed for the WM8960 too.
-   Done 2026-09-25 (namchain `412e151`). On `tib` the SSL 2+'s id is `II` (ALSA takes it from
+   Done 2026-09-25 (namchain `412e151`). The SSL 2+'s id is `II` (ALSA takes it from
    "SSL 2+ Mk II"), so the config names `hw:CARD=II,DEV=0`.
-2. **Make an amp + cab rig fit on `tib`** (namchain).
+2. **Make an amp + cab rig fit** (namchain).
    Done 2026-09-25 (namchain `79939b4`). `nc.cab.ir` now uses `PartitionedConvolution` from your
    AudioDSPTools fork at `b505422`, with all three NAMBench optimisations. The core's `nam::Linear`
-   it replaced was already a partitioned FFT, but without the spreading. On `tib` at 1.416 GHz, a
-   full-length cab alone is p99 9–10% of a 64-frame deadline (it was 111%), and A2-Full plus the cab
-   is p99 70% (was 168%). It also resamples 44.1/96 kHz IRs and caps them at 8192 taps, as the
-   plugin does, less the plugin's −18 dB. Numbers: namchain `bench-results/tib-cab-ir.txt`.
+   it replaced was already a partitioned FFT, but without the spreading. It also resamples 44.1/96 kHz
+   IRs and caps them at 8192 taps, as the plugin does, less the plugin's −18 dB.
    **Partly undone 2026-09-26** (namchain `04a1fc8`): you deprecated the AudioDSPTools fork, and it
    was gone from GitHub, so a clean clone couldn't build. `nc.cab.ir` is back on the core's
    `nam::Linear`; the resampling, the 8192-tap cap and the `.nam` path stay. On piv at q64,
    A2-Full + full cab went from p99 8.7% to 15.4%, with 0 overruns. At q32 it's 24% with 5
    overruns a minute, and a few ~1 ms blocks appear with either convolver, cause unknown
-   (namchain `bench-results/piv-cab-ir.txt`). On `tib` this brings back the 62%-at-8192-taps
-   problem: see the debt register.
-   **For step 8:** A2-Full *alone* overran 7–9 blocks in 30 s today, where the same load ran a
-   clean hour on 16 Sep. `tib` is noisier than it was; find out why before the soak.
-   Checked 2026-09-25: the kernel's isolation of core 3 is intact, and the journal shows nothing
-   else running during those runs. But they ran back to back for ~9 minutes with no cool-down and
-   no temperature recorded, the userspace confinement from namchain's host-slim had decayed, and
-   the clock cap was set by hand for each run. `devices/tib/` now owns all of that (it replaces
-   host-slim, caps the clock at boot, confines services and logins to cores 0–2, and moves the
-   audio interrupt to core 2 at priority 85). Before step 8, rerun A2-Full alone from cool, with
-   `sudo pedal-rt`, and record temperature and throttle state (`pedal-tune check` prints both).
-   - First, measure `nc.cab.ir` on `tib` at your library's real lengths.
+   (namchain `bench-results/piv-cab-ir.txt`). vip's cost table puts the same shape at 0.0222 of a
+   core for an 8192-tap cab: see the debt register.
+   **For step 8:** the rig has to be run the way the pedal runs it, with the host's own tuning in
+   force — `devices/vip/tune.conf` owns the CPU split, the clock and the audio interrupt, and
+   `pedal-tune check` prints the temperature and throttle state beside them.
    - Then port the partitioned FFT convolution from your AudioDSPTools `partitioned-ir` branch
      into `nc.cab.ir`: direct up to 512 taps and FFT above, as the branch's `Auto` does.
    - Test it against the direct path within a stated tolerance. The branch measured 136–138 dB
@@ -269,22 +240,22 @@ numbers need re-measuring on piv.
    FIFO 80 on core 3, TCP on `0.0.0.0:47810`. The SSL 2+ has to be opened with all its channels
    (8 in, 6 out); asking for 1/2 leaves the engine "lost". Still to do: a fixed address or mDNS
    for ljoss (avahi is installed but inactive on piv).
-   - `namchaind` and `namchainctl` go to `tib` through `scripts/deploy-engine`.
-   - Install the systemd unit and config under `devices/tib/`:
-     - `alsa_raw` on the SSL 2+ by name, render thread pinned to core 3
+   - `namchaind` and `namchainctl` go to the host through `scripts/deploy-engine`.
+   - Install the systemd unit and config under `devices/<host>/`:
+     - `alsa_raw` on the card by name, render thread pinned to core 3
      - `Slice=pedal-rt.slice` (the only slice allowed on core 3), `LimitRTPRIO=95`,
        `LimitMEMLOCK=infinity` (a service doesn't get `limits.d`)
-     - start from the settings `tib`'s soaks used (quantum, periods, output-queue cap)
+     - start from the settings the soaks used (quantum, periods, output-queue cap)
      - TCP on the LAN with a token from a file.
-   - Give `tib` a fixed address (a DHCP reservation) or use its mDNS name, because ljoss has no
+   - Give the host a fixed address (a DHCP reservation) or use its mDNS name, because ljoss has no
      discovery.
-4. **Library on the pedal.** Rsync the models and IRs your rigs use into `tib`'s library folders,
+4. **Library on the pedal.** Rsync the models and IRs your rigs use into the host's library folders,
    no conversion needed: `nc.cab.ir` resamples 44.1 and 96 kHz IRs itself (step 2).
    Done on piv 2026-09-26: `scripts/sync-library` mirrors `~/Documents/Audio/NAM` and `IRs` (53
    models, 1,538 IRs, 157 MB) into `/var/lib/pedal/library/{models,irs}` and asks the engine to
    rescan. That settles the open question of where data lives, for now: `/var/lib/pedal/library`.
-5. **ljoss → tib.**
-   - Point ljoss's Hardware settings at `tib`, and run `Tools/check-device.sh` against it.
+5. **ljoss → the Core host.**
+   - Point ljoss's Hardware settings at the host, and run `Tools/check-device.sh` against it.
    - Play an amp + cab + EQ + delay rig and edit it live.
 
    Done on piv 2026-09-28, through the SSL 2+ (`namchaind` moved back from the WM8960 for this,
@@ -542,14 +513,14 @@ numbers need re-measuring on piv.
      detector on the captured output).
 
 **Done when:**
-- From power-on, `tib` plays the last rig (an A2-Full amp and a full-length cab IR) through the
+- From power-on, the Core host plays the last rig (an A2-Full amp and a full-length cab IR) through the
   SSL 2+ with no app connected.
 - ljoss on the Mac edits it live.
 - An hour of playing and editing is clean.
 - `components.lock` names what's running.
 
-**First target reached** (declared by Rik, 2026-10-02), on vip with the WM8960 rather than `tib`
-with the SSL 2+: vip resumes its rig from power-on, ljoss edits it live (2e1a63a,
+**First target reached** (declared by Rik, 2026-10-02), on vip with the WM8960 rather than the SSL 2+:
+vip resumes its rig from power-on, ljoss edits it live (2e1a63a,
 `check-streaming`), the hour's replay soak passes (974060c), and `devices/vip/components.lock`
 names what runs. The two-amp Ambient Wash failing the gate alone is open, under "Next session
 starts with".
@@ -569,17 +540,17 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      silkscreen can't confirm it. LINPUT1 first.
    - ~~Photos into `references/`.~~ Done: `references/wm8960-photos/`.
 2. **Wire it stock.**
-   - VIN from `tib`'s 5 V, so the onboard LDO feeds AVDD with AVDD-ISO intact.
-   - 3V3, I2C and I2S from `tib`'s header, on short leads.
-   - Settle which I2C bus is on the header, and whether it has separate RX/TX frame clocks (the
-     handoff's open item).
+   - VIN from the host's 5 V, so the onboard LDO feeds AVDD with AVDD-ISO intact.
+   - 3V3, I2C and I2S from the host's header, on short leads.
+   - The header's I2C is I2C1 on GPIO2/3, and the Pi has one frame clock, so DACLRC is wired and
+     ADCLRC is left off (the handoff's open item, answered in 2a).
 3. **Device tree** (rtpi).
-   - A WM8960 `simple-audio-card` on `tib`'s one I2S controller, replacing the HDMI card:
+   - A WM8960 `simple-audio-card` on the Pi's I2S, from `i2s_clk_consumer` up:
      - codec at 0x1A, clock master (`bitclock-master` and `frame-master` on the codec)
      - a 24 MHz fixed clock as its MCLK, so the driver can set its PLL up for 48 kHz.
    - Built with rtpi's check on the built DTB, tried through the one-shot slot, then promoted.
-4. **Mixer state as code** (`devices/tib/`): ALC off, 3D off, speaker amp off, OUT3 off,
-   LINPUT1 → PGA near 0 dB → ADC, DAC → HP_L/HP_R.
+4. **Mixer state as code** (`devices/common/rootfs/etc/pedal/codec/wm8960.mixer`): ALC off, 3D off,
+   speaker amp off, OUT3 off, LINPUT1 → PGA near 0 dB → ADC, DAC → HP_L/HP_R.
 5. **Measure with the SSL 2+ as the instrument:**
    - frequency response
    - noise floor, A-weighted, input shorted
@@ -618,7 +589,7 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      input and right for a line input, and `namchaind`'s output gain sets it either way.
    - **AVDD draws about 5–8 mA** (the datasheet's playback figures), so a TO-92 78L33 is plenty.
      There's a simpler option for 2c too: feed the board's VIN from a 78L05 on the 9 V side. AVDD
-     then comes off `tib`'s supply with no cutting, and the board's own LDO becomes a second stage.
+     then comes off the host's supply with no cutting, and the board's own LDO becomes a second stage.
    **Review against 2a (2026-09-27).** Measured on piv; numbers in
    [docs/codec-bringup-2a.md](docs/codec-bringup-2a.md#results), datasheet v4.2.
    - **Full scale is 1.0 V rms, in and out, as the datasheet says.** The meter's 0.81 V (input) and
@@ -797,7 +768,7 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      before the deploy — the mismatch's fingerprint, seen for real:
      [bench-results/2026-10-06-draft2-swap-bench.md](bench-results/2026-10-06-draft2-swap-bench.md).
      **3.3 is done.**
-4. **The Core host side** (`tib`'s UART1 went with `tib`).
+4. **The Core host side.**
    - A UART on the Pi's 40-pin header that carries nothing but the link: no kernel console, no
      getty, no SysRq. On piv, pins 8/10 are `ttyAMA0`, and its kernel console is there
      (`console=ttyAMA0,115200` in its command line, 2026-09-28 backup). Either move the console,
@@ -818,13 +789,13 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      buffer. The RP2350's RX FIFO is 32 bytes (under 3 ms at 115200), so a display redraw or a
      burst of MIDI in the loop can overflow it.
 6. **Bypass relay.** Choose a relay whose **de-energised** state is bypass.
-   - Then no power, a crashed Pico and a booting `tib` all fail to bypass.
+   - Then no power, a crashed Pico and a booting Core host all fail to bypass.
    - The Pico energises it only once the service reports audio ready.
    - When it drops back to bypass after boot is `docs/pedal-service.md`'s relay rule, open (R4).
      The Pico and the Core host share the 5 V input, so the Pico stays powered through a Core
      host reboot or hang — **the test below holds for form 2 (2026-10-05)**, which is what the case
      will use; the proposal (bypass after 5 s without the link, or 2 s without
-     `audio_ready`) is what keeps "a booting `tib`" failing to bypass then too. Set its times on
+     `audio_ready`) is what keeps "a booting Core host" failing to bypass then too. Set its times on
      the bench, and check what a hung Core host puts out: silence, or a repeating buffer.
    - A long press gives a panic bypass.
    - **Does the Pico keep its power through a vip reboot? Test it before relying on it.** The
@@ -906,10 +877,12 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    - clicks: the glitch detector, plus a null against an always-on reference model (how far B's
      and C's state is from D's, over the first 132 ms after the switch)
    - **the render core's tail** with the other work running beside it: p99 and max on core 3,
-     overruns. The risk in D is not core 2's own load (A2-Full is ~7% of a core on piv, so 8 fit
-     in about 60%) but contention for the shared L3 cache and memory bandwidth, which isolation
-     can't partition. namchain has measured that kind of interference raising the render p99
-     before (`bench-results/tib-nohzfull-summary.txt` §2).
+     overruns. The risk in D is not core 2's own load (a Full model is ~0.11 of a core on vip at
+     the fit point, so 8 fit in about 90%) but contention for the shared L3 cache and memory
+     bandwidth, which isolation can't partition. namchain has measured that kind of interference
+     on piv: with memory pressure on the housekeeping cores the render p99 went from 8% to 37%
+     and the worst block from 23% to 52% (`bench-results/2026-10-02-multi-core-piv.md`,
+     "Interference on the housekeeping cores").
    - core 2's load, memory (vip has 1 GB), temperature and throttling over an hour.
 
    Build it as a bench tool first, not an engine feature: `namchain-soak` rendering on core 3,
@@ -1087,9 +1060,12 @@ recording before the aluminium one is drilled.
 - **Survive pulled power.** A read-only root (overlayroot) plus a small data partition for rigs and
   models, written atomically. A pedal gets unplugged mid-write, and today one SD card holds
   everything.
-- **Heat in the box.** An hour's soak inside the closed enclosure, recording temperatures.
-  Uncapped, `tib` hit its 90 °C trip. Capped at 1416 MHz it held 72–76 °C, but it has never been
-  measured inside an enclosure.
+- **Heat in the box.** An hour's soak inside the closed enclosure, recording temperatures. On a bare
+  board it is a non-event: 1, 2 and 3 render cores peak at 40.8 °C, the same as a three-core
+  `stress-ng` reference (`bench-results/2026-10-02-multi-core-piv.md`, "The thermal soak"), and the
+  pedal's own hour through the codec ran at 53.8–58.2 °C, never throttled
+  (`bench-results/2026-10-08-cost-table-vip/README.md`, T10). None of it has been measured inside an
+  enclosure, which is what this is for.
 - **Boot time**, if 1.7 shows the relay isn't enough on its own.
 
 ## Phase 5 — The pedal's own network: pairing and the app's way in
@@ -1178,7 +1154,7 @@ exactly this: think about them now, fix them after the higher-priority work.
 | Restriction | Why it's accepted now | How to pay it off later |
 |---|---|---|
 | MIDI is DIN only: USB-only controllers won't connect, and the MIDI Commander needs its own power | Simplest, isolated | USB host on the Pico through PIO-USB: two GPIO plus a USB-A socket, which is essentially what the RP2350-USB-A does. The event layer stays transport-agnostic, so this is a firmware change |
-| The RP2350-USB-A has 15 GPIO, and the design needs about 18 (display 5–6, encoder and button 4, footswitches 3, UART 2, MIDI 1, relay 1, LEDs 1+, expression 1) | A Pico 2 has 26 | Pico 2 for the control surface, RP2350-USB-A for experiments. If pins run short: footswitches on a resistor ladder into one ADC, WS2812 LEDs on one pin, or an MCP23017 on the Pico's own I2C bus (never `tib`'s) |
+| The RP2350-USB-A has 15 GPIO, and the design needs about 18 (display 5–6, encoder and button 4, footswitches 3, UART 2, MIDI 1, relay 1, LEDs 1+, expression 1) | A Pico 2 has 26 | Pico 2 for the control surface, RP2350-USB-A for experiments. If pins run short: footswitches on a resistor ladder into one ADC, WS2812 LEDs on one pin, or an MCP23017 on the Pico's own I2C bus (never the Core host's) |
 | The pedal plans its own expression jack, but the MIDI Commander already has two expression inputs | — | Decide whether the pedal needs its own. If not, drop the jack and its GPIO, since MIDI already carries expression |
 | Only program and control changes get mapped at first | Enough to change rigs | A mapping table in the pedal service: PC → rig, CC → parameter (streamed only when `engine.schema` marks it rampable), bank select, notes |
 | Mono engine: pan and stereo effects are refused. Two chains give dual mono | namchain decision: declare and refuse | namchain's stereo work, when a stereo effect is actually wanted. The outputs are already two channels |
@@ -1186,15 +1162,14 @@ exactly this: think about them now, fix them after the higher-priority work.
 | The whole rig renders on one core (core 3), and A2-Full alone takes ~58% of it | **Deliberate since 2026-10-07, not just where we are**: a rig is atomic and the other real-time core exists to keep rigs warm, because switching latency is what the pedal is for. Spending a second core on one rig would cost the warmth that makes a switch instant (D1–D4, [docs/managing-processing-power-and-optimising-for-fast-switching.md](docs/managing-processing-power-and-optimising-for-fast-switching.md)) | A rig too big for one core is trimmed to Lite or refused — the cost model's job (D2, D3, D6). namchain's parallel rendering (M4) stays in the engine, off and unused by the policy; the heaviest rig measured is a single chain it could not help anyway |
 | No resampler for models: a NAM model must already be at 48 kHz | IRs no longer need one: `nc.cab.ir` resamples 44.1 and 96 kHz (Phase 1.2) | Resample at load in namchain, or convert on upload in the pedal service. Until then its upload API refuses a model that declares another rate (`docs/pedal-service.md`) |
 | One instrument input | D5 | A mic stage on RINPUT1, and a decision on phantom power (a DC-DC converter beside the ADC) |
-| WM8960 replaces HDMI audio on the one I2S controller | Nothing uses HDMI audio | None needed. A second codec would mean TDM or USB |
+| WM8960 claims the Pi's I2S | On a Pi 5 the firmware exposes no HDMI audio (`dtparam=audio` is ignored; `docs/vip-image.md`), so nothing else wants that bus | None needed. A second codec would mean TDM or USB |
 | No way to upload from the app yet | D4 | The pedal service's upload API. ljoss gets a "send to pedal" action. Designed 2026-09-28: `docs/pedal-service.md`, its v3, which has no plan step yet. `sync-library` moves onto the API then: its `rsync --delete` would remove uploads |
 | The app needs the home network | Phase 1 happens at home | The pedal as its own access point (Phase 5, [docs/pairing.md](docs/pairing.md)): the Core host runs it, the Pico does BLE, and ljoss joins with `NEHotspotConfigurationManager.joinAccessoryHotspot`. The Mac keeps the typed address and token |
 | No discovery: the host is typed in | — | mDNS from the pedal service; and for ljoss the provisioning bundle hands it the address, the port and the token (Phase 5) |
 | Plain-text token, no TLS | Trusted LAN | A tunnel, or TLS in the service, if it ever leaves the LAN |
-| `tib` is out of production | `about.md`: reuse what you have | namchain already builds and tests for aarch64, so a Pi 4/5-class board is the replacement path. A Pi Zero 2 W hasn't been measured, and A2-Full already uses about 58% of a Cortex-A17 core, which is faster per clock than the Zero's in-order A53 |
 | Everything lives on one SD card | — | Overlayroot plus a data partition (Phase 4) |
 | An I2S fault can silence the pedal with no error. On piv (2026-09-27) BCLK was pulled and refitted while `namchaind` ran: it kept reporting `running`/`ok` with 0 xruns, but nothing came out, most likely a lost frame alignment that put the rig on the unconnected channel. Restarting `namchaind` fixed it | The build solders its connections; on the bench, restart `namchaind` after touching the header | A liveness check in namchain or the pedal service: flag an input that has been digitally silent (or DC, or stuck) for a few seconds while the device is running, and reopen the device. Possibly check that the codec's clock rate matches what the Pi receives. The Pico could show it and hold bypass |
-| `nc.cab.ir` is back on the core's `nam::Linear` (2026-09-26): every partition multiply lands in one callback. On piv that's p99 15% for A2 + cab at q64; on `tib` it was 62% for the cab alone at 8192 taps | You deprecated the AudioDSPTools fork that spread the work | Spread the multiplies inside namchain, or upstream a partitioned convolver to the NAM core or sdatkinson/AudioDSPTools. Needed for q32, or if vip's soak shows the tail is too close at q64 |
+| `nc.cab.ir` is back on the core's `nam::Linear` (2026-09-26): every partition multiply lands in one callback. On piv that's p99 15% for A2 + cab at q64; on vip an 8192-tap cab is 0.0222 of a core at its fit point, a fifth of a Full model (`devices/vip/cost.json`) | You deprecated the AudioDSPTools fork that spread the work | Spread the multiplies inside namchain, or upstream a partitioned convolver to the NAM core or sdatkinson/AudioDSPTools. Needed for q32, or if vip's soak shows the tail is too close at q64 |
 
 ## Open questions
 
@@ -1203,8 +1178,9 @@ These don't block Phase 0 or 1.
 - **Pedal service:** beside `namchaind` (the app keeps its direct connection) or in front of it
   (one endpoint and one token for the app, one extra hop for knob streams)? Decided in 3.2:
   beside ([docs/pedal-service.md](docs/pedal-service.md)).
-- **Where data lives on `tib`:** namchain's default is `/etc/namchain`. `/var/lib/...` is more
-  conventional for user data. Decided with the overlayroot design.
+- **Where data lives on the Core host:** namchain's default is `/etc/namchain`, and the library
+  landed at `/var/lib/pedal/library` (Phase 1.4). `/var/lib/...` is the more conventional place for
+  user data; the final answer comes with the overlayroot design.
 - **Rig designers for other platforms** (`about.md`): the engine protocol is where any second
   client would plug in, and `namchainctl` is its reference client. A browser UI served by the pedal
   service would reach every device with nothing to install. Worth weighing before a Qt designer.

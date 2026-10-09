@@ -26,12 +26,12 @@ ROOT=""
 STATE=/var/lib/pedal
 MANIFEST=$STATE/manifest
 SAVED=$STATE/preexisting
-LOCK=/run/lock/$(hostname).lock  # the same lock scripts/host-lock will take (tib.lock on tib)
+LOCK=/run/lock/$(hostname).lock  # the same lock scripts/host-lock will take (vip.lock on vip)
 
-# namchain's tools/soak/host-slim.sh configured tib and piv before this tree existed. apply takes
+# namchain's tools/soak/host-slim.sh configured the hosts before this tree existed. apply takes
 # its place: it removes host-slim's files (saving them) and takes over the masks we share. The
-# realtime limits in audio.conf (tib) and 99-namchain-audio.conf (piv) were written by hand during
-# namchain's plan-rt work, and are now in 90-pedal-rt.conf.
+# hand-written realtime limits it replaces (audio.conf and 99-namchain-audio.conf) were written
+# during namchain's plan-rt work, and are now in 90-pedal-rt.conf.
 HOSTSLIM_MANIFEST=/var/lib/namchain/host-slim/manifest
 HOSTSLIM_UNITS=(namchain-host-slim-vmstat.service namchain-host-slim-initconfine.service)
 ADOPT_FILES=(/etc/security/limits.d/audio.conf /etc/security/limits.d/99-namchain-audio.conf)

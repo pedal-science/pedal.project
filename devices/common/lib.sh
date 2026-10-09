@@ -1,6 +1,6 @@
 # Shared by devices/<host>/{apply,check,backup}, which are links to devices/common/. Source it,
 # don't run it. The host is the name of the directory the link was run from, so
-# devices/piv/apply works on piv and devices/tib/apply on tib.
+# devices/piv/apply works on piv and devices/vip/apply on vip.
 set -euo pipefail
 
 # BASH_SOURCE keeps the path the script was invoked by, not the link's target.

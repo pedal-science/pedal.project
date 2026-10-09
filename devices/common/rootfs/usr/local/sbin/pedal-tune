@@ -23,8 +23,7 @@ CONF=/etc/pedal/tune.conf
 # shellcheck source=/dev/null
 source "$CONF"
 : "${RT_CPUS:?} ${HOUSEKEEPING_CPUS:?} ${CPU_GOVERNOR:?} ${CPU_MAX_KHZ:?}"
-# The cores the kernel isolates. On tib that is just the render core; piv isolates 2-3 and
-# renders on 3.
+# The cores the kernel isolates. piv and vip both isolate 2-3 and render on 3.
 ISOLATED_CPUS="${ISOLATED_CPUS:-$RT_CPUS}"
 AUDIO_IRQ_MATCH="${AUDIO_IRQ_MATCH:-}"
 AUDIO_IRQ_PRIO="${AUDIO_IRQ_PRIO:-85}"

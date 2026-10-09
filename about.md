@@ -90,5 +90,5 @@ vip and piv are (so far) always on my home network.
 
 piv can be used for building, testing, etc. It's designed to be a do-everything utility server. It doesn't run anything critical, so if it is busy or down, it's not a problem. It stood in as the Core host before vip arrived, and keeps its own dev checkouts.
 
-vip is the target for "Core" and is where the pedal is being tested, so I want to keep it quiet and shared: it never builds anything (builds happen on M2), only one measurement runs at a time, and nothing heavy should start on it without asking first. 'tib' - the ASUS Tinker Board that was the original Core host - is retired: it stopped working on 2026-09-25, and its numbers, `devices/tib/` and its backups stay as history.
+vip is the target for "Core" and is where the pedal is being tested, so I want to keep it quiet and shared: it never builds anything (builds happen on M2), only one measurement runs at a time, and nothing heavy should start on it without asking first.
 

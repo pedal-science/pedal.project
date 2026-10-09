@@ -333,8 +333,10 @@ the last few from before would acknowledge new events and drop them. The dedupe 
 the session. And an event pending when the link drops is dropped rather than applied late: the
 firmware resumed retrying it after the reconnect (fixed on this branch).
 
-**U6. The Core-side port was `tib`'s.** On piv, header pins 8/10 are `ttyAMA0`, which carries the
-kernel console. The link's UART must carry nothing else; plan 3.4 now says so.
+**U6. The Core-side port must be the link's alone.** On piv, header pins 8/10 are `ttyAMA0`,
+which carries the kernel console, so the link either needs the console moved or another UART. The
+link's UART must carry nothing else; plan 3.4 now says so, and on vip the console is on
+`ttyAMA10`, so pins 8/10 have the port to themselves.
 
 **U7. `engine_bypass` was the engine's mute.** Renamed `engine_muted`, so "bypass" means one
 thing: the relay.

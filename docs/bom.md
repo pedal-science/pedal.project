@@ -17,8 +17,8 @@ The analogue values were settled by the Phase 2b review on 2026-09-27
 
 ## Already on the bench
 
-- `tib` (Tinker Board S), the SSL 2+, the SparkFun WM8960 breakout (stock, unchecked), the ST7789
-  display with its encoder, the spare enclosure, the Cioks DC7 and the MIDI Commander. The
+- `vip` (Pi 5) and `piv` (Pi 500), the SSL 2+, the SparkFun WM8960 breakout (stock, unchecked), the
+  ST7789 display with its encoder, the spare enclosure, the Cioks DC7 and the MIDI Commander. The
   RP2350-USB-A is on its way.
 - The **spare enclosure is the bench pedal since 2026-10-04**: a temporary plastic box whose rear
   wall carries IN, OUT L and OUT R in the Neutrik jacks, standing in for the aluminium case until it
@@ -31,7 +31,7 @@ The analogue values were settled by the Phase 2b review on 2026-09-27
 | Part | CPC code | Qty | £ each | For |
 |---|---|---|---|---|
 | Raspberry Pi Pico 2 WH (Pico 2 W with headers) | SC21692 | 2 | 6.30 | The control surface, and one for experiments. The W keeps Pico WiFi possible (D2) |
-| Raspberry Pi Debug Probe | SC20014 | 1 | 10.00 | SWD flashing and debugging, and a USB-UART for testing the `tib` link |
+| Raspberry Pi Debug Probe | SC20014 | 1 | 10.00 | SWD flashing and debugging, and a USB-UART for testing the Pico link |
 | 830-point breadboard with 140 pre-cut jumper wires (Pro Signal) | PC02882 | 2 | 4.24 | Prototyping, plus a spare |
 | 40-way 2.54 mm pin header strip (Multicomp Pro) | CN21901 | 2 | 0.93 | The WM8960 board's two rows (16 pins each), and the RP2350 board |
 | H11L1M optocoupler (onsemi, DIP-6) | SC17297 | 2 | 0.35 | MIDI in, plus a spare |
@@ -112,7 +112,7 @@ the middle of the op-amp's input range.
 | 1N5817 Schottky diode | SC07407 | 3 | 0.10 | in hand | Reverse-polarity protection on the 9 V barrel and on the battery (two), and the diode into the Pico's VSYS from vip's header — Phase 3.6's form 2, **wired and tested 2026-10-05: the Pico keeps running through a vip reboot and a shutdown** (form 1, the USB-A port, does not: see the USB-A cable below). Band towards VSYS. With the battery option all three are used — no spare |
 | 100 µF 25 V electrolytic (Panasonic FR) | CA09947 | 10 | 0.11 | in hand | 9 V bulk capacitance, the buffer's RC filter. Sold in tens |
 | 10 µF 50 V electrolytic (Panasonic FC) | CA09903 | 10 | 0.18 | in hand | Decoupling for the bias and the regulators. Sold in tens |
-| L78L33ACZ, 3.3 V 100 mA (TO-92) | SC16361 | 2 | 0.26 | in hand | AVDD from the 9 V side in 2c. The second one could later take the whole codec board off `tib`'s rails |
+| L78L33ACZ, 3.3 V 100 mA (TO-92) | SC16361 | 2 | 0.26 | in hand | AVDD from the 9 V side in 2c. The second one could later take the whole codec board off the host's rails |
 | L78L05ABZ, 5 V 100 mA (TO-92) | SC15743 | 5 | 0.21 | in hand | The option for 2c that needs no cutting: feed the board's VIN from the 9 V side. CPC's minimum is five |
 | M3 solder tags, pack of 100 | CN22127 | 1 | 0.83 | in hand | The star-ground point |
 | Raspberry Pi 45 W USB-C power supply | — | 1 | — | in hand | vip's supply. It offers 5.1 V at 5 A by USB PD, which vip asks for itself. The DC7 v1's USB-A (1 A) isn't enough; it stays for the MIDI Commander |

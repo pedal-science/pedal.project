@@ -12,7 +12,6 @@ gitlinks:
 --- branches ---
   * main                             44f049b [origin/main: ahead 1] workspace: the pedal's five repos move into one folder a session is opened on
     pico-service-review              c4b0296 [origin/pico-service-review] docs/pedal-service.md: Claude's review (R1-R15); plan, AGENTS.md, working-across-repos follow it
-    x/pi-debug-probe-tib-003455      b5f494a tib: soak ended in a thermal shutdown at 90 °C after 23 min, then it stopped booting again; work on it stopped
     x/pi5-sd-card-image-build-d9f6d2 214f69e vip runs namchain 2e1a63a (meta, bypass as a ramp), deployed by deploy-engine; ljoss's check-streaming passes against it: 580 ramps over a 201-step drag, a bypass without a rebuild
     x/vibrant-borg-bbd68d            a19e52b devices/piv: namchain's finished isolation A/B harness is removed from piv
 --- status --porcelain ---

@@ -56,7 +56,7 @@ user:filter-chain.service
 #                      piv's other jobs. They live in system.slice and machine.slice, so they run
 #                      on cores 0-1 with everything else. Stop them before a soak.
 #   NetworkManager, wpa_supplicant, systemd-networkd
-#                      WiFi is the way in; the same boot-time-fallback question as tib's.
+#                      WiFi is the way in; the same boot-time-fallback question the Core host has.
 #   namchain-realtime-tune.service
 #                      namchain's: sets the governor and turns USB autosuspend off. Harmless
 #                      beside pedal-tune, and the autosuspend half is worth keeping.

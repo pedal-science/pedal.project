@@ -11,16 +11,14 @@ This file is canonical for every agent. `CLAUDE.md` only imports it (and
 `docs/hardware-handoff.md`); change this file, not that one.
 
 **Core host** (the board that runs the DSP, "Core" in `about.md`):
-- **`tib`** (ASUS Tinker Board, RK3288, armhf) is **retired** as of 2026-09-26. It stopped
-  working on 2026-09-25. Its numbers, `devices/tib/` and its backups stay as history.
 - **`vip`** (Raspberry Pi 5, 1 GB, aarch64) **is the Core host** (from 2026-10-01). It's built
   from an image (`devices/vip/make-card`), has no compiler, and is where testing happens until
   it's a working pedal nobody should disrupt; then the test hardware is chosen again.
-- **`piv`** (Raspberry Pi 500, aarch64) stood in until vip arrived. It isn't updated meanwhile
-  (namchain 503aac9; `devices/piv/check` shows known differences) and keeps its dev checkouts.
+- **`piv`** (Raspberry Pi 500, aarch64) is the live bench device and build host. It isn't updated
+  in step with vip meanwhile (namchain 503aac9; `devices/piv/check` shows known differences) and
+  keeps its dev checkouts.
 
-Older docs and plan phases say "`tib`"; read that as "the Core host". Full hardware context,
-schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-handoff.md).
+Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-handoff.md).
 
 ## How to start a session
 

@@ -22,8 +22,8 @@ Then put the card in vip, power it on, and `ssh vip` works about a minute later.
 is green, `namchaind` is running the default rig, and `scripts/status --host vip` shows the
 commits it was built from. Run it again with the same pinned inputs and you get the same system.
 
-No step happens by hand on vip, and none happens on piv. vip has no compiler (as `tib` had none,
-`working-across-repos.md`), so everything arrives built.
+No step happens by hand on vip, and none happens on piv. vip has no compiler
+(`working-across-repos.md`), so everything arrives built.
 
 ## What exists already, and what carries over
 
@@ -33,7 +33,7 @@ No step happens by hand on vip, and none happens on piv. vip has no compiler (as
 | rtpi, piv | `piboot-validate`: sshd listening, a *physical* interface with an address, the expected kernel, PREEMPT_RT. The dracut lockout arguments. The watchdog at 14 s, in the initramfs too | All of it, for candidates |
 | rtpi, piv | `AUDIO_TUNING_ARGS` (isolcpus, nohz_full, rcu_nocbs on 2-3, irqaffinity 0-1, skew_tick) staged as a candidate command line, so a bad set of arguments rolls back like a bad kernel | The "tuned" profile below |
 | rtpi, piv | Ubuntu's `linux-raspi-realtime` 7.0.0-1017 is already well configured for RT, and a custom build buys little (rtpi README, "Is a custom kernel worth building for piv?") | vip's first kernel. rtpi's `piv-ubuntu-rt`/`piv-vendor-rt` builds stay available for when a patch is needed |
-| rtpi, tib | The lesson from tib's one-shot: fail *safe*. A failed clear, a hang or a power cut returns to the known-good | Every mechanism below keeps that property |
+| rtpi | Fail *safe*: a failed clear, a hang or a power cut returns to the known-good | Every mechanism below keeps that property |
 | pedal.project | `devices/common` + `devices/piv`: the `namchaind` drop-in, `pedal-tune`, `pedal-resume`, `pedal-wifi`, the cpuset slices, masked units, limits, sysctl, the codec overlay and mixer | Baked into the image, then `devices/vip/apply` works on the live board exactly as it does on piv |
 | namchain | `docs/distro-slimming.md`: the tail on piv is memory traffic on the housekeeping cores, not CPU time. A machine that runs nothing else is the predictability win | A minimal root built from packages, not a stripped desktop image. piv had 2,587 packages; vip has 1 GB |
 | pedal.project | `scripts/deploy-engine`, `sync-library`, `host-lock`, `components-lock`, `status` | Each gets `--host vip`. deploy-engine gains a "built on the Mac" path, since vip can't build |
