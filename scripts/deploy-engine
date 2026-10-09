@@ -92,7 +92,11 @@ stage=~/pedal-build/stage
 rm -rf "$stage"; mkdir -p "$stage/bin" "$stage/packaging"
 for b in $bins; do cp "build/$b" "$stage/bin/"; done
 cp packaging/systemd/namchaind.service "$stage/packaging/"
-printf 'commit=%s\nrev=%s\nbuilt=%s\nhost=%s\nkernel=%s\n' "$(git rev-parse HEAD)" "$rev" \
+# `rev` is the commit that was built, resolved: `--commit HEAD` is a reasonable thing to type and a
+# useless thing to record. What reads this is the cost table's provenance check
+# (`devices/common/check` compares cost.json's engine_commit with it), so a manifest saying "HEAD"
+# fails a check that should pass and hides which engine a table was measured against.
+printf 'commit=%s\nrev=%s\nbuilt=%s\nhost=%s\nkernel=%s\n' "$(git rev-parse HEAD)" "$(git rev-parse HEAD)" \
   "$(date -u +%FT%TZ)" "$(hostname)" "$(uname -r)" > "$stage/MANIFEST"
 bash ~/pedal-build/install.sh "$stage" "$commit"
 REMOTE
@@ -123,7 +127,7 @@ else
   mkdir -p "$W/stage/bin" "$W/stage/packaging"
   cp "$W"/bin/* "$W/stage/bin/"
   cp "$W/src/packaging/systemd/namchaind.service" "$W/stage/packaging/"
-  printf 'commit=%s\nrev=%s\nbuilt=%s\nhost=%s\nkernel=%s\n' "$full" "$REV" "$(date -u +%FT%TZ)" \
+  printf 'commit=%s\nrev=%s\nbuilt=%s\nhost=%s\nkernel=%s\n' "$full" "$full" "$(date -u +%FT%TZ)" \
     "build container on $(hostname -s) (resolute $SNAPSHOT)" "$("${SSH[@]}" uname -r)" > "$W/stage/MANIFEST"
   log "installing on $HOST"
   COPYFILE_DISABLE=1 tar --no-xattrs -C "$W/stage" -czf - . | "${SSH[@]}" "rm -rf /tmp/namchain-stage && mkdir /tmp/namchain-stage && tar -xzf - -C /tmp/namchain-stage"
