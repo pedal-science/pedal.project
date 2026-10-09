@@ -1,5 +1,5 @@
 {
-  "bar": "p99 under the deadline, overruns recorded, paced offline; the live soak confirms zero xruns",
+  "bar": "p99 under the deadline, overruns recorded, paced offline; the live soak confirms zero xruns. engine_commit moved from 87f3cb9 to a0a9cf0 on 2026-10-09 without re-measuring: P6 (the warm set) adds a thread and a document, not work on the audible path, and the render output is unchanged -- namchain's golden tests, recorded before it, still pass. See bench-results/2026-10-09-core-rules-vip/README.md section 6.",
   "core_percent": {
     "IR": {
       "1024": 0.00781,
@@ -25,7 +25,7 @@
     }
   },
   "deadline_us": 1333.3333333333333,
-  "engine_commit": "87f3cb9",
+  "engine_commit": "a0a9cf0",
   "headroom": 0.8,
   "host": "vip",
   "kernel": "7.0.0-1017-raspi-realtime-numaemu1-trimmed",
