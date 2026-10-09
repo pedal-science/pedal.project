@@ -217,6 +217,12 @@ app" and ljoss's "send to pedal" were waiting for.
 - **Rig documents are stored, not applied.** The app owns the document and applies it to the
   engine itself (D2). The library entry is what the bank and the ready set can name, and what
   the resume snapshot is compared against.
+- **An empty bank means nothing happens** (found 2026-10-10, measuring T11): with the library
+  synced and no bank set, `/status` reports `banks: [[]]`, `size: 0`, and the service warms nothing
+  (`warm_decision: idle`, `wanted: null`) because nothing is one press away — and a footswitch press
+  finds no neighbour to step to either. Banks are explicit and the endpoint that sets one is not
+  written, so the default matters before the API lands: **a service with a library and no bank has one
+  bank, and it is the library**, with an app's own banks taking precedence once `PUT /bank` exists.
 - **Banks and the map have no endpoint yet.** Until v3 adds `GET` and `PUT` for `/bank` and
   `/midi-map`, `bank.json` and `midi-map.json` are written by hand. With no `bank.json`, the bank
   is the library's rigs by name, eight to a bank, so v1 works with nothing configured (R15).

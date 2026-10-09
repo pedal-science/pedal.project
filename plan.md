@@ -1256,6 +1256,17 @@ it, 170 ms per model replayed, compensated crossfade), D6's teeth are visibility
 and the pedal decided **what it warms**: one rig, the one a press reaches, with the engine's charge
 deciding whether it fits and `/status` reporting the decision (`warm_decision`).
 
+**Found while measuring T11 (2026-10-10): the bank is empty, so nothing is warm and a press does
+nothing.** The engine holds only the audible document, pedald's `warm_decision` says `idle` with
+`wanted: null`, and `/status` shows `bank: {"banks": [[]], "size": 0, "current": null}` — while the
+library holds the rigs and pedald has *costed* them (its verdicts name them). Banks are explicit and
+there is no endpoint that sets one (`docs/pedal-service.md`: "banks and the map have no endpoint yet"),
+so a pedal that has just been synced with a library warms nothing and its footswitches have nothing to
+step to. That is why both T11 halves ran with cpu1 idle, and it is a blocker for 3.8 rather than a
+measurement detail. The sensible default is the one to argue about first: **a service with a library
+and no bank has one bank, and it is the library** (D10's "the rigs the footswitches reach next"), set
+by the service when it finds no bank, with the app's own banks taking precedence once the API exists.
+
 **Owed, in the order to take them.** (1) **T11** — the full-load hour, launched 21:52Z with a second
 renderer on the free warm core and the app's traffic, but *without* the engine's warm document (the
 harness's watch gave up at 20 s; it is 90 s now), so collect it and re-run if that gap matters.
