@@ -38,7 +38,7 @@ journal.
   If step 4's measurements show the event-to-sound budget needs it, both ends move together and
   this line changes.
 - Pico side, on the bench: UART0, **GP0 = TX, GP1 = RX**. (The pins, the fault each lead
-  produces and how to check it are in `devices/common/pedal-interface.json`, which
+  produces and how to check it are in `devices/common/rootfs/etc/pedal/pedal-interface.json`, which
   `scripts/diag` checks against: docs/diagnostics.md.) The panel wiring is step 5's business.
   RX is pulled up, because a floating RX invents bytes.
 - Core host side: a UART on the 40-pin header that carries **nothing but this link**: no kernel

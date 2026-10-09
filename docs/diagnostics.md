@@ -217,7 +217,7 @@ because the controller binds long before any service runs.
 
 ## The interface model
 
-`devices/common/pedal-interface.json` is installed to `/etc/pedal/pedal-interface.json` and is the
+`devices/common/rootfs/etc/pedal/pedal-interface.json` is installed to `/etc/pedal/pedal-interface.json` and is the
 one place that says what has to be true. It holds:
 
 - the codec's bus, address, id register and expected value, and its register ranges

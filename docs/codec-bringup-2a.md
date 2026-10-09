@@ -224,7 +224,7 @@ DACLRC and turns the ADCLRC pin into a GPIO (`wlf,gpio-cfg`, the ALRCGPIO bit), 
 clock running for recording as well (`wlf,shared-lrclk`). Wiring ADCLRC as well would put two
 outputs on one pin. This settles the handoff's open "separate RX/TX frame clocks" question.
 
-> The same table is in `devices/common/pedal-interface.json` as data — signal, pin, the fault each
+> The same table is in `devices/common/rootfs/etc/pedal/pedal-interface.json` as data — signal, pin, the fault each
 > lead produces, and the measurement that finds it — because `scripts/diag` checks the pedal against
 > it and names the wire (docs/diagnostics.md). Change both together.
 

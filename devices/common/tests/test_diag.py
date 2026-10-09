@@ -99,10 +99,18 @@ class TheHealthyPedal(unittest.TestCase):
         self.assertEqual(self.severity.get("probe.on_local"), None)
 
     def test_the_unbuilt_levels_are_reported_rather_than_faked(self):
-        """The engine has no levels yet, and the tool must say so instead of printing zeros:
-        a report of -200 dBFS everywhere would look exactly like a broken input."""
-        self.assertEqual(self.severity.get("levels.unavailable"), "info")
-        self.assertIsNone(sample()["engine"].get("levels"))
+        """An engine with no levels must be reported as such rather than as -200 dBFS everywhere,
+        which would look exactly like a broken input. The fixture is a *working* pedal and does have
+        levels, so the no-levels case is made here instead of borrowed from it (the fixture was
+        captured with the engine down until 2026-10-09, and the test quietly depended on that)."""
+        bare = sample()
+        bare["engine"].pop("levels", None)
+        severity = {f["key"]: f["severity"] for f in report_for(bare).findings}
+        self.assertEqual(severity.get("levels.unavailable"), "info")
+        self.assertIsNone(severity.get("levels.present"))
+        # And the fixture itself is the other case: levels that are there are reported.
+        self.assertIsNotNone(sample()["engine"].get("levels"))
+        self.assertEqual(self.severity.get("levels.unavailable"), None)
 
 
 class UnpluggedLeads(unittest.TestCase):
@@ -281,7 +289,10 @@ class Levels(unittest.TestCase):
         self.assertIsNone(finding(self.report(levels), "levels.silent_input"))
 
     def test_the_engine_without_levels_says_so_rather_than_printing_zeros(self):
-        findings = self.report(None) if False else report_for(sample()).findings
+        """No levels object at all -- the engine down, or too old to publish them."""
+        s = sample()
+        s["engine"].pop("levels", None)
+        findings = report_for(s).findings
         f = finding(findings, "levels.unavailable")
         self.assertIsNotNone(f)
         self.assertEqual(f["severity"], "info")
@@ -358,8 +369,34 @@ class HeatAndPressure(unittest.TestCase):
         self.assertEqual(pd.expand_hex_mask("c"), {2, 3})
         self.assertEqual(pd.expand_hex_mask("00000001,00000000"), {32})
 
+    def test_the_gatherer_s_output_parses_with_the_cost_line_after_it(self):
+        """The gatherer prints one line of JSON and then `COST <seconds>`; the local path used to
+        json.loads the whole buffer, which crashed the moment the cost line was there -- that is, on
+        every non-deep sample of `pedal-diag --json` on the pedal itself (Extra data: line 2 column
+        1). Both paths parse through one function now, so they cannot drift."""
+        sample = pd.sample_from_gather_output('{"a": 1}\nCOST 0.2500\n')
+        self.assertEqual(sample["a"], 1)
+        self.assertEqual(sample["cost_cpu_s"], 0.25)
+        # A sudo warning ahead of them, and no cost line at all: both are normal.
+        self.assertEqual(pd.sample_from_gather_output('sudo: a warning\n{"a": 2}\n')["a"], 2)
+        self.assertIsNone(pd.sample_from_gather_output('{"a": 3}\nCOST nonsense\n').get("cost_cpu_s"))
+        with self.assertRaises(SystemExit):
+            pd.sample_from_gather_output("COST 0.5\n")
+
 
 class TheInterfaceModelIsEnoughToNameWires(unittest.TestCase):
+    def test_the_interface_model_lives_where_the_rootfs_installs_it(self):
+        """It has to reach /etc/pedal/pedal-interface.json, and the only thing that installs
+        anything is the rootfs tree: apply stages rootfs_files() and the image build copies
+        rootfs/. Until 2026-10-09 the model sat at devices/common/pedal-interface.json, which looks
+        installed and is not — neither path carried it, the pedal-diag service's
+        ConditionPathExists never matched, and the tool never ran on the pedal at all."""
+        inside = TOOL_PATH.parents[3] / "etc/pedal/pedal-interface.json"   # devices/common/rootfs
+        self.assertTrue(inside.exists(), f"{inside} must exist: that is what installs it")
+        self.assertTrue(any(pathlib.Path(p).name == "pedal-interface.json" and "rootfs" in pathlib.Path(p).parts
+                            for p in pd.INTERFACE_PATHS),
+                        f"a checkout must find the model inside the rootfs: {pd.INTERFACE_PATHS}")
+
     def test_every_codec_signal_names_a_physical_place_and_a_fault(self):
         interface, _ = pd.load_interface()
         signals = interface["codec"]["signals"]

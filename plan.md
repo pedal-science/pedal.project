@@ -1322,7 +1322,7 @@ write will put there).
 **Diagnostics landed** (2026-10-05, this session): `scripts/diag` /
 `devices/common/rootfs/usr/local/sbin/pedal-diag` reads everything the host, the codec, the Pico
 link and both local sockets will say about themselves, compares it with
-`devices/common/pedal-interface.json` (the wiring tables as data) and prints what is wrong, the
+`devices/common/rootfs/etc/pedal/pedal-interface.json` (the wiring tables as data) and prints what is wrong, the
 evidence, the likely cause naming a physical thing, and the measurement that closes it. Modes: a
 report, `--json`, `--watch` (continuous, ~1.5 ms CPU and ~2.8 kB a sample, its own cost printed),
 `--deltas` (what changed over a long run), `--probe` (the invasive checks; refuses while the engine

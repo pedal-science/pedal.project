@@ -14,7 +14,7 @@ Why this exists: a fault on this pedal is almost always a wire, a power feed, a 
 device that failed to open, and each of those leaves a different fingerprint in a different
 file. The fingerprints are known (bench-results/2026-10-04-rewire-faults-and-the-pico-console.md,
 bench-results/2026-10-04-case-no-audio-diagnosis.md, bench-results/2026-10-05-pico-power-test.md)
-and the expectations are data (devices/common/pedal-interface.json), so this tool reads the
+and the expectations are data (devices/common/rootfs/etc/pedal/pedal-interface.json), so this tool reads the
 files, compares them with the expectations, and says which wire to look at. It never guesses
 at a conclusion it cannot cite: every finding carries the evidence it came from.
 
@@ -64,17 +64,20 @@ except ImportError:
 TOOL = "pedal-diag"
 FORMAT = 1
 
-# Where the interface model is, in the order it is looked for: beside this file (so a run from
-# a checkout works), the same place from the repo root (this file is reached through scripts/diag
-# and through /usr/local/sbin/pedal-diag), the environment, then the installed copy.
+# Where the interface model is, in the order it is looked for: beside this file (so a run from a
+# checkout works), the installed copy, then this file's own tree. The model is *inside the rootfs*
+# (devices/common/rootfs/etc/pedal/) because that is the only thing that installs anything: apply
+# stages rootfs_files() and the image build copies rootfs/. It lived at devices/common/ until
+# 2026-10-09, which looked installed and was not — the pedal-diag service's ConditionPathExists
+# never matched, so this tool never ran on the pedal at all.
 def _interface_paths():
     here = os.path.dirname(os.path.abspath(os.path.realpath(__file__)))
     candidates = [
         os.environ.get("PEDAL_INTERFACE", ""),
         os.path.join(here, "pedal-interface.json"),
-        # devices/common/rootfs/usr/local/sbin -> devices/common
-        os.path.join(here, "..", "..", "..", "..", "pedal-interface.json"),
         "/etc/pedal/pedal-interface.json",
+        # devices/common/rootfs/usr/local/sbin -> devices/common/rootfs/etc/pedal
+        os.path.join(here, "..", "..", "..", "etc", "pedal", "pedal-interface.json"),
     ]
     return [os.path.normpath(p) for p in candidates if p]
 
@@ -650,7 +653,7 @@ for _pattern in ("/dev/ttyACM*", "/dev/ttyUSB*", "/dev/ttyAMA*"):
         _sys["name"] = _name
         out["serial"].append(_sys)
 
-# The link's device, named by the interface model (devices/common/pedal-interface.json,
+# The link's device, named by the interface model (devices/common/rootfs/etc/pedal/pedal-interface.json,
 # pico_link.host_device). It gets a full entry whether or not the node exists, because "no node"
 # and "no UART" are the two halves of the same fault and the report has to tell them apart.
 _LINK = "ttyAMA0"
@@ -1107,6 +1110,33 @@ if cost is not None:
 '''
 
 
+def sample_from_gather_output(text):
+    """The gatherer's stdout: one line of JSON, and a `COST <seconds>` line after it when it could
+    read the pedal's own CPU time. Each is found by what it looks like rather than by position,
+    because `sudo` can put a warning ahead of them.
+
+    Local and remote runs both come through here: the remote one had this rule and the local one
+    did not, so `pedal-diag --json` on the pedal crashed with `Extra data: line 2 column 1` the
+    moment the cost line was present -- that is, on every non-deep sample.
+    """
+    sample = None
+    cost = None
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith("COST "):
+            try:
+                cost = float(line.split()[1])
+            except (ValueError, IndexError):
+                cost = None
+        elif line.startswith("{"):
+            sample = json.loads(line)
+    if sample is None:
+        raise SystemExit("%s: the gatherer returned no sample" % TOOL)
+    if cost is not None:
+        sample["cost_cpu_s"] = round(cost, 4)
+    return sample
+
+
 def gather_local(probe=False, sample_index=0, deep_every=10, tune_every=240):
     """Run the gatherer in this process, so a local run needs no child and no ssh."""
     import io
@@ -1123,7 +1153,7 @@ def gather_local(probe=False, sample_index=0, deep_every=10, tune_every=240):
     finally:
         sys.stdout = stdout
         sys.argv = argv
-    return json.loads(buffer.getvalue())
+    return sample_from_gather_output(buffer.getvalue())
 
 
 def gather_remote(host, ssh_opts=None, probe=False, sample_index=0,
@@ -1165,21 +1195,7 @@ def gather_remote(host, ssh_opts=None, probe=False, sample_index=0,
     # Only the last line: `sudo` can put a warning on stdout ahead of it.
     # The payload is one line of JSON and the cost is one line after it (or a sudo warning before
     # it), so each is found by what it looks like rather than by position.
-    sample = None
-    cost = None
-    for line in text.splitlines():
-        line = line.strip()
-        if line.startswith("COST "):
-            try:
-                cost = float(line.split()[1])
-            except (ValueError, IndexError):
-                cost = None
-        elif line.startswith("{"):
-            sample = json.loads(line)
-    if sample is None:
-        raise SystemExit("%s: %s returned no sample" % (TOOL, host))
-    if cost is not None:
-        sample["cost_cpu_s"] = round(cost, 4)
+    sample = sample_from_gather_output(text)
     sample["cost_wall_s"] = wall_seconds
     return sample
 
@@ -1500,7 +1516,7 @@ class Report(object):
                            "there. If it is a timed-out transaction, the I2C bus is the fault and "
                            "not the audio leads (docs/diagnostics.md, and the recovery overlay in "
                            "rtpi devices/vip/dt/rp1-i2c1-recovery.dts); otherwise the four I2S leads "
-                           "against devices/common/pedal-interface.json")
+                           "against devices/common/rootfs/etc/pedal/pedal-interface.json")
 
         # The historical discriminator, worth naming whenever the error is visible at all — and
         # only from a line about the codec or the I2C bus, because "-121" appears in other
@@ -1670,7 +1686,7 @@ class Report(object):
             self.add("ok", "audio.hw_params",
                      "the open device is at %s Hz, period %s, %s channels" % (
                          hw.get("rate"), hw.get("period_size"), hw.get("channels")),
-                     "devices/common/pedal-interface.json expects the same",
+                     "devices/common/rootfs/etc/pedal/pedal-interface.json expects the same",
                      check="nothing")
 
         fmt = self.dig("engine", "status", "format")
@@ -2551,7 +2567,7 @@ def build_report(sample, interface, interface_path):
         report.add("warn", "interface.missing",
                    "the interface model was not found, so findings cannot name a wire",
                    "looked in: %s" % ", ".join(p for p in INTERFACE_PATHS if p),
-                   check="install devices/common/pedal-interface.json (pedal-device apply does), "
+                   check="install devices/common/rootfs/etc/pedal/pedal-interface.json (pedal-device apply does), "
                          "or pass --interface")
     report.write_codec_findings()
     report.write_audio_findings()
