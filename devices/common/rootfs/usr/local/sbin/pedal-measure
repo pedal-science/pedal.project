@@ -27,6 +27,7 @@ It does **not** merge: the engine cannot write the table (a device's numbers are
 and rewrote its own admission would be a machine grading its own homework.
 """
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -42,6 +43,7 @@ SLICE = "pedal-bench.slice"
 # says where with --input. A measurement's input matters: the numbers are only comparable between
 # runs that rendered the same signal.
 DEFAULT_INPUT = "/var/lib/pedal/guitar-di.wav"
+COST_TABLE = "/etc/namchain/cost.json"
 
 # The warm cores: the ones a warm document may use, so the one it is not using is the one to measure
 # on. Read from the engine's config through its status (`warm.cores`), falling back to the second.
@@ -96,6 +98,29 @@ def bench_command(row, reference, args, cpu):
     return None
 
 
+def input_matches(table, path):
+    """Whether \p path is the signal the table's rows were measured with. Returns (ok, why).
+
+    Costs are comparable only between units that rendered the same input, so a fragment measured with
+    a different one does not belong in this table -- and since 2026-10-09 the table says which input
+    that is (name, size, sha256; the field is absent on tables measured before, which are all
+    `scripts/measure-core`'s guitar-di.wav). Checked here rather than trusted to a comment.
+    """
+    declared = table.get("input") if isinstance(table, dict) else None
+    if not isinstance(declared, dict) or not declared.get("sha256"):
+        return True, "the table does not say which input it was measured with"
+    digest = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b""):
+            digest.update(chunk)
+    if digest.hexdigest() == declared["sha256"]:
+        return True, ""
+    return False, ("%s is not the input this table was measured with (%s, %s bytes, sha256 %s...): "
+                   "a row measured with a different signal is not the same row"
+                   % (path, declared.get("file", "?"), declared.get("bytes", "?"),
+                      str(declared["sha256"])[:16]))
+
+
 def engine_status():
     return json.loads(subprocess.run([CTL, "--token-file", TOKEN_FILE, "--compact", "status"],
                                      capture_output=True, text=True, check=True).stdout)["status"]
@@ -108,6 +133,8 @@ def main(argv=None):
     parser.add_argument("--input", default=DEFAULT_INPUT, help="the WAV the cost table was measured with")
     parser.add_argument("--timeout", type=float, default=900.0, help="give up on the bench after this")
     parser.add_argument("--keep", action="store_true", help="keep the bench's own output directory")
+    parser.add_argument("--force", action="store_true",
+                        help="measure with this input even though the table names another")
     args = parser.parse_args(argv)
 
     try:
@@ -139,6 +166,15 @@ def main(argv=None):
     if not os.path.exists(args.input):
         print("pedal-measure: no input at %s -- the measurement needs the same signal the table was "
               "measured with (--input, or put it there)" % args.input)
+        return 1
+    try:
+        with open(COST_TABLE) as handle:
+            table = json.load(handle)
+    except Exception:  # noqa: BLE001 - an unreadable table is not a reason to refuse; it is a reason
+        table = {}      # to measure, which is what this tool is for
+    matches, why = input_matches(table, args.input)
+    if not matches and not args.force:
+        print("pedal-measure: not measuring -- %s" % why)
         return 1
 
     out = "/var/tmp/pedal-measure/%s" % row["row"]

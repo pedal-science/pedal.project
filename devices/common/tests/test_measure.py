@@ -7,6 +7,7 @@ tests are namchain's.
 """
 import importlib.machinery
 import importlib.util
+import os
 import pathlib
 import re
 import unittest
@@ -16,7 +17,7 @@ TOOL_PATH = HERE.parent / "rootfs/usr/local/sbin/pedal-measure"
 
 # What `python3-minimal` on vip has, as in test_diag.py: an import outside this list would fail on the
 # host rather than here, which is the point of checking.
-ALLOWED_IMPORTS = {"argparse", "json", "os", "re", "subprocess", "sys"}
+ALLOWED_IMPORTS = {"argparse", "hashlib", "json", "os", "re", "subprocess", "sys"}
 
 
 def load_tool():
@@ -84,6 +85,39 @@ class Happy(unittest.TestCase):
         ok, why = measure.happy(status(cost={"cost": 0.85, "headroom": 0.8}))
         self.assertFalse(ok)
         self.assertIn("headroom", why)
+
+
+class TheInput(unittest.TestCase):
+    """A row measured with a different signal is not the same row (2026-10-09)."""
+
+    def _file(self, data=b"signal"):
+        import tempfile
+        handle = tempfile.NamedTemporaryFile(delete=False)
+        handle.write(data)
+        handle.close()
+        self.addCleanup(os.unlink, handle.name)
+        return handle.name
+
+    def test_the_declared_input_matches(self):
+        import hashlib
+        path = self._file()
+        digest = hashlib.sha256(open(path, "rb").read()).hexdigest()
+        ok, why = measure.input_matches({"input": {"file": "guitar-di.wav", "bytes": 6,
+                                                   "sha256": digest}}, path)
+        self.assertTrue(ok, why)
+
+    def test_another_signal_is_refused(self):
+        path = self._file(b"something else")
+        ok, why = measure.input_matches({"input": {"file": "guitar-di.wav", "bytes": 6,
+                                                   "sha256": "0" * 64}}, path)
+        self.assertFalse(ok)
+        self.assertIn("not the input this table was measured with", why)
+
+    def test_a_table_that_says_nothing_is_not_a_refusal(self):
+        # Every table measured before the field existed: all of them measure-core's guitar-di.wav.
+        ok, why = measure.input_matches({}, self._file())
+        self.assertTrue(ok)
+        self.assertIn("does not say", why)
 
 
 class TheCommand(unittest.TestCase):

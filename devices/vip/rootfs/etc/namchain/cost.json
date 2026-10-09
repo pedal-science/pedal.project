@@ -38,6 +38,12 @@
  "host": "vip",
  "kernel": "7.0.0-1017-raspi-realtime-numaemu1-trimmed",
  "measured": "2026-10-08T09:22:07Z",
+ "input": {
+  "file": "guitar-di.wav",
+  "bytes": 8182024,
+  "sha256": "1afd0bae0d933e1c29a25579b9efd012a4b71d550120d026cee2aab4dac3f517",
+  "note": "The signal every row above was measured with, and the one P4's first-sight measurement must use: costs are comparable only between units that rendered the same input. pedal-measure checks it before it writes a fragment."
+ },
  "quantum": 64,
  "rate": 48000,
  "sources": {

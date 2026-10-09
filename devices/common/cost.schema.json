@@ -6,8 +6,18 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "host", "measured", "engine_commit", "kernel", "rate", "quantum",
-    "deadline_us", "headroom", "bar", "core_percent", "unknown", "sources"
+    "host",
+    "measured",
+    "engine_commit",
+    "kernel",
+    "rate",
+    "quantum",
+    "deadline_us",
+    "headroom",
+    "bar",
+    "core_percent",
+    "unknown",
+    "sources"
   ],
   "properties": {
     "host": {
@@ -19,6 +29,34 @@
       "type": "string",
       "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$",
       "description": "When the table was last measured, UTC."
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "bytes",
+        "sha256"
+      ],
+      "description": "The signal the rows were measured with (P4). Costs are comparable only between units that rendered the same input, and a first-sight measurement must use this one; pedal-measure checks it before it writes a fragment. Absent in tables measured before 2026-10-09, which were all measured with scripts/measure-core and its guitar-di.wav.",
+      "properties": {
+        "file": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The file name, for a reader."
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "note": {
+          "type": "string"
+        }
+      }
     },
     "engine_commit": {
       "type": "string",
@@ -56,14 +94,21 @@
       "type": "object",
       "additionalProperties": false,
       "description": "What holding warm documents costs the rig the player is hearing (D3, 2026-10-09). The rows above are measured on a quiet core; with a warm document rendering on another core the same rig takes longer -- shared L3 and DRAM -- and T5 measured how much (pedal.project scripts/measure-housekeeping; bench-results/2026-10-09-housekeeping-vip). A rig is admitted for the way it will run, so its cost is multiplied by `factors[<warm documents held>]` and that charged figure is what trimming and the admission test work against. A table without this block charges nothing, which is every table measured before 2026-10-09 and every device that has not run T5.",
-      "required": ["factors", "measured", "note"],
+      "required": [
+        "factors",
+        "measured",
+        "note"
+      ],
       "properties": {
         "factors": {
           "type": "object",
           "minProperties": 1,
           "description": "Warm documents held -> the multiplier on the audible rig's cost. The engine takes the largest measured factor at or below the count it holds, so more warm documents than anyone measured is charged the worst measured case, never less.",
           "patternProperties": {
-            "^[1-9][0-9]*$": { "type": "number", "minimum": 1 }
+            "^[1-9][0-9]*$": {
+              "type": "number",
+              "minimum": 1
+            }
           },
           "additionalProperties": false
         },
@@ -99,8 +144,12 @@
               "additionalProperties": false,
               "minProperties": 1,
               "properties": {
-                "full": { "$ref": "#/$defs/cost" },
-                "lite": { "$ref": "#/$defs/cost" }
+                "full": {
+                  "$ref": "#/$defs/cost"
+                },
+                "lite": {
+                  "$ref": "#/$defs/cost"
+                }
               }
             }
           }
@@ -110,7 +159,9 @@
           "additionalProperties": false,
           "description": "One row per tap count. A cab IR is charged the cheapest row that is not shorter than it, so a 6000-tap IR costs the 8192 row; 8192 is the longest nc.cab.ir supports.",
           "patternProperties": {
-            "^[0-9]+$": { "$ref": "#/$defs/cost" }
+            "^[0-9]+$": {
+              "$ref": "#/$defs/cost"
+            }
           }
         },
         "node": {
@@ -118,7 +169,9 @@
           "additionalProperties": false,
           "description": "One row per node type, keyed by the type's own name (nc.gain, nc.eq.biquad, ...). The levels probe belongs here too: level_probe is a row when the meter is on (P9).",
           "patternProperties": {
-            "^[a-z0-9][a-z0-9_.]*$": { "$ref": "#/$defs/cost" }
+            "^[a-z0-9][a-z0-9_.]*$": {
+              "$ref": "#/$defs/cost"
+            }
           }
         }
       }
@@ -126,12 +179,22 @@
     "unknown": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["NAM", "IR", "node"],
+      "required": [
+        "NAM",
+        "IR",
+        "node"
+      ],
       "description": "D8: what admission charges for a unit that is not in the table. Each must be at least the dearest measured row of its kind, so an unmeasured unit can never be waved through as the cheapest thing in the rig.",
       "properties": {
-        "NAM": { "$ref": "#/$defs/cost" },
-        "IR": { "$ref": "#/$defs/cost" },
-        "node": { "$ref": "#/$defs/cost" }
+        "NAM": {
+          "$ref": "#/$defs/cost"
+        },
+        "IR": {
+          "$ref": "#/$defs/cost"
+        },
+        "node": {
+          "$ref": "#/$defs/cost"
+        }
       }
     },
     "sources": {
@@ -155,7 +218,10 @@
     "source": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["n", "p99_at_n"],
+      "required": [
+        "n",
+        "p99_at_n"
+      ],
       "properties": {
         "n": {
           "type": "integer",
