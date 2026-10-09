@@ -1,0 +1,143 @@
+{
+ "chains": [
+  {
+   "connections": [
+    {
+     "from": "in-c0",
+     "from_port": 0,
+     "to": "amp0-c0",
+     "to_port": 0
+    },
+    {
+     "from": "amp0-c0",
+     "from_port": 0,
+     "to": "cab-c0",
+     "to_port": 0
+    },
+    {
+     "from": "cab-c0",
+     "from_port": 0,
+     "to": "out-c0",
+     "to_port": 0
+    }
+   ],
+   "id": "one-c0",
+   "input_channel": 0,
+   "nodes": [
+    {
+     "element": "in-c0",
+     "id": "in-c0",
+     "type": "nc.input"
+    },
+    {
+     "element": "amp0-c0",
+     "id": "amp0-c0",
+     "model": "/var/lib/pedal/library/models/000 Unsorted/Ampeg SVT VR _ 8x10 _ Beta52A + DI.nam",
+     "type": "nc.nam"
+    },
+    {
+     "element": "cab-c0",
+     "id": "cab-c0",
+     "ir": "/var/lib/pedal/library/irs/Ampeg 4x10/York Audio AMPG 410 HS v1.01/48k (Fractal, Line 6, Suhr, etc.)/Mixes/YA AMPG 410 HS Mix 01.wav",
+     "type": "nc.cab.ir"
+    },
+    {
+     "element": "out-c0",
+     "id": "out-c0",
+     "type": "nc.output"
+    }
+   ],
+   "output_channel": 0
+  },
+  {
+   "connections": [
+    {
+     "from": "in-c1",
+     "from_port": 0,
+     "to": "amp0-c1",
+     "to_port": 0
+    },
+    {
+     "from": "amp0-c1",
+     "from_port": 0,
+     "to": "out-c1",
+     "to_port": 0
+    }
+   ],
+   "id": "two-c1",
+   "input_channel": 0,
+   "nodes": [
+    {
+     "element": "in-c1",
+     "id": "in-c1",
+     "type": "nc.input"
+    },
+    {
+     "element": "amp0-c1",
+     "id": "amp0-c1",
+     "model": "/var/lib/pedal/library/models/000 Unsorted/Ampeg SVT VR _ 8x10 _ Beta52A + DI.nam",
+     "type": "nc.nam"
+    },
+    {
+     "element": "out-c1",
+     "id": "out-c1",
+     "type": "nc.output"
+    }
+   ],
+   "output_channel": 0
+  },
+  {
+   "connections": [
+    {
+     "from": "in-c2",
+     "from_port": 0,
+     "to": "amp0-c2",
+     "to_port": 0
+    },
+    {
+     "from": "amp0-c2",
+     "from_port": 0,
+     "to": "fx0-c2",
+     "to_port": 0
+    },
+    {
+     "from": "fx0-c2",
+     "from_port": 0,
+     "to": "out-c2",
+     "to_port": 0
+    }
+   ],
+   "id": "three-c2",
+   "input_channel": 0,
+   "nodes": [
+    {
+     "element": "in-c2",
+     "id": "in-c2",
+     "type": "nc.input"
+    },
+    {
+     "element": "amp0-c2",
+     "id": "amp0-c2",
+     "model": "/var/lib/pedal/library/models/000 Unsorted/Ampeg SVT VR _ 8x10 _ Beta52A + DI.nam",
+     "type": "nc.nam"
+    },
+    {
+     "element": "fx0-c2",
+     "freq": 800.0,
+     "gain_db": 3.0,
+     "id": "fx0-c2",
+     "mode": "peaking",
+     "q": 1.1,
+     "type": "nc.eq.biquad"
+    },
+    {
+     "element": "out-c2",
+     "id": "out-c2",
+     "type": "nc.output"
+    }
+   ],
+   "output_channel": 0
+  }
+ ],
+ "name": "t5-heavy"
+}

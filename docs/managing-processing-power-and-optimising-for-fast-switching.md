@@ -106,10 +106,12 @@ blocks (3.5 s) behind and never recovering — and the transition itself briefly
 had them to itself. With a warm document rendering beside the audible one, a rig admitted at 0.735
 goes from +0 to +7 blocks over the deadline in 120 s quiet, and +1 to +61 with the housekeeping core
 loaded (worst block 100.7% → 151.8%) — so **`fits` does not mean "holds the deadline while warming
-is on"** above roughly 0.7, and D4's per-core independence is the assumption that fails. The options
-are in T5 below (charge the coexistence, lower the headroom while warming, let the service cool above
-a threshold, or record the narrower promise); the measurement that chooses between them is the same
-four arms swept over rig cost.
+is on"** above roughly 0.7, and D4's per-core independence is the assumption that fails: the sweep of
+2026-10-09 puts the knee at about **0.6** — 0.559 held the deadline, 0.685 was 72 blocks over it in a
+loaded two-minute arm against 0 with nothing warm. The options are in T5 below (charge the
+coexistence, lower the headroom while warming, let the service cool above a threshold, or record the
+narrower promise); the cheapest that can ship today is the service one, since `pedald` already costs
+every rig and chooses the warm rig.
 
 **D4 — Warm rigs are packed by cost into the inactive cores, up to the same 0.8** (2026-10-07;
 scoped 2026-10-09). One rig per core wastes the resource the whole scheme exists to protect: a core
@@ -525,12 +527,14 @@ at all**: the *same rig* with a warm neighbour goes from +0 to +7 overruns quiet
 loaded, worst block 100.7% → 125.0%. The cost model charges units as if a core were alone with them;
 with a warm rig rendering beside it, it is not. `fits` at 0.735 is therefore not a promise that the
 rig holds the deadline — D3's headroom, D4's per-core independence and the admission verdict all
-assume a quiet core. **What to do about it is a decision** (charge a coexistence term measured per
-rig class; lower the headroom while warming is on; let `pedald` decide by cooling above a threshold;
-or record that `fits` means "fits alone") — the sweep that would settle it is the same four arms at
-0.3/0.5/0.6/0.7/0.75, which the harness does mechanically with `--target` and `--no-warm`.
+assume a quiet core. **The sweep puts the knee at about 0.6** (overruns in the loaded 120 s arm, warm
+against none): 0.410 → +1 against +0; 0.559 → +1; 0.685 → **+72 against +0**; 0.735 → **+61 against
++1**. **What to do about it is a decision** (charge a coexistence term measured per rig class; lower
+the headroom to ~0.6 while warming is on; let `pedald` cool above a threshold — it already costs the
+bank and chooses the warm rig; or record that `fits` means "fits alone") — the cheapest that ships
+today is the service one, and the one that needs no measurement is the headroom.
 [bench-results/2026-10-09-housekeeping-vip](bench-results/2026-10-09-housekeeping-vip/README.md) has
-the four arms, the caveats and the reproduction.
+the four arms, the sweep, the caveats and the reproduction.
 
 **T6 — the IRQ arm (D5).** The audio IRQ on a render core (where it lives now, core 1) against the
 housekeeping core (what P7 chose, core 0), measuring the IRQ thread's tail, the render tail, and the

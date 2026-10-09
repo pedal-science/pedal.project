@@ -58,25 +58,56 @@ in both arms of the warm run. Nothing was starved on core 1 — D5's arrangement
    runs, so this is the shared-core cost D5 accepted; the warm work was not starved (0 drops), and
    the audible rig's overruns are not scheduling (no xruns, no queue loss) but time.
 
+## The sweep: where the knee is
+
+The same harness, the same warm neighbour (0.41 on core 1), the active rig rebuilt at several costs —
+and, at two of them, the same run again with nothing warm. 120 s an arm, engine `fee0440`.
+
+| active rig | warm? | quiet arm, blocks over the deadline | loaded arm, blocks over the deadline | worst block (loaded) |
+|---|---|---|---|---|
+| 0.410 (3 chains) | warm | +0 | **+1** | 117.5% |
+| 0.410 (3 chains) | none | +0 | **+0** | 63.0% |
+| 0.559 (4 chains) | warm | +0 | **+1** | 139.0% |
+| 0.685 (5 chains) | warm | **+4** | **+72** | 122.6% |
+| 0.685 (5 chains) | none | **+0** | **+0** | 99.7% |
+| 0.735 (7 chains) | warm | **+7** | **+61** | 151.8% |
+| 0.735 (7 chains) | none | **+0** | **+1** | 107.7% |
+
+`xruns` 0 and no guard trips anywhere; the warm document stayed within 2 blocks and dropped nothing.
+
+**The knee is at about 0.6.** With nothing warm, a rig the table admits at 0.735 holds the deadline
+through a saturated housekeeping core (0-1 blocks over in 120 s, worst 107.7%) — the admission model
+is doing its job. With a warm document rendering beside it, the *same rig* is four to seventy-two
+blocks over in the same two minutes, and even a 0.41 rig gives up a block now and then. So while a
+neighbour is warm the figure that holds is nearer **0.6 than 0.8**, and the coexistence cost grows
+with the rig's cost rather than being a constant.
+
+Two smaller readings worth keeping: the *first* seconds after a heavy rig is made audible are the
+worst of all (the load-time transient — 6 blocks over at 0.685, 27 at 0.735 — while the new document
+is compiled, paged in and its models touched), and the quiet arm is not clean either above 0.6, so
+this is not only about the housekeeping load.
+
 ## What follows (a decision, and a measurement to make it)
 
-The mitigation is not obvious, and it is the owner's call, because each option changes what the pedal
-promises:
+The knee is measured; the choice of what to do with it is the owner's, because each option changes
+what the pedal promises:
 
 * **Charge the coexistence.** Measure, per unit or per rig class, the cost of rendering *beside* a
   warm document, and add it to the admission sum when the warm set is not empty. Most faithful, most
-  measurement.
-* **Lower the shipped headroom when warming is on** (0.8 → something near 0.6-0.7, to be measured).
-  Cheap, conservative, and it costs capacity only while a neighbour is warm.
-* **Let the service decide** (D9's boundary): `pedald` knows both costs — it costs the bank and it
-  chooses the warm rig — so it could hold a neighbour warm only while the audible rig is below the
-  figure T5 finds, and cool it above that. The engine keeps enforcing what it was given.
-* **Do nothing about it and record the promise**: `fits` means "fits alone"; a rig above the measured
-  knee may miss blocks while a neighbour is warm. That is a decision too, and it needs to be in D3.
+  measurement — and the sweep above says the term is not a constant (0.41 barely notices, 0.685 does
+  not hold), so it needs the curve, not a fudge factor.
+* **Lower the headroom while warming is on**: the sweep puts the figure near **0.6** (0.559 held, 0.685
+  did not). Cheap, conservative, and it costs capacity only while a neighbour is warm.
+* **Let the service decide** (D9's boundary), which is the cheapest thing that ships today: `pedald`
+  already costs every rig in the bank and chooses the warm rig, so it can hold a neighbour warm only
+  while the audible rig is under the figure, and cool it above that. The engine keeps enforcing what
+  it was given, and nothing in the cost model has to change.
+* **Do nothing about it and record the promise**: `fits` means "fits alone"; a rig above 0.6 may miss
+  blocks while a neighbour is warm. That is a decision too, and D3 has to say it.
 
-To choose, the next measurement is a **sweep**: the same four arms at rig costs 0.3, 0.5, 0.6, 0.7 and
-0.75, with and without a warm document, which finds the knee where coexistence starts costing blocks.
-The harness takes `--target` and `--no-warm`, so the sweep is mechanical; two runs an evening.
+To choose between the first two properly the next measurement is the same sweep with more points and
+longer arms (T10's hour, not two minutes), and on a rig whose chains are *different* rather than
+repeats.
 
 ## Caveats
 
