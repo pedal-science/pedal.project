@@ -413,6 +413,29 @@ than a load — which is what D10's 50 ms and E1's "the first 170–340 ms sound
   rigs packed into one core by cost, and a rig that has to catch up rather than hand over (P8),
   are both later work (D4, scoped 2026-10-09). The mechanism takes them; this slice does not.
 
+**Decided 2026-10-09: one rig, the press-away neighbour, and the engine's charge decides whether
+the pedal can afford it.** The question T5 forced — what *should* the service keep warm, now that a
+warm document is known to cost the rig the player is hearing real time — is answered by leaving the
+judgement where D9 put it and keeping the policy narrow:
+
+- **One rig, and it is the one a press reaches.** Not the bank, not both neighbours. With one warm
+  document the audible rig's cost is charged 1.25× and with two 1.4× (`devices/<host>/cost.json`,
+  factors from T5's sweep), and past the cliff a second warm document is fifty times more expensive
+  than the first — at a 0.685 rig, +3,543 blocks over the deadline in two minutes against +72 for
+  one. Two neighbours is D4's "one per inactive core" arriving as real work: the engine holds one
+  warm document today (`kMaxDocuments` is 2), and the charge for the second is already priced.
+- **Whether it fits is the engine's answer, not the service's** (`rig.warm` → `over_budget` when the
+  rig that is playing could not afford another document beside it, with the arithmetic in the
+  message). The service asks and believes the answer; it derives no budget of its own (R14, D9).
+- **A refusal is a state, not an error** — and it is now *visible*: `/status`'s
+  `engine.warm_decision` says `{state, wanted, held, reason, retry_in_s}` beside the engine's own
+  `warm` object, so a panel can show "warming is paused: the rig playing is too heavy to keep a
+  neighbour ready" (`refused`, `over_budget`) instead of showing nothing. The states are `held`,
+  `pending`, `refused`, `idle` (nothing is one press away) and `off` (no warm cores).
+- **The switch path is untouched by any of it.** A refused warm means the next press is a cold
+  switch, which is the behaviour the pedal had before the ready set existed; nothing about warming
+  can reach the player except as latency.
+
 The proposals that used to be here — `rig.ready_set {"rigs": [...]}` and a per-rig
 `engine.status.ready` — were namchain's to name and it named them `rig.warm`/`rig.cool`/`rig.switch`
 and `engine.status.warm`, each holding one document rather than a list of tiers. R14 is settled

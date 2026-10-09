@@ -62,6 +62,9 @@ def fake_service(status=None, engine_down=False, link_open=True, session_up=True
     service.engine_down = engine_down
     service.mapping = mapping.Mapping(["Crunch Lead", "Ambient Wash"])
     service.mapping.note_rig("Crunch Lead")
+    # /status reports the warm decision as well as the engine's warm object, so the fake has the
+    # real WarmSet: `report()` is pure state, and a fake of it would be a second thing to keep true.
+    service.warm = daemon.WarmSet(None, log=lambda _m: None)
     service.cost = daemon.RigCost(types.SimpleNamespace(), log=lambda _m: None)
     service.cost.note_rigs(rigs if rigs is not None else ["Crunch Lead", "Ambient Wash"],
                            time.monotonic())
@@ -709,6 +712,51 @@ class StatusWarm(unittest.TestCase):
         # "this device cannot warm" from "nothing is warm yet".
         _, body = fake_service().handle_status(None)
         self.assertIsNone(body["engine"]["warm"])
+
+
+class WarmDecision(unittest.TestCase):
+    """What the service decided to do about the warm set, beside what is warm (2026-10-09).
+
+    The engine's object says what *is* warm; this says what the policy wanted and why it is not
+    there, which is the difference a player sees between "keep playing, it is coming" and "the rig
+    playing is too heavy to keep a neighbour ready".
+    """
+
+    def test_a_held_neighbour_is_reported_as_held(self):
+        warm = daemon.WarmSet(None, log=lambda _m: None)
+        warm.wanted = "Ambient Wash"
+        warm.rig = "Ambient Wash"
+        self.assertEqual(warm.report()["state"], "held")
+        self.assertIsNone(warm.report()["reason"])
+
+    def test_nothing_one_press_away_is_idle(self):
+        warm = daemon.WarmSet(None, log=lambda _m: None)
+        warm.wanted = None
+        self.assertEqual(warm.report(),
+                         {"state": "idle", "wanted": None, "held": None, "reason": None})
+
+    def test_a_refusal_carries_its_reason_and_the_retry(self):
+        # `over_budget` is the coexistence charge: the engine refused to hold a neighbour because
+        # the rig the player is hearing could not afford it (D3, T5's measurement).
+        warm = daemon.WarmSet(None, log=lambda _m: None)
+        warm.wanted = "Ambient Wash"
+        warm.failed = "over_budget"
+        warm.failed_rig = "Ambient Wash"
+        warm.retry_at = 100.0
+        report = warm.report(now=40.0)
+        self.assertEqual(report["state"], "refused")
+        self.assertEqual(report["reason"], "over_budget")
+        self.assertEqual(report["retry_in_s"], 60.0)
+
+    def test_a_device_with_no_warm_cores_says_off(self):
+        warm = daemon.WarmSet(None, log=lambda _m: None)
+        warm.disabled = True
+        warm.failed = "warm_disabled"
+        self.assertEqual(warm.report()["state"], "off")
+
+    def test_status_carries_the_decision(self):
+        _, body = fake_service().handle_status(None)
+        self.assertEqual(body["engine"]["warm_decision"]["state"], "idle")
 
 
 if __name__ == "__main__":

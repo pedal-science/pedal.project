@@ -356,6 +356,14 @@ class WarmSet:
       often. `warm_disabled` is not even a failure: a device with no `warm_cpus` has warming
       off, which is a configuration — it is logged once and nothing is asked again until the
       engine comes back as a different process, the only thing that can change it.
+    - **What the audible rig can afford is the engine's judgement, not ours** (2026-10-09). A warm
+      document costs the rig the player is hearing real time — shared L3 and DRAM — which T5
+      measured, and the engine charges it (`cost * coexistence`, D3) and refuses a `rig.warm` that
+      would push the audible rig over the headroom (`over_budget`). The service does not
+      pre-empt that with a cost model of its own (D9): it asks, and a refusal is the same kind of
+      answer as `warm_disabled` — logged once, retried on the same terms, with the switch path
+      unchanged. `report()` is what makes the state of that decision legible, so a panel can say
+      "no neighbour warm: the rig playing is too heavy" rather than showing nothing.
     """
 
     def __init__(self, engine, log=None, adopt_s=WARM_ADOPT_S, retry_s=WARM_RETRY_S):
@@ -364,6 +372,7 @@ class WarmSet:
         self.adopt_s = adopt_s
         self.retry_s = retry_s
         self.rig = None         # the rig we believe the engine holds warm, without ".json"
+        self.wanted = None      # the rig the next press reaches, as of the last tick
         self.disabled = False   # the engine says this device has no warm cores
         self.failed = None      # the code last logged, so it is logged once per kind
         self.failed_rig = None  # what that failure was about, so a new rig is tried at once
@@ -378,6 +387,7 @@ class WarmSet:
         and the failure all go, and the next tick asks again.
         """
         self.rig = None
+        self.wanted = None
         self.disabled = False
         self.failed = None
         self.failed_rig = None
@@ -400,6 +410,7 @@ class WarmSet:
         elif status is not None:
             self._adopt(status, now)
         wanted = self._next(mapping)
+        self.wanted = wanted
         if wanted == self.rig:
             return
         if wanted is None:
@@ -408,6 +419,36 @@ class WarmSet:
             return
         if wanted != self.failed_rig or now >= self.retry_at:
             self._warm(wanted, now)
+
+    # ------------------------------------------------------------------ what a reader sees
+    def report(self, now=None):
+        """The decision as a small object, for `/status`: wanted, held, and why not.
+
+        `state` is one word for what is happening to the warm set, and the point of having one is
+        that "nothing is warm" and "nothing *can* be warm" look different to a player:
+
+          `off`      this device has no warm cores (`warm_disabled`);
+          `idle`     nothing is one press away, so nothing should be warm;
+          `held`     the rig the next press reaches is warm;
+          `pending`  asked for and not yet adopted — the engine's warm thread has not reported it;
+          `refused`  the engine said no, and `reason` is its code (`over_budget` is the coexistence
+                     charge: the rig playing is too heavy to keep a neighbour beside it).
+        """
+        wanted = self.wanted
+        if self.disabled:
+            state, reason = "off", self.failed
+        elif self.failed is not None and self.failed_rig == wanted:
+            state, reason = "refused", self.failed
+        elif wanted is None:
+            state, reason = "idle", None
+        elif self.rig == wanted:
+            state, reason = "held", None
+        else:
+            state, reason = "pending", None
+        report = {"state": state, "wanted": wanted, "held": self.rig, "reason": reason}
+        if state == "refused" and now is not None and self.retry_at > now:
+            report["retry_in_s"] = round(self.retry_at - now, 1)
+        return report
 
     # ------------------------------------------------------------------ the decision
     def _next(self, mapping):
@@ -786,6 +827,11 @@ class Service:
                 # summary here would be a second thing to keep true. Absent on a device with no
                 # warm cores, which is how the engine says warming is off.
                 "warm": status.get("warm"),
+                # What the service decided to do about it (2026-10-09): the engine's object above
+                # says what *is* warm, this says what the policy wanted and why it is not there --
+                # `refused` with a reason is how "the rig playing is too heavy to keep a neighbour"
+                # reaches a panel instead of looking like nothing happened.
+                "warm_decision": self.warm.report(now=time.monotonic()),
             },
             "link": self.link_status(time.monotonic()),
             "bank": {"banks": self.mapping.banks, "bank": self.mapping.bank,
