@@ -1234,25 +1234,45 @@ switches on the pedal: `handover_blocks: 3` plus a 5 ms fade (~9 ms) each, **0 x
 the deadline, 0 dropped warm blocks**, warm lag 0–1 block while sharing core 1 with the interrupt.
 What the service half added (`24349e7`, verified live): `pedald` holds the rig the footswitches reach
 next warm — `rig.warm` when the neighbour changes, `rig.switch` on every press, with a cold publish
-as the fallback — so the engine is no longer waiting for a caller. What is still owed, in the order
-the next session should take it: **T5** (load on the one housekeeping core while a warm rig renders
-beside the audible one — the test that says whether one housekeeping core is enough, which the
-amended rules assume); the **bench's switch verdict** (its own crossfade fails continuity and
-convergence in both arms, so it is unproven, not evidence); **T7's service half** (a press through
-`pedald`, which needs an event path — proposed: a token-authenticated `POST /event` — and would also
-let ljoss and rigpa step rigs without speaking the engine protocol); **P4**; **T11**; then **P8**,
-which waits on the owner's listening verdict about a Lite standing in for a Full; and **piv**, still
-the one device behind these rules. T7's offline harness agrees on the load (device p99 107 µs = 8% of
-the deadline with a warm document beside it, warm lag 0 blocks) and fails its glitch check; only the
-load numbers from it are quoted anywhere.
+as the fallback — so the engine is no longer waiting for a caller.
+
+**What landed since, 2026-10-09 evening.** **T5 ran and found more than it was pointed at**: a warm
+document costs the rig the player is hearing, and the cost table did not model it at all (a 0.735 rig
+holds the deadline alone, misses it 61 times in two minutes with one neighbour and 3,543 times with
+two). **D3 now charges the coexistence** — `coexistence.factors` in the device's own table, 1.25 for
+one warm document and 1.4 for two, derived from the measured knees — with a **failsafe** behind it
+(the engine cools the warm set when a window of the render load's histogram has any block over the
+deadline or a hundredth past nine tenths of it, and refuses a new warm for ten seconds:
+`warm_pressure`, `pressure_cools`). **T7's service half passed**: a new `POST /event` in pedald takes
+the Pico's own vocabulary over HTTP, and eight presses through it were **8/8 handovers**, 0 xruns,
+with the warm set sliding to the new neighbour. **T8's storm passed while paced** (60/60 at 2/s,
+59/59 at ~3/s) and broke only under *bursts* of ten concurrent presses, during which the board
+**rebooted** — cause unknown; the journal is persistent on vip now so the next one is diagnosable, and
+the lead is the 5 V rail. The bench's switch arm was fixed (four harness bugs of its own) and its
+cross-rig verdict closed as **UNPROVEN with the reasons measured**: on one rig against itself the
+handover is an *exact* match (−1000 dBFS). **E2's listening verdict arrived** — the owner cannot hear
+a Lite standing in for a Full — so **P8's design is settled** in the document (Lite first, Full behind
+it, 170 ms per model replayed, compensated crossfade), D6's teeth are visibility rather than sound,
+and the pedal decided **what it warms**: one rig, the one a press reaches, with the engine's charge
+deciding whether it fits and `/status` reporting the decision (`warm_decision`).
+
+**Owed, in the order to take them.** (1) **T11** — the full-load hour, launched 21:52Z with a second
+renderer on the free warm core and the app's traffic, but *without* the engine's warm document (the
+harness's watch gave up at 20 s; it is 90 s now), so collect it and re-run if that gap matters.
+(2) **piv** — its tree is on the rules now (isolate 1-3, housekeeping 0, the USB audio interrupt on
+core 1) but the board still boots the old command line, and `arm-try-piv.sh` needs a *staged candidate
+kernel* in the untested state, so this is a round of its own: stage, arm, reboot, watch, then
+`rtpi-audio-tune check` and `devices/piv/check`. (3) **P4** — first-sight measurement (the service
+notices a unit the table has no row for and measures it on the free warm core). (4) **P8's
+implementation** — the two-step publish in namchain. (5) **3.8**'s acceptance, then 3.5.
 
 Two faults were found by putting this on the board and are fixed: **`pedal-interface.json` was never
 installed** (it lived outside the rootfs, which is the only thing that installs anything, so
 `pedal-diag.service` had never started and every check that compares the board against the model had
 silently done nothing), and `pedal-diag --json` could not parse its own gatherer's `COST` line. `tib`
 is gone from all five repositories — device trees, tooling, kernel fragments, measurement data and
-prose — rather than marked retired, and `piv`'s layout is now the one device behind these rules
-(debt, to reconcile in its own session).
+prose — rather than marked retired. `piv` is the one device behind these rules, and its tree is now
+ahead of its boot (config on the rules, kernel args still the old ones) — the state (2) above.
 
 **E2 is measured; the tiers wait on one listening test** (2026-10-06). All four of 3.8's open
 questions are answered — Lite against Full over the whole library, catch-up for chains, warm
