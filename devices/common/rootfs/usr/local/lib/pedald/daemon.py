@@ -577,6 +577,14 @@ class Service:
         self.resume = resume_mod.Resume(self.engine, cfg.rigs_root, state_root=cfg.state_root, log=log)
         self.http = Server(cfg.http_host, cfg.http_port, token,
                            {"/status": self.handle_status,
+                            # The Pico's own vocabulary, over HTTP: one event, the same shape the
+                            # link carries (`{"kind": 1, "a": 0, "b": 0}`), handed to the same
+                            # `on_event` the UART reader calls. It is how a press is driven without
+                            # the hardware -- T7's service half and T8's storm are measured through
+                            # it -- and how a UI asks for a step (`kind` 1/2 are rig down/up), which
+                            # is exactly what a footswitch is. Nothing here is a second mapping: the
+                            # tables decide what an event means, whoever sent it.
+                            "POST /event": self.handle_event,
                             "GET /library/rigs": self.handle_rigs,
                             "/library/rigs/*": self.handle_rig}, log=log,
                            # The transport cap has to be the largest upload the API allows, or
@@ -852,6 +860,30 @@ class Service:
             "bypass": self.bypass,
         }
         return 200, body
+
+    # ------------------------------------------------------------------ an event, from anywhere
+    def handle_event(self, request):
+        """`POST /event`: one event in the link's own shape, answered by the mapping.
+
+        The body is `{"kind": N, "a": A, "b": B}` — the fields the UART reader puts in an event,
+        with `kind` as the number the protocol numbers it (`docs/uart-protocol.md`). It goes
+        straight to `on_event`, so an event that arrives here and one that arrives on the wire are
+        indistinguishable to everything downstream: the mapping tables decide, and the engine is
+        asked for a switch or a load exactly as it would be for a press.
+
+        This is the bench's surface (T7's service half, T8's press storm) and a UI's: a rig step
+        from a panel is the same event a footswitch sends, which is the point of D2 making the two
+        identical. It is authenticated like every other route, and a body that is not an event is
+        refused rather than guessed at.
+        """
+        try:
+            event = json.loads(request.body or b"{}")
+        except (ValueError, AttributeError):
+            return 400, {"error": "the body is {\"kind\": N, \"a\": A, \"b\": B}"}
+        if not isinstance(event, dict) or not isinstance(event.get("kind"), int):
+            return 400, {"error": "the body is {\"kind\": N, \"a\": A, \"b\": B}"}
+        self.on_event(event)
+        return 200, {"ok": True, "kind": event["kind"]}
 
     # ------------------------------------------------------------------ the rig library (v3)
     def running_rig(self, status=None):

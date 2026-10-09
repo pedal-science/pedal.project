@@ -1,5 +1,6 @@
 """The daemon's own decisions: the STATE flags, the bank's verdicts and what /status says
 (docs/pedal-service.md)."""
+import json
 import os
 import pathlib
 import sys
@@ -107,6 +108,51 @@ class Status(unittest.TestCase):
         _, body = fake_service(link_open=False, session_up=False).handle_status(None)
         self.assertFalse(body["link"]["open"])
         self.assertFalse(body["link"]["session"])
+
+
+class EventRoute(unittest.TestCase):
+    """`POST /event`: a press over HTTP, answered by the same mapping a UART event is (2026-10-09).
+
+    This is what makes T7's service half and T8's storm measurable without the Pico in the loop,
+    and what lets a UI ask for a step: the event goes to `on_event`, so nothing downstream can tell
+    where it came from.
+    """
+
+    def _service(self, loaded):
+        service = fake_service()
+        service.log = lambda _m: None
+        service.mapping = mapping.Mapping(["a", "b"])
+        service.mapping.note_rig("a")
+        service.load_rig = loaded.append
+        return service
+
+    def test_an_event_reaches_the_mapping(self):
+        loaded = []
+        service = self._service(loaded)
+        request = types.SimpleNamespace(method="POST", path="/event",
+                                        body=json.dumps({"kind": 0x01, "a": 0, "b": 0}).encode())
+        status, body = service.handle_event(request)
+        self.assertEqual(status, 200)
+        self.assertEqual(body["kind"], 0x01)
+        self.assertEqual(loaded, ["b"])          # rig_up from 'a' lands on 'b', as a press does
+
+    def test_a_body_that_is_not_an_event_is_refused(self):
+        service = self._service([])
+        for body in (b"", b"[]", b'{"a": 1}', b'{"kind": "up"}', b"not json"):
+            request = types.SimpleNamespace(method="POST", path="/event", body=body)
+            status, _ = service.handle_event(request)
+            self.assertEqual(status, 400, body)
+
+    def test_an_unknown_kind_is_ignored_rather_than_guessed(self):
+        # `on_event` logs it and does nothing: a client that sends a kind this protocol does not
+        # have gets an answer that says so, not a rig change.
+        loaded = []
+        service = self._service(loaded)
+        request = types.SimpleNamespace(method="POST", path="/event",
+                                        body=json.dumps({"kind": 0x7F, "a": 0, "b": 0}).encode())
+        status, _ = service.handle_event(request)
+        self.assertEqual(status, 200)
+        self.assertEqual(loaded, [])
 
 
 class EventKinds(unittest.TestCase):
