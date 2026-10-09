@@ -1,0 +1,65 @@
+T5: what one housekeeping core costs the render cores.
+host vip, 120 s an arm, 200 MB of SD and WiFi load, target cost 0.78
+
+== setup
+    restarting namchaind for fresh counters
+    playing      /var/lib/pedal/library/rigs/last.json
+last.json
+last.prev.json
+    candidate    3 chains -> cost 0.40986999999999996
+    candidate    4 chains -> cost 0.5586899999999999
+    candidate    5 chains -> cost 0.6853099999999999
+    candidate    6 chains -> cost 0.7420399999999998
+    candidate    7 chains -> cost 0.7354599999999998
+    candidate    8 chains -> cost 0.78438
+    active rig   7 chains, cost 0.7354599999999998
+    restarting pedald so its bank includes the test rigs
+    making the active rig audible
+    rig          /var/lib/pedal/library/rigs/t5-heavy.json  (cost 0.735, trimmed)
+    render       worst 1667.2 us = 125.0%  over_deadline 27  over_90 36
+    histogram    [[20, 2330], [21, 1487], [22, 930], [23, 145], [24, 71], [25, 39], [26, 47], [27, 48], [28, 47], [29, 81], [30, 157], [31, 138], [32, 71], [33, 42], [34, 44], [35, 36], [36, 22], [37, 15], [38, 19], [39, 15], [40, 11], [41, 11], [42, 10], [43, 9], [44, 11], [45, 12], [46, 20], [47, 26], [48, 11], [49, 10], [50, 9], [51, 3], [52, 1], [53, 2], [54, 3], [55, 10], [56, 33], [57, 32], [58, 26], [59, 27], [60, 25], [61, 15], [62, 12], [63, 2], [64, 9], [65, 8], [66, 6], [67, 6], [68, 7], [69, 6], [70, 11], [71, 10], [72, 17], [73, 14], [74, 17], [75, 18], [76, 18], [77, 6], [78, 5], [79, 3], [80, 5], [81, 7], [82, 2], [83, 5], [84, 2], [85, 3], [86, 2], [87, 1], [88, 5], [89, 1], [90, 1], [91, 1], [92, 2], [93, 2], [94, 1], [98, 1], [99, 1], [100, 27]]
+    xruns 0  guard_trips 0  blocks 6344
+    warm         /var/lib/pedal/library/rigs/t5-heavy.json on core 1: state warm, behind 1 (worst 2), dropped 0, blocks 513
+
+
+== arm A: quiet (nothing on core 0)
+    rig          /var/lib/pedal/library/rigs/t5-heavy.json  (cost 0.735, trimmed)
+    render       worst 1667.2 us = 125.0%  over_deadline 34  over_90 56
+    histogram    [[20, 2330], [21, 1487], [22, 930], [23, 145], [24, 71], [25, 39], [26, 47], [27, 48], [28, 47], [29, 81], [30, 157], [31, 138], [32, 71], [33, 42], [34, 44], [35, 36], [36, 22], [37, 15], [38, 19], [39, 15], [40, 11], [41, 11], [42, 10], [43, 9], [44, 11], [45, 12], [46, 20], [47, 44], [48, 98], [49, 85], [50, 69], [51, 48], [52, 17], [53, 37], [54, 35], [55, 41], [56, 67], [57, 69], [58, 52], [59, 52], [60, 48], [61, 30], [62, 24], [63, 32], [64, 37], [65, 29], [66, 31], [67, 27], [68, 23], [69, 21], [70, 23], [71, 21], [72, 32], [73, 25], [74, 29], [75, 27], [76, 23], [77, 14], [78, 14], [79, 6], [80, 12], [81, 18], [82, 6], [83, 7], [84, 10], [85, 4], [86, 4], [87, 2], [88, 9], [89, 3], [90, 2], [91, 1], [92, 2], [93, 3], [94, 4], [95, 3], [96, 1], [97, 1], [98, 3], [99, 2], [100, 34]]
+    xruns 0  guard_trips 0  blocks 7229
+    warm         /var/lib/pedal/library/rigs/t5-warm.json on core 1: state warm, behind 0 (worst 2), dropped 0, blocks 1397
+    rig          /var/lib/pedal/library/rigs/t5-heavy.json  (cost 0.735, trimmed)
+    render       worst 2024.1 us = 151.8%  over_deadline 39  over_90 71
+    histogram    [[20, 2330], [21, 1487], [22, 930], [23, 145], [24, 71], [25, 39], [26, 47], [27, 48], [28, 47], [29, 81], [30, 157], [31, 138], [32, 71], [33, 42], [34, 44], [35, 36], [36, 22], [37, 15], [38, 19], [39, 15], [40, 11], [41, 11], [42, 10], [43, 9], [44, 11], [45, 12], [46, 851], [47, 24180], [48, 28999], [49, 11651], [50, 5970], [51, 2428], [52, 4675], [53, 5952], [54, 2981], [55, 1479], [56, 621], [57, 293], [58, 454], [59, 251], [60, 89], [61, 50], [62, 35], [63, 55], [64, 57], [65, 40], [66, 38], [67, 33], [68, 29], [69, 25], [70, 26], [71, 22], [72, 34], [73, 26], [74, 31], [75, 29], [76, 24], [77, 15], [78, 16], [79, 6], [80, 13], [81, 18], [82, 7], [83, 7], [84, 11], [85, 4], [86, 4], [87, 2], [88, 9], [89, 4], [90, 3], [91, 2], [92, 3], [93, 4], [94, 5], [95, 6], [96, 2], [97, 1], [98, 4], [99, 2], [100, 39]]
+    xruns 0  guard_trips 0  blocks 97462
+    warm         /var/lib/pedal/library/rigs/t5-warm.json on core 1: state warm, behind 0 (worst 2), dropped 0, blocks 91631
+    per-core busy over the arm: cpu0 6.8%  cpu1 28.7%  cpu2 0.0%  cpu3 51.1%
+    irq thread   2184849 ns of wait to run over 182760 wakes = 12.0 ns/wake
+    temperature  67.2 C -> 69.4 C
+
+== arm B: loaded (spinner, SD write, WiFi upload, compile burst on core 0)
+    rig          /var/lib/pedal/library/rigs/t5-heavy.json  (cost 0.735, trimmed)
+    render       worst 2024.1 us = 151.8%  over_deadline 42  over_90 87
+    histogram    [[20, 2330], [21, 1487], [22, 930], [23, 145], [24, 71], [25, 39], [26, 47], [27, 48], [28, 47], [29, 81], [30, 157], [31, 138], [32, 71], [33, 42], [34, 44], [35, 36], [36, 22], [37, 15], [38, 19], [39, 15], [40, 11], [41, 11], [42, 10], [43, 9], [44, 11], [45, 12], [46, 851], [47, 24249], [48, 29174], [49, 11777], [50, 6071], [51, 2511], [52, 4711], [53, 6039], [54, 3039], [55, 1521], [56, 663], [57, 310], [58, 482], [59, 279], [60, 113], [61, 77], [62, 54], [63, 90], [64, 100], [65, 80], [66, 59], [67, 57], [68, 51], [69, 43], [70, 45], [71, 31], [72, 41], [73, 37], [74, 44], [75, 35], [76, 31], [77, 18], [78, 21], [79, 12], [80, 15], [81, 20], [82, 11], [83, 12], [84, 12], [85, 4], [86, 6], [87, 3], [88, 11], [89, 5], [90, 5], [91, 3], [92, 4], [93, 6], [94, 7], [95, 9], [96, 2], [97, 2], [98, 5], [99, 2], [100, 42]]
+    xruns 0  guard_trips 0  blocks 98750
+    warm         /var/lib/pedal/library/rigs/t5-warm.json on core 1: state warm, behind 0 (worst 2), dropped 0, blocks 92918
+    rig          /var/lib/pedal/library/rigs/t5-heavy.json  (cost 0.735, trimmed)
+    render       worst 2024.1 us = 151.8%  over_deadline 100  over_90 1018
+    histogram    [[20, 2330], [21, 1487], [22, 930], [23, 145], [24, 71], [25, 39], [26, 47], [27, 48], [28, 47], [29, 81], [30, 157], [31, 138], [32, 71], [33, 42], [34, 44], [35, 36], [36, 22], [37, 15], [38, 19], [39, 15], [40, 11], [41, 11], [42, 10], [43, 9], [44, 11], [45, 12], [46, 851], [47, 24266], [48, 29226], [49, 11818], [50, 6118], [51, 2641], [52, 5222], [53, 8244], [54, 6195], [55, 5021], [56, 4256], [57, 4325], [58, 5427], [59, 7976], [60, 6137], [61, 5348], [62, 3601], [63, 4756], [64, 4078], [65, 3724], [66, 3326], [67, 2960], [68, 2684], [69, 2401], [70, 2068], [71, 1760], [72, 2016], [73, 1420], [74, 1779], [75, 1692], [76, 1266], [77, 1102], [78, 1135], [79, 1299], [80, 1214], [81, 1159], [82, 853], [83, 678], [84, 785], [85, 594], [86, 452], [87, 294], [88, 352], [89, 251], [90, 207], [91, 164], [92, 132], [93, 131], [94, 72], [95, 75], [96, 28], [97, 47], [98, 28], [99, 34], [100, 100]]
+    xruns 0  guard_trips 0  blocks 189635
+    warm         /var/lib/pedal/library/rigs/t5-warm.json on core 1: state warm, behind 0 (worst 2), dropped 0, blocks 183803
+    per-core busy over the arm: cpu0 99.2%  cpu1 40.0%  cpu2 0.0%  cpu3 67.1%
+    irq thread   127965694 ns of wait to run over 183764 wakes = 696.4 ns/wake
+    temperature  69.4 C -> 77.1 C
+
+== reading
+    final: xruns 0, blocks over the deadline 103, guard trips 0, worst block 2024.1 us (151.8%)
+    gate: FAIL (see the arms above)
+    the decision this feeds: whether one housekeeping core carries pedald, the control side,
+    WiFi, the SD card and a compile without moving the render cores' tail.
+
+== cleanup
+    restored last.json and its resume files
+    removed the test rigs (t5-heavy.json, t5-warm.json), restarted pedald, cooled the warm set
+    df: /dev/mmcblk0p5  2.9G  1.1G  1.7G  39% /
+    still running on the host: 

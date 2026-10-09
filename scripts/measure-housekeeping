@@ -1,0 +1,362 @@
+#!/usr/bin/env bash
+# scripts/measure-housekeeping [--host vip] [--seconds 240] [--mb 200] [--target 0.78]
+#                             [--rig NAME] [--warm NAME] [--out DIR]
+#                    — T5: does one housekeeping core carry everything else without moving a render?
+#
+# The rules (amended 2026-10-09) spend every core but one on rendering, so core 0 carries `pedald`,
+# the engine's control side, WiFi, the SD card and the OS — and D5 keeps the audio interrupt *off*
+# it, so the interrupt is not what this measures any more. What T5 asks is what that one core costs
+# the cores that render.
+#
+# Two arms, the same rig playing and a warm document rendering on an inactive core in both:
+#
+#   arm A  quiet
+#   arm B  loaded on core 0: a CPU spinner, a bounded SD write, a bounded WiFi upload, and a compile
+#          burst — `rig.cost` over the heaviest rig, repeated, which the engine runs on the control
+#          thread pinned to core 0 (the ~20 ms of work a rig switch costs, per namchaind's drop-in)
+#
+# Read for each arm:
+#
+#   * engine.status: the render tail (worst_us, worst_percent, over_deadline, histogram), xruns,
+#     guard trips, and the cost of the rig being rendered
+#   * engine.status.warm: the warm document's behind_blocks, worst_behind_blocks, blocks_dropped
+#   * the IRQ thread's /proc/<tid>/schedstat: run_delay per wake — it shares core 1 with the warm
+#     thread, so this is where the interrupt's cost shows if it shows anywhere
+#   * per-core busy from /proc/stat, and the temperature
+#
+# The falsifier (the document's): a compile, an upload or a backup on core 0 moves the render cores'
+# tail, or pushes the active rig over the deadline. The gate is 0 xruns and 0 blocks over the
+# deadline in both arms; the *reading* is the delta between them, which this prints.
+#
+# The active rig is built for the test: a copy of the rig the pedal plays, with its chains repeated
+# until `rig.cost` puts it just under the headroom (default 0.78), so the render core is as full as
+# admission allows. Both test rigs are removed at the end, and the warm set is cooled.
+#
+# The load is bounded: --mb written and --mb uploaded per arm (200 MB default), both deleted after.
+# The first T6 harness asked for 1.2 GB on a 2.9 GB card and filled it; not again.
+#
+# Measured 2026-10-09: bench-results/2026-10-09-housekeeping-vip/README.md.
+set -u
+CTL="/opt/namchain/current/bin/namchainctl --token-file /etc/namchain/token"
+HOST=vip
+RUN=240
+MB=200
+TARGET=0.78
+RIG=t5-heavy.json
+WARM=""
+NOWARM=no
+OUT=""
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --seconds) RUN=$2; shift ;;
+    --mb) MB=$2; shift ;;
+    --target) TARGET=$2; shift ;;
+    --rig) RIG=$2; shift ;;
+    --warm) WARM=$2; shift ;;
+    --no-warm) NOWARM=yes ;;
+    --out) OUT=$2; shift ;;
+    -h|--help) sed -n '2,40p' "$0"; exit 0 ;;
+    *) echo "measure-housekeeping: unknown argument $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+OUT=${OUT:-$ROOT/build/$HOST/t5}
+mkdir -p "$OUT"
+# The report is the evidence, so it is kept as well as printed.
+exec > >(tee "$OUT/t5.txt") 2>&1
+
+ctl() { ssh "$HOST" "sudo -n $CTL $*"; }
+
+# The engine's status, as one JSON object on stdout. Note `--compact status`, not `status --compact`:
+# the flag is a global option of namchainctl.
+status() { ssh "$HOST" "sudo -n $CTL --compact status"; }
+
+# A block of lines describing one arm, parsed out of the status above.
+describe() { # describe <label>
+  status | python3 -c "
+import json, sys
+s = json.load(sys.stdin)['status']
+r = s['render']
+c = s.get('cost') or {}
+print('    rig          %s  (cost %s, %s)' % (s.get('rig'), round(c.get('cost', 0), 3), c.get('verdict')))
+print('    render       worst %.1f us = %.1f%%  over_deadline %d  over_90 %d' % (
+    r['worst_us'], r['worst_percent'], r['over_deadline'], r['over_90_percent']))
+print('    histogram    %s' % json.dumps(r['load_histogram']))
+print('    xruns %d  guard_trips %d  blocks %d' % (s['xruns'], s['guard_trips'], s['blocks']))
+w = s.get('warm') or {}
+for e in w.get('set') or []:
+    if not e.get('audible'):
+        print('    warm         %s on core %s: state %s, behind %s (worst %s), dropped %s, blocks %s' % (
+            e.get('rig'), e.get('core'), e.get('state'), e.get('behind_blocks'),
+            e.get('worst_behind_blocks'), e.get('blocks_dropped'), e.get('blocks')))
+if not w:
+    print('    warm         none (this device has no warm set)')
+"
+}
+
+# The IRQ thread's wait to run, and its wake count, as raw schedstat numbers.
+irq_stat() { ssh "$HOST" 't=$(pgrep -f "irq/138-dw_axi" | head -1); cat /proc/$t/schedstat'; }
+
+# Per-core busy over a window. Two samples of "cpu busy total" ticks, so the percentage is a
+# percentage and not a tick count: `100 * (busy2 - busy1) / (total2 - total1)`.
+cpu_stat() { ssh "$HOST" 'awk "/^cpu[0-9]/{u=\$2+\$3+\$4+\$7+\$8+\$9; i=\$5; print \$1, u, u+i}" /proc/stat'; }
+temp_c() { ssh "$HOST" 'awk "{printf \"%.1f\", \$1/1000}" /sys/class/thermal/thermal_zone0/temp'; }
+
+busy_delta() { # busy_delta <before> <after>
+  python3 - "$1" "$2" <<'EOF'
+import sys
+def parse(t):
+    out = {}
+    for line in t.strip().splitlines():
+        name, busy, total = line.split()
+        out[name] = (int(busy), int(total))
+    return out
+a, b = parse(sys.argv[1]), parse(sys.argv[2])
+parts = []
+for c in sorted(a):
+    dbusy, dtotal = b[c][0] - a[c][0], b[c][1] - a[c][1]
+    parts.append("%s %.1f%%" % (c, 100.0 * dbusy / dtotal if dtotal else 0.0))
+print("    per-core busy over the arm: " + "  ".join(parts))
+EOF
+}
+
+# ------------------------------------------------------------------ set up the rigs
+
+echo "T5: what one housekeeping core costs the render cores."
+echo "host $HOST, $RUN s an arm, $MB MB of SD and WiFi load, target cost $TARGET"
+echo
+
+PLAYING=$(status | python3 -c "import json,sys; print(json.load(sys.stdin)['status'].get('rig') or '')")
+echo "== setup"
+
+# A fresh engine: the counters (`xruns`, `over_deadline`, the histogram) are cumulative since
+# namchaind started, so an arm's numbers are only readable from zero. It also drops whatever warm set
+# was held, which is what --no-warm wants and what the warm case then builds for itself.
+echo "    restarting namchaind for fresh counters"
+ssh "$HOST" "sudo systemctl restart namchaind" || { echo "could not restart namchaind" >&2; exit 1; }
+sleep 6
+PLAYING=$(status | python3 -c "import json,sys; print(json.load(sys.stdin)['status'].get('rig') or '')")
+[[ -n $PLAYING ]] || { echo "nothing is playing after the restart; start the engine with a rig first" >&2; exit 2; }
+PLAY_NAME=$(basename "$PLAYING")
+echo "    playing      $PLAYING"
+[[ -n $WARM ]] || WARM=t5-warm.json
+
+# The pedal's resume state: pedald writes the document being played into the rigs root as `last.json`
+# (and the one before it as `last.prev.json`), so loading a test rig overwrites both. They are backed
+# up here and put back at the end -- without this a measurement leaves the pedal playing the test rig,
+# which is exactly what happened on 2026-10-09 (recovered from the T10 harness's own rig copies).
+ssh "$HOST" "rm -rf /var/tmp/t5-resume && mkdir -p /var/tmp/t5-resume && cp /var/lib/pedal/library/rigs/last.json /var/lib/pedal/library/rigs/last.prev.json /var/tmp/t5-resume/ 2>/dev/null; ls /var/tmp/t5-resume"
+
+# Two test rigs, both built from the document the pedal is playing:
+#
+#   $RIG    the active rig: its chains repeated, with fresh ids, until `cost` says it is just under
+#           the headroom. Duplicating a chain means renaming it and every node and connection in it,
+#           because ids are the document's namespace and the engine refuses a duplicate. The document
+#           cap is `kMaxChains = 8`, so that is the ceiling however heavy the target is.
+#   $WARM   the neighbour: the playing document unchanged, so the warm thread renders real work on an
+#           inactive core and pedald has a second rig for its bank.
+#
+# Written into the rigs root because `rig.cost` and `rig.load` resolve a rig by name there.
+ssh "$HOST" "sudo python3 - '$PLAY_NAME' '$RIG' '$WARM' '$TARGET' '$CTL'" <<'EOF'
+import copy, json, os, subprocess, sys
+playing, heavy, warm, target, ctl = sys.argv[1], sys.argv[2], sys.argv[3], float(sys.argv[4]), sys.argv[5].split()
+root = "/var/lib/pedal/library/rigs"
+MAX_CHAINS = 8          # daemon.h: a document may hold at most this many
+doc = json.load(open(os.path.join(root, playing)))
+base = list(doc.get("chains") or [])
+if not base:
+    sys.exit("the playing rig has no chains")
+
+def place(path, body):
+    tmp = "/tmp/" + os.path.basename(path)
+    json.dump(body, open(tmp, "w"), indent=1)
+    subprocess.run(["sudo", "-n", "install", "-m", "644", "-o", "pedal", "-g", "pedal", tmp, path],
+                   check=True)
+
+def cost(name):
+    out = subprocess.run(["sudo", "-n", *ctl, "cost", name, "--compact"], capture_output=True, text=True)
+    try:
+        reply = json.loads(out.stdout)
+    except Exception:
+        return None, (out.stdout or out.stderr).strip()[:200]
+    if not reply.get("ok"):
+        return None, (reply.get("error") or {}).get("message", "refused")
+    return (reply.get("cost") or {}).get("cost"), None
+
+def clone(chain, k):
+    c = copy.deepcopy(chain)
+    c["id"] = "%s-c%d" % (chain.get("id", "chain"), k)
+    for n in c.get("nodes") or []:
+        if n.get("id"):
+            n["id"] = "%s-c%d" % (n["id"], k)
+        if n.get("element"):
+            n["element"] = "%s-c%d" % (n["element"], k)
+    for conn in c.get("connections") or []:
+        for key in ("from", "to"):
+            if isinstance(conn.get(key), str):
+                conn[key] = "%s-c%d" % (conn[key], k)
+    return c
+
+# The neighbour first: it is the playing document as it stands.
+neighbour = copy.deepcopy(doc)
+neighbour["name"] = warm[:-5]
+place(os.path.join(root, warm), neighbour)
+
+def build(n):
+    heavy_doc = copy.deepcopy(doc)
+    heavy_doc["name"] = heavy[:-5]
+    heavy_doc["chains"] = [clone(base[i % len(base)], i) for i in range(n)]
+    place(os.path.join(root, heavy), heavy_doc)
+
+best = None
+for n in range(len(base), MAX_CHAINS + 1):
+    build(n)
+    c, err = cost(heavy)
+    print("    candidate    %d chains -> cost %s%s" % (n, c, " (%s)" % err if err else ""))
+    if c is None:
+        sys.exit("rig.cost would not cost the candidate rig: %s" % err)
+    if c < target:
+        best = (n, c)
+    else:
+        break
+if best is None:
+    sys.exit("even %d chains cost %s, at or over the %s target: play a lighter rig or raise --target"
+             % (len(base), cost(heavy)[0], target))
+build(best[0])
+print("    active rig   %d chains, cost %s" % best)
+EOF
+[[ $? == 0 ]] || { echo "the setup failed; nothing was measured" >&2; exit 1; }
+# The rigs are evidence as well as input: keep them beside the report, as the soak harness does.
+mkdir -p "$OUT/rigs"
+for f in "$RIG" "$WARM"; do
+  scp -q "$HOST:/var/lib/pedal/library/rigs/$f" "$OUT/rigs/$f" || true
+done
+
+# pedald's bank is the library's rigs, read once at startup, and its warm set is the rig one press
+# away. Restarting it is what makes it see the two test rigs -- and its own warming is the realistic
+# arrangement, so the arms run with pedald's choice warm rather than one this script imposed. With
+# --no-warm the bank is left empty on purpose: pedald then cools whatever was warm, which is how the
+# coexistence cost of a warm document is separated from the cost of the audible rig alone.
+if [[ $NOWARM == yes ]]; then
+  echo "    --no-warm: pedald is stopped so nothing is held warm"
+  ssh "$HOST" "sudo systemctl stop pedald" || true
+  sleep 2
+  ctl "cool" >/dev/null 2>&1 || true
+else
+  echo "    restarting pedald so its bank includes the test rigs"
+  ssh "$HOST" "sudo systemctl restart pedald" || true
+fi
+
+echo "    making the active rig audible"
+load_reply=$(ctl "load '$RIG' --compact" 2>&1)
+case "$load_reply" in
+  *'"ok":true'*) ;;
+  *) echo "could not load $RIG as the audible rig: $load_reply" >&2; exit 1 ;;
+esac
+
+# Wait for the warm side to be a document that is not the audible one and has rendered a block, and
+# say so plainly when it never happens: an arm with no warm work measures less than it claims.
+warm_ready=no
+for _ in $(seq 1 20); do
+  n=$(status | python3 -c "
+import json,sys
+s = json.load(sys.stdin)['status']
+print(sum(1 for e in ((s.get('warm') or {}).get('set') or [])
+          if not e.get('audible') and e.get('state') == 'warm' and (e.get('blocks') or 0) > 0))
+" 2>/dev/null || echo 0)
+  [[ $n -ge 1 ]] && { warm_ready=yes; break; }
+  sleep 1
+done
+[[ $warm_ready == yes ]] || echo "    WARNING: no warm document is rendering; the arms measure the" \
+                               "render cores without warm work beside them"
+describe setup
+echo
+
+[[ -f /tmp/t5-payload ]] || { mkfile -n "${MB}m" /tmp/t5-payload 2>/dev/null || dd if=/dev/zero of=/tmp/t5-payload bs=1m count="$MB" 2>/dev/null; }
+
+# ------------------------------------------------------------------ the arms
+
+arm() { # arm <label> <load: yes|no>
+  local label=$1 load=$2
+  echo
+  echo "== arm $label"
+  local cpu0 irq0 tmp0
+  cpu0=$(cpu_stat); irq0=$(irq_stat); tmp0=$(temp_c)
+  describe before
+
+  local dd scp_pid
+  rm -f /tmp/t5-stop
+  if [[ $load == yes ]]; then
+    # The compile burst: `cost` over the heavy rig, repeated, pinned to core 0 like any other
+    # control-side work. This is what a publish costs and it is the heaviest thing core 0 does.
+    ssh "$HOST" "taskset -c 0 timeout $RUN bash -c 'while :; do sudo -n $CTL cost $RIG >/dev/null; done' >/dev/null 2>&1 & echo \$! > /var/tmp/t5-burst.pid" || true
+    ssh "$HOST" "taskset -c 0 yes > /dev/null 2>&1 & echo \$! > /var/tmp/t5-yes.pid; taskset -c 0 dd if=/dev/zero of=/var/tmp/t5-dd.bin bs=1M count=$MB conv=fsync 2>/dev/null" &
+    dd=$!
+    # The upload repeats until the arm ends: one 200 MB scp finishes in a fraction of a four-minute
+    # arm, and a load that stops halfway is not the load this measures.
+    ( while [[ ! -f /tmp/t5-stop ]]; do scp -q -o ConnectTimeout=15 /tmp/t5-payload "$HOST:/var/tmp/t5-payload" || sleep 1; done ) &
+    scp_pid=$!
+  fi
+  sleep "$RUN"
+  if [[ $load == yes ]]; then
+    touch /tmp/t5-stop
+    kill "$dd" "$scp_pid" 2>/dev/null || true
+    wait "$dd" 2>/dev/null || true
+    wait "$scp_pid" 2>/dev/null || true
+    ssh "$HOST" 'for f in /var/tmp/t5-yes.pid /var/tmp/t5-burst.pid; do [ -f $f ] && kill "$(cat $f)" 2>/dev/null; rm -f $f; done; pkill -f t5-dd.bin 2>/dev/null; true' || true
+  fi
+
+  describe after
+  busy_delta "$cpu0" "$(cpu_stat)"
+  python3 - "$irq0" "$(irq_stat)" "$tmp0" "$(temp_c)" <<'EOF'
+import sys
+def nums(line):
+    return [int(x) for x in line.split()[:3]]
+a, b = nums(sys.argv[1]), nums(sys.argv[2])
+dw, dd = b[1] - a[1], b[2] - a[2]
+print("    irq thread   %d ns of wait to run over %d wakes = %.1f ns/wake" % (dw, dd, dw / dd if dd else 0))
+print("    temperature  %s C -> %s C" % (sys.argv[3], sys.argv[4]))
+EOF
+}
+
+arm "A: quiet (nothing on core 0)" no
+arm "B: loaded (spinner, SD write, WiFi upload, compile burst on core 0)" yes
+
+# ------------------------------------------------------------------ what it says
+
+echo
+echo "== reading"
+status | python3 -c "
+import json, sys
+s = json.load(sys.stdin)['status']
+r = s['render']
+ok = s['xruns'] == 0 and r['over_deadline'] == 0 and s['guard_trips'] == 0
+print('    final: xruns %d, blocks over the deadline %d, guard trips %d, worst block %.1f us (%.1f%%)' % (
+    s['xruns'], r['over_deadline'], s['guard_trips'], r['worst_us'], r['worst_percent']))
+print('    gate: %s' % ('PASS (both arms ended with 0 xruns and 0 blocks over the deadline)' if ok
+                        else 'FAIL (see the arms above)'))
+"
+echo "    the decision this feeds: whether one housekeeping core carries pedald, the control side,"
+echo "    WiFi, the SD card and a compile without moving the render cores' tail."
+
+# ------------------------------------------------------------------ leave nothing behind
+
+echo
+echo "== cleanup"
+# Put the pedal back the way it was found: pedald's resume files, the rig it was playing, its library
+# without the test rigs, pedald restarted so its bank forgets them, and the warm set cooled.
+ssh "$HOST" "sudo cp /var/tmp/t5-resume/last.json /var/lib/pedal/library/rigs/last.json 2>/dev/null; sudo cp /var/tmp/t5-resume/last.prev.json /var/lib/pedal/library/rigs/last.prev.json 2>/dev/null; sudo chown pedal:pedal /var/lib/pedal/library/rigs/last.json /var/lib/pedal/library/rigs/last.prev.json 2>/dev/null; true" || true
+ctl "cool" >/dev/null 2>&1 || true
+ssh "$HOST" "sudo rm -f /var/lib/pedal/library/rigs/$RIG /var/lib/pedal/library/rigs/$WARM; rm -rf /var/tmp/t5-resume; rm -f /var/tmp/t5-dd.bin /var/tmp/t5-payload; pkill -f t5-dd.bin 2>/dev/null; true" || true
+restore=$(ctl "load last.json --compact" 2>&1)
+case "$restore" in
+  *'"ok":true'*) echo "    restored last.json and its resume files" ;;
+  *) echo "    WARNING: could not reload last.json: $restore" >&2 ;;
+esac
+ssh "$HOST" "sudo systemctl restart pedald" >/dev/null 2>&1 || true
+rm -f /tmp/t5-stop
+echo "    removed the test rigs ($RIG, $WARM), restarted pedald, cooled the warm set"
+echo "    df: $(ssh "$HOST" 'df -h / | tail -1')"
+echo "    still running on the host: $(ssh "$HOST" 'pgrep -a -f "t5-|rig.cost|yes$" | grep -v pgrep | head -3')"

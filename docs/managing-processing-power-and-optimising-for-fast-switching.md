@@ -102,6 +102,14 @@ eighth model dearer than the first (measured: first Full 6.6% of a quantum, eigh
 a cliff, not a plateau — vip: 8 Full at 89% of a quantum, 10 at 113%, 12 with the warm thread 2,621
 blocks (3.5 s) behind and never recovering — and the transition itself briefly runs two rigs
 (Lite and Full during a handover). *Ruled out:* admitting a rig that scores exactly 1.0.
+**Undermined by T5 (2026-10-09), and this needs a decision.** The table charges units as if a core
+had them to itself. With a warm document rendering beside the audible one, a rig admitted at 0.735
+goes from +0 to +7 blocks over the deadline in 120 s quiet, and +1 to +61 with the housekeeping core
+loaded (worst block 100.7% → 151.8%) — so **`fits` does not mean "holds the deadline while warming
+is on"** above roughly 0.7, and D4's per-core independence is the assumption that fails. The options
+are in T5 below (charge the coexistence, lower the headroom while warming, let the service cool above
+a threshold, or record the narrower promise); the measurement that chooses between them is the same
+four arms swept over rig cost.
 
 **D4 — Warm rigs are packed by cost into the inactive cores, up to the same 0.8** (2026-10-07;
 scoped 2026-10-09). One rig per core wastes the resource the whole scheme exists to protect: a core
@@ -493,7 +501,36 @@ is where the headroom may prove too thin — the two-amp work measured another c
 compile, an upload or a backup on core 0 moves the render cores' tail, or pushes the active rig over
 the deadline. *Recorded as:* the headroom and the mitigation it forces (a lower admission figure, or
 the memory discipline: `mlockall` for every worker stack and buffer, no new-page churn beside the
-engine). **Not run** — it wants P6's warm cores to be the thing that is being protected.
+engine). **Run 2026-10-09: the falsifier fired, and it found more than the falsifier.**
+`scripts/measure-housekeeping`, four arms on vip (engine `fee0440`), the active rig built for the test
+at **0.735** — admitted, `fits`, one model trimmed — with a 0.41 neighbour warm on core 1 in two of
+them and nothing warm in the other two, the same load (core 0 at 99%: spinner, 200 MB SD write, a
+WiFi upload repeated to the end of the arm, and `namchainctl cost` in a loop as the compile burst):
+
+| 120 s arm | over the deadline | worst block | blocks over 90% |
+|---|---|---|---|
+| quiet, nothing warm | +0 | 100.7% | +2 |
+| **loaded, nothing warm** | **+1** | **107.7%** | **+33** |
+| quiet, warm on core 1 | **+7** | 125.0% | +20 |
+| **loaded, warm on core 1** | **+61** | **151.8%** | **+947** |
+
+`xruns` 0 and no guard trips anywhere; the warm document itself was never more than 2 blocks behind
+and dropped nothing.
+
+**Two findings.** (1) The housekeeping load does move the render tail, and on a rig this close to the
+table's limit it breaks the deadline — on a 0.41 rig the first run of the same harness saw 0 overruns
+and a worst block of 63%, so the load's cost is bounded and what decides is how near the top of the
+table the rig is. (2) **The warm document costs more than the load, and the table does not model it
+at all**: the *same rig* with a warm neighbour goes from +0 to +7 overruns quiet and from +1 to +61
+loaded, worst block 100.7% → 125.0%. The cost model charges units as if a core were alone with them;
+with a warm rig rendering beside it, it is not. `fits` at 0.735 is therefore not a promise that the
+rig holds the deadline — D3's headroom, D4's per-core independence and the admission verdict all
+assume a quiet core. **What to do about it is a decision** (charge a coexistence term measured per
+rig class; lower the headroom while warming is on; let `pedald` decide by cooling above a threshold;
+or record that `fits` means "fits alone") — the sweep that would settle it is the same four arms at
+0.3/0.5/0.6/0.7/0.75, which the harness does mechanically with `--target` and `--no-warm`.
+[bench-results/2026-10-09-housekeeping-vip](bench-results/2026-10-09-housekeeping-vip/README.md) has
+the four arms, the caveats and the reproduction.
 
 **T6 — the IRQ arm (D5).** The audio IRQ on a render core (where it lives now, core 1) against the
 housekeeping core (what P7 chose, core 0), measuring the IRQ thread's tail, the render tail, and the
