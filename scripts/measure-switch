@@ -1,0 +1,211 @@
+#!/usr/bin/env bash
+# scripts/measure-switch [--host vip] [--presses N] [--storm-rate 10] [--storm-seconds 60]
+#                        [--presses-between-status 4] [--out DIR]
+#                    — T7's service half and T8's storm: a press through the service.
+#
+# The engine's half of T7 (a handover, 0 xruns, the warm rig never more than a block behind) is
+# measured; so is the offline arm's load. What was missing is the *service*: a press arriving, the
+# mapping resolving it, `rig.switch` going out, the warm set sliding to the new neighbour, and the
+# next press landing on a rig that is already rendering. That is what this drives, with no hardware:
+# `POST /event` carries the Pico's own vocabulary (`{"kind": 1, "a": 0, "b": 0}` is rig_up), and the
+# route hands it to the same `on_event` the UART reader calls.
+#
+# Two phases:
+#
+#   presses   N presses, spaced by the status poll, each one stepping the bank and each one checked
+#             against the engine: `switched` warm or cold, the outgoing rig left warm, the warm
+#             document still rendering, no xrun and no dropped warm block;
+#   storm     `--storm-rate` presses a second for `--storm-seconds`, the newest winning (T8): the
+#             work must stay bounded -- no queue growth, no xrun, and the engine's own counters for
+#             deferred switches and dropped warm blocks must not run away.
+#
+# A bank of two rigs is built for the run from the rig the pedal is playing, and pedald's resume
+# files are backed up and put back: loading a rig rewrites them (`Resume`), which is how a
+# measurement once left the pedal playing its own test rig.
+#
+# Evidence: <out>/t7-service.txt (default build/<host>/switch), and the summary at the end.
+set -u
+HOST=vip
+PRESSES=12
+RATE=10
+SECONDS_STORM=60
+SPACING=1.0
+OUT=""
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --presses) PRESSES=$2; shift ;;
+    --storm-rate) RATE=$2; shift ;;
+    --storm-seconds) SECONDS_STORM=$2; shift ;;
+    --storm-only) PRESSES=0 ;;
+    --spacing) SPACING=$2; shift ;;
+    --out) OUT=$2; shift ;;
+    -h|--help) sed -n '2,30p' "$0"; exit 0 ;;
+    *) echo "measure-switch: unknown argument $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+OUT=${OUT:-$ROOT/build/$HOST/switch}
+mkdir -p "$OUT"
+exec > >(tee "$OUT/t7-service.txt") 2>&1
+
+CTL="/opt/namchain/current/bin/namchainctl --token-file /etc/namchain/token"
+RIG_A=t7-a.json
+RIG_B=t7-b.json
+PORT=47820
+
+TOKEN=$(ssh "$HOST" "sudo cat /etc/namchain/token" 2>/dev/null | tr -d '\n')
+[[ -n $TOKEN ]] || { echo "could not read the token on $HOST" >&2; exit 1; }
+
+api() { # api <METHOD> <path> [body]
+  local method=$1 path=$2 body=${3:-}
+  if [[ -n $body ]]; then
+    curl -sS -m 10 -X "$method" -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+         --data-binary "$body" "http://$HOST:$PORT$path"
+  else
+    curl -sS -m 10 -X "$method" -H "Authorization: Bearer $TOKEN" "http://$HOST:$PORT$path"
+  fi
+}
+
+engine_status() { ssh "$HOST" "sudo $CTL --compact status" 2>/dev/null; }
+
+# One line of what the engine says about the switches and the warm set.
+snapshot() { # snapshot <label>
+  engine_status | python3 -c "
+import json, sys
+s = json.load(sys.stdin)['status']
+w = s.get('warm') or {}
+held = [e for e in (w.get('set') or []) if not e.get('audible')]
+print('    %-10s switches %s (warm %s, cold %s, deferred %s)  xruns %d  issues %d' % (
+    '$1', w.get('switches'), w.get('warm_switches', w.get('switches')), w.get('cold_switches'),
+    w.get('deferred'), s['xruns'], len(s.get('issues') or [])))
+for e in held:
+    print('               warm: %s on core %s, state %s, behind %s (worst %s), dropped %s' % (
+        (e.get('rig') or '?').split('/')[-1], e.get('core'), e.get('state'), e.get('behind_blocks'),
+        e.get('worst_behind_blocks'), e.get('blocks_dropped')))
+"
+}
+
+press() { # press <up|down>
+  local kind=1
+  [[ $1 == down ]] && kind=2
+  api POST /event "{\"kind\": $kind, \"a\": 0, \"b\": 0}" >/dev/null
+}
+
+echo "T7's service half and T8's storm: presses through pedald's own event path."
+echo "host $HOST, $PRESSES presses at ${SPACING}s, then ${RATE}/s for ${SECONDS_STORM}s"
+echo
+
+# ------------------------------------------------------------------ the bank, and a way back
+
+echo "== setup"
+PLAYING=$(engine_status | python3 -c "import json,sys; print(json.load(sys.stdin)['status'].get('rig') or '')")
+PLAY_NAME=$(basename "$PLAYING")
+[[ -n $PLAY_NAME ]] || { echo "nothing is playing" >&2; exit 2; }
+echo "    playing      $PLAY_NAME"
+ssh "$HOST" "rm -rf /var/tmp/t7-resume && mkdir -p /var/tmp/t7-resume && cp /var/lib/pedal/library/rigs/last.json /var/lib/pedal/library/rigs/last.prev.json /var/tmp/t7-resume/ 2>/dev/null; true"
+for name in "$RIG_A" "$RIG_B"; do
+  ssh "$HOST" "sudo install -m 644 -o pedal -g pedal /var/lib/pedal/library/rigs/$PLAY_NAME /var/lib/pedal/library/rigs/$name"
+done
+echo "    bank         $RIG_A, $RIG_B (both the document the pedal plays)"
+ssh "$HOST" "sudo systemctl restart pedald" || true
+sleep 4
+api GET /library/rigs | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+print('    service sees  %s' % ', '.join(r.get('name', '?') for r in d.get('rigs', [])))
+print('    warm decision %s' % json.dumps(d.get('running')))" 2>/dev/null || true
+snapshot "before"
+
+# ------------------------------------------------------------------ T7's service half
+
+warm_before=0
+if [[ $PRESSES -gt 0 ]]; then
+  echo
+  echo "== T7's service half: $PRESSES presses through POST /event, each one a step of the bank"
+  warm_switch=0
+  cold_switch=0
+  for i in $(seq 1 "$PRESSES"); do
+    before=$(engine_status | python3 -c "import json,sys; s=json.load(sys.stdin)['status']; w=s.get('warm') or {}; print('%s %s %s' % (w.get('switches') or 0, w.get('cold_switches') or 0, s['xruns']))")
+    api POST /event '{"kind": 1, "a": 0, "b": 0}' >/dev/null
+    sleep "$SPACING"
+    after=$(engine_status | python3 -c "import json,sys; s=json.load(sys.stdin)['status']; w=s.get('warm') or {}; print('%s %s %s' % (w.get('switches') or 0, w.get('cold_switches') or 0, s['xruns']))")
+    set -- $before; b_sw=$1; b_cold=$2; b_xr=$3
+    set -- $after;  a_sw=$1; a_cold=$2; a_xr=$3
+    if [[ $a_sw -gt $b_sw ]]; then warm_switch=$((warm_switch + 1)); fi
+    if [[ $a_cold -gt $b_cold ]]; then cold_switch=$((cold_switch + 1)); fi
+    if [[ $a_xr -gt $b_xr ]]; then echo "    press $i: XRUNS went $b_xr -> $a_xr"; fi
+    printf '    press %-3s warm %s cold %s xruns %s\n' "$i" "$((a_sw - b_sw))" "$((a_cold - b_cold))" "$a_xr"
+  done
+  echo
+  echo "    $warm_switch of $PRESSES presses were handovers, $cold_switch were cold"
+  snapshot "after"
+fi
+
+# ------------------------------------------------------------------ T8's storm
+
+if [[ $RATE -gt 0 && $SECONDS_STORM -gt 0 ]]; then
+  echo
+  echo "== T8's storm: $RATE presses a second for ${SECONDS_STORM}s, newest wins"
+  before=$(engine_status)
+  # One curl at a time, paced: a backgrounded curl per press cannot hold a rate (the first run of
+  # this script reached 1.6/s while claiming 10), and the rate is the thing T8 is about.
+  sent=0
+  failed=0
+  python3 - "$HOST" "$PORT" "$TOKEN" "$RATE" "$SECONDS_STORM" > /tmp/t7-storm-count <<'PYEOF_INNER'
+import json, subprocess, sys, time
+host, port, token, rate, seconds = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4]), float(sys.argv[5])
+interval = 1.0 / rate
+end = time.time() + seconds
+sent = failed = 0
+next_at = time.time()
+while time.time() < end:
+    body = json.dumps({"kind": 1 if sent % 2 == 0 else 2, "a": 0, "b": 0})
+    done = subprocess.run(["curl", "-sS", "-m", "5", "-o", "/dev/null", "-w", "%{http_code}",
+                           "-X", "POST", "-H", "Authorization: Bearer " + token,
+                           "-H", "Content-Type: application/json", "--data-binary", body,
+                           "http://%s:%s/event" % (host, port)], capture_output=True, text=True)
+    if done.stdout.strip() == "200":
+        sent += 1
+    else:
+        failed += 1
+    next_at += interval
+    delay = next_at - time.time()
+    if delay > 0:
+        time.sleep(delay)
+print(sent, failed)
+PYEOF_INNER
+  read -r sent failed < /tmp/t7-storm-count
+  echo "    sent $sent presses (${failed} not answered 200) in ${SECONDS_STORM}s = $(python3 -c "print(round($sent / $SECONDS_STORM, 2))")/s"
+  after=$(engine_status)
+  python3 - "$before" "$after" <<'EOF'
+import json, sys
+b = json.loads(sys.argv[1])['status']
+a = json.loads(sys.argv[2])['status']
+bw, aw = b.get('warm') or {}, a.get('warm') or {}
+print('    switches     %s -> %s (warm %s -> %s, cold %s -> %s)' % (
+    bw.get('switches'), aw.get('switches'), bw.get('switches'), aw.get('switches'),
+    bw.get('cold_switches'), aw.get('cold_switches')))
+print('    deferred     %s -> %s' % (bw.get('deferred'), aw.get('deferred')))
+print('    xruns        %s -> %s   guard trips %s -> %s' % (b['xruns'], a['xruns'], b['guard_trips'], a['guard_trips']))
+print('    render       worst %s -> %s blocks over the deadline' % (
+    (b.get('render') or {}).get('over_deadline'), (a.get('render') or {}).get('over_deadline')))
+for e in (aw.get('set') or []):
+    if not e.get('audible'):
+        print('    warm after   %s state %s behind %s (worst %s) dropped %s' % (
+            (e.get('rig') or '?').split('/')[-1], e.get('state'), e.get('behind_blocks'),
+            e.get('worst_behind_blocks'), e.get('blocks_dropped')))
+EOF
+fi
+
+# ------------------------------------------------------------------ put it back
+
+echo
+echo "== cleanup"
+ssh "$HOST" "sudo rm -f /var/lib/pedal/library/rigs/$RIG_A /var/lib/pedal/library/rigs/$RIG_B"
+ssh "$HOST" "sudo cp /var/tmp/t7-resume/last.json /var/lib/pedal/library/rigs/last.json 2>/dev/null; sudo cp /var/tmp/t7-resume/last.prev.json /var/lib/pedal/library/rigs/last.prev.json 2>/dev/null; sudo chown pedal:pedal /var/lib/pedal/library/rigs/last.json /var/lib/pedal/library/rigs/last.prev.json 2>/dev/null; rm -rf /var/tmp/t7-resume; true"
+ssh "$HOST" "sudo $CTL load last.json --compact" >/dev/null 2>&1 || echo "    (could not reload last.json)"
+ssh "$HOST" "sudo systemctl restart pedald" >/dev/null 2>&1 || true
+echo "    removed the test rigs, restored the resume files, reloaded $PLAY_NAME"
+echo "    library now: $(ssh "$HOST" 'ls /var/lib/pedal/library/rigs/')"
