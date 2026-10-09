@@ -1,0 +1,178 @@
+#!/usr/bin/python3
+"""pedal-measure — measure the cost rows this device's table has no number for (P4).
+
+    pedal-measure [--dry-run] [--seconds N] [--input FILE] [--keep]
+
+Why this is a root oneshot beside `pedal-diag` rather than part of `pedald`: the service runs as
+`User=pedal` with `CPUAffinity=0` in `system.slice`, whose cpuset is the housekeeping core. It cannot
+pin a bench to an inactive core (the affinity call fails against that cpuset) and it has no privilege
+to enter `pedal-bench.slice`, which is the slice that exists to allow those cores. So the service does
+the half it can do unprivileged -- it knows the worklist and says so in `/status`
+(`engine.needs_measuring`) -- and the privileged half lives here, where privileges are declared.
+
+What it does, in order:
+
+  1. reads the engine's status (the worklist is on `/status` too, but the engine's own issues are
+     where it comes from, and this tool has the token);
+  2. refuses to run when the pedal is unhappy: `xruns` or blocks over the deadline, the warm failsafe
+     holding, or the audible rig already at or over the headroom. A pedal at its limit has no inactive
+     core to spare, and T5 is the measurement that says so;
+  3. takes **one** row -- the first the worklist names -- and runs the deployed bench for it on a core
+     the player is not using, inside `pedal-bench.slice`, bounded by `--timeout`;
+  4. writes the bench's `fragment:` line to `/var/lib/pedal/cost-fragments/<row>.json`, which is what
+     `devices/common/cost-merge` folds into the device's table.
+
+It does **not** merge: the engine cannot write the table (a device's numbers are the device's, and
+`devices/<host>/check` hashes the installed file) and neither does this. A pedal that measured a row
+and rewrote its own admission would be a machine grading its own homework.
+"""
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+
+CTL = "/opt/namchain/current/bin/namchainctl"
+TOKEN_FILE = "/etc/namchain/token"
+BENCH = "/opt/namchain/current/bin/namchain-warm-bench"
+FRAGMENTS = "/var/lib/pedal/cost-fragments"
+SLICE = "pedal-bench.slice"
+# The DI the table was measured with. Not shipped in the rootfs (8 MB); the operator puts it here or
+# says where with --input. A measurement's input matters: the numbers are only comparable between
+# runs that rendered the same signal.
+DEFAULT_INPUT = "/var/lib/pedal/guitar-di.wav"
+
+# The warm cores: the ones a warm document may use, so the one it is not using is the one to measure
+# on. Read from the engine's config through its status (`warm.cores`), falling back to the second.
+def measure_cpu(status):
+    cores = ((status.get("warm") or {}).get("cores")) or []
+    return int(cores[1]) if len(cores) > 1 else 2
+
+
+def happy(status):
+    """Whether this is a moment to spend a core on measuring. Returns (ok, why not)."""
+    render = status.get("render") or {}
+    cost = status.get("cost") or {}
+    warm = status.get("warm") or {}
+    if status.get("xruns"):
+        return False, "the engine has xruns (%s)" % status["xruns"]
+    if render.get("over_deadline"):
+        return False, "blocks are going over the deadline (%s)" % render["over_deadline"]
+    if warm.get("pressure_holding"):
+        return False, "the warm failsafe is holding: the audible rig is at its limit"
+    headroom = cost.get("headroom")
+    if headroom is not None and cost.get("cost") is not None and cost["cost"] > headroom:
+        return False, "the audible rig is over the headroom (%.3f > %.3f)" % (cost["cost"], headroom)
+    return True, ""
+
+
+def worklist(status):
+    """The rows with no measured row, from the engine's own issues: [{"row", "reference"}, ...]."""
+    rows = {}
+    for issue in status.get("issues") or []:
+        if not isinstance(issue, dict) or issue.get("code") != "cost_unknown":
+            continue
+        row = issue.get("row") or "unknown"
+        entry = rows.setdefault(row, {"row": row, "reference": None, "count": 0})
+        entry["count"] += 1
+        if entry["reference"] is None and issue.get("reference"):
+            entry["reference"] = issue["reference"]
+    return [rows[row] for row in sorted(rows)]
+
+
+def bench_command(row, reference, args, cpu):
+    """The one row, as the `measure` mode spells it: a model, an IR, or a node."""
+    if row.startswith("NAM."):
+        # NAM.<family>.<full|lite>: the model is what is measured; the family comes from the file.
+        return [BENCH, "measure", "--unit", "nam", "--model", reference,
+                "--input", args.input, "--seconds", str(args.seconds), "--cpu", str(cpu)]
+    if row.startswith("IR."):
+        return [BENCH, "measure", "--unit", "ir", "--model", reference, "--input", args.input,
+                "--seconds", str(args.seconds), "--cpu", str(cpu), "--taps", row.split(".", 1)[1]]
+    if row.startswith("node."):
+        return [BENCH, "measure", "--unit", "node", "--node", row.split(".", 1)[1],
+                "--input", args.input, "--seconds", str(args.seconds), "--cpu", str(cpu)]
+    return None
+
+
+def engine_status():
+    return json.loads(subprocess.run([CTL, "--token-file", TOKEN_FILE, "--compact", "status"],
+                                     capture_output=True, text=True, check=True).stdout)["status"]
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument("--dry-run", action="store_true", help="say what would be measured, measure nothing")
+    parser.add_argument("--seconds", type=float, default=30.0, help="seconds per measured point")
+    parser.add_argument("--input", default=DEFAULT_INPUT, help="the WAV the cost table was measured with")
+    parser.add_argument("--timeout", type=float, default=900.0, help="give up on the bench after this")
+    parser.add_argument("--keep", action="store_true", help="keep the bench's own output directory")
+    args = parser.parse_args(argv)
+
+    try:
+        status = engine_status()
+    except Exception as exc:  # noqa: BLE001 - a missing engine is a reason not to measure, not a crash
+        print("pedal-measure: the engine did not answer: %s" % exc)
+        return 1
+
+    rows = worklist(status)
+    if not rows:
+        print("pedal-measure: every unit the engine is playing has a measured row; nothing to do")
+        return 0
+
+    ok, why = happy(status)
+    if not ok:
+        print("pedal-measure: not now -- %s (%d row(s) still unmeasured)" % (why, len(rows)))
+        return 0
+
+    row = rows[0]
+    reference = row["reference"]
+    if not reference:
+        print("pedal-measure: %s needs measuring but the engine named no file for it" % row["row"])
+        return 1
+    cpu = measure_cpu(status)
+    command = bench_command(row["row"], reference, args, cpu)
+    if command is None:
+        print("pedal-measure: %s is not a row this tool knows how to measure" % row["row"])
+        return 1
+    if not os.path.exists(args.input):
+        print("pedal-measure: no input at %s -- the measurement needs the same signal the table was "
+              "measured with (--input, or put it there)" % args.input)
+        return 1
+
+    out = "/var/tmp/pedal-measure/%s" % row["row"]
+    os.makedirs(out, exist_ok=True)
+    print("pedal-measure: %s (%d node(s) waiting), %s on core %d" % (row["row"], row["count"],
+                                                                    os.path.basename(reference), cpu))
+    print("pedal-measure: %s" % " ".join(command))
+    if args.dry_run:
+        return 0
+
+    # The slice is the point: it is the only cgroup whose cpuset includes the isolated cores, and a
+    # measurement that cannot be pinned would measure the housekeeping core instead.
+    run = ["systemd-run", "--quiet", "--scope", "--slice=" + SLICE,
+           "--property=CPUAffinity=%d" % cpu] + command
+    try:
+        done = subprocess.run(["timeout", str(int(args.timeout))] + run, capture_output=True, text=True)
+    except Exception as exc:  # noqa: BLE001
+        print("pedal-measure: the bench did not run: %s" % exc)
+        return 1
+    text = done.stdout + done.stderr
+    fragments = re.findall(r"^fragment: (.*)$", text, re.MULTILINE)
+    if not fragments:
+        print("pedal-measure: the bench produced no fragment (exit %s); its output follows" % done.returncode)
+        print(text[-2000:])
+        return 1
+
+    os.makedirs(FRAGMENTS, exist_ok=True)
+    path = os.path.join(FRAGMENTS, row["row"] + ".json")
+    with open(path, "w") as handle:
+        handle.write(fragments[-1].rstrip() + "\n")
+    print("pedal-measure: wrote %s -- merge it with devices/common/cost-merge when you are happy with it"
+          % path)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

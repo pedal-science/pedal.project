@@ -1,0 +1,29 @@
+# pedal-measure — measure the cost rows this device has no number for (P4).
+#
+# A oneshot, not a daemon and not a timer: what it does costs an inactive core for minutes, and the
+# pedal is the owner's to measure when it suits. Start it by hand (`sudo systemctl start pedal-measure`),
+# from `pedal-diag`'s report, or from whatever policy comes later; when it has nothing to do it says so
+# and exits.
+#
+# It is root because the measurement needs two things pedald cannot have: a cgroup whose cpuset
+# includes the isolated cores (`pedal-bench.slice`) and the privilege to enter it. The service keeps the
+# half it can do unprivileged -- knowing the worklist and saying so in /status.
+#
+# No `After=namchaind.service` dependency: the tool reads the engine's status and refuses politely if
+# the engine is not answering, which is a better answer than a start failure.
+[Unit]
+Description=Pedal: measure a cost row this device has no number for (P4)
+Documentation=file:///usr/local/share/doc/pedal/pedal-service.md
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/pedal-measure
+# A row's bisection is minutes; an hour means something is wrong with the bench or the board.
+TimeoutStartSec=3600
+Nice=10
+IOSchedulingClass=idle
+# Deliberately no CPUAffinity: the tool pins the bench itself, per row, to a core the player is not
+# using, and the slice it enters is what makes that possible.
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/var/lib/pedal /var/tmp

@@ -359,9 +359,14 @@ resolve without a single xrun (T5).
 
 **In place:** D8's half — an unmeasured unit is charged `unknown`, never nothing, at the dearest value
 of its kind, and every node charged that way raises a `cost_unknown` warning naming it and the row it
-should have — and, since 2026-10-09, **the worklist**: `pedald` aggregates those warnings into
-`/status`'s `engine.needs_measuring` (one entry per *row*, deduplicated, with a count and one reference
-to hand the bench), which is what a panel shows and what a measurement loop consumes.
+should have; **the worklist** — `pedald` aggregates those warnings into `/status`'s
+`engine.needs_measuring` (one entry per *row*, deduplicated, with a count and one reference to hand the
+bench); and **the measurer** — `pedal-measure`, a root oneshot beside `pedal-diag`
+(`devices/common/rootfs/usr/local/sbin/pedal-measure`, `pedal-measure.service`), which reads the
+worklist, refuses when the pedal is unhappy, runs the deployed bench for one row on a core the player
+is not using inside `pedal-bench.slice`, and writes the fragment to
+`/var/lib/pedal/cost-fragments/<row>.json`. Twelve tests cover the decision (which row, and when to
+refuse); the measurement itself is the bench's, and namchain tests that.
 
 **Settled design for the rest:**
 
@@ -389,10 +394,11 @@ to hand the bench), which is what a panel shows and what a measurement loop cons
   `over_deadline` are non-zero, when the failsafe is holding, or when the audible rig is above the
   charge — a pedal at its limit does not have an inactive core to spare, and T5 is the measurement
   that says so.
-- **What has to be built**: `pedal-measure` (its unit, its timer, the happy-gate and the one-row
-  restriction), the DI asset on the device (`guitar-di.wav` is 8 MB; the measurement needs *an* input
-  and the bench takes any WAV), the fragment directory, and T5's verification path (install an unseen
-  model, play, watch the row resolve with no xrun).
+- **What has to be built**: the DI on the device (`/var/lib/pedal/guitar-di.wav` — not shipped in the
+  rootfs at 8 MB; the tool says so and takes `--input`), the apply that installs the oneshot, the
+  operator's merge step (`devices/common/cost-merge`), and T5's verification path: install a model the
+  table has never seen, play, run `pedal-measure`, merge the fragment, and watch the row resolve with
+  no xrun.
 
 **P5 — the bank's verdicts and the pedal's mapping (pp, lj). DONE 2026-10-08; the warm half landed
 2026-10-09.** `pedald` costs every rig and skips unusable ones when stepping;
