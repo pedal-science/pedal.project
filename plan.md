@@ -117,6 +117,7 @@ the fallbacks. It has six choices for you at the end.
 | D11 | The Core host runs the pedal's own Wi-Fi network; the Pico advertises over BLE and the phone joins with `NEHotspotConfigurationManager.joinAccessoryHotspot` | you, 2026-10-01 | Phase 5 ([docs/pairing.md](docs/pairing.md)). The pedal root retires its station config, the bench reaches the pedal over Ethernet, and neither `sftp` nor a typed address is needed for the app |
 | D12 | The first pairing gets an out-of-band code on the pedal's screen, before the pedal releases its BLE bundle. v1 pairs without it | you, 2026-10-01 | 3.7's display carries a security job, not only a nice one; the code is the Mac's way in too, and the QR stays the fallback |
 | D13 | The five repositories live in one workspace, `~/code.local/pedal/`, which is deliberately **not** a repository; a guard installed by path refuses an embedded checkout that nothing declares | you + recommendation, 2026-10-06 | [docs/workspace.md](docs/workspace.md). A session opened on the workspace writes in all five with no extra permissions; `scripts/workspace check` and `scripts/status` keep the layout, the declaration and the guard from rotting silently |
+| D14 | The pedal gets a screen, an 8.8″ 1920×480 touch bar display (mini‑HDMI video, USB touch), in a larger enclosure (Hammond 1456RH3). Its UI is **rigpa** (C++, Qt 6), on the Core host's housekeeping core 0: a client of `namchaind` and of `pedald`'s library API that reads the library read‑only. The Pico keeps every physical control (D2 stands); the main rotary, apply and back join the footswitches on the UART. Supersedes "the Core host does DSP only" and 3.7's ST7789 | you, 2026-10-09 | `../rigpa/docs/spec.md` and `plan.md`. **Conditional:** a soak on vip with rigpa off, idle and animating must show 0 xruns, 0 overruns and the worst block under 90% (rigpa plan V2); if not, rigpa's rendering is cut back until it does. vip's kernel, boot config and image gain a display stack (rigpa plan V1) |
 
 **On storage (D3).** The existing design already keeps models and IRs on the pedal, in
 `namchaind`'s `models_root` and `irs_root` on the SD card. D3 and D4 bring in the four things it
@@ -826,7 +827,9 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      Pico watches its supply and drops the relay a little before the codec loses power.
    - The output coupling cap must settle before the relay first engages. 10 µF into ~1 MΩ is
      τ ≈ 10 s, inside the boot; 100 µF (τ ≈ 100 s) would still be charging and pop.
-7. **Display and encoder**, low priority per `about.md`. Check it has no onboard LDO before
+7. **Display and encoder**, low priority per `about.md`. *Superseded by D14 (2026-10-09): the
+   screen is the Core host's, shown by rigpa; only the encoder and buttons stay here, as rigpa's
+   main rotary, apply and back (rigpa plan H1).* Check it has no onboard LDO before
    powering it (per `CLAUDE.md`). It picks up a job with Phase 5 (D12): the pairing out-of-band
    code, and on the same screen the QR that gets the Mac onto the pedal's network.
 8. **Rigs ready for switching** (D10; namchain's M3). Required before 3.5: without it a footswitch

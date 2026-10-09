@@ -1,6 +1,6 @@
 # The workspace
 
-The pedal's software is five repositories, and a session works on all of them at once. This page
+The pedal's software is six repositories (rigpa joined on 2026-10-09), and a session works on all of them at once. This page
 says where they live, why they live that way, and what keeps the arrangement from rotting. It was
 written on 2026-10-06, when the repositories moved into the workspace.
 
@@ -16,7 +16,8 @@ written on 2026-10-06, when the repositories moved into the workspace.
 │   └── vendor/NeuralAmpModelerCore/       declared submodule, rikkus/OptimisationWorkOnNeuralAmpModelerCore
 ├── ljoss/                                 rikkus/ljoss
 ├── rtpi/                                  rikkus/rtpi
-└── NAMBench/                              rikkus/NAMBench
+├── NAMBench/                              rikkus/NAMBench
+└── rigpa/                                 rikkus/rigpa
 ```
 
 `pedal.project` is the only directory of that name; it is a direct child of the workspace root.

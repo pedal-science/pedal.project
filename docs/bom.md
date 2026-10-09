@@ -131,6 +131,8 @@ the middle of the op-amp's input range.
 | 5 mm LED panel clip (Broadcom HLMP-0103) | SC08868 | 4 | 0.26 | in hand | |
 | Expression jack | — | — | — | in hand | One of the five Neutrik jacks under Building, if the debt register's decision keeps it. Its 1 kΩ and 100 nF filter is in hand |
 | Knob for the display module's encoder | — | 1 | — | later | Depends on the shaft |
+| Prechen 8.8″ IPS touch bar display, 1920×480 (panel natively 480×1920), 236.5×68.5×18.7 mm, 75×50 mm M4 mounts | — | 1 | — | due | D14: the pedal's screen, shown by rigpa on the Core host. Video over mini‑HDMI (a micro‑HDMI to mini‑HDMI lead from the Pi), power and touch over USB from a Pi port. Not from CPC |
+| Hammond 1456RH3 sloped console, 434.8 × 218.7 × 81.4 mm, 15° top, aluminium | 2720683 | 1 | — | due | D14: the larger enclosure that takes the screen. Its layout is not designed yet |
 
 ## Building
 

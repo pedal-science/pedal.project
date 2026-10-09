@@ -112,6 +112,9 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
   at power-up, uploads, and the footswitch/MIDI mapping. namchain stays a generic
   engine (D4). Designed 2026-09-28, with review points open:
   [docs/pedal-service.md](docs/pedal-service.md).
+- **rigpa** (its own repo, `../rigpa`) is the pedal's on-device UI on the Core host's
+  screen, on core 0 (D14): a client of `namchaind` over TCP loopback and of the pedal service's
+  library API, reading the library read-only.
 
 ## Constraints — ask before violating any of these
 
@@ -122,7 +125,8 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
   its own 24 MHz oscillator and MCLK is not exposed.
 - The Core host **owns the I2C bus** to the codec (0x1A). The Pico never writes codec
   registers.
-- The Core host does **DSP only**. Display, encoder, footswitches, MIDI, LEDs and GPIO
+- The Core host does **DSP and the screen only** (D14: rigpa, on housekeeping core 0,
+  SCHED_OTHER, gated by a soak). The encoder and buttons, footswitches, MIDI, LEDs and GPIO
   belong to the Pico, which talks to the Core host over UART.
 - Footswitch and MIDI events produce **identical** UART messages.
 - Codec ALC and 3D enhancement stay **off**.
@@ -155,6 +159,7 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
 ## Where things are
 
 - `plan.md` — the plan and its history; start at "Next session starts with".
+- `../rigpa/` — the on-device UI (D14); its spec and plan are in its `docs/`.
 - `workspace.repos`, `scripts/workspace`, `workspace-root/`, `tools/git-hooks/` — the workspace:
   what it holds, the files at its root, and the guard that stops a checkout being embedded in a
   repository. [docs/workspace.md](docs/workspace.md) is the design.

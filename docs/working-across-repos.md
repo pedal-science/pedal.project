@@ -17,12 +17,13 @@ rather than a rule.
 | `ljoss` | `~/code.local/pedal/ljoss` | The rig designer (macOS/iOS), including flattening the rig tree into an engine graph |
 | `rtpi` | `~/code.local/pedal/rtpi` | The Core host's kernel, the boot-slot safety net, RT tuning, and so any **device-tree** change such as the WM8960 sound card |
 | `NAMBench` | `~/code.local/pedal/NAMBench` | NAM and IR kernel research. It reaches the pedal only through `namchain`, as a vendor patch or a port |
+| `rigpa` | `~/code.local/pedal/rigpa` | The pedal's on-device UI (C++, Qt 6) on the Core host's screen (D14). A client of `namchain`'s protocol and of `pedald`'s library API, never their owner; reads the library read-only. Its deployment on the Core host is `devices/`'s, like the engine's |
 | `OptimisationWorkOnNeuralAmpModelerCore` (fork) | `~/code.local/pedal/namchain/vendor/NeuralAmpModelerCore` | The planar NEON kernels (upstream PR #313). It is **vendored into `namchain` as a declared submodule** at `all-optimisations`, so there is one checkout of it, not two |
 | `AudioDSPTools` (fork) | not checked out here | The partitioned-FFT IR branch, which `namchain` carries as a port — `nc.cab.ir` doesn't use AudioDSPTools. `rikkus/AudioDSPTools` no longer exists on GitHub; the only copy of `partitioned-ir` is `~/code.local/nam/AudioDSPTools-spread` |
 | `midi-commander-custom` (fork) | `~/code.local/comidi/midi-commander-custom-rikkus` | The MIDI Commander's firmware and button configuration. Deliberately outside the workspace: it is a peripheral, and its two sibling clones in `comidi/` are other people's |
 
-Those four rows above `AudioDSPTools` are the ones the workspace holds, plus this repository: the
-five checkouts under `~/code.local/pedal/` are the accepted layout since 2026-10-06, declared in
+Those five rows above `AudioDSPTools` are the ones the workspace holds, plus this repository: the
+six checkouts under `~/code.local/pedal/` are the accepted layout since 2026-10-06, declared in
 `workspace.repos` and checked by `scripts/workspace`. [docs/workspace.md](workspace.md) says why
 they are arranged that way and what the guard around them does. The NAM research checkouts stay
 where they are, in `~/code.local/nam/`.
@@ -37,7 +38,7 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 
 | Host | Role | Notes |
 |---|---|---|
-| **M2** (MacBook Air) | Where editing and agent sessions happen, and where every deploy is started. Xcode, macOS builds of the engine | Holds every repo, all five of them under `~/code.local/pedal/` |
+| **M2** (MacBook Air) | Where editing and agent sessions happen, and where every deploy is started. Xcode, macOS builds of the engine | Holds every repo, all six of them under `~/code.local/pedal/` |
 | **vip** (Pi 5, 1 GB, aarch64) | **The Core host** (from 2026-10-01), and nothing else. Built from an image (`devices/vip/make-card`, `docs/vip-image.md`); where testing happens until it's a pedal nobody should disrupt | No compiler: everything arrives built (the engine in colima on the Mac, `scripts/deploy-engine`) |
 | **piv** (Pi 500, aarch64) | The live bench device and the ARM build host: native aarch64, armv7 cross-compiler (GCC 15.2), `qemu-arm-static` for running armv7 tests | Allowed to be busy or down, so every build that runs on it also needs a fallback (colima on the Mac, which `rtpi` and vip's image already use). Its dev checkouts stay at `~/code.local/<repo>`: the workspace is the Mac's layout, and `scripts/workspace root --repo` falls back to that path, so the scripts work in both |
 
@@ -89,7 +90,7 @@ Rollback on the Core host is the previous symlink. For the kernel it is `rtpi`'s
 
 ## Setting up an agent session
 
-- **Open the workspace for cross-repo work.** `~/code.local/pedal/` holds all five repositories as
+- **Open the workspace for cross-repo work.** `~/code.local/pedal/` holds all six repositories as
   siblings, so a session opened on that folder can read and write every one of them with no extra
   permissions and nothing to configure — no `additionalDirectories`, no per-machine settings file.
   That is the whole point of the layout ([docs/workspace.md](workspace.md)); the

@@ -63,7 +63,7 @@ EOF
 # and at the legacy $HOME/code.local/<name> on a checkout that has not moved yet or on piv.
 repo_path() { "$SCRIPTS/workspace" root --repo "$1" 2>/dev/null || printf '%s' "$HOME/code.local/${1##*/}"; }
 MAC_REPOS=(pedal.project="$ROOT" namchain="$(repo_path namchain)" ljoss="$(repo_path ljoss)"
-           rtpi="$(repo_path rtpi)" NAMBench="$(repo_path NAMBench)")
+           rtpi="$(repo_path rtpi)" NAMBench="$(repo_path NAMBench)" rigpa="$(repo_path rigpa)")
 # piv is also the build host: its dev checkouts, and deploy-engine's build tree (detached by design).
 PIV_REPOS=('namchain=~/code.local/namchain' 'ljoss=~/code.local/ljoss' 'rtpi=~/code.local/rtpi'
            'NAMBench=~/NAMBench' 'build tree=~/pedal-build/namchain')

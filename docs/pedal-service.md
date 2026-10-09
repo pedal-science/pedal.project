@@ -30,7 +30,7 @@ tables, the Pico link, and the rig the footswitches reach next, held warm in the
 | Which rigs in the bank can play, and skipping the ones that cannot | **the service**, answered by `namchaind`'s `rig.cost` (below) |
 | Which rig is held warm: the one a press reaches next | **the service** (D9, D10) |
 | Holding it warm, and switching to it (`rig.warm`/`rig.cool`/`rig.switch`, M3) | `namchaind`, asked for by the service |
-| The physical controls, the relay, the display | the Pico |
+| The physical controls, the relay | the Pico (the display is the Core host's since D14: rigpa) |
 | Audio | nobody in this table: no part of the service is in the signal path |
 
 It never:

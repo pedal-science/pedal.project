@@ -29,7 +29,7 @@ something is unverified it says so.
 | Core host | **vip**, a Raspberry Pi 5 (1 GB, BCM2712, aarch64), the Core host since 2026-10-01, with the WM8960 wired to it. **piv** (Pi 500, same SoC) is the bench device and build host |
 | Codec | SparkFun WM8960 Audio Codec Breakout, schematic v1.0 (Eagle 9.4.2, Jan 2023). Retired product — consider a spare. |
 | Control MCU | Raspberry Pi Pico 2 (ordering). An RP2350-USB-A is due, but its 15 GPIO are short of the ~18 needed, so it's for experiments |
-| Display | 2.4" ST7789 320×240 SPI module with EC11 encoder + tactile button, board V1.2 (in hand) |
+| Display | **Superseded by D14:** a Prechen 8.8″ 1920×480 IPS touch bar display (mini‑HDMI video; USB power and touch; panel natively 480×1920), driven by the Core host and shown by rigpa (`../rigpa/docs/spec.md`). The 2.4" ST7789 320×240 SPI module with EC11 encoder + tactile button (board V1.2, in hand) was the Pico's plan |
 | Front end | Hi-Z buffer, to be built |
 | Power | Cioks DC7 **v1** (in hand): 7 isolated outlets at 6 W each (660 mA @ 9 V); USB-A 1 A (Cioks' site may say 5 W); AUX 24 V @ 2 A. Raspberry Pi 45 W USB-C supply (in hand) for the Core host |
 
@@ -294,6 +294,9 @@ enclosure must leave room for a PP3 (≈48.5 × 26.5 × 17.5 mm) and its snap, r
 replacement, wired on the analogue side.
 
 ### Control surface (all on the Pico — the Core host never sees any of it)
+
+> **Superseded in part by D14 (2026-10-09):** the screen is now the Core host's (rigpa, over HDMI).
+> Every physical control below — encoder, buttons, footswitches, MIDI, expression — stays on the Pico.
 
 **Display module** — 2.4" ST7789, 320×240, 4-wire SPI, board V1.2, with an EC11
 encoder and a separate tactile button on the same PCB. (There is no joystick: the

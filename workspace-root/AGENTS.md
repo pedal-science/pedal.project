@@ -1,7 +1,7 @@
 # The pedal workspace
 
 This directory is the workspace root: the folder a session is opened on, and the root the file
-sandbox grants. The pedal's five repositories are inside it, so an agent can read and write all of
+sandbox grants. The pedal's six repositories are inside it, so an agent can read and write all of
 them with no extra permissions and no per-project settings.
 
 **Before doing anything, read `pedal.project/AGENTS.md`.** It is canonical for the whole project —
@@ -19,12 +19,13 @@ reaches the pedal. Each repository's own `AGENTS.md` is authoritative inside it.
 | `ljoss/` | The rig designer and the front end that drives the engine |
 | `rtpi/` | The Core host's kernel, its boot-slot safety net, device-tree work |
 | `NAMBench/` | NAM and IR kernel research |
+| `rigpa/` | The pedal's on-device UI (C++, Qt 6), on the Core host's screen |
 
 `.worktrees/` holds per-session git worktrees, when two agents need one repository at once.
 
 ## Rules that belong to this level
 
-- **This directory is not a git repository and must never become one.** The five repositories are
+- **This directory is not a git repository and must never become one.** The six repositories are
   independent; a repository here could only record them as gitlinks, which clone as empty
   directories. Never run `git init` here.
 - **Work in the repository that owns the change.** Open a session on this folder for cross-repo

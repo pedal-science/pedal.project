@@ -66,7 +66,7 @@ I am planning to use the following software that I've been working on:
 
 ## Open questions
 
-* If I decide I want to add rig design support for more platforms, what's best?
+* If I decide I want to add rig design support for more platforms, what's best? *(2026-10-09, D14: a Qt 6 UI, rigpa, runs on the pedal itself beside ljoss; ljoss stays the Mac/iOS designer.)*
     * Write a Qt-based designer
         * And deprecate the SwiftUI & Swift implementation
         * Or add it as a second implementation
