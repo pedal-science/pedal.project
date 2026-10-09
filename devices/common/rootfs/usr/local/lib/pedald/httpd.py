@@ -24,7 +24,9 @@ Routes are a `dict` of path to `callable(Request) -> (status, body)`, as the fro
 promises. A path key alone answers every method this API uses (GET, HEAD, PUT, POST); a key
 may pin its method instead (`"GET /status"`), and then the same path asked with another method
 is 405 with an `Allow` header. A path nobody registered is 404 whatever the method, so 404
-always wins over 405.
+always wins over 405. A path ending in `/*` (`"/library/rigs/*"`) is a prefix: it answers every
+path below it that no exact key claims, and the longest prefix wins. The handler reads the rest of
+the path from `request.path`.
 
 `stop()` closes the listener, shuts down every live connection and returns; a handler that never
 returns is left on its daemon thread rather than holding the caller there.
@@ -50,7 +52,7 @@ JOIN_TIMEOUT = 2.0
 # Bad tokens on one connection before it is closed (Security, docs/pedal-service.md).
 AUTH_FAILURES_MAX = 3
 # The methods this API uses. A route registered by path alone answers these.
-API_METHODS = ("GET", "HEAD", "PUT", "POST")
+API_METHODS = ("GET", "HEAD", "PUT", "POST", "DELETE")
 # Methods whose request is expected to carry a body, and so to frame one.
 _BODY_METHODS = ("PUT", "POST", "PATCH")
 
@@ -267,6 +269,8 @@ class Server:
 
         (None, None) means the path is not registered: that is a 404 whatever the method.
         """
+        if path not in self._plain and path not in self._pinned_methods:
+            path = self._prefix_for(path) or path
         handler = self._pinned.get((path, method))
         if handler is None and method == "HEAD":
             handler = self._pinned.get((path, "GET"))    # a GET route answers HEAD, without a body
@@ -280,6 +284,15 @@ class Server:
         if method in allowed or (method == "HEAD" and "GET" in allowed):
             return self._plain.get(path), None
         return None, allowed
+
+    def _prefix_for(self, path):
+        """The `/*` key that answers `path`, as that key, or None: the longest prefix wins."""
+        best = None
+        for key in list(self._plain) + list(self._pinned_methods):
+            if key.endswith("/*") and path.startswith(key[:-1]) and len(path) > len(key) - 1:
+                if best is None or len(key) > len(best):
+                    best = key
+        return best
 
     def _authorised(self, headers):
         """Whether the bearer token matches, in a time that does not depend on the guess."""

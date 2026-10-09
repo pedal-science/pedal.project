@@ -191,7 +191,7 @@ class HttpdTest(unittest.TestCase):
         self.assertEqual(self.body_json(payload)["error"], "method not allowed")
 
     def test_a_method_the_api_does_not_use_is_405_on_a_known_path(self):
-        status, headers, _ = self.request("DELETE", "/status")
+        status, headers, _ = self.request("PATCH", "/status")
         self.assertEqual(status, 405)
         self.assertIn("GET", headers.get("Allow", ""))
 

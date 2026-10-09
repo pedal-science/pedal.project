@@ -41,6 +41,23 @@ def write_atomic(path, text):
         os.close(fd)
 
 
+def write_atomic_plain(path, text):
+    """`write_atomic` without the resume-only step of keeping the previous file as last.prev."""
+    directory = os.path.dirname(path)
+    os.makedirs(directory, exist_ok=True)
+    tmp = f"{path}.tmp"
+    with open(tmp, "w") as handle:
+        handle.write(text)
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(tmp, path)
+    fd = os.open(directory, os.O_DIRECTORY)
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
 def canonical(document):
     """A stable rendering, so 'did the document change' is a string compare."""
     return json.dumps(document, sort_keys=True, separators=(",", ":"))

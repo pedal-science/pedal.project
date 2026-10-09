@@ -175,10 +175,13 @@ app" and ljoss's "send to pedal" were waiting for.
 |---|---|---|---|
 | `GET` | `/status` | — | service version and uptime; engine state, health, generations and the warm set; the link; the bank, the position and the verdicts; library counts |
 | `GET` | `/library/models`, `/library/irs` | — | the engine's `engine.assets` scan, ids and all — there is no second scan |
-| `GET` | `/library/rigs` | — | the rig names, and which one is running |
+| `GET` | `/library/rigs` | — | `{"rigs": [{name, modified, size}], "running": name or null}`: the library's rigs by name, and the one the engine runs (by its file, or by the document's name after a boot resumed `last.json`) |
+| `GET` | `/library/rigs/<name>` | — | the document |
 | `PUT` | `/library/models/<file>` | the `.nam` bytes | 201 and whether it replaced; a declared rate other than 48000 is refused |
 | `PUT` | `/library/irs/<file>` | the `.wav` or `.nam` bytes | 201; any rate is stored — `nc.cab.ir` resamples 44.1/96 kHz, and the engine refuses at compile time what it cannot use |
 | `PUT` | `/library/rigs/<name>` | the document | 201, stored, **not applied**; absolute model/IR paths refused, and a name another rig already has |
+| `DELETE` | `/library/rigs/<name>` | — | 200; the rig leaves `bank.json` too |
+| `POST` | `/library/rigs/<name>/rename` | `{"to": name}` | 200; the file and the document's `name` change together, and `bank.json` follows |
 | `POST` | `/library/refresh` | — | the scan (the service does it after every upload anyway) |
 
 - **A path names a file, and the id follows from it** (`assets.md`: the path under the root, less
@@ -190,6 +193,14 @@ app" and ljoss's "send to pedal" were waiting for.
   over 200 characters. Every write path is resolved and checked to be under its root before
   anything is created. Rig names follow the same rules without the `/`; `last` and `last.prev`
   are reserved.
+- **Rigs (landed 2026-10-09, for rigpa).** A rig is `rigs/<name>.json`, and its document's
+  `name` must equal `<name>` (a document without one takes it). Names that differ only in case
+  are one name, because the Mac's filesystem says so. A rename writes the new file before the
+  old one goes; a change of case only is a rename in place. Deleting a rig is allowed, unlike a
+  model or an IR: nothing else in the library names a rig, and the bank is updated with it. The
+  routes write files on the server's threads and queue the change; the loop then rewrites
+  `bank.json` for a rename or a delete, rebuilds the bank keeping its rig, and drops the changed
+  rig's cost verdict. The MIDI map's names are not rewritten: it has no endpoint yet.
 - **Overwrite is the default**, and the answer says whether it replaced: a "send to pedal"
   repeated after an edit should not need a delete first. Deletion is deliberately absent for now
   — a model the library lists may be named by rigs, and removing it is a library-management job
@@ -536,6 +547,11 @@ pedal changes rigs for real only from v2 (R1):
 - **v3** (no plan step yet; it pays off the debt register's "no way to upload from the app"): the
   upload API and the refresh path, the `/bank` and `/midi-map` endpoints, ljoss's "send to
   pedal" and the library listing, and `sync-library` moving onto the API.
+  **Its rig half landed 2026-10-09** (rigpa's plan, P1): `GET /library/rigs`, `GET`, `PUT` and
+  `DELETE /library/rigs/<name>`, and `POST …/rename`, in `pedald/library.py` and the daemon's
+  routes, with `httpd`'s prefix routes and `DELETE`; tests in `devices/common/tests/test_library.py`.
+  Models, IRs, refresh, `/bank` and `/midi-map` are still to come. It reaches vip with the next
+  `devices/` apply.
 
 ## Implementing what is left, in order
 

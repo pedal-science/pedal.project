@@ -13,11 +13,13 @@ client — the HTTP server, the resume read — is either cheap or on its own th
 import argparse
 import json
 import os
+import queue
 import signal
 import sys
 import time
 
 from . import config as config_mod
+from . import library as library_mod
 from . import mapping as mapping_mod
 from . import protocol
 from . import resume as resume_mod
@@ -173,6 +175,13 @@ class RigCost:
         """The verdicts for `/status`: a shallow copy, so the HTTP thread reads a dict the loop
         is not inserting into, and only the rigs currently in the library."""
         return {name: self.verdicts.get(name) for name in self.rigs}
+
+    def invalidate(self, name):
+        """One rig's document changed (a save through the library API): its verdict is stale,
+        and it goes to the front of the sweep. The others keep theirs."""
+        self.verdicts.pop(name, None)
+        self.asked_at.pop(name, None)
+        self._asked_at[name] = 0.0
 
     def forget(self):
         """Drop every verdict: the table, the bank or the engine has changed (see the class).
@@ -519,9 +528,16 @@ class Service:
         # rendering on an inactive core, so a press is a handover rather than a compile (P5's warm
         # half). A device with no warm cores says so once and the press path is what it always was.
         self.warm = WarmSet(self.engine, log=log)
+        # The rig library's HTTP side (v3): the routes write files on the server's threads and
+        # queue what changed; the loop (apply_library_changes) is what moves the bank and the
+        # verdicts, so neither is ever touched from two threads.
+        self.library = library_mod.RigLibrary(cfg.rigs_root, cfg.max_rig_bytes, log=log)
+        self.library_changes = queue.SimpleQueue()
         self.resume = resume_mod.Resume(self.engine, cfg.rigs_root, state_root=cfg.state_root, log=log)
         self.http = Server(cfg.http_host, cfg.http_port, token,
-                           {"/status": self.handle_status}, log=log,
+                           {"/status": self.handle_status,
+                            "GET /library/rigs": self.handle_rigs,
+                            "/library/rigs/*": self.handle_rig}, log=log,
                            # The transport cap has to be the largest upload the API allows, or
                            # a model or IR would be 413 before its route saw it (v3).
                            max_body=cfg.max_ir_bytes)
@@ -791,6 +807,110 @@ class Service:
         }
         return 200, body
 
+    # ------------------------------------------------------------------ the rig library (v3)
+    def running_rig(self, status=None):
+        """The library rig the engine is running, by name, or None.
+
+        The engine names its rig by path: a library rig's own file after a `rig.load`, but
+        `last.json` after a boot resumed it, and then the document's name is the link — the same
+        rule the bank's position uses ("Resume", Position). A document the library doesn't have
+        (an app applied it) is None.
+        """
+        status = self.status if status is None else status
+        if not isinstance(status, dict):
+            return None
+        names = self.library.names()
+        path = status.get("rig") or ""
+        directory, base = os.path.split(path)
+        if (base.endswith(".json") and os.path.abspath(directory) == os.path.abspath(self.cfg.rigs_root)
+                and base[:-5] in names):
+            return base[:-5]
+        name = status.get("rig_name")
+        return name if name in names else None
+
+    def handle_rigs(self, request):
+        return 200, {"rigs": self.library.listing(), "running": self.running_rig()}
+
+    def handle_rig(self, request):
+        rest = request.path[len("/library/rigs/"):]
+        action = None
+        if rest.endswith("/rename"):
+            rest, action = rest[:-len("/rename")], "rename"
+        name = _unquote_path(rest)
+        try:
+            if action == "rename":
+                if request.method != "POST":
+                    return 405, {"error": "rename is a POST"}
+                try:
+                    to = json.loads(request.body or b"{}").get("to")
+                except (ValueError, AttributeError):
+                    return 400, {"error": "the body is {\"to\": \"<new name>\"}"}
+                self.library.rename(name, to)
+                self.library_changes.put(("rename", name, to))
+                self.log(f"library: renamed rig '{name}' to '{to}'")
+                return 200, {"name": to}
+            if request.method in ("GET", "HEAD"):
+                return 200, self.library.get(name)
+            if request.method == "PUT":
+                replaced = self.library.put(name, request.body)
+                self.library_changes.put(("put", name, None))
+                self.log(f"library: {'replaced' if replaced else 'stored'} rig '{name}'")
+                return 201, {"name": name, "replaced": replaced}
+            if request.method == "DELETE":
+                self.library.delete(name)
+                self.library_changes.put(("delete", name, None))
+                self.log(f"library: deleted rig '{name}'")
+                return 200, {"name": name, "deleted": True}
+            return 405, {"error": f"{request.method} is not a rig operation"}
+        except library_mod.LibraryError as exc:
+            return exc.status, {"error": exc.message}
+
+    def apply_library_changes(self, now):
+        """On the loop: what the library routes changed, applied to the bank and the verdicts.
+
+        A rename or a delete rewrites `bank.json`'s names (it names rigs, and a name that has
+        gone would be a hole in the bank); then the mapping is rebuilt from the library and the
+        bank as they now are, keeping the rig it was on when that rig still exists. A changed
+        document's verdict is stale and is asked for again. The MIDI map is hand-written and has
+        no endpoint yet, so names in it are not rewritten.
+        """
+        changes = []
+        while True:
+            try:
+                changes.append(self.library_changes.get_nowait())
+            except queue.Empty:
+                break
+        if not changes:
+            return
+        bank_path = os.path.join(self.cfg.state_root, "bank.json")
+        bank = mapping_mod.load_json(bank_path, self.log)
+        bank_changed = False
+        for kind, name, to in changes:
+            if kind in ("rename", "delete") and bank:
+                bank, changed = library_mod.rename_in_bank(bank, name, to if kind == "rename" else None)
+                bank_changed = bank_changed or changed
+        if bank_changed:
+            try:
+                resume_mod.write_atomic_plain(bank_path, json.dumps(bank, indent=2) + "\n")
+            except OSError as exc:
+                self.log(f"could not save {bank_path}: {exc}")
+        current = self.mapping.current_name()
+        for kind, name, to in changes:
+            if kind == "rename" and current == name:
+                current = to
+        rigs = self._rig_names()
+        self.mapping = mapping_mod.Mapping(rigs, bank=bank, midi_map=self.mapping.map, log=self.log)
+        if current in rigs:
+            self.mapping.note_rig(current)
+        self.cost.note_rigs(rigs, now)
+        for kind, name, to in changes:
+            if kind == "put":
+                self.cost.invalidate(name)
+            elif kind == "rename":
+                self.cost.invalidate(to)
+        self.mapping.verdicts = self.cost.verdicts
+        self.bank_at = now
+
     # ------------------------------------------------------------------ loop
     def stop(self, *_args):
         self.running = False
@@ -809,6 +929,7 @@ class Service:
             for message in self.link.take_messages():
                 self.on_message(message)
             self.session.tick(int(now * 1000))
+            self.apply_library_changes(now)
             if now - self.status_at >= STATUS_POLL_S:
                 self.poll_engine(now)
             if self.positions_at and now - self.positions_at > 2.0:
@@ -820,6 +941,26 @@ class Service:
         self.link.close()
         self.engine.close()
         return 0
+
+
+def _unquote_path(text):
+    """Percent-decoding for a path component (UTF-8); unlike a query, `+` is itself."""
+    if "%" not in text:
+        return text
+    out = bytearray()
+    i = 0
+    while i < len(text):
+        if text[i] == "%" and i + 2 < len(text) and _is_hex(text[i + 1:i + 3]):
+            out.append(int(text[i + 1:i + 3], 16))
+            i += 3
+        else:
+            out.extend(text[i].encode("utf-8"))
+            i += 1
+    return out.decode("utf-8", errors="replace")
+
+
+def _is_hex(pair):
+    return len(pair) == 2 and all(c in "0123456789abcdefABCDEF" for c in pair)
 
 
 def main(argv=None):

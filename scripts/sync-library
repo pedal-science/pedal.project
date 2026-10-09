@@ -26,9 +26,10 @@ SRC="$HOME/Documents/Audio"
 DEST=/var/lib/pedal/library
 SSH=(ssh -o BatchMode=yes -o ConnectTimeout=10 "$HOST")
 
-"${SSH[@]}" "sudo install -d -o \$(id -u) -g \$(id -g) $DEST $DEST/models $DEST/irs $DEST/rigs"
-# The rigs directory is written by pedal-resume (root); the library folders are ours.
-"${SSH[@]}" "sudo chown root:root $DEST/rigs"
+# The model and IR folders are this script's. rigs/ is pedald's (it saves resume there, and the
+# library API writes rigs there; `pedald seed` creates it and keeps it the service's user's), so
+# it is never created or re-owned here: doing so took it from the service and broke its writes.
+"${SSH[@]}" "sudo install -d -o \$(id -u) -g \$(id -g) $DEST/models $DEST/irs"
 
 RSYNC=(rsync -rt --delete --delete-excluded --itemize-changes "${DRY[@]}"
        --exclude .DS_Store --include '*/' --include '*.nam' --include '*.wav' --exclude '*')
