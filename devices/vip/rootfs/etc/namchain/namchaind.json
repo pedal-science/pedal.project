@@ -14,6 +14,8 @@
   "socket_mode": "0660",
   "rt_priority": 80,
   "cpu": 3,
+  "warm_cpus": [1, 2],
+  "warm_priority": 70,
   "lock_memory": true,
   "output_queue_periods": 4,
   "output_queue_floor_periods": 2,

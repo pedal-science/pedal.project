@@ -65,7 +65,7 @@ sudo -n /opt/namchain/current/bin/namchainctl --compact status 2>&1 | head -c 60
 echo "installed $commit"
 EOF
 )
-BINS=(namchaind namchainctl namchain-soak namchain-latency namchain-render)
+BINS=(namchaind namchainctl namchain-soak namchain-latency namchain-render namchain-warm-bench)
 
 if [[ $HOST == piv ]]; then
   log "building $REV on $HOST"
