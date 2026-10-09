@@ -1,5 +1,5 @@
 {
- "bar": "p99 under the deadline, overruns recorded, paced offline; the live soak confirms zero xruns. engine_commit moved from 87f3cb9 to a0a9cf0 on 2026-10-09 without re-measuring: P6 (the warm set) adds a thread and a document, not work on the audible path, and the render output is unchanged -- namchain's golden tests, recorded before it, still pass. See bench-results/2026-10-09-core-rules-vip/README.md section 6.; engine_commit moved from a0a9cf0 to df75c18 on 2026-10-09 without re-measuring: the commits in between are namchainctl's `cost` command and four fixes to namchain-warm-bench's switch arm -- a tool, a client and a bench, nothing on the audible path -- and the golden tests pass on the commit the device runs. See bench-results/2026-10-09-warm-bench-switch/README.md; engine_commit moved from df75c18 to 9f3cbb8 on 2026-10-09 without re-measuring: the change is the coexistence charge in admission and trimming, not in the rows -- the same code measures a unit either way, and the golden tests pass. See bench-results/2026-10-09-housekeeping-vip/README.md",
+ "bar": "p99 under the deadline, overruns recorded, paced offline; the live soak confirms zero xruns. engine_commit moved from 87f3cb9 to a0a9cf0 on 2026-10-09 without re-measuring: P6 (the warm set) adds a thread and a document, not work on the audible path, and the render output is unchanged -- namchain's golden tests, recorded before it, still pass. See bench-results/2026-10-09-core-rules-vip/README.md section 6.; engine_commit moved from a0a9cf0 to df75c18 on 2026-10-09 without re-measuring: the commits in between are namchainctl's `cost` command and four fixes to namchain-warm-bench's switch arm -- a tool, a client and a bench, nothing on the audible path -- and the golden tests pass on the commit the device runs. See bench-results/2026-10-09-warm-bench-switch/README.md; engine_commit moved from df75c18 to 9f3cbb8 on 2026-10-09 without re-measuring: the change is the coexistence charge in admission and trimming, not in the rows -- the same code measures a unit either way, and the golden tests pass. See bench-results/2026-10-09-housekeeping-vip/README.md; engine_commit moved from 9f3cbb8 to 1b77d02 on 2026-10-09 without re-measuring: the commits between them price the warm set -- the coexistence charge and its failsafe -- and admission changes with them, not the rows, which the same code measures either way. The golden tests pass on the commit the device runs. See bench-results/2026-10-10-t11-fullload/README.md",
  "core_percent": {
   "IR": {
    "1024": 0.00781,
@@ -25,7 +25,7 @@
   }
  },
  "deadline_us": 1333.3333333333333,
- "engine_commit": "9f3cbb8",
+ "engine_commit": "1b77d02",
  "headroom": 0.8,
  "coexistence": {
   "factors": {
