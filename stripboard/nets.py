@@ -50,8 +50,8 @@ PARTS = {
     'R4':  dict(kind='r',     value='10k',                pins=2),
     'C4':  dict(kind='el5.2', value='10µF 50V',           pins=2),
     'U1':  dict(kind='dip8',  value='OPA2197 on adapter', pins=8),
-    'R5':  dict(kind='r',     value='330k',               pins=2),
-    'R6':  dict(kind='r',     value='680k',               pins=2),
+    'R5':  dict(kind='r',     value='680k',               pins=2),
+    'R6':  dict(kind='r',     value='330k',               pins=2),
     'C5':  dict(kind='film',  value='100nF film',         pins=2),
     'C6':  dict(kind='el6.3', value='10µF bipolar',       pins=2),
     'R7':  dict(kind='r',     value='100Ω',               pins=2),
@@ -64,19 +64,37 @@ PARTS = {
 # The nets.  A pin is 'REF.PIN'.
 #
 # The Inst/Line switch is three pads, not a part: the toggle bolts to the panel, so only its
-# wires reach a board, and a board that carries them draws three pads.  Its common is IN_A --
-# the buffer's input, where R5's top lead also lands -- and its two throws are the two ways
-# the input can be padded: SW-I to IN_RAW (Inst: no padding, the follower sees the whole
-# signal, about 1.0x) and SW-L to IN_B, past R5 (Line: R5/R6 divide it down, about 0.33x,
-# -9.7 dB).  R5 is 330k and R6 is 680k: that ratio is what makes the Line pad -9.7 dB, and
-# the two in series are the 1 MΩ the jack sees.
+# wires reach a board, and a board that carries them draws three pads.  Its common is the
+# follower's input, `IN_A`, and its two throws put that input on one of the two taps of the
+# input network -- so the middle pin of the toggle is the lug whose wire goes to U1.3, and the
+# two outer lugs are the taps:
+#
+#   SW-I, the Inst throw, is `IN_A` as well: node A, past C5, the top of R5.  At Inst the
+#     follower looks at node A, so the tip arrives through C5 and straight through the switch,
+#     with nothing dividing it -- about 1.0x -- and the jack sees R5 + R6, 1.01 MΩ, on to the
+#     bias.
+#   SW-L, the Line throw, is `IN_B`: node B, between R5 and R6.  At Line the follower looks at
+#     node B instead, which is node A divided by R5/R6 -- about 0.32x, -9.8 dB.
+#
+#  R5 is the 680k top and R6 the 330k shunt: that is the pair the BOM's -9.7 dB needs (the
+#  review checked the network at 1 kHz), and 330k top with 680k shunt gives -3.5 dB instead.
+#  The jack sees 1.01 MΩ at Inst and R5 ∥ R6, about 222 kΩ, at Line whatever those two values
+#  are -- which is why the transposition is silent on Inst and shows only as the Line pad
+#  being loud when it is the wrong way round.
+#
+#  Both `SW-C` and `SW-I` are therefore `IN_A`: the same node, reached two ways -- U1.3's pin,
+#  and the wire from the toggle's middle pin and its Inst lug.  A board whose copper cannot run
+#  from one to the other carries `IN_A` in two pieces and lets those two wires join it, which
+#  is exactly what board 1 and the breadboard do.
 NETS = {
     # input, from the jack to the codec
     'IN_RAW':   {'C5.1'},                                   # the jack tip, screened cable
-    'IN_A':     {'C5.2', 'R5.1', 'U1.3'},                   # the unity-gain tap, and the
-                                                            #   buffer's input: 1 MΩ at the
-                                                            #   jack even with the switch open
-    'IN_B':     {'R5.2', 'R6.1'},                           # the 0.33 tap
+    'IN_A':     {'C5.2', 'R5.1', 'U1.3'},                   # node A: C5's far lead, R5's top
+                                                            #   lead and the follower's input
+                                                            #   (U1.3), where the switch's
+                                                            #   common lands.  1.01 MΩ at the
+                                                            #   jack in either lever position
+    'IN_B':     {'R5.2', 'R6.1'},                           # node B: the 0.32 tap
     'LIN1':     {'U1.1', 'U1.2'},                           # the follower's output
     'BIAS':     {'R3.2', 'R4.1', 'C4.1', 'U1.5', 'R6.2'},   # about 2.9 V
     'BIAS_MID': {'R2.2', 'R3.1'},                           # the divider's middle
@@ -138,9 +156,9 @@ def net_key(net):
 # reach the rest of the pedal.
 PADS = {
     'IN':    ('IN_RAW', "the input jack's tip, through the screened cable's core"),
-    'SW-I':  ('IN_RAW', 'the Inst/Line switch, Inst throw (the tip, across C5)'),
-    'SW-L':  ('IN_B',   'the Inst/Line switch, Line throw (past R5: the 0.33 pad)'),
-    'SW-C':  ('IN_A',   'the Inst/Line switch, common (the buffer input, U1.3)'),
+    'SW-C':  ('IN_A',   "the Inst/Line switch, common: the follower's input, U1.3"),
+    'SW-I':  ('IN_A',   'the Inst/Line switch, Inst throw: node A, past C5, the top of R5'),
+    'SW-L':  ('IN_B',   'the Inst/Line switch, Line throw: node B, the bottom of R5'),
     'LIN1':  ('LIN1',   "the codec board's LIN1 pad (the audio end of its right-hand row)"),
     'HPL':   ('HPL',    "the codec board's HPL pad"),
     'HPR':   ('HPR',    "the codec board's HPR pad"),

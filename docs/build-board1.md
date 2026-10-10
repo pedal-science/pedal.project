@@ -65,29 +65,26 @@ numbers stay the same. Column 0 is now on the right.
 | C4 | 10 µF 50 V | + (30, 4), − (30, 5) | Stripe on row 5 |
 | U1 | 8-pin DIL socket | pins 1–4 at x 18, rows 1–4; pins 8–5 at x 21, rows 1–4 | The OPA2197 on its adapter plugs in here (stage 8) |
 | C5 | 100 nF film | (3, 6)–(5, 6) | Input coupling. Film, not ceramic, no polarity |
-| R5 | **330 kΩ** | (7, 6)–(11, 6) | The Line pad's top |
-| R6 | **680 kΩ** | (13, 6)–(17, 6) | The Line pad's bottom, to the bias |
+| R5 | **680 kΩ** | (7, 6)–(11, 6) | The Line pad's top: node A to node B |
+| R6 | **330 kΩ** | (13, 6)–(17, 6) | The Line pad's bottom, to the bias: node B to the bias |
 | C6, C7 | 10 µF bipolar | (28, 7)–(28, 8), (28, 11)–(28, 12) | Output coupling. Bipolar: either way round |
 | R7, R9 | 100 Ω | (30, 8)–(34, 8), (30, 12)–(34, 12) | Output series resistors |
 | R8, R10 | 1 MΩ | (36, 8)–(40, 8), (36, 12)–(40, 12) | Output bleeds, which hold the jacks at 0 V DC |
 
-Links: (17, 1)–(17, 2), (22, 2)–(22, 3), (27, 1)–(27, 3), (40, 3)–(40, 4), (48, 3)–(48, 5),
-(16, 4)–(16, 5), (24, 6)–(24, 4), (1, 0)–(1, 5), (23, 5)–(23, 10), (41, 8)–(41, 10), (42, 12)–(42, 10).
+Links: (17, 1)–(17, 2), (22, 2)–(22, 3), (27, 1)–(27, 3), (40, 3)–(40, 4), (48, 3)–(48, 5), (16, 4)–(16, 5), (24, 6)–(24, 4), (0, 0)–(0, 5), (23, 5)–(23, 10), (41, 8)–(41, 10), (42, 12)–(42, 10).
 
-Cuts: (14, 1), (19, 1), (29, 1), (38, 1); (15, 2), (19, 2), (24, 2); (12, 3), (19, 3), (24, 3),
-(31, 3), (37, 3), (44, 3); (19, 4); (4, 6), (9, 6), (15, 6), (25, 6); (32, 8), (38, 8); (32, 12),
-(38, 12).
+Cuts: (4, 6), (9, 6), (12, 3), (14, 1), (15, 2), (15, 6), (19, 1), (19, 2), (19, 3), (19, 4), (24, 2), (24, 3), (25, 6), (29, 1), (31, 3), (32, 8), (32, 12), (37, 3), (38, 1), (38, 8), (38, 12), (44, 3).
 
 ### Off-board wires
 
 | Pad | Hole | Goes to |
 |---|---|---|
-| +9V | (44, 1) | The DC socket's +9 V contact (stage 2 finds which) |
-| STAR | (0, 0) | The star-ground tag |
+| V9 | (44, 1) | The DC socket's +9 V contact (stage 2 finds which) |
+| STAR | (1, 5) | The star-ground tag |
 | IN | (1, 6) | Input jack tip, through the screened cable's core |
-| SW-I | (6, 6) | Inst/Line switch, the Inst throw |
-| SW-L | (12, 6) | Inst/Line switch, the Line throw |
-| SW-C | (15, 3) | Inst/Line switch, the common (middle) lug |
+| SW-I | (6, 6) | Inst/Line switch, the Inst throw: node A, past C5 |
+| SW-L | (12, 6) | Inst/Line switch, the Line throw: node B, between R5 and R6 |
+| SW-C | (17, 3) | Inst/Line switch, the common (middle) lug: the follower's input, U1.3 |
 | LIN1 | (15, 1) | Codec board LIN1 (right-hand row) |
 | HPL | (25, 7) | Codec board HPL |
 | HPR | (25, 11) | Codec board HPR |
@@ -215,8 +212,11 @@ Cioks off.
       **IN**. The screen goes to the jack's sleeve lug only, and is left unconnected at the board
       end. Also wire the jack's **tip switch** lug to its sleeve lug, so an empty jack holds the
       input at 0 V.
-- [ ] **Inst/Line switch.** Common → **SW-C**. The throw that's selected with the lever towards
-      Inst → **SW-I**, and the other → **SW-L**. Keep these three wires short.
+- [ ] **Inst/Line switch.** Common (the middle lug) → **SW-C**, which is the follower's input
+      and so the wire that also reaches U1.3. The throw the lever selects at **Inst** → **SW-I**
+      (node A, past C5), and the other → **SW-L** (node B, between R5 and R6). Keep these three
+      wires short. The two throws' wires are the same node in two places, so the *meter* is what
+      tells them apart: at Inst the middle lug beeps to the SW-I wire.
 - [ ] **Output jacks.** OUT-L pad → OUT L tip lug. OUT-R pad → OUT R tip lug. Leave these wires long
       enough to reroute later: Phase 3.6's bypass relay goes between the board and these tips.
 
@@ -229,7 +229,7 @@ Cioks on, op-amp **not** fitted. Measure the socket's pins against the star tag:
 | 8 | about 8.7 V | VF |
 | 4 | 0 V | ground |
 | 5 | about 2.9 V | the bias, straight from the divider |
-| 3 | about 2.9 V at Inst, about 2.5 V at Line | the bias, reached through the input network: 330 kΩ + 680 kΩ = 1.01 MΩ at Inst, and 330 kΩ in parallel with 680 kΩ (about 222 kΩ) at Line. A 10 MΩ meter loads the Line position noticeably and the Inst position hardly at all, which is the reading that shows the path is there. **These are the corrected values** — see the note under the parts table |
+| 3 | **the lower of the two positions, always.** The meter loads the node it is on: at Inst it sits on node A and reads `Vbias × Rm/(Rm + 1.01 MΩ)`; at Line it sits on node B and reads `Vbias × Rm/(Rm + R6)`, Rm being the meter's own input resistance — a cheap DMM's DC volts range is typically 1 MΩ, a bench meter's 10 MΩ. Worked with Vbias = 2.95 V: **Rm = 1 MΩ → Inst ≈ 1.50 V, Line ≈ 2.24 V**; **Rm = 10 MΩ → Inst ≈ 2.67 V, Line ≈ 2.86 V** | the ohms range, power off, is the test that settles it: **pin 3 to the bias hole (21, 4) reads 1.01 MΩ at Inst and 330 kΩ at Line**, and the toggle's middle lug beeps to the SW-I wire at (6, 6) at Inst. `Rm` can be worked out from the two volts readings: `Rm = 1.01 MΩ × V_Inst/(Vbias − V_Inst)`. The **−9.7 dB** pad is an *audio* figure: no DC voltmeter shows it, and these readings only say which position the toggle is in and how much the meter itself is loading |
 | 1, 2, 6, 7 | anything, or drifting | nothing drives them yet |
 
 Then, Cioks off:

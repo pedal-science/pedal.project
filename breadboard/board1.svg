@@ -875,8 +875,10 @@
 <rect x="1273" y="353" width="6" height="6" rx="1" fill="#bbb"/>
 <rect x="1273" y="373" width="6" height="6" rx="1" fill="#bbb"/>
 <rect x="26" y="190" width="1260" height="32" fill="#eee"/>
-<rect x="404" y="166" width="84" height="80" rx="3" fill="#1d4d34" opacity=".85"/><text x="446.0" y="210.0" font-size="11" text-anchor="middle" fill="#fff" font-weight="700">U1 OPA2197</text>
-<circle cx="416" cy="250" r="3" fill="#fff"/><text x="404" y="254" font-size="10" fill="#fff">1</text>
+<rect x="404" y="166" width="84" height="80" rx="3" fill="#1d4d34" opacity=".85"/>
+<text x="452.0" y="210.0" font-size="11" text-anchor="middle" fill="#fff" font-weight="700">U1 OPA2197</text>
+<circle cx="416" cy="236" r="4.5" fill="#fff" stroke="#0a5"/>
+<text x="414" y="268" font-size="10" font-weight="800" fill="#0a5" text-anchor="middle">1</text>
 <line x1="1116" y1="136" x2="1016" y2="136" stroke="#222" stroke-width="6" stroke-linecap="round" opacity=".9"/>
 <circle cx="1116" cy="136" r="4" fill="#222"/>
 <circle cx="1016" cy="136" r="4" fill="#222"/>
@@ -894,7 +896,7 @@
 <circle cx="936" cy="116" r="4" fill="#2c3e8f"/>
 <circle cx="936" cy="56" r="4" fill="#2c3e8f"/>
 <text x="941" y="111" font-size="13" font-weight="800" fill="#2c3e8f">+</text>
-<text x="945.0" y="90.0" font-size="11" font-weight="700" text-anchor="start" fill="#111" stroke="#fff" stroke-width="3" paint-order="stroke">C2 100µF 25V</text>
+<text x="945.0" y="116.0" font-size="11" font-weight="700" text-anchor="start" fill="#111" stroke="#fff" stroke-width="3" paint-order="stroke">C2 100µF 25V</text>
 <line x1="416" y1="116" x2="416" y2="56" stroke="#e67e22" stroke-width="6" stroke-linecap="round" opacity=".9"/>
 <circle cx="416" cy="116" r="4" fill="#e67e22"/>
 <circle cx="416" cy="56" r="4" fill="#e67e22"/>
@@ -931,11 +933,11 @@
 <line x1="616" y1="276" x2="636" y2="276" stroke="#2c3e8f" stroke-width="6" stroke-linecap="round" opacity=".9"/>
 <circle cx="616" cy="276" r="4" fill="#2c3e8f"/>
 <circle cx="636" cy="276" r="4" fill="#2c3e8f"/>
-<text x="626.0" y="267.0" font-size="11" font-weight="700" text-anchor="middle" fill="#111" stroke="#fff" stroke-width="3" paint-order="stroke">C6 10µF bipolar</text>
+<text x="626.0" y="241.0" font-size="11" font-weight="700" text-anchor="middle" fill="#111" stroke="#fff" stroke-width="3" paint-order="stroke">C6 10µF bipolar</text>
 <line x1="636" y1="256" x2="716" y2="256" stroke="#b8860b" stroke-width="6" stroke-linecap="round" opacity=".9"/>
 <circle cx="636" cy="256" r="4" fill="#b8860b"/>
 <circle cx="716" cy="256" r="4" fill="#b8860b"/>
-<text x="676.0" y="247.0" font-size="11" font-weight="700" text-anchor="middle" fill="#111" stroke="#fff" stroke-width="3" paint-order="stroke">R7 100Ω</text>
+<text x="676.0" y="260.0" font-size="11" font-weight="700" text-anchor="middle" fill="#111" stroke="#fff" stroke-width="3" paint-order="stroke">R7 100Ω</text>
 <line x1="716" y1="296" x2="716" y2="376" stroke="#b8860b" stroke-width="6" stroke-linecap="round" opacity=".9"/>
 <circle cx="716" cy="296" r="4" fill="#b8860b"/>
 <circle cx="716" cy="376" r="4" fill="#b8860b"/>
@@ -943,11 +945,11 @@
 <line x1="776" y1="276" x2="796" y2="276" stroke="#2c3e8f" stroke-width="6" stroke-linecap="round" opacity=".9"/>
 <circle cx="776" cy="276" r="4" fill="#2c3e8f"/>
 <circle cx="796" cy="276" r="4" fill="#2c3e8f"/>
-<text x="786.0" y="267.0" font-size="11" font-weight="700" text-anchor="middle" fill="#111" stroke="#fff" stroke-width="3" paint-order="stroke">C7 10µF bipolar</text>
+<text x="786.0" y="241.0" font-size="11" font-weight="700" text-anchor="middle" fill="#111" stroke="#fff" stroke-width="3" paint-order="stroke">C7 10µF bipolar</text>
 <line x1="796" y1="256" x2="876" y2="256" stroke="#b8860b" stroke-width="6" stroke-linecap="round" opacity=".9"/>
 <circle cx="796" cy="256" r="4" fill="#b8860b"/>
 <circle cx="876" cy="256" r="4" fill="#b8860b"/>
-<text x="836.0" y="247.0" font-size="11" font-weight="700" text-anchor="middle" fill="#111" stroke="#fff" stroke-width="3" paint-order="stroke">R9 100Ω</text>
+<text x="836.0" y="260.0" font-size="11" font-weight="700" text-anchor="middle" fill="#111" stroke="#fff" stroke-width="3" paint-order="stroke">R9 100Ω</text>
 <line x1="876" y1="296" x2="876" y2="376" stroke="#b8860b" stroke-width="6" stroke-linecap="round" opacity=".9"/>
 <circle cx="876" cy="296" r="4" fill="#b8860b"/>
 <circle cx="876" cy="376" r="4" fill="#b8860b"/>
@@ -959,15 +961,26 @@
 <line x1="476" y1="116" x2="316" y2="236" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round"/>
 <line x1="476" y1="316" x2="476" y2="376" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round"/>
 <line x1="56" y1="56" x2="56" y2="376" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round"/>
-<circle cx="1116" cy="96" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/><text x="1116" y="78" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">+9V</text>
-<circle cx="76" cy="56" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/><text x="76" y="38" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">STAR</text>
-<circle cx="116" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/><text x="116" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">IN</text>
-<circle cx="156" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/><text x="156" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">SW-I</text>
-<circle cx="236" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/><text x="236" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">SW-L</text>
-<circle cx="456" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/><text x="456" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">SW-C</text>
-<circle cx="416" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/><text x="416" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">LIN1</text>
-<circle cx="616" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/><text x="616" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">HPL</text>
-<circle cx="776" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/><text x="776" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">HPR</text>
-<circle cx="716" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/><text x="716" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">OUT-L</text>
-<circle cx="876" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/><text x="876" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">OUT-R</text>
-<text x="36" y="438" font-size="14" font-weight="800" fill="#111">Board 1 on the breadboard · green: jumpers · purple: wires off the breadboard · T+ is VF (8.7 V), T− and B− are ground</text></svg>
+<circle cx="1116" cy="96" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/>
+<text x="1116" y="78" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">V9</text>
+<circle cx="76" cy="56" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/>
+<text x="76" y="38" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">STAR</text>
+<circle cx="116" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/>
+<text x="116" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">IN</text>
+<circle cx="156" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/>
+<text x="156" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">SW-I</text>
+<circle cx="236" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/>
+<text x="236" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">SW-L</text>
+<circle cx="456" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/>
+<text x="456" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">SW-C</text>
+<circle cx="416" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/>
+<text x="416" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">LIN1</text>
+<circle cx="616" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/>
+<text x="616" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">HPL</text>
+<circle cx="776" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/>
+<text x="776" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">HPR</text>
+<circle cx="716" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/>
+<text x="690" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">OUT-L</text>
+<circle cx="876" cy="316" r="6" fill="none" stroke="#7c3aed" stroke-width="3"/>
+<text x="850" y="342" font-size="11" font-weight="800" text-anchor="middle" fill="#7c3aed">OUT-R</text>
+<text x="36" y="438" font-size="14" font-weight="800" fill="#111">Board 1 on the breadboard · green: jumpers · purple: wires off the breadboard · T+ is VF (8.7 V), T− and B− are one ground node</text></svg>

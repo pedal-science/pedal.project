@@ -837,10 +837,10 @@
 <text x="128.0" y="162" font-size="11" font-weight="700" text-anchor="middle" fill="#111">C5 100nF film</text>
 <line x1="194" y1="172" x2="282" y2="172" stroke="#777" stroke-width="2"/>
 <rect x="202.0" y="166.5" width="72" height="11" rx="4" fill="#c8b27d"/>
-<text x="238.0" y="162" font-size="11" font-weight="700" text-anchor="middle" fill="#111">R5 330k</text>
+<text x="238.0" y="162" font-size="11" font-weight="700" text-anchor="middle" fill="#111">R5 680k</text>
 <line x1="326" y1="172" x2="414" y2="172" stroke="#777" stroke-width="2"/>
 <rect x="334.0" y="166.5" width="72" height="11" rx="4" fill="#c8b27d"/>
-<text x="370.0" y="162" font-size="11" font-weight="700" text-anchor="middle" fill="#111">R6 680k</text>
+<text x="370.0" y="162" font-size="11" font-weight="700" text-anchor="middle" fill="#111">R6 330k</text>
 <circle cx="656.0" cy="205.0" r="27.283464566929133" fill="#2c3e8f" opacity=".8"/>
 <text x="686.2834645669292" y="209.0" font-size="11" font-weight="700" fill="#111">C6</text>
 <line x1="700" y1="216" x2="788" y2="216" stroke="#777" stroke-width="2"/>
@@ -860,15 +860,15 @@
 <circle cx="62" cy="150" r="6" fill="none" stroke="#0a7d3b" stroke-width="3"/>
 <text x="62" y="170" font-size="11" font-weight="800" text-anchor="middle" fill="#0a7d3b">STAR</text>
 <circle cx="1008" cy="62" r="6" fill="none" stroke="#0a7d3b" stroke-width="3"/>
-<text x="1008" y="82" font-size="11" font-weight="800" text-anchor="middle" fill="#0a7d3b">+9V</text>
+<text x="1008" y="82" font-size="11" font-weight="800" text-anchor="middle" fill="#0a7d3b">V9</text>
 <circle cx="62" cy="172" r="6" fill="none" stroke="#0a7d3b" stroke-width="3"/>
 <text x="62" y="192" font-size="11" font-weight="800" text-anchor="middle" fill="#0a7d3b">IN</text>
 <circle cx="414" cy="106" r="6" fill="none" stroke="#0a7d3b" stroke-width="3"/>
-<text x="414" y="126" font-size="11" font-weight="800" text-anchor="middle" fill="#0a7d3b">SW-I</text>
+<text x="414" y="126" font-size="11" font-weight="800" text-anchor="middle" fill="#0a7d3b">SW-C</text>
 <circle cx="304" cy="172" r="6" fill="none" stroke="#0a7d3b" stroke-width="3"/>
 <text x="304" y="192" font-size="11" font-weight="800" text-anchor="middle" fill="#0a7d3b">SW-L</text>
 <circle cx="172" cy="172" r="6" fill="none" stroke="#0a7d3b" stroke-width="3"/>
-<text x="172" y="192" font-size="11" font-weight="800" text-anchor="middle" fill="#0a7d3b">SW-C</text>
+<text x="172" y="192" font-size="11" font-weight="800" text-anchor="middle" fill="#0a7d3b">SW-I</text>
 <circle cx="370" cy="62" r="6" fill="none" stroke="#0a7d3b" stroke-width="3"/>
 <text x="370" y="82" font-size="11" font-weight="800" text-anchor="middle" fill="#0a7d3b">LIN1</text>
 <circle cx="590" cy="194" r="6" fill="none" stroke="#0a7d3b" stroke-width="3"/>

@@ -46,15 +46,15 @@ left. **B+** is unused.
 | C4 | 10 µF 50 V | + g15, − B− | |
 | U1 | OPA2197 on its adapter | pins 1–4 in f20–f23, pins 8–5 in e20–e23 | Across the channel, pin 1 at **f20** (bottom left). Stage 6 |
 | C5 | 100 nF film | g5–g7 | |
-| R5 | **330 kΩ** | h7–h11 | |
-| R6 | **680 kΩ** | i11–i15 | |
+| R5 | **680 kΩ** | h7–h11 | The Line pad's top: node A to node B |
+| R6 | **330 kΩ** | i11–i15 | The Line pad's bottom, to the bias: node B to the bias |
 | C6, C7 | 10 µF bipolar | h30–h31, h38–h39 | Either way round |
 | R7, R9 | 100 Ω | g31–g35, g39–g43 | |
 | R8, R10 | 1 MΩ | i35, B−; i43, B− | |
 
 Jumpers: a20–T+, a46–T+, i20–i21, b21–b22, b23–f15, j23–B−, and T−–B− at column 2.
 
-Wires off the breadboard: **+9V** a55, **STAR** T−, **IN** j5, **SW-I** j7, **SW-L** j11,
+Wires off the breadboard: **V9** a55, **STAR** T−, **IN** j5, **SW-I** j7, **SW-L** j11,
 **SW-C** j22, **LIN1** j20, **HPL** j30, **HPR** j38, **OUT-L** j35, **OUT-R** j43. They go where
 [build-board1.md](build-board1.md)'s "Off-board wires" table says.
 
@@ -143,7 +143,7 @@ Cioks on, op-amp not fitted. Measure the holes U1's pins will go into, against t
 | 8 (e20) | about 8.7 V |
 | 4 (f23) | 0 V |
 | 5 (e23) | about 2.9 V |
-| 3 (f22) | about 2.9 V at Inst, about 2.5 V at Line (the meter's 10 MΩ loads the ~222 kΩ Line path noticeably and the 1.01 MΩ Inst path hardly at all — **corrected values**, see the note under the parts table) |
+| 3 (f22) | **the lower of the two positions, always.** The meter loads the node it is on, so what it reads depends on its own input resistance: at Inst it sits on node A and reads `Vbias × Rm/(Rm + 1.01 MΩ)`; at Line it sits on node B and reads `Vbias × Rm/(Rm + R6)`. Worked with Vbias = 2.95 V: **Rm = 1 MΩ → Inst ≈ 1.50 V, Line ≈ 2.24 V**; **Rm = 10 MΩ → Inst ≈ 2.67 V, Line ≈ 2.86 V**. So Line is the higher reading at any meter. **Measure Rm from the pair:** `Rm = 1.01 MΩ × V_Inst/(Vbias − V_Inst)`. **The −9.7 dB pad is an audio figure and no DC voltmeter can show it** — these readings only identify which position the toggle is in and what the meter is loading. The unambiguous test is on the ohms range, power off: **f22 to the bias hole e23 reads 1.01 MΩ at Inst and 330 kΩ at Line**, and the toggle's middle lug beeps to the SW-I wire (j7) at Inst |
 
 Then, Cioks off: about **1 MΩ** from each output jack's tip to ground, and no continuity from HPL
 (j30) or HPR (j38) to ground.
@@ -176,7 +176,7 @@ anything is soldered.
 | What | Value | Date |
 |---|---|---|
 | Rails split in the middle? | | |
-| +9V / C1 / T+ | | |
+| V9 / C1 / T+ | | |
 | Bias (e23) | | |
 | Pin 3 hole (f22), Inst / Line | | |
 | Op-amp outputs (f20 / e21) | | |

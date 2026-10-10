@@ -72,8 +72,8 @@ PARTS = {
         ((18, 1), 'LIN1'), ((18, 2), 'LIN1'), ((18, 3), 'IN_A'), ((18, 4), 'GND_A'),
         ((21, 4), 'BIAS'), ((21, 3), 'U1B'), ((21, 2), 'U1B'), ((21, 1), 'VF')]),
     'C5': ('film', '100nF film', [((3, 6), 'IN_RAW'), ((5, 6), 'IN_A')]),
-    'R5': ('r', '330k', [((7, 6), 'IN_A'), ((11, 6), 'IN_B')]),
-    'R6': ('r', '680k', [((13, 6), 'IN_B'), ((17, 6), 'BIAS')]),
+    'R5': ('r', '680k', [((7, 6), 'IN_A'), ((11, 6), 'IN_B')]),
+    'R6': ('r', '330k', [((13, 6), 'IN_B'), ((17, 6), 'BIAS')]),
     'C6': ('el6.3', '10µF bipolar', [((28, 7), 'HPL'), ((28, 8), 'OUT_L_N')]),
     'R7': ('r', '100Ω', [((30, 8), 'OUT_L_N'), ((34, 8), 'OUT_L')]),
     'R8': ('r', '1M', [((36, 8), 'OUT_L'), ((40, 8), 'GND_A')]),
@@ -82,22 +82,38 @@ PARTS = {
     'R10': ('r', '1M', [((36, 12), 'OUT_R'), ((40, 12), 'GND_A')]),
 }
 
-# Wires leaving the board: label -> (hole, net, where it goes).  The switch is three pads
-# rather than a part: the toggle bolts to the panel, so only its wires reach the board.
-# U1.3 is where the switch's common lands, and the two throws tap R5 either side.
-PADS = {
-    'STAR': ((1, 5), 'GND_A', 'the star-ground tag (this board\'s one ground wire)'),
-    '+9V': ((44, 1), 'V9_RAW', "the DC socket's +9 V contact"),
-    'IN': ((1, 6), 'IN_RAW', 'input jack tip (screened cable core)'),
-    'SW-I': ((17, 3), 'IN_A', 'Inst/Line switch, Inst throw: the buffer input (U1.3)'),
-    'SW-L': ((12, 6), 'IN_B', 'Inst/Line switch, Line throw (past R5)'),
-    'SW-C': ((6, 6), 'IN_A', 'Inst/Line switch, common: across C5, at the tip'),
-    'LIN1': ((15, 1), 'LIN1', 'codec board LIN1 (right-hand row)'),
-    'HPL': ((25, 7), 'HPL', 'codec board HPL'),
-    'HPR': ((25, 11), 'HPR', 'codec board HPR'),
-    'OUT-L': ((35, 8), 'OUT_L', 'OUT L jack tip'),
-    'OUT-R': ((35, 12), 'OUT_R', 'OUT R jack tip'),
+# Wires leaving the board: label -> hole, where it lands.  The switch is three pads rather
+# than a part -- the toggle bolts to the panel, so only its wires reach the board -- and the
+# netlist's names say which lug each one is: SW-C, the common, is the follower's input, U1.3's
+# strip on row 3; SW-I, the Inst throw, is node A, on row 6 to the right of the cut at (4, 6);
+# and SW-L, the Line throw, is node B, between R5 and R6.
+#
+# A pad's *net* is not written here: it comes from the netlist (`PADS` below), so a pad whose
+# net is wrong is a thing this file cannot say.  That is what went wrong once -- the two
+# switch pads' nets were transposed here, and the check could not see it, because rule 1
+# checks the leads against the netlist and the pads were only asked to name a net that
+# exists.  What a layout owns is the *hole*, and that is all this table holds.  The labels are
+# the netlist's too: board 1's 'V9' pad is the netlist's, and its wire still goes to the DC
+# socket's +9 V contact.
+PADS_AT = {
+    'STAR': (1, 5),
+    'V9': (44, 1),
+    'IN': (1, 6),
+    'SW-C': (17, 3),
+    'SW-L': (12, 6),
+    'SW-I': (6, 6),
+    'LIN1': (15, 1),
+    'HPL': (25, 7),
+    'HPR': (25, 11),
+    'OUT-L': (35, 8),
+    'OUT-R': (35, 12),
 }
+# The three switch pads take their net from the netlist, not from this file, so nothing here
+# can transpose them again.  SW-C (the common) and SW-I (the Inst throw) are both `IN_A` -- the
+# same node, which this copper carries in two pieces: U1.3's strip on row 3, and node A, C5's
+# far lead and R5's top lead, on row 6 past the cut at (4, 6).  The switch's two wires are what
+# join them, exactly as docs/build-board1.md's off-board table wires them.
+PADS = {label: (hole, *NET.PADS[label]) for label, hole in PADS_AT.items()}
 
 
 # Drawing ------------------------------------------------------------------
@@ -200,10 +216,13 @@ M_ = 40
 
 
 if __name__ == '__main__':
-    # IN_A is in two pieces on the board: U1.3's strip (SW-I) and the input network's (SW-C,
-    # C5.2, R5.1).  There is no room for a link between row 3 and row 6 without crossing the
-    # two ground buses, and the switch is the part that joins them anyway -- its throw and its
-    # common are one node when the lever is at Inst.
+    # IN_A is in two pieces on the board: C5's output lead and R5's top lead are one (row 6,
+    # right of the cut at (4, 6)) and U1.3's strip is the other (row 3).  They are one node
+    # only through the switch's own two wires -- SW-I's pad on one piece and SW-C's on the
+    # other -- which is how docs/build-board1.md's off-board table wires them.  A link between
+    # the two rows would not be a missing wire but a wrong one: it would tie node A to the
+    # follower's input permanently and leave the toggle unable to choose the Line tap.  There
+    # is no room for one either, without crossing the two ground buses.
     errs, info = SB.check(W, H, CUTS, LINKS, PARTS, PADS, off_board={'IN_A'},
                           carries=set(NET.PARTS))
     for e in errs:

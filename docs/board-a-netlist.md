@@ -40,15 +40,29 @@ and prints the size it found:
 
 ### What the extraction found: board 1's two pad values
 
-Board 1's own data had **R5 = 680k and R6 = 330k**. Its topology is right — the switch taps
-either side of R5, the buffer is a follower, the divider runs from the jack's coupling
-capacitor to the bias — but that pair of values gives the Inst position about **0.81** and
-Line about **0.33**, against the BOM's ×1 for Inst and −9.7 dB (0.33) for Line. Swapped
-(R5 = 330k, R6 = 680k) the pad is −9.7 dB, which is what `docs/bom.md` and the 2b review say
-it should be, and the jack still sees 1.01 MΩ either way. The netlist carries the swapped
-values; **board 1 as built needs its two resistors exchanged** if the Line pad is to be the
-−9.7 dB it was designed for. Nothing else about board 1 changed except where three pads sit,
-because a cut strip cannot carry the switch's common to `U1.3`.
+Board 1's own data had **R5 = 330k and R6 = 680k**, and that pair is the transposition. The
+topology was right — the switch's common is the follower's input, its Inst throw is node A
+past C5 and its Line throw is node B between R5 and R6 — but the values were the wrong way
+round: R5 is the 680 kΩ *top* of the Line pad and R6 the 330 kΩ *shunt* from node B to the
+bias. The BOM says so directly ("the 680 kΩ … the top of the Line pad", "the 330 kΩ … the
+bottom of the Line pad"), and the network says so numerically: at 1 kHz, with C5 = 100 nF and
+a 10 kΩ source, **R5 = 680k / R6 = 330k gives Inst ×1.00 and Line 0.324 (−9.8 dB)**, while
+R5 = 330k / R6 = 680k gives Line 0.667 (−3.5 dB). Inst is ×1 either way, because the follower's
+input is node A itself and nothing divides the signal there; the jack sees R5 + R6 = 1.01 MΩ
+at Inst and R5 ∥ R6 ≈ 222 kΩ at Line in both cases, which is why the mistake is audible only
+on Line, and only as "the pad is loud".
+
+So the values have been exchanged in the netlist and in `stripboard/board1.py`,
+`stripboard/board_a.py` and `docs/build-board1*.md`, and an earlier note here had it
+backwards: it is the values it called the original (top 680k) that the BOM's −9.7 dB needs,
+and its "Inst ≈ 0.81" was wrong — the Inst position is not a division of the signal at all.
+**Anyone who built from the sheets before this fix has R5 and R6 the wrong way round**; it is
+the same footprint in the same holes, so it is a straight swap of the two parts, with no
+rewiring and no cut changes.
+
+Two pads moved with the netlist extraction, because a cut strip cannot carry the switch's
+common to `U1.3`: `SW-C` is on U1.3's row-3 strip and `SW-I` on node A's row-6 piece, which is
+what `docs/build-board1.md`'s off-board table now says.
 
 ## The noise rules, and what each one rests on
 

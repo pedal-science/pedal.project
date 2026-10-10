@@ -1213,6 +1213,34 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**R5 and R6 are the other way round on the breadboard sheet, and its drawing had stopped being
+written** (2026-10-11). `python3 breadboard/board1.py` failed its own check (IN_A split, the two
+ground names joined), so it exited before writing `breadboard/board1.svg` — the owner has been
+building from a picture that still said R5 = 330k / R6 = 680k. Two things were wrong, and one of
+them is hardware:
+
+- **The values are R5 = 680k (top) and R6 = 330k (shunt)**, as `docs/bom.md` says and as the
+  network gives at 1 kHz: Inst ×1.00, Line 0.324 = −9.8 dB, while the other way round Line is
+  0.667 = −3.5 dB. The netlist and both build docs now carry that pair, and
+  `docs/board-a-netlist.md`'s "board 1 as built needs its two resistors exchanged" was backwards.
+  **Anyone who built from the earlier sheets should swap R5 and R6** — same footprint, same
+  holes, no rewiring. Inst is ×1 either way, so the fault shows only as the Line pad being loud.
+- The two switch pads' **names** were transposed against the netlist: a layout's `PADS` table
+  carried each pad's net by hand, and the checker only asked whether that net existed, so it
+  could not see a transposition. Board 1's and the breadboard's pad nets now come from
+  `stripboard/nets.py`, and both layouts pass again: board 1 `ok: 19 parts, 11 links, 22 cuts,
+  11 wires; 50x14 holes = 124.46 x 33.02 mm`, breadboard `ok: 19 parts, 7 jumpers, 11 wires, 1
+  net in two pieces, joined by the switch`.
+- The breadboard drawing is regenerated and **looked at**: every label goes through a collision
+  pass (no label on another label, on a part's body or on a pad's ring), the pin-1 marker is
+  clear of the adapter, and the title fits its canvas. `breadboard/board1.svg` is current and
+  reads R5 680k / R6 330k.
+- Stage 5/7's pin-3 targets were wrong for the same reason (they assumed a 10 MΩ meter and the
+  transposed pair). The reading is `Vbias × Rm/(Rm + 1.01 MΩ)` at Inst and `Vbias × Rm/(Rm + R6)`
+  at Line, so **Inst is always the lower of the two**; the owner's 1 MΩ meter explains the
+  1.55 V / 1.85 V he saw. Both docs now give the ratio form, worked numbers for 1 MΩ and 10 MΩ,
+  and say that the −9.7 dB pad is an audio figure no DC voltmeter can show.
+
 **D14's condition is met: V2 passed (2026-10-10).** rigpa as its real unit on eglfs, the HDMI output
 forced on at 1920×480 with a generated EDID (no screen yet), beside a 0.553 rig with a warm document:
 five ten-minute arms, every one 0 xruns, 0 overruns, worst block ≤ 58%. Render p99 moves 23% → 25%
