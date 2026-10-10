@@ -1,0 +1,25 @@
+18:50:14Z  V2 on vip: 600 s an arm, target cost 0.70
+    connector connected 1920x480
+18:50:17Z  playing /var/lib/pedal/library/rigs/last.json; building v2-heavy.json
+    candidate 1 chains -> cost 0.18443000000000004
+    candidate 2 chains -> cost 0.36886
+    candidate 3 chains -> cost 0.55329
+    candidate 4 chains -> cost 0.7377199999999999
+    heavy rig 3 chains, cost 0.55329
+18:50:22Z  loaded v2-heavy.json; letting the load transient pass
+18:50:52Z  arm off: rigpa off
+19:00:56Z  arm off: PASS
+19:00:56Z  arm idle: rigpa on, meters false
+19:11:22Z  arm idle: PASS
+19:11:22Z  arm meters: rigpa on, meters true
+19:21:49Z  arm meters: PASS
+19:21:49Z  arm animate: rigpa on, meters true, --demo-animate
+19:32:16Z  arm animate: PASS
+19:32:16Z  arm off2: rigpa off
+19:42:21Z  arm off2: PASS
+19:42:21Z  done
+19:42:21Z  cleanup
+restored last.json
+    connector now disconnected
+19:42:22Z  cleanup done
+exit 0

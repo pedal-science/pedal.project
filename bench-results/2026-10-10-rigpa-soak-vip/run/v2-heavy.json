@@ -1,0 +1,188 @@
+{
+ "chains": [
+  {
+   "connections": [
+    {
+     "from": "in-c0",
+     "from_port": 0,
+     "to": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c0",
+     "to_port": 0
+    },
+    {
+     "from": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c0",
+     "from_port": 0,
+     "to": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c0",
+     "to_port": 0
+    },
+    {
+     "from": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c0",
+     "from_port": 0,
+     "to": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA-gain-c0",
+     "to_port": 0
+    },
+    {
+     "from": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA-gain-c0",
+     "from_port": 0,
+     "to": "out-c0",
+     "to_port": 0
+    }
+   ],
+   "id": "64AD55DB-C889-41EC-B223-99AC8B26B40C-c0",
+   "input_channel": 0,
+   "name": "Guitar",
+   "nodes": [
+    {
+     "element": "in-c0",
+     "id": "in-c0",
+     "type": "nc.input"
+    },
+    {
+     "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-c0",
+     "id": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c0",
+     "model": "NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, Fumble pedal, M160",
+     "type": "nc.nam"
+    },
+    {
+     "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-c0",
+     "id": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c0",
+     "type": "fx.amp.tonestack"
+    },
+    {
+     "element": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA-c0",
+     "gain_db": 11.8364,
+     "id": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA-gain-c0",
+     "type": "nc.gain"
+    },
+    {
+     "element": "out-c0",
+     "id": "out-c0",
+     "type": "nc.output"
+    }
+   ],
+   "output_channel": 0
+  },
+  {
+   "connections": [
+    {
+     "from": "in-c1",
+     "from_port": 0,
+     "to": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c1",
+     "to_port": 0
+    },
+    {
+     "from": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c1",
+     "from_port": 0,
+     "to": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c1",
+     "to_port": 0
+    },
+    {
+     "from": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c1",
+     "from_port": 0,
+     "to": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA-gain-c1",
+     "to_port": 0
+    },
+    {
+     "from": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA-gain-c1",
+     "from_port": 0,
+     "to": "out-c1",
+     "to_port": 0
+    }
+   ],
+   "id": "64AD55DB-C889-41EC-B223-99AC8B26B40C-c1",
+   "input_channel": 0,
+   "name": "Guitar",
+   "nodes": [
+    {
+     "element": "in-c1",
+     "id": "in-c1",
+     "type": "nc.input"
+    },
+    {
+     "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-c1",
+     "id": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c1",
+     "model": "NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, Fumble pedal, M160",
+     "type": "nc.nam"
+    },
+    {
+     "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-c1",
+     "id": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c1",
+     "type": "fx.amp.tonestack"
+    },
+    {
+     "element": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA-c1",
+     "gain_db": 11.8364,
+     "id": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA-gain-c1",
+     "type": "nc.gain"
+    },
+    {
+     "element": "out-c1",
+     "id": "out-c1",
+     "type": "nc.output"
+    }
+   ],
+   "output_channel": 0
+  },
+  {
+   "connections": [
+    {
+     "from": "in-c2",
+     "from_port": 0,
+     "to": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c2",
+     "to_port": 0
+    },
+    {
+     "from": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c2",
+     "from_port": 0,
+     "to": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c2",
+     "to_port": 0
+    },
+    {
+     "from": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c2",
+     "from_port": 0,
+     "to": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA-gain-c2",
+     "to_port": 0
+    },
+    {
+     "from": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA-gain-c2",
+     "from_port": 0,
+     "to": "out-c2",
+     "to_port": 0
+    }
+   ],
+   "id": "64AD55DB-C889-41EC-B223-99AC8B26B40C-c2",
+   "input_channel": 0,
+   "name": "Guitar",
+   "nodes": [
+    {
+     "element": "in-c2",
+     "id": "in-c2",
+     "type": "nc.input"
+    },
+    {
+     "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-c2",
+     "id": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c2",
+     "model": "NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, Fumble pedal, M160",
+     "type": "nc.nam"
+    },
+    {
+     "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-c2",
+     "id": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c2",
+     "type": "fx.amp.tonestack"
+    },
+    {
+     "element": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA-c2",
+     "gain_db": 11.8364,
+     "id": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA-gain-c2",
+     "type": "nc.gain"
+    },
+    {
+     "element": "out-c2",
+     "id": "out-c2",
+     "type": "nc.output"
+    }
+   ],
+   "output_channel": 0
+  }
+ ],
+ "name": "v2-heavy"
+}

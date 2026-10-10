@@ -117,7 +117,7 @@ the fallbacks. It has six choices for you at the end.
 | D11 | The Core host runs the pedal's own Wi-Fi network; the Pico advertises over BLE and the phone joins with `NEHotspotConfigurationManager.joinAccessoryHotspot` | you, 2026-10-01 | Phase 5 ([docs/pairing.md](docs/pairing.md)). The pedal root retires its station config, the bench reaches the pedal over Ethernet, and neither `sftp` nor a typed address is needed for the app |
 | D12 | The first pairing gets an out-of-band code on the pedal's screen, before the pedal releases its BLE bundle. v1 pairs without it | you, 2026-10-01 | 3.7's display carries a security job, not only a nice one; the code is the Mac's way in too, and the QR stays the fallback |
 | D13 | The five repositories live in one workspace, `~/code.local/pedal/`, which is deliberately **not** a repository; a guard installed by path refuses an embedded checkout that nothing declares | you + recommendation, 2026-10-06 | [docs/workspace.md](docs/workspace.md). A session opened on the workspace writes in all five with no extra permissions; `scripts/workspace check` and `scripts/status` keep the layout, the declaration and the guard from rotting silently |
-| D14 | The pedal gets a screen, an 8.8″ 1920×480 touch bar display (mini‑HDMI video, USB touch), in a larger enclosure (Hammond 1456RH3). Its UI is **rigpa** (C++, Qt 6), on the Core host's housekeeping core 0: a client of `namchaind` and of `pedald`'s library API that reads the library read‑only. The Pico keeps every physical control (D2 stands); the main rotary, apply and back join the footswitches on the UART. Supersedes "the Core host does DSP only" and 3.7's ST7789 | you, 2026-10-09 | `../rigpa/docs/spec.md` and `plan.md`. **Conditional:** a soak on vip with rigpa off, idle and animating must show 0 xruns, 0 overruns and the worst block under 90% (rigpa plan V2); if not, rigpa's rendering is cut back until it does. vip's kernel, boot config and image gain a display stack (rigpa plan V1) |
+| D14 | The pedal gets a screen, an 8.8″ 1920×480 touch bar display (mini‑HDMI video, USB touch), in a larger enclosure (Hammond 1456RH3). Its UI is **rigpa** (C++, Qt 6), on the Core host's housekeeping core 0: a client of `namchaind` and of `pedald`'s library API that reads the library read‑only. The Pico keeps every physical control (D2 stands); the main rotary, apply and back join the footswitches on the UART. Supersedes "the Core host does DSP only" and 3.7's ST7789 | you, 2026-10-09 | `../rigpa/docs/spec.md` and `plan.md`. **Condition met 2026-10-10** (rigpa plan V2, [bench-results/2026-10-10-rigpa-soak-vip](bench-results/2026-10-10-rigpa-soak-vip/README.md)): rigpa off, idle, with meters and animating, on eglfs scanning out 1920×480, beside a 0.553 rig — 0 xruns, 0 overruns, worst block 58% in every arm; render p99 23% → 31% at the worst. vip's kernel (numaemu3), boot config (`vip-boot try-config`) and image carry the display stack (rigpa plan V1) |
 
 **On storage (D3).** The existing design already keeps models and IRs on the pedal, in
 `namchaind`'s `models_root` and `irs_root` on the SD card. D3 and D4 bring in the four things it
@@ -1212,6 +1212,18 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 - **Not designed yet:** the mic stage, cooling and the panel hardware.
 
 ## Next session starts with
+
+**D14's condition is met: V2 passed (2026-10-10).** rigpa as its real unit on eglfs, the HDMI output
+forced on at 1920×480 with a generated EDID (no screen yet), beside a 0.553 rig with a warm document:
+five ten-minute arms, every one 0 xruns, 0 overruns, worst block ≤ 58%. Render p99 moves 23% → 25%
+(idle) → 28% (meters) → 31% (animating every frame); rigpa is 0.4% / 3% / 18.6% of core 0 and
+141–143 MB PSS. [bench-results/2026-10-10-rigpa-soak-vip](bench-results/2026-10-10-rigpa-soak-vip/README.md).
+Getting there: the overlay is on through `vip-boot try-config`; vc4 needed the HDMI DDC driver,
+backlight and CEC kept through the trim (rtpi **numaemu3**, now the pedal kernel, slot b; stock in a);
+rigpa's unit starts only with a screen *connected*, drives vc4 by path, and stops after five failed
+starts; `devices/vip/check` reads the slots by role. **Open:** a root carrying numaemu3's
+`device.env` (until then `check` fails the slots against the root's numaemu2 record), `MemoryMax` for
+rigpa (256 MB from these numbers), and V3 with the screen.
 
 **Board A's placement is legal and cannot be wired, and now there is a tool that says so**
 (2026-10-10, `3a89a4e`). The two defects named last time are fixed: an electrolytic's lead span

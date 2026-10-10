@@ -1,0 +1,198 @@
+#!/usr/bin/env bash
+# run-v2 [--host vip] [--seconds 600] [--target 0.70] — the D14 gate (rigpa plan V2): does rigpa on
+# the housekeeping core, drawing the pedal's screen, cost the render core anything?
+#
+# rigpa runs as its real unit (rigpa.service, with the pedal's drop-ins), on eglfs on vc4, scanning out
+# 1920x480 at 60 Hz: the screen isn't fitted yet, so HDMI-A-1 is forced on with a 1920x480 EDID
+# (make-edid.py) through DRM's debugfs and sysfs. That is runtime state only; a reboot clears it.
+#
+# Five arms, RUN seconds each, the same heavy rig playing in all of them:
+#
+#   off       rigpa stopped                       the control
+#   idle      rigpa up, live meters off           a static screen: scan-out only
+#   meters    rigpa up, live meters on            the info panel redrawn ~10 times a second
+#   animate   rigpa up, meters on, --demo-animate the screen redrawn every frame (GPU and scan-out)
+#   off2      rigpa stopped again                 the control, after: did anything drift?
+#
+# Each arm: soak-monitor.sh on the host (engine.status every 10 s), soak-summary.py on it (the gate:
+# 0 xruns, 0 deadline overruns, 0 guard trips, no block over 90%), rigpa's PSS and CPU, MemAvailable,
+# and per-core busy from /proc/stat. The rig is built for the test as scripts/measure-housekeeping
+# builds T5's: the playing rig's chains repeated until rig.cost puts it just under --target.
+#
+# Everything is put back at the end, whatever happens: the playing rig and pedald's resume files, the
+# test rig removed, rigpa's runtime drop-in removed and the unit stopped, the connector un-forced.
+#
+# Run it from a file nobody edits while it runs (T11's lesson: bash reads the script as it goes).
+set -euo pipefail
+ARGS=("$@")
+HOST=vip
+RUN=600
+TARGET=0.70
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --seconds) RUN=$2; shift ;;
+    --target) TARGET=$2; shift ;;
+    -h|--help) sed -n '2,27p' "$0"; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+HERE=$(cd "$(dirname "$0")" && pwd)
+REPO=$(git -C "$HERE" rev-parse --show-toplevel)
+[[ ${PEDAL_HOST_LOCK:-} == "$HOST" ]] || exec "$REPO/scripts/host-lock" --host "$HOST" -- "$0" "${ARGS[@]}"
+
+OUT=${V2_OUT:-$HERE/run}
+mkdir -p "$OUT"
+SSH=(ssh -o BatchMode=yes -o ConnectTimeout=10 "$HOST")
+CTL="sudo /opt/namchain/current/bin/namchainctl --token-file /etc/namchain/token"
+RIG=v2-heavy.json
+R=/var/tmp/rigpa-v2          # the harness's own files (resume backup, logs)
+C=/run/rigpa-v2              # rigpa's config and settings: the unit has PrivateTmp, so not /var/tmp
+DRM='/sys/kernel/debug/dri/axi:gpu/HDMI-A-1'
+CONN=/sys/class/drm/card1-HDMI-A-1
+log() { printf '%s  %s\n' "$(date -u +%H:%M:%SZ)" "$*" | tee -a "$OUT/log.txt" >&2; }
+on() { "${SSH[@]}" "$@"; }
+
+cleanup() {
+  log "cleanup"
+  on "sudo systemctl stop rigpa 2>/dev/null; sudo rm -f /run/systemd/system/rigpa.service.d/90-v2.conf; \
+      sudo systemctl daemon-reload; sudo systemctl reset-failed rigpa 2>/dev/null; true"
+  # pedald first, so it can't save the test rig over the resume files once they're back; then the
+  # files, then the rig they name, then pedald again with the test rig gone from its bank.
+  on "sudo systemctl stop pedald; [ -d $R/resume ] && sudo install -m 644 -o pedal -g pedal \
+        $R/resume/last.json $R/resume/last.prev.json /var/lib/pedal/library/rigs/; \
+      sudo rm -f /var/lib/pedal/library/rigs/$RIG; true"
+  on "r=\$($CTL load last.json --compact 2>&1); case \$r in *'\"ok\":true'*) echo restored last.json;; *) echo \"WARNING: \$r\";; esac" \
+    | tee -a "$OUT/log.txt" >&2 || true
+  on "sudo systemctl start pedald; sudo rm -rf $C; true"
+  on "echo detect | sudo tee $CONN/status >/dev/null; printf reset | sudo tee '$DRM/edid_override' >/dev/null; \
+      cat $CONN/status" | sed 's/^/    connector now /' | tee -a "$OUT/log.txt" >&2 || true
+  log "cleanup done"
+}
+trap cleanup EXIT
+
+log "V2 on $HOST: $RUN s an arm, target cost $TARGET"
+on "sudo rm -rf $R && sudo mkdir -p $R/resume && sudo chmod 755 $R && \
+    sudo cp /var/lib/pedal/library/rigs/last.json /var/lib/pedal/library/rigs/last.prev.json $R/resume/"
+scp -q "$HERE/edid-1920x480.bin" "$REPO/scripts/soak/soak-monitor.sh" "$HOST:/tmp/"
+on "sudo install -m 644 /tmp/edid-1920x480.bin $R/ && sudo install -m 755 /tmp/soak-monitor.sh $R/"
+
+# What is running: the record a reader needs to reproduce it.
+{
+  echo "host        $HOST"
+  echo "started     $(date -u +%FT%TZ)"
+  on 'echo "kernel      $(uname -r)"; grep -E "^(commit|rtpi|namchain|rigpa)=" /etc/pedal-image | sed "s/=/      /"
+      echo "rigpa bin   $(sed -n "s/^commit=//p" /opt/rigpa/current/MANIFEST)"
+      echo "engine bin  $(sed -n "s/^commit=//p" /opt/namchain/current/MANIFEST)"
+      sudo vip-boot status | sed -n "3,6p" | sed "s/^/boot        /"'
+} > "$OUT/env.txt"
+
+# The screen: HDMI-A-1 forced on with the 1920x480 EDID.
+on "sudo mount -t debugfs none /sys/kernel/debug 2>/dev/null; sudo sh -c 'cat $R/edid-1920x480.bin > \"$DRM/edid_override\"'; \
+    echo on | sudo tee $CONN/status >/dev/null; sleep 1; echo \"\$(cat $CONN/status) \$(cat $CONN/modes | head -1)\"" \
+  | sed 's/^/    connector /' | tee -a "$OUT/log.txt" >&2
+on "grep -qx connected $CONN/status" || { log "the connector didn't come up"; exit 1; }
+
+# The heavy rig: the playing rig's chains repeated until rig.cost is just under the target.
+PLAYING=$(on "$CTL --compact status" | python3 -c "import json,sys; print(json.load(sys.stdin)['status'].get('rig') or '')")
+[[ -n $PLAYING ]] || { log "nothing is playing"; exit 1; }
+log "playing $PLAYING; building $RIG"
+on "sudo python3 - '$(basename "$PLAYING")' '$RIG' '$TARGET'" <<'EOF' | tee -a "$OUT/log.txt" >&2
+import copy, json, os, subprocess, sys
+playing, heavy, target = sys.argv[1], sys.argv[2], float(sys.argv[3])
+root = "/var/lib/pedal/library/rigs"
+ctl = ["/opt/namchain/current/bin/namchainctl", "--token-file", "/etc/namchain/token"]
+doc = json.load(open(os.path.join(root, playing)))
+base = list(doc.get("chains") or [])
+
+def clone(chain, k):
+    c = copy.deepcopy(chain)
+    c["id"] = "%s-c%d" % (chain.get("id", "chain"), k)
+    for n in c.get("nodes") or []:
+        for key in ("id", "element"):
+            if n.get(key):
+                n[key] = "%s-c%d" % (n[key], k)
+    for conn in c.get("connections") or []:
+        for key in ("from", "to"):
+            if isinstance(conn.get(key), str):
+                conn[key] = "%s-c%d" % (conn[key], k)
+    return c
+
+def build(n):
+    d = copy.deepcopy(doc)
+    d["name"] = heavy[:-5]
+    d["chains"] = [clone(base[i % len(base)], i) for i in range(n)]
+    tmp = "/tmp/" + heavy
+    json.dump(d, open(tmp, "w"), indent=1)
+    subprocess.run(["install", "-m", "644", "-o", "pedal", "-g", "pedal", tmp, os.path.join(root, heavy)], check=True)
+
+def cost():
+    out = subprocess.run(ctl + ["cost", heavy, "--compact"], capture_output=True, text=True)
+    reply = json.loads(out.stdout)
+    return (reply.get("cost") or {}).get("cost") if reply.get("ok") else None
+
+best = None
+for n in range(len(base), 9):
+    build(n)
+    c = cost()
+    print("    candidate %d chains -> cost %s" % (n, c))
+    if c is not None and c < target:
+        best = (n, c)
+    else:
+        break
+if best is None:
+    sys.exit("no candidate under the target")
+build(best[0])
+print("    heavy rig %d chains, cost %s" % best)
+EOF
+scp -q "$HOST:/var/lib/pedal/library/rigs/$RIG" "$OUT/$RIG"
+on "sudo systemctl restart pedald"
+sleep 3
+r=$(on "$CTL load $RIG --compact" 2>&1)
+[[ $r == *'"ok":true'* ]] || { log "could not load $RIG: $r"; exit 1; }
+log "loaded $RIG; letting the load transient pass"
+sleep 30
+
+# rigpa's unit, with this arm's config through a runtime drop-in: everything else is the real unit.
+rigpa_start() { # rigpa_start <meters true|false> <extra args>
+  on "sudo install -d -o rigpa -g rigpa $C
+      printf '[General]\nlive_meters=$1\n' | sudo -u rigpa tee $C/settings.ini >/dev/null
+      printf '{\"settings_file\": \"$C/settings.ini\", \"display\": {\"rotation\": 0}}\n' | sudo -u rigpa tee $C/rigpa.json >/dev/null
+      sudo mkdir -p /run/systemd/system/rigpa.service.d
+      printf '[Service]\nExecStart=\nExecStart=/opt/rigpa/current/bin/rigpa --config $C/rigpa.json $2\nReadWritePaths=$C\n' \
+        | sudo tee /run/systemd/system/rigpa.service.d/90-v2.conf >/dev/null
+      sudo systemctl daemon-reload && sudo systemctl start rigpa"
+  sleep 20
+  on "systemctl is-active -q rigpa" || { log "rigpa didn't stay up"; on "sudo journalctl -u rigpa -n 20 --no-pager" >&2; exit 1; }
+}
+rigpa_stop() { on "sudo systemctl stop rigpa; sudo rm -f /run/systemd/system/rigpa.service.d/90-v2.conf; sudo systemctl daemon-reload"; }
+
+# One sample of what the arm's side readings need: /proc/stat's cpu lines, MemAvailable, rigpa's PSS,
+# RSS and CPU ticks, and how many frames vc4 has scanned (its vblank counter).
+sample() {
+  on 'grep -E "^cpu[0-9]" /proc/stat; grep MemAvailable /proc/meminfo
+      pid=$(systemctl show -p MainPID --value rigpa)
+      if [ "$pid" != 0 ]; then sudo grep -E "^(Pss|Rss):" /proc/$pid/smaps_rollup; echo "ticks $(awk "{print \$14+\$15}" /proc/$pid/stat)"; fi'
+}
+
+arm() { # arm <label> <rigpa: off|on> <meters> <extra args>
+  local label=$1 rigpa=$2 meters=${3:-false} extra=${4:-}
+  log "arm $label: rigpa $rigpa${3:+, meters $meters}${extra:+, $extra}"
+  [[ $rigpa == on ]] && rigpa_start "$meters" "$extra"
+  sample > "$OUT/$label.before.txt"
+  on "sudo $R/soak-monitor.sh $R/$label.jsonl $RUN 10"
+  sample > "$OUT/$label.after.txt"
+  [[ $rigpa == on ]] && rigpa_stop
+  scp -q "$HOST:$R/$label.jsonl" "$OUT/$label.jsonl"
+  python3 "$REPO/scripts/soak/soak-summary.py" "$OUT/$label.jsonl" > "$OUT/$label.summary.txt" 2>&1 || true
+  log "arm $label: $(tail -1 "$OUT/$label.summary.txt")"
+}
+
+arm off off
+arm idle on false
+arm meters on true
+arm animate on true --demo-animate
+arm off2 off
+echo "ended       $(date -u +%FT%TZ)" >> "$OUT/env.txt"
+log "done"
