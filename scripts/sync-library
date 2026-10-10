@@ -35,6 +35,12 @@ RSYNC=(rsync -rt --delete --delete-excluded --itemize-changes "${DRY[@]}"
        --exclude .DS_Store --include '*/' --include '*.nam' --include '*.wav' --exclude '*')
 "${RSYNC[@]}" "$SRC/NAM/" "$HOST:$DEST/models/" | grep -v '^\.' || true
 "${RSYNC[@]}" "$SRC/IRs/" "$HOST:$DEST/irs/" | grep -v '^\.' | tail -5 || true
+# Readable by every service on the host, whatever the Mac's modes are: rigpa (its own user) reads the
+# library as well as namchaind (root), and a folder unzipped on the Mac is often 700 — rsync gives a
+# new copy its source's mode, and rigpa saw no models at all (2026-10-10). Set on the host after the
+# copy, every run, because the Mac's rsync (openrsync) has no --chmod.
+(( ${#DRY[@]} )) || "${SSH[@]}" "find $DEST/models $DEST/irs -type d ! -perm 755 -exec chmod 755 {} + \
+  && find $DEST/models $DEST/irs -type f ! -perm 644 -exec chmod 644 {} +"
 
 if [[ ${#DRY[@]} -eq 0 ]] && "${SSH[@]}" systemctl is-active -q namchaind.service; then
   # Over TCP to the host itself rather than the Unix socket. The Unix socket carries a reply as one
