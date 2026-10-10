@@ -1303,6 +1303,11 @@ publish: namchain `7d9cbbd` + `1a07af0`; piv's tool: rtpi `a6d4d67`), so the lis
 actually left.
 
 (1) **P8's catch-up replay** — and with it D6's visibility, which the landing showed does not hold:
+**an attempt at this was in flight, unattended, at the end of the session that wrote this line** — a
+subagent was briefed with the previous delegation's findings and told to land the smallest testable
+slice (the input-history buffer plus the replay, with the measurable claim) and commit early, so a
+commit on `namchain`'s `main` may appear without a human in the loop. If one is there, read its message
+before redoing the work; if there is not, nothing was lost and the paragraph below is the brief.
 with the second publish inline on the control thread no client can observe the temporary Lite (the control
 loop answers one request at a time, so `/status` always describes the end state), so "coming up to full"
 needs the Full's compile off the control thread. The replay itself is the one piece of P8 deliberately not
