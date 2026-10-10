@@ -504,6 +504,30 @@ and it is now settled in this shape:
   flag on it: Lite first, Full behind), the replay that catches the Full up, the service's
   willingness to accept a temporary Lite (it already accepts a switch's `switched: cold` answer), and
   T9 measuring press-to-full-rig through the pedal.
+- **What landed first, and what the engine found while landing it (2026-10-10, namchain `7d9cbbd`)**:
+  `rig.load` and `rig.switch` take `lite_first`, publishing the trimmed document, waiting — bounded by a
+  fade — for the render thread to *settle on it* before compiling the Full, then crossfading the Full in
+  through the ordinary transition. Without that wait the second publish coalesces the first into
+  `ChainRuntime::pending` and **the Lite is never heard at all**, which is the kind of detail that only
+  shows up when the thing is run. Admission is unchanged (over budget with everything trimmed is refused
+  on the first publish, running rig untouched), a rig that is warm ignores the flag, and a failing second
+  publish leaves the Lite standing with `lite_first` still true so the service reports it.
+- **D6's visibility claim does not hold as implemented, and this is the thing to fix next**: with the
+  second publish inline on the control thread, no client can *observe* the temporary Lite — the control
+  loop answers one request at a time, so `engine.status` (and pedald's `engine.lite_pending`) is only
+  ever answered after the Full has landed, and always describes the end state. The only record of the
+  stand-in is the reply to the request that caused it. "Coming up to full" on the display therefore needs
+  the Full's compile moved off the control thread, so that the Lite is a *state* a client can poll rather
+  than a step inside one call. D6 asks for the trim to be visible; until that moves, it is only
+  *reported*.
+- **The replay's obstacle, in the engine's own terms**: the input to replay is not reachable from the
+  publish path — the warm set's `BlockPool` is four blocks of decoded capture, single-consumer, and it
+  *drops* when the consumer falls behind, so it is a hand-over buffer and not ~8,200 frames of history.
+  A replay needs a new buffer written by the device thread, a per-model size from `lookback`, and an owner
+  to run the replay (the Full's chains are not rendering anywhere until they are published, so running a
+  plan on the control thread needs scratch output a control thread does not have). Until then the Full
+  starts cold and its first ~170 ms are wrong but faded in — with the ordinary fade, not E2's compensated
+  shape — which is a real if brief cost, and the reason this is a *next* piece rather than a detail.
 - **The hard half of the replay is already in the engine** (checked 2026-10-10): `nam/lookback.cpp`
   derives a model's **exact replay length** — `Ok` with a finite length, or `Unbounded` for a model
   whose memory cannot be replayed exactly (an LSTM), which is the case P8 must refuse to promise about

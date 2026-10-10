@@ -1302,7 +1302,11 @@ fragment it produces is one to read rather than wave through.)
 publish: namchain `7d9cbbd` + `1a07af0`; piv's tool: rtpi `a6d4d67`), so the list starts at what is
 actually left.
 
-(1) **P8's catch-up replay** — the one piece of P8 deliberately not written: catching the Full up needs
+(1) **P8's catch-up replay** — and with it D6's visibility, which the landing showed does not hold:
+with the second publish inline on the control thread no client can observe the temporary Lite (the control
+loop answers one request at a time, so `/status` always describes the end state), so "coming up to full"
+needs the Full's compile off the control thread. The replay itself is the one piece of P8 deliberately not
+written: catching the Full up needs
 the *recent input*, and the engine's live input ring is a four-block dropping pool rather than the
 ~170 ms of history the design's numbers come from, so it needs a buffer on the warm path (the
 `lookback` length per model is already the engine's, and `Unbounded` for a model whose memory cannot be
