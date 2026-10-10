@@ -727,12 +727,17 @@ the render tail rather than on the firmware's own flags; the low-voltage alarm v
 (`rpi_volt in0_lcrit_alarm`, which `pedal-diag` reads) is 0 at both ends. Consequence for the table:
 **no temperature caveat is needed** at this rig and this cooling.
 
-What this run does *not* settle, and what is owed: it never had the engine's own warm document
-(cpu1 ~0.7% in both halves; both setups printed `no warm document is rendering`, most likely the
-failsafe cooling it after the setup transient). The interference was present as the stand-in renderer
-on core 2 and the load was fully present, so T5's question is answered; "a warm document rendering" is
-not. [bench-results/2026-10-10-t11-fullload](bench-results/2026-10-10-t11-fullload/README.md) has both
-halves and the harness mistake that made the loaded half a re-run.
+**And it was run again with the warm document there, which is the shape the test describes.** The first
+passes had no warm document at all: the pedal's bank was empty (`banks: [[]]`), so nothing was one press
+away — a bug in the service's bank handling, fixed, plus a warm failsafe that fired on blocks *near* the
+deadline rather than over it and cooled the document every ten seconds, also fixed. With the bank fix
+applied, pedald warmed its neighbour within seconds (`t5-warm.json` on core 1, state `warm`, 431 blocks)
+and the loaded half then read: **blocks over the deadline +0**, worst block **96.2%**, xruns 0, guard
+trips 0, cpu0 **100.0%**, cpu1 **4.0%** (the warm thread rendering), cpu2 33.6%, cpu3 49.5%, the warm
+document behind 1 block with **0 dropped** for the whole half, temperature 75.5 → **81.5 °C**, clock
+2400 MHz, low-voltage alarm 0. So the whole test passes in the shape it was written: an hour at full load
+with a warm document rendering beside the audible rig and a second renderer on the free warm core, and
+**no block over the deadline anywhere in it**.
 
 ## Not doing, and why
 
