@@ -1,10 +1,11 @@
 # What devices/vip/make-card builds from (docs/vip-image.md). --lock rewrites the commits;
-# the snapshot and the kernel change by hand, deliberately. Check namchain is the engine you
-# mean, and that the kernel is the rebuild you mean (docs/vip-kernel-image.md).
+# the snapshot and the kernel change by hand, deliberately. Check namchain is the engine and
+# rigpa the UI you mean, and that the kernel is the rebuild you mean (docs/vip-kernel-image.md).
 snapshot=20260929T000000Z
-pedal=572910adbec1e2a7a35ba5779f88b743d1526e65
-rtpi=ad9fee1430e5431266c53dfc3ebbbd102f276fe8
-namchain=a69d31560f9230ca316be9a486778a245fbace9a
+pedal=8f9181bf0b77c22e74da138d21423666e25626bb
+rtpi=9f9faaf1775e6855afd6d51419a85d9c74544e27
+namchain=eba5eef57897899dab2d7560661a620679a9048f
+rigpa=72bcf0b251039bc52f949ab2805ca41d49a7fa45
 
 # The pedal kernel: rtpi's rebuild, which is in no archive, so the image takes it from rtpi's
 # build/vip/ as artefacts and pins it by hash — make-card verifies every one of these before the
