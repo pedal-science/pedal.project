@@ -1282,8 +1282,11 @@ cpu1 busy. Evidence: `bench-results/2026-10-11-t11-warm/`.
 `unmeasured: none` and all at the same cost — the library is one family the table covers). So the
 verification has to *bring* the gap, and the file to bring is already in the engine's own tree:
 **`namchain/vendor/NeuralAmpModelerCore/example_models/lstm.nam`** — an LSTM, a family vip's table has
-no row for (its two NAM rows are WaveNet full/lite). Copy it into the device's library, build a rig on
-it, load that rig, and watch `needs_measuring` name `NAM.LSTM.full`; then `pedal-measure`, merge the
+no row for (its two NAM rows are WaveNet full/lite). **Its trigger half is verified** (2026-10-10): copied in, built into a rig and
+loaded, that LSTM made the engine report `cost_unknown` and pedald report
+`needs_measuring: [{"row": "unknown.NAM", "count": 1, "reference": ".../t5-lstm.nam", ...}]` -- the row
+a first-sight rig actually reports is `unknown.NAM`, which the measurer did not match until that
+verification found it (fixed). What is left is the measurement itself and the merge; then `pedal-measure`, merge the
 fragment with `devices/common/cost-merge`, and confirm the row resolves with no xrun. (An LSTM is also
 the case the *bench* has to refuse rather than approximate — `lookback` says `Unbounded` — so the
 fragment it produces is one to read rather than wave through.)
