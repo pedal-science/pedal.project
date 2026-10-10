@@ -129,6 +129,15 @@ class TheCommand(unittest.TestCase):
         self.assertIn("/models/a.nam", command)
         self.assertIn("2", command)
 
+    def test_an_unknown_architecture_is_measured_from_its_file(self):
+        # What a first-sight rig on an architecture the engine cannot name actually reports: the row
+        # is `unknown.NAM` (verified on the board with an LSTM), and the bench learns the family from
+        # the model itself.
+        args = type("A", (), {"input": "/i.wav", "seconds": 30.0})()
+        command = measure.bench_command("unknown.NAM", "/models/lstm.nam", args, 2)
+        self.assertIn("nam", command)
+        self.assertIn("/models/lstm.nam", command)
+
     def test_an_ir_row_carries_its_tap_count(self):
         args = type("A", (), {"input": "/i.wav", "seconds": 30.0})()
         command = measure.bench_command("IR.8192", "/irs/c.wav", args, 2)
@@ -136,8 +145,10 @@ class TheCommand(unittest.TestCase):
         self.assertIn("8192", command)
 
     def test_a_row_it_does_not_know_is_refused_rather_than_guessed(self):
+        # Not every unmeasured row is a spelling this tool can hand the bench: `unknown.node` says a
+        # node type has no row, and the bench measures units, not node types.
         args = type("A", (), {"input": "/i.wav", "seconds": 30.0})()
-        self.assertIsNone(measure.bench_command("unknown.NAM", "/models/a.nam", args, 2))
+        self.assertIsNone(measure.bench_command("unknown.node", "/models/a.nam", args, 2))
 
 
 class TheMeasuringCore(unittest.TestCase):

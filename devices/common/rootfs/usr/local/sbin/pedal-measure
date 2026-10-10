@@ -85,8 +85,11 @@ def worklist(status):
 
 def bench_command(row, reference, args, cpu):
     """The one row, as the `measure` mode spells it: a model, an IR, or a node."""
-    if row.startswith("NAM."):
-        # NAM.<family>.<full|lite>: the model is what is measured; the family comes from the file.
+    if row.startswith("NAM.") or row == "unknown.NAM":
+        # NAM.<family>.<full|lite>, or `unknown.NAM` when the engine could not name the family at all
+        # (an architecture it does not know -- verified on the board 2026-10-10 with an LSTM from the
+        # vendored core: the row a first-sight measurement actually sees is often this one). Either
+        # way the file is what is measured and the bench learns the family from it.
         return [BENCH, "measure", "--unit", "nam", "--model", reference,
                 "--input", args.input, "--seconds", str(args.seconds), "--cpu", str(cpu)]
     if row.startswith("IR."):
