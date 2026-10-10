@@ -52,6 +52,51 @@ def body_holes(kind, pts):
     return []
 
 
+def broken(cuts, a, b):
+    """Is the track cut between these two neighbouring holes?
+
+    A cut *at* either hole breaks the track too, so the two holes are not joined -- but the
+    hole the cut is at is joined to nothing either, which is why rule 3 asks separately
+    whether a lead parked on one can still reach its net.
+    """
+    if a in cuts or b in cuts:
+        return True
+    (x1, y1), (x2, y2) = a, b
+    return ((x1 + x2) / 2, (y1 + y2) / 2) in cuts
+
+
+def copper(bw, bh, cuts, links):
+    """The copper as the checker sees it: `find(hole)` is the piece of copper that hole is on.
+
+    Union-find over the strips, broken at the cuts, plus the links -- rule 2, and nothing else.
+    `check()` is built on this, and a tool that needs to ask "are these two leads joined?"
+    must ask this rather than write its own predicate: twice now a hand-rolled copy of this
+    answered a slightly different question from the checker, and the cuts derived from it
+    were wrong in the same way.
+    """
+    cuts = set(cuts)
+    parent = {}
+
+    def find(h):
+        parent.setdefault(h, h)
+        while parent[h] != h:
+            parent[h] = parent[parent[h]]
+            h = parent[h]
+        return h
+
+    def union(a, b):
+        parent[find(a)] = find(b)
+
+    for y in range(bh):
+        for x in range(bw - 1):
+            a, b = (x, y), (x + 1, y)
+            if not broken(cuts, a, b):
+                union(a, b)
+    for a, b in links:
+        union(a, b)
+    return find
+
+
 def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
           carries=None):
     """Check one board.  Returns (errors, info).
@@ -107,33 +152,7 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
             errors.append(f'pad {label} is on net {net}, which is not in the netlist')
 
     # -- 2. the copper: union-find over holes, along the strips and through the links ----
-    parent = {}
-
-    def find(h):
-        parent.setdefault(h, h)
-        while parent[h] != h:
-            parent[h] = parent[parent[h]]
-            h = parent[h]
-        return h
-
-    def union(a, b):
-        parent[find(a)] = find(b)
-
-    def broken(a, b):
-        """Is the track cut between these two neighbouring holes?"""
-        if a in cuts or b in cuts:
-            return True
-        (x1, y1), (x2, y2) = a, b
-        mid = ((x1 + x2) / 2, (y1 + y2) / 2)
-        return mid in cuts
-
-    for y in range(bh):
-        for x in range(bw - 1):
-            a, b = (x, y), (x + 1, y)
-            if not broken(a, b):
-                union(a, b)
-    for a, b in links:
-        union(a, b)
+    find = copper(bw, bh, cuts, links)
 
     used = {}                              # hole -> what is in it
     wire_span = {}                         # hole -> the link running over it
@@ -200,7 +219,7 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
         # hole beside it to reach its net through.
         strip_either_side = False
         for p in ((x - 1, y), (x + 1, y)):
-            if 0 <= p[0] < bw and not broken(h, p):
+            if 0 <= p[0] < bw and not broken(cuts, h, p):
                 strip_either_side = True
         beside = [(x + dx, y + dy) for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0))]
         free_beside = any(0 <= p[0] < bw and 0 <= p[1] < bh and p not in cuts

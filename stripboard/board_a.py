@@ -16,12 +16,24 @@ the two leads that meet (26 cuts, all *between* holes), and the pieces are joine
 (24 links).  That took the error count from 33 to 22 and left the placement still clean, but
 it did not close it.
 
-What blocks it, precisely: 13 nets are still in more than one piece and 8 pairs of nets are
-still joined.  The joins are all in the two bands where a row carries three or four nets --
-the input rows (2, 3, 5, 8, 13, 14) and the output rows (17, 19, 22, 23) -- where cutting
-between one pair leaves a third lead sharing the same piece, so each such row needs its cuts
-computed as a set rather than one at a time.  That is the next concrete step, and it is a
-local fix: the placement, the corridors and the geometry are all settled.
+Two things are now settled and should not be redone:
+
+  * **the cuts are derived, not guessed.**  `_cuts.py` groups each row's leads by the net they
+    are on and puts a cut at every net-to-net boundary, n-1 cuts for n nets.  On this layout
+    that is 34 cuts and it leaves **no two nets joined** -- zero shorts, where there were 19
+    earlier tonight.  Deriving them from the checker's own rows is what fixed that; the two
+    earlier attempts failed because they used a hand-written "are these two leads still
+    joined?" test instead.
+  * **the codec's old socket reservation is gone.**  Seating its 16-pin strips used to take
+    columns 1 and 10 for rows 2-17.  The codec is on standoffs now, only column 10 still
+    carries its fly-lead pads, and the input network and the bias chain have moved into the
+    reclaimed left band (columns 3-9).  That is where the room for them came from.
+
+What is left is the links: 14 nets are still in more than one piece, and the links that would
+join them are not landing.  The pieces are single leads whose neighbouring holes are other
+leads, so a link from one has nowhere to start -- which says the cut list, though it removes
+every short, cuts more finely than the routing needs.  The next step is to cut per *net
+group* rather than per boundary and route as it goes, rather than cutting everything first.
 
 Previous status follows.
 
@@ -108,122 +120,79 @@ U1X, U1Y = 12, 5
 U1 = [(U1X, U1Y + i) for i in range(4)] + [(U1X + 3, U1Y + 3 - i) for i in range(4)]
 
 CUTS = {
-    # the socket's columns: pins that share a strip and are on different nets are separated
-    # by a cut *between* two holes, which strands neither pin.
-    (12, 5.5), (12, 6.5), (12, 7.5),
-    (15, 5.5), (15, 6.5), (15, 7.5),
-    # the input network
-    (16.5, 1), (16.5, 2),
-    # the bias chain
-    (15.5, 3), (15.5, 4), (15.5, 6), (15.5, 7), (15.5, 13), (16.5, 13),
-    # the output stage
-    (1.5, 20), (3.5, 21), (2.5, 21), (4.5, 19), (4.5, 20), (5.5, 21), (6.5, 21),
-    (15.5, 20), (15.5, 21), (16.5, 21),
-    # every row that carries two nets, cut between the two leads that meet
-    (14.5, 3),
-    (15.5, 3),
-    (16.5, 3),
-    (12.5, 5),
-    (14.5, 5),
-    (10.5, 8),
-    (13.5, 8),
-    (16.5, 8),
-    (10.5, 12),
-    (16.5, 12),
-    (16.5, 13),
-    (1.5, 15),
-    (5.5, 15),
-    (1.5, 17),
-    (5.5, 17),
-    (16.5, 17),
-    (1.5, 19),
-    (3.5, 19),
-    (5.5, 19),
-    (2.5, 22),
-    (9.5, 22),
-    (12.5, 22),
-    (1.5, 23),
-    (3.5, 23),
-    (5.5, 23),
-    (7.5, 23),
-    (12.5, 6),
-    (14.5, 6),
-    (12.5, 7),
-    (14.5, 7),
-    (14.5, 8),
-    (16.5, 14),
-    (12.5, 20),
-    (15.5, 22),
-    (2.5, 23),
-    (6.5, 23),
-    (10.5, 23),
-    (17.5, 11),
+    (15.5, 0.0),
+    (15.5, 1.0),
+    (5.5, 2.0),
+    (9.0, 2.0),
+    (5.5, 3.0),
+    (9.0, 3.0),
+    (12.5, 3.0),
+    (16.0, 3.0),
+    (13.0, 4.0),
+    (10.0, 7.0),
+    (13.5, 7.0),
+    (9.0, 8.0),
+    (13.5, 8.0),
+    (7.5, 9.0),
+    (13.5, 9.0),
+    (4.0, 10.0),
+    (7.5, 10.0),
+    (11.0, 10.0),
+    (13.5, 10.0),
+    (9.0, 12.0),
+    (12.5, 12.0),
+    (13.5, 12.0),
+    (16.0, 12.0),
+    (4.0, 14.0),
+    (7.5, 14.0),
+    (4.0, 17.0),
+    (4.0, 18.0),
+    (2.0, 19.0),
+    (5.0, 19.0),
+    (8.0, 19.0),
+    (2.5, 23.0),
+    (6.0, 23.0),
+    (8.0, 23.0),
+    (10.5, 23.0),
 }
 
-LINKS = [
-    ((3, 23), (4, 23)),   # GND_A,
-    ((16, 17), (16, 18)),   # BIAS,
-    ((17, 2), (17, 3)),   # IN_A,
-    ((16, 3), (16, 4)),   # VF,
-    ((12, 5), (12, 6)),   # LIN1,
-    ((17, 7), (17, 8)),   # IN_B,
-    ((15, 6), (15, 7)),   # U1B,
-    ((1, 17), (1, 18)),   # OUT_L_N,
-    ((5, 17), (5, 18)),   # OUT_R_N,
-    ((5, 23), (6, 23)),   # GND_A,
-    ((16, 4), (16, 5)),   # VF,
-    ((9, 22), (10, 22)),   # GND_A,
-    ((16, 6), (16, 7)),   # VF,
-    ((11, 22), (12, 22)),   # GND_A,
-    ((16, 8), (16, 9)),   # VF,
-    ((12, 22), (13, 22)),   # GND_A,
-    ((16, 10), (16, 11)),   # VF,
-    ((14, 4), (15, 4)),   # GND_A,
-    ((16, 11), (16, 12)),   # GND_A,
-    ((16, 13), (16, 14)),   # GND_A,
-    ((16, 15), (16, 16)),   # GND_A,
-    ((16, 17), (16, 18)),   # GND_A,
-    ((16, 18), (16, 19)),   # GND_A,
-    ((16, 20), (16, 21)),   # GND_A,
-]
+LINKS = []
 PARTS = {
     'U1':  ('dip8', 'OPA2197 on adapter', [
-        (U1[0], 'LIN1'), (U1[1], 'LIN1'), (U1[2], 'IN_A'), (U1[3], 'GND_A'),
-        (U1[4], 'BIAS'), (U1[5], 'U1B'), (U1[6], 'U1B'), (U1[7], 'VF')]),
-    # the input network, in the rear right band beside the jack
-    'C5':  ('film', '100nF film', [((17, 0), 'IN_RAW'), ((17, 2), 'IN_A')]),
-    'R5':  ('r', '330k', [((17, 3), 'IN_A'), ((17, 7), 'IN_B')]),
-    'R6':  ('r', '680k', [((17, 8), 'IN_B'), ((17, 12), 'BIAS')]),
-    # the bias chain, in the right band below it
-    'C3':  ('cer', '100nF', [((15, 3), 'VF'), ((15, 4), 'GND_A')]),
-    'C4':  ('el5', '10µF 50V', [((13, 1), 'BIAS'), ((13, 2), 'GND_A')]),
-    'R2':  ('r', '10k', [((17, 13), 'VF'), ((17, 17), 'BIAS_MID')]),
-    'R3':  ('r', '10k', [((16, 13), 'BIAS_MID'), ((16, 17), 'BIAS')]),
-    'R4':  ('r', '10k', [((16, 18), 'BIAS'), ((16, 22), 'GND_A')]),
-    # the output stage, in the front band
-    'C6':  ('el6.3', '10µF bipolar', [((1, 15), 'HPL'), ((1, 17), 'OUT_L_N')]),
+        ((12, 7), 'LIN1'), ((12, 8), 'LIN1'), ((12, 9), 'IN_A'), ((12, 10), 'GND_A'),
+        ((15, 10), 'BIAS'), ((15, 9), 'U1B'), ((15, 8), 'U1B'), ((15, 7), 'VF')]),
+    'C5':  ('film', '100nF film', [((8, 0), 'IN_RAW'), ((8, 3), 'IN_A')]) if False else
+           ('film', '100nF film', [((8, 0), 'IN_RAW'), ((8, 2), 'IN_A')]),
+    'R5':  ('r', '330k', [((8, 3), 'IN_A'), ((8, 7), 'IN_B')]),
+    'R6':  ('r', '680k', [((8, 8), 'IN_B'), ((8, 12), 'BIAS')]),
+    'C3':  ('cer', '100nF', [((17, 3), 'VF'), ((17, 4), 'GND_A')]),
+    'C4':  ('el5', '10µF 50V', [((3, 2), 'BIAS'), ((3, 3), 'GND_A')]),
+    'R2':  ('r', '10k', [((3, 5), 'VF'), ((3, 9), 'BIAS_MID')]),
+    'R3':  ('r', '10k', [((3, 10), 'BIAS_MID'), ((3, 14), 'BIAS')]),
+    'R4':  ('r', '10k', [((5, 10), 'BIAS'), ((5, 14), 'GND_A')]),
+    'C6':  ('el6.3', '10µF bipolar', [((1, 17), 'HPL'), ((1, 18), 'OUT_L_N')]),
     'R7':  ('r', '100Ω', [((1, 19), 'OUT_L_N'), ((1, 23), 'OUT_L')]),
     'R8':  ('r', '1M', [((3, 19), 'OUT_L'), ((3, 23), 'GND_A')]),
-    'C7':  ('el6.3', '10µF bipolar', [((5, 15), 'HPR'), ((5, 17), 'OUT_R_N')]),
-    'R9':  ('r', '100Ω', [((5, 19), 'OUT_R_N'), ((5, 23), 'OUT_R')]),
-    'R10': ('r', '1M', [((7, 19), 'OUT_R'), ((7, 23), 'GND_A')]),
+    'C7':  ('el6.3', '10µF bipolar', [((7, 17), 'HPR'), ((7, 18), 'OUT_R_N')]),
+    'R9':  ('r', '100Ω', [((7, 19), 'OUT_R_N'), ((7, 23), 'OUT_R')]),
+    'R10': ('r', '1M', [((9, 19), 'OUT_R'), ((9, 23), 'GND_A')]),
 }
 
 PADS = {
-    'IN':    ((15, 0), 'IN_RAW', "the input jack's tip, through the screened cable's core"),
-    'SW-I':  ((16, 0), 'IN_RAW', 'Inst/Line switch, Inst throw (no padding)'),
-    'SW-C':  ((16, 1), 'IN_A', 'Inst/Line switch, common: the top of R5 (the buffer input)'),
-    'SW-L':  ((16, 2), 'IN_B', 'Inst/Line switch, Line throw: past R5 (the 0.33 pad)'),
+    'IN':    ((6, 0), 'IN_RAW', "the input jack's tip, through the screened cable's core"),
+    'SW-I':  ((7, 0), 'IN_RAW', 'Inst/Line switch, Inst throw (no padding)'),
+    'SW-C':  ((9, 1), 'IN_A', 'Inst/Line switch, common: the top of R5 (the buffer input)'),
+    'SW-L':  ((9, 4), 'IN_B', 'Inst/Line switch, Line throw: past R5 (the 0.33 pad)'),
     'LIN1':  ((10, 8), 'LIN1', "the codec's LIN1 pad, on a fly lead from its own standoffs"),
     'HPL':   ((10, 10), 'HPL', "the codec's HPL pad"),
     'HPR':   ((10, 12), 'HPR', "the codec's HPR pad"),
     'V3A3':  ((10, 14), 'V3A3', "the codec's AVDD pad, from the power board's 78L33"),
     'CGND':  ((10, 15), 'GND_A', "the codec's GND pad -- its own wire back to the star"),
-    'OUT-L': ((2, 22), 'OUT_L', 'OUT L jack tip'),
-    'OUT-R': ((12, 22), 'OUT_R', 'OUT R jack tip'),
-    'STAR':  ((9, 22), 'GND_A', 'the star-ground tag'),
-    'VF':    ((16, 11), 'VF', "the power board's filtered 9 V"),
-    'V9':    ((17, 20), 'V9_RAW', "the power board's +9 V"),
+    'OUT-L': ((2, 23), 'OUT_L', 'OUT L jack tip'),
+    'OUT-R': ((12, 23), 'OUT_R', 'OUT R jack tip'),
+    'STAR':  ((5, 23), 'GND_A', 'the star-ground tag'),
+    'VF':    ((17, 12), 'VF', "the power board's filtered 9 V"),
+    'V9':    ((17, 21), 'V9_RAW', "the power board's +9 V"),
 }
 
 CARRIES = {'C5', 'R5', 'R6', 'U1', 'C3', 'C4', 'R2', 'R3', 'R4',
