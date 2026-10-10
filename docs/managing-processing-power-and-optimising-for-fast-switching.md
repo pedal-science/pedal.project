@@ -563,9 +563,13 @@ T1 (**every unit's curve**), T2 (**16 rigs, nothing falsified**), three of T3's 
 unit paths, and P9's measurement. 2026-10-09 ([bench-results/2026-10-09-core-rules-vip](bench-results/2026-10-09-core-rules-vip/README.md)):
 **T6** on both placements, **T10** twice (the second hour with the warm set live), and **T7's live
 half with T8's live falsifier** — eight switches through the engine, 0 xruns, warm lag 0–1 block.
-**Not run:** T4's "while switching" half, **T5**, **T7's service half** (a press through `pedald`,
-which needs an event path), **T8's press storm**, **T9** (it waits on P8) and **T11**. Each says
-where it is described what it waits on, and none is claimed.
+**Not run:** T4's "while switching" half, **T5**, **T8's press storm** (its paced half through the
+service was measured on 2026-10-09, and the burst is where it broke — see
+[bench-results/2026-10-09-service-switch](bench-results/2026-10-09-service-switch/README.md)), and
+**T9**, which waits not on P8 any more but on a board that can run it: the engine has the two-step
+publish and the service asks for it, and the commit that carries them does not deploy because its own
+suite is red. Its block says exactly where that stands. Each test says what it waits on, and none is
+claimed.
 
 **T1 — the cliff, per unit.** For each unit, run n−2 … n+4 and record p50/p99/max/overruns/lag.
 *Expected:* not linear. E2's Full: 89% at 8, 113% at 10, and at 12 the warm thread 2,621 blocks
@@ -722,6 +726,35 @@ and the engine-level storm — many `rig.switch` calls a second — is the cheap
 **T9 — cold, from nothing.** The first press after boot, nothing warm, SD card cold: the catch-up
 path's worst case, measured to the jack. This is the number that justifies D6 and the catch-up rules
 being real.
+**Not yet run, and the instrument is ready** (2026-10-10). What T9 needs is now built and committed,
+and what stops it is a finding of its own:
+
+- **The service can ask for it** (`pedal.project` `877b8c4`): pedald's `engine.py` sent only
+  `{rig, fallback}`, so P8's two-step publish was unreachable from a press — the engine had it and
+  the service never asked. It now asks unconditionally, which the engine makes safe: a rig that is
+  *warm* is answered `switched: warm` with `lite_first: false` and no publish at all, and a document
+  with nothing to trim is answered `nothing_to_trim` (`Daemon::switch_to`, `publish_lite_first`).
+- **The measurement is `scripts/measure-lite-first`** (`pedal.project` `432702d`): three arms — the
+  engine's own `rig.switch` with `lite_first` false (what a press measured before the wiring, and the
+  control) and true, and a press through pedald's `POST /event` — each timing accepted-to-Lite-audible
+  and accepted-to-Full-audible against `engine.status` polled in a tight loop, with every
+  `catch_up.state`/`full`/`replay` and `cost.lite_first` transition recorded and the render health
+  read either side. `scripts/t9-rigs` installs the two documents it needs from models already in the
+  board's library and puts the pedal back afterwards. **The resolution is the poll interval**, which
+  is printed with every run: a document becomes audible between the last poll that showed the old
+  generation and the first that showed the new one, so no number from it is finer than one poll.
+- **What blocks it is the engine's own test, not the instrument**: `scripts/deploy-engine --host vip
+  --commit 89193f5` fails its `ctest` run twice, identically, on *"a replayed plan is bit-identical to
+  one that has been running"* (`tests/test_catch_up.cpp:148`, five `memcmp` mismatches on blocks 3-7)
+  — the case that asserts the bit-identity claim the catch-up and this test both rest on. It passes
+  alone in the same container image and 367/367 on the Mac, so it is a suite-context effect in the
+  build container; the board is left on `ee4c53d`, which predates `lite_first` entirely, because a
+  suite that cannot go green is a commit that does not deploy. The evidence and the reasoning are in
+  [bench-results/2026-10-10-t9-lite-first](bench-results/2026-10-10-t9-lite-first/README.md), whose
+  measurement tables are deliberately empty until a board runs that commit.
+- **Still owed after that**: the physical footswitch press and a capture at the jack — this drives
+  the service's own event path, not the Pico's UART — which is 3.8's; and a heavier Full than one
+  model into one cab.
 
 **T10 — the hour.** The whole scheme for an hour: switching between rigs, refills, warm cores at
 0.8, catch-ups, `xruns` at zero, guard trips at zero, temperature and throttle recorded. This is the
