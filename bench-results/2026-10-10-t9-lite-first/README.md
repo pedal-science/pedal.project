@@ -60,6 +60,17 @@ engine rather than in the deploy script's willingness to skip it. Consequence wo
 assertion like this one — now blocks every deploy of that commit, and a red suite is discovered at
 deploy time rather than at commit time.
 
+The instrument that would localise it, if the suite's own output is not enough: a standalone
+reproduction of the case that prints rather than only comparing — `lookback.samples` for the model,
+the window's `covers()`, `replay_window`'s `blocks`/`frames`/`covered`/`last_seq`, and per block the
+worst absolute difference and the index of the first differing sample, plus the unreplayed falsifier
+in the same run. Run both in the container and on the Mac, it says in one line whether the two sides
+diverge because the replay is short, because the state was restored wrongly, or because the two plans
+are not running the same arithmetic. It was **written but not run** before this session handed the
+bug on — the two facts that localise it so far are the isolated 2/2 pass and the 367/367 on the Mac —
+and it was removed rather than left in `namchain/`, since the engine repo is where a permanent version
+belongs.
+
 ## 1. What was driven, and how
 
 Two documents, both the pedal's own, built by `scripts/t9-rigs` out of models already in the
