@@ -75,11 +75,13 @@ const N={
  csoak:[6,7,'done','2a.6 Hour-long soak','on the codec: clean'],
  review:[6,9,'done','2b.1–2 Review the design,','values stand; 47 nF → film'],
  opamp:[6,10,'done','OPA2197 from CPC','arrived 2026-10-10'],
- fw:[6,11,'todo','3.5 Firmware v1','footswitches, MIDI in'],
+ fw:[6,11,'todo','3.5 Firmware v1','footswitches'],
  picopwr:[6,12,'done','3.6 Pico power test','header feed holds; USB-A not'],
  buffer:[7,9,'next','2b.3 Board 1, breadboard','op-amps in hand; build it'],
  relay:[7,11,'todo','3.6 Bypass relay','covers boot and failure'],
- display:[7,13,'todo','3.7 Display and encoder','(low priority)'],
+ display:[14,11,'todo','3.7 Display','ST7789, on the case'],
+ encoder:[14,12,'todo','3.7 Encoder','EC11, on the case'],
+ midi:[14,13,'todo','MIDI in','same messages as footswitches'],
  strip:[8,9,'todo','2b.3 Board 1, stripboard','modelled; noise measured here'],
  plays:[8,7,'mile','The pedal plays in a case','jacks, Pico, link live'],
  p3:[8,12,'mile','PHASE 3 DONE','Footswitches step rigs'],
@@ -106,12 +108,13 @@ const E=[['docs','scripts'],['park','scripts'],['neon','scripts'],['agent','scri
 ['wm','inspect'],['inspect','wire'],['wire','dtree'],['dtree','mixer'],['mixer','cmeas'],['deploy','cmeas'],
 ['cmeas','csoak'],['cmeas','review'],['review','buffer'],['parts','buffer'],['opamp','buffer'],['buffer','strip'],['csoak','modify'],['strip','modify'],['modify','p2'],
 ['parts','boards'],['resume','service'],['service','proto'],['service','pedald1'],['pedald1','models'],['dtree','tibuart'],['boards','fw'],['proto','fw'],['tibuart','fw'],['tibuart','plays'],
-['csoak','plays'],['plays','p3'],['boards','picopwr'],['picopwr','relay'],['fw','relay'],['fw','display'],['measure','models'],['e1','e2'],['e2','models'],['models','fw'],['service','models'],['relay','p3'],['models','p3'],['target','p3'],
+['csoak','plays'],['plays','p3'],['boards','picopwr'],['picopwr','relay'],['fw','relay'],['measure','models'],['e1','e2'],['e2','models'],['models','fw'],['service','models'],['relay','p3'],['models','p3'],['target','p3'],
 ['power','buy'],['buy','p4'],['target','p4'],['p2','p4'],['p3','p4'],['thermal','p4'],
 ['power','singlecable'],['power','battery'],['singlecable','p4'],['battery','p4'],['p4','goal'],
-// After the pedal is gig-ready, and not a dependency of it: predicting which rig the player will
-// ask for next, so the warm set can be chosen rather than guessed at.
-['goal','predict'],
+// After the pedal is gig-ready, and not dependencies of it: predicting which rig the player will
+// ask for next, so the warm set can be chosen rather than guessed at; the screen, the encoder and
+// MIDI in, which change how the pedal is driven rather than what it does with a guitar.
+['goal','predict'],['goal','display'],['goal','encoder'],['goal','midi'],
 // What landed on the Core host since, and the one thing it exposed: T9 measured the publish
 // and found the replay is not applied on the actual audio path, so the Full still starts cold.
 ['mulcore','warm'],['warm','coex'],['budget','cost'],['deploy','cost'],
