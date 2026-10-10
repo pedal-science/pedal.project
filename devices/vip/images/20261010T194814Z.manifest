@@ -1,0 +1,41 @@
+host vip
+pedal cb3292ae64285592ce316b58a703c8bec6321f2c
+rtpi d4779fff3c9579e4143e02fe7da52201737e22dc
+namchain eba5eef57897899dab2d7560661a620679a9048f
+rigpa 179e202ce0c31a2ea097c8aec7602ece7766197c
+snapshot 20260929T000000Z
+pedal-kernel 7.0.0-1017-raspi-realtime-numaemu3-trimmed
+fallback-kernel 7.0.0-1017-raspi-realtime
+rescue-kernel 7.0.0-1017-raspi
+kernel-kind trimmed
+kernel-rtpi c797e848e89d1df5112951afb2c9547642e5d509
+kernel-boot-sha256 47938848a2383ccbffd050d74623cf63dc792b17981835c1263e1071f12fcd5c
+kernel-modules-sha256 c95033631dcdf5676ddb91a000f34191ae1c8e993938a6199889bd188b4f0255
+kernel-dtb-sha256 1d1988efb6e918ffb516362cebef482f8f6c48bbb4462129b57e3d1888afd2c3
+pedal-kernel-vmlinuz 1331df2dbd9949aed5a908ec0e93068cee3457ac5ed970015b0fd661ff5d0820
+fallback-kernel-vmlinuz de22756cee5bdc25cfa507a31d3d7e4dad843bb2f690beea9df52aecccbaf5a8
+image-bytes 6438256640
+image-sha256 b689304dd2b1fb38b29b44f62fd92f1a79540e9972294d095336cfb4bfb0ae94
+packages-pedal 11c0f71d012de2086d6a37fa2aff2182452c7e6e45bb76c43d477cb49db552ed 424
+packages-rescue 2a8e1fb602e3153f423d4216c17db52c846f42dfa6ca182e914232c0ed6a0fb1 159
+tree-bootsel d830ae76729198ca9159797406c8b35bc110ccd4ecf64c2d4a6ad8d7263bb394 4
+tree-pedal-boot 90f59fc0a238dfde10081767f2130a2c16ee52ffc212d200492d17d44cdebc40 779
+tree-rescue-boot a8a707fd0048f63b88f147de1a25139d3570ea92cd211f55f4014579b835f16e 385
+tree-rescue 7448328c57ea9a54435598613bfe6d94acdd942cd7008f0df265909e23ec105a 21487
+tree-pedal c5092d4015135074dee990ea55e2a71b3b4940e597c9cdb4be97855ba470b6d4 32697
+tree-pedal-data d9e287e1c88c8050a3ec65eeb1fa16b0bab0ac47d39bd1b0f547b2c3849bf9e3 4
+--- sfdisk
+label: gpt
+label-id: 2CB2937F-0A15-52C6-9F8C-1C0379F6523B
+device: vip.img
+unit: sectors
+first-lba: 2048
+last-lba: 12574686
+sector-size: 512
+
+vip.img1 : start=        2048, size=      131072, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=A053EFEC-0910-5338-8917-480E9A267B21, name="bootsel"
+vip.img2 : start=      133120, size=     1048576, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=98E3FE32-4130-56EC-AE3C-45A0FC72B337, name="pedal-boot"
+vip.img3 : start=     1181696, size=      524288, type=EBD0A0A2-B9E5-4433-87C0-68B6B72699C7, uuid=C7B254D8-7283-5832-8278-561635E17D45, name="rescue-boot"
+vip.img4 : start=     1705984, size=     3145728, type=B921B045-1DF0-41C3-AF44-4C6F280D3FAE, uuid=ADA57533-8C8B-506A-B37A-4A28B43C0587, name="rescue"
+vip.img5 : start=     4851712, size=     6291456, type=B921B045-1DF0-41C3-AF44-4C6F280D3FAE, uuid=3B34BD9D-6EF7-5751-8932-003E1C7AE819, name="pedal"
+vip.img6 : start=    11143168, size=     1429504, type=0FC63DAF-8483-4772-8E79-3D69D8477DE4, uuid=0B72A613-89A6-53BF-B195-74F207639741, name="pedal-data"
