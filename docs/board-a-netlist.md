@@ -90,6 +90,19 @@ than by what fits on one piece:
   the split the 2b finding argues for: what the supply draws stays out of the analogue ground;
 - **the control board** (board B in the enclosure) — the Pico, MIDI and the relay driver.
 
+### How big board A has to be
+
+The 18 x 20 outline was a guess, so it was treated as one: outlines of 18 x 20, 20 x 20,
+22 x 20, 18 x 26, 18 x 30, 22 x 26 and 22 x 30 holes were each searched for a placement and a
+routing, for a bounded time each.  **None closed.**  That is a statement about the search as
+much as about the board -- the same routers cannot route board 1, which is built and working --
+but it does say one useful thing: **the board is not short of area.**  Every one of those
+outlines has hundreds of free holes; what they lack is free *rows and columns between the
+parts*, which more area does not create.  The stage needs a placement with its routing
+corridors reserved, which is what the taller 18 x 24 outline starts to do: it gives the output
+stage its own band (rows 16-23) clear of the codec's pads at column 10, which is the one
+improvement the extra height actually bought.
+
 ### Where the codec goes
 
 It stays **above board A**, but no longer seated in it.  `enclosure/src/layout.py` seats its two

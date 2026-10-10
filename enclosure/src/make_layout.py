@@ -52,8 +52,19 @@ BOARDS = (
 )
 # Modules that sit on board A, with the hole they are seated on (see bl_pedal.py).
 ON_BOARD_A = (
-    ("codec", "CODEC", (1, 2), (-1.27, 1.27), "SparkFun WM8960 breakout on socket strips"),
     ("soic_adapter", "SOIC_ADAPTER", (13, 4), (-1.29, 1.49), "OPA2197 SOIC adapter in DIP-8"),
+)
+# Modules that stand above board A on their own taller standoffs and reach it by fly leads,
+# with the hole they are centred over.  The codec is here and not on the strips: seating its
+# two 16-pin socket strips on board A takes columns 1 and 10 for rows 2-17, and with those
+# holes gone no placement of the analogue stage could be routed (docs/board-a-netlist.md,
+# "Which tool produced which answer").  Moving the codec clear of board A instead puts a
+# 55 mm lead on its input side, which is the one thing board A's placement exists to prevent:
+# the high-impedance node is the jack's, through C5 and R5 into U1.3, and it wants to be short.
+# So the codec stays above board A, higher up, and comes down on short fly leads.
+ON_STANDOFFS = (
+    ("codec", "CODEC", (1, 2), (-1.27, 1.27),
+     "SparkFun WM8960 breakout: above board A on its own standoffs, on fly leads"),
 )
 
 # The references worth showing: a module, its fixings, and the handful of source footprints
@@ -320,8 +331,8 @@ def main():
         place_board(master, name, ox, oy, ref, note)
         standoffs(master, name, [tuple(s) for s in LAYOUT_STANDOFFS[name]], ref + "_FIX")
 
-    # Modules seated on board A.
-    for name, ref, (c, r), (dx, dy), note in ON_BOARD_A:
+    # Modules seated on or standing above board A.
+    for name, ref, (c, r), (dx, dy), note in ON_BOARD_A + ON_STANDOFFS:
         hx, hy = L.hole(L.BOARD_A, c, r)
         place_board(master, name, hx + dx, hy + dy, ref, note)
 

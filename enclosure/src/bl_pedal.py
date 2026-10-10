@@ -25,7 +25,12 @@ FONT = "/System/Library/Fonts/Supplemental/DIN Alternate Bold.ttf"
 PI_Z = L.Z_LID_TOP + L.PI5_STANDOFF - 1.62          # GLB origin of the Pi: its PCB underside is 1.62 up
 PI_PCB_TOP = PI_Z + 2.90
 PI_PIN_BASE = PI_PCB_TOP + 2.5                     # top of the GPIO header's plastic
-CODEC_Z = L.BOARD_TOP + L.SOCKET_H + L.HEADER_BASE  # codec PCB underside, on its sockets
+# The codec stands above board A on its own standoffs and reaches it by fly leads, rather
+# than being seated on socket strips: seating it costs board A columns 1 and 10 for rows 2-17
+# and leaves no placement of the analogue stage that can be routed (docs/board-a-netlist.md).
+# Tall enough to clear the SOIC adapter in its DIP socket beside it.
+CODEC_STANDOFF = 12.0                               # its M3 standoffs
+CODEC_Z = L.BOARD_TOP + CODEC_STANDOFF               # codec PCB underside, clear of the socket
 ADAPTER_Z = L.BOARD_TOP + 4.1 + L.HEADER_BASE       # SOIC adapter PCB underside, on the DIP socket
 DISP_Z = L.DISP_PCB_TOP - L.PCB_T                   # display board underside
 

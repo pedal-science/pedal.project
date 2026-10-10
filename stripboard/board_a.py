@@ -1,6 +1,29 @@
 #!/usr/bin/env python3
 """Board A: the analogue board -- the input buffer, the bias and the output stage.
 
+STATUS, 2026-10-10: **the connectivity is not closed.**  The outline is 18 x 24 holes
+(45.72 x 60.96 mm), taller than the enclosure's plate, and the parts are placed.  What is
+still wrong is reported when this runs: a handful of geometric collisions (a capacitor body
+over a neighbouring lead) and the nets the cuts leave in more than one piece.  The drawings
+are written anyway so the board can be looked at.
+
+Three things were established and are worth keeping:
+
+  * **The codec is not seated on board A.**  It stands above the board on its own taller
+    standoffs and comes down on short fly leads (enclosure/src/bl_pedal.py, CODEC_STANDOFF).
+    Seating its two 16-pin socket strips takes columns 1 and 10 for rows 2-17, and with those
+    holes gone no placement of the analogue stage could be routed -- greedy 0 of 3000,
+    backtracking 0 of 4222.  Moving the codec clear of board A instead puts a 55 mm lead on
+    its *input* side, which is the one thing this placement exists to prevent.
+  * **Growing the outline did not close it.**  18 x 20, 20 x 20, 22 x 20, 18 x 26, 18 x 30,
+    22 x 26 and 22 x 30 were all tried, each for a bounded time, and none routed.  The board
+    is not short of area: what it is short of is free *rows and columns* between the parts,
+    which is a placement problem, not a size one.  The extra height to 18 x 24 did buy the
+    output stage its own band clear of the codec's pads, which is why the outline is this one.
+  * **A router that cannot route board 1 tells you about the router.**  Both search tools were
+    validated against board 1, which is built and working, and neither could route it, so
+    neither is trusted to say a layout is impossible.  Both were removed from the tree.
+
 Board 1 (`stripboard/board1.py`) is the same circuit on one 124 x 33 mm piece of stripboard and
 does not fit the enclosure.  Board A is that circuit for the enclosure, and it is **not the
 whole analogue side on one plate**.  The split is by what the noise argues for, and every board
@@ -43,87 +66,78 @@ from pathlib import Path
 import nets as NET
 import stripboard as SB
 
-W, H = 18, 20            # 45.72 x 50.8 mm: the enclosure's board A (enclosure/src/layout.py)
+W, H = 18, 24            # 45.72 x 60.96 mm: taller than the enclosure's plate, because the
+                         # analogue stage does not close on 18 x 20 (docs/board-a-netlist.md)
 
 # U1's socket: pins 1-4 down column 4, 5-8 up column 7 (the socket's default orientation,
 # notch towards row 5).  A column of four pins is four strips, and where two pins of
 # different nets would share a strip the track is cut *between* them -- which is what a 3 mm
 # spot-face cutter does when it is turned between two holes, and which strands neither pin.
-U1X, U1Y = 4, 5
+U1X, U1Y = 4, 6
 U1 = [(U1X, U1Y + i) for i in range(4)] + [(U1X + 3, U1Y + 3 - i) for i in range(4)]
 
 CUTS = {
-    (4.5, 5),                # U1.1, U1.2 (LIN1) from U1.8 (VF)
-    (4.5, 6),                # U1.2 (LIN1) from U1.7 (U1B)
-    (4.5, 7),                # U1.3 (IN_A) from U1.6 (U1B)
-    (4.5, 8),                # U1.4 (GND_A) from U1.5 (BIAS)
-    (10.5, 0),               # the input network: the tip from IN_A
-    (11.5, 2),               # the input network: IN_A from IN_B
-    (12.5, 9), (15.5, 9),    # the bias chain: BIAS_MID from BIAS, and BIAS from GND_A
-    (11.5, 12),              # the codec's HPL from HPR
-    (12.5, 13),              # the output stage: OUT_L_N from the ground row
-    (2.5, 14), (3.5, 14),    # the left channel's ground end
-    (12.5, 14), (13.5, 14),  # the right channel's ground end
+    # U1's socket (pins 1-4 down column 4, 5-8 up column 7).  The pins that share a strip are
+    # separated by a cut *between* two holes, which is what a spot-face cutter does turned
+    # between holes and which strands neither pin.
+    (4.5, 6), (4.5, 7), (4.5, 8),
+    (7.5, 6), (7.5, 7), (7.5, 8),
+    # the input network: the tip from IN_A, and IN_A from IN_B
+    (15.5, 0), (14.5, 2), (13.5, 2), (13.5, 3), (15.5, 3), (8.5, 16), (9.5, 18),
+    (1.5, 17), (2.5, 18), (9.5, 17), (10.5, 18),
+    # the bias chain: BIAS from GND_A, and BIAS_MID from BIAS
+    (15.5, 3), (15.5, 4), (15.5, 6), (15.5, 7), (17.5, 5), (17.5, 10),
+    # the output stage: each channel's coupling capacitor from its series resistor
+    (1.5, 18), (3.5, 19), (10.5, 18), (12.5, 19),
 }
 
 LINKS = [
-    # LIN1: U1.1 and U1.2 out, down column 2, to the codec's pad
-    ((3, 5), (4, 5)), ((3, 5), (3, 6)), ((3, 6), (4, 6)),
-    ((3, 5), (2, 5)), ((2, 5), (2, 9)), ((2, 9), (10, 9)),
-    # IN_A: U1.3 out to the input network
-    ((5, 7), (5, 4)), ((5, 4), (8, 4)), ((8, 4), (8, 1)), ((8, 1), (11, 1)),
-    ((11, 1), (12, 1)), ((12, 1), (12, 2)), ((12, 2), (12, 3)),
-    # IN_RAW: the tip, C5 and the switch's Inst throw
-    ((11, 0), (10, 0)),
-    # GND_A: U1.4 out, and R6/R4/R3's ground ends
-    ((5, 8), (5, 10)), ((5, 10), (5, 11)), ((5, 11), (8, 11)) if False else ((5, 11), (7, 11)),
-    ((7, 11), (7, 18)), ((7, 18), (7, 19)),
-    # U1B: U1.7 and U1.6 out
-    ((7, 7), (8, 7)) if False else ((7, 6), (7, 7)), ((8, 7), (8, 8)), ((8, 8), (8, 9)),
-    # VF: U1.8 out to its rail
-    ((8, 5), (9, 5)), ((9, 5), (17, 5)), ((17, 5), (17, 0)),
-    # the bias chain: BIAS_MID and BIAS joined, and the chain's bottom to GND_A
-    ((13, 9), (13, 6)), ((13, 6), (13, 5)), ((13, 5), (12, 5)),
-    # HPL, HPR, V3A3 and the codec's ground
-    ((10, 14), (11, 14)), ((11, 14), (11, 12)), ((11, 12), (10, 12)),
-    ((11, 13), (10, 13)), ((11, 15), (10, 15)), ((11, 16), (10, 16)),
+    # LIN1: U1.1 and U1.2 out, down column 3, to the codec's pad
+    ((3, 6), (4, 6)), ((3, 6), (3, 7)), ((3, 7), (4, 7)),
+    ((3, 6), (2, 6)), ((2, 6), (2, 6)),
+    # IN_A: U1.3 out to the input network's node
+    ((5, 8), (5, 5)), ((5, 5), (5, 2)), ((5, 2), (13, 2)),
+    # GND_A: U1.4 out to the ground run
+    ((5, 9), (5, 22)), ((5, 22), (5, 23)),
+    # VF: U1.8 out to the rail
+    ((8, 6), (8, 5)), ((8, 5), (16, 5)) if False else ((8, 5), (9, 5)),
 ]
 
 PARTS = {
     'U1':  ('dip8', 'OPA2197 on adapter', [
-        (U1[0], 'LIN1'), (U1[1], 'LIN1'), (U1[2], 'IN_A'), (U1[3], 'GND_A'),
-        (U1[4], 'BIAS'), (U1[5], 'U1B'), (U1[6], 'U1B'), (U1[7], 'VF')]),
-    'C5':  ('film', '100nF film', [((10, 0), 'IN_RAW'), ((10, 2), 'IN_A')]),
-    'R5':  ('r', '330k', [((8, 2), 'IN_A'), ((8, 6), 'IN_B')]),
-    'R6':  ('r', '680k', [((8, 7), 'IN_B'), ((8, 11), 'BIAS')]),
-    'C3':  ('cer', '100nF', [((14, 0), 'VF'), ((14, 1), 'GND_A')]),
-    'C4':  ('el5', '10µF 50V', [((17, 1), 'BIAS'), ((17, 2), 'GND_A')]),
-    'R2':  ('r', '10k', [((13, 2), 'VF'), ((13, 6), 'BIAS_MID')]),
-    'R3':  ('r', '10k', [((13, 7), 'BIAS_MID'), ((13, 11), 'BIAS')]),
+        ((4, 6), 'LIN1'), ((4, 7), 'LIN1'), ((4, 8), 'IN_A'), ((4, 9), 'GND_A'),
+        ((7, 9), 'BIAS'), ((7, 8), 'U1B'), ((7, 7), 'U1B'), ((7, 6), 'VF')]),
+    'C5':  ('film', '100nF film', [((16, 0), 'IN_RAW'), ((16, 2), 'IN_A')]),
+    'R5':  ('r', '330k', [((15, 3), 'IN_A'), ((15, 7), 'IN_B')]),
+    'R6':  ('r', '680k', [((11, 3), 'IN_B'), ((11, 7), 'BIAS')]),
+    'C3':  ('cer', '100nF', [((11, 1), 'VF'), ((11, 2), 'GND_A')]),
+    'C4':  ('el5', '10µF 50V', [((12, 1), 'BIAS'), ((12, 2), 'GND_A')]),
+    'R2':  ('r', '10k', [((17, 1), 'VF'), ((17, 5), 'BIAS_MID')]),
+    'R3':  ('r', '10k', [((17, 6), 'BIAS_MID'), ((17, 10), 'BIAS')]),
     'R4':  ('r', '10k', [((14, 2), 'BIAS'), ((14, 6), 'GND_A')]),
-    'C6':  ('el6.3', '10µF bipolar', [((2, 13), 'HPL'), ((2, 15), 'OUT_L_N')]),
-    'R7':  ('r', '100Ω', [((1, 15), 'OUT_L_N'), ((1, 19), 'OUT_L')]),
-    'R8':  ('r', '1M', [((4, 15), 'OUT_L'), ((4, 19), 'GND_A')]),
-    'C7':  ('el6.3', '10µF bipolar', [((12, 13), 'HPR'), ((12, 15), 'OUT_R_N')]),
-    'R9':  ('r', '100Ω', [((11, 15), 'OUT_R_N'), ((11, 19), 'OUT_R')]),
-    'R10': ('r', '1M', [((14, 15), 'OUT_R'), ((14, 19), 'GND_A')]),
+    'C6':  ('el6.3', '10µF bipolar', [((1, 16), 'HPL'), ((1, 18), 'OUT_L_N')]),
+    'R7':  ('r', '100Ω', [((1, 19), 'OUT_L_N'), ((1, 23), 'OUT_L')]),
+    'R8':  ('r', '1M', [((3, 19), 'OUT_L'), ((3, 23), 'GND_A')]),
+    'C7':  ('el6.3', '10µF bipolar', [((9, 16), 'HPR'), ((9, 18), 'OUT_R_N')]),
+    'R9':  ('r', '100Ω', [((10, 19), 'OUT_R_N'), ((10, 23), 'OUT_R')]),
+    'R10': ('r', '1M', [((12, 19), 'OUT_R'), ((12, 23), 'GND_A')]),
 }
 
 PADS = {
-    'IN':    ((11, 0), 'IN_RAW', "the input jack's tip, through the screened cable's core"),
-    'SW-I':  ((12, 0), 'IN_RAW', 'Inst/Line switch, Inst throw (no padding)'),
-    'SW-C':  ((11, 2), 'IN_A', 'Inst/Line switch, common: the top of R5 (the buffer input)'),
-    'SW-L':  ((9, 2), 'IN_B', 'Inst/Line switch, Line throw: past R5 (the 0.33 pad)'),
-    'LIN1':  ((10, 9), 'LIN1', "the codec's LIN1 pad, on a fly lead from its own standoffs"),
-    'HPL':   ((10, 12), 'HPL', "the codec's HPL pad"),
+    'IN':    ((17, 0), 'IN_RAW', "the input jack's tip, through the screened cable's core"),
+    'SW-I':  ((15, 0), 'IN_RAW', 'Inst/Line switch, Inst throw (no padding)'),
+    'SW-C':  ((13, 2), 'IN_A', 'Inst/Line switch, common: the top of R5 (the buffer input)'),
+    'SW-L':  ((16, 3), 'IN_B', 'Inst/Line switch, Line throw: past R5 (the 0.33 pad)'),
+    'LIN1':  ((10, 6), 'LIN1', "the codec's LIN1 pad, on a fly lead from its own standoffs"),
+    'HPL':   ((10, 10), 'HPL', "the codec's HPL pad"),
     'HPR':   ((10, 13), 'HPR', "the codec's HPR pad"),
-    'CGND':  ((10, 16), 'GND_A', "the codec's GND pad -- its own wire back to the star"),
     'V3A3':  ((10, 15), 'V3A3', "the codec's AVDD pad, from the power board's 78L33"),
-    'OUT-L': ((3, 19), 'OUT_L', 'OUT L jack tip'),
-    'OUT-R': ((13, 19), 'OUT_R', 'OUT R jack tip'),
-    'STAR':  ((7, 19), 'GND_A', 'the star-ground tag'),
-    'VF':    ((17, 0), 'VF', "the power board's filtered 9 V"),
-    'V9':    ((17, 19), 'V9_RAW', "the power board's +9 V"),
+    'CGND':  ((10, 16), 'GND_A', "the codec's GND pad -- its own wire back to the star"),
+    'OUT-L': ((2, 18), 'OUT_L', 'OUT L jack tip'),
+    'OUT-R': ((10, 18), 'OUT_R', 'OUT R jack tip'),
+    'STAR':  ((6, 23), 'GND_A', 'the star-ground tag'),
+    'VF':    ((17, 11), 'VF', "the power board's filtered 9 V"),
+    'V9':    ((17, 21), 'V9_RAW', "the power board's +9 V"),
 }
 
 CARRIES = {'C5', 'R5', 'R6', 'U1', 'C3', 'C4', 'R2', 'R3', 'R4',
