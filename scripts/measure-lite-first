@@ -1,0 +1,407 @@
+#!/usr/bin/env python3
+"""scripts/measure-lite-first [--host vip] [--runs N] [--out DIR] [--engine-only]
+
+T9's measurement: **how long from a press being accepted to a rig playing at all, and to the Full
+playing** (pedal.project/docs/managing-processing-power-and-optimising-for-fast-switching.md, "T9").
+
+One rig to play and one to switch to, both of the pedal's own documents:
+
+  engine-no-lite   `rig.switch` with `lite_first: false` -- the single-step cold publish the service
+                   asked for until 2026-10-10, and so what a press measured before the wiring. The
+                   control, and the only honest way to get that number now that pedald asks for the
+                   Lite first.
+  engine-lite      `rig.switch` with `lite_first: true` -- P8's two-step publish, driven straight at
+                   the engine, so nothing between the press and the engine is this measurement's.
+  service          `POST /event` on pedald -- a real press through the service, which since
+                   2026-10-10 asks for `lite_first` itself. It carries the service's own overhead,
+                   and it is the arm that says what a footswitch will feel.
+
+What it times, and the resolution of every number in it:
+
+  * **accepted -> audible.** "accepted" is the request leaving this process, not the engine
+    receiving it, so the engine arms carry one control round trip (sub-millisecond on loopback,
+    a millisecond or so over WiFi) and the service arm carries the HTTP round trip as well.
+    "audible" is the first `engine.status` poll that saw `audible_generation` reach that document
+    with its transition finished. A document becomes audible somewhere between the last poll that
+    still showed the old generation and the first that showed the new one, so **the poll interval is
+    the resolution of every time here** and is reported with each run. The engine's generations
+    change once per fade, so that poll is the first after the crossfade began rather than after it
+    ended. Nothing here is finer than one poll and nothing claims to be.
+  * **the engine's own state in between**, from the same polls: `catch_up.state` (the plan:
+    `exact`, `empty`, `unbounded`, `too_long`, `inexact`), `catch_up.full` (`preparing`,
+    `compiling`, `published`, `refused`, `unchanged`, `superseded`), `catch_up.replay` (`running`,
+    `exact`, `gap`, `no_input`, `abandoned`, `busy`, `none`), `catch_up.running`,
+    `cost.lite_first` (true while the Lite stands in) and `chains[i].audible_generation`.
+  * **whether it disturbed the rig that was playing**: `render.over_deadline`, `render.worst_us`,
+    `xruns` and `guard_trips`, read before and after every run.
+
+Evidence: <out>/lite-first.json (every poll of every run) and <out>/t9.txt (the transcript).
+Default <out> is build/<host>/lite-first.
+"""
+
+import argparse
+import json
+import os
+import subprocess
+import sys
+import time
+import urllib.request
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+#: pedald's own client, so the measurement speaks the protocol exactly as the service does rather
+#: than growing a second idea of it.
+PEDALD = os.path.join(ROOT, "devices/common/rootfs/usr/local/lib")
+sys.path.insert(0, PEDALD)
+from pedald.engine import EngineClient, EngineError  # noqa: E402
+
+PORT = 47820
+CTL = "/opt/namchain/current/bin/namchainctl --token-file /etc/namchain/token"
+#: One arm may not take longer than this. A Full's compile on vip is a second or two; this is two
+#: orders of magnitude of headroom for a bad day, not a deadline.
+ARM_TIMEOUT_S = 60.0
+#: The status fields that are what this measures. `engine.status` is ~30 KB and mostly the cost
+#: table's per-node rows and the asset scan, which this does not read.
+FIELDS = ("state", "generation", "target_generation", "audible_generation", "adopted_generation",
+          "transition_active", "blocks", "xruns", "guard_trips")
+
+
+def die(message, code=2):
+    print("measure-lite-first: %s" % message, file=sys.stderr)
+    sys.exit(code)
+
+
+def ssh(host, command):
+    done = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", host, command],
+                          capture_output=True, text=True)
+    return done.stdout, done.returncode
+
+
+def sudo_read(host, path):
+    out, rc = ssh(host, "sudo cat %s" % path)
+    if rc != 0:
+        die("could not read %s on %s" % (path, host))
+    return out
+
+
+def ctl(host, command):
+    out, rc = ssh(host, "sudo %s %s --compact" % (CTL, command))
+    if rc != 0:
+        die("namchainctl %s failed on %s" % (command, host))
+    return out
+
+
+def pick(status):
+    """The part of one `engine.status` this measurement is about."""
+    cost = status.get("cost") or {}
+    catch = status.get("catch_up") or {}
+    render = status.get("render") or {}
+    warm = status.get("warm") or {}
+    chains = []
+    for chain in status.get("chains") or []:
+        chains.append({key: chain.get(key) for key in
+                       ("id", "generation", "audible_generation", "target_generation",
+                        "transition_active", "slimmed_models", "missing_assets")})
+    return {
+        "rig": status.get("rig"), "name": status.get("name"),
+        "state": status.get("state"), "blocks": status.get("blocks"),
+        "generation": status.get("generation"),
+        "target_generation": status.get("target_generation"),
+        "audible_generation": status.get("audible_generation"),
+        "adopted_generation": status.get("adopted_generation"),
+        "transition_active": status.get("transition_active"),
+        "xruns": status.get("xruns"), "guard_trips": status.get("guard_trips"),
+        "cost": {"lite_first": cost.get("lite_first"), "trimmed": cost.get("trimmed"),
+                 "verdict": cost.get("verdict"), "cost": cost.get("cost")},
+        "catch_up": {key: catch.get(key) for key in
+                     ("state", "replay", "full", "frames", "blocks", "running", "detail")},
+        "chains": chains,
+        "warm": {"active_doc": warm.get("active_doc"), "switches": warm.get("switches"),
+                 "cold_switches": warm.get("cold_switches"), "enabled": warm.get("enabled"),
+                 "set": [{key: entry.get(key) for key in
+                          ("name", "audible", "state", "core", "generation", "doc")}
+                         for entry in (warm.get("set") or [])]},
+        "render": {key: render.get(key) for key in
+                   ("over_deadline", "worst_us", "worst_percent", "over_90_percent")},
+    }
+
+
+class Poller:
+    """One engine connection, polled as fast as it answers, keeping every reply."""
+
+    def __init__(self, host, token):
+        self.client = EngineClient(host=host, port=47810, token=token, timeout=5.0)
+
+    def one(self):
+        try:
+            status = self.client.status().get("status") or {}
+        except EngineError as exc:
+            die("engine.status failed: %s" % exc)
+        snap = pick(status)
+        snap["t"] = time.monotonic()
+        return snap
+
+    def close(self):
+        self.client.close()
+
+
+def transitions(polls, path):
+    """Every poll where a (possibly nested) field changed, as [t, value]."""
+    out = []
+    last = object()
+    for snap in polls:
+        value = snap
+        for part in path.split("."):
+            value = value.get(part) if isinstance(value, dict) else None
+        if value != last:
+            out.append([round(snap["t"], 6), value])
+            last = value
+    return out
+
+
+def summarise(run, t0, polls):
+    """The three times, the reply, and what the engine said in between."""
+    published = run["published_generation"]
+    full = run["full_generation"]
+    t_lite = t_full = None
+    for snap in polls:
+        if snap["t"] < t0:
+            continue
+        if t_lite is None and snap["audible_generation"] == published \
+                and not snap["transition_active"]:
+            t_lite = snap["t"]
+        if t_full is None and full is not None and full != published \
+                and snap["audible_generation"] == full and not snap["transition_active"]:
+            t_full = snap["t"]
+    run["lite_ms"] = None if t_lite is None else round((t_lite - t0) * 1000.0, 3)
+    run["full_ms"] = None if t_full is None else round((t_full - t0) * 1000.0, 3)
+    gaps = [b["t"] - a["t"] for a, b in zip(polls, polls[1:])]
+    run["poll_interval_ms"] = round(sum(gaps) / len(gaps) * 1000.0, 3) if gaps else None
+    run["catch_up_state"] = transitions(polls, "catch_up.state")
+    run["catch_up_full"] = transitions(polls, "catch_up.full")
+    run["catch_up_replay"] = transitions(polls, "catch_up.replay")
+    run["cost_lite_first"] = transitions(polls, "cost.lite_first")
+    run["audible_generation"] = transitions(polls, "audible_generation")
+    run["chain_audible"] = transitions(polls, "chains.0.audible_generation")
+    run["polls"] = polls
+    return run
+
+
+def wait_for_play(poller, published, t0, polls):
+    """Poll until `published` is the audible generation with its transition finished."""
+    deadline = t0 + ARM_TIMEOUT_S
+    while time.monotonic() < deadline:
+        snap = poller.one()
+        polls.append(snap)
+        if snap["audible_generation"] == published and not snap["transition_active"]:
+            return True
+    return False
+
+
+def wait_for_catch_up(poller, t0, polls):
+    """Poll until the catch-up says it is done with the Full, or `ARM_TIMEOUT_S` passes."""
+    deadline = t0 + ARM_TIMEOUT_S
+    while time.monotonic() < deadline:
+        snap = poller.one()
+        polls.append(snap)
+        catch = snap["catch_up"]
+        if catch.get("full") in ("published", "unchanged", "refused", "superseded") \
+                and catch.get("replay") not in ("running", None):
+            return True
+        if catch.get("full") in ("unchanged", "refused", "superseded"):
+            return True
+    return False
+
+
+def run_engine_arm(host, token, rig, base, lite_first, runs, log):
+    """The engine's own switch, on `runs` cold publishes."""
+    results = []
+    for index in range(1, runs + 1):
+        poller = Poller(host, token)
+        # Back to the base rig and let it settle: every run must be a cold publish, or the arm
+        # measures a handover instead of the thing T9 is about.
+        ctl(host, "rig.load %s" % base)
+        time.sleep(0.6)
+        before = poller.one()
+        t0 = time.monotonic()
+        try:
+            reply = poller.client.call("rig.switch", rig=rig, fallback=True, lite_first=lite_first)
+        except EngineError as exc:
+            die("rig.switch refused: %s" % exc)
+        t_reply = time.monotonic()
+        run = {"arm": "engine-lite" if lite_first else "engine-no-lite", "run": index,
+               "rig": rig, "lite_first": lite_first, "from": before["rig"],
+               "published_generation": reply.get("generation"), "full_generation": None,
+               "reply": {key: reply.get(key) for key in
+                         ("switched", "reason", "lite_first", "handover_blocks", "fade_ms",
+                          "generation", "doc", "core")},
+               "reply_lite": reply.get("lite"), "reply_full": reply.get("full"),
+               "reply_ms": round((t_reply - t0) * 1000.0, 3),
+               "before": {key: before[key] for key in ("rig", "generation", "xruns",
+                                                       "guard_trips", "render", "warm")}}
+        polls = []
+        wait_for_play(poller, reply.get("generation"), t0, polls)
+        # The Full is a later publish of its own: what the engine reports as the current generation
+        # after the catch-up has finished is what the Lite was standing in for.
+        wait_for_catch_up(poller, t0, polls)
+        for _ in range(3):
+            polls.append(poller.one())
+        poller.close()
+        generations = [snap["generation"] for snap in polls if snap["generation"] is not None]
+        run["full_generation"] = max(generations) if generations else reply.get("generation")
+        after = polls[-1]
+        run["after"] = {key: after[key] for key in ("rig", "generation", "xruns", "guard_trips",
+                                                    "render", "warm")}
+        results.append(summarise(run, t0, polls))
+        log("  run %d: from %s gen %s -> %s; reply %s in %.1f ms" % (
+            index, os.path.basename(run["from"] or "?"), run["before"]["generation"],
+            run["reply"].get("switched"), json.dumps(run["reply_lite"]), run["reply_ms"]))
+        log("    Lite audible %s ms, Full (gen %s) audible %s ms, poll %.2f ms; "
+            "catch_up %s / %s / %s; cost.lite_first %s" % (
+                run["lite_ms"], run["full_generation"], run["full_ms"], run["poll_interval_ms"],
+                run["catch_up_state"], run["catch_up_full"], run["catch_up_replay"],
+                run["cost_lite_first"]))
+        log("    render before %s after %s; xruns %s -> %s" % (
+            json.dumps(run["before"]["render"]), json.dumps(run["after"]["render"]),
+            run["before"]["xruns"], run["after"]["xruns"]))
+    return results
+
+
+def api(host, token, method, path, body=None):
+    request = urllib.request.Request("http://%s:%d%s" % (host, PORT, path), method=method,
+                                     data=None if body is None else body.encode("utf-8"),
+                                     headers={"Authorization": "Bearer %s" % token,
+                                              "Content-Type": "application/json"})
+    with urllib.request.urlopen(request, timeout=15) as reply:
+        return json.loads(reply.read().decode("utf-8"))
+
+
+def run_service_arm(host, token, target, base, runs, log):
+    """A press through pedald: `POST /event`, the same route the UART reader calls."""
+    results = []
+    total = float(runs)
+    for index in range(1, runs + 1):
+        # Step back to the base rig through the engine, so each press is the cold publish T9 is
+        # about rather than a handover to a rig the last press left warm.
+        ctl(host, "rig.load %s" % base)
+        time.sleep(0.6)
+        poller = Poller(host, token)
+        before = poller.one()
+        log("  run %d: bank is %s; playing %s (gen %s)" % (
+            index, json.dumps(before["warm"]["set"]), os.path.basename(before["rig"] or "?"),
+            before["generation"]))
+        t0 = time.monotonic()
+        try:
+            api(host, token, "POST", "/event", json.dumps({"kind": 1, "a": 0, "b": 0}))
+        except Exception as exc:                      # noqa: BLE001 - the HTTP answer is the datum
+            die("POST /event failed: %s" % exc)
+        t_accepted = time.monotonic()
+        polls = []
+        # The service answers when it has handed the press to the engine and taken its reply; the
+        # engine's own publishes are what the polls below see.
+        published = None
+        deadline = t0 + ARM_TIMEOUT_S
+        while time.monotonic() < deadline and published is None:
+            snap = poller.one()
+            polls.append(snap)
+            if snap["generation"] != before["generation"]:
+                published = snap["generation"]
+        if published is None:
+            die("the press did not publish anything within %ss" % ARM_TIMEOUT_S)
+        wait_for_play(poller, published, t0, polls)
+        wait_for_catch_up(poller, t0, polls)
+        for _ in range(3):
+            polls.append(poller.one())
+        poller.close()
+        generations = [snap["generation"] for snap in polls if snap["generation"] is not None]
+        run = {"arm": "service", "run": index, "rig": target, "from": before["rig"],
+               "press_accepted_ms": round((t_accepted - t0) * 1000.0, 3),
+               "published_generation": published,
+               "full_generation": max(generations) if generations else published,
+               "before": {key: before[key] for key in ("rig", "generation", "xruns",
+                                                       "guard_trips", "render", "warm")}}
+        after = polls[-1]
+        run["after"] = {key: after[key] for key in ("rig", "generation", "xruns", "guard_trips",
+                                                    "render", "warm")}
+        results.append(summarise(run, t0, polls))
+        log("    POST /event accepted in %.1f ms; Lite audible %s ms; Full (gen %s) audible %s ms; "
+            "poll %.2f ms" % (run["press_accepted_ms"], run["lite_ms"], run["full_generation"],
+                              run["full_ms"], run["poll_interval_ms"]))
+        log("    catch_up %s / %s / %s; cost.lite_first %s; xruns %s -> %s" % (
+            run["catch_up_state"], run["catch_up_full"], run["catch_up_replay"],
+            run["cost_lite_first"], run["before"]["xruns"], run["after"]["xruns"]))
+    return results
+
+
+def main():
+    parser = argparse.ArgumentParser(description="T9: press to Lite, and to Full, through the pedal")
+    parser.add_argument("--host", default="vip")
+    parser.add_argument("--runs", type=int, default=3)
+    parser.add_argument("--out", default=None)
+    parser.add_argument("--rig", default=None, help="the rig to switch to (default: a copy of the "
+                                                   "one playing, so the pedal's own document)")
+    parser.add_argument("--base", default=None, help="the rig to play first (default: the one "
+                                                     "playing at the start)")
+    parser.add_argument("--engine-only", action="store_true", help="skip the service arm")
+    parser.add_argument("--service-only", action="store_true", help="skip the engine arms")
+    args = parser.parse_args()
+    host = args.host
+    out = args.out or os.path.join(ROOT, "build", host, "lite-first")
+    os.makedirs(out, exist_ok=True)
+    transcript = open(os.path.join(out, "t9.txt"), "w")
+    evidence = {"host": host, "started": time.strftime("%Y-%m-%dT%H:%M:%S"), "runs": []}
+
+    def log(message=""):
+        print(message)
+        transcript.write(message + "\n")
+        transcript.flush()
+
+    token = sudo_read(host, "/etc/namchain/token").strip()
+    if not token:
+        die("no token on %s" % host)
+    manifest = " ".join(sudo_read(host, "/opt/namchain/current/MANIFEST").split())
+    poller = Poller(host, token)
+    first = poller.one()
+    poller.close()
+    playing = os.path.basename(first["rig"] or "")
+    if not playing:
+        die("nothing is playing on %s" % host)
+    rig = args.rig or playing
+    base = args.base or playing
+    if not args.engine_only and rig == base:
+        die("the service arm needs two different rigs: name one with --rig")
+    log("T9: press to Lite, and to Full, through the pedal")
+    log("host %s, %d runs an arm" % (host, args.runs))
+    log("engine on the board: %s" % manifest)
+    log("playing %s; switching to %s; base %s" % (playing, rig, base))
+    log()
+    log("clock: every time below is this process's monotonic clock, and 'accepted' is the request")
+    log("leaving this process -- so the engine arms carry a control round trip and the service arm")
+    log("carries the HTTP round trip as well. 'audible' is the first poll that saw the engine's")
+    log("audible_generation reach that document with its transition finished. A document becomes")
+    log("audible between the last poll that showed the old generation and the first that showed the")
+    log("new one, so the poll interval printed with each run is the resolution of every number")
+    log("here; nothing is finer than one poll.")
+    log()
+
+    if not args.service_only:
+        log("== arm 1: the engine's own cold publish, `lite_first: false` "
+            "(what a press did before the wiring)")
+        evidence["runs"] += run_engine_arm(host, token, rig, base, False, args.runs, log)
+        log()
+        log("== arm 2: the engine's own cold publish, `lite_first: true`")
+        evidence["runs"] += run_engine_arm(host, token, rig, base, True, args.runs, log)
+        log()
+    if not args.engine_only:
+        log("== arm 3: a press through the service, `POST /event` on pedald")
+        evidence["runs"] += run_service_arm(host, token, rig, base, args.runs, log)
+        log()
+
+    with open(os.path.join(out, "lite-first.json"), "w") as handle:
+        json.dump(evidence, handle, indent=1)
+    transcript.close()
+    print("wrote %s" % os.path.join(out, "lite-first.json"))
+    print("wrote %s" % os.path.join(out, "t9.txt"))
+
+
+if __name__ == "__main__":
+    main()

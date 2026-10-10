@@ -1,0 +1,235 @@
+#!/usr/bin/env python3
+"""scripts/t9-rigs — put T9's rigs on a Core host, drive them, and put the pedal back.
+
+T9's two measurements need documents the pedal's own library does not have: a **base** rig that is
+an ordinary Full (so the switch to it is a two-step publish with a Full to compile) and a **target**
+rig — by default one built on the LSTM the engine's table has no row for.
+
+    scripts/t9-rigs --host vip setup          # back up the resume files, install base.json + target.json
+    scripts/t9-rigs --host vip list           # what is in the library now
+    scripts/t9-rigs --host vip costs          # what the engine says each of them costs
+    scripts/t9-rigs --host vip restore        # remove them, reload last.json, restart pedald
+
+The rigs are built from models already in the pedal's own library, so nothing is uploaded and no
+model data is written to the card (rule 8): `--base-model` picks a `.nam` by a substring of its path
+under the library's `models/`, and the cab is the one `last.json` already names. `--target-lstm`
+copies `namchain/vendor/NeuralAmpModelerCore/example_models/lstm.nam` in — 2.3 KB, and the one asset
+this does write — because the library has no LSTM at all and the refusal path cannot be reached
+without one.
+
+`restore` is the half that matters: it removes both rigs and the model, reloads the rig the pedal was
+playing when `setup` ran, and restarts pedald, so a run leaves the pedal as it found it. What it
+restores from is `<out>/t9-rigs.json`, written by `setup`.
+"""
+
+import argparse
+import json
+import os
+import shutil
+import subprocess
+import sys
+import time
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(ROOT, "devices/common/rootfs/usr/local/lib"))
+from pedald.engine import EngineClient, EngineError  # noqa: E402
+
+RIGS = "/var/lib/pedal/library/rigs"
+MODELS = "/var/lib/pedal/library/models"
+CTL = "/opt/namchain/current/bin/namchainctl --token-file /etc/namchain/token"
+#: The three protocol verbs the service asks the LSTM question with, and the assets it needs.
+BASE = "t9-base.json"
+TARGET = "t9-lstm.json"
+LSTM_MODEL = "t9-lstm.nam"
+
+
+def die(message, code=2):
+    print("t9-rigs: %s" % message, file=sys.stderr)
+    sys.exit(code)
+
+
+def ssh(host, command):
+    done = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", host, command],
+                          capture_output=True, text=True)
+    return done.stdout, done.returncode
+
+
+def sudo(host, command, check=True, stdin=None):
+    done = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", host,
+                           "sudo bash -c %s" % json.dumps(command)],
+                          input=stdin, capture_output=True, text=True)
+    if check and done.returncode != 0:
+        die("on %s: %s\n%s" % (host, command, done.stderr))
+    return done.stdout, done.returncode
+
+
+def ctl(host, command):
+    out, rc = ssh(host, "sudo %s %s --compact" % (CTL, command))
+    if rc != 0:
+        die("namchainctl %s failed" % command)
+    return out
+
+
+def engine(host):
+    token, rc = sudo(host, "cat /etc/namchain/token")
+    if rc != 0:
+        die("no token on %s" % host)
+    return EngineClient(host=host, port=47810, token=token.strip(), timeout=5.0)
+
+
+def find_model(host, needle):
+    found, _ = ssh(host, "find %s -name '*.nam' -not -name '%s'" % (MODELS, LSTM_MODEL))
+    matches = [line for line in found.splitlines() if needle.lower() in line.lower()]
+    if not matches:
+        die("no model under %s matches %r" % (MODELS, needle))
+    return sorted(matches)[0]
+
+
+def rig_json(name, model, cab):
+    return {
+        "name": name[:-len(".json")],
+        "chains": [{
+            "id": "one",
+            "input_channel": 0,
+            "output_channel": 0,
+            "nodes": [
+                {"id": "in", "element": "in", "type": "nc.input"},
+                {"id": "amp0", "element": "amp0", "type": "nc.nam", "model": model},
+                {"id": "cab", "element": "cab", "type": "nc.cab.ir", "ir": cab},
+                {"id": "out", "element": "out", "type": "nc.output"},
+            ],
+            "connections": [
+                {"from": "in", "from_port": 0, "to": "amp0", "to_port": 0},
+                {"from": "amp0", "from_port": 0, "to": "cab", "to_port": 0},
+                {"from": "cab", "from_port": 0, "to": "out", "to_port": 0},
+            ],
+        }],
+    }
+
+
+def read_last(host):
+    out, rc = ssh(host, "cat %s/last.json" % RIGS)
+    if rc != 0:
+        die("no last.json on %s" % host)
+    return out
+
+
+def command_setup(args):
+    host = args.host
+    os.makedirs(args.out, exist_ok=True)
+    state_path = os.path.join(args.out, "t9-rigs.json")
+    if os.path.exists(state_path):
+        die("%s exists: run `restore` first, so a previous run's rigs are not orphaned" % state_path)
+    last = json.loads(read_last(host))
+    cab = None
+    for chain in last.get("chains", []):
+        for node in chain.get("nodes", []):
+            if node.get("type") == "nc.cab.ir":
+                cab = node.get("ir")
+    if cab is None:
+        die("the rig playing has no cab: this needs the pedal's own document to borrow one from")
+    base_model = find_model(host, args.base_model)
+    print("base model   %s" % base_model)
+    print("cab          %s" % cab)
+    lstm_source = os.path.join(args.namchain, "vendor/NeuralAmpModelerCore/example_models/lstm.nam")
+    if not os.path.exists(lstm_source):
+        die("no lstm.nam at %s" % lstm_source)
+    # The resume files are what a rig change rewrites; keep them to put back.
+    sudo(host, "rm -rf %s/t9-rigs-save && mkdir -p %s/t9-rigs-save && cp %s/last.json "
+               "%s/last.prev.json %s/t9-rigs-save/ 2>/dev/null; true"
+         % (RIGS, RIGS, RIGS, RIGS, RIGS))
+    base = rig_json(BASE, base_model, cab)
+    target = rig_json(TARGET, "%s/%s" % (MODELS, LSTM_MODEL), cab)
+    for name, document in ((BASE, base), (TARGET, target)):
+        payload = json.dumps(document, indent=1)
+        sudo(host, "cat > %s/%s && chown pedal:pedal %s/%s && chmod 644 %s/%s"
+             % (RIGS, name, RIGS, name, RIGS, name), stdin=payload)
+        print("installed    %s" % name)
+    with open(lstm_source, "rb") as handle:
+        model = handle.read()
+    done = subprocess.run(["ssh", "-o", "BatchMode=yes", host,
+                           "sudo bash -c %s" % json.dumps(
+                               "cat > %s/%s && chown pedal:pedal %s/%s && chmod 644 %s/%s"
+                               % (MODELS, LSTM_MODEL, MODELS, LSTM_MODEL, MODELS, LSTM_MODEL))],
+                          input=model, capture_output=True)
+    if done.returncode != 0:
+        die("could not install the LSTM: %s" % done.stderr.decode())
+    print("installed    %s (%d bytes, the one asset this writes)" % (LSTM_MODEL, len(model)))
+    status = json.loads(ctl(host, "status"))["status"]
+    with open(state_path, "w") as handle:
+        json.dump({"host": host, "playing": status.get("rig"), "cab": cab,
+                   "base_model": base_model, "rigs": [BASE, TARGET], "model": LSTM_MODEL,
+                   "engine_commit": None}, handle, indent=1)
+    # pedald rescans the library on its own; the engine is told, because it is the engine that
+    # resolves a rig's references.
+    ctl(host, "rescan")
+    print("wrote        %s" % state_path)
+    print()
+    print("`restore` removes both rigs and the model, reloads the rig playing now, and restarts "
+          "pedald.")
+
+
+def command_list(args):
+    out, _ = ssh(args.host, "ls -la %s" % RIGS)
+    print(out)
+    out, _ = ssh(args.host, "ls -la %s/%s %s/%s 2>&1" % (MODELS, LSTM_MODEL, RIGS, TARGET))
+    print(out)
+
+
+def command_costs(args):
+    client = engine(args.host)
+    for name in (BASE, TARGET):
+        try:
+            reply = client.call("rig.cost", rig=name)
+        except EngineError as exc:
+            print("%-14s refused: %s" % (name, exc))
+            continue
+        cost = reply.get("cost") or {}
+        print("%-14s verdict=%s cost=%s trimmed=%s lite_first=%s" % (
+            name, cost.get("verdict"), cost.get("cost"), cost.get("trimmed"),
+            cost.get("lite_first")))
+        for row in cost.get("nodes") or []:
+            if row.get("slimmed") or row.get("row") == "unknown.node":
+                print("               %s %s (%s)" % (row.get("node"), row.get("row"),
+                                                     row.get("reference")))
+
+
+def command_restore(args):
+    host = args.host
+    state_path = os.path.join(args.out, "t9-rigs.json")
+    sudo(host, "rm -f %s/%s %s/%s %s/%s" % (RIGS, BASE, RIGS, TARGET, MODELS, LSTM_MODEL))
+    print("removed      %s, %s, %s" % (BASE, TARGET, LSTM_MODEL))
+    sudo(host, "cp %s/t9-rigs-save/last.json %s/last.json 2>/dev/null; cp %s/t9-rigs-save/"
+               "last.prev.json %s/last.prev.json 2>/dev/null; chown pedal:pedal %s/last.json "
+               "%s/last.prev.json 2>/dev/null; rm -rf %s/t9-rigs-save; true"
+         % (RIGS, RIGS, RIGS, RIGS, RIGS, RIGS, RIGS))
+    print("restored     last.json and last.prev.json")
+    playing = json.load(open(state_path))["engine"] if os.path.exists(state_path) else None
+    if playing:
+        ctl(host, "load %s" % os.path.basename(playing))
+        print("reloaded     %s" % os.path.basename(playing))
+    ssh(host, "sudo systemctl restart pedald")
+    time.sleep(3)
+    out, _ = ssh(host, "ls %s" % RIGS)
+    print("library now  %s" % " ".join(out.split()))
+    if os.path.exists(state_path):
+        os.remove(state_path)
+    print("(the saved copy is removed too; the pedal is as it was found)")
+
+
+def main():
+    parser = argparse.ArgumentParser(description="T9's rigs: install, drive, restore")
+    parser.add_argument("--host", default="vip")
+    parser.add_argument("--out", default=None, help="where t9-rigs.json lives")
+    parser.add_argument("--base-model", default="Ampeg SVT VR With Cab",
+                        help="a substring of a .nam under the library's models/ for the base rig")
+    parser.add_argument("--namchain", default=os.path.join(os.path.dirname(ROOT), "namchain"))
+    parser.add_argument("command", choices=("setup", "list", "costs", "restore"))
+    args = parser.parse_args()
+    args.out = args.out or os.path.join(ROOT, "build", args.host, "lite-first")
+    {"setup": command_setup, "list": command_list, "costs": command_costs,
+     "restore": command_restore}[args.command](args)
+
+
+if __name__ == "__main__":
+    main()
