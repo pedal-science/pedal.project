@@ -563,13 +563,14 @@ T1 (**every unit's curve**), T2 (**16 rigs, nothing falsified**), three of T3's 
 unit paths, and P9's measurement. 2026-10-09 ([bench-results/2026-10-09-core-rules-vip](bench-results/2026-10-09-core-rules-vip/README.md)):
 **T6** on both placements, **T10** twice (the second hour with the warm set live), and **T7's live
 half with T8's live falsifier** — eight switches through the engine, 0 xruns, warm lag 0–1 block.
+**Run 2026-10-10** ([bench-results/2026-10-10-t9-lite-first](bench-results/2026-10-10-t9-lite-first/README.md)):
+**T9**, through pedald's event path and the engine's own switch — the Lite audible 41 ms after the
+press and the Full 320 ms after it, the refusal path holding on the pedal, and **the replay behind the
+Lite not running at all** (see its block; that is P8's second half and it is owed).
 **Not run:** T4's "while switching" half, **T5**, **T8's press storm** (its paced half through the
 service was measured on 2026-10-09, and the burst is where it broke — see
 [bench-results/2026-10-09-service-switch](bench-results/2026-10-09-service-switch/README.md)), and
-**T9**, which waits not on P8 any more but on a board that can run it: the engine has the two-step
-publish and the service asks for it, and the commit that carries them does not deploy because its own
-suite is red. Its block says exactly where that stands. Each test says what it waits on, and none is
-claimed.
+T9's physical footswitch press, which is 3.8's. Each test says what it waits on, and none is claimed.
 
 **T1 — the cliff, per unit.** For each unit, run n−2 … n+4 and record p50/p99/max/overruns/lag.
 *Expected:* not linear. E2's Full: 89% at 8, 113% at 10, and at 12 the warm thread 2,621 blocks
