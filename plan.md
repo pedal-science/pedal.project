@@ -1213,6 +1213,22 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**Board A's placement is legal and cannot be wired, and now there is a tool that says so**
+(2026-10-10, `3a89a4e`). The two defects named last time are fixed: an electrolytic's lead span
+now comes from its footprint (2.0–2.5 mm pitch, so one hole — `CP_Radial_D5.0mm_P2.00mm` for C4,
+`CP_Radial_D6.3mm_P2.50mm` for C6/C7 in `enclosure/assets/kicad/board_a.kicad_pcb`), and
+**the exits rule is in `stripboard/_place.py`**: for every net, can a wire — over free holes
+only, ending in a lead or beside a pad — reach every piece of the net? It is the router's own
+question asked in advance, and the answer for this placement is **no**, on IN_A, IN_B, GND_A,
+HPL, HPR, OUT_L_N and OUT_R_N. Row 15, the output band's only way out, carries GND_A; column 11
+is U1.3's only exit and dead-ends on row 1; row 21 is `V9_RAW` end to end. All 27 cuts are
+load-bearing, so this is **a placement question, not a wiring one** — the next pass needs a
+placement with each net's path decided before the parts are fixed, which is what `_place.py`
+and `_route.py` can now score. 7 of the 12 splits are GND_A. Board 1 still checks out
+(`19 parts, 11 links, 22 cuts, 11 wires`). The enclosure sandbox and the four `board_a_*`
+renders are **untouched at `ed81576`** — that step waits on the check passing, and board A is
+still `(IN PROGRESS)`.
+
 **rigpa is on vip (V1 of rigpa's plan, 2026-10-10).** The pedal root carries rigpa (`/opt/rigpa/72bcf0b`),
 Qt 6.10 and Mesa, its unit, user and config; `make-card --remote` put it there (image
 `20261010T134132Z`). The kernel is rtpi's **numaemu2** (numaemu1 plus vc4, v3d and USB HID kept
