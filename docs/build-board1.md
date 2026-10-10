@@ -65,8 +65,8 @@ numbers stay the same. Column 0 is now on the right.
 | C4 | 10 µF 50 V | + (30, 4), − (30, 5) | Stripe on row 5 |
 | U1 | 8-pin DIL socket | pins 1–4 at x 18, rows 1–4; pins 8–5 at x 21, rows 1–4 | The OPA2197 on its adapter plugs in here (stage 8) |
 | C5 | 100 nF film | (3, 6)–(5, 6) | Input coupling. Film, not ceramic, no polarity |
-| R5 | 680 kΩ | (7, 6)–(11, 6) | The Line pad's top |
-| R6 | 330 kΩ | (13, 6)–(17, 6) | The Line pad's bottom, to the bias |
+| R5 | **330 kΩ** | (7, 6)–(11, 6) | The Line pad's top |
+| R6 | **680 kΩ** | (13, 6)–(17, 6) | The Line pad's bottom, to the bias |
 | C6, C7 | 10 µF bipolar | (28, 7)–(28, 8), (28, 11)–(28, 12) | Output coupling. Bipolar: either way round |
 | R7, R9 | 100 Ω | (30, 8)–(34, 8), (30, 12)–(34, 12) | Output series resistors |
 | R8, R10 | 1 MΩ | (36, 8)–(40, 8), (36, 12)–(40, 12) | Output bleeds, which hold the jacks at 0 V DC |
@@ -229,7 +229,7 @@ Cioks on, op-amp **not** fitted. Measure the socket's pins against the star tag:
 | 8 | about 8.7 V | VF |
 | 4 | 0 V | ground |
 | 5 | about 2.9 V | the bias, straight from the divider |
-| 3 | about 2.6 V at Inst, 2.8 V at Line | the bias through 1 MΩ (Inst) or 330 kΩ (Line). A 10 MΩ meter pulls it down that much, which shows the path is there |
+| 3 | about 2.9 V at Inst, about 2.5 V at Line | the bias, reached through the input network: 330 kΩ + 680 kΩ = 1.01 MΩ at Inst, and 330 kΩ in parallel with 680 kΩ (about 222 kΩ) at Line. A 10 MΩ meter loads the Line position noticeably and the Inst position hardly at all, which is the reading that shows the path is there. **These are the corrected values** — see the note under the parts table |
 | 1, 2, 6, 7 | anything, or drifting | nothing drives them yet |
 
 Then, Cioks off:

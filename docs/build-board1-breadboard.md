@@ -46,8 +46,8 @@ left. **B+** is unused.
 | C4 | 10 µF 50 V | + g15, − B− | |
 | U1 | OPA2197 on its adapter | pins 1–4 in f20–f23, pins 8–5 in e20–e23 | Across the channel, pin 1 at **f20** (bottom left). Stage 6 |
 | C5 | 100 nF film | g5–g7 | |
-| R5 | 680 kΩ | h7–h11 | |
-| R6 | 330 kΩ | i11–i15 | |
+| R5 | **330 kΩ** | h7–h11 | |
+| R6 | **680 kΩ** | i11–i15 | |
 | C6, C7 | 10 µF bipolar | h30–h31, h38–h39 | Either way round |
 | R7, R9 | 100 Ω | g31–g35, g39–g43 | |
 | R8, R10 | 1 MΩ | i35, B−; i43, B− | |
@@ -143,7 +143,7 @@ Cioks on, op-amp not fitted. Measure the holes U1's pins will go into, against t
 | 8 (e20) | about 8.7 V |
 | 4 (f23) | 0 V |
 | 5 (e23) | about 2.9 V |
-| 3 (f22) | about 2.6 V at Inst, 2.8 V at Line (the meter's 10 MΩ loads the 1 MΩ or 330 kΩ path) |
+| 3 (f22) | about 2.9 V at Inst, about 2.5 V at Line (the meter's 10 MΩ loads the ~222 kΩ Line path noticeably and the 1.01 MΩ Inst path hardly at all — **corrected values**, see the note under the parts table) |
 
 Then, Cioks off: about **1 MΩ** from each output jack's tip to ground, and no continuity from HPL
 (j30) or HPR (j38) to ground.

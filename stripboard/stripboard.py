@@ -57,7 +57,15 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
     """Check one board.  Returns (errors, info).
 
     bw, bh      the outline, in holes (18, 20 is 45.72 x 50.8 mm of stripboard)
-    cuts        {(x, y), ...} holes where the track is broken
+    cuts        where the track is broken.  Two forms, and both are real cuts:
+                  * (x, y)          at that hole -- the copper there is gone, so a lead in
+                                    that hole is joined to nothing unless a hole beside it
+                                    carries it to its net;
+                  * (x + 0.5, y)    *between* that hole and the one to its right (and
+                                    (x, y + 0.5) between it and the one below).  This is what
+                                    a 3 mm spot-face cutter does when it is turned between
+                                    two holes, which is how a stripboard is normally cut: it
+                                    separates the two holes and destroys neither.
     links       [((x, y), (x, y)), ...] wires on the component side
     parts       {ref: (kind, value, [(hole, net), ...])}
     pads        {label: (hole, net, where it goes)} -- wires leaving the board
@@ -111,10 +119,18 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
     def union(a, b):
         parent[find(a)] = find(b)
 
+    def broken(a, b):
+        """Is the track cut between these two neighbouring holes?"""
+        if a in cuts or b in cuts:
+            return True
+        (x1, y1), (x2, y2) = a, b
+        mid = ((x1 + x2) / 2, (y1 + y2) / 2)
+        return mid in cuts
+
     for y in range(bh):
         for x in range(bw - 1):
             a, b = (x, y), (x + 1, y)
-            if a not in cuts and b not in cuts:
+            if not broken(a, b):
                 union(a, b)
     for a, b in links:
         union(a, b)
@@ -179,10 +195,19 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
         x, y = h
         if h not in cuts:
             continue
+        # The strip left on either side is part of the pin's net, so a cut *between* holes
+        # does not strand it.  Only a cut at the pin's own hole can, and then the pin needs a
+        # hole beside it to reach its net through.
+        strip_either_side = False
+        for p in ((x - 1, y), (x + 1, y)):
+            if 0 <= p[0] < bw and not broken(h, p):
+                strip_either_side = True
         beside = [(x + dx, y + dy) for dx, dy in ((0, -1), (0, 1), (-1, 0), (1, 0))]
-        if not any(0 <= p[0] < bw and 0 <= p[1] < bh and p not in cuts and p not in used
-                   for p in beside):
-            errors.append(f'{lead_ref[h]} is on the cut hole {h} with nothing beside it')
+        free_beside = any(0 <= p[0] < bw and 0 <= p[1] < bh and p not in cuts
+                          and p not in used for p in beside)
+        if not strip_either_side and not free_beside:
+            errors.append(f'{lead_ref[h]} is on the cut hole {h} with nothing beside it '
+                          f'and no strip left to reach its net along')
 
     for net, roots in net_of.items():
         if len(roots) > 1 and net not in off_board:
