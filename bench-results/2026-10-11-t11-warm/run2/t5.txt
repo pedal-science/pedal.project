@@ -27,3 +27,24 @@ last.prev.json
     histogram    [[20, 1963], [21, 1907], [22, 1011], [23, 147], [24, 71], [25, 78], [26, 89], [27, 94], [28, 83], [29, 89], [30, 59], [31, 56], [32, 22], [33, 9], [34, 16], [35, 56], [36, 66], [37, 50], [38, 32], [39, 53], [40, 37], [41, 42], [42, 31], [43, 22], [44, 151], [45, 316], [46, 301], [47, 281], [48, 279], [49, 186], [50, 153], [51, 123], [52, 91], [53, 94], [54, 84], [55, 40], [56, 19], [57, 27], [58, 18], [59, 40], [60, 28], [61, 34], [62, 21], [63, 41], [64, 44], [65, 29], [66, 26], [67, 22], [68, 9], [69, 15], [70, 10], [71, 14], [72, 9], [73, 1], [74, 18], [75, 15], [76, 13], [77, 10], [78, 5], [79, 3], [80, 3], [81, 6], [82, 2], [83, 2], [84, 3], [85, 1], [86, 3], [88, 2], [90, 1], [91, 1], [92, 1], [96, 1]]
     xruns 0  guard_trips 0  blocks 8679
     warm         /var/lib/pedal/library/rigs/t5-warm.json on core 1: state warm, behind 1 (worst 0), dropped 0, blocks 2991
+    rig          /var/lib/pedal/library/rigs/t5-heavy.json  (cost 0.559, fits)
+    render       worst 1282.8 us = 96.2%  over_deadline 0  over_90 38
+    histogram    [[20, 1963], [21, 1907], [22, 1011], [23, 147], [24, 71], [25, 78], [26, 89], [27, 94], [28, 83], [29, 89], [30, 59], [31, 56], [32, 22], [33, 16], [34, 36], [35, 133], [36, 296], [37, 1958], [38, 22682], [39, 68157], [40, 113260], [41, 122818], [42, 109555], [43, 118074], [44, 104625], [45, 86162], [46, 72065], [47, 62824], [48, 40403], [49, 36119], [50, 34182], [51, 28160], [52, 31319], [53, 36673], [54, 36238], [55, 34556], [56, 30868], [57, 27397], [58, 26009], [59, 22311], [60, 14924], [61, 10309], [62, 7946], [63, 7820], [64, 6421], [65, 4877], [66, 4140], [67, 3479], [68, 2886], [69, 2455], [70, 2165], [71, 2307], [72, 2009], [73, 2209], [74, 2705], [75, 2837], [76, 2009], [77, 1389], [78, 985], [79, 744], [80, 618], [81, 499], [82, 363], [83, 297], [84, 185], [85, 102], [86, 69], [87, 40], [88, 18], [89, 15], [90, 16], [91, 10], [92, 4], [93, 3], [94, 4], [96, 1]]
+    xruns 0  guard_trips 0  blocks 1359425
+    app traffic  7352 library requests over WiFi during the arm
+    per-core busy over the arm: cpu0 100.0%  cpu1 4.0%  cpu2 33.6%  cpu3 49.5%
+    irq thread   2080182650 ns of wait to run over 2702836 wakes = 769.6 ns/wake
+    temperature  75.5 C -> 81.5 C
+    clock        2400 MHz now, low-voltage alarm 0
+
+== reading
+    final: xruns 0, blocks over the deadline 0, guard trips 0, worst block 1282.8 us (96.2%)
+    gate: PASS (both arms ended with 0 xruns and 0 blocks over the deadline)
+    the decision this feeds: whether one housekeeping core carries pedald, the control side,
+    WiFi, the SD card and a compile without moving the render cores' tail.
+
+== cleanup
+    restored last.json and its resume files
+    removed the test rigs (t5-heavy.json, t5-warm.json t5-warm2.json), stopped the second renderer, restarted pedald, cooled the warm set
+    df: /dev/mmcblk0p5  2.9G  1.2G  1.6G  44% /
+    still running on the host: 
