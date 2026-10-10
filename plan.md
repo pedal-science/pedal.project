@@ -1050,7 +1050,7 @@ recording before the aluminium one is drilled.
     coarse threshold, not a percentage (the chemistries' discharge curves differ). Detail and the
     chemistry/safety notes: the handoff's Power section.
 - **Mounting, and the case kept out of the ground scheme** (decided 2026-10-01):
-  - A 3 mm FR4 plate, cut to the inside of the box, is screwed to the base plate. vip and both
+  - The FR4 plate is **not needed** (decided 2026-10-10: nylon standoffs are in hand, and they fix the boards to the case directly). vip and both
     stripboards stand on **nylon** standoffs on the plate, held by nylon screws (countersunk from
     under the plate). vip's mounting holes are grounded, and the star tag sits under a board
     screw, so metal standoffs would join the grounds to the case and make a loop through it.
@@ -1208,7 +1208,7 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
   - the Inst/Line switch and the Line pad's resistors, at provisional values; screened cable and
     hook-up wire.
 - **To buy** (decided 2026-10-01, Phase 4): the USB-C panel extension, the Pico's USB cable,
-  the FR4 mounting plate and nylon standoffs. See the BOM.
+  nylon standoffs to the case itself -- no FR4 plate. See the BOM.
 - **Not designed yet:** the mic stage, cooling and the panel hardware.
 
 ## Next session starts with
