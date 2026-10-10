@@ -1289,8 +1289,10 @@ a first-sight rig actually reports is `unknown.NAM`, which the measurer did not 
 verification found it (fixed). **It is verified end to end** (2026-10-10, `bench-results/2026-10-10-p4-first-sight`): the LSTM in a
 rig raised `cost_unknown` and `needs_measuring`, `pedal-measure` measured it on core 2 (finding and
 hash-checking the DI first) and wrote the fragment, and the fragment names the row the engine could
-not -- `NAM.LSTM.full`, 0.00885 of a core, 113 copies at the fit point. What is left is the *operator's*
-merge (`cost-merge`, then `devices/vip/apply`), which is the boundary P4 was designed around; then `pedal-measure`, merge the
+not -- `NAM.LSTM.full`, 0.00885 of a core, 113 copies at the fit point. **P4 is done end to end** (2026-10-10): the fragment was
+merged with `cost-merge` (vip's table now has 15 rows, `NAM.LSTM.full` at 0.00885 of a core), applied,
+and `devices/vip/check` is green — a rig on that family is admitted at its true cost instead of D8's
+`unknown`. Nothing is left of P4; then `pedal-measure`, merge the
 fragment with `devices/common/cost-merge`, and confirm the row resolves with no xrun. (An LSTM is also
 the case the *bench* has to refuse rather than approximate — `lookback` says `Unbounded` — so the
 fragment it produces is one to read rather than wave through.)
