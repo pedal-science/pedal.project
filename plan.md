@@ -1280,10 +1280,13 @@ cpu1 busy. Evidence: `bench-results/2026-10-11-t11-warm/`.
 **P4's verification needs a model the table has no row for, and the library has none** (checked
 2026-10-10: eight models from eight directories, each costed through a rig built from `last.json`, all
 `unmeasured: none` and all at the same cost — the library is one family the table covers). So the
-verification has to *bring* the gap: generate a small model of another architecture (or copy one in
-from the Mac's library), load a rig that uses it, watch `needs_measuring` name the row, run
-`pedal-measure`, merge the fragment with `devices/common/cost-merge`, and confirm the row resolves with
-no xrun.
+verification has to *bring* the gap, and the file to bring is already in the engine's own tree:
+**`namchain/vendor/NeuralAmpModelerCore/example_models/lstm.nam`** — an LSTM, a family vip's table has
+no row for (its two NAM rows are WaveNet full/lite). Copy it into the device's library, build a rig on
+it, load that rig, and watch `needs_measuring` name `NAM.LSTM.full`; then `pedal-measure`, merge the
+fragment with `devices/common/cost-merge`, and confirm the row resolves with no xrun. (An LSTM is also
+the case the *bench* has to refuse rather than approximate — `lookback` says `Unbounded` — so the
+fragment it produces is one to read rather than wave through.)
 
 **Owed, in the order to take them.** (1) **T11** — the full-load hour, launched 21:52Z with a second
 renderer on the free warm core and the app's traffic, but *without* the engine's warm document (the
