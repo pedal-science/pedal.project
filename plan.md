@@ -1331,6 +1331,13 @@ write and its restore inside the same second used to collide on the backup name 
 that, which is why `--restore` no longer backs up over its own restore point. The owner's call on
 timing, since it is a reboot.
 
+**One gap the tool does not close by itself**: nothing installs `piv-boot` on piv. `vip-boot` arrives
+at image build; piv has no such path yet, so the first real use needs the file copied to
+`/usr/local/sbin/piv-boot` on the board (or a small deploy script, which does not exist). The
+subagent's own pushes died on the locked ssh agent and its `origin/main` ref is stale as a result --
+both commits are on the remote through https (`a6d4d67`, `26b80bb`), so "ahead 3" is the ref, not the
+remote. `make test-tools` runs both suites: piv 33 tests, vip 54 with 10 skipped for `dtc`.
+
 **What a piv copy could not inherit from `vip-boot`**, for whoever touches this next: vip's whole model
 is two fixed slots with `profile.txt`/`tryboot.txt` rewritten in place at fixed length, an `os_prefix`,
 and tryboot staging a candidate — and piv has none of it: one `cmdline.txt` on one partition, no slot,
