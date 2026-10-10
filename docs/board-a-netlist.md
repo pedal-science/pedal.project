@@ -154,15 +154,43 @@ The first job was to test whether board 1 is overkill. Its choices split cleanly
 
 ## Where board A stands (2026-10-10, unfinished)
 
-`stripboard/board_a.py` **draws**, and the placement's geometry is settled: 15 parts placed
-with no overlaps, nothing under another part's body, nothing off the board, and the cuts the
-pins need. What is not finished is the *connectivity*: running it reports the nets that the
-cuts leave in more than one piece, and the few strips that still need a cut between two nets.
+`stripboard/board_a.py` **draws**, and the placement now carries the rule the routing kept
+asking for: **every lead and pad hole has a hole beside it a wire may end in**, and no two
+neighbouring leads of different parts sit on different nets. `stripboard/_place.py` measures
+both. The placement before this pass had **three** leads with no hole beside them at all — the
+two input coupling capacitors' inner leads, each boxed in by its neighbour's body, and a 1M
+resistor's lead on the bottom edge with both gaps beside it cut — and no cut or link can free
+a lead like that, which is why three routing attempts failed on a placement with no geometric
+errors. The output stage is what moved: its six parts now stand in one band at row 16, at
+x = 0, 3, 5, 7, 12 and 14, with the input chain's lower half at x = 8. **That cost nothing in
+area**: the outline is unchanged.
+
+Two things are settled and should not be redone:
+
+- **a defect in the checker, fixed.** `stripboard.copper` unioned holes along a row and,
+  through the links, between rows, but never within a column — so a part lying down a column
+  (a resistor's leads are in different rows, and its own body joins those two strips) was
+  never credited with joining them, and nothing could be reported as shorted down a column.
+  `board1.py`, built and measured, checks out unchanged with the fix.
+- **rule 3b: a link may only be soldered where its own net already is.** A wire end joins the
+  hole's piece of strip, so a link ending in a hole on another net's strip is a short, and
+  rule 2's union-find cannot report it because the union the link makes is what hides it.
+  Board 1 obeys this on all eleven of its links; a router that ignores it produces shorts no
+  check will catch.
+
+What is not finished is still the **connectivity**: with the 27 cuts this placement needs, the
+checker reports **12 nets in more than one piece and no two nets joined**. The placement is
+legal and the copper is sound; the wires are not placed. The band search that found this
+placement does not yet carry the last constraint the routing needs — that each output net has a
+way out to the panel's wires that avoids the band's own leads and bodies — so a band whose
+parts are each legal can still seal its own exits.
+
 `enclosure/src/layout.py` has **not** yet been changed, so the enclosure model still seats the
 codec on board A — see "Which tool produced which answer" above for why it should not.
 
-- the **outline**: 18 x 20 holes = 45.72 x 50.8 mm, taken from
-  `enclosure/assets/kicad/board_a.kicad_pcb`'s Edge.Cuts and from `enclosure/src/layout.py`;
+- the **outline**: 18 x 24 holes = 45.72 x 60.96 mm (`board_a.py`'s `W, H`; the KiCad file
+  and `enclosure/src/layout.py` still carry the old 18 x 20 = 45.72 x 50.8 mm and have not
+  been moved yet — that step waits on the check passing);
 - the **codec's keep-out**: its two 16-pin socket strips are columns 1 and 10, rows 2-17
   (`layout.py` seats the breakout at hole (1, 2)), and its right-hand row's pads land at
   (10, 9), (10, 12), (10, 14), (10, 15) and (10, 16). Those holes are not board A's;

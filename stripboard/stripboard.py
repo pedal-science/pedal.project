@@ -6,19 +6,25 @@ component side), `CUTS` (holes where the track is broken) and `PADS` (where a wi
 board).  `stripboard/nets.py` holds the netlist those leads are checked against, so a layout
 can be redone without the netlist, or the netlist changed, without the two drifting.
 
-`check()` enforces five rules:
+`check()` enforces six rules:
 
   1. every lead is on the net the netlist puts that pin on -- and every pin of a part the
      board carries is on the board;
   2. no two nets are joined by the copper (a missed cut, or a part lying across two strips);
   3. nothing sits on a cut hole;
+  3b. a link is soldered where it ends, so each end must already be on the net the link joins:
+     a lead of that net, or a hole whose piece of strip carries no other net.  A link ending
+     in a hole on another net's strip is a short, and rule 2's union-find cannot report it:
+     the union the link makes is the thing that hides it;
   4. no lead, link or pad is under another part's body;
   5. the fit rule: every hole the board uses is inside its outline, and the outline is
      printed in millimetres and holes.
 
 A part that lies along a strip joins the holes it spans unless the cut list says otherwise,
 which is what rule 2 catches: it is the classic stripboard mistake and it is silent until
-something hums.
+something hums.  A part lying down a *column* spans two strips, and its own body is what joins
+them; that is unioned the same way, but only between the leads of one part -- a socket's pins
+are joined by nothing.
 
 Boards are drawn from the same data, so the picture, the build sheet and the check are one
 thing.  Coordinates are holes: x along the strips (0 at the left, seen from the component
@@ -152,7 +158,14 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
             errors.append(f'pad {label} is on net {net}, which is not in the netlist')
 
     # -- 2. the copper: union-find over holes, along the strips and through the links ----
-    find = copper(bw, bh, cuts, links)
+    # A part lying down a column has its leads in different rows, and its own body joins
+    # them: two rows are two strips, and the part is what crosses from one to the next.  That
+    # is the same connection a link makes, so it is unioned the same way -- and only between
+    # leads of *one part*, because a socket's pins are joined by nothing.
+    bridged = [(a, b) for ref, (kind, _, leads) in parts.items()
+               for i, (a, na) in enumerate(leads) for b, nb in leads[i + 1:]
+               if a[0] == b[0] and NET.same_net(na, nb)]
+    find = copper(bw, bh, cuts, list(links) + bridged)
 
     used = {}                              # hole -> what is in it
     wire_span = {}                         # hole -> the link running over it
@@ -246,6 +259,55 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
             if r in owner and not NET.same_net(owner[r], net):
                 errors.append(f'nets {owner[r]} and {net} are joined')
             owner[r] = net
+
+    # -- 3b. where a link is soldered ---------------------------------------------------
+    # A wire is soldered into the hole it ends in, so that end joins whatever the hole
+    # carries: the net already in the hole, or -- in a hole with no lead in it -- every lead
+    # on the piece of strip the hole sits on.  `copper()` above unions the links without
+    # asking, which is what makes a link a connection at all; this asks the other question,
+    # which is whether each end landed somewhere that already belongs to one net.  Board 1,
+    # built and measured, satisfies it on all eleven links.  A link that ends in a hole on
+    # another net's strip is a short the union-find cannot see, because the union it makes is
+    # the thing that hides it.
+    if links:
+        bare = copper(bw, bh, cuts, bridged)
+        piece_net = defaultdict(set)                # hole -> the nets of its piece of strip
+
+        def strip_of(h):
+            if h in cuts:
+                return [h]
+            x, y = h
+            lo = x
+            while lo - 1 >= 0 and not broken(cuts, (lo - 1, y), (lo, y)):
+                lo -= 1
+            hi = x
+            while hi + 1 < bw and not broken(cuts, (hi, y), (hi + 1, y)):
+                hi += 1
+            return [(xx, y) for xx in range(lo, hi + 1)]
+
+        ends = {e for a, b in links for e in (a, b)}
+        for e in ends:
+            for p in strip_of(e):
+                for ref, (_, _, leads) in parts.items():
+                    for lh, net in leads:
+                        if lh == p:
+                            piece_net[e].add(NET.net_key(net))
+                for label, (ph, net, _) in pads.items():
+                    if ph == p:
+                        piece_net[e].add(NET.net_key(net))
+        for a, b in links:
+            for e in (a, b):
+                if e in lead_holes:
+                    continue                        # a lead: the joint, and its own net
+                names = set(piece_net[e])
+                for ref, (_, _, leads) in parts.items():
+                    for lh, net in leads:
+                        if bare(lh) == bare(e):
+                            names.add(NET.net_key(net))
+                names = {n for n in names if n is not None}
+                if len(names) > 1:
+                    errors.append(f'a link ends at {e}, whose copper already carries '
+                                  f'{sorted(names)}: soldering there joins them')
 
     # -- 4. bodies ----------------------------------------------------------------------
     for ref, (kind, _, leads) in parts.items():

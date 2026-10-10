@@ -1,77 +1,44 @@
 #!/usr/bin/env python3
 """Board A: the analogue board -- the input buffer, the bias and the output stage.
 
-STATUS, 2026-10-10: **placed to the corridor plan; the connectivity is not closed.**
+STATUS, 2026-10-10: **the placement now carries the spare-hole rule; the runs are not wired.**
 
-Corridor-first worked where area did not.  `board_a-corridors.svg` decides which rows and
-columns are wire-only -- IN_A alone at column 13 (the short high-impedance run, into the pin
-beside it), the ground return at 14, the low-impedance trunk at 11, the codec's pads at 10 --
-and the parts were then fitted into the bands between them.  The result is that this
-placement has **no geometric errors at all**: no overlaps, nothing off the board, nothing
-under another part's body, no lead in a corridor.  Three placement attempts and a change of
-outline could not achieve that; deciding the corridors first did.
+Two things happened in this pass, and the first is the more useful.
 
-Routing has since been worked on directly: every row that carries two nets is cut between
-the two leads that meet (26 cuts, all *between* holes), and the pieces are joined by wires
-(24 links).  That took the error count from 33 to 22 and left the placement still clean, but
-it did not close it.
+**A defect in the checker.**  `stripboard.copper` unioned holes along a row and, through the
+links, between rows -- but never *within* a column.  On this board that meant two things were
+invisible: a part lying down a column (a resistor's two leads are in different rows, and the
+part's own body joins the two strips) was never credited with joining them, and nothing could
+ever be reported as shorted down a column.  `board1.py` -- built, measured and working -- now
+checks out with the same numbers as before, so the fix reads the board the way the board is:
+**a part that bridges two rows is unioned like a link, a socket's pins are not, and a link may
+only be soldered where its own net already is.**  The last of those is new rule 3b: a wire end
+joins the hole's piece of strip, so a wire ending in a hole on another net's strip is a short
+that the union-find by itself cannot see, because the union it makes is what hides it.
 
-Two things are now settled and should not be redone:
+**The placement, moved to satisfy the rule the routing kept asking for.**  Every lead and pad
+hole now has a hole beside it that a wire may end in (`_place.py` measures this), and no two
+neighbouring leads of different parts are on different nets.  The output stage is what moved:
+its six parts stand in one band at row 16 -- C6 at x=0, C7 at x=3, the two 100 ohm resistors at
+x=5 and x=7, the 1M resistors at x=12 and x=14 -- with the input chain's lower half at x=8.
+The old placement had **three** leads with no hole beside them at all: C6.2 and C7.2, each
+boxed in by its own neighbour's body, and R9.2 on the bottom edge with both gaps beside it cut.
+No cut and no link could have freed any of them, which is why three routing attempts failed on
+a placement that had no geometric errors.
 
-  * **the cuts are derived, not guessed.**  `_cuts.py` groups each row's leads by the net they
-    are on and puts a cut at every net-to-net boundary, n-1 cuts for n nets.  On this layout
-    that is 34 cuts and it leaves **no two nets joined** -- zero shorts, where there were 19
-    earlier tonight.  Deriving them from the checker's own rows is what fixed that; the two
-    earlier attempts failed because they used a hand-written "are these two leads still
-    joined?" test instead.
-  * **the codec's old socket reservation is gone.**  Seating its 16-pin strips used to take
-    columns 1 and 10 for rows 2-17.  The codec is on standoffs now, only column 10 still
-    carries its fly-lead pads, and the input network and the bias chain have moved into the
-    reclaimed left band (columns 3-9).  That is where the room for them came from.
+What that cost: **nothing in area.**  The outline is unchanged at 18 x 24 holes
+(45.72 x 60.96 mm).  It did cost the two 10 uF input capacitors their place at the board's
+left edge, where they had been, and it moved the input chain's lower half from x=7 to x=8.
 
-Route-first was then tried (`_route.py`): walk each net in order of constraint -- IN_A first,
-then the ground return, then the low-impedance trunk -- place the links it needs, and cut a row
-only where the copper the routing is using would join a different net.  That is the right
-order, and it is the order this needs finishing in, but it did not close either: 14 nets are
-still in more than one piece.
+What is still open: **the runs are not wired.**  With the cuts this placement needs -- 27 of
+them, derived per net by isolating each net's own span in a row -- the checker reports
+**12 nets in more than one piece and no two nets joined**: the placement is legal and the
+copper is sound, and the wires that would close it are not placed.  The band search that found
+this placement does not yet carry the last constraint the routing needs -- that each output net
+has a way out to the panel's wires that avoids the band's own leads and bodies -- so a band
+whose parts are legal can still seal its own exits.
 
-**What blocks it, measured rather than guessed.**  Each remaining piece is a *single lead*
-whose four neighbours are other leads or cut holes, so a link has nowhere to attach: a wire
-needs a free hole at one end.  The node this bites hardest is IN_A, where U1.3, C5.2, R5.1 and
-the switch's common are all that net has and none of them can reach another.  So the fault is
-upstream of the routing: **the parts are placed so tightly that the nets have no spare holes
-between them**, and no cut or link can create one.  The fix is one more placement pass with a
-*spare hole* required beside every lead the routing will need to reach -- which is a rule the
-placement search never had.
-
-Everything else is settled: the placement has no geometric errors, the cuts are derived and
-leave no two nets joined, and the parts use the reclaimed left band that the codec's old
-socket reservation was holding empty.
-
-Previous status follows.
-
-**The connectivity is not closed.**  The outline is 18 x 24 holes
-(45.72 x 60.96 mm), taller than the enclosure's plate, and the parts are placed.  What is
-still wrong is reported when this runs: a handful of geometric collisions (a capacitor body
-over a neighbouring lead) and the nets the cuts leave in more than one piece.  The drawings
-are written anyway so the board can be looked at.
-
-Three things were established and are worth keeping:
-
-  * **The codec is not seated on board A.**  It stands above the board on its own taller
-    standoffs and comes down on short fly leads (enclosure/src/bl_pedal.py, CODEC_STANDOFF).
-    Seating its two 16-pin socket strips takes columns 1 and 10 for rows 2-17, and with those
-    holes gone no placement of the analogue stage could be routed -- greedy 0 of 3000,
-    backtracking 0 of 4222.  Moving the codec clear of board A instead puts a 55 mm lead on
-    its *input* side, which is the one thing this placement exists to prevent.
-  * **Growing the outline did not close it.**  18 x 20, 20 x 20, 22 x 20, 18 x 26, 18 x 30,
-    22 x 26 and 22 x 30 were all tried, each for a bounded time, and none routed.  The board
-    is not short of area: what it is short of is free *rows and columns* between the parts,
-    which is a placement problem, not a size one.  The extra height to 18 x 24 did buy the
-    output stage its own band clear of the codec's pads, which is why the outline is this one.
-  * **A router that cannot route board 1 tells you about the router.**  Both search tools were
-    validated against board 1, which is built and working, and neither could route it, so
-    neither is trusted to say a layout is impossible.  Both were removed from the tree.
+Everything below is the reasoning that led here.
 
 Board 1 (`stripboard/board1.py`) is the same circuit on one 124 x 33 mm piece of stripboard and
 does not fit the enclosure.  Board A is that circuit for the enclosure, and it is **not the
@@ -133,40 +100,13 @@ U1X, U1Y = 12, 5
 U1 = [(U1X, U1Y + i) for i in range(4)] + [(U1X + 3, U1Y + 3 - i) for i in range(4)]
 
 CUTS = {
-    (15.5, 0.0),
-    (15.5, 1.0),
-    (5.5, 2.0),
-    (9.0, 2.0),
-    (5.5, 3.0),
-    (9.0, 3.0),
-    (12.5, 3.0),
-    (16.0, 3.0),
-    (13.0, 4.0),
-    (10.0, 7.0),
-    (13.5, 7.0),
-    (9.0, 8.0),
-    (13.5, 8.0),
-    (7.5, 9.0),
-    (13.5, 9.0),
-    (4.0, 10.0),
-    (7.5, 10.0),
-    (11.0, 10.0),
-    (13.5, 10.0),
-    (9.0, 12.0),
-    (12.5, 12.0),
-    (13.5, 12.0),
-    (16.0, 12.0),
-    (4.0, 14.0),
-    (7.5, 14.0),
-    (4.0, 17.0),
-    (4.0, 18.0),
-    (2.0, 19.0),
-    (5.0, 19.0),
-    (8.0, 19.0),
-    (2.5, 23.0),
-    (6.0, 23.0),
-    (8.0, 23.0),
-    (10.5, 23.0),
+    (1.5, 16), (1.5, 17), (4.0, 16), (6.0, 16), (9.5, 16), (13.0, 16),
+    (6.0, 20), (9.5, 20),
+    (5.5, 2), (5.5, 3), (4.0, 10), (7.5, 9), (7.5, 10), (11.0, 10),
+    (4.0, 14), (7.5, 14),
+    (10.0, 7), (10.0, 9), (13.5, 7), (13.5, 8), (13.5, 9), (13.5, 10), (13.5, 12),
+    (13.0, 4), (12.5, 3),
+    (3.5, 23), (8.5, 23),
 }
 
 LINKS = []
@@ -174,21 +114,20 @@ PARTS = {
     'U1':  ('dip8', 'OPA2197 on adapter', [
         ((12, 7), 'LIN1'), ((12, 8), 'LIN1'), ((12, 9), 'IN_A'), ((12, 10), 'GND_A'),
         ((15, 10), 'BIAS'), ((15, 9), 'U1B'), ((15, 8), 'U1B'), ((15, 7), 'VF')]),
-    'C5':  ('film', '100nF film', [((8, 0), 'IN_RAW'), ((8, 3), 'IN_A')]) if False else
-           ('film', '100nF film', [((8, 0), 'IN_RAW'), ((8, 2), 'IN_A')]),
+    'C5':  ('film', '100nF film', [((8, 0), 'IN_RAW'), ((8, 2), 'IN_A')]),
     'R5':  ('r', '330k', [((8, 3), 'IN_A'), ((8, 7), 'IN_B')]),
-    'R6':  ('r', '680k', [((8, 8), 'IN_B'), ((8, 12), 'BIAS')]),
+    'R6':  ('r', '680k', [((8, 9), 'IN_B'), ((8, 13), 'BIAS')]),
     'C3':  ('cer', '100nF', [((17, 3), 'VF'), ((17, 4), 'GND_A')]),
     'C4':  ('el5', '10µF 50V', [((3, 2), 'BIAS'), ((3, 3), 'GND_A')]),
     'R2':  ('r', '10k', [((3, 5), 'VF'), ((3, 9), 'BIAS_MID')]),
     'R3':  ('r', '10k', [((3, 10), 'BIAS_MID'), ((3, 14), 'BIAS')]),
     'R4':  ('r', '10k', [((5, 10), 'BIAS'), ((5, 14), 'GND_A')]),
-    'C6':  ('el6.3', '10µF bipolar', [((1, 17), 'HPL'), ((1, 18), 'OUT_L_N')]),
-    'R7':  ('r', '100Ω', [((1, 19), 'OUT_L_N'), ((1, 23), 'OUT_L')]),
-    'R8':  ('r', '1M', [((3, 19), 'OUT_L'), ((3, 23), 'GND_A')]),
-    'C7':  ('el6.3', '10µF bipolar', [((7, 17), 'HPR'), ((7, 18), 'OUT_R_N')]),
-    'R9':  ('r', '100Ω', [((7, 19), 'OUT_R_N'), ((7, 23), 'OUT_R')]),
-    'R10': ('r', '1M', [((9, 19), 'OUT_R'), ((9, 23), 'GND_A')]),
+    'C6':  ('el6.3', '10µF bipolar', [((0, 16), 'HPL'), ((0, 17), 'OUT_L_N')]),
+    'R7':  ('r', '100Ω', [((5, 16), 'OUT_L_N'), ((5, 20), 'OUT_L')]),
+    'R8':  ('r', '1M', [((12, 16), 'OUT_L'), ((12, 20), 'GND_A')]),
+    'C7':  ('el6.3', '10µF bipolar', [((3, 16), 'HPR'), ((3, 17), 'OUT_R_N')]),
+    'R9':  ('r', '100Ω', [((7, 16), 'OUT_R_N'), ((7, 20), 'OUT_R')]),
+    'R10': ('r', '1M', [((14, 16), 'OUT_R'), ((14, 20), 'GND_A')]),
 }
 
 PADS = {
