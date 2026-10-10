@@ -1283,8 +1283,10 @@ nothing.** The engine holds only the audible document, pedald's `warm_decision` 
 library holds the rigs and pedald has *costed* them (its verdicts name them). Banks are explicit and
 there is no endpoint that sets one (`docs/pedal-service.md`: "banks and the map have no endpoint yet"),
 so a pedal that has just been synced with a library warms nothing and its footswitches have nothing to
-step to. That is why both T11 halves ran with cpu1 idle, and it is a blocker for 3.8 rather than a
-measurement detail. The sensible default is the one to argue about first: **a service with a library
+step to. That is why both T11 halves ran with cpu1 idle -- **fixed 2026-10-10**: `mapping.py` drops an
+empty bank and falls back to the library, which is the default argued for below, and T11's third
+run then held a warm document (cpu1 4.0%, no block over the deadline) with the full load and the
+app's traffic. It was a blocker for 3.8 for a day, not a measurement detail. Implemented as: **a service with a library
 and no bank has one bank, and it is the library** (D10's "the rigs the footswitches reach next"), set
 by the service when it finds no bank, with the app's own banks taking precedence once the API exists.
 
@@ -1429,11 +1431,12 @@ is gone from all five repositories — device trees, tooling, kernel fragments, 
 prose — rather than marked retired. `piv` is the one device behind these rules, and its tree is now
 ahead of its boot (config on the rules, kernel args still the old ones) — the state (2) above.
 
-**E2 is measured; the tiers wait on one listening test** (2026-10-06). All four of 3.8's open
+**E2 is settled (2026-10-10): you cannot hear an audible difference when a Lite stands in for a
+Full**, so the tiers wait on nothing. All four of 3.8's open
 questions are answered — Lite against Full over the whole library, catch-up for chains, warm
 density on vip, and an IR kept as a record — and the reading is
 [bench-results/2026-10-06-e2-tiers.md](bench-results/2026-10-06-e2-tiers.md), with the tables in
-namchain's `bench-results/e2-*.txt`. The one thing left is a judgement no bench makes: **is a Lite
+namchain's `bench-results/e2-*.txt`. The judgement no bench makes was: **is a Lite
 standing in for a Full audible?** That is what decides whether tier 2 survives as designed or the
 bank has to be tier 1, and it is 40 MB of WAVs in `build/e2/audition/24bit/` made by
 [bench-results/2026-10-06-e2-listening](bench-results/2026-10-06-e2-listening/README.md) — play
