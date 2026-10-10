@@ -193,6 +193,58 @@ class EngineClientTest(unittest.TestCase):
         self.assertEqual(engine.requests[-1][1]["rig"], "nope.json")
         self.assertEqual(engine.connections, 1)     # a refusal is an answer, not a failure
 
+    # ------------------------------------------------------------------ P8: lite_first
+
+    def test_rig_load_asks_for_the_lite_first_publish(self):
+        # P8: a cold publish is the case the two-step exists for -- the Lite plays while the Full is
+        # compiled behind it -- so the service asks on every load rather than judging the rig itself.
+        engine = self.start_engine()
+        client = self.start_client(engine)
+
+        client.rig_load("Big Lead.json")
+
+        request = engine.requests[-1][1]
+        self.assertEqual(request["method"], "rig.load")
+        self.assertIs(request["lite_first"], True)
+
+    def test_rig_switch_asks_for_the_lite_first_publish_and_the_fallback(self):
+        def cold(conn, request, connection, index):
+            conn.sendall(frame({"ok": True, "id": request["id"], "switched": "cold",
+                                "rig": "/rigs/c.json", "generation": 9,
+                                "lite_first": True, "lite": {"published": True, "adopted": True},
+                                "full": {"state": "compiling"}}))
+
+        engine = self.start_engine(cold)
+        client = self.start_client(engine)
+
+        reply = client.rig_switch("c.json")
+
+        request = engine.requests[-1][1]
+        self.assertIs(request["lite_first"], True)
+        self.assertTrue(request["fallback"])        # a press must never end in silence
+        # The two steps are passed through, not interpreted: the engine owns what a Lite standing in
+        # means, and `engine.status.cost.lite_first` is what says it is still the one playing.
+        self.assertIs(reply["lite_first"], True)
+        self.assertEqual(reply["full"]["state"], "compiling")
+
+    def test_a_warm_rig_answers_a_lite_first_request_with_false(self):
+        # What makes asking unconditionally safe: the engine ignores the flag for a rig that is warm
+        # -- a handover beats any Lite compile -- and says so rather than leaving the caller to guess.
+        def warm(conn, request, connection, index):
+            conn.sendall(frame({"ok": True, "id": request["id"], "switched": "warm",
+                                "rig": "/rigs/b.json", "doc": 1, "core": 3,
+                                "handover_blocks": 3, "fade_ms": 5, "completed": True,
+                                "lite_first": False}))
+
+        engine = self.start_engine(warm)
+        client = self.start_client(engine)
+
+        reply = client.rig_switch("b.json")
+
+        self.assertIs(engine.requests[-1][1]["lite_first"], True)   # asked for
+        self.assertEqual(reply["switched"], "warm")
+        self.assertIs(reply["lite_first"], False)                   # and not what happened
+
     # ------------------------------------------------------------------ rig.cost
 
     def test_rig_cost_asks_for_the_rig_and_returns_the_engines_verdict(self):

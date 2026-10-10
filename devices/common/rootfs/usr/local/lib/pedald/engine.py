@@ -118,8 +118,24 @@ class EngineClient:
         return self.call("rig.get")
 
     def rig_load(self, rig):
-        """Load a rig by name, resolved under the daemon's `rigs_root`."""
-        return self.call("rig.load", rig=rig)
+        """Load a rig by name, resolved under the daemon's `rigs_root`.
+
+        `lite_first` asks for P8's two-step publish: the document's **Lite** goes first — it
+        compiles in about a third of the time, and the owner cannot hear a Lite standing in for a
+        Full — and the engine compiles the Full behind it, replays the input into it and crossfades
+        it in. It is what stops a press waiting for a Full's compile, so the service asks for it on
+        every publish rather than only when it has decided the rig is heavy.
+
+        **Asking unconditionally is safe, and that is the engine's rule rather than this caller's
+        belief** (namchain `Daemon::switch_to`, `publish_lite_first`): a rig that is *warm* is
+        answered `switched: warm` with `lite_first: false` and no publish at all, because a handover
+        is already faster than any Lite compile; a document with nothing to trim is answered
+        `full.state: nothing_to_trim`; and a rig the budget would trim anyway gains nothing. Only
+        the cold path that has a Full to compile behind a Lite uses it. The reply carries what
+        happened (`lite_first`, `lite`, `full`) and `engine.status.cost.lite_first` stays true while
+        the Lite is standing in — which is what `engine.lite_pending` reports.
+        """
+        return self.call("rig.load", rig=rig, lite_first=True)
 
     def rig_cost(self, rig):
         """What a rig would cost on this device, without playing or compiling it.
@@ -177,8 +193,13 @@ class EngineClient:
         One refusal is about the device rather than the rig: `warm_disabled` means this device
         has no `warm_cpus` and the engine's switch is off *entirely* — it will not fall back
         either — so a caller that must make sound asks for `rig_load` on that one code.
+
+        `lite_first` rides along on the same terms as \ref rig_load: a press that cold-loads a rig
+        is the case P8 exists for, because it is the press that would otherwise wait for a Full's
+        compile. A warm rig ignores it and says so (`switched: warm`, `lite_first: false`) rather
+        than obeying it, so asking on every press is safe.
         """
-        return self.call("rig.switch", rig=rig, fallback=bool(fallback))
+        return self.call("rig.switch", rig=rig, fallback=bool(fallback), lite_first=True)
 
     def assets(self, refresh=False):
         """The model and impulse-response library; `refresh` rescans the roots first."""
