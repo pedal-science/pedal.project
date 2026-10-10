@@ -1,0 +1,125 @@
+{
+  "chains" : [
+    {
+      "elements" : [
+        {
+          "block" : {
+            "_0" : {
+              "componentID" : "util.volume",
+              "id" : "F03DD94B-71BA-4EC7-90AD-4C6E2D797D0F",
+              "isEnabled" : true,
+              "values" : {
+
+              }
+            }
+          }
+        },
+        {
+          "parallel" : {
+            "_0" : {
+              "balance" : 0,
+              "crossoverHz" : 800,
+              "id" : "6CC4CEC7-098A-4F38-970A-49793C98B2A5",
+              "lanes" : [
+                {
+                  "elements" : [
+                    {
+                      "block" : {
+                        "_0" : {
+                          "componentID" : "eq.highcut",
+                          "id" : "FB649601-CC86-458C-AACE-11DB8AFF779C",
+                          "isEnabled" : true,
+                          "values" : {
+
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "id" : "E1CD4495-5D89-43C6-AECF-97D4D5B3828B",
+                  "invertPhase" : false,
+                  "isMuted" : false,
+                  "level" : 0,
+                  "pan" : 0
+                },
+                {
+                  "elements" : [
+                    {
+                      "block" : {
+                        "_0" : {
+                          "componentID" : "eq.lowcut",
+                          "id" : "BB0AE332-BD89-42BD-B406-708D577055AC",
+                          "isEnabled" : true,
+                          "values" : {
+
+                          }
+                        }
+                      }
+                    }
+                  ],
+                  "id" : "2F4A8767-58C9-4183-B9E7-BD9E98EF5B21",
+                  "invertPhase" : false,
+                  "isMuted" : false,
+                  "level" : 0,
+                  "pan" : 0
+                }
+              ],
+              "splitMode" : "yCable"
+            }
+          }
+        }
+      ],
+      "id" : "D90BC979-1E4F-4327-8C9D-5AEFE826F677",
+      "input" : {
+        "id" : "B6B79EBF-C2BE-48F8-A176-5EDE6B894C00",
+        "values" : {
+
+        }
+      },
+      "name" : "Guitar",
+      "output" : {
+        "id" : "5BFAE12C-8A2B-4F6E-8B85-48E084B1BC89",
+        "values" : {
+
+        }
+      },
+      "source" : "guitar"
+    },
+    {
+      "elements" : [
+        {
+          "block" : {
+            "_0" : {
+              "componentID" : "util.gain",
+              "id" : "F0F132D1-1A2F-442F-98FD-1C93AA53C023",
+              "isEnabled" : true,
+              "values" : {
+
+              }
+            }
+          }
+        }
+      ],
+      "id" : "C36DCC40-F872-4C65-9FA5-ED3CD4D4C7A0",
+      "input" : {
+        "id" : "5AF719AD-7F14-4160-88D2-EA3CE10ED0D1",
+        "values" : {
+
+        }
+      },
+      "name" : "Vocal",
+      "output" : {
+        "id" : "1CB60309-3696-45FB-9EA6-729F67F47B31",
+        "values" : {
+
+        }
+      },
+      "source" : "vocal"
+    }
+  ],
+  "createdAt" : "2026-10-03T17:27:00Z",
+  "id" : "AAFFC1F6-2F00-4FFC-AAAD-71EA24131578",
+  "layout" : "dual",
+  "modifiedAt" : "2026-10-03T17:29:47Z",
+  "name" : "Test"
+}
