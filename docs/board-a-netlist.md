@@ -90,6 +90,21 @@ than by what fits on one piece:
   the split the 2b finding argues for: what the supply draws stays out of the analogue ground;
 - **the control board** (board B in the enclosure) — the Pico, MIDI and the relay driver.
 
+### Where the codec goes
+
+It stays **above board A**, but no longer seated in it.  `enclosure/src/layout.py` seats its two
+16-pin socket strips at hole (1, 2), which is what costs the board columns 1 and 10 for rows
+2-17.  Moving the module off board A altogether is not free either: the nearest position that
+does not overlap board A, the Pi or board B is 55 mm from the input, and that puts a long lead
+on the codec's *input* side -- the one thing board A's placement exists to avoid.
+
+So: **the codec keeps its position above board A, on taller standoffs, and comes down on short
+fly leads instead of through socket strips.**  Its ground is its own wire to the star.  That
+keeps the LIN1 lead short, frees the whole 18 x 20 holes for the analogue stage, and is neutral
+for noise -- 2a's comb was a *second* ground path, which this does not add.  It is what the
+search above needs: with those two columns reserved, no placement routed; without them, the
+board has the copper its wires need.
+
 The size of board A is the enclosure's, not a number chosen here: `enclosure/src/layout.py`
 places it at 18 × 20 holes, **45.72 × 50.8 mm**, and the codec's breakout sits above it on
 two 16-pin socket strips which `layout.py` seats at hole (1, 2) — so those holes (columns 1
