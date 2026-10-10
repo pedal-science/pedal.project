@@ -2,10 +2,10 @@
 # the snapshot and the kernel change by hand, deliberately. Check namchain is the engine and
 # rigpa the UI you mean, and that the kernel is the rebuild you mean (docs/vip-kernel-image.md).
 snapshot=20260929T000000Z
-pedal=8f9181bf0b77c22e74da138d21423666e25626bb
-rtpi=9f9faaf1775e6855afd6d51419a85d9c74544e27
+pedal=a5abbe68d938aa782f432212fb96ff7d2729a913
+rtpi=c2c23a4900c37409b77286eb8744974f09d565cf
 namchain=eba5eef57897899dab2d7560661a620679a9048f
-rigpa=72bcf0b251039bc52f949ab2805ca41d49a7fa45
+rigpa=429bc8a681ecd66eda96512a1340bbbe967ec646
 
 # The pedal kernel: rtpi's rebuild, which is in no archive, so the image takes it from rtpi's
 # build/vip/ as artefacts and pins it by hash — make-card verifies every one of these before the
