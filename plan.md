@@ -1324,7 +1324,12 @@ pedal: press-to-full-rig, with the Lite in the meantime and that state visible w
 
 (2) **piv's reboot** — the tool is built, tested (**33 cases green**, and the vip suite beside it 54 with
 10 skipped for `dtc`) and **pushed** (`rtpi a6d4d67`; the subagent's own push died on the locked ssh
-agent, so it went over https), and it is the *board* that has not moved. On piv:
+agent, so it went over https), and it is the *board* that has not moved. **Corrected below**: the two
+commands this item used to give are not the route for this change — `piv-boot set-args` edits the
+active line in place, with no candidate and no automatic fallback, and on piv it was reading the
+wrong file as well, so it refused a write nobody was making (`rtpi a497598`, which fixed the
+resolution and took the suite to 44). The route is the tryboot one-shot, spelled out under
+"What `piv-boot` is not" below. On piv:
 
     sudo piv-boot status                       # card line, running line, proposal, diff
     sudo piv-boot set-args --yes --reboot      # write it and reboot, which is what applies it
@@ -1360,11 +1365,36 @@ E2's compensated shape. The service already accepts a temporary Lite; T9 measure
 
 (2) **piv** — its tree is on the rules (isolate 1-3, housekeeping 0, the USB audio interrupt on core 1)
 but the board still boots the old command line (`cat /proc/cmdline` shows 2-3 and `irqaffinity=0-1`).
-**piv has no candidate slot to arm** (`/boot/firmware/` holds `current` and no `new`, and
-`arm-try-piv.sh` refuses without a candidate in the untested state), so the route that fits the job is
-**vip's own**: `vip-boot try-args` boots the running kernel once with new tuned arguments — an args
-change and nothing else — ported to piv's single-slot layout, or a staged candidate. Then
-`rtpi-audio-tune check` and `devices/piv/check` on the board. Its own session.
+piv **has** the slot: `/boot/firmware/config.txt` carries `[all] os_prefix=current/` with
+`[tryboot] os_prefix=new/`, and `new/` is absent only because nothing has been staged into it yet.
+So the route for an arguments change is the designed one — the one-shot, which stages `new/` as
+`current/` plus the tuned arguments, boots it once, and keeps `current/` bootable so a candidate
+that does not come up falls back by itself:
+
+    make piv-audio-boot-args          # flash-kernel, then --audio-tuning, then watch the reboot
+    # or by hand, with a kernel release you name yourself:
+    scripts/safety/arm-try-piv.sh --expect "$(ssh piv uname -r)" --audio-tuning --reboot
+
+then `rtpi-audio-tune check` and `devices/piv/check` on the board. Its own session, and the owner's
+call on timing, since it is a reboot.
+
+**What `piv-boot` is not.** It read the wrong file until this fix — with `os_prefix=current/` the
+firmware reads `/boot/firmware/current/cmdline.txt`, and the tool opened the one-option leftover at
+the root of the boot partition — so its `set-args` is **not** the route to use for an untested
+change: it edits the active line in place, with no candidate behind the change and no automatic
+fallback (the tool now says so in its own output, and prints the path it resolved). It is worth
+having for the case the tryboot route does not fit — a board that is already up and arguments
+already known to boot — and `--restore` puts the newest backup back.
+
+**What a piv copy could not inherit from `vip-boot`**, for whoever touches this next: vip's whole model
+is two fixed slots with `profile.txt`/`tryboot.txt` rewritten in place at fixed length, an `os_prefix`,
+and tryboot staging a candidate — and the arguments-changing part of it has no counterpart here:
+`vip-boot try-args` rewrites both slots at once, while piv has one line in one tree, so the write is
+temp-plus-fsync-plus-rename rather than a fixed-length write in place. The one thing piv does have
+is the slot itself, which is what makes `arm-try-piv.sh --audio-tuning` the route — and it has been
+exercised: rtpi's `devices/piv/last-known-state.txt` records a completed tryboot
+(`this boot is a tryboot: 1`) with `current/` and `old/` both `good` and no `new/`, which is a
+candidate that was staged, booted and promoted.
 
 (3) **3.8's acceptance** — a press end to end (footswitch → Pico → pedald → engine → sound), then 3.5.
 Two things are still the owner's: the power question behind T8's reboot (the journal is persistent now,
