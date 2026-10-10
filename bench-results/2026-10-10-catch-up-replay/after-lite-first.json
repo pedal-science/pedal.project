@@ -1,0 +1,3693 @@
+{
+ "host": "vip",
+ "started": "2026-10-10T14:05:34",
+ "runs": [
+  {
+   "arm": "engine-no-lite",
+   "run": 1,
+   "rig": "t9-base.json",
+   "lite_first": false,
+   "from": "/var/lib/pedal/library/rigs/last.json",
+   "published_generation": 3,
+   "full_generation": 3,
+   "reply": {
+    "switched": "cold",
+    "reason": "nothing is warm",
+    "lite_first": null,
+    "handover_blocks": null,
+    "fade_ms": null,
+    "generation": 3,
+    "doc": null,
+    "core": null
+   },
+   "reply_lite": null,
+   "reply_full": null,
+   "reply_ms": 23.049,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/last.json",
+    "generation": 2,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 218.684,
+     "worst_percent": 16.401304100326026,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 0,
+     "cold_switches": 0,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t5-lstm",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 2,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 3,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 218.684,
+     "worst_percent": 16.401304100326026,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 0,
+     "cold_switches": 1,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 3,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "lite_ms": 28.856,
+   "full_ms": null,
+   "poll_interval_ms": 7.465,
+   "catch_up_state": [
+    [
+     478589.778541,
+     "none"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     478589.778541,
+     "idle"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     478589.778541,
+     "none"
+    ]
+   ],
+   "catch_up_hold": [
+    [
+     478589.778541,
+     {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     }
+    ]
+   ],
+   "catch_up_blocks": [
+    [
+     478589.778541,
+     0
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     478589.778541,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     478589.778541,
+     3
+    ]
+   ],
+   "chain_audible": [
+    [
+     478589.778541,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 16479,
+     "generation": 3,
+     "target_generation": 3,
+     "audible_generation": 3,
+     "adopted_generation": 3,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "none",
+      "replay": "none",
+      "full": "idle",
+      "frames": 0,
+      "blocks": 0,
+      "hold_frames": 0,
+      "running": false,
+      "progress": "idle",
+      "fill": "none",
+      "history_block_frames": 0,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": false,
+      "block_frames": 0,
+      "blocks": 0,
+      "channels": 0,
+      "configured": false,
+      "consumed": 0,
+      "dropped": 0,
+      "head": 0,
+      "newest_seq": 0,
+      "oldest_seq": 0,
+      "tail": 0,
+      "written": 0
+     },
+     "catch_up_window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 3,
+       "audible_generation": 3,
+       "target_generation": 3,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 1,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 3,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478589.778540875
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 61493,
+     "generation": 3,
+     "target_generation": 3,
+     "audible_generation": 3,
+     "adopted_generation": 3,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "none",
+      "replay": "none",
+      "full": "idle",
+      "frames": 0,
+      "blocks": 0,
+      "hold_frames": 0,
+      "running": false,
+      "progress": "idle",
+      "fill": "none",
+      "history_block_frames": 0,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": false,
+      "block_frames": 0,
+      "blocks": 0,
+      "channels": 0,
+      "configured": false,
+      "consumed": 0,
+      "dropped": 0,
+      "head": 0,
+      "newest_seq": 0,
+      "oldest_seq": 0,
+      "tail": 0,
+      "written": 0
+     },
+     "catch_up_window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 3,
+       "audible_generation": 3,
+       "target_generation": 3,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 1,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 3,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478649.800345208
+    }
+   ],
+   "polls_total": 8041
+  },
+  {
+   "arm": "engine-no-lite",
+   "run": 2,
+   "rig": "t9-base.json",
+   "lite_first": false,
+   "from": "/var/lib/pedal/library/rigs/last.json",
+   "published_generation": 3,
+   "full_generation": 3,
+   "reply": {
+    "switched": "cold",
+    "reason": "nothing is warm",
+    "lite_first": null,
+    "handover_blocks": null,
+    "fade_ms": null,
+    "generation": 3,
+    "doc": null,
+    "core": null
+   },
+   "reply_lite": null,
+   "reply_full": null,
+   "reply_ms": 7.58,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/last.json",
+    "generation": 3,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 218.684,
+     "worst_percent": 16.401304100326026,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 0,
+     "cold_switches": 1,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 3,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 3,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 218.684,
+     "worst_percent": 16.401304100326026,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 0,
+     "cold_switches": 2,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 3,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "lite_ms": 18.359,
+   "full_ms": null,
+   "poll_interval_ms": 7.626,
+   "catch_up_state": [
+    [
+     478650.751202,
+     "none"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     478650.751202,
+     "idle"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     478650.751202,
+     "none"
+    ]
+   ],
+   "catch_up_hold": [
+    [
+     478650.751202,
+     {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     }
+    ]
+   ],
+   "catch_up_blocks": [
+    [
+     478650.751202,
+     0
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     478650.751202,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     478650.751202,
+     3
+    ]
+   ],
+   "chain_audible": [
+    [
+     478650.751202,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 62206,
+     "generation": 3,
+     "target_generation": 3,
+     "audible_generation": 3,
+     "adopted_generation": 3,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "none",
+      "replay": "none",
+      "full": "idle",
+      "frames": 0,
+      "blocks": 0,
+      "hold_frames": 0,
+      "running": false,
+      "progress": "idle",
+      "fill": "none",
+      "history_block_frames": 0,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": false,
+      "block_frames": 0,
+      "blocks": 0,
+      "channels": 0,
+      "configured": false,
+      "consumed": 0,
+      "dropped": 0,
+      "head": 0,
+      "newest_seq": 0,
+      "oldest_seq": 0,
+      "tail": 0,
+      "written": 0
+     },
+     "catch_up_window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 3,
+       "audible_generation": 3,
+       "target_generation": 3,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 2,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 3,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478650.751201625
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 107215,
+     "generation": 3,
+     "target_generation": 3,
+     "audible_generation": 3,
+     "adopted_generation": 3,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "none",
+      "replay": "none",
+      "full": "idle",
+      "frames": 0,
+      "blocks": 0,
+      "hold_frames": 0,
+      "running": false,
+      "progress": "idle",
+      "fill": "none",
+      "history_block_frames": 0,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": false,
+      "block_frames": 0,
+      "blocks": 0,
+      "channels": 0,
+      "configured": false,
+      "consumed": 0,
+      "dropped": 0,
+      "head": 0,
+      "newest_seq": 0,
+      "oldest_seq": 0,
+      "tail": 0,
+      "written": 0
+     },
+     "catch_up_window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 3,
+       "audible_generation": 3,
+       "target_generation": 3,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 2,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 3,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478710.759113
+    }
+   ],
+   "polls_total": 7870
+  },
+  {
+   "arm": "engine-no-lite",
+   "run": 3,
+   "rig": "t9-base.json",
+   "lite_first": false,
+   "from": "/var/lib/pedal/library/rigs/last.json",
+   "published_generation": 3,
+   "full_generation": 3,
+   "reply": {
+    "switched": "cold",
+    "reason": "nothing is warm",
+    "lite_first": null,
+    "handover_blocks": null,
+    "fade_ms": null,
+    "generation": 3,
+    "doc": null,
+    "core": null
+   },
+   "reply_lite": null,
+   "reply_full": null,
+   "reply_ms": 6.715,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/last.json",
+    "generation": 3,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 218.684,
+     "worst_percent": 16.401304100326026,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 0,
+     "cold_switches": 2,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 3,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 3,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 218.684,
+     "worst_percent": 16.401304100326026,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 0,
+     "cold_switches": 3,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 3,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "lite_ms": 14.184,
+   "full_ms": null,
+   "poll_interval_ms": 8.095,
+   "catch_up_state": [
+    [
+     478711.701567,
+     "none"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     478711.701567,
+     "idle"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     478711.701567,
+     "none"
+    ]
+   ],
+   "catch_up_hold": [
+    [
+     478711.701567,
+     {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     }
+    ]
+   ],
+   "catch_up_blocks": [
+    [
+     478711.701567,
+     0
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     478711.701567,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     478711.701567,
+     3
+    ]
+   ],
+   "chain_audible": [
+    [
+     478711.701567,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 107921,
+     "generation": 3,
+     "target_generation": 3,
+     "audible_generation": 3,
+     "adopted_generation": 3,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "none",
+      "replay": "none",
+      "full": "idle",
+      "frames": 0,
+      "blocks": 0,
+      "hold_frames": 0,
+      "running": false,
+      "progress": "idle",
+      "fill": "none",
+      "history_block_frames": 0,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": false,
+      "block_frames": 0,
+      "blocks": 0,
+      "channels": 0,
+      "configured": false,
+      "consumed": 0,
+      "dropped": 0,
+      "head": 0,
+      "newest_seq": 0,
+      "oldest_seq": 0,
+      "tail": 0,
+      "written": 0
+     },
+     "catch_up_window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 3,
+       "audible_generation": 3,
+       "target_generation": 3,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 3,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 3,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478711.701566541
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 152928,
+     "generation": 3,
+     "target_generation": 3,
+     "audible_generation": 3,
+     "adopted_generation": 3,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "none",
+      "replay": "none",
+      "full": "idle",
+      "frames": 0,
+      "blocks": 0,
+      "hold_frames": 0,
+      "running": false,
+      "progress": "idle",
+      "fill": "none",
+      "history_block_frames": 0,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": false,
+      "block_frames": 0,
+      "blocks": 0,
+      "channels": 0,
+      "configured": false,
+      "consumed": 0,
+      "dropped": 0,
+      "head": 0,
+      "newest_seq": 0,
+      "oldest_seq": 0,
+      "tail": 0,
+      "written": 0
+     },
+     "catch_up_window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 3,
+       "audible_generation": 3,
+       "target_generation": 3,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 3,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 3,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478771.711270791
+    }
+   ],
+   "polls_total": 7414
+  },
+  {
+   "arm": "engine-lite",
+   "run": 1,
+   "rig": "t9-base.json",
+   "lite_first": true,
+   "from": "/var/lib/pedal/library/rigs/last.json",
+   "published_generation": 4,
+   "full_generation": 5,
+   "reply": {
+    "switched": "cold",
+    "reason": "nothing is warm",
+    "lite_first": true,
+    "handover_blocks": null,
+    "fade_ms": null,
+    "generation": 4,
+    "doc": null,
+    "core": null
+   },
+   "reply_lite": {
+    "adopted": true,
+    "cost": 0.07112000000000002,
+    "full_cost": 0.14882,
+    "generation": 4,
+    "slimmed_models": [
+     {
+      "chain": "one",
+      "cost": 0.0333,
+      "element": "amp0",
+      "full_cost": 0.111,
+      "node": "amp0",
+      "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+      "row": "NAM.WaveNet.lite",
+      "working_set_bytes": 300808
+     }
+    ],
+    "trimmed": true,
+    "verdict": "trimmed"
+   },
+   "reply_full": {
+    "catch_up": {
+     "blocks": 0,
+     "device_period_size": 0,
+     "fill": "none",
+     "frames": 14539,
+     "full": "compiling",
+     "history_block_frames": 0,
+     "hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "hold_frames": 0,
+     "period_mismatch": 0,
+     "progress": "idle",
+     "replay": "running",
+     "ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 0,
+      "dropped": 0,
+      "head": 13,
+      "newest_seq": 153621,
+      "oldest_seq": 0,
+      "tail": 0,
+      "written": 13
+     },
+     "running": true,
+     "seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "state": "exact",
+     "window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     }
+    },
+    "state": "compiling"
+   },
+   "reply_ms": 33.643,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/last.json",
+    "generation": 3,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 218.684,
+     "worst_percent": 16.401304100326026,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 0,
+     "cold_switches": 3,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 3,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 5,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 218.684,
+     "worst_percent": 16.401304100326026,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 0,
+     "cold_switches": 4,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 5,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "lite_ms": 40.68,
+   "full_ms": 350.978,
+   "poll_interval_ms": 7.701,
+   "catch_up_state": [
+    [
+     478772.644187,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     478772.644187,
+     "compiling"
+    ],
+    [
+     478772.658895,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     478772.644187,
+     "running"
+    ],
+    [
+     478772.946903,
+     "exact"
+    ]
+   ],
+   "catch_up_hold": [
+    [
+     478772.644187,
+     {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     }
+    ],
+    [
+     478772.954485,
+     {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 1,
+      "exact_at": 13888
+     }
+    ]
+   ],
+   "catch_up_blocks": [
+    [
+     478772.644187,
+     0
+    ],
+    [
+     478772.946903,
+     228
+    ],
+    [
+     478772.954485,
+     247
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     478772.644187,
+     true
+    ],
+    [
+     478772.954485,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     478772.644187,
+     4
+    ],
+    [
+     478772.954485,
+     5
+    ]
+   ],
+   "chain_audible": [
+    [
+     478772.644187,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 153628,
+     "generation": 4,
+     "target_generation": 4,
+     "audible_generation": 4,
+     "adopted_generation": 4,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": true,
+      "verdict": "trimmed",
+      "cost": 0.07112000000000002
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "compiling",
+      "frames": 14539,
+      "blocks": 0,
+      "hold_frames": 0,
+      "running": true,
+      "progress": "idle",
+      "fill": "none",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 0,
+      "dropped": 0,
+      "head": 20,
+      "newest_seq": 153628,
+      "oldest_seq": 0,
+      "tail": 0,
+      "written": 20
+     },
+     "catch_up_window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 4,
+       "audible_generation": 4,
+       "target_generation": 4,
+       "transition_active": false,
+       "slimmed_models": [
+        {
+         "cost": 0.0333,
+         "element": "amp0",
+         "full_cost": 0.111,
+         "node": "amp0",
+         "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+         "row": "NAM.WaveNet.lite"
+        }
+       ],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 4,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 4,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478772.644186541
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 153639,
+     "generation": 5,
+     "target_generation": 4,
+     "audible_generation": 4,
+     "adopted_generation": 4,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "hold_frames": 26560,
+      "running": true,
+      "progress": "idle",
+      "fill": "none",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 0,
+      "dropped": 0,
+      "head": 31,
+      "newest_seq": 153639,
+      "oldest_seq": 0,
+      "tail": 0,
+      "written": 31
+     },
+     "catch_up_window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 5,
+       "audible_generation": 4,
+       "target_generation": 4,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 4,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 4,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478772.658894583
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 153646,
+     "generation": 5,
+     "target_generation": 5,
+     "audible_generation": 4,
+     "adopted_generation": 5,
+     "transition_active": true,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "hold_frames": 26560,
+      "running": true,
+      "progress": "filling",
+      "fill": "none",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 37,
+      "dropped": 0,
+      "head": 38,
+      "newest_seq": 153646,
+      "oldest_seq": 153645,
+      "tail": 37,
+      "written": 38
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 37,
+      "held": 37,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 5,
+       "audible_generation": 4,
+       "target_generation": 5,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 4,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 5,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478772.666832208
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 153840,
+     "generation": 5,
+     "target_generation": 5,
+     "audible_generation": 4,
+     "adopted_generation": 5,
+     "transition_active": true,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "hold_frames": 26560,
+      "running": true,
+      "progress": "replaying",
+      "fill": "need_met",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 228,
+      "dropped": 0,
+      "head": 232,
+      "newest_seq": 153840,
+      "oldest_seq": 153836,
+      "tail": 228,
+      "written": 232
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 228,
+      "held": 228,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 5,
+       "audible_generation": 4,
+       "target_generation": 5,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 4,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 5,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478772.92526875
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 153854,
+     "generation": 5,
+     "target_generation": 5,
+     "audible_generation": 4,
+     "adopted_generation": 5,
+     "transition_active": true,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 228,
+      "hold_frames": 26560,
+      "running": true,
+      "progress": "mirroring",
+      "fill": "need_met",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 241,
+      "dropped": 0,
+      "head": 246,
+      "newest_seq": 153854,
+      "oldest_seq": 153850,
+      "tail": 241,
+      "written": 246
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 228,
+      "held": 228,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "catch_up_seq": {
+      "executed": 153849,
+      "fed": 153849
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 5,
+       "audible_generation": 4,
+       "target_generation": 5,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 4,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 5,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478772.946903
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 153861,
+     "generation": 5,
+     "target_generation": 5,
+     "audible_generation": 5,
+     "adopted_generation": 5,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 247,
+      "hold_frames": 26560,
+      "running": false,
+      "progress": "done",
+      "fill": "need_met",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": false,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 247,
+      "dropped": 0,
+      "head": 248,
+      "newest_seq": 153856,
+      "oldest_seq": 153855,
+      "tail": 247,
+      "written": 248
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 228,
+      "held": 228,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 1,
+      "exact_at": 13888
+     },
+     "catch_up_seq": {
+      "executed": 153855,
+      "fed": 153855
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 5,
+       "audible_generation": 5,
+       "target_generation": 5,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 4,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 5,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478772.954484833
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 153876,
+     "generation": 5,
+     "target_generation": 5,
+     "audible_generation": 5,
+     "adopted_generation": 5,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 247,
+      "hold_frames": 26560,
+      "running": false,
+      "progress": "done",
+      "fill": "need_met",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": false,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 247,
+      "dropped": 0,
+      "head": 248,
+      "newest_seq": 153856,
+      "oldest_seq": 153855,
+      "tail": 247,
+      "written": 248
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 228,
+      "held": 228,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 1,
+      "exact_at": 13888
+     },
+     "catch_up_seq": {
+      "executed": 153855,
+      "fed": 153855
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 5,
+       "audible_generation": 5,
+       "target_generation": 5,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 4,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 5,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478772.975345666
+    }
+   ],
+   "polls_total": 44
+  },
+  {
+   "arm": "engine-lite",
+   "run": 2,
+   "rig": "t9-base.json",
+   "lite_first": true,
+   "from": "/var/lib/pedal/library/rigs/last.json",
+   "published_generation": 6,
+   "full_generation": 7,
+   "reply": {
+    "switched": "cold",
+    "reason": "nothing is warm",
+    "lite_first": true,
+    "handover_blocks": null,
+    "fade_ms": null,
+    "generation": 6,
+    "doc": null,
+    "core": null
+   },
+   "reply_lite": {
+    "adopted": true,
+    "cost": 0.07112000000000002,
+    "full_cost": 0.14882,
+    "generation": 6,
+    "slimmed_models": [
+     {
+      "chain": "one",
+      "cost": 0.0333,
+      "element": "amp0",
+      "full_cost": 0.111,
+      "node": "amp0",
+      "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+      "row": "NAM.WaveNet.lite",
+      "working_set_bytes": 300808
+     }
+    ],
+    "trimmed": true,
+    "verdict": "trimmed"
+   },
+   "reply_full": {
+    "catch_up": {
+     "blocks": 0,
+     "device_period_size": 0,
+     "fill": "none",
+     "frames": 14539,
+     "full": "compiling",
+     "history_block_frames": 0,
+     "hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "hold_frames": 0,
+     "period_mismatch": 0,
+     "progress": "idle",
+     "replay": "running",
+     "ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 247,
+      "dropped": 0,
+      "head": 260,
+      "newest_seq": 154565,
+      "oldest_seq": 153855,
+      "tail": 247,
+      "written": 260
+     },
+     "running": true,
+     "seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "state": "exact",
+     "window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     }
+    },
+    "state": "compiling"
+   },
+   "reply_ms": 32.805,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/last.json",
+    "generation": 5,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 218.684,
+     "worst_percent": 16.401304100326026,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 0,
+     "cold_switches": 4,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 5,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 7,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 218.684,
+     "worst_percent": 16.401304100326026,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 0,
+     "cold_switches": 5,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 7,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "lite_ms": 40.173,
+   "full_ms": 355.607,
+   "poll_interval_ms": 6.905,
+   "catch_up_state": [
+    [
+     478773.903011,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     478773.903011,
+     "compiling"
+    ],
+    [
+     478773.917517,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     478773.903011,
+     "exact"
+    ],
+    [
+     478773.917517,
+     "running"
+    ],
+    [
+     478774.211904,
+     "exact"
+    ]
+   ],
+   "catch_up_hold": [
+    [
+     478773.903011,
+     {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 1,
+      "exact_at": 13888
+     }
+    ],
+    [
+     478774.211904,
+     {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 2,
+      "exact_at": 14016
+     }
+    ]
+   ],
+   "catch_up_blocks": [
+    [
+     478773.903011,
+     247
+    ],
+    [
+     478774.211904,
+     248
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     478773.903011,
+     true
+    ],
+    [
+     478774.218445,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     478773.903011,
+     6
+    ],
+    [
+     478774.218445,
+     7
+    ]
+   ],
+   "chain_audible": [
+    [
+     478773.903011,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 154572,
+     "generation": 6,
+     "target_generation": 6,
+     "audible_generation": 6,
+     "adopted_generation": 6,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": true,
+      "verdict": "trimmed",
+      "cost": 0.07112000000000002
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "compiling",
+      "frames": 14539,
+      "blocks": 247,
+      "hold_frames": 0,
+      "running": false,
+      "progress": "idle",
+      "fill": "none",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 247,
+      "dropped": 0,
+      "head": 267,
+      "newest_seq": 154572,
+      "oldest_seq": 153855,
+      "tail": 247,
+      "written": 267
+     },
+     "catch_up_window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 1,
+      "exact_at": 13888
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 6,
+       "audible_generation": 6,
+       "target_generation": 6,
+       "transition_active": false,
+       "slimmed_models": [
+        {
+         "cost": 0.0333,
+         "element": "amp0",
+         "full_cost": 0.111,
+         "node": "amp0",
+         "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+         "row": "NAM.WaveNet.lite"
+        }
+       ],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 5,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 6,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478773.903010625
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 154583,
+     "generation": 7,
+     "target_generation": 6,
+     "audible_generation": 6,
+     "adopted_generation": 6,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 247,
+      "hold_frames": 26560,
+      "running": true,
+      "progress": "idle",
+      "fill": "none",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 247,
+      "dropped": 0,
+      "head": 278,
+      "newest_seq": 154583,
+      "oldest_seq": 153855,
+      "tail": 247,
+      "written": 278
+     },
+     "catch_up_window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 1,
+      "exact_at": 13888
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 7,
+       "audible_generation": 6,
+       "target_generation": 6,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 5,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 6,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478773.917517375
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 154589,
+     "generation": 7,
+     "target_generation": 7,
+     "audible_generation": 6,
+     "adopted_generation": 7,
+     "transition_active": true,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 247,
+      "hold_frames": 26560,
+      "running": true,
+      "progress": "filling",
+      "fill": "none",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 283,
+      "dropped": 0,
+      "head": 284,
+      "newest_seq": 154589,
+      "oldest_seq": 154588,
+      "tail": 283,
+      "written": 284
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 35,
+      "held": 36,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 1,
+      "exact_at": 13888
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 7,
+       "audible_generation": 6,
+       "target_generation": 7,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 5,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 7,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478773.925105
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 154784,
+     "generation": 7,
+     "target_generation": 7,
+     "audible_generation": 6,
+     "adopted_generation": 7,
+     "transition_active": true,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 247,
+      "hold_frames": 26560,
+      "running": true,
+      "progress": "replaying",
+      "fill": "need_met",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 476,
+      "dropped": 0,
+      "head": 479,
+      "newest_seq": 154784,
+      "oldest_seq": 154781,
+      "tail": 476,
+      "written": 479
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 228,
+      "held": 229,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 1,
+      "exact_at": 13888
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 7,
+       "audible_generation": 6,
+       "target_generation": 7,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 5,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 7,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478774.184974208
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 154804,
+     "generation": 7,
+     "target_generation": 7,
+     "audible_generation": 6,
+     "adopted_generation": 7,
+     "transition_active": true,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 248,
+      "hold_frames": 26560,
+      "running": false,
+      "progress": "done",
+      "fill": "need_met",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": false,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 496,
+      "dropped": 0,
+      "head": 497,
+      "newest_seq": 154802,
+      "oldest_seq": 154801,
+      "tail": 496,
+      "written": 497
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 228,
+      "held": 229,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 2,
+      "exact_at": 14016
+     },
+     "catch_up_seq": {
+      "executed": 154801,
+      "fed": 154801
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 7,
+       "audible_generation": 6,
+       "target_generation": 7,
+       "transition_active": true,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 5,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 7,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478774.21190375
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 154809,
+     "generation": 7,
+     "target_generation": 7,
+     "audible_generation": 7,
+     "adopted_generation": 7,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 248,
+      "hold_frames": 26560,
+      "running": false,
+      "progress": "done",
+      "fill": "need_met",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": false,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 496,
+      "dropped": 0,
+      "head": 497,
+      "newest_seq": 154802,
+      "oldest_seq": 154801,
+      "tail": 496,
+      "written": 497
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 228,
+      "held": 229,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 2,
+      "exact_at": 14016
+     },
+     "catch_up_seq": {
+      "executed": 154801,
+      "fed": 154801
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 7,
+       "audible_generation": 7,
+       "target_generation": 7,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 5,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 7,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478774.218445
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 154821,
+     "generation": 7,
+     "target_generation": 7,
+     "audible_generation": 7,
+     "adopted_generation": 7,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 248,
+      "hold_frames": 26560,
+      "running": false,
+      "progress": "done",
+      "fill": "need_met",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": false,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 496,
+      "dropped": 0,
+      "head": 497,
+      "newest_seq": 154802,
+      "oldest_seq": 154801,
+      "tail": 496,
+      "written": 497
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 228,
+      "held": 229,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 2,
+      "exact_at": 14016
+     },
+     "catch_up_seq": {
+      "executed": 154801,
+      "fed": 154801
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 7,
+       "audible_generation": 7,
+       "target_generation": 7,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 5,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 7,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478774.234435125
+    }
+   ],
+   "polls_total": 49
+  },
+  {
+   "arm": "engine-lite",
+   "run": 3,
+   "rig": "t9-base.json",
+   "lite_first": true,
+   "from": "/var/lib/pedal/library/rigs/last.json",
+   "published_generation": 8,
+   "full_generation": 9,
+   "reply": {
+    "switched": "cold",
+    "reason": "nothing is warm",
+    "lite_first": true,
+    "handover_blocks": null,
+    "fade_ms": null,
+    "generation": 8,
+    "doc": null,
+    "core": null
+   },
+   "reply_lite": {
+    "adopted": true,
+    "cost": 0.07112000000000002,
+    "full_cost": 0.14882,
+    "generation": 8,
+    "slimmed_models": [
+     {
+      "chain": "one",
+      "cost": 0.0333,
+      "element": "amp0",
+      "full_cost": 0.111,
+      "node": "amp0",
+      "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+      "row": "NAM.WaveNet.lite",
+      "working_set_bytes": 300808
+     }
+    ],
+    "trimmed": true,
+    "verdict": "trimmed"
+   },
+   "reply_full": {
+    "catch_up": {
+     "blocks": 0,
+     "device_period_size": 0,
+     "fill": "none",
+     "frames": 14539,
+     "full": "compiling",
+     "history_block_frames": 0,
+     "hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 0,
+      "exact_at": 0
+     },
+     "hold_frames": 0,
+     "period_mismatch": 0,
+     "progress": "idle",
+     "replay": "running",
+     "ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 496,
+      "dropped": 0,
+      "head": 510,
+      "newest_seq": 155479,
+      "oldest_seq": 154801,
+      "tail": 496,
+      "written": 510
+     },
+     "running": true,
+     "seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "state": "exact",
+     "window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     }
+    },
+    "state": "compiling"
+   },
+   "reply_ms": 32.702,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/last.json",
+    "generation": 7,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 218.684,
+     "worst_percent": 16.401304100326026,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 0,
+     "cold_switches": 5,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 7,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 9,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 218.684,
+     "worst_percent": 16.401304100326026,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 0,
+     "cold_switches": 6,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 9,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "lite_ms": 39.573,
+   "full_ms": 349.26,
+   "poll_interval_ms": 7.337,
+   "catch_up_state": [
+    [
+     478775.120222,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     478775.120222,
+     "compiling"
+    ],
+    [
+     478775.134217,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     478775.120222,
+     "exact"
+    ],
+    [
+     478775.134217,
+     "running"
+    ],
+    [
+     478775.429909,
+     "exact"
+    ]
+   ],
+   "catch_up_hold": [
+    [
+     478775.120222,
+     {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 2,
+      "exact_at": 14016
+     }
+    ],
+    [
+     478775.429909,
+     {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 3,
+      "exact_at": 14016
+     }
+    ]
+   ],
+   "catch_up_blocks": [
+    [
+     478775.120222,
+     248
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     478775.120222,
+     true
+    ],
+    [
+     478775.429909,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     478775.120222,
+     8
+    ],
+    [
+     478775.429909,
+     9
+    ]
+   ],
+   "chain_audible": [
+    [
+     478775.120222,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 155486,
+     "generation": 8,
+     "target_generation": 8,
+     "audible_generation": 8,
+     "adopted_generation": 8,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": true,
+      "verdict": "trimmed",
+      "cost": 0.07112000000000002
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "compiling",
+      "frames": 14539,
+      "blocks": 248,
+      "hold_frames": 0,
+      "running": false,
+      "progress": "idle",
+      "fill": "none",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 496,
+      "dropped": 0,
+      "head": 517,
+      "newest_seq": 155486,
+      "oldest_seq": 154801,
+      "tail": 496,
+      "written": 517
+     },
+     "catch_up_window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 2,
+      "exact_at": 14016
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 8,
+       "audible_generation": 8,
+       "target_generation": 8,
+       "transition_active": false,
+       "slimmed_models": [
+        {
+         "cost": 0.0333,
+         "element": "amp0",
+         "full_cost": 0.111,
+         "node": "amp0",
+         "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+         "row": "NAM.WaveNet.lite"
+        }
+       ],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 6,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 8,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478775.120222375
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 155496,
+     "generation": 9,
+     "target_generation": 8,
+     "audible_generation": 8,
+     "adopted_generation": 8,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 248,
+      "hold_frames": 26560,
+      "running": true,
+      "progress": "idle",
+      "fill": "none",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 496,
+      "dropped": 0,
+      "head": 527,
+      "newest_seq": 155496,
+      "oldest_seq": 154801,
+      "tail": 496,
+      "written": 527
+     },
+     "catch_up_window": {
+      "blocks": 0,
+      "contiguous": 0,
+      "held": 0,
+      "need": 0
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 2,
+      "exact_at": 14016
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 9,
+       "audible_generation": 8,
+       "target_generation": 8,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 6,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 8,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478775.134217333
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 155501,
+     "generation": 9,
+     "target_generation": 9,
+     "audible_generation": 8,
+     "adopted_generation": 9,
+     "transition_active": true,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 248,
+      "hold_frames": 26560,
+      "running": true,
+      "progress": "filling",
+      "fill": "none",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 532,
+      "dropped": 0,
+      "head": 532,
+      "newest_seq": 155501,
+      "oldest_seq": 155501,
+      "tail": 532,
+      "written": 532
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 35,
+      "held": 36,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 2,
+      "exact_at": 14016
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 9,
+       "audible_generation": 8,
+       "target_generation": 9,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 6,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 9,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478775.141001291
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 155695,
+     "generation": 9,
+     "target_generation": 9,
+     "audible_generation": 8,
+     "adopted_generation": 9,
+     "transition_active": true,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 248,
+      "hold_frames": 26560,
+      "running": true,
+      "progress": "replaying",
+      "fill": "need_met",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": true,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 725,
+      "dropped": 0,
+      "head": 726,
+      "newest_seq": 155695,
+      "oldest_seq": 155694,
+      "tail": 725,
+      "written": 726
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 228,
+      "held": 229,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 2,
+      "exact_at": 14016
+     },
+     "catch_up_seq": {
+      "executed": 0,
+      "fed": 0
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 9,
+       "audible_generation": 8,
+       "target_generation": 9,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 6,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 9,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478775.401832458
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 155718,
+     "generation": 9,
+     "target_generation": 9,
+     "audible_generation": 9,
+     "adopted_generation": 9,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 248,
+      "hold_frames": 26560,
+      "running": false,
+      "progress": "done",
+      "fill": "need_met",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": false,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 745,
+      "dropped": 0,
+      "head": 746,
+      "newest_seq": 155715,
+      "oldest_seq": 155714,
+      "tail": 745,
+      "written": 746
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 228,
+      "held": 229,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 3,
+      "exact_at": 14016
+     },
+     "catch_up_seq": {
+      "executed": 155714,
+      "fed": 155714
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 9,
+       "audible_generation": 9,
+       "target_generation": 9,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 6,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 9,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478775.429909333
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 155733,
+     "generation": 9,
+     "target_generation": 9,
+     "audible_generation": 9,
+     "adopted_generation": 9,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 248,
+      "hold_frames": 26560,
+      "running": false,
+      "progress": "done",
+      "fill": "need_met",
+      "history_block_frames": 64,
+      "device_period_size": 64,
+      "period_mismatch": 0,
+      "detail": null
+     },
+     "catch_up_ring": {
+      "armed": false,
+      "block_frames": 64,
+      "blocks": 1024,
+      "channels": 2,
+      "configured": true,
+      "consumed": 745,
+      "dropped": 0,
+      "head": 746,
+      "newest_seq": 155715,
+      "oldest_seq": 155714,
+      "tail": 745,
+      "written": 746
+     },
+     "catch_up_window": {
+      "blocks": 256,
+      "contiguous": 228,
+      "held": 229,
+      "need": 228
+     },
+     "catch_up_hold": {
+      "abandoned": 0,
+      "abandoned_at": 0,
+      "exact": 3,
+      "exact_at": 14016
+     },
+     "catch_up_seq": {
+      "executed": 155714,
+      "fed": 155714
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 9,
+       "audible_generation": 9,
+       "target_generation": 9,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 0,
+      "cold_switches": 6,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 9,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 218.684,
+      "worst_percent": 16.401304100326026,
+      "over_90_percent": 0
+     },
+     "t": 478775.450382208
+    }
+   ],
+   "polls_total": 46
+  }
+ ]
+}

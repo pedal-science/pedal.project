@@ -121,8 +121,18 @@ def pick(status):
         "xruns": status.get("xruns"), "guard_trips": status.get("guard_trips"),
         "cost": {"lite_first": cost.get("lite_first"), "trimmed": cost.get("trimmed"),
                  "verdict": cost.get("verdict"), "cost": cost.get("cost")},
+        # The catch-up's own account, whole: `replay: no_input` on its own cannot say whether the
+        # ring was never written, whether the window never covered it, or whether the replay was
+        # ready and simply not taken (2026-10-10 -- all three happened, at different times, and the
+        # fields below are what told them apart).
         "catch_up": {key: catch.get(key) for key in
-                     ("state", "replay", "full", "frames", "blocks", "running", "detail")},
+                     ("state", "replay", "full", "frames", "blocks", "hold_frames", "running",
+                      "progress", "fill", "history_block_frames", "device_period_size",
+                      "period_mismatch", "detail")},
+        "catch_up_ring": catch.get("ring"),
+        "catch_up_window": catch.get("window"),
+        "catch_up_hold": catch.get("hold"),
+        "catch_up_seq": catch.get("seq"),
         "chains": chains,
         "warm": {"active_doc": warm.get("active_doc"), "switches": warm.get("switches"),
                  "cold_switches": warm.get("cold_switches"), "enabled": warm.get("enabled"),
@@ -188,6 +198,11 @@ def summarise(run, t0, polls):
     run["catch_up_state"] = transitions(polls, "catch_up.state")
     run["catch_up_full"] = transitions(polls, "catch_up.full")
     run["catch_up_replay"] = transitions(polls, "catch_up.replay")
+    # What the hand-over came to, and how deep the history was: the acceptance of P8's replay is
+    # `replay: exact` with `blocks > 0`, and `hold.exact` against `hold.abandoned` is which way the
+    # render thread let the plan go (docs/daemon.md, "Lite-first publishes").
+    run["catch_up_hold"] = transitions(polls, "catch_up_hold")
+    run["catch_up_blocks"] = transitions(polls, "catch_up.blocks")
     run["cost_lite_first"] = transitions(polls, "cost.lite_first")
     run["audible_generation"] = transitions(polls, "audible_generation")
     run["chain_audible"] = transitions(polls, "chains.0.audible_generation")
