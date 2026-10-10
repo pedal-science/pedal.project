@@ -29,11 +29,24 @@ Two things are now settled and should not be redone:
     carries its fly-lead pads, and the input network and the bias chain have moved into the
     reclaimed left band (columns 3-9).  That is where the room for them came from.
 
-What is left is the links: 14 nets are still in more than one piece, and the links that would
-join them are not landing.  The pieces are single leads whose neighbouring holes are other
-leads, so a link from one has nowhere to start -- which says the cut list, though it removes
-every short, cuts more finely than the routing needs.  The next step is to cut per *net
-group* rather than per boundary and route as it goes, rather than cutting everything first.
+Route-first was then tried (`_route.py`): walk each net in order of constraint -- IN_A first,
+then the ground return, then the low-impedance trunk -- place the links it needs, and cut a row
+only where the copper the routing is using would join a different net.  That is the right
+order, and it is the order this needs finishing in, but it did not close either: 14 nets are
+still in more than one piece.
+
+**What blocks it, measured rather than guessed.**  Each remaining piece is a *single lead*
+whose four neighbours are other leads or cut holes, so a link has nowhere to attach: a wire
+needs a free hole at one end.  The node this bites hardest is IN_A, where U1.3, C5.2, R5.1 and
+the switch's common are all that net has and none of them can reach another.  So the fault is
+upstream of the routing: **the parts are placed so tightly that the nets have no spare holes
+between them**, and no cut or link can create one.  The fix is one more placement pass with a
+*spare hole* required beside every lead the routing will need to reach -- which is a rule the
+placement search never had.
+
+Everything else is settled: the placement has no geometric errors, the cuts are derived and
+leave no two nets joined, and the parts use the reclaimed left band that the codec's old
+socket reservation was holding empty.
 
 Previous status follows.
 
