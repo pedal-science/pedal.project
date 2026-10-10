@@ -121,6 +121,11 @@ const E=[['docs','scripts'],['park','scripts'],['neon','scripts'],['agent','scri
 // ask for next, so the warm set can be chosen rather than guessed at; the screen, the encoder and
 // MIDI in, which change how the pedal is driven rather than what it does with a guitar.
 ['goal','predict'],['goal','display'],['goal','encoder'],['goal','midi'],
+// What 3.8 must still prove before it can close (D10): the press timed where D10 times it,
+// a cross-rig switch with no click, the bank's neighbours warm rather than one, a heavy
+// Full's number, MIDI's near jumps, and the end-to-end press through the jack.
+['press','models'],['bankready','models'],['footpress','models'],['clickfree','models'],
+['heavyfull','models'],['midifar','models'],['replay','models'],
 // What landed on the Core host since, and the one thing it exposed: T9 measured the publish
 // and found the replay is not applied on the actual audio path, so the Full still starts cold.
 ['mulcore','warm'],['warm','coex'],['budget','cost'],['deploy','cost'],
@@ -136,11 +141,7 @@ s+=`<text x="${PX}" y="${PY+14}" font-size="20" font-weight="800" fill="var(--do
 E.forEach(([a,b])=>{const p=pos(a),q=pos(b),x1=p.x+W,y1=p.y+H/2,x2=q.x-4,y2=q.y+H/2,m=(x2-x1)*0.5;
  s+=`<path d="M${x1},${y1} C${x1+m},${y1} ${x2-m},${y2} ${x2},${y2}" fill="none" stroke="var(--line)" stroke-width="3" opacity=".75" marker-end="url(#a)"/>`});
 const C={done:['--done','--doneFill'],next:['--next','--nextFill'],todo:['--todo','--todoFill'],mile:['--mile','--mileFill']};
-for(const k in N){const[, ,st,l1,l2]=N[k],p=pos(k),[b,f]=C[st// What 3.8 must still prove before it can close (D10): the press timed where D10 times it,
-// a cross-rig switch with no click, the bank's neighbours warm rather than one, a heavy
-// Full's number, MIDI's near jumps, and the end-to-end press through the jack.
-['press','models'],['bankready','models'],['footpress','models'],['clickfree','models'],
-['heavyfull','models'],['midifar','models'],['replay','models'],];
+for(const k in N){const[, ,st,l1,l2]=N[k],p=pos(k),[b,f]=C[st];
  s+=`<rect x="${p.x}" y="${p.y}" width="${W}" height="${H}" rx="12" fill="var(${f})" stroke="var(${b})" stroke-width="${st==='mile'?5:3.5}"/>`;
  const cx=p.x+W/2;
  if(l2){s+=`<text x="${cx}" y="${p.y+28}" text-anchor="middle" font-size="18" font-weight="800" fill="var(--ink)">${st==='done'?'✓ ':''}${l1}</text><text x="${cx}" y="${p.y+51}" text-anchor="middle" font-size="16" font-weight="600" fill="var(--ink)">${l2}</text>`}
