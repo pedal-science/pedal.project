@@ -46,10 +46,12 @@ if [[ -f $DEV_DIR/authorized_keys ]]; then
   fi
 fi
 
-# The two kernels: the pedal's (rtpi's rebuild, installed from the image's artefacts) in slot a,
-# the stock one the spare slot boots in slot b, and both of them in the root so either slot can
-# boot against it (docs/vip-kernel-image.md). Read from the host's own device.env: this is about
-# what the board carries, not about what the repo would build.
+# The two kernels: the pedal's (rtpi's rebuild, installed from the image's artefacts) in the active
+# slot, the stock one in the other, and both of them in the root so either slot can boot against it
+# (docs/vip-kernel-image.md). By role, not by letter: every validated trial (try-kernel, try-args,
+# try-config) promotes the spare slot, so which letter holds which kernel moves; what must hold is that
+# the pedal boots its own kernel and has the stock one to fall back to. Read from the host's own
+# device.env: this is about what the board carries, not about what the repo would build.
 pedal_kernel=$(dev 'sed -n "s/^PEDAL_KERNEL=//p" /etc/rtpi/device.env' 2>/dev/null || true)
 fallback_kernel=$(dev 'sed -n "s/^FALLBACK_KERNEL=//p" /etc/rtpi/device.env' 2>/dev/null || true)
 if [[ -z $pedal_kernel || -z $fallback_kernel ]]; then
@@ -57,10 +59,13 @@ if [[ -z $pedal_kernel || -z $fallback_kernel ]]; then
   printf '  --    %-50s %s\n' "pedal and fallback kernels" \
     "PEDAL_KERNEL='$pedal_kernel' FALLBACK_KERNEL='$fallback_kernel'"
 else
-  log "kernels: $pedal_kernel (slot a) and $fallback_kernel (slot b) on $DEV_HOST"
+  log "kernels: $pedal_kernel (active) and $fallback_kernel (fallback) on $DEV_HOST"
   status=$(dev "sudo -n vip-boot status" 2>/dev/null || true)
-  for pair in "a:$pedal_kernel" "b:$fallback_kernel"; do
-    s=${pair%%:*}; rel=${pair#*:}
+  # "slot a *   good  <release>  <args>": the star marks the active slot.
+  active=$(awk '$1 == "slot" && $3 == "*" {print $2}' <<< "$status")
+  spare=$(awk '$1 == "slot" && $3 != "*" {print $2}' <<< "$status")
+  for pair in "$active:$pedal_kernel:active" "$spare:$fallback_kernel:fallback"; do
+    IFS=: read -r s rel role <<< "$pair"
     line=$(awk -v s="$s" '$1 == "slot" && $2 == s' <<< "$status")
     read -ra fields <<< "$line"
     good=0; named=0
@@ -68,8 +73,8 @@ else
       [[ $f == good ]] && good=1
       [[ $f == "$rel" ]] && named=1
     done
-    if (( good && named )); then printf '  ok    %s\n' "slot $s: $rel, good"
-    else printf '  FAIL  %-50s\n' "slot $s is not $rel, good"; bad=1; fi
+    if [[ -n $s ]] && (( good && named )); then printf '  ok    %s\n' "$role slot ($s): $rel, good"
+    else printf '  FAIL  %-50s\n' "the $role slot (${s:-none}) is not $rel, good"; bad=1; fi
     have=$(dev "ls -d /lib/modules/$rel /boot/vmlinuz-$rel /boot/initrd.img-$rel 2>/dev/null | wc -l")
     if [[ $have == 3 ]]; then printf '  ok    %s\n' "$rel: modules, kernel and initramfs in the root"
     else printf '  FAIL  %-50s %s\n' "$rel" "only $have of 3 in the root"; bad=1; fi
