@@ -1302,7 +1302,11 @@ fragment it produces is one to read rather than wave through.)
 publish: namchain `7d9cbbd` + `1a07af0`; piv's tool: rtpi `a6d4d67`), so the list starts at what is
 actually left.
 
-(1) **P8's catch-up replay** — and with it D6's visibility, which the landing showed does not hold:
+(1) **P8's catch-up replay — done 2026-10-10** (namchain `810a1fd`, `ea453c0`, `74ebd08`,
+`2830f5d`, `89193f5`; 367 cases and 271,552 assertions green, `ctest` 5/5): the Full's first blocks
+are bit-identical to a Full that had been running, and 3,840 of 3,840 samples differ without it. D6's
+visibility holds with it, because the compile now runs off the control thread. What follows is what
+this item said while it was still open:
 **an attempt at this was in flight, unattended, at the end of the session that wrote this line** — a
 subagent was briefed with the previous delegation's findings and told to land the smallest testable
 slice (the input-history buffer plus the replay, with the measurable claim) and commit early, so a

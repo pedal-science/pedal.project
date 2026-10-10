@@ -470,7 +470,7 @@ to "inside it, and not `RT_CPUS`". *Verification:* T6 (done), the four layout as
 `pedal-tune check` (one housekeeping core; the render set is every other core; the IRQ inside the
 render set; the IRQ outside `RT_CPUS`), and a re-run of T6's arms on the new placement.
 
-**P8 — catch-up, end to end (nc). NOT IMPLEMENTED; design settled 2026-10-09.** Lite-first
+**P8 — catch-up, end to end (nc). IMPLEMENTED 2026-10-10** (namchain `810a1fd` the replay, `ea453c0` the compile off the control thread, and three more beside them); design settled 2026-10-09. Lite-first
 catch-up on an inactive core, staged by depth, with the measured 170 ms per model; the path must be
 exercised by a real switch, not only by the bench. *Verification:* T9 and the convergence numbers
 re-measured through the live engine.
@@ -512,7 +512,14 @@ and it is now settled in this shape:
   shows up when the thing is run. Admission is unchanged (over budget with everything trimmed is refused
   on the first publish, running rig untouched), a rig that is warm ignores the flag, and a failing second
   publish leaves the Lite standing with `lite_first` still true so the service reports it.
-- **D6's visibility claim does not hold as implemented, and this is the thing to fix next**: with the
+- **D6's visibility held only until the compile left the control thread** — this bullet was written
+  when it did not, and is kept because the reason is worth knowing. With the second publish inline on
+  the control thread, no client could *observe* the temporary Lite: the control loop answers one
+  request at a time, so `engine.status` described only the end state. It now holds: the compile runs
+  on a catch-up thread (`ea453c0`), and `engine.status.catch_up` reports `compiling` while the Full is
+  built (cost still the Lite's, the trimmed models named) and `published` with `replay: running`
+  while the Full is caught up, cleared only once the render thread is playing it. What the old bullet
+  said, for the record, was: with the
   second publish inline on the control thread, no client can *observe* the temporary Lite — the control
   loop answers one request at a time, so `engine.status` (and pedald's `engine.lite_pending`) is only
   ever answered after the Full has landed, and always describes the end state. The only record of the
