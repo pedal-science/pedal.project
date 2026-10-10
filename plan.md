@@ -1313,10 +1313,25 @@ the *recent input*, and the engine's live input ring is a four-block dropping po
 replayed exactly, which P8 must refuse to promise about rather than approximate). Then T9 through the
 pedal: press-to-full-rig, with the Lite in the meantime and that state visible where D6 says.
 
-(2) **piv's reboot** — the tool is built, tested (32 cases green) and pushed, and it is the *board* that
-has not moved: `piv-boot set-args` on piv, then `rtpi-audio-tune check` and `devices/piv/check`, and
-`cat /proc/cmdline` should show `isolcpus=...1-3`, `irqaffinity=0`, `skew_tick=1`. The owner's call on
-timing, since it is a reboot of the board.
+(2) **piv's reboot** — the tool is built, tested (**33 cases green**, and the vip suite beside it 54 with
+10 skipped for `dtc`) and **pushed** (`rtpi a6d4d67`; the subagent's own push died on the locked ssh
+agent, so it went over https), and it is the *board* that has not moved. On piv:
+
+    sudo piv-boot status                       # card line, running line, proposal, diff
+    sudo piv-boot set-args --yes --reboot      # write it and reboot, which is what applies it
+
+then `rtpi-audio-tune check` and `devices/piv/check`, and `cat /proc/cmdline` should show
+`isolcpus=...1-3`, `irqaffinity=0`, `skew_tick=1`. `--restore` puts the newest backup back, and a
+write and its restore inside the same second used to collide on the backup name — the suite caught
+that, which is why `--restore` no longer backs up over its own restore point. The owner's call on
+timing, since it is a reboot.
+
+**What a piv copy could not inherit from `vip-boot`**, for whoever touches this next: vip's whole model
+is two fixed slots with `profile.txt`/`tryboot.txt` rewritten in place at fixed length, an `os_prefix`,
+and tryboot staging a candidate — and piv has none of it: one `cmdline.txt` on one partition, no slot,
+no `os_prefix`, so no one-shot `try-args` to arm (which is exactly why the tryboot route could not carry
+an arguments change on this card), and the line's length changes, so the write is temp-plus-fsync-plus-
+rename rather than a fixed-length write in place.
 
 (3) **3.8's acceptance** — a press end to end (footswitch → Pico → pedald → engine → sound), then 3.5.
 Still the owner's: the power question behind T8's reboot (the journal is persistent now, so a
