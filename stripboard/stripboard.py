@@ -367,6 +367,10 @@ class Sheet:
                           f'fill="{colour}">{esc(label)}</text>')
 
     def save(self, path, title):
+        """Write the SVG, widening the canvas if the title is longer than the drawing."""
+        need = M + len(title) * 8.6 + M
+        if need > self.w:
+            self.w = int(need)
         self.o.append(f'<text x="{M}" y="{self.h - 12}" font-size="15" font-weight="800" '
                       f'fill="#111">{esc(title)}</text>')
         self.o.append('</svg>')

@@ -458,5 +458,5 @@
 <text x="736" y="356" font-size="12" font-weight="700" text-anchor="end" fill="#e67e22">VF · VF</text>
 <path d="M 414 458 L 444 458 L 700 378 L 740 378" fill="none" stroke="#c0392b" stroke-width="2" stroke-dasharray="6 4"/>
 <text x="736" y="382" font-size="12" font-weight="700" text-anchor="end" fill="#c0392b">V9 · V9_RAW</text>
-<text x="40" y="516" font-size="15" font-weight="800" fill="#111">Board A · WIRING: every wire that leaves the board, and the net it carries</text>
+<text x="40" y="516" font-size="15" font-weight="800" fill="#111">Board A · WIRING · every wire that leaves the board</text>
 </svg>

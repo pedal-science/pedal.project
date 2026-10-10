@@ -142,7 +142,7 @@ def draw():
     s = SB.Sheet(W, H, mirror=True)
     s.frame(CUTS)
     s.save(here / 'board_a-copper.svg',
-           'Board A · COPPER SIDE (mirrored): cut the tracks at the red bars')
+           'Board A · COPPER SIDE (mirrored) · cut the tracks at the red bars')
 
     s = SB.Sheet(W, H)
     s.frame(CUTS)
@@ -193,7 +193,7 @@ def draw():
         s.o.append(f'<text x="{s.X(hx)}" y="{s.Y(hy) - 11}" font-size="11" '
                    f'font-weight="800" text-anchor="middle" fill="#0a7d3b">{label}</text>')
     s.save(here / 'board_a-components.svg',
-           'Board A · COMPONENT SIDE: parts, blue wire links, green off-board wires, red cuts')
+           'Board A · COMPONENT SIDE · parts, links, wires, cuts')
 
     s = SB.Sheet(W, H, tw=300)
     s.frame(CUTS)
@@ -207,7 +207,7 @@ def draw():
         s.o.append(f'<text x="{tx - 4}" y="{ty + 4}" font-size="12" font-weight="700" '
                    f'text-anchor="end" fill="{col}">{label} · {net}</text>')
     s.save(here / 'board_a-wiring.svg',
-           'Board A · WIRING: every wire that leaves the board, and the net it carries')
+           'Board A · WIRING · every wire that leaves the board')
 
 
 def main():
