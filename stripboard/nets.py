@@ -48,7 +48,7 @@ PARTS = {
     'R2':  dict(kind='r',     value='10k',                pins=2),
     'R3':  dict(kind='r',     value='10k',                pins=2),
     'R4':  dict(kind='r',     value='10k',                pins=2),
-    'C4':  dict(kind='el5',   value='10µF 50V',           pins=2),
+    'C4':  dict(kind='el5.2', value='10µF 50V',           pins=2),
     'U1':  dict(kind='dip8',  value='OPA2197 on adapter', pins=8),
     'R5':  dict(kind='r',     value='330k',               pins=2),
     'R6':  dict(kind='r',     value='680k',               pins=2),

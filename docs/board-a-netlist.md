@@ -180,10 +180,35 @@ Two things are settled and should not be redone:
 
 What is not finished is still the **connectivity**: with the 27 cuts this placement needs, the
 checker reports **12 nets in more than one piece and no two nets joined**. The placement is
-legal and the copper is sound; the wires are not placed. The band search that found this
-placement does not yet carry the last constraint the routing needs — that each output net has a
-way out to the panel's wires that avoids the band's own leads and bodies — so a band whose
-parts are each legal can still seal its own exits.
+legal and the copper is sound; the wires are not placed.
+
+Three things were settled in the pass after that, and the third is the one that matters:
+
+- **a part's lead span now comes from its footprint.** `stripboard.py` used to hold a radial
+  electrolytic to two holes of lead span, and the band search that produced this placement was
+  scoring a 10 µF electrolytic as *four* holes -- a part nobody sells, with a body the checker
+  cannot draw. The span is now the footprint's pad pitch in holes (`EL` in `stripboard.py`):
+  2.0-2.5 mm, so **one hole**, i.e. the two leads are neighbours. `board1.py`, built and
+  measured, checks out unchanged with the tighter rule (its electrolytics were always
+  neighbours), and `board_a.kicad_pcb` carries `CP_Radial_D5.0mm_P2.00mm` for C4 and
+  `CP_Radial_D6.3mm_P2.50mm` for C6/C7 -- which is where the numbers come from;
+- **a wire is a wire.** The checker now puts each link in the holes it runs over, not only in
+  the two it ends in, so a wire crossing a lead, a pad or another part's body is an error; and
+  two wires of *one* net may be soldered in one hole, because that is how a run that has to
+  turn is built. Board 1 still checks out unchanged;
+- **the exits rule, in `stripboard/_place.py`.** This is the rule the routing kept asking for
+  and the placement search never had, and it is asked of the checker and the layout data rather
+  than of a copy of either. For every net: can a wire -- running only over free holes, ending
+  in a lead or in the free hole beside a pad -- reach every piece of the net? A piece with no
+  free hole in it, and no path of free holes to another piece, is a piece no builder can wire.
+  **This placement fails it**, on IN_A, IN_B, GND_A, HPL, HPR, OUT_L_N and OUT_R_N, and the
+  failures are structural, not a router running out of effort: row 15, the output band's only
+  way out, carries GND_A; column 11, U1.3's only exit, dead-ends on row 1; row 21 is V9_RAW
+  from end to end and blocks the output nets' way down. `stripboard/_route.py` agrees, with the
+  checker's own `copper()` as its only oracle and no hand-rolled predicate anywhere: it places
+  what it can (IN_A, IN_B, BIAS, BIAS_MID, VF, OUT_L) and then reports **no route** for the
+  rest, naming the copper that refuses the wire's end. 7 of the 12 splits are GND_A, the net
+  with the longest way to travel and the star at the bottom edge.
 
 `enclosure/src/layout.py` has **not** yet been changed, so the enclosure model still seats the
 codec on board A — see "Which tool produced which answer" above for why it should not.
@@ -245,5 +270,13 @@ lands on a pin hole (checked), because its socket has room around it that board 
 ```bash
 python3 stripboard/nets.py       # the netlist itself
 python3 stripboard/board1.py     # check board 1, rewrite its two drawings
-python3 stripboard/board_a.py    # check board A's parts and cuts; prints what is left
+python3 stripboard/board_a.py    # check board A's parts, cuts and links; prints what is left
+python3 stripboard/_place.py     # the placement rules: spare holes, neighbouring nets, exits
+python3 stripboard/_route.py     # route each net, hardest first, and say where it cannot
+python3 stripboard/_corridors.py # the corridor plan, as a drawing
 ```
+
+`_place.py` and `_route.py` are the tools that answer questions about a placement rather than
+checking a board: `_place.py` says whether the placement *can* be wired, `_route.py` wires it
+and says where it cannot. Neither is trusted to say "impossible"; both are trusted to say "not
+found, and here is the copper that stopped it".

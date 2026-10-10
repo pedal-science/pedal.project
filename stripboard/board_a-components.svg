@@ -559,7 +559,7 @@
 <rect x="409.4" y="110.0" width="61.2" height="16" rx="3" fill="#f7f3ea" opacity=".92"/>
 <text x="440.0" y="122.0" font-size="11" font-weight="700" text-anchor="middle" fill="#111">C3 100nF</text>
 <line x1="106" y1="84" x2="106" y2="106" stroke="#777" stroke-width="2"/>
-<circle cx="106.0" cy="95.0" r="21.653543307086615" fill="#2c3e8f" opacity=".85"/>
+<circle cx="106.0" cy="95.0" r="22.519685039370078" fill="#2c3e8f" opacity=".85"/>
 <rect x="91.8" y="88.0" width="80.4" height="16" rx="3" fill="#f7f3ea" opacity=".92"/>
 <text x="132.0" y="100.0" font-size="11" font-weight="700" text-anchor="middle" fill="#111">C4 10µF 50V</text>
 <line x1="106" y1="150" x2="106" y2="238" stroke="#777" stroke-width="2"/>

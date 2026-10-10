@@ -9,22 +9,28 @@ can be redone without the netlist, or the netlist changed, without the two drift
 `check()` enforces six rules:
 
   1. every lead is on the net the netlist puts that pin on -- and every pin of a part the
-     board carries is on the board;
+     board carries is on the board, with a lead span its own footprint can make (see `EL`
+     and `lead_span` below: a part's leads are its pads, not a convenient number of holes);
   2. no two nets are joined by the copper (a missed cut, or a part lying across two strips);
   3. nothing sits on a cut hole;
   3b. a link is soldered where it ends, so each end must already be on the net the link joins:
      a lead of that net, or a hole whose piece of strip carries no other net.  A link ending
      in a hole on another net's strip is a short, and rule 2's union-find cannot report it:
-     the union the link makes is the thing that hides it;
-  4. no lead, link or pad is under another part's body;
+     the union the link makes is the thing that hides it.  Two wires of *one* net may end in
+     one hole -- that is how a run that has to turn is built -- and two wires of different
+     nets in one hole is a short, which is the same question asked of the wire instead of the
+     strip;
+  4. no lead, link or pad is under another part's body, and a wire is in every hole it
+     passes over, so the same rule catches a wire crossing a lead or a pad;
   5. the fit rule: every hole the board uses is inside its outline, and the outline is
      printed in millimetres and holes.
 
 A part that lies along a strip joins the holes it spans unless the cut list says otherwise,
 which is what rule 2 catches: it is the classic stripboard mistake and it is silent until
-something hums.  A part lying down a *column* spans two strips, and its own body is what joins
-them; that is unioned the same way, but only between the leads of one part -- a socket's pins
-are joined by nothing.
+something hums.  A part lying down a *column* -- a resistor, or a radial electrolytic whose
+leads are on neighbouring holes -- spans two strips, and its own body is what joins them; that
+is unioned the same way, but only between the leads of one part -- a socket's pins are joined
+by nothing.
 
 Boards are drawn from the same data, so the picture, the build sheet and the check are one
 thing.  Coordinates are holes: x along the strips (0 at the left, seen from the component
@@ -46,6 +52,72 @@ def ref_of(pin):
     return pin.partition('.')[0]
 
 
+# ---------------------------------------------------------------- the parts' real footprints
+# A layout is only as real as the parts it assumes, so the sizes a layout is checked against
+# come from the footprints the board is built from, not from what would be convenient.  An
+# electrolytic's lead span is its *pad pitch*, in holes: the footprint's pitch in millimetres
+# divided by the 2.54 mm hole grid, and a part whose pitch is under one hole straddles two
+# neighbouring holes.
+#
+#   kind     D x P (mm)      holes   KiCad footprint
+#   el4      4.0 x 1.50       1       CP_Radial_D4.0mm_P1.50mm
+#   el5      5.0 x 2.50       1       CP_Radial_D5.0mm_P2.50mm
+#   el5.2    5.0 x 2.00       1       CP_Radial_D5.0mm_P2.00mm   <- C4, Panasonic FC
+#   el6.3    6.3 x 2.50       1       CP_Radial_D6.3mm_P2.50mm   <- C1, C2, C6, C7
+#   el8      8.0 x 3.50       1       CP_Radial_D8.0mm_P3.50mm
+#   el10     10.0 x 5.00      2       CP_Radial_D10.0mm_P5.00mm
+#   el12.5   12.5 x 5.00      2       CP_Radial_D12.5mm_P5.00mm
+#
+# Reading a pitch off the footprint is the whole point: the band search that produced the
+# placement below was scoring a 10 uF electrolytic as *four* holes of lead span, which is not
+# a part anyone sells, and a body the checker cannot draw.  `span` is what `check()` holds a
+# part to; `pitch` is kept so the number in the drawing and the number in the check are the
+# same one.
+EL = {
+    'el4':    dict(d=4.0,  pitch=1.50, span=1),
+    'el5':    dict(d=5.0,  pitch=2.50, span=1),
+    'el5.2':  dict(d=5.0,  pitch=2.00, span=1),
+    'el6.3':  dict(d=6.3,  pitch=2.50, span=1),
+    'el8':    dict(d=8.0,  pitch=3.50, span=1),
+    'el10':   dict(d=10.0, pitch=5.00, span=2),
+    'el12.5': dict(d=12.5, pitch=5.00, span=2),
+}
+
+
+def body_radius(kind):
+    """A body's radius in holes, from its diameter: half the diameter, plus a little."""
+    return EL[kind]['d'] / 2 / 2.54 + 0.15
+
+
+def lead_span(kind):
+    """(least, most) holes a part's two leads may be apart on the 2.54 mm grid.
+
+    A part's leads are its footprint's pads, so the *ceiling* is the footprint's pitch in
+    holes -- and that is the number that was wrong: the band search that produced board A's
+    current placement scored a 10 uF electrolytic as four holes of lead span, which is not a
+    part anyone sells.  An electrolytic's pads are 2.0-2.5 mm apart, under one hole, so its
+    two leads are neighbours on the grid.
+
+    The *floor* is the part actually bridging its own pads.  A leaded part may be stretched
+    past its pitch -- leads bend, and board 1's diode is soldered five holes apart -- but it
+    cannot be squeezed below the footprint it comes in, so a lead span under the pitch is the
+    one that is always an error.
+    """
+    if kind.startswith('el'):
+        e = EL[kind]
+        return 1, max(1, round(e['pitch'] / 2.54))
+    return {'r': (4, 99), 'd': (4, 99), 'film': (2, 99)}[kind]
+
+
+def lead_span_reason(kind):
+    """What a part's lead span is, in words, for the checker's error message."""
+    if kind.startswith('el'):
+        e = EL[kind]
+        return f'{kind} is a {e["d"]:.1f} mm can on a {e["pitch"]:.2f} mm pitch'
+    return {'r': 'a 10.16 mm resistor', 'd': 'a 10.16 mm diode',
+            'film': 'a 5.00 mm box capacitor'}[kind]
+
+
 def body_holes(kind, pts):
     """The holes a part's body covers, given its lead holes."""
     (x1, y1), (x2, y2) = pts[0], pts[1]
@@ -56,6 +128,20 @@ def body_holes(kind, pts):
     if kind == 'cer':
         return []                      # a 2.5 mm disc between two holes: nothing to cover
     return []
+
+
+def _span(a, b):
+    """The holes a wire from a to b runs over, both ends included.
+
+    A link is a straight run on the component side: along the row the two holes share, or
+    down the column they share.  Every layout that draws or checks a wire uses this one
+    function, so the picture and the check cannot disagree about where a wire is.
+    """
+    if a[0] == b[0]:
+        lo, hi = sorted((a[1], b[1]))
+        return [(a[0], y) for y in range(lo, hi + 1)]
+    lo, hi = sorted((a[0], b[0]))
+    return [(x, a[1]) for x in range(lo, hi + 1)]
 
 
 def broken(cuts, a, b):
@@ -169,17 +255,29 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
 
     used = {}                              # hole -> what is in it
     wire_span = {}                         # hole -> the link running over it
-    wire_end = {}                          # hole -> the link ending in it
+    wire_end = {}                          # hole -> the links ending in it
+    end_nets = defaultdict(set)            # hole -> the nets whose wires are soldered there
     lead_holes = set()                     # holes a lead is in
     lead_ref = {}                          # hole -> the lead in it
 
-    def occupy(h, what, wire=False, end=False):
+    # Every hole the layout's own data puts on a net: a lead's hole, or a pad's.
+    hole_net = {}
+    for ref, (_, _, leads) in parts.items():
+        for h, net in leads:
+            hole_net.setdefault(h, NET.net_key(net))
+    for label, (h, net, _) in pads.items():
+        hole_net.setdefault(h, NET.net_key(net))
+
+    def occupy(h, what, wire=False, end=False, net=None):
         """Put something in a hole.
 
         The rules, which are what stripboard actually needs:
           * a lead, a pad and another lead can never share a hole (that is a short);
-          * a wire may end where a lead is (that is a soldered joint) but not where a pad is,
-            and not where another wire ends;
+          * a wire may end where a lead is (that is a soldered joint), and beside a pad, but
+            not *in* a pad's hole, where the part's own lead goes;
+          * two wires may end in the same hole -- that is how a run that has to turn is built,
+            two straight wires soldered at the corner -- but soldering a wire onto a hole
+            whose wire is another net's is a short, and rule 3b reads a wire's end that way;
           * nothing may be soldered where a wire only passes over.
         """
         if not (0 <= h[0] < bw and 0 <= h[1] < bh):
@@ -189,23 +287,25 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
         if h in used:
             if wire and used[h].startswith('lead'):
                 pass                       # a wire ending on a lead: the joint
-            elif wire and used[h].startswith('link ') and end:
-                errors.append(f'{what} and {used[h]} both end at {h}')
-            elif wire and end and h in wire_end:
-                errors.append(f'{what} and {wire_end[h]} both end at {h}')
+            elif wire and used[h].startswith('link '):
+                # A wire ending on another wire is a soldered joint, and a joint of one net:
+                # two wires of *different* nets meeting in a hole is a short, which is the
+                # one thing this refuses.
+                if end and net is not None and end_nets[h] and net not in end_nets[h]:
+                    errors.append(f'{what} ({net}) ends at {h} on {wire_end[h]} '
+                                  f'({", ".join(sorted(end_nets[h]))}): two nets at one hole')
             elif used[h].startswith('link '):
                 errors.append(f'{what} at {h} is under {used[h]}')
             elif wire and used[h].startswith('pad '):
                 errors.append(f'{what} ends on the pad hole {h} ({used[h]})')
             else:
                 errors.append(f'{what} and {used[h]} share hole {h}')
-        if end and h in wire_end:
-            errors.append(f'{what} and {wire_end[h]} both end at {h}')
         used[h] = what
         if wire:
             wire_span[h] = what
             if end:
-                wire_end[h] = what
+                wire_end[h] = ((wire_end[h] + ' and ') if h in wire_end else '') + what
+                end_nets[h].add(net)
 
     # Nets that are one node in the pedal (EQUIV) are one net here, so a single ground bus
     # that carries both names is not reported as two nets joined.
@@ -219,6 +319,18 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
     for label, (h, net, _) in pads.items():
         occupy(h, f'pad {label}')
         net_of[NET.net_key(net)].add(find(h))
+
+    # The wires.  A link is a straight run on the component side, so it is in every hole it
+    # passes over and soldered in the two it ends in: a lead under it, or a pad under it, is a
+    # short, and so is another part's body.  A net for each end is what tells a corner joint
+    # (two wires of one net, which is how a run that turns is built) from a short (two nets in
+    # one hole).  Rule 2 above unions the links without asking, so this is the only place the
+    # copper the wires *touch* is looked at.
+    for a, b in links:
+        run = _span(a, b)
+        for h in run:
+            occupy(h, f'link {a}-{b}', wire=True,
+                   end=h in (a, b), net=hole_net.get(h))
 
     # A lead may sit on a cut hole -- the strip is broken at that hole, so the pin is on
     # neither side -- as long as it can still reach its net: through the hole beside it, or
@@ -312,19 +424,22 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
     # -- 4. bodies ----------------------------------------------------------------------
     for ref, (kind, _, leads) in parts.items():
         pts = [h for h, _ in leads]
-        if kind in ('r', 'd', 'film'):
+        if kind in ('r', 'd', 'film', 'el'):
             if pts[0][0] != pts[1][0] and pts[0][1] != pts[1][1]:
                 errors.append(f'{ref} is not lying along a strip or a column')
                 continue
             span = abs(pts[1][0] - pts[0][0]) + abs(pts[1][1] - pts[0][1])
-            need = {'r': 4, 'd': 4, 'film': 2}[kind]
-            if span < need:
-                errors.append(f'{ref}: leads {span} holes apart, needs {need}')
+            least, most = lead_span(kind)
+            if span < least:
+                errors.append(f'{ref}: leads {span} holes apart, {kind} needs at least {least}')
+            elif span > most:
+                errors.append(f'{ref}: leads {span} holes apart, but '
+                              f'{lead_span_reason(kind)} is {most} hole(s)')
         for h in body_holes(kind, pts):
             if h in used and used[h] != f'lead {ref}.1' and used[h] != f'lead {ref}.2':
                 errors.append(f"{ref}'s body covers {used[h]} at {h}")
         if kind.startswith('el'):
-            r = float(kind[2:]) / 2 / 2.54 + 0.15          # radius in holes, plus a little
+            r = body_radius(kind)                          # radius in holes, plus a little
             cx = sum(p[0] for p in pts) / 2
             cy = sum(p[1] for p in pts) / 2
             for h, what in used.items():

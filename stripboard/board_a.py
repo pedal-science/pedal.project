@@ -1,7 +1,15 @@
 #!/usr/bin/env python3
 """Board A: the analogue board -- the input buffer, the bias and the output stage.
 
-STATUS, 2026-10-10: **the placement now carries the spare-hole rule; the runs are not wired.**
+STATUS, 2026-10-10: **the placement carries the spare-hole rule and the exits rule; it does
+not pass the exits rule, and the runs are not wired.**
+
+The exits rule is the new one, and it is the answer this pass was for: a placement can have a
+free hole beside every lead and still be impossible to wire, because the wire that would use
+that hole cannot *get* there.  `stripboard/_place.py` now asks the router's own question before
+the routing -- can a wire reach every piece of every net? -- and this placement fails it on
+**IN_A, IN_B, GND_A, HPL, HPR, OUT_L_N and OUT_R_N**.  The details are below.  The parts are
+where the last pass left them; what changed is that the board can now be *asked*.
 
 Two things happened in this pass, and the first is the more useful.
 
@@ -30,13 +38,40 @@ What that cost: **nothing in area.**  The outline is unchanged at 18 x 24 holes
 (45.72 x 60.96 mm).  It did cost the two 10 uF input capacitors their place at the board's
 left edge, where they had been, and it moved the input chain's lower half from x=7 to x=8.
 
-What is still open: **the runs are not wired.**  With the cuts this placement needs -- 27 of
-them, derived per net by isolating each net's own span in a row -- the checker reports
-**12 nets in more than one piece and no two nets joined**: the placement is legal and the
-copper is sound, and the wires that would close it are not placed.  The band search that found
-this placement does not yet carry the last constraint the routing needs -- that each output net
-has a way out to the panel's wires that avoids the band's own leads and bodies -- so a band
-whose parts are legal can still seal its own exits.
+What is still open: **the runs are not wired, and running the exits rule says why.**  With the
+cuts this placement needs -- 27 of them, derived per net by isolating each net's own span in a
+row, and every one of the 27 is *load-bearing*: the checker reports a short if any single one
+is removed -- the checker reports **12 nets in more than one piece and no two nets joined**.
+The placement is legal and the copper is sound.
+
+The exits rule is now in `_place.py`, and it is the router's own question asked in advance:
+for each net, can a wire -- running only over free holes, and ending in a lead or in the free
+hole beside a pad -- reach every piece of the net?  It says this placement **cannot be wired**,
+and not because the router ran out of room.  The pieces are walled off from one another by the
+cuts and by the neighbouring parts:
+
+  * **IN_B** -- R5.2 at (8,7) reaches (9,7) and the row-7 dead end; R6.1 at (8,9) reaches
+    (9,9); the switch's pad at (9,4) reaches (10,4).  Three pieces, three separate spaces.
+    No cut can be removed to help: every one of the 27 is load-bearing;
+  * **IN_A** -- U1.3 at (12,9) has exactly one free hole beside it, (11,9), and the wire that
+    uses it comes down column 11, which dead-ends on row 1;
+  * **HPL and HPR** -- C6.1 at (0,16) and C7.1 at (3,16) have one free hole each, (0,15) and
+    (3,15), and row 15 carries **GND_A** (the cut at (17,4) and the C4/R4/BIAS row make it so).
+    A wire cannot end on another net's copper, so the band's two coupling capacitors are sealed
+    against the row that is their only way out -- which is the exits rule's whole point;
+  * **GND_A** -- seven pieces and six separate spaces, and the codec's ground pad CGND at
+    (10,15) can reach only (10,16), which carries OUT_L;
+  * **OUT_L_N and OUT_R_N** -- their only way down the left of the board is column 0 and
+    column 3, and row 21 is `V9_RAW` from end to end, so the wire's end lands on another net;
+  * **V9_RAW** is a net with one pad and no other hole on the board, and that pad sits on the
+    whole row the output wires need.
+
+**7 of the 12 splits are GND_A**, which is the net the ground plan expects to be the hardest:
+every part's return wants its own wire to the star, and the star is on the bottom edge, so
+every return runs the length of a board whose middle rows are the parts.  That is a placement
+question rather than a wiring one, exactly as this file argued before: the board needs each
+net's *path* decided before the parts are fixed in place, and the exits rule is the first tool
+that can say whether a placement has one.
 
 Everything below is the reasoning that led here.
 
@@ -118,7 +153,7 @@ PARTS = {
     'R5':  ('r', '330k', [((8, 3), 'IN_A'), ((8, 7), 'IN_B')]),
     'R6':  ('r', '680k', [((8, 9), 'IN_B'), ((8, 13), 'BIAS')]),
     'C3':  ('cer', '100nF', [((17, 3), 'VF'), ((17, 4), 'GND_A')]),
-    'C4':  ('el5', '10µF 50V', [((3, 2), 'BIAS'), ((3, 3), 'GND_A')]),
+    'C4':  ('el5.2', '10µF 50V', [((3, 2), 'BIAS'), ((3, 3), 'GND_A')]),
     'R2':  ('r', '10k', [((3, 5), 'VF'), ((3, 9), 'BIAS_MID')]),
     'R3':  ('r', '10k', [((3, 10), 'BIAS_MID'), ((3, 14), 'BIAS')]),
     'R4':  ('r', '10k', [((5, 10), 'BIAS'), ((5, 14), 'GND_A')]),

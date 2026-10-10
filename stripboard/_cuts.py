@@ -8,6 +8,14 @@ correctly -- and derives the cuts from that:
   for each row, take its leads in x order, group them by the net they are on, and put one cut
   at every net-to-net boundary: n-1 cuts for n nets.
 
+**This is only half the rule, and the half it is missing is rule 3b.**  A cut on a row parts
+two pieces of copper, and a piece is only ever joined to the rest of the board by a wire whose
+end lands on it -- so a cut that no wire needs is a route taken away, and a cut that leaves a
+lead with nothing on its own side of it is a lead nobody can wire.  That is why this is a
+*report* and not the last word: `stripboard/_route.py` places the wires first and cuts only
+where a wire's copper demands it, and `_place.py`'s exits rule says ahead of time whether the
+placement *can* be wired at all.  Read this beside those two, not instead of them.
+
 Then it re-runs the checker to see what is left.  Prints the CUTS to use.
 
     python3 stripboard/_cuts.py
