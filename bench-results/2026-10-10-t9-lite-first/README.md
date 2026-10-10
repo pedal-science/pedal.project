@@ -52,24 +52,30 @@ What was ruled out by measurement, not by reading:
 * **The falsifier in the same case passes** where it runs: a plan that was *not* replayed does differ
   from the running plan, so the comparison is not vacuous.
 
-What that leaves is an interaction between the case and whatever the rest of the suite leaves behind
-in the container build, and it is being chased as an engine bug: a suite that cannot go green is a
-board that cannot be updated, which is the correct state to leave it in, and the fix belongs in the
-engine rather than in the deploy script's willingness to skip it. Consequence worth writing down:
-`deploy-engine` is fail-closed on `ctest`, so **any** failing case — the 4% crash or a deterministic
-assertion like this one — now blocks every deploy of that commit, and a red suite is discovered at
-deploy time rather than at commit time.
+**Resolved: it was the test, not the engine** (namchain `894b67c`). The case generated exactly
+`kBlocks` of input and then compared the blocks *after* the signal by reading
+`x.data() + (kBlocks + b) * kQuantum` — 512 floats (2 KB) **past the end of the vector**, into live
+heap where the two plans' own buffers sat. So the reference plan's run wrote the bytes the replayed
+plan then read: the two plans were fed different audio, and the case measured that instead of the
+replay. Deterministic in the board's build and nowhere else because the A2 planar parity case, which
+runs first in file order, leaves the heap shaped so the catch-up plans' buffers land immediately
+behind `x`. ASan names it exactly — a 256-byte read at `x+51200`, 0 bytes after the 51200-byte region
+`signal()` allocated — and digesting the out-of-bounds bytes before and after each run shows the
+correlation: blocks 0–2 unchanged (the plans agree) and blocks 3–7 changed by the reference's own run
+(so they differ). `execute()` reads exactly `frames` samples from the pointer it is given, which is
+its contract, so **the engine was never at fault and the bit-identity claim was never falsified** —
+the honest reading of the evidence above was "the test disagrees with itself in this environment",
+which is what it turned out to be. The suite is green on the fixed commit both on the Mac (367/367)
+and in the board's own container build (5/5 ctest, `unit` 372/372).
 
-The instrument that would localise it, if the suite's own output is not enough: a standalone
-reproduction of the case that prints rather than only comparing — `lookback.samples` for the model,
-the window's `covers()`, `replay_window`'s `blocks`/`frames`/`covered`/`last_seq`, and per block the
-worst absolute difference and the index of the first differing sample, plus the unreplayed falsifier
-in the same run. Run both in the container and on the Mac, it says in one line whether the two sides
-diverge because the replay is short, because the state was restored wrongly, or because the two plans
-are not running the same arithmetic. It was **written but not run** before this session handed the
-bug on — the two facts that localise it so far are the isolated 2/2 pass and the 367/367 on the Mac —
-and it was removed rather than left in `namchain/`, since the engine repo is where a permanent version
-belongs.
+Two consequences are worth keeping, because they are about the pipeline rather than this test.
+`deploy-engine` is fail-closed on `ctest`, so a red suite — the 4% crash or a deterministic
+assertion like this one — blocks every deploy of that commit, and a red suite is now discovered at
+deploy time rather than at commit time. And the way this one hid is instructive: it passed alone in
+the same image and passed on the Mac, so the two facts that made it tractable were "it is
+suite-context" and "the falsifiable prediction is that ordering matters", not a reading of the code.
+A second, unrelated finding from the same sweep (a heap-use-after-free in `test_daemon.cpp`, found
+under randomised ordering) does not affect this suite.
 
 ## 1. What was driven, and how
 
