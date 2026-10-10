@@ -504,6 +504,13 @@ and it is now settled in this shape:
   flag on it: Lite first, Full behind), the replay that catches the Full up, the service's
   willingness to accept a temporary Lite (it already accepts a switch's `switched: cold` answer), and
   T9 measuring press-to-full-rig through the pedal.
+- **The hard half of the replay is already in the engine** (checked 2026-10-10): `nam/lookback.cpp`
+  derives a model's **exact replay length** — `Ok` with a finite length, or `Unbounded` for a model
+  whose memory cannot be replayed exactly (an LSTM), which is the case P8 must refuse to promise about
+  rather than approximate. The bench uses it (`always->memory()`), and the input to replay is already
+  kept: the warm path's block pool holds the decoded capture beside the audible document. So what is
+  missing is the *use* — publish the Lite, compile the Full, replay `lookback` frames of recent input
+  into it, then crossfade with E2's compensated shape — not a way to know how much to replay.
 
 **P9 — the level probes as a table row (nc, pp). DECIDED 2026-10-08, BY MEASUREMENT.** The meter costs render-core time and is not free
 (publishing per period already recovered 55% of it). Either it appears as a per-node row in the table
