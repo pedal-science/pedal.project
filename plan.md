@@ -1256,23 +1256,26 @@ it, 170 ms per model replayed, compensated crossfade), D6's teeth are visibility
 and the pedal decided **what it warms**: one rig, the one a press reaches, with the engine's charge
 deciding whether it fits and `/status` reporting the decision (`warm_decision`).
 
-**T9's instrument is built, and the commit it measures does not deploy (2026-10-10).** T9 is
-press-to-full-rig through the pedal, and everything it needs now exists: pedald asks for the Lite
-first (`877b8c4` — it sent only `{rig, fallback}` before, so P8's two-step publish was unreachable
-from a press), the harness is `scripts/measure-lite-first` with `scripts/t9-rigs` beside it
-(`432702d`), and the evidence file is `bench-results/2026-10-10-t9-lite-first/`. **No T9 number has
-been taken**, because `scripts/deploy-engine --host vip --commit 89193f5` fails its own `ctest` run,
-twice, identically: `tests/test_catch_up.cpp:148`, *"a replayed plan is bit-identical to one that has
-been running"*, five `memcmp` mismatches on the blocks after the hand-over. That is the case asserting
-the claim the catch-up and T9 both rest on; it passes alone in the same container image (2/2) and
-passes 367/367 on the Mac, so it is a suite-context effect in the build container rather than the
-known intermittent `unit` crash. The board stays on `ee4c53d`, which predates `lite_first` entirely,
-because a suite that cannot go green is a commit that does not deploy — and `deploy-engine` being
-fail-closed on `ctest` means a red suite is now discovered at deploy time rather than at commit time.
-Fix that case, then: deploy, bump `engine_commit` in `devices/vip/cost.json` with the reason in `bar`
-and apply it, run `scripts/t9-rigs setup`, `scripts/measure-lite-first`, the LSTM refusal check and
-`scripts/t9-rigs restore`, and fill the README's tables. The poll grid is 9.62 ms (measured), so no
-number from it may be quoted finer than that.
+**T9 ran through the pedal, and the replay behind the Lite never ran (2026-10-10).** The board is on
+**`894b67c`** (deployed; 5/5 ctest and `unit` 372/372 in the board's own container build; the cost
+table names it with the reason in `bar`, applied, `devices/vip/check` green). T9's numbers, three runs
+an arm with the warm set verified empty at each press: **the Lite is audible 41 ms after the press**
+(the one-step publish it replaces was 32 ms on this small rig) **and the Full 320 ms after it**, with
+`lite.adopted` true, `cost.lite_first` set while the Lite stands in, `catch_up.full` reaching
+`published` every time, and 0 xruns / 0 blocks over the deadline throughout. A press through pedald's
+`POST /event` is **108–110 ms**, of which ~100 ms is the service's own HTTP round trip — and it is a
+*handover* in a two-rig bank, because the service holds the neighbour warm, so the cold path a
+footswitch takes is the one the engine arm measures. **The defect: in all three two-step runs
+`catch_up.state` is `exact` with a 14,539-frame window and the catch-up runs for ~270 ms, then ends
+`catch_up.replay: no_input` and `catch_up.blocks: 0`** — no input was ever replayed, so the Full is
+crossfaded in cold. The engine's own tests reach `exact` on the test backend, so it is board-specific
+and it is **the engine's to find**: the history ring on the render path is the suspect and its
+counters are not in `engine.status`. The refusal path is confirmed on the pedal (a chain with a
+slimmable model and the LSTM refuses with `unbounded`, `frames: 0`, `detail` naming `amp1`, and still
+publishes the Full). Evidence: `bench-results/2026-10-10-t9-lite-first/`. The pedal was put back —
+`last.json` playing, pedald and namchaind active, library holding only the two resume files. **Owed
+next: the replay defect** (engine), then T9's physical press at the jack (3.8's), a heavier Full, and
+the literal first-press-after-boot with a cold card.
 
 **Found while measuring T11 (2026-10-10): the bank is empty, so nothing is warm and a press does
 nothing.** The engine holds only the audible document, pedald's `warm_decision` says `idle` with

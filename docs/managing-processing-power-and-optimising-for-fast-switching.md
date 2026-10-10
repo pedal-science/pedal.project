@@ -726,35 +726,46 @@ and the engine-level storm — many `rig.switch` calls a second — is the cheap
 **T9 — cold, from nothing.** The first press after boot, nothing warm, SD card cold: the catch-up
 path's worst case, measured to the jack. This is the number that justifies D6 and the catch-up rules
 being real.
-**Not yet run, and the instrument is ready** (2026-10-10). What T9 needs is now built and committed,
-and what stops it is a finding of its own:
+**Run 2026-10-10, through the pedal, on `894b67c`**
+([bench-results/2026-10-10-t9-lite-first](bench-results/2026-10-10-t9-lite-first/README.md)): the
+press is driven through pedald's own `POST /event` and through the engine's `rig.switch`, a rig the
+pedal plays into a copy of itself, three runs an arm, with the warm set **verified empty at the press**
+(the service holds the neighbour warm, so a cold publish has to be made cold on purpose). Every time
+is bounded by that run's poll grid, 7.5–11.6 ms, printed with each run; nothing here is finer than
+one `engine.status` poll.
 
-- **The service can ask for it** (`pedal.project` `877b8c4`): pedald's `engine.py` sent only
-  `{rig, fallback}`, so P8's two-step publish was unreachable from a press — the engine had it and
-  the service never asked. It now asks unconditionally, which the engine makes safe: a rig that is
-  *warm* is answered `switched: warm` with `lite_first: false` and no publish at all, and a document
-  with nothing to trim is answered `nothing_to_trim` (`Daemon::switch_to`, `publish_lite_first`).
-- **The measurement is `scripts/measure-lite-first`** (`pedal.project` `432702d`): three arms — the
-  engine's own `rig.switch` with `lite_first` false (what a press measured before the wiring, and the
-  control) and true, and a press through pedald's `POST /event` — each timing accepted-to-Lite-audible
-  and accepted-to-Full-audible against `engine.status` polled in a tight loop, with every
-  `catch_up.state`/`full`/`replay` and `cost.lite_first` transition recorded and the render health
-  read either side. `scripts/t9-rigs` installs the two documents it needs from models already in the
-  board's library and puts the pedal back afterwards. **The resolution is the poll interval**, which
-  is printed with every run: a document becomes audible between the last poll that showed the old
-  generation and the first that showed the new one, so no number from it is finer than one poll.
-- **What blocks it is the engine's own test, not the instrument**: `scripts/deploy-engine --host vip
-  --commit 89193f5` fails its `ctest` run twice, identically, on *"a replayed plan is bit-identical to
-  one that has been running"* (`tests/test_catch_up.cpp:148`, five `memcmp` mismatches on blocks 3-7)
-  — the case that asserts the bit-identity claim the catch-up and this test both rest on. It passes
-  alone in the same container image and 367/367 on the Mac, so it is a suite-context effect in the
-  build container; the board is left on `ee4c53d`, which predates `lite_first` entirely, because a
-  suite that cannot go green is a commit that does not deploy. The evidence and the reasoning are in
-  [bench-results/2026-10-10-t9-lite-first](bench-results/2026-10-10-t9-lite-first/README.md), whose
-  measurement tables are deliberately empty until a board runs that commit.
-- **Still owed after that**: the physical footswitch press and a capture at the jack — this drives
-  the service's own event path, not the Pico's UART — which is 3.8's; and a heavier Full than one
-  model into one cab.
+| arm | press → Lite audible | press → Full audible |
+|---|---|---|
+| `engine-no-lite` (the one-step publish, what a press did before `877b8c4`) | **32 ms** | n/a — no Full behind it |
+| `engine-lite` (P8's two-step publish) | **41 ms** | **320 ms** |
+| a press through pedald, `rig_up` / `rig_select` | **108 / 110 ms** (HTTP round trip 98–108 ms of it) | n/a — both were handovers |
+
+**So the promise holds at the press and the mechanism behind it does not work on this board.** The
+Lite is what the player hears 41 ms after the press, `lite.adopted` is true (the render thread
+settled on it, so it was really audible and not coalesced away), `cost.lite_first` is true while it
+stands in and clears when the Full lands, and `catch_up.full` reached `published` in every run. But
+in all three two-step runs the engine reported `catch_up.state: exact` with a 14,539-frame window,
+ran the catch-up for ~270 ms, and finished with **`catch_up.replay: no_input` and `catch_up.blocks:
+0`** — the replay that is supposed to make the Full *right* before it is heard never had any input,
+so the Full is crossfaded in from a cold start. D6's visibility and the Lite-first timing are
+measured and hold; **P8's second half is not achieved on the pedal**, and it is the engine's own
+tests that say the mechanism is sound (they reach `replay: exact` on the test backend), so what is
+owed is the board-specific cause, from the engine's side.
+
+Two more things this run settles: **the refusal path works exactly as designed** — a chain with a
+slimmable model *and* an LSTM refuses with `state: unbounded`, `frames: 0` and a `detail` naming
+`amp1` and "LSTM has unbounded memory; replay cannot be exact", and *still publishes the Full* rather
+than ending in silence or leaving the Lite standing — and **nothing disturbed the audible rig** (0
+xruns, 0 blocks over the deadline, worst block 245.9 µs of 1333.3, identical before and after every
+run). One correction to this test's premise, found by running it: **the pedal's service holds the
+neighbour warm, so a press in a two-rig bank is always a handover**, and the cold path a footswitch
+will actually take is the one the engine arm measures. What the service adds to a cold publish is
+therefore not measured; its own overhead is ~100 ms, which is over twice what the publish needs.
+
+**Still owed:** the physical footswitch press and a capture at the jack — this drives the service's
+event path, not the Pico's UART — which is 3.8's; the replay defect above, which is the engine's; a
+heavier Full than one model into one cab; and the literal "first press after boot, SD card cold",
+since these runs load the base rig first and leave the page cache warm.
 
 **T10 — the hour.** The whole scheme for an hour: switching between rigs, refills, warm cores at
 0.8, catch-ups, `xruns` at zero, guard trips at zero, temperature and throttle recorded. This is the
