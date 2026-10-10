@@ -133,6 +133,7 @@ power cut mid-write leaves the old sector or the new one. Tested on vip with the
 | Normal | power on | the active slot, default profile (tuned) | — |
 | Try a kernel | `vip-boot try-kernel <rel>` | the spare slot once | validate passes → it becomes the active slot, and the other keeps the previous kernel. Anything else → the active slot again, and the candidate is marked bad |
 | Try new boot arguments | `vip-boot try-args '<args>'` | the spare slot with the same kernel and the new tuned arguments | the same as a kernel |
+| Try a config line | `vip-boot try-config '<line>'` | the spare slot with the same kernel, and the line in the one-shot | the same as a kernel; the line goes into `profile.txt`. `drop-config '<line>' --yes` takes it away |
 | One loose boot | `vip-boot loose` | the active slot, loose profile | next boot is tuned |
 | Loose until told otherwise | `vip-boot default loose` | loose every boot | `vip-boot default tuned` |
 | Rescue once | `vip-boot rescue` (`reboot "3"`: no flag, nothing written) | rescue-boot | next boot is the pedal |
@@ -318,10 +319,12 @@ confirmation).
   loaded at runtime by `pedal-codec`, as on piv.
   **D14 changes this, and it is open**: rigpa needs `vc4-kms-v3d` for its screen. The kernel
   already carries vc4 and v3d (rtpi's numaemu2), and rigpa's unit waits for vc4's HDMI connector,
-  so nothing changes until the overlay is enabled. But `config.txt` is written once, by a card
-  write, and `--remote` never touches the boot partition: enabling it on a running vip needs either
-  a card write or a vip-boot change (rtpi) that can try a config line the way it tries a kernel.
-  Decided when the screen is fitted (plan V3).
+  so nothing changes until the overlay is enabled. `config.txt` is written once, by a card write,
+  and `--remote` never touches the boot partition, so a running vip gets the line through
+  `vip-boot try-config 'dtoverlay=vc4-kms-v3d'` (rtpi `c2c23a4`): tried once in the spare slot,
+  promoted into `profile.txt` by validation, kept through later kernel trials, `drop-config` to take
+  it away. It needs that vip-boot in the root (a `--remote` with rtpi pinned at or after it). When
+  to enable it is decided when the screen is fitted (plan V3).
 - rescue-boot keeps the KMS driver, so the HDMI console works with a keyboard.
 - `cfg80211.ieee80211_regdom=GB`, the dracut arguments (`rd.shell=0 rd.emergency=reboot
   rd.retry=60 rd.timeout=90`) and `panic=10` on every command line.
