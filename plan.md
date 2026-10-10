@@ -1202,7 +1202,7 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
   - the MIDI-in parts. The BOM gives the circuit and its values.
   - everything else that doesn't wait on a decision: the output stage (which 2a's measurements
     need too), power, the relay and its driver, footswitches, LEDs, sockets and stripboard
-  - the op-amp: 2 × OPA2197 on SOIC-to-DIP adapters. **Arrived 2026-10-10** (back-ordered past 4 Oct, then delivered),
+  - the op-amp: 2 × OPA2197 on SOIC-to-DIP adapters. **Arrived 2026-10-10** (back-ordered past 4 Oct, then delivered).
     The adapters and sockets were already here, so board 1
     can be built first.
   - the Inst/Line switch and the Line pad's resistors, at provisional values; screened cable and
