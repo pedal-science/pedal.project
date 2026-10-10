@@ -1,0 +1,4082 @@
+{
+ "host": "vip",
+ "started": "2026-10-10T13:02:43",
+ "runs": [
+  {
+   "arm": "engine-no-lite",
+   "run": 1,
+   "rig": "t9-base.json",
+   "lite_first": false,
+   "from": "/var/lib/pedal/library/rigs/last.json",
+   "published_generation": 82,
+   "full_generation": 82,
+   "reply": {
+    "switched": "cold",
+    "reason": "nothing is warm",
+    "lite_first": null,
+    "handover_blocks": null,
+    "fade_ms": null,
+    "generation": 82,
+    "doc": null,
+    "core": null
+   },
+   "reply_lite": null,
+   "reply_full": null,
+   "reply_ms": 29.068,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/last.json",
+    "generation": 81,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 22,
+     "cold_switches": 30,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-lstm",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 81,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 82,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 22,
+     "cold_switches": 31,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 82,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "lite_ms": 42.495,
+   "full_ms": null,
+   "poll_interval_ms": 11.115,
+   "catch_up_state": [
+    [
+     474818.119876,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     474818.119876,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     474818.119876,
+     "no_input"
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     474818.119876,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     474818.119876,
+     82
+    ]
+   ],
+   "chain_audible": [
+    [
+     474818.119876,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1060979,
+     "generation": 82,
+     "target_generation": 82,
+     "audible_generation": 82,
+     "adopted_generation": 82,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 82,
+       "audible_generation": 82,
+       "target_generation": 82,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 31,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 82,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474818.119876375
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1061012,
+     "generation": 82,
+     "target_generation": 82,
+     "audible_generation": 82,
+     "adopted_generation": 82,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 82,
+       "audible_generation": 82,
+       "target_generation": 82,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 31,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 82,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474818.164337833
+    }
+   ],
+   "polls_total": 5
+  },
+  {
+   "arm": "engine-no-lite",
+   "run": 2,
+   "rig": "t9-base.json",
+   "lite_first": false,
+   "from": "/var/lib/pedal/library/rigs/last.json",
+   "published_generation": 85,
+   "full_generation": 85,
+   "reply": {
+    "switched": "cold",
+    "reason": "nothing is warm",
+    "lite_first": null,
+    "handover_blocks": null,
+    "fade_ms": null,
+    "generation": 85,
+    "doc": null,
+    "core": null
+   },
+   "reply_lite": null,
+   "reply_full": null,
+   "reply_ms": 24.732,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/last.json",
+    "generation": 84,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 22,
+     "cold_switches": 31,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-lstm",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 83,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 85,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 22,
+     "cold_switches": 32,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 85,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "lite_ms": 31.809,
+   "full_ms": null,
+   "poll_interval_ms": 11.635,
+   "catch_up_state": [
+    [
+     474819.102844,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     474819.102844,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     474819.102844,
+     "no_input"
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     474819.102844,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     474819.102844,
+     85
+    ]
+   ],
+   "chain_audible": [
+    [
+     474819.102844,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1061719,
+     "generation": 85,
+     "target_generation": 85,
+     "audible_generation": 85,
+     "adopted_generation": 85,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 85,
+       "audible_generation": 85,
+       "target_generation": 85,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 32,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 85,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474819.102843625
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1061751,
+     "generation": 85,
+     "target_generation": 85,
+     "audible_generation": 85,
+     "adopted_generation": 85,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 85,
+       "audible_generation": 85,
+       "target_generation": 85,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 32,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 85,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474819.149381916
+    }
+   ],
+   "polls_total": 5
+  },
+  {
+   "arm": "engine-no-lite",
+   "run": 3,
+   "rig": "t9-base.json",
+   "lite_first": false,
+   "from": "/var/lib/pedal/library/rigs/last.json",
+   "published_generation": 87,
+   "full_generation": 87,
+   "reply": {
+    "switched": "cold",
+    "reason": "nothing is warm",
+    "lite_first": null,
+    "handover_blocks": null,
+    "fade_ms": null,
+    "generation": 87,
+    "doc": null,
+    "core": null
+   },
+   "reply_lite": null,
+   "reply_full": null,
+   "reply_ms": 22.772,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/last.json",
+    "generation": 86,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 22,
+     "cold_switches": 32,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-lstm",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 86,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 87,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 22,
+     "cold_switches": 33,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 87,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "lite_ms": 30.059,
+   "full_ms": null,
+   "poll_interval_ms": 10.733,
+   "catch_up_state": [
+    [
+     474820.092025,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     474820.092025,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     474820.092025,
+     "no_input"
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     474820.092025,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     474820.092025,
+     87
+    ]
+   ],
+   "chain_audible": [
+    [
+     474820.092025,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1062461,
+     "generation": 87,
+     "target_generation": 87,
+     "audible_generation": 87,
+     "adopted_generation": 87,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 87,
+       "audible_generation": 87,
+       "target_generation": 87,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 33,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 87,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474820.092024958
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1062493,
+     "generation": 87,
+     "target_generation": 87,
+     "audible_generation": 87,
+     "adopted_generation": 87,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 87,
+       "audible_generation": 87,
+       "target_generation": 87,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 33,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 87,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474820.13495875
+    }
+   ],
+   "polls_total": 5
+  },
+  {
+   "arm": "engine-lite",
+   "run": 1,
+   "rig": "t9-base.json",
+   "lite_first": true,
+   "from": "/var/lib/pedal/library/rigs/last.json",
+   "published_generation": 90,
+   "full_generation": 91,
+   "reply": {
+    "switched": "cold",
+    "reason": "nothing is warm",
+    "lite_first": true,
+    "handover_blocks": null,
+    "fade_ms": null,
+    "generation": 90,
+    "doc": null,
+    "core": null
+   },
+   "reply_lite": {
+    "adopted": true,
+    "cost": 0.07112000000000002,
+    "full_cost": 0.14882,
+    "generation": 90,
+    "slimmed_models": [
+     {
+      "chain": "one",
+      "cost": 0.0333,
+      "element": "amp0",
+      "full_cost": 0.111,
+      "node": "amp0",
+      "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+      "row": "NAM.WaveNet.lite",
+      "working_set_bytes": 300808
+     }
+    ],
+    "trimmed": true,
+    "verdict": "trimmed"
+   },
+   "reply_full": {
+    "catch_up": {
+     "blocks": 0,
+     "frames": 14539,
+     "full": "compiling",
+     "replay": "running",
+     "running": true,
+     "state": "exact"
+    },
+    "state": "compiling"
+   },
+   "reply_ms": 32.339,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/last.json",
+    "generation": 89,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 22,
+     "cold_switches": 33,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-lstm",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 88,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 91,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 22,
+     "cold_switches": 34,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 91,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "lite_ms": 40.897,
+   "full_ms": 319.466,
+   "poll_interval_ms": 10.996,
+   "catch_up_state": [
+    [
+     474821.059067,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     474821.059067,
+     "compiling"
+    ],
+    [
+     474821.075164,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     474821.059067,
+     "no_input"
+    ],
+    [
+     474821.075164,
+     "running"
+    ],
+    [
+     474821.337636,
+     "no_input"
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     474821.059067,
+     true
+    ],
+    [
+     474821.337636,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     474821.059067,
+     90
+    ],
+    [
+     474821.337636,
+     91
+    ]
+   ],
+   "chain_audible": [
+    [
+     474821.059067,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1063186,
+     "generation": 90,
+     "target_generation": 90,
+     "audible_generation": 90,
+     "adopted_generation": 90,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": true,
+      "verdict": "trimmed",
+      "cost": 0.07112000000000002
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "compiling",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 90,
+       "audible_generation": 90,
+       "target_generation": 90,
+       "transition_active": false,
+       "slimmed_models": [
+        {
+         "cost": 0.0333,
+         "element": "amp0",
+         "full_cost": 0.111,
+         "node": "amp0",
+         "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+         "row": "NAM.WaveNet.lite"
+        }
+       ],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 34,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 90,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474821.059066666
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1063198,
+     "generation": 91,
+     "target_generation": 90,
+     "audible_generation": 90,
+     "adopted_generation": 90,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": true,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 91,
+       "audible_generation": 90,
+       "target_generation": 90,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 34,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 90,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474821.075164458
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1063204,
+     "generation": 91,
+     "target_generation": 91,
+     "audible_generation": 90,
+     "adopted_generation": 91,
+     "transition_active": true,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": true,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 91,
+       "audible_generation": 90,
+       "target_generation": 91,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 34,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 91,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474821.083187291
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1063387,
+     "generation": 91,
+     "target_generation": 91,
+     "audible_generation": 90,
+     "adopted_generation": 91,
+     "transition_active": true,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": true,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 91,
+       "audible_generation": 90,
+       "target_generation": 91,
+       "transition_active": true,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 34,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 91,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474821.329502
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1063395,
+     "generation": 91,
+     "target_generation": 91,
+     "audible_generation": 91,
+     "adopted_generation": 91,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 91,
+       "audible_generation": 91,
+       "target_generation": 91,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 34,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 91,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474821.337636041
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1063424,
+     "generation": 91,
+     "target_generation": 91,
+     "audible_generation": 91,
+     "adopted_generation": 91,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 91,
+       "audible_generation": 91,
+       "target_generation": 91,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 34,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 91,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474821.377947083
+    }
+   ],
+   "polls_total": 30
+  },
+  {
+   "arm": "engine-lite",
+   "run": 2,
+   "rig": "t9-base.json",
+   "lite_first": true,
+   "from": "/var/lib/pedal/library/rigs/last.json",
+   "published_generation": 93,
+   "full_generation": 95,
+   "reply": {
+    "switched": "cold",
+    "reason": "nothing is warm",
+    "lite_first": true,
+    "handover_blocks": null,
+    "fade_ms": null,
+    "generation": 93,
+    "doc": null,
+    "core": null
+   },
+   "reply_lite": {
+    "adopted": true,
+    "cost": 0.07112000000000002,
+    "full_cost": 0.14882,
+    "generation": 93,
+    "slimmed_models": [
+     {
+      "chain": "one",
+      "cost": 0.0333,
+      "element": "amp0",
+      "full_cost": 0.111,
+      "node": "amp0",
+      "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+      "row": "NAM.WaveNet.lite",
+      "working_set_bytes": 300808
+     }
+    ],
+    "trimmed": true,
+    "verdict": "trimmed"
+   },
+   "reply_full": {
+    "catch_up": {
+     "blocks": 0,
+     "frames": 14539,
+     "full": "compiling",
+     "replay": "running",
+     "running": true,
+     "state": "exact"
+    },
+    "state": "compiling"
+   },
+   "reply_ms": 33.45,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/last.json",
+    "generation": 92,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 22,
+     "cold_switches": 34,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-lstm",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 92,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 95,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 22,
+     "cold_switches": 35,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 94,
+       "doc": 0
+      },
+      {
+       "name": "t9-lstm",
+       "audible": false,
+       "state": "warm",
+       "core": 1,
+       "generation": 95,
+       "doc": 1
+      }
+     ]
+    }
+   },
+   "lite_ms": 40.896,
+   "full_ms": null,
+   "poll_interval_ms": 7.729,
+   "catch_up_state": [
+    [
+     474822.340711,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     474822.340711,
+     "compiling"
+    ],
+    [
+     474822.356075,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     474822.340711,
+     "no_input"
+    ],
+    [
+     474822.356075,
+     "running"
+    ],
+    [
+     474822.620324,
+     "no_input"
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     474822.340711,
+     true
+    ],
+    [
+     474822.61352,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     474822.340711,
+     93
+    ],
+    [
+     474822.61352,
+     94
+    ]
+   ],
+   "chain_audible": [
+    [
+     474822.340711,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1064148,
+     "generation": 93,
+     "target_generation": 93,
+     "audible_generation": 93,
+     "adopted_generation": 93,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": true,
+      "verdict": "trimmed",
+      "cost": 0.07112000000000002
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "compiling",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 93,
+       "audible_generation": 93,
+       "target_generation": 93,
+       "transition_active": false,
+       "slimmed_models": [
+        {
+         "cost": 0.0333,
+         "element": "amp0",
+         "full_cost": 0.111,
+         "node": "amp0",
+         "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+         "row": "NAM.WaveNet.lite"
+        }
+       ],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 35,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 93,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474822.340710583
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1064158,
+     "generation": 94,
+     "target_generation": 93,
+     "audible_generation": 93,
+     "adopted_generation": 93,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": true,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 94,
+       "audible_generation": 93,
+       "target_generation": 93,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 35,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 93,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474822.356074958
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1064165,
+     "generation": 94,
+     "target_generation": 94,
+     "audible_generation": 93,
+     "adopted_generation": 94,
+     "transition_active": true,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": true,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 94,
+       "audible_generation": 93,
+       "target_generation": 94,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 35,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 94,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474822.363403916
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1064347,
+     "generation": 94,
+     "target_generation": 94,
+     "audible_generation": 93,
+     "adopted_generation": 94,
+     "transition_active": true,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": true,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 94,
+       "audible_generation": 93,
+       "target_generation": 94,
+       "transition_active": true,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 35,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 94,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474822.606203833
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1064352,
+     "generation": 94,
+     "target_generation": 94,
+     "audible_generation": 94,
+     "adopted_generation": 94,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": true,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 94,
+       "audible_generation": 94,
+       "target_generation": 94,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 35,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 94,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474822.613519666
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1064358,
+     "generation": 94,
+     "target_generation": 94,
+     "audible_generation": 94,
+     "adopted_generation": 94,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 94,
+       "audible_generation": 94,
+       "target_generation": 94,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 35,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 94,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474822.62032375
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1064373,
+     "generation": 95,
+     "target_generation": 94,
+     "audible_generation": 94,
+     "adopted_generation": 94,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 94,
+       "audible_generation": 94,
+       "target_generation": 94,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 35,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 94,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 95,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474822.642368083
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1064379,
+     "generation": 95,
+     "target_generation": 94,
+     "audible_generation": 94,
+     "adopted_generation": 94,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 94,
+       "audible_generation": 94,
+       "target_generation": 94,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 35,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 94,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 95,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474822.649859208
+    }
+   ],
+   "polls_total": 41
+  },
+  {
+   "arm": "engine-lite",
+   "run": 3,
+   "rig": "t9-base.json",
+   "lite_first": true,
+   "from": "/var/lib/pedal/library/rigs/last.json",
+   "published_generation": 97,
+   "full_generation": 98,
+   "reply": {
+    "switched": "cold",
+    "reason": "nothing is warm",
+    "lite_first": true,
+    "handover_blocks": null,
+    "fade_ms": null,
+    "generation": 97,
+    "doc": null,
+    "core": null
+   },
+   "reply_lite": {
+    "adopted": true,
+    "cost": 0.07112000000000002,
+    "full_cost": 0.14882,
+    "generation": 97,
+    "slimmed_models": [
+     {
+      "chain": "one",
+      "cost": 0.0333,
+      "element": "amp0",
+      "full_cost": 0.111,
+      "node": "amp0",
+      "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+      "row": "NAM.WaveNet.lite",
+      "working_set_bytes": 300808
+     }
+    ],
+    "trimmed": true,
+    "verdict": "trimmed"
+   },
+   "reply_full": {
+    "catch_up": {
+     "blocks": 0,
+     "frames": 14539,
+     "full": "compiling",
+     "replay": "running",
+     "running": true,
+     "state": "exact"
+    },
+    "state": "compiling"
+   },
+   "reply_ms": 33.84,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/last.json",
+    "generation": 96,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 22,
+     "cold_switches": 35,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-lstm",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 96,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 98,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 22,
+     "cold_switches": 36,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 98,
+       "doc": 0
+      }
+     ]
+    }
+   },
+   "lite_ms": 42.641,
+   "full_ms": 321.19,
+   "poll_interval_ms": 9.89,
+   "catch_up_state": [
+    [
+     474823.539222,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     474823.539222,
+     "compiling"
+    ],
+    [
+     474823.55704,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     474823.539222,
+     "no_input"
+    ],
+    [
+     474823.55704,
+     "running"
+    ],
+    [
+     474823.817771,
+     "no_input"
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     474823.539222,
+     true
+    ],
+    [
+     474823.817771,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     474823.539222,
+     97
+    ],
+    [
+     474823.817771,
+     98
+    ]
+   ],
+   "chain_audible": [
+    [
+     474823.539222,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1065046,
+     "generation": 97,
+     "target_generation": 97,
+     "audible_generation": 97,
+     "adopted_generation": 97,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": true,
+      "verdict": "trimmed",
+      "cost": 0.07112000000000002
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "compiling",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 97,
+       "audible_generation": 97,
+       "target_generation": 97,
+       "transition_active": false,
+       "slimmed_models": [
+        {
+         "cost": 0.0333,
+         "element": "amp0",
+         "full_cost": 0.111,
+         "node": "amp0",
+         "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+         "row": "NAM.WaveNet.lite"
+        }
+       ],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 36,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 97,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474823.539222208
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1065060,
+     "generation": 98,
+     "target_generation": 97,
+     "audible_generation": 97,
+     "adopted_generation": 97,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": true,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 98,
+       "audible_generation": 97,
+       "target_generation": 97,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 36,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 97,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474823.557039958
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1065066,
+     "generation": 98,
+     "target_generation": 98,
+     "audible_generation": 97,
+     "adopted_generation": 98,
+     "transition_active": true,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": true,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "running",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": true,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 98,
+       "audible_generation": 97,
+       "target_generation": 98,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 36,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 98,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474823.565236
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1065255,
+     "generation": 98,
+     "target_generation": 98,
+     "audible_generation": 98,
+     "adopted_generation": 98,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 98,
+       "audible_generation": 98,
+       "target_generation": 98,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 36,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 98,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474823.817771458
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1065275,
+     "generation": 98,
+     "target_generation": 98,
+     "audible_generation": 98,
+     "adopted_generation": 98,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.14882
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "no_input",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 0,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 98,
+       "audible_generation": 98,
+       "target_generation": 98,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 0,
+      "switches": 22,
+      "cold_switches": 36,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 98,
+        "doc": 0
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474823.845803416
+    }
+   ],
+   "polls_total": 32
+  },
+  {
+   "arm": "service",
+   "press": "rig_up",
+   "run": 1,
+   "handover": true,
+   "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+   "from": "/var/lib/pedal/library/rigs/t9-base.json",
+   "warm_before": [
+    "t9-lstm"
+   ],
+   "press_accepted_ms": 98.84,
+   "published_generation": 101,
+   "full_generation": 101,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 101,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 22,
+     "cold_switches": 37,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 100,
+       "doc": 0
+      },
+      {
+       "name": "t9-lstm",
+       "audible": false,
+       "state": "warm",
+       "core": 1,
+       "generation": 101,
+       "doc": 1
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+    "generation": 101,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 1,
+     "switches": 23,
+     "cold_switches": 37,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": false,
+       "state": "warm",
+       "core": 1,
+       "generation": 100,
+       "doc": 0
+      },
+      {
+       "name": "t9-lstm",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 101,
+       "doc": 1
+      }
+     ]
+    }
+   },
+   "lite_ms": 105.655,
+   "full_ms": null,
+   "poll_interval_ms": 9.964,
+   "catch_up_state": [
+    [
+     474825.409517,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     474825.409517,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     474825.409517,
+     "exact"
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     474825.409517,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     474825.409517,
+     101
+    ]
+   ],
+   "chain_audible": [
+    [
+     474825.409517,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1066450,
+     "generation": 101,
+     "target_generation": 101,
+     "audible_generation": 101,
+     "adopted_generation": 101,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.28781999999999996
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 228,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 101,
+       "audible_generation": 101,
+       "target_generation": 101,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 1,
+      "switches": 23,
+      "cold_switches": 37,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 100,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 101,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474825.40951675
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1066487,
+     "generation": 101,
+     "target_generation": 101,
+     "audible_generation": 101,
+     "adopted_generation": 101,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.28781999999999996
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 228,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 101,
+       "audible_generation": 101,
+       "target_generation": 101,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 1,
+      "switches": 23,
+      "cold_switches": 37,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 100,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 101,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474825.459335541
+    }
+   ],
+   "polls_total": 6
+  },
+  {
+   "arm": "service",
+   "press": "rig_up",
+   "run": 2,
+   "handover": true,
+   "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+   "from": "/var/lib/pedal/library/rigs/t9-base.json",
+   "warm_before": [
+    "t9-lstm"
+   ],
+   "press_accepted_ms": 101.425,
+   "published_generation": 102,
+   "full_generation": 102,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 102,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 24,
+     "cold_switches": 37,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 100,
+       "doc": 0
+      },
+      {
+       "name": "t9-lstm",
+       "audible": false,
+       "state": "warm",
+       "core": 1,
+       "generation": 102,
+       "doc": 1
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+    "generation": 102,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 1,
+     "switches": 25,
+     "cold_switches": 37,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": false,
+       "state": "warm",
+       "core": 1,
+       "generation": 100,
+       "doc": 0
+      },
+      {
+       "name": "t9-lstm",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 102,
+       "doc": 1
+      }
+     ]
+    }
+   },
+   "lite_ms": 108.291,
+   "full_ms": null,
+   "poll_interval_ms": 8.267,
+   "catch_up_state": [
+    [
+     474826.983856,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     474826.983856,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     474826.983856,
+     "exact"
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     474826.983856,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     474826.983856,
+     102
+    ]
+   ],
+   "chain_audible": [
+    [
+     474826.983856,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1067630,
+     "generation": 102,
+     "target_generation": 102,
+     "audible_generation": 102,
+     "adopted_generation": 102,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.28781999999999996
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 228,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 102,
+       "audible_generation": 102,
+       "target_generation": 102,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 1,
+      "switches": 25,
+      "cold_switches": 37,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 100,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 102,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474826.983855958
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1067660,
+     "generation": 102,
+     "target_generation": 102,
+     "audible_generation": 102,
+     "adopted_generation": 102,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.28781999999999996
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 228,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 102,
+       "audible_generation": 102,
+       "target_generation": 102,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 1,
+      "switches": 25,
+      "cold_switches": 37,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 100,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 102,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474827.02519275
+    }
+   ],
+   "polls_total": 6
+  },
+  {
+   "arm": "service",
+   "press": "rig_up",
+   "run": 3,
+   "handover": true,
+   "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+   "from": "/var/lib/pedal/library/rigs/t9-base.json",
+   "warm_before": [
+    "t9-lstm"
+   ],
+   "press_accepted_ms": 108.026,
+   "published_generation": 103,
+   "full_generation": 103,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 103,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 26,
+     "cold_switches": 37,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 100,
+       "doc": 0
+      },
+      {
+       "name": "t9-lstm",
+       "audible": false,
+       "state": "warm",
+       "core": 1,
+       "generation": 103,
+       "doc": 1
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+    "generation": 103,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 1,
+     "switches": 27,
+     "cold_switches": 37,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": false,
+       "state": "warm",
+       "core": 1,
+       "generation": 100,
+       "doc": 0
+      },
+      {
+       "name": "t9-lstm",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 103,
+       "doc": 1
+      }
+     ]
+    }
+   },
+   "lite_ms": 120.963,
+   "full_ms": null,
+   "poll_interval_ms": 9.325,
+   "catch_up_state": [
+    [
+     474828.607963,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     474828.607963,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     474828.607963,
+     "exact"
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     474828.607963,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     474828.607963,
+     103
+    ]
+   ],
+   "chain_audible": [
+    [
+     474828.607963,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1068844,
+     "generation": 103,
+     "target_generation": 103,
+     "audible_generation": 103,
+     "adopted_generation": 103,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.28781999999999996
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 228,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 103,
+       "audible_generation": 103,
+       "target_generation": 103,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 1,
+      "switches": 27,
+      "cold_switches": 37,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 100,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 103,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474828.607962666
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1068882,
+     "generation": 103,
+     "target_generation": 103,
+     "audible_generation": 103,
+     "adopted_generation": 103,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.28781999999999996
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 228,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 103,
+       "audible_generation": 103,
+       "target_generation": 103,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 1,
+      "switches": 27,
+      "cold_switches": 37,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 100,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 103,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474828.654585625
+    }
+   ],
+   "polls_total": 6
+  },
+  {
+   "arm": "service",
+   "press": "rig_select",
+   "run": 1,
+   "handover": true,
+   "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+   "from": "/var/lib/pedal/library/rigs/t9-base.json",
+   "warm_before": [
+    "t9-lstm"
+   ],
+   "press_accepted_ms": 107.374,
+   "published_generation": 103,
+   "full_generation": 103,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 103,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 28,
+     "cold_switches": 37,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 100,
+       "doc": 0
+      },
+      {
+       "name": "t9-lstm",
+       "audible": false,
+       "state": "warm",
+       "core": 1,
+       "generation": 103,
+       "doc": 1
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+    "generation": 103,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 1,
+     "switches": 29,
+     "cold_switches": 37,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": false,
+       "state": "warm",
+       "core": 1,
+       "generation": 100,
+       "doc": 0
+      },
+      {
+       "name": "t9-lstm",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 103,
+       "doc": 1
+      }
+     ]
+    }
+   },
+   "lite_ms": 115.756,
+   "full_ms": null,
+   "poll_interval_ms": 8.582,
+   "catch_up_state": [
+    [
+     474830.250003,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     474830.250003,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     474830.250003,
+     "exact"
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     474830.250003,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     474830.250003,
+     103
+    ]
+   ],
+   "chain_audible": [
+    [
+     474830.250003,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1070080,
+     "generation": 103,
+     "target_generation": 103,
+     "audible_generation": 103,
+     "adopted_generation": 103,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.28781999999999996
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 228,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 103,
+       "audible_generation": 103,
+       "target_generation": 103,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 1,
+      "switches": 29,
+      "cold_switches": 37,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 100,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 103,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474830.250002916
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1070112,
+     "generation": 103,
+     "target_generation": 103,
+     "audible_generation": 103,
+     "adopted_generation": 103,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.28781999999999996
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 228,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 103,
+       "audible_generation": 103,
+       "target_generation": 103,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 1,
+      "switches": 29,
+      "cold_switches": 37,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 100,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 103,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474830.292913333
+    }
+   ],
+   "polls_total": 6
+  },
+  {
+   "arm": "service",
+   "press": "rig_select",
+   "run": 2,
+   "handover": true,
+   "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+   "from": "/var/lib/pedal/library/rigs/t9-base.json",
+   "warm_before": [
+    "t9-lstm"
+   ],
+   "press_accepted_ms": 101.04,
+   "published_generation": 104,
+   "full_generation": 104,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 104,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 30,
+     "cold_switches": 37,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 100,
+       "doc": 0
+      },
+      {
+       "name": "t9-lstm",
+       "audible": false,
+       "state": "warm",
+       "core": 1,
+       "generation": 104,
+       "doc": 1
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+    "generation": 104,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 1,
+     "switches": 31,
+     "cold_switches": 37,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": false,
+       "state": "warm",
+       "core": 1,
+       "generation": 100,
+       "doc": 0
+      },
+      {
+       "name": "t9-lstm",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 104,
+       "doc": 1
+      }
+     ]
+    }
+   },
+   "lite_ms": 109.573,
+   "full_ms": null,
+   "poll_interval_ms": 8.015,
+   "catch_up_state": [
+    [
+     474831.826011,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     474831.826011,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     474831.826011,
+     "exact"
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     474831.826011,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     474831.826011,
+     104
+    ]
+   ],
+   "chain_audible": [
+    [
+     474831.826011,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1071261,
+     "generation": 104,
+     "target_generation": 104,
+     "audible_generation": 104,
+     "adopted_generation": 104,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.28781999999999996
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 228,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 104,
+       "audible_generation": 104,
+       "target_generation": 104,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 1,
+      "switches": 31,
+      "cold_switches": 37,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 100,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 104,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474831.826010791
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1071292,
+     "generation": 104,
+     "target_generation": 104,
+     "audible_generation": 104,
+     "adopted_generation": 104,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.28781999999999996
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 228,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 104,
+       "audible_generation": 104,
+       "target_generation": 104,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 1,
+      "switches": 31,
+      "cold_switches": 37,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 100,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 104,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474831.8660875
+    }
+   ],
+   "polls_total": 6
+  },
+  {
+   "arm": "service",
+   "press": "rig_select",
+   "run": 3,
+   "handover": true,
+   "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+   "from": "/var/lib/pedal/library/rigs/t9-base.json",
+   "warm_before": [
+    "t9-lstm"
+   ],
+   "press_accepted_ms": 97.939,
+   "published_generation": 105,
+   "full_generation": 105,
+   "before": {
+    "rig": "/var/lib/pedal/library/rigs/t9-base.json",
+    "generation": 105,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 0,
+     "switches": 32,
+     "cold_switches": 37,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 100,
+       "doc": 0
+      },
+      {
+       "name": "t9-lstm",
+       "audible": false,
+       "state": "warm",
+       "core": 1,
+       "generation": 105,
+       "doc": 1
+      }
+     ]
+    }
+   },
+   "after": {
+    "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+    "generation": 105,
+    "xruns": 0,
+    "guard_trips": 0,
+    "render": {
+     "over_deadline": 0,
+     "worst_us": 247.239,
+     "worst_percent": 18.54292963573241,
+     "over_90_percent": 0
+    },
+    "warm": {
+     "active_doc": 1,
+     "switches": 33,
+     "cold_switches": 37,
+     "enabled": true,
+     "set": [
+      {
+       "name": "t9-base",
+       "audible": false,
+       "state": "warm",
+       "core": 1,
+       "generation": 100,
+       "doc": 0
+      },
+      {
+       "name": "t9-lstm",
+       "audible": true,
+       "state": "audible",
+       "core": 3,
+       "generation": 105,
+       "doc": 1
+      }
+     ]
+    }
+   },
+   "lite_ms": 108.176,
+   "full_ms": null,
+   "poll_interval_ms": 7.513,
+   "catch_up_state": [
+    [
+     474833.406624,
+     "exact"
+    ]
+   ],
+   "catch_up_full": [
+    [
+     474833.406624,
+     "published"
+    ]
+   ],
+   "catch_up_replay": [
+    [
+     474833.406624,
+     "exact"
+    ]
+   ],
+   "cost_lite_first": [
+    [
+     474833.406624,
+     false
+    ]
+   ],
+   "audible_generation": [
+    [
+     474833.406624,
+     105
+    ]
+   ],
+   "chain_audible": [
+    [
+     474833.406624,
+     null
+    ]
+   ],
+   "polls": [
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1072445,
+     "generation": 105,
+     "target_generation": 105,
+     "audible_generation": 105,
+     "adopted_generation": 105,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.28781999999999996
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 228,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 105,
+       "audible_generation": 105,
+       "target_generation": 105,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 1,
+      "switches": 33,
+      "cold_switches": 37,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 100,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 105,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474833.40662375
+    },
+    {
+     "rig": "/var/lib/pedal/library/rigs/t9-lstm.json",
+     "name": null,
+     "state": "running",
+     "blocks": 1072475,
+     "generation": 105,
+     "target_generation": 105,
+     "audible_generation": 105,
+     "adopted_generation": 105,
+     "transition_active": false,
+     "xruns": 0,
+     "guard_trips": 0,
+     "cost": {
+      "lite_first": false,
+      "trimmed": false,
+      "verdict": "fits",
+      "cost": 0.28781999999999996
+     },
+     "catch_up": {
+      "state": "exact",
+      "replay": "exact",
+      "full": "published",
+      "frames": 14539,
+      "blocks": 228,
+      "running": false,
+      "detail": null
+     },
+     "chains": [
+      {
+       "id": "one",
+       "generation": 105,
+       "audible_generation": 105,
+       "target_generation": 105,
+       "transition_active": false,
+       "slimmed_models": [],
+       "missing_assets": []
+      }
+     ],
+     "warm": {
+      "active_doc": 1,
+      "switches": 33,
+      "cold_switches": 37,
+      "enabled": true,
+      "set": [
+       {
+        "name": "t9-base",
+        "audible": false,
+        "state": "warm",
+        "core": 1,
+        "generation": 100,
+        "doc": 0
+       },
+       {
+        "name": "t9-lstm",
+        "audible": true,
+        "state": "audible",
+        "core": 3,
+        "generation": 105,
+        "doc": 1
+       }
+      ]
+     },
+     "render": {
+      "over_deadline": 0,
+      "worst_us": 247.239,
+      "worst_percent": 18.54292963573241,
+      "over_90_percent": 0
+     },
+     "t": 474833.444190791
+    }
+   ],
+   "polls_total": 6
+  }
+ ]
+}

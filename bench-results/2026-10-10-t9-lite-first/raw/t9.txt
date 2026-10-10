@@ -1,0 +1,55 @@
+T9: press to Lite, and to Full, through the pedal
+host vip, 3 runs an arm
+engine on the board: commit=894b67c rev=894b67c built=2026-10-10T11:36:18Z host=build container on M2 (resolute 20260929T000000Z) kernel=7.0.0-1017-raspi-realtime-numaemu1-trimmed
+playing t9-lstm.json; switching to t9-base.json; base last.json
+
+clock: every time below is this process's monotonic clock, and 'accepted' is the request
+leaving this process -- so the engine arms carry a control round trip and the service arm
+carries the HTTP round trip as well. 'audible' is the first poll that saw the engine's
+audible_generation reach that document with its transition finished. A document becomes
+audible between the last poll that showed the old generation and the first that showed the
+new one, so the poll interval printed with each run is the resolution of every number
+here; nothing is finer than one poll.
+
+== arm 1: the engine's own cold publish, `lite_first: false` (what a press did before the wiring)
+  run 1: from last.json gen 81 -> cold; reply null in 29.1 ms
+    Lite audible 42.495 ms, Full (gen 82) audible None ms, poll 11.12 ms; catch_up [[474818.119876, 'exact']] / [[474818.119876, 'published']] / [[474818.119876, 'no_input']]; cost.lite_first [[474818.119876, False]]
+    render before {"over_deadline": 0, "worst_us": 247.239, "worst_percent": 18.54292963573241, "over_90_percent": 0} after {"over_deadline": 0, "worst_us": 247.239, "worst_percent": 18.54292963573241, "over_90_percent": 0}; xruns 0 -> 0
+  run 2: from last.json gen 84 -> cold; reply null in 24.7 ms
+    Lite audible 31.809 ms, Full (gen 85) audible None ms, poll 11.63 ms; catch_up [[474819.102844, 'exact']] / [[474819.102844, 'published']] / [[474819.102844, 'no_input']]; cost.lite_first [[474819.102844, False]]
+    render before {"over_deadline": 0, "worst_us": 247.239, "worst_percent": 18.54292963573241, "over_90_percent": 0} after {"over_deadline": 0, "worst_us": 247.239, "worst_percent": 18.54292963573241, "over_90_percent": 0}; xruns 0 -> 0
+  run 3: from last.json gen 86 -> cold; reply null in 22.8 ms
+    Lite audible 30.059 ms, Full (gen 87) audible None ms, poll 10.73 ms; catch_up [[474820.092025, 'exact']] / [[474820.092025, 'published']] / [[474820.092025, 'no_input']]; cost.lite_first [[474820.092025, False]]
+    render before {"over_deadline": 0, "worst_us": 247.239, "worst_percent": 18.54292963573241, "over_90_percent": 0} after {"over_deadline": 0, "worst_us": 247.239, "worst_percent": 18.54292963573241, "over_90_percent": 0}; xruns 0 -> 0
+
+== arm 2: the engine's own cold publish, `lite_first: true`
+  run 1: from last.json gen 89 -> cold; reply {"adopted": true, "cost": 0.07112000000000002, "full_cost": 0.14882, "generation": 90, "slimmed_models": [{"chain": "one", "cost": 0.0333, "element": "amp0", "full_cost": 0.111, "node": "amp0", "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam", "row": "NAM.WaveNet.lite", "working_set_bytes": 300808}], "trimmed": true, "verdict": "trimmed"} in 32.3 ms
+    Lite audible 40.897 ms, Full (gen 91) audible 319.466 ms, poll 11.00 ms; catch_up [[474821.059067, 'exact']] / [[474821.059067, 'compiling'], [474821.075164, 'published']] / [[474821.059067, 'no_input'], [474821.075164, 'running'], [474821.337636, 'no_input']]; cost.lite_first [[474821.059067, True], [474821.337636, False]]
+    render before {"over_deadline": 0, "worst_us": 247.239, "worst_percent": 18.54292963573241, "over_90_percent": 0} after {"over_deadline": 0, "worst_us": 247.239, "worst_percent": 18.54292963573241, "over_90_percent": 0}; xruns 0 -> 0
+  run 2: from last.json gen 92 -> cold; reply {"adopted": true, "cost": 0.07112000000000002, "full_cost": 0.14882, "generation": 93, "slimmed_models": [{"chain": "one", "cost": 0.0333, "element": "amp0", "full_cost": 0.111, "node": "amp0", "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam", "row": "NAM.WaveNet.lite", "working_set_bytes": 300808}], "trimmed": true, "verdict": "trimmed"} in 33.5 ms
+    Lite audible 40.896 ms, Full (gen 95) audible None ms, poll 7.73 ms; catch_up [[474822.340711, 'exact']] / [[474822.340711, 'compiling'], [474822.356075, 'published']] / [[474822.340711, 'no_input'], [474822.356075, 'running'], [474822.620324, 'no_input']]; cost.lite_first [[474822.340711, True], [474822.61352, False]]
+    render before {"over_deadline": 0, "worst_us": 247.239, "worst_percent": 18.54292963573241, "over_90_percent": 0} after {"over_deadline": 0, "worst_us": 247.239, "worst_percent": 18.54292963573241, "over_90_percent": 0}; xruns 0 -> 0
+  run 3: from last.json gen 96 -> cold; reply {"adopted": true, "cost": 0.07112000000000002, "full_cost": 0.14882, "generation": 97, "slimmed_models": [{"chain": "one", "cost": 0.0333, "element": "amp0", "full_cost": 0.111, "node": "amp0", "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam", "row": "NAM.WaveNet.lite", "working_set_bytes": 300808}], "trimmed": true, "verdict": "trimmed"} in 33.8 ms
+    Lite audible 42.641 ms, Full (gen 98) audible 321.19 ms, poll 9.89 ms; catch_up [[474823.539222, 'exact']] / [[474823.539222, 'compiling'], [474823.55704, 'published']] / [[474823.539222, 'no_input'], [474823.55704, 'running'], [474823.817771, 'no_input']]; cost.lite_first [[474823.539222, True], [474823.817771, False]]
+    render before {"over_deadline": 0, "worst_us": 247.239, "worst_percent": 18.54292963573241, "over_90_percent": 0} after {"over_deadline": 0, "worst_us": 247.239, "worst_percent": 18.54292963573241, "over_90_percent": 0}; xruns 0 -> 0
+
+== arm 3: a press through the service, `POST /event` on pedald
+  rig_up run 1: playing t9-base.json (gen 101); warm set holds ['t9-lstm']
+    POST /event accepted in 98.8 ms; Lite audible 105.655 ms; Full (gen 101) audible None ms; poll 9.96 ms
+    landed on t9-lstm.json; catch_up [[474825.409517, 'exact']] / [[474825.409517, 'published']] / [[474825.409517, 'exact']]; cost.lite_first [[474825.409517, False]]; xruns 0 -> 0
+  rig_up run 2: playing t9-base.json (gen 102); warm set holds ['t9-lstm']
+    POST /event accepted in 101.4 ms; Lite audible 108.291 ms; Full (gen 102) audible None ms; poll 8.27 ms
+    landed on t9-lstm.json; catch_up [[474826.983856, 'exact']] / [[474826.983856, 'published']] / [[474826.983856, 'exact']]; cost.lite_first [[474826.983856, False]]; xruns 0 -> 0
+  rig_up run 3: playing t9-base.json (gen 103); warm set holds ['t9-lstm']
+    POST /event accepted in 108.0 ms; Lite audible 120.963 ms; Full (gen 103) audible None ms; poll 9.32 ms
+    landed on t9-lstm.json; catch_up [[474828.607963, 'exact']] / [[474828.607963, 'published']] / [[474828.607963, 'exact']]; cost.lite_first [[474828.607963, False]]; xruns 0 -> 0
+  rig_select run 1: playing t9-base.json (gen 103); warm set holds ['t9-lstm']
+    POST /event accepted in 107.4 ms; Lite audible 115.756 ms; Full (gen 103) audible None ms; poll 8.58 ms
+    landed on t9-lstm.json; catch_up [[474830.250003, 'exact']] / [[474830.250003, 'published']] / [[474830.250003, 'exact']]; cost.lite_first [[474830.250003, False]]; xruns 0 -> 0
+  rig_select run 2: playing t9-base.json (gen 104); warm set holds ['t9-lstm']
+    POST /event accepted in 101.0 ms; Lite audible 109.573 ms; Full (gen 104) audible None ms; poll 8.02 ms
+    landed on t9-lstm.json; catch_up [[474831.826011, 'exact']] / [[474831.826011, 'published']] / [[474831.826011, 'exact']]; cost.lite_first [[474831.826011, False]]; xruns 0 -> 0
+  rig_select run 3: playing t9-base.json (gen 105); warm set holds ['t9-lstm']
+    POST /event accepted in 97.9 ms; Lite audible 108.176 ms; Full (gen 105) audible None ms; poll 7.51 ms
+    landed on t9-lstm.json; catch_up [[474833.406624, 'exact']] / [[474833.406624, 'published']] / [[474833.406624, 'exact']]; cost.lite_first [[474833.406624, False]]; xruns 0 -> 0
+

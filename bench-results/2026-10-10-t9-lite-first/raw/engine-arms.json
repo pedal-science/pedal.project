@@ -1,0 +1,81 @@
+[
+ {
+  "arm": "engine-no-lite",
+  "attempt": 1,
+  "warm_empty_at_press": true,
+  "reply_ms": 26.5,
+  "switched": "cold",
+  "published_generation": 57,
+  "full_generation": 58,
+  "lite_ms": 33.4,
+  "full_ms": null,
+  "poll_ms": 7.3,
+  "catch_up_state": "unbounded",
+  "catch_up_full": "nothing_to_trim",
+  "catch_up_replay": "no_input",
+  "catch_up_blocks": 0,
+  "catch_up_frames": 0,
+  "lite_first": false,
+  "xruns": [
+   0,
+   0
+  ],
+  "over_deadline": 0,
+  "lite_reply": null,
+  "full_reply": null
+ },
+ {
+  "arm": "engine-lite",
+  "attempt": 1,
+  "warm_empty_at_press": true,
+  "reply_ms": 35.2,
+  "switched": "cold",
+  "published_generation": 59,
+  "full_generation": 61,
+  "lite_ms": null,
+  "full_ms": null,
+  "poll_ms": 7.95,
+  "catch_up_state": "exact",
+  "catch_up_full": "published",
+  "catch_up_replay": "no_input",
+  "catch_up_blocks": 0,
+  "catch_up_frames": 14539,
+  "lite_first": true,
+  "xruns": [
+   0,
+   0
+  ],
+  "over_deadline": 0,
+  "lite_reply": {
+   "adopted": true,
+   "cost": 0.07112000000000002,
+   "full_cost": 0.14882,
+   "generation": 59,
+   "slimmed_models": [
+    {
+     "chain": "one",
+     "cost": 0.0333,
+     "element": "amp0",
+     "full_cost": 0.111,
+     "node": "amp0",
+     "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+     "row": "NAM.WaveNet.lite",
+     "working_set_bytes": 300808
+    }
+   ],
+   "trimmed": true,
+   "verdict": "trimmed"
+  },
+  "full_reply": {
+   "catch_up": {
+    "blocks": 0,
+    "frames": 14539,
+    "full": "compiling",
+    "replay": "running",
+    "running": true,
+    "state": "exact"
+   },
+   "state": "compiling"
+  }
+ }
+]

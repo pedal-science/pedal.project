@@ -76,6 +76,13 @@ def ssh(host, command):
     return done.stdout, done.returncode
 
 
+def ssh_err(host, command):
+    """`ssh`, but a failure comes back with what the command said rather than only its code."""
+    done = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", host, command],
+                          capture_output=True, text=True)
+    return done.stdout, done.stderr
+
+
 def sudo_read(host, path):
     out, rc = ssh(host, "sudo cat %s" % path)
     if rc != 0:
@@ -84,9 +91,11 @@ def sudo_read(host, path):
 
 
 def ctl(host, command):
-    out, rc = ssh(host, "sudo %s %s --compact" % (CTL, command))
-    if rc != 0:
-        die("namchainctl %s failed on %s" % (command, host))
+    # The verb is namchainctl's own (`load NAME.json`), not the protocol's (`rig.load`): this goes
+    # through the reference client so the measurement drives the engine the way a person would.
+    out, err = ssh_err(host, "sudo %s %s --compact" % (CTL, command))
+    if err:
+        die("namchainctl %s failed on %s: %s" % (command, host, err.strip()))
     return out
 
 
@@ -217,11 +226,23 @@ def run_engine_arm(host, token, rig, base, lite_first, runs, log):
     results = []
     for index in range(1, runs + 1):
         poller = Poller(host, token)
-        # Back to the base rig and let it settle: every run must be a cold publish, or the arm
-        # measures a handover instead of the thing T9 is about.
-        ctl(host, "rig.load %s" % base)
-        time.sleep(0.6)
-        before = poller.one()
+        # Back to the base rig and empty the warm set: every run must be a cold publish, or the arm
+        # measures a handover instead of the thing T9 is about. The service holds the rig a press
+        # would reach next warm, so it has to be *emptied and the emptiness verified* -- and if the
+        # service warmed it again in the meantime, this run is not the measurement and is retried.
+        before = None
+        for attempt in range(1, 7):
+            ctl(host, "load %s" % base)
+            time.sleep(0.3)
+            ctl(host, "cool")
+            time.sleep(0.05)
+            before = poller.one()
+            if not [e for e in before["warm"]["set"] if not e.get("audible")]:
+                break
+            log("    run %d attempt %d: the warm set was refilled (holding %s); retrying" % (
+                index, attempt, [e.get("name") for e in before["warm"]["set"]]))
+        else:
+            die("the warm set could not be emptied: the engine arms need a cold publish")
         t0 = time.monotonic()
         try:
             reply = poller.client.call("rig.switch", rig=rig, fallback=True, lite_first=lite_first)
@@ -275,60 +296,91 @@ def api(host, token, method, path, body=None):
         return json.loads(reply.read().decode("utf-8"))
 
 
-def run_service_arm(host, token, target, base, runs, log):
-    """A press through pedald: `POST /event`, the same route the UART reader calls."""
+def run_service_arm(host, token, base, index_in_bank, runs, log):
+    """A press through pedald: `POST /event`, the same route the UART reader calls.
+
+    Two presses, because the service's own answer to "where does a press land" decides which arm a
+    press is. pedald holds the rig a press would reach next warm (D10), so a `rig_up` step lands on a
+    rig the engine already has compiled -- a handover, and the press a player actually makes. To get
+    the *cold* publish the service cannot avoid either -- a jump to a rig that is not the neighbour --
+    the same endpoint takes `rig_select`, which is a rig the footswitch reaches without a step. Both
+    are driven; whichever each is, the run says so from the engine's own reply (`switched`), and the
+    warm set before the press is recorded so the reader can check the claim rather than trust it.
+    """
     results = []
-    total = float(runs)
-    for index in range(1, runs + 1):
-        # Step back to the base rig through the engine, so each press is the cold publish T9 is
-        # about rather than a handover to a rig the last press left warm.
-        ctl(host, "rig.load %s" % base)
-        time.sleep(0.6)
-        poller = Poller(host, token)
-        before = poller.one()
-        log("  run %d: bank is %s; playing %s (gen %s)" % (
-            index, json.dumps(before["warm"]["set"]), os.path.basename(before["rig"] or "?"),
-            before["generation"]))
-        t0 = time.monotonic()
-        try:
-            api(host, token, "POST", "/event", json.dumps({"kind": 1, "a": 0, "b": 0}))
-        except Exception as exc:                      # noqa: BLE001 - the HTTP answer is the datum
-            die("POST /event failed: %s" % exc)
-        t_accepted = time.monotonic()
-        polls = []
-        # The service answers when it has handed the press to the engine and taken its reply; the
-        # engine's own publishes are what the polls below see.
-        published = None
-        deadline = t0 + ARM_TIMEOUT_S
-        while time.monotonic() < deadline and published is None:
-            snap = poller.one()
-            polls.append(snap)
-            if snap["generation"] != before["generation"]:
-                published = snap["generation"]
-        if published is None:
-            die("the press did not publish anything within %ss" % ARM_TIMEOUT_S)
-        wait_for_play(poller, published, t0, polls)
-        wait_for_catch_up(poller, t0, polls)
-        for _ in range(3):
-            polls.append(poller.one())
-        poller.close()
-        generations = [snap["generation"] for snap in polls if snap["generation"] is not None]
-        run = {"arm": "service", "run": index, "rig": target, "from": before["rig"],
-               "press_accepted_ms": round((t_accepted - t0) * 1000.0, 3),
-               "published_generation": published,
-               "full_generation": max(generations) if generations else published,
-               "before": {key: before[key] for key in ("rig", "generation", "xruns",
-                                                       "guard_trips", "render", "warm")}}
-        after = polls[-1]
-        run["after"] = {key: after[key] for key in ("rig", "generation", "xruns", "guard_trips",
-                                                    "render", "warm")}
-        results.append(summarise(run, t0, polls))
-        log("    POST /event accepted in %.1f ms; Lite audible %s ms; Full (gen %s) audible %s ms; "
-            "poll %.2f ms" % (run["press_accepted_ms"], run["lite_ms"], run["full_generation"],
-                              run["full_ms"], run["poll_interval_ms"]))
-        log("    catch_up %s / %s / %s; cost.lite_first %s; xruns %s -> %s" % (
-            run["catch_up_state"], run["catch_up_full"], run["catch_up_replay"],
-            run["cost_lite_first"], run["before"]["xruns"], run["after"]["xruns"]))
+    for kind, a, label in ((1, 0, "rig_up"), (3, index_in_bank, "rig_select")):
+        for run_index in range(1, runs + 1):
+            # Put the bank back on its first rig through the *service*, never by loading the engine
+            # underneath it: pedald remembers where a press has walked, so a rig loaded behind its
+            # back leaves its position and the playing rig disagreeing and the next press a no-op.
+            # `bank_select 0` is that reset, and it is the same endpoint a press uses.
+            try:
+                api(host, token, "POST", "/event", json.dumps({"kind": 6, "a": 0, "b": 0}))
+            except Exception:                   # noqa: BLE001 - a device with one bank ignores it
+                pass
+            time.sleep(1.2)                     # let the bank move and the warm set settle
+            poller = Poller(host, token)
+            before = poller.one()
+            held = [e.get("name") for e in before["warm"]["set"] if not e.get("audible")]
+            log("  %s run %d: playing %s (gen %s); warm set holds %s" % (
+                label, run_index, os.path.basename(before["rig"] or "?"), before["generation"],
+                held or "nothing"))
+            t0 = time.monotonic()
+            try:
+                api(host, token, "POST", "/event", json.dumps({"kind": kind, "a": a, "b": 0}))
+            except Exception as exc:            # noqa: BLE001 - the HTTP answer is the datum
+                die("POST /event failed: %s" % exc)
+            t_accepted = time.monotonic()
+            polls = []
+            published = None
+            handover = False
+            deadline = t0 + ARM_TIMEOUT_S
+            # A press is one of two things and this waits for either: a *publish* (the engine's
+            # generation moves) or a *handover* (a warm document becomes the audible one without a
+            # publish, so the generation does not move and only the audible document changes). Both
+            # are "the press reached a rig playing", which is what T9 asks for; which one it was is
+            # read from the reply's own `switched` when the engine arm can see it, and from the warm
+            # set moving when the service's HTTP answer does not carry it.
+            while time.monotonic() < deadline:
+                snap = poller.one()
+                polls.append(snap)
+                if snap["generation"] != before["generation"]:
+                    published = snap["generation"]
+                    break
+                if snap["audible_generation"] != before["audible_generation"] and \
+                        not snap["transition_active"]:
+                    handover = True
+                    published = snap["generation"]
+                    break
+            if published is None:
+                die("the press neither published nor handed over within %ss" % ARM_TIMEOUT_S)
+            wait_for_play(poller, published, t0, polls)
+            wait_for_catch_up(poller, t0, polls)
+            for _ in range(3):
+                polls.append(poller.one())
+            poller.close()
+            generations = [snap["generation"] for snap in polls if snap["generation"] is not None]
+            run = {"arm": "service", "press": label, "run": run_index, "handover": handover,
+                   "rig": base, "from": before["rig"],
+                   "warm_before": held,
+                   "press_accepted_ms": round((t_accepted - t0) * 1000.0, 3),
+                   "published_generation": published,
+                   "full_generation": max(generations) if generations else published,
+                   "before": {key: before[key] for key in ("rig", "generation", "xruns",
+                                                           "guard_trips", "render", "warm")}}
+            after = polls[-1]
+            run["after"] = {key: after[key] for key in ("rig", "generation", "xruns",
+                                                        "guard_trips", "render", "warm")}
+            run["rig"] = after["rig"]
+            results.append(summarise(run, t0, polls))
+            log("    POST /event accepted in %.1f ms; Lite audible %s ms; Full (gen %s) audible "
+                "%s ms; poll %.2f ms" % (run["press_accepted_ms"], run["lite_ms"],
+                                         run["full_generation"], run["full_ms"],
+                                         run["poll_interval_ms"]))
+            log("    landed on %s; catch_up %s / %s / %s; cost.lite_first %s; xruns %s -> %s" % (
+                os.path.basename(after["rig"] or "?"), run["catch_up_state"], run["catch_up_full"],
+                run["catch_up_replay"], run["cost_lite_first"], run["before"]["xruns"],
+                run["after"]["xruns"]))
     return results
 
 
@@ -341,6 +393,10 @@ def main():
                                                    "one playing, so the pedal's own document)")
     parser.add_argument("--base", default=None, help="the rig to play first (default: the one "
                                                      "playing at the start)")
+    parser.add_argument("--bank-index", type=int, default=1,
+                        help="the bank slot the service arm jumps to with rig_select; the neighbour "
+                             "a rig_up step lands on is the one pedald holds warm, so this is the "
+                             "slot that makes a press a cold publish")
     parser.add_argument("--engine-only", action="store_true", help="skip the service arm")
     parser.add_argument("--service-only", action="store_true", help="skip the engine arms")
     args = parser.parse_args()
@@ -367,8 +423,8 @@ def main():
         die("nothing is playing on %s" % host)
     rig = args.rig or playing
     base = args.base or playing
-    if not args.engine_only and rig == base:
-        die("the service arm needs two different rigs: name one with --rig")
+    if not args.service_only and rig == base:
+        die("the engine arms need two different rigs: name the one to switch to with --rig")
     log("T9: press to Lite, and to Full, through the pedal")
     log("host %s, %d runs an arm" % (host, args.runs))
     log("engine on the board: %s" % manifest)
@@ -393,9 +449,26 @@ def main():
         log()
     if not args.engine_only:
         log("== arm 3: a press through the service, `POST /event` on pedald")
-        evidence["runs"] += run_service_arm(host, token, rig, base, args.runs, log)
+        evidence["runs"] += run_service_arm(host, token, base, args.bank_index, args.runs, log)
         log()
 
+    # Kept only where something this measurement reads changed, plus the first and last poll of each
+    # run: the full 30 KB-per-poll stream is ~25 MB an arm and says nothing the changes do not.
+    for run in evidence["runs"]:
+        polls = run.get("polls") or []
+        def fingerprint(poll):
+            return json.dumps([poll.get(k) for k in
+                               ("generation", "audible_generation", "transition_active", "cost",
+                                "catch_up", "chains", "warm", "xruns", "guard_trips")],
+                              sort_keys=True)
+        kept, seen = [], None
+        for index, poll in enumerate(polls):
+            key = fingerprint(poll)
+            if index == 0 or index == len(polls) - 1 or key != seen:
+                kept.append(poll)
+                seen = key
+        run["polls_total"] = len(polls)
+        run["polls"] = kept
     with open(os.path.join(out, "lite-first.json"), "w") as handle:
         json.dump(evidence, handle, indent=1)
     transcript.close()

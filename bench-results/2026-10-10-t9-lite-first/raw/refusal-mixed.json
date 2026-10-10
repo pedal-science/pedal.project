@@ -1,0 +1,428 @@
+{
+ "reply": {
+  "full": {
+   "catch_up": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "compiling",
+    "replay": "none",
+    "running": false,
+    "state": "unbounded"
+   },
+   "state": "compiling"
+  },
+  "generation": 30,
+  "id": "3",
+  "lite": {
+   "adopted": true,
+   "cost": 0.32111999999999996,
+   "full_cost": 0.39881999999999995,
+   "generation": 30,
+   "slimmed_models": [
+    {
+     "chain": "one",
+     "cost": 0.0333,
+     "element": "amp0",
+     "full_cost": 0.111,
+     "node": "amp0",
+     "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+     "row": "NAM.WaveNet.lite",
+     "working_set_bytes": 300808
+    }
+   ],
+   "trimmed": true,
+   "verdict": "trimmed"
+  },
+  "lite_first": true,
+  "missing_assets": [],
+  "ok": true,
+  "reason": "that rig is not the warm one",
+  "rig": "/var/lib/pedal/library/rigs/t9-mixed.json",
+  "slimmed_models": [
+   {
+    "chain": "one",
+    "cost": 0.0333,
+    "element": "amp0",
+    "full_cost": 0.111,
+    "node": "amp0",
+    "reference": "/var/lib/pedal/library/models/Ampeg SVT VR_4 PRO Death_Black_Sludge Metal Tones 2/Ampeg SVT VR With Cab.nam",
+    "row": "NAM.WaveNet.lite",
+    "working_set_bytes": 300808
+   }
+  ],
+  "switched": "cold",
+  "transitions": [
+   {
+    "chain": "one",
+    "created": 2,
+    "fades": 1,
+    "kept": 3,
+    "kind": "local",
+    "retiring": 1
+   }
+  ]
+ },
+ "polls": [
+  {
+   "t_ms": 10.2,
+   "gen": 30,
+   "aud": 30,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "compiling",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": true,
+   "chain_aud": [
+    [
+     "one",
+     30
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 50.4,
+   "gen": 31,
+   "aud": 30,
+   "trans": true,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": true,
+   "chain_aud": [
+    [
+     "one",
+     30
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 83.8,
+   "gen": 31,
+   "aud": 31,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": false,
+   "chain_aud": [
+    [
+     "one",
+     31
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 111.3,
+   "gen": 31,
+   "aud": 31,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": false,
+   "chain_aud": [
+    [
+     "one",
+     31
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 152.8,
+   "gen": 31,
+   "aud": 31,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": false,
+   "chain_aud": [
+    [
+     "one",
+     31
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 186.1,
+   "gen": 31,
+   "aud": 31,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": false,
+   "chain_aud": [
+    [
+     "one",
+     31
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 223.4,
+   "gen": 31,
+   "aud": 31,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": false,
+   "chain_aud": [
+    [
+     "one",
+     31
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 255.6,
+   "gen": 31,
+   "aud": 31,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": false,
+   "chain_aud": [
+    [
+     "one",
+     31
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 285.9,
+   "gen": 31,
+   "aud": 31,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": false,
+   "chain_aud": [
+    [
+     "one",
+     31
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 317.3,
+   "gen": 31,
+   "aud": 31,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": false,
+   "chain_aud": [
+    [
+     "one",
+     31
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 356.1,
+   "gen": 31,
+   "aud": 31,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": false,
+   "chain_aud": [
+    [
+     "one",
+     31
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 392.6,
+   "gen": 31,
+   "aud": 31,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": false,
+   "chain_aud": [
+    [
+     "one",
+     31
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 426.2,
+   "gen": 31,
+   "aud": 31,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": false,
+   "chain_aud": [
+    [
+     "one",
+     31
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 463.3,
+   "gen": 31,
+   "aud": 31,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": false,
+   "chain_aud": [
+    [
+     "one",
+     31
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  },
+  {
+   "t_ms": 505.6,
+   "gen": 31,
+   "aud": 31,
+   "trans": false,
+   "cu": {
+    "blocks": 0,
+    "detail": "node 'amp1' (nc.nam): '/var/lib/pedal/library/models/t9-lstm.nam': unbounded -- LSTM has unbounded memory; replay cannot be exact",
+    "frames": 0,
+    "full": "published",
+    "replay": "no_input",
+    "running": false,
+    "state": "unbounded"
+   },
+   "lite_first": false,
+   "chain_aud": [
+    [
+     "one",
+     31
+    ]
+   ],
+   "xruns": 0,
+   "over": 0
+  }
+ ]
+}
