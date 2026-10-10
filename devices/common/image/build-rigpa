@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Runs INSIDE the build container. Builds and tests rigpa, the pedal's UI (D14), the way the Core host
+# runs it: Release, Ubuntu's Qt 6.10.2 from the snapshot. The image build (build-image) and
+# scripts/deploy-rigpa both use this, so the UI on a card and the UI deployed later are built the same
+# way.
+#
+#   build-rigpa <source dir> <log dir> [--namchain <build dir>] [--pedal-rootfs <dir>] [--no-tests]
+#
+# The live tests run against a real namchaind and pedald when they're given: --namchain is a namchain
+# build with namchaind and its generated/ test models (the image build's own, just tested), and
+# --pedal-rootfs is devices/common/rootfs, for pedald. Without them those suites skip, and say so.
+# Builds in <source dir>/build. Logs: rigpa-{configure,build,test}.log in <log dir>.
+set -euo pipefail
+die() { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
+SRC=${1:?}; LOGS=${2:?}; shift 2
+NAMCHAIN=""; ROOTFS=""; TESTS=1
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --namchain) NAMCHAIN=$2; shift ;;
+    --pedal-rootfs) ROOTFS=$2; shift ;;
+    --no-tests) TESTS=0 ;;
+    *) die "build-rigpa: unknown argument $1" ;;
+  esac
+  shift
+done
+mkdir -p "$LOGS"
+cd "$SRC"
+ARGS=(-DCMAKE_BUILD_TYPE=Release)
+[[ -n $NAMCHAIN ]] && ARGS+=("-DRIGPA_NAMCHAIN_BUILD=$NAMCHAIN")
+[[ -n $ROOTFS ]] && ARGS+=("-DRIGPA_PEDAL_ROOTFS=$ROOTFS")
+cmake --preset linux-release "${ARGS[@]}" > "$LOGS/rigpa-configure.log" 2>&1 \
+  || { tail -30 "$LOGS/rigpa-configure.log" >&2; exit 1; }
+cmake --build --preset linux-release -j"$(nproc)" > "$LOGS/rigpa-build.log" 2>&1 \
+  || { tail -40 "$LOGS/rigpa-build.log" >&2; exit 1; }
+(( TESTS )) || exit 0
+# Verbose, so the log has each suite's own output: a QSKIP still counts as passed to ctest.
+ctest --preset linux-release -V > "$LOGS/rigpa-test.log" 2>&1 || { grep -E 'FAIL|Failed|\*\*\*' "$LOGS/rigpa-test.log" | tail -40 >&2; exit 1; }
+# A suite that skipped is a suite that tested nothing: say so, rather than a bare "passed".
+skipped=$(grep -c ': SKIP   :\|SKIP   :' "$LOGS/rigpa-test.log" || true)
+(( skipped == 0 )) || printf '    rigpa: %s skipped test function(s): no namchaind or pedald given\n' "$skipped" >&2
+tail -3 "$LOGS/rigpa-test.log" | sed 's/^/    /' >&2

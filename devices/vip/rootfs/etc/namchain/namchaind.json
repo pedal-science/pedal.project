@@ -27,6 +27,7 @@
   "tcp_listen": true,
   "tcp_address": "0.0.0.0",
   "tcp_port": 47810,
+  "tcp_max_connections": 8,
   "tcp_token_file": "/etc/namchain/token",
   "verbose": true
 }

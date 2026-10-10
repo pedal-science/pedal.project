@@ -5,10 +5,10 @@
 #   devices/vip/make-card --remote [--dev]           build, then put the pedal root on the running vip
 #   devices/vip/make-card --remote --image DIR       put an image built before on it (no build)
 #   devices/vip/make-card --remote --previous --image DIR   back to the root before the last one sent
-#   devices/vip/make-card --lock          pin image.lock to the three repos' HEADs
+#   devices/vip/make-card --lock          pin image.lock to the four repos' HEADs
 #
 # docs/vip-image.md is the design. Everything is built in colima's aarch64 container
-# (devices/common/image): namchain from its commit, tested; the pedal root and the rescue root
+# (devices/common/image): namchain and rigpa from their commits, tested; the pedal root and the rescue root
 # from the Ubuntu snapshot; the boot partitions by rtpi's vip-boot; one GPT image. The inputs are
 # exported with `git archive` at the commits in devices/<host>/image.lock, never taken from a
 # working tree: --dev takes the working trees instead, uncommitted changes and all, and marks the
@@ -37,6 +37,7 @@ REPO=$(git -C "$HERE" rev-parse --show-toplevel)
 COMMON=$REPO/devices/common
 RTPI_REPO=${RTPI_REPO:-$("$REPO/scripts/workspace" root --repo rtpi)}
 NAMCHAIN_REPO=${NAMCHAIN_REPO:-$("$REPO/scripts/workspace" root --repo namchain)}
+RIGPA_REPO=${RIGPA_REPO:-$("$REPO/scripts/workspace" root --repo rigpa)}
 LOCK=$HERE/image.lock
 
 IMAGE_ONLY=0; DISK=(); DEV=0; DO_LOCK=0; REMOTE=0; PREVIOUS=0; FROM=""
@@ -64,7 +65,7 @@ fi
 # shellcheck disable=SC1091
 source "$HERE/image.env"
 
-declare -A REPOS=([pedal]=$REPO [rtpi]=$RTPI_REPO [namchain]=$NAMCHAIN_REPO)
+declare -A REPOS=([pedal]=$REPO [rtpi]=$RTPI_REPO [namchain]=$NAMCHAIN_REPO [rigpa]=$RIGPA_REPO)
 lock_get() { sed -n "s/^$1=//p" "$LOCK"; }
 
 if (( DO_LOCK )); then
@@ -74,10 +75,10 @@ if (( DO_LOCK )); then
   keep=$(sed -n '/^# The pedal kernel:/,$p' "$LOCK")
   {
     echo "# What devices/$HOST/make-card builds from (docs/vip-image.md). --lock rewrites the commits;"
-    echo "# the snapshot and the kernel change by hand, deliberately. Check namchain is the engine you"
-    echo "# mean, and that the kernel is the rebuild you mean (docs/vip-kernel-image.md)."
+    echo "# the snapshot and the kernel change by hand, deliberately. Check namchain is the engine and"
+    echo "# rigpa the UI you mean, and that the kernel is the rebuild you mean (docs/vip-kernel-image.md)."
     echo "snapshot=${snap:?no snapshot in $LOCK}"
-    for k in pedal rtpi namchain; do echo "$k=$(git -C "${REPOS[$k]}" rev-parse HEAD)"; done
+    for k in pedal rtpi namchain rigpa; do echo "$k=$(git -C "${REPOS[$k]}" rev-parse HEAD)"; done
     [[ -z $keep ]] || { echo; printf '%s\n' "$keep"; }
   } > "$LOCK.new"
   mv "$LOCK.new" "$LOCK"
@@ -119,23 +120,23 @@ fi
 # ------------------------------------------------------------------ inputs
 declare -A PIN
 if (( DEV )); then
-  for k in pedal rtpi namchain; do PIN[$k]=$(git -C "${REPOS[$k]}" rev-parse HEAD); done
+  for k in pedal rtpi namchain rigpa; do PIN[$k]=$(git -C "${REPOS[$k]}" rev-parse HEAD); done
   PIN[snapshot]=$(lock_get snapshot)
 else
   [[ -f $LOCK ]] || die "no $LOCK: run --lock, commit it, or build with --dev"
-  for k in snapshot pedal rtpi namchain; do PIN[$k]=$(lock_get "$k"); [[ -n ${PIN[$k]} ]] || die "no $k in $LOCK"; done
+  for k in snapshot pedal rtpi namchain rigpa; do PIN[$k]=$(lock_get "$k"); [[ -n ${PIN[$k]} ]] || die "no $k in $LOCK"; done
 fi
 # The pedal kernel is artefacts, not a tree, so both paths take it from the lock: --dev means the
-# working trees of the three repos, not a working directory full of kernel build output.
+# working trees of the four repos, not a working directory full of kernel build output.
 for k in kernel kernel-kind kernel-rtpi kernel-boot-sha256 kernel-modules-sha256 kernel-dtb-sha256; do
   PIN[$k]=$(lock_get "$k")
 done
 STAMP=$(date -u +%Y%m%dT%H%M%SZ)
 # --dev: each repo with uncommitted changes is marked -dirty, and so is the image.
 DIRTY=""
-declare -A MARK=([pedal]="" [rtpi]="" [namchain]="")
+declare -A MARK=([pedal]="" [rtpi]="" [namchain]="" [rigpa]="")
 if (( DEV )); then
-  for k in pedal rtpi namchain; do
+  for k in pedal rtpi namchain rigpa; do
     [[ -z $(git -C "${REPOS[$k]}" status --porcelain --ignore-submodules=none) ]] || { MARK[$k]=-dirty; DIRTY=-dirty; }
   done
 fi
@@ -147,7 +148,7 @@ mkdir -p "$IN"
 # shellcheck disable=SC1091
 source "$COMMON/image/export.sh"
 if (( DEV )); then log "inputs: the working trees (--dev)"; else log "inputs: image.lock"; fi
-for k in pedal rtpi namchain; do
+for k in pedal rtpi namchain rigpa; do
   if (( DEV )); then export_tree "${REPOS[$k]}" worktree "$IN/$k"
   else
     git -C "${REPOS[$k]}" cat-file -e "${PIN[$k]}^{commit}" 2>/dev/null || die "$k: no commit ${PIN[$k]} in ${REPOS[$k]}"
@@ -198,7 +199,7 @@ else
   warn "no kernel= in $LOCK: the card gets only the stock kernel — no pedal kernel, no fallback slot"
 fi
 
-{ for k in snapshot pedal rtpi namchain; do echo "$k=${PIN[$k]}"; done
+{ for k in snapshot pedal rtpi namchain rigpa; do echo "$k=${PIN[$k]}"; done
   for k in kernel kernel-kind kernel-rtpi kernel-boot-sha256 kernel-modules-sha256 kernel-dtb-sha256; do
     [[ -n ${PIN[$k]} ]] && echo "$k=${PIN[$k]}"
   done; } > "$IN/inputs"
@@ -215,7 +216,7 @@ secrets() {
   op read "op://$OP_VAULT/$TOKEN_ITEM/password"
   op read "op://$OP_VAULT/$HOST_KEY_ITEM/private key?ssh-format=openssh"
 }
-log "image (about 15 minutes: namchain's build and tests, two roots, the filesystems)"
+log "image (about 20 minutes: namchain's and rigpa's builds and tests, two roots, the filesystems)"
 # mmdebstrap and the build's chroots mount /proc, /sys and /dev in the roots they build, which
 # needs CAP_SYS_ADMIN. Nothing else does: no loop devices, no --privileged.
 secrets | docker run --rm -i \

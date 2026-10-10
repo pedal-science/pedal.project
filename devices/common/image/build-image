@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Runs INSIDE the build container (devices/common/make-card starts it). Builds a Pi host's card
-# image: namchain, the pedal root, the rescue root, the boot partitions, pedal-data, the GPT.
+# image: namchain, rigpa, the pedal root, the rescue root, the boot partitions, pedal-data, the GPT.
 # docs/vip-image.md says why each piece is the way it is.
 #
-# In:  /in/pedal, /in/rtpi, /in/namchain   the inputs, exported at their pinned commits
+# In:  /in/pedal, /in/rtpi, /in/namchain, /in/rigpa
+#                                           the inputs, exported at their pinned commits
 #      /in/inputs                           name=commit lines for them, plus snapshot and the
 #                                           pedal kernel's release, kind, commit and hashes
 #      /in/kernel                           rtpi's kernel artefacts (boot/modules tarballs and
@@ -77,6 +78,15 @@ log "namchain $NC_SHORT: build and test (Release, $NAMCHAIN_CXXFLAGS)"
 cp -a "$IN/namchain" "$W/namchain-src"
 "$IN/pedal/devices/common/image/build-namchain" "$W/namchain-src" "$NAMCHAIN_CXXFLAGS" "$W"
 cp "$W/namchain-configure.log" "$W/namchain-test.log" "$OUT/"
+
+# ------------------------------------------------------------------ rigpa
+# The UI (D14), tested against the namchaind just built and the pedald in this commit.
+RG_COMMIT=${PIN[rigpa]}; RG_SHORT=${RG_COMMIT:0:7}
+log "rigpa $RG_SHORT: build and test (Release, Qt from the snapshot)"
+cp -a "$IN/rigpa" "$W/rigpa-src"
+"$IN/pedal/devices/common/image/build-rigpa" "$W/rigpa-src" "$W" \
+  --namchain "$W/namchain-src/build" --pedal-rootfs "$IN/pedal/devices/common/rootfs"
+cp "$W/rigpa-configure.log" "$W/rigpa-test.log" "$OUT/"
 
 # ------------------------------------------------------------------ roots
 pkglist() { grep -v -e '^#' -e '^[[:space:]]*$' "$1" | paste -sd, -; }
@@ -162,8 +172,8 @@ common() {  # common <root> <kind>
   install -D -m 644 "$RTPI_DEV/device.env" "$r/etc/rtpi/device.env"
   install -D -m 755 "$RTPI_DEV/usr/local/sbin/vip-boot" "$r/usr/local/sbin/vip-boot"
   install -d "$r$BOOTSEL_MOUNT"
-  printf '%s=%s\n' commit "${PIN[pedal]}" rtpi "${PIN[rtpi]}" namchain "$NC_COMMIT" snapshot "$SNAPSHOT" root "$kind" \
-    > "$r/etc/pedal-image"
+  printf '%s=%s\n' commit "${PIN[pedal]}" rtpi "${PIN[rtpi]}" namchain "$NC_COMMIT" rigpa "$RG_COMMIT" \
+    snapshot "$SNAPSHOT" root "$kind" > "$r/etc/pedal-image"
 }
 initramfs() {  # initramfs <root> <release>
   inroot "$1" dracut --quiet --force --reproducible --no-hostonly --kver "$2" \
@@ -242,13 +252,38 @@ install -d -m 755 "$PEDAL/etc/namchain"
 missing=$(chroot "$PEDAL" ldd "$nc/bin/namchaind" | grep 'not found' || true)
 [[ -z $missing ]] || die "namchaind's libraries aren't in the pedal root: $missing"
 
+log "pedal root: rigpa $RG_SHORT into /opt/rigpa"
+rg=/opt/rigpa/$RG_SHORT
+install -d "$PEDAL$rg/bin" "$PEDAL$rg/packaging"
+install -m 755 "$W/rigpa-src/build/linux-release/rigpa" "$PEDAL$rg/bin/rigpa"
+install -m 644 "$W/rigpa-src/packaging/systemd/rigpa.service" "$PEDAL$rg/packaging/"
+printf 'commit=%s\nrev=%s\nbuilt=%s\nhost=%s\n' "$RG_COMMIT" "image" \
+  "$(date -u -d "@$SOURCE_DATE_EPOCH" +%FT%TZ)" "build container (resolute $SNAPSHOT)" > "$PEDAL$rg/MANIFEST"
+ln -sfn "$rg" "$PEDAL/opt/rigpa/current"
+install -m 644 "$W/rigpa-src/packaging/systemd/rigpa.service" "$PEDAL/etc/systemd/system/rigpa.service"
+missing=$(chroot "$PEDAL" ldd "$rg/bin/rigpa" | grep 'not found' || true)
+[[ -z $missing ]] || die "rigpa's libraries aren't in the pedal root: $missing"
+
 log "pedal root: devices/common + devices/$HOST, applied offline"
 S=$W/stage
 mkdir -p "$S/rootfs"
 cp -a "$IN/pedal/devices/common/rootfs/." "$S/rootfs/"
 cp -a "$DEV/rootfs/." "$S/rootfs/"
 bash "$S/rootfs/usr/local/sbin/pedal-device" apply "$S" --root "$PEDAL" --commit "${PIN[pedal]:0:7}" >&2
-chroot "$PEDAL" systemctl enable -q namchaind vip-boot-settle vip-boot-validate pedal-guard pedal-guard-maint vip-boot-deadline
+chroot "$PEDAL" systemctl enable -q namchaind rigpa vip-boot-settle vip-boot-validate pedal-guard pedal-guard-maint vip-boot-deadline
+
+# rigpa's QML imports come from packages (devices/<host>/packages), which ldd cannot see: render one
+# frame inside the pedal root, offscreen, so a missing module stops the build here rather than the
+# screen staying black on the pedal. No engine is running, so it shows itself disconnected.
+log "pedal root: rigpa renders a frame offscreen"
+printf '{"settings_file": "/tmp/rigpa-check.ini", "engine": {"port": 9}, "pedald": {"port": 9}}\n' \
+  > "$PEDAL/tmp/rigpa-check.json"
+inroot "$PEDAL" env QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
+  /opt/rigpa/current/bin/rigpa --config /tmp/rigpa-check.json --screenshot /tmp/rigpa-check.png \
+  > "$W/rigpa-check.log" 2>&1 \
+  || { cat "$W/rigpa-check.log" >&2; die "rigpa does not start in the pedal root (a QML module or plugin is missing)"; }
+cp "$PEDAL/tmp/rigpa-check.png" "$W/rigpa-check.log" "$OUT/"
+rm -f "$PEDAL"/tmp/rigpa-check.*
 
 log "pedal root: initramfs for both kernels, with vip-guard"
 initramfs "$PEDAL" "$FALLBACK_KERNEL"      # the pedal kernel's came from vip-install-kernel
@@ -401,7 +436,7 @@ done < <(sfdisk -J "$IMG" | python3 -c 'import json,sys; [print(p["start"]) for 
 
 {
   echo "host $HOST"
-  for k in pedal rtpi namchain snapshot; do echo "$k ${PIN[$k]}"; done
+  for k in pedal rtpi namchain rigpa snapshot; do echo "$k ${PIN[$k]}"; done
   echo "pedal-kernel $PEDAL_KERNEL"
   echo "fallback-kernel $FALLBACK_KERNEL"
   echo "rescue-kernel $RESCUE_KERNEL"

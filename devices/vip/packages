@@ -57,3 +57,26 @@ less
 
 # pedal-diag
 i2c-tools
+
+# The screen (D14): rigpa's Qt 6.10 (the version its Mac build pins), Mesa for the GPU, a font.
+# The image build renders one rigpa frame inside the root, so a QML module missing here stops the
+# build rather than leaving the screen black (build-image, "rigpa renders a frame offscreen").
+# eglfs and its KMS integration are libqt6opengl6's; the vnc platform (to see rigpa before the screen
+# is fitted) is qt6-qpa-plugins'; offscreen, libinput and evdev touch are libqt6gui6's.
+libqt6opengl6
+qt6-qpa-plugins
+qml6-module-qtquick
+qml6-module-qtquick-window
+qml6-module-qtquick-shapes
+qml6-module-qtquick-controls
+qml6-module-qtquick-templates
+qml6-module-qtquick-layouts
+qml6-module-qtqml-workerscript
+qml6-module-qtquick-virtualkeyboard
+qt6-virtualkeyboard-plugin
+qt6-svg-plugins
+libegl-mesa0
+libgbm1
+libgles2
+mesa-libgallium
+fonts-dejavu-core

@@ -5,8 +5,9 @@
 # rewrites another's record.
 #
 # It reads the host, not the Mac: the board, the kernel, namchain's commit from the MANIFEST of the
-# binary namchaind is running (the installed one if it isn't running), and the devices/ tree commit
-# from /etc/pedal/applied. scripts/deploy-engine and devices/<host>/apply write it after each change;
+# binary namchaind is running (the installed one if it isn't running), rigpa's from its installed
+# MANIFEST, and the devices/ tree commit from /etc/pedal/applied. scripts/deploy-engine,
+# scripts/deploy-rigpa and devices/<host>/apply write it after each change;
 # commit it with the change. No timestamps, so an unchanged host leaves the file unchanged.
 set -euo pipefail
 
@@ -39,12 +40,17 @@ printf 'host=%s\n' "$(hostname)"
 printf 'board=%s\n' "$(tr -d '\0' < /proc/device-tree/model)"
 printf 'kernel=%s\n' "$(uname -r)"
 printf 'namchain=%s\n' "$(manifest commit)"
+# The UI, where there is one (D14): the installed build, whether or not the unit runs (it waits for a
+# screen).
+if [[ -r /opt/rigpa/current/MANIFEST ]]; then
+  printf 'rigpa=%s\n' "$(sed -n 's/^commit=//p' /opt/rigpa/current/MANIFEST | cut -c1-7)"
+fi
 printf 'devices=%s\n' "$(sed -n 's/^commit=//p' /etc/pedal/applied 2>/dev/null)"
 REMOTE
 )
 
-body="# What $HOST runs. Written by scripts/components-lock, which scripts/deploy-engine and
-# devices/<host>/apply call; scripts/status compares it with the host. Commit it with the change.
+body="# What $HOST runs. Written by scripts/components-lock, which scripts/deploy-engine,
+# scripts/deploy-rigpa and devices/<host>/apply call; scripts/status compares it with the host. Commit it with the change.
 $live"
 
 if (( CHECK )); then

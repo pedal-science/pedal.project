@@ -10,12 +10,11 @@ namchain=a69d31560f9230ca316be9a486778a245fbace9a
 # build/vip/ as artefacts and pins it by hash — make-card verifies every one of these before the
 # build starts, and the image build installs them. The spare slot boots the stock kernel instead,
 # which devices/vip/packages installs as a package (rtpi's FALLBACK_KERNEL).
-kernel=7.0.0-1017-raspi-realtime-numaemu1-trimmed
+kernel=7.0.0-1017-raspi-realtime-numaemu2-trimmed
 kernel-kind=trimmed
-# Reconstructed: this build predates rtpi's own built-from stamp (rtpi ad9fee1). The artefacts'
-# timestamps and the rtpi tree at that moment put them at the change that became e873c9c; builds
-# from now on write the commit themselves, and make-card says so when the two disagree.
-kernel-rtpi=e873c9cd2195088674fc296e42017909b92ae311
-kernel-boot-sha256=dac07fb7cdb514a45156afc2ea17a78b74ed1b3602ffd04ca30692c4cc43d527
-kernel-modules-sha256=ebce6fc56fbedc6e3b71eb4c91399f6d74c8b78c4eea30a8351891014e2816ab
+# numaemu1 with the screen's drivers kept through the trim (rtpi config/vip-keep.fragment: vc4, v3d,
+# USB HID). Built from rtpi 496fe8c and promoted on vip by vip-boot try-kernel on 2026-10-10.
+kernel-rtpi=496fe8ce27b582d8c3ecef00cee1eedabee82388
+kernel-boot-sha256=5c91185cea63bf17ca47e3bdffe4cfa9dd618e502d69c8467e1996227af97460
+kernel-modules-sha256=33a9bce4c7a94b5dede363f4cf7488a8b697662287cab954159365a0ae7a31e1
 kernel-dtb-sha256=1d1988efb6e918ffb516362cebef482f8f6c48bbb4462129b57e3d1888afd2c3

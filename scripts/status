@@ -124,6 +124,13 @@ if [[ -n $engine ]] && git -C "$NC" cat-file -e "$engine" 2>/dev/null; then
   (( n == 0 )) && note "engine: ${engine:0:7}, origin/main" \
                || note "engine: ${engine:0:7}, $n commit(s) behind origin/main (scripts/deploy-engine)"
 fi
+ui=$(on "$HOST" "sed -n 's/^commit=//p' /opt/rigpa/current/MANIFEST" 2>/dev/null || true)
+RG=$(repo_path rigpa)
+if [[ -n $ui ]] && git -C "$RG" cat-file -e "$ui" 2>/dev/null; then
+  n=$(git -C "$RG" rev-list --count "$ui..origin/main")
+  (( n == 0 )) && note "rigpa: ${ui:0:7}, origin/main" \
+               || note "rigpa: ${ui:0:7}, $n commit(s) behind origin/main (scripts/deploy-rigpa)"
+fi
 applied=$(on "$HOST" "sed -n 's/^commit=//p' /etc/pedal/applied" 2>/dev/null || true)
 if [[ -n $applied && -d $ROOT/devices/$HOST ]]; then
   # Only the rootfs trees go on the host; the apply scripts themselves run on the Mac.

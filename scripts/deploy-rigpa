@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+# scripts/deploy-rigpa [--host vip] [--commit <rev>] [--no-tests] — build rigpa, the pedal's UI (D14),
+# from a commit and install it on the Core host.
+#
+# vip has no compiler, so it's built on the Mac, in the image build's container
+# (devices/common/image/build-rigpa, on the snapshot in devices/vip/image.lock): exactly as the UI on
+# vip's card was built. The tests run against a namchaind built in the same container at the commit
+# the host runs, and the pedald in this checkout. Then it's installed into /opt/rigpa/<commit>/,
+# /opt/rigpa/current swapped to it, rigpa's own unit installed (packaging/systemd/rigpa.service;
+# devices/common adds the pedal's drop-in), rigpa restarted if it runs, and
+# devices/<host>/components.lock updated. Its Qt comes from the pedal root's packages: a rigpa that
+# needs a package the root lacks is refused before anything is swapped. It holds the host's lock
+# throughout (scripts/host-lock).
+set -euo pipefail
+
+ARGS=("$@")
+HOST=vip
+REV=origin/main
+TESTS=1
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --commit) REV=$2; shift ;;
+    --no-tests) TESTS=0 ;;
+    -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+[[ $HOST == vip ]] || { echo "deploy-rigpa: vip only (piv has no pedal root to run it)" >&2; exit 2; }
+[[ ${PEDAL_HOST_LOCK:-} == "$HOST" ]] || exec "$(dirname "$0")/host-lock" --host "$HOST" -- "$0" "${ARGS[@]}"
+
+REPO=$(cd "$(dirname "$0")/.." && pwd)
+SSH=(ssh -o BatchMode=yes -o ConnectTimeout=10 "$HOST")
+log() { printf '\033[1;34m==>\033[0m %s\n' "$*" >&2; }
+die() { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
+
+RG=${RIGPA_REPO:-$("$REPO/scripts/workspace" root --repo rigpa)}
+NC=${NAMCHAIN_REPO:-$("$REPO/scripts/workspace" root --repo namchain)}
+SNAPSHOT=$(sed -n 's/^snapshot=//p' "$REPO/devices/$HOST/image.lock")
+# shellcheck disable=SC1091
+source "$REPO/devices/$HOST/image.env"
+git -C "$RG" fetch -q origin
+full=$(git -C "$RG" rev-parse --verify "$REV^{commit}") || die "no commit $REV in $RG"
+commit=${full:0:7}
+# The live tests run against the engine the host runs, built here at its commit.
+engine=$("${SSH[@]}" "sed -n 's/^commit=//p' /opt/namchain/current/MANIFEST")
+[[ -n $engine ]] || die "$HOST has no /opt/namchain/current/MANIFEST: deploy the engine first"
+git -C "$NC" fetch -q origin
+engine_full=$(git -C "$NC" rev-parse --verify "$engine^{commit}") || die "no namchain commit $engine in $NC"
+docker info >/dev/null 2>&1 || die "no docker: start colima (colima start --arch aarch64 --vm-type vz)"
+
+W=$REPO/build/rigpa/$commit
+rm -rf "$W"; mkdir -p "$W"
+# shellcheck disable=SC1091
+source "$REPO/devices/common/image/export.sh"
+log "building rigpa $REV ($commit) for $HOST on the Mac (snapshot $SNAPSHOT; tests against namchain $engine)"
+export_tree "$RG" "$full" "$W/src"
+export_tree "$NC" "$engine_full" "$W/namchain"
+TAG=pedal-build:$SNAPSHOT
+docker build -q -t "$TAG" --build-arg SNAPSHOT="$SNAPSHOT" "$REPO/devices/common/image" >/dev/null
+# Built inside the container's own filesystem, as deploy-engine does: only the binary comes back.
+docker run --rm -v "$W:/w" -v "$REPO/devices/common:/common:ro" "$TAG" bash -c '
+  set -e; cp -a /w/src /rg
+  if [[ $2 == 1 ]]; then
+    cp -a /w/namchain /nc
+    # Built, not tested (deploy-engine tested it): the build also makes the models the live tests load.
+    /common/image/build-namchain /nc "$1" /w/logs --no-tests
+    /common/image/build-rigpa /rg /w/logs --namchain /nc/build --pedal-rootfs /common/rootfs
+  else
+    /common/image/build-rigpa /rg /w/logs --no-tests
+  fi
+  mkdir -p /w/bin; cp /rg/build/linux-release/rigpa /w/bin/' _ "$NAMCHAIN_CXXFLAGS" "$TESTS"
+mkdir -p "$W/stage/bin" "$W/stage/packaging"
+cp "$W/bin/rigpa" "$W/stage/bin/"
+cp "$W/src/packaging/systemd/rigpa.service" "$W/stage/packaging/"
+printf 'commit=%s\nrev=%s\nbuilt=%s\nhost=%s\n' "$commit" "$commit" "$(date -u +%FT%TZ)" \
+  "build container on $(hostname -s) (resolute $SNAPSHOT)" > "$W/stage/MANIFEST"
+
+log "installing on $HOST"
+COPYFILE_DISABLE=1 tar --no-xattrs -C "$W/stage" -czf - . \
+  | "${SSH[@]}" "rm -rf /tmp/rigpa-stage && mkdir /tmp/rigpa-stage && tar -xzf - -C /tmp/rigpa-stage"
+"${SSH[@]}" bash -s -- /tmp/rigpa-stage "$commit" <<'EOF'
+set -euo pipefail
+stage=$1 commit=$2
+missing=$(ldd "$stage/bin/rigpa" | grep 'not found' || true)
+[[ -z $missing ]] || { echo "rigpa needs libraries this root lacks (devices/vip/packages, then a new root):" >&2; echo "$missing" >&2; exit 1; }
+dest=/opt/rigpa/$commit
+sudo install -d "$dest/bin" "$dest/packaging"
+sudo install -m 0755 "$stage/bin/rigpa" "$dest/bin/"
+sudo install -m 0644 "$stage/packaging/rigpa.service" "$dest/packaging/"
+sudo install -m 0644 "$stage/MANIFEST" "$dest/MANIFEST"
+sudo ln -sfn "$dest" /opt/rigpa/current
+sudo install -m 0644 "$dest/packaging/rigpa.service" /etc/systemd/system/rigpa.service
+sudo systemctl daemon-reload
+sudo systemctl enable -q rigpa.service
+# The unit runs only where there is a screen (the pedal's drop-in): restart it if it is running, and
+# otherwise leave it to its condition.
+sudo systemctl try-restart rigpa.service
+echo "installed rigpa $commit ($(systemctl is-active rigpa.service || true))"
+rm -rf "$stage"
+EOF
+rm -rf "$W/src" "$W/namchain"
+"$(dirname "$0")/components-lock" --host "$HOST"
