@@ -1,6 +1,18 @@
 #!/usr/bin/env python3
 """Board A: the analogue board -- the input buffer, the bias and the output stage.
 
+STATUS, 2026-10-10: **unfinished, and it does not draw.**  The parts below are placed legally --
+no two overlap, nothing is off the board, no body covers another part's lead or pad -- and the
+cuts are the ones that placement needs.  What is missing is the links: the cuts leave several
+nets in more than one piece and the wires joining them are not written yet, so running this
+reports which nets are still split.  See docs/board-a-netlist.md, "Where board A stands".
+
+The finding behind that, measured rather than guessed: with the codec's two 16-pin socket
+strips seated on board A (columns 1 and 10, rows 2-17, as enclosure/src/layout.py places
+them), a search over placements and routings found none that closes -- the socket strips and
+the analogue stage together leave too little copper for the wires between them.  The codec
+going on its own standoffs, on a short fly lead, is the fallback that was agreed.
+
 Board 1 (`stripboard/board1.py`) is the same circuit on one 124 x 33 mm piece of stripboard
 and does not fit the enclosure.  Board A is that circuit split by what the noise argues for,
 on boards that each return to the star tag on their own wire:
