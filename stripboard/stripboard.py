@@ -303,7 +303,8 @@ class Sheet:
         for y in range(self.bh):
             runs, start = [], None
             for x in range(self.bw + 1):
-                if x < self.bw and (x, y) not in cuts:
+                if x < self.bw and (x, y) not in cuts \
+                        and (x - 0.5, y) not in cuts:
                     start = x if start is None else start
                 elif start is not None:
                     runs.append((start, x - 1))
@@ -316,12 +317,20 @@ class Sheet:
         for x in range(self.bw):
             for y in range(self.bh):
                 o.append(f'<circle cx="{self.X(x)}" cy="{self.Y(y)}" r="2.6" fill="#3b2a1a"/>')
-        for (x, y) in cuts:
-            o.append(f'<g stroke="#c00" stroke-width="3">'
-                     f'<line x1="{self.X(x) - 7}" y1="{self.Y(y) - 7}" '
-                     f'x2="{self.X(x) + 7}" y2="{self.Y(y) + 7}"/>'
-                     f'<line x1="{self.X(x) - 7}" y1="{self.Y(y) + 7}" '
-                     f'x2="{self.X(x) + 7}" y2="{self.Y(y) - 7}"/></g>')
+        for (x, y) in sorted(cuts):
+            cx, cy = self.X(x), self.Y(y)
+            if float(x) != int(x) or float(y) != int(y):
+                # a cut *between* two holes: a bar across the track, where the cutter goes
+                if float(x) != int(x):
+                    o.append(f'<line x1="{cx:.1f}" y1="{cy - 11}" x2="{cx:.1f}" '
+                             f'y2="{cy + 11}" stroke="#c00" stroke-width="4"/>')
+                else:
+                    o.append(f'<line x1="{cx - 11}" y1="{cy:.1f}" x2="{cx + 11}" '
+                             f'y2="{cy:.1f}" stroke="#c00" stroke-width="4"/>')
+            else:
+                o.append(f'<g stroke="#c00" stroke-width="3">'
+                         f'<line x1="{cx - 7}" y1="{cy - 7}" x2="{cx + 7}" y2="{cy + 7}"/>'
+                         f'<line x1="{cx - 7}" y1="{cy + 7}" x2="{cx + 7}" y2="{cy - 7}"/></g>')
         for x in range(0, self.bw, 5):
             o.append(f'<text x="{self.X(x)}" y="{M - 18}" font-size="12" text-anchor="middle" '
                      f'fill="#333">{x}</text>')

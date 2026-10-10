@@ -126,8 +126,12 @@ The first job was to test whether board 1 is overkill. Its choices split cleanly
 
 ## Where board A stands (2026-10-10, unfinished)
 
-`stripboard/board_a.py` is **not finished and does not draw yet**. What it holds is the
-analysis, and running it prints what is still wrong:
+`stripboard/board_a.py` **draws**, and the placement's geometry is settled: 15 parts placed
+with no overlaps, nothing under another part's body, nothing off the board, and the cuts the
+pins need. What is not finished is the *connectivity*: running it reports the nets that the
+cuts leave in more than one piece, and the few strips that still need a cut between two nets.
+`enclosure/src/layout.py` has **not** yet been changed, so the enclosure model still seats the
+codec on board A — see "Which tool produced which answer" above for why it should not.
 
 - the **outline**: 18 x 20 holes = 45.72 x 50.8 mm, taken from
   `enclosure/assets/kicad/board_a.kicad_pcb`'s Edge.Cuts and from `enclosure/src/layout.py`;
@@ -141,6 +145,20 @@ analysis, and running it prints what is still wrong:
 What is not done is the **links**: the cuts leave several nets in more than one piece, and
 each piece needs a wire on the component side to join it. That is the last step, and it is
 the step where every attempt so far has run out of free holes.
+
+### Which tool produced which answer
+
+Both were asked the same question — "is there a legal layout of the analogue stage on board A
+with the codec's socket strips seated on it?" — and the answer is only as good as the tool:
+
+| Tool | Result | What it is worth |
+|---|---|---|
+| greedy router (`stripboard/route.py`'s predecessor, and `solve.py`) | **0 of 3000 placements routed** | evidence about how tight the board is, not proof: a greedy join takes the shortest run it can reach and never undoes it, so it fails on boards that are merely awkward |
+| backtracking router (`stripboard/solve.py`, A* per net, nets hardest-first, undo on dead ends) | **0 of ~3700 placements routed**, within a 60 000-node budget | the same answer from a stronger tool, so the conclusion is worth more — but it is still a bounded search, not a proof |
+
+Neither router is trusted to say "impossible"; both are trusted to say "not found within the
+effort given". The codec going on its own standoffs is a design decision taken on that
+evidence, not a proof that the seated variant cannot be built.
 
 ### The one hard constraint, which took the longest to see
 
