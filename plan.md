@@ -1213,6 +1213,18 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**rigpa is on vip (V1 of rigpa's plan, 2026-10-10).** The pedal root carries rigpa (`/opt/rigpa/72bcf0b`),
+Qt 6.10 and Mesa, its unit, user and config; `make-card --remote` put it there (image
+`20261010T134132Z`). The kernel is rtpi's **numaemu2** (numaemu1 plus vc4, v3d and USB HID kept
+through the trim), promoted through `try-kernel` with the stock kernel tried back into slot b, so the
+slots are pedal + fallback again. rigpa's unit is enabled and waits for vc4's HDMI connector; run as
+its user, offscreen, it renders vip's rig and status, and three runs added no xruns (the engine's 2
+are one overrun and one underrun from its start after the boot). **Open:** the KMS overlay — the boot
+`config.txt` is written once and `--remote` doesn't touch it, so enabling the screen needs a card write
+or a vip-boot change (`docs/vip-image.md`, Pi 5 settings); and `devices/vip/check` fails cost.json's
+provenance (kernel now numaemu2; its engine commit was already stale): re-measure (P4) when it suits.
+`scripts/deploy-rigpa` updates rigpa without a new root.
+
 **The core rules changed, P6 is on the pedal, and the hour is running** (2026-10-09). The owner
 amended the rules: **all but one core renders**, the non-render core carries everything *except*
 interrupts, the audio interrupt is **delivered to a render core**, and that core is **never the

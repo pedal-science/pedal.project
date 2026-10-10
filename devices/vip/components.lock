@@ -1,7 +1,8 @@
-# What vip runs. Written by scripts/components-lock, which scripts/deploy-engine and
-# devices/<host>/apply call; scripts/status compares it with the host. Commit it with the change.
+# What vip runs. Written by scripts/components-lock, which scripts/deploy-engine,
+# scripts/deploy-rigpa and devices/<host>/apply call; scripts/status compares it with the host. Commit it with the change.
 host=vip
 board=Raspberry Pi 5 Model B Rev 1.1
-kernel=7.0.0-1017-raspi-realtime-numaemu1-trimmed
-namchain=eba5eef
-devices=be77479
+kernel=7.0.0-1017-raspi-realtime-numaemu2-trimmed
+namchain=eba5eef57897899dab2d7560661a620679a9048f
+rigpa=72bcf0b
+devices=8f9181b

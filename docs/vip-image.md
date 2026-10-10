@@ -242,12 +242,18 @@ the one privilege is `CAP_SYS_ADMIN`, for mmdebstrap to mount `/proc` in the roo
     masks units without starting anything. So the image is exactly "fresh + apply", and apply
     stays the one source for the configuration.
   - `namchaind` goes into `/opt/namchain/<commit>/` with its manifest, as deploy-engine does.
+  - `rigpa` (the UI, D14) goes into `/opt/rigpa/<commit>/` the same way, with its own unit and
+    the pedal's drop-in. Its Qt and QML modules are packages, which `ldd` can't see, so the build
+    renders one frame of it offscreen inside the root: a missing module stops the build.
   - The pedal root's own image, compressed, goes into `pedal-data/images/` for rescue to restore
     from.
 - **namchain** is built in the same container from its pinned commit, with the same flags
   deploy-engine uses on piv (`-march=armv8-a -mtune=cortex-a76`, Release). Its tests run there,
   on the same resolute userland vip runs. This is the "built on the Mac" path deploy-engine needs
   anyway, so it's shared.
+- **rigpa** is built after it (`build-rigpa`, shared with `scripts/deploy-rigpa`), against Ubuntu's
+  Qt 6.10.2 from the snapshot, and its live tests run against the namchaind just built and this
+  tree's pedald.
 - **Filesystems and the card image** are assembled as files: `mkfs.ext4 -d` fills each ext4
   partition from a directory (owners and file capabilities kept), `mtools` fills the FAT ones,
   and `sfdisk` writes the GPT into the image file.
@@ -310,6 +316,12 @@ confirmation).
   card), no `vc4-kms-v3d` (display off on the pedal, following distro-slimming's point about the
   GPU's memory traffic), the kernel console on `ttyAMA10`. The WM8960 overlay stays
   loaded at runtime by `pedal-codec`, as on piv.
+  **D14 changes this, and it is open**: rigpa needs `vc4-kms-v3d` for its screen. The kernel
+  already carries vc4 and v3d (rtpi's numaemu2), and rigpa's unit waits for vc4's HDMI connector,
+  so nothing changes until the overlay is enabled. But `config.txt` is written once, by a card
+  write, and `--remote` never touches the boot partition: enabling it on a running vip needs either
+  a card write or a vip-boot change (rtpi) that can try a config line the way it tries a kernel.
+  Decided when the screen is fitted (plan V3).
 - rescue-boot keeps the KMS driver, so the HDMI console works with a keyboard.
 - `cfg80211.ieee80211_regdom=GB`, the dracut arguments (`rd.shell=0 rd.emergency=reboot
   rd.retry=60 rd.timeout=90`) and `panic=10` on every command line.
