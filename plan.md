@@ -1256,6 +1256,24 @@ it, 170 ms per model replayed, compensated crossfade), D6's teeth are visibility
 and the pedal decided **what it warms**: one rig, the one a press reaches, with the engine's charge
 deciding whether it fits and `/status` reporting the decision (`warm_decision`).
 
+**T9's instrument is built, and the commit it measures does not deploy (2026-10-10).** T9 is
+press-to-full-rig through the pedal, and everything it needs now exists: pedald asks for the Lite
+first (`877b8c4` — it sent only `{rig, fallback}` before, so P8's two-step publish was unreachable
+from a press), the harness is `scripts/measure-lite-first` with `scripts/t9-rigs` beside it
+(`432702d`), and the evidence file is `bench-results/2026-10-10-t9-lite-first/`. **No T9 number has
+been taken**, because `scripts/deploy-engine --host vip --commit 89193f5` fails its own `ctest` run,
+twice, identically: `tests/test_catch_up.cpp:148`, *"a replayed plan is bit-identical to one that has
+been running"*, five `memcmp` mismatches on the blocks after the hand-over. That is the case asserting
+the claim the catch-up and T9 both rest on; it passes alone in the same container image (2/2) and
+passes 367/367 on the Mac, so it is a suite-context effect in the build container rather than the
+known intermittent `unit` crash. The board stays on `ee4c53d`, which predates `lite_first` entirely,
+because a suite that cannot go green is a commit that does not deploy — and `deploy-engine` being
+fail-closed on `ctest` means a red suite is now discovered at deploy time rather than at commit time.
+Fix that case, then: deploy, bump `engine_commit` in `devices/vip/cost.json` with the reason in `bar`
+and apply it, run `scripts/t9-rigs setup`, `scripts/measure-lite-first`, the LSTM refusal check and
+`scripts/t9-rigs restore`, and fill the README's tables. The poll grid is 9.62 ms (measured), so no
+number from it may be quoted finer than that.
+
 **Found while measuring T11 (2026-10-10): the bank is empty, so nothing is warm and a press does
 nothing.** The engine holds only the audible document, pedald's `warm_decision` says `idle` with
 `wanted: null`, and `/status` shows `bank: {"banks": [[]], "size": 0, "current": null}` — while the
