@@ -109,6 +109,11 @@ resolution of every number in this file** and is reported with each run. The eng
 changes once per fade (5 ms here), so the catching poll is the first after the crossfade *began*, not
 after it ended. Nothing below is finer than one poll and nothing implies it is.
 
+The poll interval was measured against the board rather than assumed: `engine.status` over TCP from
+the Mac to `vip` takes **9.62 ms** on average over 20 calls. So every time this measurement produces
+is only as good as a ~10 ms grid, and the script prints the interval it actually got with each run.
+Times quoted to a tenth of a millisecond would be a lie; they are reported to the grid the run had.
+
 ## 2. The numbers
 
 *(to be filled by `scripts/measure-lite-first` on a board running `89193f5`)*
