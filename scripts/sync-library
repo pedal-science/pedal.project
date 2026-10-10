@@ -33,8 +33,16 @@ SSH=(ssh -o BatchMode=yes -o ConnectTimeout=10 "$HOST")
 
 RSYNC=(rsync -rt --delete --delete-excluded --itemize-changes "${DRY[@]}"
        --exclude .DS_Store --include '*/' --include '*.nam' --include '*.wav' --exclude '*')
-"${RSYNC[@]}" "$SRC/NAM/" "$HOST:$DEST/models/" | grep -v '^\.' || true
-"${RSYNC[@]}" "$SRC/IRs/" "$HOST:$DEST/irs/" | grep -v '^\.' | tail -5 || true
+# copy <from> <to> <lines of changes to show>. rsync's own status decides: the filter after it finds
+# nothing to show whenever nothing changed, and its `|| true` once hid a copy that never ran.
+copy() {
+  local out rc=0
+  out=$("${RSYNC[@]}" "$1" "$HOST:$2") || rc=$?
+  grep -v '^\.' <<<"$out" | tail -n "$3" || true
+  (( rc == 0 )) || { echo "sync-library: rsync to $HOST:$2 failed (exit $rc); nothing after it was done" >&2; exit "$rc"; }
+}
+copy "$SRC/NAM/" "$DEST/models/" 1000
+copy "$SRC/IRs/" "$DEST/irs/" 5
 # Readable by every service on the host, whatever the Mac's modes are: rigpa (its own user) reads the
 # library as well as namchaind (root), and a folder unzipped on the Mac is often 700 — rsync gives a
 # new copy its source's mode, and rigpa saw no models at all (2026-10-10). Set on the host after the
