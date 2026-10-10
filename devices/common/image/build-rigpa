@@ -34,7 +34,9 @@ cmake --build --preset linux-release -j"$(nproc)" > "$LOGS/rigpa-build.log" 2>&1
   || { tail -40 "$LOGS/rigpa-build.log" >&2; exit 1; }
 (( TESTS )) || exit 0
 # Verbose, so the log has each suite's own output: a QSKIP still counts as passed to ctest.
-ctest --preset linux-release -V > "$LOGS/rigpa-test.log" 2>&1 || { grep -E 'FAIL|Failed|\*\*\*' "$LOGS/rigpa-test.log" | tail -40 >&2; exit 1; }
+# On a failure, each failed check with the lines QtTest prints after it (Actual, Expected, Loc).
+ctest --preset linux-release -V > "$LOGS/rigpa-test.log" 2>&1 \
+  || { grep -A4 'FAIL!' "$LOGS/rigpa-test.log" | tail -60 >&2; grep -A3 'tests FAILED' "$LOGS/rigpa-test.log" >&2; exit 1; }
 # A suite that skipped is a suite that tested nothing: say so, rather than a bare "passed".
 skipped=$(grep -c ': SKIP   :\|SKIP   :' "$LOGS/rigpa-test.log" || true)
 (( skipped == 0 )) || printf '    rigpa: %s skipped test function(s): no namchaind or pedald given\n' "$skipped" >&2
