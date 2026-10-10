@@ -189,9 +189,11 @@ def main(argv=None):
         return 0
 
     # The slice is the point: it is the only cgroup whose cpuset includes the isolated cores, and a
-    # measurement that cannot be pinned would measure the housekeeping core instead.
-    run = ["systemd-run", "--quiet", "--scope", "--slice=" + SLICE,
-           "--property=CPUAffinity=%d" % cpu] + command
+    # measurement that cannot be pinned would measure the housekeeping core instead. The pinning is
+    # the bench's own (`--cpu N`, a sched_setaffinity call the slice now permits) rather than a
+    # systemd property: `--property=CPUAffinity=` is refused as an unknown assignment on this
+    # systemd, which is how the first end-to-end run of this tool failed on the board (2026-10-10).
+    run = ["systemd-run", "--quiet", "--scope", "--slice=" + SLICE] + command
     try:
         done = subprocess.run(["timeout", str(int(args.timeout))] + run, capture_output=True, text=True)
     except Exception as exc:  # noqa: BLE001
