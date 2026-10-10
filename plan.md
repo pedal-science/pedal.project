@@ -1297,10 +1297,26 @@ fragment with `devices/common/cost-merge`, and confirm the row resolves with no 
 the case the *bench* has to refuse rather than approximate — `lookback` says `Unbounded` — so the
 fragment it produces is one to read rather than wave through.)
 
-**Owed, in the order to take them.** **T11 and P4 are done** (T11: an hour at full load with a warm
-document rendering, no block over the deadline, `bench-results/2026-10-11-t11-warm`; P4: the first-sight
-measurement verified end to end and merged, `bench-results/2026-10-10-p4-first-sight`), so the list
-starts at what is actually left.
+**Owed, in the order to take them.** **T11, P4, P8's publish and piv's tool have all landed** (T11:
+`bench-results/2026-10-11-t11-warm`; P4: `bench-results/2026-10-10-p4-first-sight`; P8's two-step
+publish: namchain `7d9cbbd` + `1a07af0`; piv's tool: rtpi `a6d4d67`), so the list starts at what is
+actually left.
+
+(1) **P8's catch-up replay** — the one piece of P8 deliberately not written: catching the Full up needs
+the *recent input*, and the engine's live input ring is a four-block dropping pool rather than the
+~170 ms of history the design's numbers come from, so it needs a buffer on the warm path (the
+`lookback` length per model is already the engine's, and `Unbounded` for a model whose memory cannot be
+replayed exactly, which P8 must refuse to promise about rather than approximate). Then T9 through the
+pedal: press-to-full-rig, with the Lite in the meantime and that state visible where D6 says.
+
+(2) **piv's reboot** — the tool is built, tested (32 cases green) and pushed, and it is the *board* that
+has not moved: `piv-boot set-args` on piv, then `rtpi-audio-tune check` and `devices/piv/check`, and
+`cat /proc/cmdline` should show `isolcpus=...1-3`, `irqaffinity=0`, `skew_tick=1`. The owner's call on
+timing, since it is a reboot of the board.
+
+(3) **3.8's acceptance** — a press end to end (footswitch → Pico → pedald → engine → sound), then 3.5.
+Still the owner's: the power question behind T8's reboot (the journal is persistent now, so a
+recurrence will say).
 
 (1) **P8's implementation** — the two-step publish in namchain: publish the Lite (the `lite_first` trim
 and its reporting in engine and service are in), compile the Full behind it, replay the `lookback`
