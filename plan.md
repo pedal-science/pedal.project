@@ -1297,19 +1297,27 @@ fragment with `devices/common/cost-merge`, and confirm the row resolves with no 
 the case the *bench* has to refuse rather than approximate — `lookback` says `Unbounded` — so the
 fragment it produces is one to read rather than wave through.)
 
-**Owed, in the order to take them.** (1) **T11** — the full-load hour, launched 21:52Z with a second
-renderer on the free warm core and the app's traffic, but *without* the engine's warm document (the
-harness's watch gave up at 20 s; it is 90 s now), so collect it and re-run if that gap matters.
-(2) **piv** — its tree is on the rules now (isolate 1-3, housekeeping 0, the USB audio interrupt on
-core 1) but the board still boots the old command line (`cat /proc/cmdline` shows 2-3 and
-`irqaffinity=0-1`). **piv has no candidate slot to arm**: `/boot/firmware/` holds `current` and no
-`new`, and `arm-try-piv.sh` refuses without a candidate in the untested state, so the tryboot route
-needs a kernel staged first. The route that fits the job is **vip's own**: `vip-boot try-args` boots
-the running kernel once with new tuned arguments, which is exactly an args change and nothing else —
-so piv wants that mechanism (or a staged candidate) before its reboot, then `rtpi-audio-tune check`
-and `devices/piv/check` on the board. Its own session. (3) **P4** — first-sight measurement (the service
-notices a unit the table has no row for and measures it on the free warm core). (4) **P8's
-implementation** — the two-step publish in namchain. (5) **3.8**'s acceptance, then 3.5.
+**Owed, in the order to take them.** **T11 and P4 are done** (T11: an hour at full load with a warm
+document rendering, no block over the deadline, `bench-results/2026-10-11-t11-warm`; P4: the first-sight
+measurement verified end to end and merged, `bench-results/2026-10-10-p4-first-sight`), so the list
+starts at what is actually left.
+
+(1) **P8's implementation** — the two-step publish in namchain: publish the Lite (the `lite_first` trim
+and its reporting in engine and service are in), compile the Full behind it, replay the `lookback`
+length of recent input into it (the length and the input are already the engine's), then crossfade with
+E2's compensated shape. The service already accepts a temporary Lite; T9 measures it.
+
+(2) **piv** — its tree is on the rules (isolate 1-3, housekeeping 0, the USB audio interrupt on core 1)
+but the board still boots the old command line (`cat /proc/cmdline` shows 2-3 and `irqaffinity=0-1`).
+**piv has no candidate slot to arm** (`/boot/firmware/` holds `current` and no `new`, and
+`arm-try-piv.sh` refuses without a candidate in the untested state), so the route that fits the job is
+**vip's own**: `vip-boot try-args` boots the running kernel once with new tuned arguments — an args
+change and nothing else — ported to piv's single-slot layout, or a staged candidate. Then
+`rtpi-audio-tune check` and `devices/piv/check` on the board. Its own session.
+
+(3) **3.8's acceptance** — a press end to end (footswitch → Pico → pedald → engine → sound), then 3.5.
+Two things are still the owner's: the power question behind T8's reboot (the journal is persistent now,
+so a recurrence will say) and which piv route above to take.
 
 Two faults were found by putting this on the board and are fixed: **`pedal-interface.json` was never
 installed** (it lived outside the rootfs, which is the only thing that installs anything, so
