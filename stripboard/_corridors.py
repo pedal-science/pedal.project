@@ -14,8 +14,8 @@ W, H = 18, 24
 
 # The codec's pads, on fly leads from its own standoffs above the board.  Its socket strips
 # are NOT on board A (enclosure/src/layout.py, ON_STANDOFFS), so column 1 is free.
-CODEC = {'LIN1': (10, 9), 'HPL': (10, 12), 'HPR': (10, 15),
-         'V3A3': (10, 16), 'CGND': (10, 17)}
+CODEC = {'LIN1': (10, 8), 'HPL': (10, 10), 'HPR': (10, 12),
+         'V3A3': (10, 14), 'CGND': (10, 15)}
 
 # The terminations, on the edges they belong to.
 PADS = {
@@ -23,7 +23,7 @@ PADS = {
     'LIN1': CODEC['LIN1'], 'HPL': CODEC['HPL'], 'HPR': CODEC['HPR'],
     'V3A3': CODEC['V3A3'], 'CGND': CODEC['CGND'],
     'OUT-L': (2, 23), 'OUT-R': (12, 23), 'STAR': (7, 23),
-    'VF': (17, 8), 'V9': (17, 20),
+    'VF': (16, 0), 'V9': (17, 20),
 }
 
 # ---------------------------------------------------------------- the corridors
@@ -31,14 +31,15 @@ PADS = {
 # justified by the net it carries: the short high-impedance node first, then ground, then
 # what is only a wire.
 COLUMNS = {
-    11: 'IN_A: the one short high-impedance run, from the switch taps down to U1.3. '
+    12: 'IN_A: the one short high-impedance run, from the switch taps down to U1.3. '
         'Nothing else may use this column between rows 1 and 6.',
-    13: 'GND_A and the codec\'s ground: one column down to the star row, so the analogue '
+    14: 'GND_A and the codec\'s ground: one column down to the star row, so the analogue '
         'return is one wire and not a daisy chain.',
     8:  'LIN1 and the two output runs: the trunk from the socket and the codec pads down '
         'to the front band. Low impedance, so length is not the worry; crossing other '
         'nets is, which is why it is its own column.',
-    16: 'the supply: VF from the power board down the right edge, and IN_RAW from the jack.',
+    10: 'the output runs: HPL and HPR from the codec\'s pads down to the front band, which '
+        'is the only way past the pads that does not cross the input.',
 }
 ROWS = {
     2:  'the input network\'s node row: C5, R5 and the switch taps sit here, against the '
@@ -50,11 +51,11 @@ ROWS = {
 }
 # The bands the parts live in, between the corridors.
 BANDS = {
-    'input':  (13, 17, 0, 4),
-    'U1':     (11, 15, 5, 12),
-    'bias':   (14, 17, 6, 12),
-    'output': (0, 8, 18, 23),
-    'output R': (9, 11, 18, 23),
+    'input':  (15, 17, 0, 4),
+    'U1':     (12, 13, 5, 12),
+    'bias':   (15, 17, 6, 13),
+    'output': (0, 9, 17, 23),
+    'output R': (15, 17, 14, 23),
 }
 
 

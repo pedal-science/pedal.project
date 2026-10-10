@@ -1,7 +1,23 @@
 #!/usr/bin/env python3
 """Board A: the analogue board -- the input buffer, the bias and the output stage.
 
-STATUS, 2026-10-10: **the connectivity is not closed.**  The outline is 18 x 24 holes
+STATUS, 2026-10-10: **placed to the corridor plan; the connectivity is not closed.**
+
+Corridor-first worked where area did not.  `board_a-corridors.svg` decides which rows and
+columns are wire-only -- IN_A alone at column 13 (the short high-impedance run, into the pin
+beside it), the ground return at 14, the low-impedance trunk at 11, the codec's pads at 10 --
+and the parts were then fitted into the bands between them.  The result is that this
+placement has **no geometric errors at all**: no overlaps, nothing off the board, nothing
+under another part's body, no lead in a corridor.  Three placement attempts and a change of
+outline could not achieve that; deciding the corridors first did.
+
+What is left is the connectivity: the nets the cuts leave in more than one piece, and the
+strips that still need a cut between two nets.  The parts are where they should be, which is
+the part that was failing.
+
+Previous status follows.
+
+**The connectivity is not closed.**  The outline is 18 x 24 holes
 (45.72 x 60.96 mm), taller than the enclosure's plate, and the parts are placed.  What is
 still wrong is reported when this runs: a handful of geometric collisions (a capacitor body
 over a neighbouring lead) and the nets the cuts leave in more than one piece.  The drawings
@@ -76,72 +92,87 @@ W, H = 18, 24            # 45.72 x 60.96 mm: taller than the enclosure's plate, 
 U1X, U1Y = 4, 6
 U1 = [(U1X, U1Y + i) for i in range(4)] + [(U1X + 3, U1Y + 3 - i) for i in range(4)]
 
+# U1's socket, stood upright: pins 1-4 down column 12, 5-8 up column 15.  Its two pin columns
+# are the two things that want a corridor each: pin 3 is the high-impedance node, which must
+# reach the switch taps in the shortest run the board allows, and pins 1-2 are the buffer's
+# output, which is low impedance and may go the long way.
+U1X, U1Y = 12, 5
+U1 = [(U1X, U1Y + i) for i in range(4)] + [(U1X + 3, U1Y + 3 - i) for i in range(4)]
+
 CUTS = {
-    # U1's socket (pins 1-4 down column 4, 5-8 up column 7).  The pins that share a strip are
-    # separated by a cut *between* two holes, which is what a spot-face cutter does turned
-    # between holes and which strands neither pin.
-    (4.5, 6), (4.5, 7), (4.5, 8),
-    (7.5, 6), (7.5, 7), (7.5, 8),
-    # the input network: the tip from IN_A, and IN_A from IN_B
-    (15.5, 0), (14.5, 2), (13.5, 2), (13.5, 3), (15.5, 3), (8.5, 16), (9.5, 18),
-    (1.5, 17), (2.5, 18), (9.5, 17), (10.5, 18),
-    # the bias chain: BIAS from GND_A, and BIAS_MID from BIAS
-    (15.5, 3), (15.5, 4), (15.5, 6), (15.5, 7), (17.5, 5), (17.5, 10),
-    # the output stage: each channel's coupling capacitor from its series resistor
-    (1.5, 18), (3.5, 19), (10.5, 18), (12.5, 19),
+    # the socket's columns: pins that share a strip and are on different nets are separated
+    # by a cut *between* two holes, which strands neither pin.
+    (12, 5.5), (12, 6.5), (12, 7.5),
+    (15, 5.5), (15, 6.5), (15, 7.5),
+    # the input network
+    (16.5, 1), (16.5, 2),
+    # the bias chain
+    (15.5, 3), (15.5, 4), (15.5, 6), (15.5, 7), (15.5, 13), (16.5, 13),
+    # the output stage
+    (1.5, 20), (3.5, 21), (2.5, 21), (4.5, 19), (4.5, 20), (5.5, 21), (6.5, 21),
+    (15.5, 20), (15.5, 21), (16.5, 21),
 }
 
-LINKS = [
-    # LIN1: U1.1 and U1.2 out, down column 3, to the codec's pad
-    ((3, 6), (4, 6)), ((3, 6), (3, 7)), ((3, 7), (4, 7)),
-    ((3, 6), (2, 6)), ((2, 6), (2, 6)),
-    # IN_A: U1.3 out to the input network's node
-    ((5, 8), (5, 5)), ((5, 5), (5, 2)), ((5, 2), (13, 2)),
-    # GND_A: U1.4 out to the ground run
-    ((5, 9), (5, 22)), ((5, 22), (5, 23)),
-    # VF: U1.8 out to the rail
-    ((8, 6), (8, 5)), ((8, 5), (16, 5)) if False else ((8, 5), (9, 5)),
-]
-
+LINKS = []
 PARTS = {
     'U1':  ('dip8', 'OPA2197 on adapter', [
-        ((4, 6), 'LIN1'), ((4, 7), 'LIN1'), ((4, 8), 'IN_A'), ((4, 9), 'GND_A'),
-        ((7, 9), 'BIAS'), ((7, 8), 'U1B'), ((7, 7), 'U1B'), ((7, 6), 'VF')]),
-    'C5':  ('film', '100nF film', [((16, 0), 'IN_RAW'), ((16, 2), 'IN_A')]),
-    'R5':  ('r', '330k', [((15, 3), 'IN_A'), ((15, 7), 'IN_B')]),
-    'R6':  ('r', '680k', [((11, 3), 'IN_B'), ((11, 7), 'BIAS')]),
-    'C3':  ('cer', '100nF', [((11, 1), 'VF'), ((11, 2), 'GND_A')]),
-    'C4':  ('el5', '10µF 50V', [((12, 1), 'BIAS'), ((12, 2), 'GND_A')]),
-    'R2':  ('r', '10k', [((17, 1), 'VF'), ((17, 5), 'BIAS_MID')]),
-    'R3':  ('r', '10k', [((17, 6), 'BIAS_MID'), ((17, 10), 'BIAS')]),
-    'R4':  ('r', '10k', [((14, 2), 'BIAS'), ((14, 6), 'GND_A')]),
-    'C6':  ('el6.3', '10µF bipolar', [((1, 16), 'HPL'), ((1, 18), 'OUT_L_N')]),
+        (U1[0], 'LIN1'), (U1[1], 'LIN1'), (U1[2], 'IN_A'), (U1[3], 'GND_A'),
+        (U1[4], 'BIAS'), (U1[5], 'U1B'), (U1[6], 'U1B'), (U1[7], 'VF')]),
+    # the input network, in the rear right band beside the jack
+    'C5':  ('film', '100nF film', [((17, 0), 'IN_RAW'), ((17, 2), 'IN_A')]),
+    'R5':  ('r', '330k', [((17, 3), 'IN_A'), ((17, 7), 'IN_B')]),
+    'R6':  ('r', '680k', [((17, 8), 'IN_B'), ((17, 12), 'BIAS')]),
+    # the bias chain, in the right band below it
+    'C3':  ('cer', '100nF', [((16, 3), 'VF'), ((16, 4), 'GND_A')]),
+    'C4':  ('el5', '10µF 50V', [((14, 3), 'BIAS'), ((14, 4), 'GND_A')]),
+    'R2':  ('r', '10k', [((17, 13), 'VF'), ((17, 17), 'BIAS_MID')]),
+    'R3':  ('r', '10k', [((16, 13), 'BIAS_MID'), ((16, 17), 'BIAS')]),
+    'R4':  ('r', '10k', [((16, 18), 'BIAS'), ((16, 22), 'GND_A')]),
+    # the output stage, in the front band
+    'C6':  ('el6.3', '10µF bipolar', [((1, 15), 'HPL'), ((1, 17), 'OUT_L_N')]),
     'R7':  ('r', '100Ω', [((1, 19), 'OUT_L_N'), ((1, 23), 'OUT_L')]),
     'R8':  ('r', '1M', [((3, 19), 'OUT_L'), ((3, 23), 'GND_A')]),
-    'C7':  ('el6.3', '10µF bipolar', [((9, 16), 'HPR'), ((9, 18), 'OUT_R_N')]),
-    'R9':  ('r', '100Ω', [((10, 19), 'OUT_R_N'), ((10, 23), 'OUT_R')]),
-    'R10': ('r', '1M', [((12, 19), 'OUT_R'), ((12, 23), 'GND_A')]),
+    'C7':  ('el6.3', '10µF bipolar', [((5, 15), 'HPR'), ((5, 17), 'OUT_R_N')]),
+    'R9':  ('r', '100Ω', [((5, 19), 'OUT_R_N'), ((5, 23), 'OUT_R')]),
+    'R10': ('r', '1M', [((7, 19), 'OUT_R'), ((7, 23), 'GND_A')]),
 }
 
 PADS = {
-    'IN':    ((17, 0), 'IN_RAW', "the input jack's tip, through the screened cable's core"),
-    'SW-I':  ((15, 0), 'IN_RAW', 'Inst/Line switch, Inst throw (no padding)'),
-    'SW-C':  ((13, 2), 'IN_A', 'Inst/Line switch, common: the top of R5 (the buffer input)'),
-    'SW-L':  ((16, 3), 'IN_B', 'Inst/Line switch, Line throw: past R5 (the 0.33 pad)'),
-    'LIN1':  ((10, 6), 'LIN1', "the codec's LIN1 pad, on a fly lead from its own standoffs"),
+    'IN':    ((15, 0), 'IN_RAW', "the input jack's tip, through the screened cable's core"),
+    'SW-I':  ((16, 0), 'IN_RAW', 'Inst/Line switch, Inst throw (no padding)'),
+    'SW-C':  ((16, 1), 'IN_A', 'Inst/Line switch, common: the top of R5 (the buffer input)'),
+    'SW-L':  ((16, 2), 'IN_B', 'Inst/Line switch, Line throw: past R5 (the 0.33 pad)'),
+    'LIN1':  ((10, 8), 'LIN1', "the codec's LIN1 pad, on a fly lead from its own standoffs"),
     'HPL':   ((10, 10), 'HPL', "the codec's HPL pad"),
-    'HPR':   ((10, 13), 'HPR', "the codec's HPR pad"),
-    'V3A3':  ((10, 15), 'V3A3', "the codec's AVDD pad, from the power board's 78L33"),
-    'CGND':  ((10, 16), 'GND_A', "the codec's GND pad -- its own wire back to the star"),
-    'OUT-L': ((2, 18), 'OUT_L', 'OUT L jack tip'),
-    'OUT-R': ((10, 18), 'OUT_R', 'OUT R jack tip'),
-    'STAR':  ((6, 23), 'GND_A', 'the star-ground tag'),
-    'VF':    ((17, 11), 'VF', "the power board's filtered 9 V"),
-    'V9':    ((17, 21), 'V9_RAW', "the power board's +9 V"),
+    'HPR':   ((10, 12), 'HPR', "the codec's HPR pad"),
+    'V3A3':  ((10, 14), 'V3A3', "the codec's AVDD pad, from the power board's 78L33"),
+    'CGND':  ((10, 15), 'GND_A', "the codec's GND pad -- its own wire back to the star"),
+    'OUT-L': ((2, 22), 'OUT_L', 'OUT L jack tip'),
+    'OUT-R': ((12, 22), 'OUT_R', 'OUT R jack tip'),
+    'STAR':  ((9, 22), 'GND_A', 'the star-ground tag'),
+    'VF':    ((16, 11), 'VF', "the power board's filtered 9 V"),
+    'V9':    ((17, 20), 'V9_RAW', "the power board's +9 V"),
 }
 
 CARRIES = {'C5', 'R5', 'R6', 'U1', 'C3', 'C4', 'R2', 'R3', 'R4',
            'C6', 'R7', 'R8', 'C7', 'R9', 'R10'}
+
+
+def main():
+    errs, info = SB.check(W, H, CUTS, LINKS, PARTS, PADS, carries=CARRIES)
+    for e in errs:
+        print('ERROR', e)
+    if errs:
+        draw()
+        print('drawings written for the placement as it stands; the errors above are what is '
+              'still wrong')
+        return 1
+    draw()
+    mm = info['mm']
+    print(f'ok: {len(PARTS)} parts, {len(LINKS)} links, {len(CUTS)} cuts, {len(PADS)} wires; '
+          f'{info["cols"]}x{info["rows"]} holes = {mm[0]:.2f} x {mm[1]:.2f} mm; '
+          f'the three drawings are written')
+    return 0
 
 
 # Drawing ---------------------------------------------------------------------------------
