@@ -1277,6 +1277,14 @@ blocks *near* the deadline rather than over it, cooling the document every ten s
 `scripts/measure-housekeeping --seconds 1800 --target 0.60 --extra renderer --skip-quiet`, and expect
 cpu1 busy. Evidence: `bench-results/2026-10-11-t11-warm/`.
 
+**P4's verification needs a model the table has no row for, and the library has none** (checked
+2026-10-10: eight models from eight directories, each costed through a rig built from `last.json`, all
+`unmeasured: none` and all at the same cost — the library is one family the table covers). So the
+verification has to *bring* the gap: generate a small model of another architecture (or copy one in
+from the Mac's library), load a rig that uses it, watch `needs_measuring` name the row, run
+`pedal-measure`, merge the fragment with `devices/common/cost-merge`, and confirm the row resolves with
+no xrun.
+
 **Owed, in the order to take them.** (1) **T11** — the full-load hour, launched 21:52Z with a second
 renderer on the free warm core and the app's traffic, but *without* the engine's warm document (the
 harness's watch gave up at 20 s; it is 90 s now), so collect it and re-run if that gap matters.
