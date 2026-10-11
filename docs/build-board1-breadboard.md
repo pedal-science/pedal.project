@@ -153,9 +153,21 @@ Then, Cioks off: about **1 MΩ** from each output jack's tip to ground, and no c
 
 ## Stage 6: the op-amp
 
-- [ ] Solder the OPA2197 onto the adapter as in [build-board1.md](build-board1.md) stage 8.
-- [ ] Cioks off. Press the adapter across the channel, **pin 1 at f20**.
-- [ ] Cioks on. **f20** (pin 1) and **e21** (pin 7) both about **2.9 V**, and e20 still about 8.7 V.
+- [ ] Solder the OPA2197 onto the adapter as in [build-board1.md](build-board1.md) stage 8. The
+      Aries board has bare tinned pads — two rows of four at 1.27 mm, with the vias between them.
+      Which adapter pin is pin 1 is not readable off the board (the chip sits across the pin
+      columns), so find it by continuity before soldering: the pad under the chip's **dot** lead
+      beeps to exactly one of the eight pins, and that pin is pin 1. Solder the chip in that
+      orientation.
+- [ ] Cioks off. Press the adapter across the channel, **pin 1 at f20** — the chip's **dot end
+      pointing left**, so pin 1 is in f20 (bottom-left of the group) and pin 8 in e20 (top-left,
+      the T+ hole). The adapter fits 180° the wrong way, and that feeds the chip's V− from T+ and
+      its V+ from ground: the rail then collapses to about 1 V, both outputs sit near 0.5 V, and
+      R1 gets hot.
+- [ ] Cioks on. **f20** (pin 1) and **e21** (pin 7) both at the bias — **3.0 V** on this board —
+      and e20 (pin 8) at the rail, **9.0 V**. Note that pin 3 is *not* a good place to read the
+      bias once the op-amp is in: its node still sees the meter's own 1 MΩ, so it keeps reading
+      the loaded 1.55 V / 2.3 V whereas the follower's output sits at the true bias.
 
 > **▶ Tell Claude:** a photo of the soldered adapter before it goes in, then the three voltages.
 
@@ -182,6 +194,7 @@ anything is soldered.
 | Pin 3 ↔ pin 5 on ohms, Inst / Line | **1.01 MΩ / 330 kΩ** — 3:1, power off. This is the check that identifies the toggle's position without depending on the meter, and it proves R5 is in circuit | 2026-10-11 |
 | Meter's own input resistance | **≈ 1.08 MΩ**, from the bias and the Inst reading. Stage 5's earlier "2.9 V / 2.5 V" assumed 10 MΩ and was wrong; the expected values are in ratio form now | 2026-10-11 |
 | Output jacks, HPL / HPR | **1 MΩ** from the left output jack's tip to ground (R8), and **no continuity** from HPL or HPR to ground. The right jack is not wired yet; it gets the same 1 MΩ check (R10) when it is | 2026-10-11 |
-| Op-amp outputs (f20 / e21) | | |
+| Op-amp outputs (f20 / e21) | **3.0 V / 3.0 V** — both followers sit at the bias, and e20 (pin 8) at the 9.0 V rail. The chip had been reverse-supplied first (the adapter 180° out) and survived | 2026-10-11 |
+| Adapter orientation | Pin 1 is found by continuity, not by eye: the pad under the chip's dot lead beeps to one pin, and **that** pin goes to f20 with the **dot end pointing left**. Inserted the other way round the chip's V− is fed from T+ and its V+ from ground, the rail collapses to about 1 V and R1 gets hot — that happened once, here, and cost nothing | 2026-10-11 |
 | First sound | | |
 | Changes for the soldered board | **R5 = 680 kΩ (the pad's top), R6 = 330 kΩ (the pad's bottom, to the bias)** — the build docs and the breadboard drawing had these transposed until 2026-10-11 and the board was built from them, which makes Line −3.5 dB instead of −9.7 dB. The fix is to swap the two resistors: same holes, no rewiring. `docs/bom.md` had the values right all along ("from A, 680 kΩ to node B, then 330 kΩ from B to the bias") | 2026-10-11 |

@@ -252,7 +252,9 @@ socket.
       Only then solder the diagonally opposite corner, then the rest. A fine tip and a little solder:
       if two pins bridge, flux and braid clear it.
 - [ ] Check with the meter that no two neighbouring pins beep to each other.
-- [ ] **Cioks off.** Plug the adapter in, pin 1 to the socket's pin 1 at (18, 1).
+- [ ] **Cioks off.** Plug the adapter in, pin 1 to the socket's pin 1 at (18, 1) — the chip's **dot
+      end towards pin 1's end**. The adapter fits 180° the wrong way, which swaps V+ and V−; the
+      symptom is under "If something goes wrong".
 - [ ] Cioks on. Measure: **pin 1** (the buffer's output) and **pin 7** (the unused half) both about
       **2.9 V**, and pin 8 still about 8.7 V. If either output sits near 0 V or near 8.7 V, switch
       off and tell Claude.
@@ -302,6 +304,7 @@ Then Claude records what Phase 2 is done on:
 | Bias far from 2.9 V | A missed cut on row 3 (at 31, 37 or 44), or R2–R4 in the wrong holes |
 | Pin 3 at 0 V | A missed cut at (4, 6) or (9, 6), the switch wiring, or the input jack's tip switch wired to the tip instead of the sleeve |
 | Output pin at a rail | The follower link (17, 1)–(17, 2) missing, or the chip turned round on the adapter |
+| Pin 8 (or VF) collapses to about 1 V, and both outputs sit near 0.5 V | The adapter is in the socket 180° out: the chip's V− is fed from VF and its V+ sits on the ground row, so its protection junctions clamp the rail and R1 drops the rest — and gets hot. The chip's dot end goes towards pin 1: pin 1 to pin 1, pin 8 to pin 8 |
 | Hum that stops when you touch the strings | Normal for single coils. Check that it drops |
 | Hum that doesn't change | A second ground path: the SSL, a lead to piv, or the screen connected at both ends |
 | Crackle when the switch moves | Normal while the lever is between positions. It shouldn't happen at rest |
