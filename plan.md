@@ -1240,6 +1240,15 @@ them is hardware:
   at Line, so **Inst is always the lower of the two**; the owner's 1 MΩ meter explains the
   1.55 V / 1.85 V he saw. Both docs now give the ratio form, worked numbers for 1 MΩ and 10 MΩ,
   and say that the −9.7 dB pad is an audio figure no DC voltmeter can show.
+- **Stage 5 passes (2026-10-11).** With the resistors swapped, the owner measured the bias at
+  3.0 V, pin 3 at **1.55 V (Inst) / 2.30 V (Line)**, and pin 3 ↔ pin 5 on the ohms range at
+  **1.01 MΩ / 330 kΩ**. The pair fixes the meter's own input resistance at 1.08 MΩ, and the Line
+  figure is within 10 mV of what that Rm predicts — so the switch, C5, R5 and R6 are all in
+  circuit and the Inst pad's joint is sound. Nothing on the board needed moving; the transposed
+  values were the only hardware fault. Recorded in
+  [docs/build-board1-breadboard.md](docs/build-board1-breadboard.md)'s Results table.
+  **Next: stage 6** — solder the OPA2197 onto the adapter, press it in with pin 1 at f20, then
+  f20 and e21 read about 3.0 V (the two followers) and e20 still about 8.7 V.
 
 **D14's condition is met: V2 passed (2026-10-10).** rigpa as its real unit on eglfs, the HDMI output
 forced on at 1920×480 with a generated EDID (no screen yet), beside a 0.553 rig with a warm document:

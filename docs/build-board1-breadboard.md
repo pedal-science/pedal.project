@@ -143,7 +143,7 @@ Cioks on, op-amp not fitted. Measure the holes U1's pins will go into, against t
 | 8 (e20) | about 8.7 V |
 | 4 (f23) | 0 V |
 | 5 (e23) | about 2.9 V |
-| 3 (f22) | **the lower of the two positions, always.** The meter loads the node it is on, so what it reads depends on its own input resistance: at Inst it sits on node A and reads `Vbias × Rm/(Rm + 1.01 MΩ)`; at Line it sits on node B and reads `Vbias × Rm/(Rm + R6)`. Worked with Vbias = 2.95 V: **Rm = 1 MΩ → Inst ≈ 1.50 V, Line ≈ 2.24 V**; **Rm = 10 MΩ → Inst ≈ 2.67 V, Line ≈ 2.86 V**. So Line is the higher reading at any meter. **Measure Rm from the pair:** `Rm = 1.01 MΩ × V_Inst/(Vbias − V_Inst)`. **The −9.7 dB pad is an audio figure and no DC voltmeter can show it** — these readings only identify which position the toggle is in and what the meter is loading. The unambiguous test is on the ohms range, power off: **f22 to the bias hole e23 reads 1.01 MΩ at Inst and 330 kΩ at Line**, and the toggle's middle lug beeps to the SW-I wire (j7) at Inst |
+| 3 (f22) | **the lower of the two positions, always.** The meter loads the node it is on, so what it reads depends on its own input resistance: at Inst it sits on node A and reads `Vbias × Rm/(Rm + 1.01 MΩ)`; at Line it sits on node B and reads `Vbias × Rm/(Rm + R6)`. Worked with Vbias = 2.95 V: **Rm = 1 MΩ → Inst ≈ 1.50 V, Line ≈ 2.24 V**; **Rm = 10 MΩ → Inst ≈ 2.67 V, Line ≈ 2.86 V**. So Line is the higher reading at any meter. **Measure Rm from the pair:** `Rm = 1.01 MΩ × V_Inst/(Vbias − V_Inst)`. **Measured 2026-10-11:** bias 3.0 V, pin 3 at Inst 1.55 V and at Line 2.30 V — Rm = 1.08 MΩ, and the Line figure is within 10 mV of what that Rm predicts, so this board's input network is the netlist's. **The −9.7 dB pad is an audio figure and no DC voltmeter can show it** — these readings only identify which position the toggle is in and what the meter is loading. The unambiguous test is on the ohms range, power off: **f22 to the bias hole e23 reads 1.01 MΩ at Inst and 330 kΩ at Line** (measured: 1.01 MΩ and 330 kΩ, so the switch, R5 and R6 are all in circuit and the Inst pad's joint is sound), and the toggle's middle lug beeps to the SW-I wire (j7) at Inst |
 
 Then, Cioks off: about **1 MΩ** from each output jack's tip to ground, and no continuity from HPL
 (j30) or HPR (j38) to ground.
@@ -177,8 +177,10 @@ anything is soldered.
 |---|---|---|
 | Rails split in the middle? | | |
 | V9 / C1 / T+ | | |
-| Bias (e23) | | |
-| Pin 3 hole (f22), Inst / Line | | |
+| Bias (e23, U1 pin 5) | **3.0 V** — a third of T+, and the figure Stage 5's two pin-3 readings are measured against | 2026-10-11 |
+| Pin 3 (f22), Inst / Line | **1.55 V / 2.30 V** — Inst is the lower of the two, always, because its reading looks through R5 + R6 while Line's looks through R6 alone | 2026-10-11 |
+| Pin 3 ↔ pin 5 on ohms, Inst / Line | **1.01 MΩ / 330 kΩ** — 3:1, power off. This is the check that identifies the toggle's position without depending on the meter, and it proves R5 is in circuit | 2026-10-11 |
+| Meter's own input resistance | **≈ 1.08 MΩ**, from the bias and the Inst reading. Stage 5's earlier "2.9 V / 2.5 V" assumed 10 MΩ and was wrong; the expected values are in ratio form now | 2026-10-11 |
 | Op-amp outputs (f20 / e21) | | |
 | First sound | | |
-| Changes for the soldered board | | |
+| Changes for the soldered board | **R5 = 680 kΩ (the pad's top), R6 = 330 kΩ (the pad's bottom, to the bias)** — the build docs and the breadboard drawing had these transposed until 2026-10-11 and the board was built from them, which makes Line −3.5 dB instead of −9.7 dB. The fix is to swap the two resistors: same holes, no rewiring. `docs/bom.md` had the values right all along ("from A, 680 kΩ to node B, then 330 kΩ from B to the bias") | 2026-10-11 |
