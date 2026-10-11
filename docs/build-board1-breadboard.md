@@ -181,6 +181,7 @@ anything is soldered.
 | Pin 3 (f22), Inst / Line | **1.55 V / 2.30 V** — Inst is the lower of the two, always, because its reading looks through R5 + R6 while Line's looks through R6 alone | 2026-10-11 |
 | Pin 3 ↔ pin 5 on ohms, Inst / Line | **1.01 MΩ / 330 kΩ** — 3:1, power off. This is the check that identifies the toggle's position without depending on the meter, and it proves R5 is in circuit | 2026-10-11 |
 | Meter's own input resistance | **≈ 1.08 MΩ**, from the bias and the Inst reading. Stage 5's earlier "2.9 V / 2.5 V" assumed 10 MΩ and was wrong; the expected values are in ratio form now | 2026-10-11 |
+| Output jacks, HPL / HPR | **1 MΩ** from the left output jack's tip to ground (R8), and **no continuity** from HPL or HPR to ground. The right jack is not wired yet; it gets the same 1 MΩ check (R10) when it is | 2026-10-11 |
 | Op-amp outputs (f20 / e21) | | |
 | First sound | | |
 | Changes for the soldered board | **R5 = 680 kΩ (the pad's top), R6 = 330 kΩ (the pad's bottom, to the bias)** — the build docs and the breadboard drawing had these transposed until 2026-10-11 and the board was built from them, which makes Line −3.5 dB instead of −9.7 dB. The fix is to swap the two resistors: same holes, no rewiring. `docs/bom.md` had the values right all along ("from A, 680 kΩ to node B, then 330 kΩ from B to the bias") | 2026-10-11 |
