@@ -1247,8 +1247,16 @@ them is hardware:
   circuit and the Inst pad's joint is sound. Nothing on the board needed moving; the transposed
   values were the only hardware fault. Recorded in
   [docs/build-board1-breadboard.md](docs/build-board1-breadboard.md)'s Results table.
-  **Next: stage 6** — solder the OPA2197 onto the adapter, press it in with pin 1 at f20, then
-  f20 and e21 read about 3.0 V (the two followers) and e20 still about 8.7 V.
+- **Stage 6 passes too (2026-10-11):** the op-amp is on the Aries adapter and in the 2×4 group,
+  with pin 1 in f20 and pin 7 sitting at the bias (3.0 V) beside pin 8 at the 9.0 V rail. The
+  adapter fits that group **180° the wrong way** and has no readable pin-1 mark — pin 1 is found
+  by continuity (the pad under the chip's dot lead beeps to one pin) — and inserted the other way
+  round the chip is reverse-supplied: the rail collapsed to 1 V, both outputs sat at 0.5 V and R1
+  got hot. The chip survived. Both build docs now carry the procedure, the symptom and how to
+  identify pin 1. **Next: stage 7** — wire the codec (LIN1 j20 → codec LIN1, HPL → j30, HPR →
+  j38, codec GND → the star tag, nothing else joining the two), then first sound: guitar into IN,
+  Inst then Line, which with the corrected R5/R6 is the −9.7 dB pad it was designed as. Claude
+  moves `namchaind` to the codec for that, asking first and not during a soak.
 
 **D14's condition is met: V2 passed (2026-10-10).** rigpa as its real unit on eglfs, the HDMI output
 forced on at 1920×480 with a generated EDID (no screen yet), beside a 0.553 rig with a warm document:
