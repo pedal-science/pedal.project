@@ -8,6 +8,13 @@ the October baseline. Two runs, back to back, both with LIN1 shorted to the code
 **Result: the codec's input floor is now −89.3 dBFS(A) in the pedal's normal state, 14.0 dB below
 the 2026-10-11 codec-only reading of −75.3 dBFS(A), and there is no mains hum anywhere in it.**
 
+Both runs were on vip's `7.0.0-1017-raspi-realtime-numaemu3-trimmed` kernel. That is worth stating
+now rather than later: the same kernel's RP1 audio DMA controller killed an `arecord` capture twice
+the same afternoon (see [the DMA section](../docs/audio-dma-irq.md#when-the-capture-dies-pcm_read-inputoutput-error)),
+and a patch for it is under test — so these numbers belong to that kernel and a later run on a
+different one is not the same measurement. `scripts/codec-input-noise.py` records the kernel in
+`state.json` and the README from 2026-10-12 onwards; these two runs predate that.
+
 | arm | run 1, 18:44 | run 2, 18:50 | 2026-10-11 |
 |---|---|---|---|
 | engine running, muted (64-frame periods) — the normal state | **−87.31 dBFS / −89.34 dB(A)** | −86.93 / −88.94 | −75.72 / −75.29 |

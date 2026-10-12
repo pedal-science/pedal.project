@@ -275,6 +275,46 @@ class Retries(unittest.TestCase):
         self.assertEqual(driver.attempt_arm("playback", 2, flaky), 2)
         self.assertEqual(len(calls), 2)
 
+    def test_the_option_means_retries_so_zero_is_one_go_and_the_default_is_two(self):
+        # The bug this pins: --retry was wired straight into the attempt count, so the default of
+        # 1 bought no retry at all and --retry 0 bought no arm at all ("failed 0 time(s)").
+        def run_with(retries, fail_first):
+            calls = []
+
+            def arm():
+                calls.append(1)
+                if fail_first and len(calls) < 2:
+                    raise driver.Failure("arecord: pcm_read:2285: read error: Input/output error")
+            try:
+                took = driver.attempt_arm("x", 1 + retries, arm)
+                return took, len(calls), None
+            except driver.Failure as exc:
+                return None, len(calls), str(exc)
+        self.assertEqual(run_with(0, True)[:2], (None, 1))       # --retry 0: one go, then final
+        self.assertEqual(run_with(1, True)[:2], (2, 2))          # default: a second go
+        self.assertEqual(run_with(0, False)[:2], (1, 1))
+        self.assertNotIn("0 time(s)", run_with(0, True)[2])
+
+    def test_a_negative_retry_is_refused(self):
+        proc = subprocess.run([sys.executable, str(DRIVER), "--dry-run", "--state", "x",
+                               "--retry", "-1"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                              text=True)
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn("--retry takes 0 or more", proc.stdout)
+
+    @unittest.skipUnless(DOC_PYTHON, "no python with numpy and Pillow (the harness's bundled one)")
+    def test_the_record_names_the_kernel_it_was_measured_on(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = make_results_dir(d, arms=("engine",), drift=())
+            state = json.loads((out / "state.json").read_text())
+            state["before"]["kernel"] = "7.0.0-1017-raspi-realtime-numaemu3-trimmed"
+            state["after"]["kernel"] = "7.0.0-1017-raspi-realtime-numaemu3-trimmed"
+            (out / "state.json").write_text(json.dumps(state))
+            subprocess.run([sys.executable, str(DRIVER), "--rebuild", str(out)], check=True,
+                           stdout=subprocess.DEVNULL)
+            readme = (out / "README.md").read_text()
+            self.assertIn("Kernel `7.0.0-1017-raspi-realtime-numaemu3-trimmed`", readme)
+
     def test_an_arm_that_works_takes_one_attempt(self):
         self.assertEqual(driver.attempt_arm("alone", 3, lambda: None), 1)
 

@@ -167,11 +167,18 @@ def host_json(host, command):
 
 
 def state_of(host):
-    """What the engine is doing now, as much of it as is worth recording."""
+    """What the engine is doing now, as much of it as is worth recording.
+
+    The kernel is in here because vip's kernel changes: `rtpi` builds it, `vip-boot` swaps the
+    slot, and a patch that touches the audio DMA would move these numbers. A record that cannot
+    say which kernel it was measured on cannot be compared with the next one.
+    """
     status = host_json(host, "status").get("status", {})
     active = run(ssh_base(host) + ["systemctl is-active namchaind"], check=False).stdout.strip()
+    kernel = run(ssh_base(host) + ["uname -r"], check=False).stdout.strip()
     return {
         "namchaind": active,
+        "kernel": kernel,
         "state": status.get("state"),
         "mute": status.get("mute"),
         "sample_rate": status.get("sample_rate"),
@@ -533,6 +540,10 @@ def readme(args, out_dir, state_before, state_after, arms_done, attempts=None):
                  state_before.get("xruns"), state_after.get("xruns")),
               "- Card `%s`, format `%s`, %d s per arm, channel 0 = LIN1."
               % (args.device, args.format, args.seconds),
+              "- Kernel `%s`%s." % (
+                  state_before.get("kernel") or "not recorded",
+                  "" if state_before.get("kernel") == state_after.get("kernel")
+                  else " before, `%s` after" % (state_after.get("kernel") or "?")),
               "- Arms run: %s." % ", ".join(arms_done),
               "- Attempts: %s." % (", ".join("%s %d" % (a, n) for a, n in (attempts or {}).items())
                                    or "not recorded"),
@@ -608,9 +619,10 @@ def main():
     ap.add_argument("--format", default=None,
                     help="arecord format (default: the card's best of S32_LE, S24_LE, S16_LE)")
     ap.add_argument("--retry", type=int, default=1, metavar="N",
-                    help="attempts per arm: 1 means no retry (default 1, so each arm gets 2 goes). "
-                         "A dead capture is no measurement, so a retry costs an arm and risks "
-                         "nothing; the count is kept in the record either way")
+                    help="how many times to retry an arm that fails (default 1, so an arm gets a "
+                         "second go; 0 means a failure is final). A dead capture is no measurement, "
+                         "so a retry costs an arm and risks nothing; the count is kept in the "
+                         "record either way")
     ap.add_argument("--no-audio", action="store_true", help="no playable copies, no play buttons")
     ap.add_argument("--dry-run", action="store_true", help="say what would happen, touch nothing")
     ap.add_argument("--rebuild", metavar="DIR",
@@ -622,6 +634,8 @@ def main():
     if args.rebuild:
         return rebuild(args)
 
+    if args.retry < 0:
+        ap.error("--retry takes 0 or more (0 means an arm gets one go and a failure is final)")
     arms = [a.strip() for a in args.arms.split(",") if a.strip()]
     for arm in arms:
         if arm not in ARMS:
@@ -715,7 +729,7 @@ def main():
                      "%s:/var/lib/namchain/recordings/%s/meta.json"
                      % (args.host, recording_name),
                      os.path.join(out_dir, "captures", "engine-muted-meta.json")])
-            attempts["engine"] = attempt_arm("engine", args.retry, engine_arm)
+            attempts["engine"] = attempt_arm("engine", 1 + args.retry, engine_arm)
             notes.append("the engine's recording is /var/lib/namchain/recordings/%s/"
                          % recording_name)
             arms_done.append("engine")
@@ -739,7 +753,7 @@ def main():
                                 playback=True)
                     run(["scp", *SSH_OPTS, "%s:%s/playback.wav" % (args.host, TMP_ON_HOST),
                          os.path.join(out_dir, "captures", "playback-open.wav")])
-                attempts["playback"] = attempt_arm("playback", args.retry, playback_arm)
+                attempts["playback"] = attempt_arm("playback", 1 + args.retry, playback_arm)
                 arms_done.append("playback")
             if "alone" in arms:
                 def alone_arm():
@@ -748,7 +762,7 @@ def main():
                                 playback=False)
                     run(["scp", *SSH_OPTS, "%s:%s/alone.wav" % (args.host, TMP_ON_HOST),
                          os.path.join(out_dir, "captures", "capture-only.wav")])
-                attempts["alone"] = attempt_arm("alone", args.retry, alone_arm)
+                attempts["alone"] = attempt_arm("alone", 1 + args.retry, alone_arm)
                 arms_done.append("alone")
     finally:
         # Whatever happened above, the engine goes back to how it was found: running, and with the
