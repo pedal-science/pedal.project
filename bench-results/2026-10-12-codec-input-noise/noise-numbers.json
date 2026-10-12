@@ -1,0 +1,550 @@
+{
+  "title": "The codec's input noise \u2014 2026-10-12",
+  "meta": "2026-10-12 &middot; LIN1 shorted to the codec's own GND; nothing else attached to the pedal, and only vip and the codec connected (apart from the host's USB-C supply) \u2014 the owner's description",
+  "checked_against": "scripts/codec-noise.py",
+  "captures": [
+    {
+      "seconds": 18.0,
+      "rms_dbfs": -87.31,
+      "rms_a_dbfs": -89.34,
+      "peak_dbfs": -72.18,
+      "raw_rms_dbfs": -86.48,
+      "outside_band_db": 0.83,
+      "full_scale_v": 1.0,
+      "dc_offset": -1.869903e-06,
+      "dc_offset_uv": -1.87,
+      "rms_uv": 43.08,
+      "rms_a_uv": 34.13,
+      "bands": [
+        {
+          "from": 31.5,
+          "to": 63,
+          "dbfs": -113.7,
+          "share": 0.2
+        },
+        {
+          "from": 63,
+          "to": 125,
+          "dbfs": -111.1,
+          "share": 0.4
+        },
+        {
+          "from": 125,
+          "to": 250,
+          "dbfs": -108.9,
+          "share": 0.7
+        },
+        {
+          "from": 250,
+          "to": 500,
+          "dbfs": -106.0,
+          "share": 1.3
+        },
+        {
+          "from": 500,
+          "to": 1000,
+          "dbfs": -101.9,
+          "share": 3.5
+        },
+        {
+          "from": 1000,
+          "to": 2000,
+          "dbfs": -99.9,
+          "share": 5.5
+        },
+        {
+          "from": 2000,
+          "to": 4000,
+          "dbfs": -97.2,
+          "share": 10.2
+        },
+        {
+          "from": 4000,
+          "to": 8000,
+          "dbfs": -94.4,
+          "share": 19.3
+        },
+        {
+          "from": 8000,
+          "to": 16000,
+          "dbfs": -91.4,
+          "share": 39.0
+        },
+        {
+          "from": 16000,
+          "to": 20000,
+          "dbfs": -94.4,
+          "share": 19.7
+        }
+      ],
+      "lines": [
+        {
+          "hz": 29.3,
+          "dbfs": -121.72,
+          "band": "low"
+        },
+        {
+          "hz": 322.3,
+          "dbfs": -122.93,
+          "band": "low"
+        },
+        {
+          "hz": 749.3,
+          "dbfs": -115.99,
+          "band": "low"
+        },
+        {
+          "hz": 750.0,
+          "dbfs": -109.77,
+          "band": "low"
+        },
+        {
+          "hz": 750.7,
+          "dbfs": -115.59,
+          "band": "low"
+        },
+        {
+          "hz": 1499.3,
+          "dbfs": -118.11,
+          "band": "high"
+        },
+        {
+          "hz": 1500.0,
+          "dbfs": -111.69,
+          "band": "high"
+        },
+        {
+          "hz": 1500.7,
+          "dbfs": -117.1,
+          "band": "high"
+        },
+        {
+          "hz": 2250.0,
+          "dbfs": -114.06,
+          "band": "high"
+        },
+        {
+          "hz": 3000.0,
+          "dbfs": -117.07,
+          "band": "high"
+        }
+      ],
+      "lines_low": [
+        {
+          "hz": 29.3,
+          "dbfs": -121.72
+        },
+        {
+          "hz": 322.3,
+          "dbfs": -122.93
+        },
+        {
+          "hz": 749.3,
+          "dbfs": -115.99
+        },
+        {
+          "hz": 750.0,
+          "dbfs": -109.77
+        },
+        {
+          "hz": 750.7,
+          "dbfs": -115.59
+        }
+      ],
+      "lines_high": [
+        {
+          "hz": 1499.3,
+          "dbfs": -118.11
+        },
+        {
+          "hz": 1500.0,
+          "dbfs": -111.69
+        },
+        {
+          "hz": 1500.7,
+          "dbfs": -117.1
+        },
+        {
+          "hz": 2250.0,
+          "dbfs": -114.06
+        },
+        {
+          "hz": 3000.0,
+          "dbfs": -117.07
+        }
+      ],
+      "bin_hz": 0.732421875,
+      "id": "engine-muted",
+      "label": "Engine running, muted \u2014 the pedal's normal state",
+      "note": "<p>The engine holds the codec and renders its document, muted, which is what the player's audio path carries. Captured through <code>namchainctl record</code>: the engine's own capture path, the one the bench test's \u201cGuitar input noise\u201d uses. 2026-10-11 read &minus;75.3 dBFS(A) here at 64-frame periods.</p>",
+      "file": "engine-muted.wav",
+      "channel": 0,
+      "trim_seconds": 2.0,
+      "check_db": 0.0,
+      "checked": true,
+      "norm_gain_db": 69.2
+    },
+    {
+      "seconds": 18.0,
+      "rms_dbfs": -87.51,
+      "rms_a_dbfs": -89.58,
+      "peak_dbfs": -73.13,
+      "raw_rms_dbfs": -86.65,
+      "outside_band_db": 0.86,
+      "full_scale_v": 1.0,
+      "dc_offset": -8.90594e-07,
+      "dc_offset_uv": -0.89,
+      "rms_uv": 42.14,
+      "rms_a_uv": 33.18,
+      "bands": [
+        {
+          "from": 31.5,
+          "to": 63,
+          "dbfs": -114.1,
+          "share": 0.2
+        },
+        {
+          "from": 63,
+          "to": 125,
+          "dbfs": -111.6,
+          "share": 0.4
+        },
+        {
+          "from": 125,
+          "to": 250,
+          "dbfs": -109.2,
+          "share": 0.7
+        },
+        {
+          "from": 250,
+          "to": 500,
+          "dbfs": -106.4,
+          "share": 1.3
+        },
+        {
+          "from": 500,
+          "to": 1000,
+          "dbfs": -103.4,
+          "share": 2.5
+        },
+        {
+          "from": 1000,
+          "to": 2000,
+          "dbfs": -100.6,
+          "share": 4.9
+        },
+        {
+          "from": 2000,
+          "to": 4000,
+          "dbfs": -97.5,
+          "share": 10.0
+        },
+        {
+          "from": 4000,
+          "to": 8000,
+          "dbfs": -94.5,
+          "share": 19.8
+        },
+        {
+          "from": 8000,
+          "to": 16000,
+          "dbfs": -91.5,
+          "share": 40.0
+        },
+        {
+          "from": 16000,
+          "to": 20000,
+          "dbfs": -94.5,
+          "share": 20.2
+        }
+      ],
+      "lines": [
+        {
+          "hz": 29.3,
+          "dbfs": -123.35,
+          "band": "low"
+        },
+        {
+          "hz": 64.5,
+          "dbfs": -124.34,
+          "band": "low"
+        },
+        {
+          "hz": 474.6,
+          "dbfs": -123.96,
+          "band": "low"
+        },
+        {
+          "hz": 896.5,
+          "dbfs": -124.43,
+          "band": "low"
+        },
+        {
+          "hz": 978.5,
+          "dbfs": -123.96,
+          "band": "low"
+        },
+        {
+          "hz": 4177.7,
+          "dbfs": -123.56,
+          "band": "high"
+        },
+        {
+          "hz": 8419.9,
+          "dbfs": -123.62,
+          "band": "high"
+        },
+        {
+          "hz": 13576.2,
+          "dbfs": -123.61,
+          "band": "high"
+        },
+        {
+          "hz": 15287.1,
+          "dbfs": -123.37,
+          "band": "high"
+        },
+        {
+          "hz": 19318.4,
+          "dbfs": -123.41,
+          "band": "high"
+        }
+      ],
+      "lines_low": [
+        {
+          "hz": 29.3,
+          "dbfs": -123.35
+        },
+        {
+          "hz": 64.5,
+          "dbfs": -124.34
+        },
+        {
+          "hz": 474.6,
+          "dbfs": -123.96
+        },
+        {
+          "hz": 896.5,
+          "dbfs": -124.43
+        },
+        {
+          "hz": 978.5,
+          "dbfs": -123.96
+        }
+      ],
+      "lines_high": [
+        {
+          "hz": 4177.7,
+          "dbfs": -123.56
+        },
+        {
+          "hz": 8419.9,
+          "dbfs": -123.62
+        },
+        {
+          "hz": 13576.2,
+          "dbfs": -123.61
+        },
+        {
+          "hz": 15287.1,
+          "dbfs": -123.37
+        },
+        {
+          "hz": 19318.4,
+          "dbfs": -123.41
+        }
+      ],
+      "bin_hz": 0.732421875,
+      "id": "playback-open",
+      "label": "Engine stopped, a silent playback stream open",
+      "note": "<p>No engine, but a silent <code>aplay</code> holds the playback path open \u2014 the codec state the engine leaves it in. This converter's capture-only state is about 15 dB louder in the 4\u201316 kHz bands, so this arm is the quiet one: 2026-10-11 read &minus;79.9 dBFS(A).</p>",
+      "file": "playback-open.wav",
+      "channel": 0,
+      "trim_seconds": 2.0,
+      "check_db": 0.0,
+      "checked": true,
+      "norm_gain_db": 70.1
+    },
+    {
+      "seconds": 18.0,
+      "rms_dbfs": -92.43,
+      "rms_a_dbfs": -94.63,
+      "peak_dbfs": -57.43,
+      "raw_rms_dbfs": -82.99,
+      "outside_band_db": 9.44,
+      "full_scale_v": 1.0,
+      "dc_offset": 3.683928e-05,
+      "dc_offset_uv": 36.84,
+      "rms_uv": 23.91,
+      "rms_a_uv": 18.55,
+      "bands": [
+        {
+          "from": 31.5,
+          "to": 63,
+          "dbfs": -112.4,
+          "share": 1.0
+        },
+        {
+          "from": 63,
+          "to": 125,
+          "dbfs": -114.0,
+          "share": 0.7
+        },
+        {
+          "from": 125,
+          "to": 250,
+          "dbfs": -113.1,
+          "share": 0.9
+        },
+        {
+          "from": 250,
+          "to": 500,
+          "dbfs": -111.0,
+          "share": 1.4
+        },
+        {
+          "from": 500,
+          "to": 1000,
+          "dbfs": -108.4,
+          "share": 2.5
+        },
+        {
+          "from": 1000,
+          "to": 2000,
+          "dbfs": -105.4,
+          "share": 5.0
+        },
+        {
+          "from": 2000,
+          "to": 4000,
+          "dbfs": -102.6,
+          "share": 9.6
+        },
+        {
+          "from": 4000,
+          "to": 8000,
+          "dbfs": -99.6,
+          "share": 19.0
+        },
+        {
+          "from": 8000,
+          "to": 16000,
+          "dbfs": -96.6,
+          "share": 38.4
+        },
+        {
+          "from": 16000,
+          "to": 20000,
+          "dbfs": -99.4,
+          "share": 19.9
+        }
+      ],
+      "lines": [
+        {
+          "hz": 19.8,
+          "dbfs": -120.05,
+          "band": "low"
+        },
+        {
+          "hz": 20.5,
+          "dbfs": -120.17,
+          "band": "low"
+        },
+        {
+          "hz": 21.2,
+          "dbfs": -120.18,
+          "band": "low"
+        },
+        {
+          "hz": 22.0,
+          "dbfs": -120.89,
+          "band": "low"
+        },
+        {
+          "hz": 22.7,
+          "dbfs": -121.64,
+          "band": "low"
+        },
+        {
+          "hz": 10716.8,
+          "dbfs": -129.87,
+          "band": "high"
+        },
+        {
+          "hz": 10742.4,
+          "dbfs": -129.19,
+          "band": "high"
+        },
+        {
+          "hz": 10751.2,
+          "dbfs": -130.03,
+          "band": "high"
+        },
+        {
+          "hz": 15322.3,
+          "dbfs": -129.7,
+          "band": "high"
+        },
+        {
+          "hz": 16025.4,
+          "dbfs": -130.25,
+          "band": "high"
+        }
+      ],
+      "lines_low": [
+        {
+          "hz": 19.8,
+          "dbfs": -120.05
+        },
+        {
+          "hz": 20.5,
+          "dbfs": -120.17
+        },
+        {
+          "hz": 21.2,
+          "dbfs": -120.18
+        },
+        {
+          "hz": 22.0,
+          "dbfs": -120.89
+        },
+        {
+          "hz": 22.7,
+          "dbfs": -121.64
+        }
+      ],
+      "lines_high": [
+        {
+          "hz": 10716.8,
+          "dbfs": -129.87
+        },
+        {
+          "hz": 10742.4,
+          "dbfs": -129.19
+        },
+        {
+          "hz": 10751.2,
+          "dbfs": -130.03
+        },
+        {
+          "hz": 15322.3,
+          "dbfs": -129.7
+        },
+        {
+          "hz": 16025.4,
+          "dbfs": -130.25
+        }
+      ],
+      "bin_hz": 0.732421875,
+      "id": "capture-only",
+      "label": "Engine stopped, capture only (no playback stream)",
+      "note": "<p>The engine stopped and <code>arecord</code> on its own. The arm the earlier logs quote, and the least repeatable of the three: 2026-10-11 read &minus;75.8 dBFS(A) in the settled re-run, but 4\u201316 kHz dominated and 15 dB louder with the Pico attached earlier the same day.</p>",
+      "file": "capture-only.wav",
+      "channel": 0,
+      "trim_seconds": 2.0,
+      "check_db": 0.0,
+      "checked": true,
+      "norm_gain_db": 54.4
+    }
+  ]
+}

@@ -112,6 +112,16 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
   offset, unweighted and A-weighted RMS in dBFS and µV, and the spectral lines that show a hum comb.
   `--selftest` checks the weighting against the standard's figures; the procedure it belongs to is
   [docs/codec-bringup-2c.md](docs/codec-bringup-2c.md).
+- `scripts/codec-input-noise.py [--host vip] [--state "…"] [--arms engine,playback,alone]`: that
+  measurement as one command — the codec's input noise from its own ADC, captured, analysed and
+  graphed. It takes the host's lock, records the engine's own capture while it runs, stops
+  `namchaind` for the two `arecord` arms, starts it again and puts the mute back as it found it, and
+  writes `bench-results/<date>-codec-input-noise/`: `index.html` (a spectrum and octave-band chart
+  per arm, with the audio), the numbers, the state of the host around the run, and a README.
+  `--rebuild DIR` re-analyses captures already on disk without touching the pedal; `--dry-run` says
+  what it would do. `scripts/noise-document.py MANIFEST.json` is the page builder on its own, for
+  any captures (numpy and Pillow: run it with the harness's bundled python). The result of the
+  2026-10-12 run and what it means: [bench-results/2026-10-12-codec-input-noise.md](bench-results/2026-10-12-codec-input-noise.md).
 - `scripts/benchtest [--host vip] [--fake]`: the bench test. Under the host's lock it starts
   `pedal.benchtest` (on demand, never at boot; it stops itself after 5 idle minutes, or from Stop on
   the page), opens its page — the pedal's blocks with a pass/fail lamp each — and stays as its audio

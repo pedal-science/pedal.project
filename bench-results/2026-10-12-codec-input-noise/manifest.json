@@ -1,0 +1,40 @@
+{
+  "title": "The codec's input noise \u2014 2026-10-12",
+  "meta": "2026-10-12 &middot; LIN1 shorted to the codec's own GND; nothing else attached to the pedal, and only vip and the codec connected (apart from the host's USB-C supply) \u2014 the owner's description",
+  "intro": [
+    "<p>This is the WM8960 codec on its jumpers to the Core host with its input shorted at the pin, so the converter sees silence: <strong>everything in these captures is the pedal's own noise</strong>, and nothing in them is the guitar, the input board or the room. Each arm is 20 s of the codec's own ADC, analysed from 2 s in, because the stream's start-up transient sits in the first seconds.</p>",
+    "<p>The state line above is the owner's description of the bench, not something this script can see: it measured whatever was wired, and only the numbers below say how quiet that was.</p>"
+  ],
+  "callout": "<p><strong>How to read it.</strong> Each capture has a spectrum in dBFS per 0.73 Hz bin and the same noise as octave-band bars. <em>Hum</em> is a spike at 50 Hz and its harmonics; <em>hiss</em> is a broad slope across the high bands. The two arms that matter are the engine's own recording (the pedal's normal state) and the one with a silent playback stream open (the converter's quiet state).</p>",
+  "compare_title": "Every arm, one spectrum each",
+  "footer": [
+    "<p>Captured by <code>scripts/codec-input-noise.py</code>, analysed and drawn by <code>scripts/codec-noise.py</code> and <code>scripts/noise-document.py</code>. The engine and host state around the run is in <code>state.json</code>.</p>"
+  ],
+  "trim": 2.0,
+  "captures": [
+    {
+      "id": "engine-muted",
+      "path": "captures/engine-muted.wav",
+      "label": "Engine running, muted \u2014 the pedal's normal state",
+      "note": "<p>The engine holds the codec and renders its document, muted, which is what the player's audio path carries. Captured through <code>namchainctl record</code>: the engine's own capture path, the one the bench test's \u201cGuitar input noise\u201d uses. 2026-10-11 read &minus;75.3 dBFS(A) here at 64-frame periods.</p>",
+      "channel": 0,
+      "trim": 2.0
+    },
+    {
+      "id": "playback-open",
+      "path": "captures/playback-open.wav",
+      "label": "Engine stopped, a silent playback stream open",
+      "note": "<p>No engine, but a silent <code>aplay</code> holds the playback path open \u2014 the codec state the engine leaves it in. This converter's capture-only state is about 15 dB louder in the 4\u201316 kHz bands, so this arm is the quiet one: 2026-10-11 read &minus;79.9 dBFS(A).</p>",
+      "channel": 0,
+      "trim": 2.0
+    },
+    {
+      "id": "capture-only",
+      "path": "captures/capture-only.wav",
+      "label": "Engine stopped, capture only (no playback stream)",
+      "note": "<p>The engine stopped and <code>arecord</code> on its own. The arm the earlier logs quote, and the least repeatable of the three: 2026-10-11 read &minus;75.8 dBFS(A) in the settled re-run, but 4\u201316 kHz dominated and 15 dB louder with the Pico attached earlier the same day.</p>",
+      "channel": 0,
+      "trim": 2.0
+    }
+  ]
+}

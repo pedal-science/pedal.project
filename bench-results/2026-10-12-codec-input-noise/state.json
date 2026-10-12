@@ -1,0 +1,64 @@
+{
+  "before": {
+    "namchaind": "active",
+    "state": "running",
+    "mute": false,
+    "sample_rate": 48000,
+    "period_size": 64,
+    "format": "S32_LE",
+    "xruns": 2,
+    "record": {
+      "active": false,
+      "dropped": 0,
+      "enabled": true,
+      "inserted": 0,
+      "name": "benchtest-20261012-173414-2-noise_codec",
+      "overflows": 0,
+      "path": "/var/lib/namchain/recordings/benchtest-20261012-173414-2-noise_codec",
+      "periods": 15000,
+      "seconds": 20.0,
+      "xruns": 0
+    },
+    "backend_diagnostics": {
+      "capture_overruns": 1,
+      "floor_inserted_frames": 0,
+      "gate_capture_xruns": 1,
+      "occupancy_mismatches": 1
+    },
+    "read_at": "2026-10-12T18:44:03+01:00"
+  },
+  "after": {
+    "namchaind": "active",
+    "state": "running",
+    "mute": false,
+    "sample_rate": 48000,
+    "period_size": 64,
+    "format": "S32_LE",
+    "xruns": 0,
+    "record": {
+      "active": false,
+      "enabled": true
+    },
+    "backend_diagnostics": {
+      "capture_overruns": 0,
+      "floor_inserted_frames": 0,
+      "gate_capture_xruns": 0,
+      "occupancy_mismatches": 0
+    },
+    "read_at": "2026-10-12T18:45:16+01:00"
+  },
+  "arms": [
+    "engine",
+    "playback",
+    "alone"
+  ],
+  "notes": [
+    "the engine's recording is /var/lib/namchain/recordings/codec-input-noise-20261012-184403/"
+  ],
+  "state_as_described": "LIN1 shorted to the codec's own GND; nothing else attached to the pedal, and only vip and the codec connected (apart from the host's USB-C supply) \u2014 the owner's description",
+  "seconds_per_arm": 20,
+  "skip_seconds": 2.0,
+  "device": "hw:wm8960",
+  "format": "S32_LE",
+  "ran_at": "2026-10-12T18:45:16+01:00"
+}

@@ -31,19 +31,30 @@ Two rows decide it, both from a capture of the codec's own ADC:
 
 ### Capture
 
+**One command does all of this, and draws the graphs**: `scripts/codec-input-noise.py`, which takes
+the host's lock, records the engine's own capture while it runs, stops `namchaind` for the two
+`arecord` arms, starts it again and puts the mute back as it found it, and writes
+`bench-results/<date>-codec-input-noise/` — a page with a spectrum and an octave-band chart per arm,
+the numbers, and the state of the host around the run. `--state "…"` is the line that says what was
+wired. `--arms engine` does the first arm alone, which needs no interruption at all. Use it unless
+you need a capture it does not make; the manual recipe below is what it does, and is still the way
+to do something else.
+
 `arecord` and `python3` are both in the host image (`devices/vip/test-offline-apply` checks for
 them). The engine holds the card, so stop it for the capture, and put everything on the host through
 the lock — one measurement at a time:
 
     scripts/host-lock -- ssh vip 'systemctl stop namchaind'
     scripts/host-lock -- ssh vip 'arecord -l'                  # the card's name, and its formats
-    scripts/host-lock -- ssh vip 'arecord -D hw:wm8960 -f S24_3LE -r 48000 -c 2 -d 60 /var/tmp/2c-leg0.wav'
+    scripts/host-lock -- ssh vip 'arecord -D hw:wm8960 -f S32_LE -r 48000 -c 2 -d 60 /var/tmp/2c-leg0.wav'
     scripts/host-lock -- ssh vip 'systemctl start namchaind'
     scripts/status                                             # running/ok again, xruns unchanged
 
-**24-bit, not 16:** a −93 dBFS floor sits below 16-bit's last bit. If the card refuses `S24_3LE`,
-`--dump-hw-params` lists what it takes (`S24_LE` or `S32_LE` are the likely others). Channel 0 is
-LIN1, which is the default the analysis reads.
+**24-bit, not 16:** a −93 dBFS floor sits below 16-bit's last bit. This card answers
+`--dump-hw-params` with `FORMAT: S16_LE S24_LE S32_LE` — **no `S24_3LE`** — so a plain `arecord`
+wants `-f S32_LE`, which is also what `namchaind` takes and what the engine's own recordings carry;
+`scripts/codec-input-noise.py` reads the card's list and picks in that order. Channel 0 is LIN1,
+which is the default the analysis reads.
 
 Then on the Mac:
 
@@ -53,7 +64,16 @@ Then on the Mac:
 That prints the DC offset, the unweighted and A-weighted RMS in dBFS and µV at 1.0 V rms (2a's
 convention), the peak, and the largest lines below 1 kHz and between 1 and 20 kHz — so a comb or a
 whine arrives as a frequency rather than as a number that moved. Its `--selftest` checks the
-weighting against the standard's own figures before you trust it on a capture.
+weighting against the standard's own figures before you trust it on a capture. Give the capture and
+its analysis to `scripts/noise-document.py` for the graphs and the page — a manifest of captures is
+all it takes.
+
+**Read the band, and then read the raw.** The unweighted and A-weighted figures are band-limited to
+20 Hz–20 kHz, as every earlier reading of this converter is; where a capture's raw (unbanded) level
+sits well above its band figure, most of its power is outside the audio band and the number is not
+describing hiss. `scripts/codec-input-noise.py` and `scripts/noise-document.py` both report the raw
+figure beside the others for exactly that reason (2026-10-12's `arecord`-alone arm: −92.4 dBFS in
+band, −83.0 raw).
 
 ### Ground discipline, the same for every leg
 

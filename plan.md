@@ -1213,6 +1213,38 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**The codec's input floor is 14 dB lower than October's, and the measurement is a command now**
+(2026-10-12). The owner re-seated the codec's wiring and left the pedal with only vip and the codec
+in it, then asked for the input noise again and a new graph. It reads **−89.3 dBFS(A)** in the
+pedal's normal state (engine running, muted, 64-frame periods) and **−89.6 dBFS(A)** with a silent
+playback stream open, against 2026-10-11's −75.3 and −79.9 — and with **no mains hum anywhere in it**,
+where the same session's input row had 50 Hz at −58 dBFS. Two back-to-back runs agree to 0.4 dB on
+those two arms. The engine's 750 Hz period-rate family is unchanged and is the engine's, 15 dB above
+the per-bin floor and 22 dB under the total; the pedal is now within 4 dB of 2a's bare-board bench
+record of −93.5 dBFS(A). [bench-results/2026-10-12-codec-input-noise.md](bench-results/2026-10-12-codec-input-noise.md)
+has the numbers, both pages and what the graphs show. The third arm — engine stopped, `arecord`
+alone — reads 8–9 dB quieter in band and **is not**: most of its power is sub-audio drift below
+20 Hz (raw −83.0 against −92.4 in band), which the band-limited convention cannot see; the pages and
+the README say so beside the number.
+
+That run is now one command, which is what this session built:
+`scripts/codec-input-noise.py` (lock, capture, analyse, graph, restore the engine's state) and
+`scripts/noise-document.py` (captures + a manifest → spectra, octave bands, `index.html`), with 17
+tests in `scripts/tests/test_codec_input_noise.py`. See [AGENTS.md](AGENTS.md)'s Commands.
+
+**Two open questions from it.**
+- **The bench test's bar for this is stale.** Its "Codec input on its own" check passes at
+  `codec_only_rms_dbfs = -75.0 ± 3` from the 2026-10-11 log and paints the codec block when it
+  fails, so it would pass a pedal 15 dB worse than this one. Tightening it is a decision about what
+  the pedal should achieve, and it is the owner's.
+- **Nothing here says anything about the guitar input.** LIN1 is shorted at the pin, so this is the
+  converter and the wiring to it. The input stage's own noise needs board 1 wired to LIN1 (stage 7).
+
+**Next, unchanged: stage 7** — wire the codec (LIN1 j20 → codec LIN1, HPL → j30, HPR → j38, codec
+GND → the star tag, nothing else joining the two), then first sound: guitar into IN, Inst then Line,
+which with the corrected R5/R6 is the −9.7 dB pad it was designed as. The codec's own floor above is
+the reference that row will be compared against.
+
 **R5 and R6 are the other way round on the breadboard sheet, and its drawing had stopped being
 written** (2026-10-11). `python3 breadboard/board1.py` failed its own check (IN_A split, the two
 ground names joined), so it exited before writing `breadboard/board1.svg` — the owner has been
