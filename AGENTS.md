@@ -129,7 +129,11 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
   writes `bench-results/<date>-codec-input-noise/`: `index.html` (a spectrum and octave-band chart
   per arm, with the audio), the numbers, the state of the host around the run, and a README.
   `--rebuild DIR` re-analyses captures already on disk without touching the pedal; `--dry-run` says
-  what it would do. `scripts/noise-document.py MANIFEST.json` is the page builder on its own, for
+  what it would do. Each `arecord` arm is wrapped in the kernel's log, which is kept as
+  `dmesg-<arm>.txt` beside the captures, and a failed arm is retried (`--retry`, default one) with
+  the attempt count in the record — `arecord` dies on this platform with
+  `pcm_read: Input/output error`, and [docs/audio-dma-irq.md](docs/audio-dma-irq.md) is the page
+  about why. `scripts/noise-document.py MANIFEST.json` is the page builder on its own, for
   any captures (numpy and Pillow: run it with the harness's bundled python). The result of the
   2026-10-12 run and what it means: [bench-results/2026-10-12-codec-input-noise.md](bench-results/2026-10-12-codec-input-noise.md).
 - `scripts/benchtest [--host vip] [--fake]`: the bench test. Under the host's lock it starts
@@ -209,7 +213,9 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
   and the thread accounting), `pairing.md` (BLE pairing, the pedal's own
   Wi-Fi network, and how ljoss joins it), `vip-image.md` (building vip's card,
   its rescue and pedal roots, boot fallback), `audio-dma-irq.md` (the audio DMA interrupt
-  thread: what it is, its measured cost, and why it outranks the render thread), `bom.md`,
+  thread: what it is, its measured cost, why it outranks the render thread, and the one way it
+  fails — the `pcm_read: Input/output error` that kills a capture, with its kernel log decoded
+  and the fix `rtpi` may carry), `bom.md`,
   `modules.md` (a proposal, 2026-10-11: the circuits as pluggable boards, their cables and
   connectors, and the ground tree; its map, which checks the tree, is `diagrams/modules.html`).
 - `stripboard/`, `breadboard/` — board layouts as data; each script checks its placement against

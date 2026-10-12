@@ -5,6 +5,10 @@ the top CPU user is `irq/138-dw_axi_dmac_platform` at ~5% CPU and "niced to -86"
 explains what that process is, why it costs what it costs, and why it is prioritized the way
 it is. The facts are measured, not inferred; the commands to re-measure them are at the end.
 
+It also records the one way this controller fails on vip — the `pcm_read: Input/output error`
+that kills a capture — because that is the same driver on the same interrupt line, and its
+messages say what the CPU cost of the thread never would.
+
 ## What it is
 
 The pedal's audio path on the Core host is: `namchaind` → ALSA (`snd-soc-simple-card`) →
@@ -80,6 +84,71 @@ So the process is healthy and expected: it is the cost of moving audio at low la
 leak or a runaway. If it ever seems worth reclaiming, the lever is the period size, not the
 priority.
 
+## When the capture dies: `pcm_read: Input/output error`
+
+`arecord` on vip occasionally dies with this, taking the capture with it:
+
+```
+arecord: pcm_read:2285: read error: Input/output error
+```
+
+It happened twice on 2026-10-12 (18:24 and 20:25), both times on the **capture** side, and both
+times the kernel had already said why. `dma2chan3` is **`1f000a4000.i2s:rx`**, the capture direction
+of this controller — `dma2chan2` is `:tx` — which `/sys/kernel/debug/dmaengine/summary` names. Every
+message below is on that channel:
+
+| message | what it is |
+|---|---|
+| `dma2chan3 is non-idle!` | `axi_chan_block_xfer_start()` found the hardware channel still enabled as a new transfer started. **The stock driver prints this and returns without programming the new transfer.** |
+| `BUG: dma2chan3, IRQ with no descriptors` | an interrupt arrived with an empty descriptor list. Common and, here, harmless: 9 times in the same boot, and no failure followed any of them. |
+| `Bad descriptor submitted for dma2chan3, cookie: N, irq: 0x…` | `axi_chan_handle_err()`, which reports **every** DMA error this way and then dumps the transfer's LLIs — the `SAR/DAR/LLP/BTS/CTL` lines. The `irq` value is the raw interrupt status. |
+
+Both failures had the same shape: `is non-idle!`, then **5 ms later** a `Bad descriptor` carrying
+`irq: 0x00002000` — bit 13 of the controller's `INTSTATUS`, which the hardware documents as *shadow
+register or LLI invalid error* (`DWAXIDMAC_IRQ_INVALID_ERR` in the driver). The two dumps are
+identical down to `SAR`/`DAR`/`BTS`, and in both the first LLI's `CTL` differs from its three
+siblings: the same rejected head descriptor twice, not random corruption. ALSA turns the failed
+transfer into `-EIO`, which is the `arecord` error above.
+
+So the reading is **a start-while-non-idle race on the capture channel**, hit at the moment one
+stream stops and another starts — which is what a measurement session is made of. It is not the
+wiring and not the codec.
+
+Where the fix stands (2026-10-12):
+
+- **StarFive's patch**, "dmaengine: dw-axi-dmac: Handle xfer start while non-idle", disables the
+  channel and re-issues the descriptor instead of returning. OpenWrt carries it for its StarFive
+  target and it is **not** in mainline:
+  [1013-dmaengine-dw-axi-dmac-Handle-xfer-start-while-non-id.patch](https://git.cdn.openwrt.org/openwrt/staging/linusw/plain/target/linux/starfive/patches-6.12/1013-dmaengine-dw-axi-dmac-Handle-xfer-start-while-non-id.patch?id=0a1e1016b4d82dabedcb231dc4fd7fb65ba16736).
+  **`../rtpi/plan.md` carries it as a candidate.**
+- **An upstream series** (Roland Dreier, 2026-10-06) decodes these errors — naming the offending
+  bit instead of "Bad descriptor", and dumping LLIs only for non-data errors — and explicitly
+  **leaves the transfer result and recovery path unchanged**:
+  [PATCH 3/3](https://lists.openwall.net/linux-kernel/2026/10/06/57). It would relabel this log, not
+  stop the error.
+- **[raspberrypi/linux#7320](https://github.com/raspberrypi/linux/issues/7320)** is the same family
+  on the playback channel (`dma2chan2`, a PCM512x HAT, ending in an oops) and is still open.
+
+vip runs Ubuntu's `linux-raspi-realtime` 7.0.0-1017 with rtpi's trim and no rtpi patches of its own,
+so it has neither fix.
+
+**It matters beyond the bench.** `namchaind` holds `i2s:rx` as well, so every reopen of its capture
+— a device loss, a rig change, a restart — is the same start-while-non-idle dance. There the symptom
+would not be a failed test but a stalled capture; `engine.status`'s `backend_diagnostics`
+(`capture_overruns`, `gate_capture_xruns`) is where it would show.
+
+**Wrap the capture.** `scripts/codec-input-noise.py` takes the kernel's log immediately before and
+after each `arecord` arm and keeps the difference as `dmesg-<arm>.txt` beside the captures, and
+retries an arm that fails (`--retry`, default one retry). The same wrap is worth having anywhere
+else that opens the card by hand — the recipe in
+[docs/codec-bringup-2c.md](codec-bringup-2c.md) among them:
+
+```sh
+before=$(dmesg | wc -l)
+arecord -D hw:wm8960 -f S32_LE -r 48000 -c 2 -d 20 out.wav; rc=$?
+dmesg -T | tail -n +$((before + 1))       # what the kernel said while it ran
+```
+
 ## How to look at it again
 
 ```sh
@@ -92,6 +161,12 @@ grep -i dw_axi /proc/interrupts; sleep 5; grep -i dw_axi /proc/interrupts
 
 # Both directions of the stream:
 cat /proc/asound/card0/pcm0p/sub0/status /proc/asound/card0/pcm0c/sub0/status
+
+# Which channel the audio is on, and what else is using a channel (dma2chan2/3 are i2s tx/rx):
+sudo cat /sys/kernel/debug/dmaengine/summary
+
+# This controller's errors, with wall-clock times:
+sudo dmesg -T | grep -E "dma2chan[23]"
 ```
 
 The priority comes from `pedal-tune` (AUDIO_IRQ_PRIO), applied at boot by `pedal-device`; the

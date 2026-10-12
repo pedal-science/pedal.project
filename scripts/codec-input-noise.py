@@ -3,7 +3,7 @@
 
     scripts/codec-input-noise.py [--host vip] [--seconds 20] [--state "…"] [--dir DIR]
                                  [--arms engine,playback,alone] [--device hw:wm8960]
-                                 [--no-audio] [--dry-run]
+                                 [--retry N] [--no-audio] [--dry-run]
     scripts/codec-input-noise.py --rebuild DIR          re-draw a results directory, no pedal
 
 This is what `docs/codec-bringup-2c.md` describes in prose, as one command: the codec's input node
@@ -28,6 +28,15 @@ Three arms, each `--seconds` long, each analysed from 2 s in:
     alone      the engine stopped and `arecord` on its own, with no playback stream open. Kept
                because it is the arm the earlier logs quote, and because it is known to be the
                least repeatable of the three — see bench-results/2026-10-11-first-sound/.
+
+**Every `arecord` arm is wrapped in the kernel's log.** `arecord` dies on this platform with
+`pcm_read: read error: Input/output error` when the RP1's DMA controller rejects a descriptor on the
+I2S capture channel (twice on 2026-10-12; `docs/audio-dma-irq.md` is the page about it), and the
+exit status alone says nothing about why. So each arm records `dmesg` before and after itself and
+keeps the difference as `dmesg-<arm>.txt` in the results directory — it survives the failure,
+because writing it is not the last thing the arm's script does. An arm that fails is retried
+(`--retry`, default one retry) and the count is kept in `state.json` and the README: a dead capture
+is no measurement, so a second go costs an arm and risks nothing.
 
 `--arms` chooses which of the three to run; `--dry-run` prints what each one would do and touches
 nothing. Everything happens under the Core host's lock (`scripts/host-lock`, rule 8: one
@@ -245,32 +254,96 @@ def card_formats(host, device, wanted):
     return parse_formats(proc.stdout, wanted)
 
 
-def arecord_arm(host, device, fmt, seconds, path, playback=False):
-    """Arm 2 and 3: arecord on the host, with (or without) a silent aplay holding playback open."""
-    lines = ["mkdir -p %s" % shlex.quote(TMP_ON_HOST),
-             "rm -f %s" % shlex.quote(path)]
+def arecord_script(device, fmt, seconds, path, delta_path, playback=False, tmp_dir=TMP_ON_HOST):
+    """The shell that runs one `arecord` arm, with the kernel's log wrapped around it.
+
+    **The wrap is the point.** `arecord` on this platform dies with `pcm_read: read error:
+    Input/output error` when the RP1's DMA controller hits an invalid descriptor on the I2S capture
+    channel — twice on 2026-10-12, both times 5 ms after the driver said the channel was non-idle.
+    The `arecord` exit status alone says "I/O error" and nothing about why, so the script records
+    the kernel's log before and after and keeps the difference: `delta_path` holds exactly what the
+    kernel said while this arm ran, and it survives the failure because the capture is not the last
+    thing the script does. `docs/audio-dma-irq.md` is the page about that error.
+
+    The exit status is arecord's, not the wrap's: a failed arm has to fail the run (the run then
+    retries it, or reports it with this log beside it).
+    """
+    lines = ["mkdir -p %s" % shlex.quote(tmp_dir),
+             "rm -f %s %s" % (shlex.quote(path), shlex.quote(delta_path)),
+             # The line count is taken with plain dmesg; the delta is taken with -T, which is the
+             # same lines with readable timestamps.
+             'before=$(dmesg 2>/dev/null | wc -l)']
     if playback:
         # The silence is longer than the capture so aplay is still holding the playback path open
         # when arecord stops; its pty is killed by the trap rather than left running.
-        lines += [silence_script(TMP_ON_HOST + "/silence.wav", seconds + 5),
+        lines += [silence_script(tmp_dir + "/silence.wav", seconds + 5),
                   'aplay_pid=""',
-                  'cleanup() { [ -n "$aplay_pid" ] && sudo -n kill "$aplay_pid" 2>/dev/null; '
-                  'return 0; }',
+                  'cleanup() { [ -n "$aplay_pid" ] && kill "$aplay_pid" 2>/dev/null; return 0; }',
                   "trap cleanup EXIT",
-                  "sudo -n aplay -q -D %s %s/silence.wav & aplay_pid=$!"
-                  % (shlex.quote(device), TMP_ON_HOST),
+                  "aplay -q -D %s %s/silence.wav & aplay_pid=$!"
+                  % (shlex.quote(device), shlex.quote(tmp_dir)),
                   "sleep 1.5"]
-    lines += ["sudo -n arecord -q -D %s -f %s -r 48000 -c 2 -d %d %s"
+    lines += ['rc=0',
+              "arecord -q -D %s -f %s -r 48000 -c 2 -d %d %s || rc=$?"
               % (shlex.quote(device), shlex.quote(fmt), seconds, shlex.quote(path)),
-              "ls -l %s" % shlex.quote(path)]
+              "dmesg -T 2>/dev/null | tail -n +$((before + 1)) > %s || true"
+              % shlex.quote(delta_path),
+              "ls -l %s 2>/dev/null || true" % shlex.quote(path),
+              'if [ "$rc" != 0 ]; then echo "arecord exited $rc"; cat %s; fi'
+              % shlex.quote(delta_path),
+              'exit "$rc"']
+    return "\n".join(lines)
+
+
+def arecord_arm(host, device, fmt, seconds, path, out_dir, arm_id, playback=False):
+    """Arm 2 and 3: arecord on the host, with (or without) a silent aplay holding playback open.
+
+    The kernel's log around the arm comes back with it and is kept beside the captures.
+    """
+    delta_on_host = "%s/dmesg-%s.txt" % (TMP_ON_HOST, arm_id)
     what = "arecord + a silent aplay" if playback else "arecord alone"
     say("recording %d s with %s" % (seconds, what))
-    host_sh(host, "\n".join(lines))
+    try:
+        host_sh(host, arecord_script(device, fmt, seconds, path, delta_on_host, playback))
+    finally:
+        # Whatever happened, bring the kernel's log back: on a failure it is the evidence.
+        local = os.path.join(out_dir, "dmesg-%s.txt" % arm_id)
+        run(["scp", *SSH_OPTS, "%s:%s" % (host, delta_on_host), local], check=False)
+        if os.path.exists(local):
+            with open(local) as fh:
+                kernel_lines = [l for l in fh if l.strip()]
+            if kernel_lines:
+                say("the kernel said %d line(s) while the %s arm ran; they are in dmesg-%s.txt"
+                    % (len(kernel_lines), arm_id, arm_id))
+                for line in kernel_lines[-4:]:
+                    say("  %s" % line.rstrip())
+
+
+def attempt_arm(arm, attempts, run_once):
+    """Run one arm, retrying it if it fails; return how many attempts it took.
+
+    A dead capture is not a bad measurement, it is no measurement: `arecord` failing with EIO
+    leaves nothing to analyse, so trying again costs one arm and risks nothing. The count is kept
+    because a record should say when an arm needed more than one go at it.
+    """
+    last = None
+    for attempt in range(1, attempts + 1):
+        if attempt > 1:
+            say("retrying the %s arm (attempt %d of %d)" % (arm, attempt, attempts))
+        try:
+            run_once()
+            return attempt
+        except Failure as exc:
+            last = exc
+            say("the %s arm failed on attempt %d of %d: %s"
+                % (arm, attempt, attempts, str(exc).strip().splitlines()[0][:160]))
+    raise Failure("the %s arm failed %d time(s); giving up.\n%s" % (arm, attempts, last))
 
 
 # --- putting the two together ---------------------------------------------------------
 
-def write_results(args, state_before, state_after, arms_done, notes, out_dir, ran_at=None):
+def write_results(args, state_before, state_after, arms_done, notes, out_dir, ran_at=None,
+                  attempts=None):
     """The manifest noise-document.py reads, and a README from the numbers it writes."""
     captures = []
     for arm in ARMS:
@@ -319,6 +392,9 @@ def write_results(args, state_before, state_after, arms_done, notes, out_dir, ra
         fh.write("\n")
     with open(os.path.join(out_dir, "state.json"), "w") as fh:
         json.dump({"before": state_before, "after": state_after, "arms": arms_done,
+                   # How many goes each arm needed: a retried arm is a real measurement, but a
+                   # record that hid the retry would be hiding that the platform hiccuped.
+                   "attempts": attempts or {},
                    "notes": notes, "state_as_described": args.state,
                    "seconds_per_arm": args.seconds, "skip_seconds": SKIP_SECONDS,
                    "device": args.device, "format": args.format,
@@ -355,8 +431,12 @@ def document(args, out_dir):
                   % (NOISE_DOCUMENT, os.path.relpath(out_dir, REPO)))
 
 
-def readme(args, out_dir, state_before, state_after, arms_done):
+def readme(args, out_dir, state_before, state_after, arms_done, attempts=None):
     """The record: what was measured, the numbers, and what they are compared with."""
+    dmesg_files = sorted(f for f in os.listdir(out_dir)
+                         if f.startswith("dmesg-") and f.endswith(".txt"))
+    dmesg_files = [f for f in dmesg_files
+                   if os.path.getsize(os.path.join(out_dir, f)) > 0]
     numbers = {}
     path = os.path.join(out_dir, "noise-numbers.json")
     if os.path.exists(path):
@@ -414,12 +494,22 @@ def readme(args, out_dir, state_before, state_after, arms_done):
                round(100 * (1 - 10 ** (-n["outside_band_db"] / 10.0))),
                " By the raw figure it is the loudest of the arms measured here."
                if loudest is not None and loudest["id"] == n["id"] else ""))
+    retried = [a for a, n in (attempts or {}).items() if n > 1]
+    kernel_note = ("none" if not dmesg_files else
+                   "in " + ", ".join("`%s`" % f for f in dmesg_files))
     lines = ["# The codec's input noise — %s" % args.date, "",
              "`scripts/codec-input-noise.py` on `%s`, %d s per arm, analysed from %.0f s in. "
              "State, as the owner described it: **%s**." % (args.host, args.seconds, SKIP_SECONDS,
                                                             args.state),
-             "",
-             "The graphs and the audio are in [index.html](index.html); every number is in "
+             ""]
+    if retried:
+        lines += ["**An arm was retried.** %s needed more than one attempt: an `arecord` arm that "
+                  "dies with `pcm_read: read error: Input/output error` is the RP1's DMA "
+                  "controller on the I2S capture channel, and the kernel's own log from that arm "
+                  "is beside this file — see [docs/audio-dma-irq.md](../docs/audio-dma-irq.md). "
+                  "The numbers below are from the attempt that worked." % ", ".join(retried), ""]
+    lines += ["",
+              "The graphs and the audio are in [index.html](index.html); every number is in "
              "[noise-numbers.json](noise-numbers.json); the engine and host state before, during "
              "and after is in [state.json](state.json). The captures are in `captures/` and the "
              "playable copies in `audio/`, both untracked.", "",
@@ -444,6 +534,9 @@ def readme(args, out_dir, state_before, state_after, arms_done):
               "- Card `%s`, format `%s`, %d s per arm, channel 0 = LIN1."
               % (args.device, args.format, args.seconds),
               "- Arms run: %s." % ", ".join(arms_done),
+              "- Attempts: %s." % (", ".join("%s %d" % (a, n) for a, n in (attempts or {}).items())
+                                   or "not recorded"),
+              "- Kernel messages during the `arecord` arms: %s." % kernel_note,
               "",
               "## Running it again", "",
               "    scripts/codec-input-noise.py --state \"what is wired this time\"", "",
@@ -483,9 +576,11 @@ def rebuild(args):
     say("rebuilding %s from %s" % (os.path.relpath(out_dir, os.getcwd()),
                                    ", ".join(arms_done)))
     write_results(args, saved.get("before", {}), saved.get("after", {}), arms_done,
-                  saved.get("notes", []), out_dir, ran_at=saved.get("ran_at"))
+                  saved.get("notes", []), out_dir, ran_at=saved.get("ran_at"),
+                  attempts=saved.get("attempts"))
     document(args, out_dir)
-    numbers = readme(args, out_dir, saved.get("before", {}), saved.get("after", {}), arms_done)
+    numbers = readme(args, out_dir, saved.get("before", {}), saved.get("after", {}), arms_done,
+                     attempts=saved.get("attempts"))
     for arm in ARMS:
         cid = ARM_INFO[arm][0]
         if cid in numbers:
@@ -512,6 +607,10 @@ def main():
     ap.add_argument("--device", default="hw:wm8960", help="the codec's ALSA device")
     ap.add_argument("--format", default=None,
                     help="arecord format (default: the card's best of S32_LE, S24_LE, S16_LE)")
+    ap.add_argument("--retry", type=int, default=1, metavar="N",
+                    help="attempts per arm: 1 means no retry (default 1, so each arm gets 2 goes). "
+                         "A dead capture is no measurement, so a retry costs an arm and risks "
+                         "nothing; the count is kept in the record either way")
     ap.add_argument("--no-audio", action="store_true", help="no playable copies, no play buttons")
     ap.add_argument("--dry-run", action="store_true", help="say what would happen, touch nothing")
     ap.add_argument("--rebuild", metavar="DIR",
@@ -601,17 +700,22 @@ def main():
 
     notes = []
     arms_done = []
+    attempts = {}
     engine_stopped = False
     format_used = args.format
     try:
         if "engine" in arms:
-            record_with_engine(args.host, recording_name, args.seconds, state_before["mute"])
-            run(["scp", *SSH_OPTS,
-                 "%s:/var/lib/namchain/recordings/%s/capture.wav" % (args.host, recording_name),
-                 os.path.join(out_dir, "captures", "engine-muted.wav")])
-            run(["scp", *SSH_OPTS,
-                 "%s:/var/lib/namchain/recordings/%s/meta.json" % (args.host, recording_name),
-                 os.path.join(out_dir, "captures", "engine-muted-meta.json")])
+            def engine_arm():
+                record_with_engine(args.host, recording_name, args.seconds, state_before["mute"])
+                run(["scp", *SSH_OPTS,
+                     "%s:/var/lib/namchain/recordings/%s/capture.wav"
+                     % (args.host, recording_name),
+                     os.path.join(out_dir, "captures", "engine-muted.wav")])
+                run(["scp", *SSH_OPTS,
+                     "%s:/var/lib/namchain/recordings/%s/meta.json"
+                     % (args.host, recording_name),
+                     os.path.join(out_dir, "captures", "engine-muted-meta.json")])
+            attempts["engine"] = attempt_arm("engine", args.retry, engine_arm)
             notes.append("the engine's recording is /var/lib/namchain/recordings/%s/"
                          % recording_name)
             arms_done.append("engine")
@@ -629,16 +733,22 @@ def main():
                 say("the card offers %s; recording %s" % (", ".join(offered) or raw.strip() or "?",
                                                           format_used))
             if "playback" in arms:
-                arecord_arm(args.host, args.device, format_used, args.seconds,
-                            TMP_ON_HOST + "/playback.wav", playback=True)
-                run(["scp", *SSH_OPTS, "%s:%s/playback.wav" % (args.host, TMP_ON_HOST),
-                     os.path.join(out_dir, "captures", "playback-open.wav")])
+                def playback_arm():
+                    arecord_arm(args.host, args.device, format_used, args.seconds,
+                                TMP_ON_HOST + "/playback.wav", out_dir, "playback-open",
+                                playback=True)
+                    run(["scp", *SSH_OPTS, "%s:%s/playback.wav" % (args.host, TMP_ON_HOST),
+                         os.path.join(out_dir, "captures", "playback-open.wav")])
+                attempts["playback"] = attempt_arm("playback", args.retry, playback_arm)
                 arms_done.append("playback")
             if "alone" in arms:
-                arecord_arm(args.host, args.device, format_used, args.seconds,
-                            TMP_ON_HOST + "/alone.wav", playback=False)
-                run(["scp", *SSH_OPTS, "%s:%s/alone.wav" % (args.host, TMP_ON_HOST),
-                     os.path.join(out_dir, "captures", "capture-only.wav")])
+                def alone_arm():
+                    arecord_arm(args.host, args.device, format_used, args.seconds,
+                                TMP_ON_HOST + "/alone.wav", out_dir, "capture-only",
+                                playback=False)
+                    run(["scp", *SSH_OPTS, "%s:%s/alone.wav" % (args.host, TMP_ON_HOST),
+                         os.path.join(out_dir, "captures", "capture-only.wav")])
+                attempts["alone"] = attempt_arm("alone", args.retry, alone_arm)
                 arms_done.append("alone")
     finally:
         # Whatever happened above, the engine goes back to how it was found: running, and with the
@@ -660,9 +770,9 @@ def main():
         % (state_after["namchaind"], state_after["mute"], state_after["xruns"],
            state_before["xruns"]))
 
-    write_results(args, state_before, state_after, arms_done, notes, out_dir)
+    write_results(args, state_before, state_after, arms_done, notes, out_dir, attempts=attempts)
     document(args, out_dir)
-    numbers = readme(args, out_dir, state_before, state_after, arms_done)
+    numbers = readme(args, out_dir, state_before, state_after, arms_done, attempts=attempts)
 
     print()
     for arm in ARMS:

@@ -158,6 +158,159 @@ class SilenceFile(unittest.TestCase):
         self.assertIn("<<'PY'", script)          # quoted heredoc: the shell leaves the body alone
 
 
+class TheArecordWrapper(unittest.TestCase):
+    """The shell that runs one arecord arm, with the kernel's log wrapped around it.
+
+    Run for real, with stub `dmesg` and `arecord` on PATH: what matters is that the wrap records
+    what the kernel said while the arm ran, and that it cannot swallow arecord's exit status --
+    the run's retry logic depends on that status arriving.
+    """
+
+    def stub_bin(self, d, arecord_rc=0, new_dmesg=()):
+        bindir = os.path.join(d, "bin")
+        os.makedirs(bindir, exist_ok=True)
+
+        def write(name, body):
+            path = os.path.join(bindir, name)
+            with open(path, "w") as fh:
+                fh.write(body)
+            os.chmod(path, 0o755)
+
+        # dmesg: the first call is the baseline count, the second is the delta after the arm.
+        # A file in the directory tells the stub which call it is on.
+        write("dmesg", """#!/bin/bash
+count=%s
+if [ -f %s ]; then
+  # the second call: the baseline plus whatever the arm added
+  cat %s
+  cat %s/*.dmesg-new 2>/dev/null || true
+else
+  touch %s
+  cat %s/old.txt
+fi
+""" % (os.path.join(d, "count"), os.path.join(d, "seen"), os.path.join(d, "old.txt"),
+       d, os.path.join(d, "seen"), d))
+        with open(os.path.join(d, "old.txt"), "w") as fh:
+            fh.write("old line one\nold line two\n")
+        with open(os.path.join(d, "count"), "w") as fh:
+            fh.write("2\n")
+        if new_dmesg:
+            with open(os.path.join(d, "new.dmesg-new"), "w") as fh:
+                fh.write("".join(l + "\n" for l in new_dmesg))
+        write("arecord", "#!/bin/bash\nfor a in \"$@\"; do :; done\necho 'arecord ran'\nexit %d\n"
+              % arecord_rc)
+        write("aplay", "#!/bin/bash\nsleep 0.1\n")
+        return bindir
+
+    def run_script(self, d, script, bindir):
+        env = dict(os.environ)
+        env["PATH"] = bindir + os.pathsep + env["PATH"]
+        return subprocess.run(["bash", "-c", script], cwd=d, env=env, stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT, text=True)
+
+    def test_the_kernel_log_around_the_arm_survives_and_is_only_the_difference(self):
+        with tempfile.TemporaryDirectory() as d:
+            bindir = self.stub_bin(d, new_dmesg=["dma dma2chan3: Bad descriptor submitted"])
+            capture = os.path.join(d, "alone.wav")
+            delta = os.path.join(d, "dmesg-capture-only.txt")
+            script = driver.arecord_script("hw:wm8960", "S32_LE", 20, capture, delta,
+                                           playback=False, tmp_dir=d)
+            proc = self.run_script(d, script, bindir)
+            self.assertEqual(proc.returncode, 0, proc.stdout)
+            with open(delta) as fh:
+                got = fh.read()
+            self.assertIn("Bad descriptor", got)
+            self.assertNotIn("old line one", got)     # the baseline is not the delta
+
+    def test_arecords_exit_status_is_what_the_script_returns(self):
+        for rc, expect in ((0, 0), (1, 1), (5, 5)):
+            with tempfile.TemporaryDirectory() as d:
+                bindir = self.stub_bin(d, arecord_rc=rc,
+                                       new_dmesg=["dma dma2chan3: dma2chan3 is non-idle!"])
+                script = driver.arecord_script("hw:wm8960", "S32_LE", 20,
+                                               os.path.join(d, "alone.wav"),
+                                               os.path.join(d, "dmesg-capture-only.txt"),
+                                               playback=False, tmp_dir=d)
+                proc = self.run_script(d, script, bindir)
+                self.assertEqual(proc.returncode, expect, proc.stdout)
+                if rc:
+                    # a failed arm brings its evidence out with it
+                    self.assertIn("non-idle", proc.stdout)
+
+    def test_the_playback_arm_still_holds_the_card_open_and_kills_its_aplay(self):
+        with tempfile.TemporaryDirectory() as d:
+            bindir = self.stub_bin(d)
+            script = driver.arecord_script("hw:wm8960", "S32_LE", 1, os.path.join(d, "playback.wav"),
+                                           os.path.join(d, "dmesg-playback-open.txt"),
+                                           playback=True, tmp_dir=d)
+            proc = self.run_script(d, script, bindir)
+            self.assertEqual(proc.returncode, 0, proc.stdout)
+            self.assertIn("aplay -q -D hw:wm8960", script)
+            self.assertIn("trap cleanup EXIT", script)
+            self.assertTrue(os.path.exists(os.path.join(d, "silence.wav")))
+            # nothing of the arm's aplay is left behind
+            self.assertNotIn("aplay", subprocess.run(["pgrep", "-a", "aplay"], stdout=subprocess.PIPE,
+                                                     text=True).stdout)
+
+    def test_the_script_is_valid_shell(self):
+        for playback in (False, True):
+            script = driver.arecord_script("hw:wm8960", "S32_LE", 20, "/tmp/x.wav", "/tmp/x.txt",
+                                           playback=playback)
+            proc = subprocess.run(["bash", "-n"], input=script, text=True,
+                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            self.assertEqual(proc.returncode, 0, proc.stdout)
+
+
+class Retries(unittest.TestCase):
+    """An arm that fails is tried again, and the record says how many goes it took."""
+
+    def test_an_arm_that_fails_once_is_retried_and_the_count_is_kept(self):
+        calls = []
+
+        def flaky():
+            calls.append(1)
+            if len(calls) < 2:
+                raise driver.Failure("arecord: pcm_read:2285: read error: Input/output error")
+
+        self.assertEqual(driver.attempt_arm("playback", 2, flaky), 2)
+        self.assertEqual(len(calls), 2)
+
+    def test_an_arm_that_works_takes_one_attempt(self):
+        self.assertEqual(driver.attempt_arm("alone", 3, lambda: None), 1)
+
+    def test_an_arm_that_keeps_failing_stops_at_the_limit_and_says_so(self):
+        calls = []
+
+        def broken():
+            calls.append(1)
+            raise driver.Failure("arecord: pcm_read:2285: read error: Input/output error")
+
+        with self.assertRaises(driver.Failure) as caught:
+            driver.attempt_arm("alone", 3, broken)
+        self.assertEqual(len(calls), 3)
+        self.assertIn("failed 3 time(s)", str(caught.exception))
+        self.assertIn("Input/output error", str(caught.exception))
+
+    @unittest.skipUnless(DOC_PYTHON, "no python with numpy and Pillow (the harness's bundled one)")
+    def test_a_retried_arm_says_so_in_the_record(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = make_results_dir(d, arms=("engine", "alone"), drift=())
+            state = json.loads((out / "state.json").read_text())
+            state["attempts"] = {"engine": 1, "alone": 2}
+            (out / "state.json").write_text(json.dumps(state))
+            (out / "dmesg-capture-only.txt").write_text(
+                "[Mon Oct 12 20:25:02 2026] dma dma2chan3: Bad descriptor submitted for "
+                "dma2chan3, cookie: 54, irq: 0x00002000\n")
+            subprocess.run([sys.executable, str(DRIVER), "--rebuild", str(out)], check=True,
+                           stdout=subprocess.DEVNULL)
+            readme = (out / "README.md").read_text()
+            self.assertIn("Attempts: engine 1, alone 2", readme)
+            self.assertIn("An arm was retried", readme)
+            self.assertIn("dmesg-capture-only.txt", readme)
+            state = json.loads((out / "state.json").read_text())
+            self.assertEqual(state["attempts"], {"engine": 1, "alone": 2})
+
+
 class ArmsAndDryRun(unittest.TestCase):
     """The arm list, its order, and that --dry-run is not a measurement."""
 

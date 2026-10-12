@@ -1239,6 +1239,14 @@ tests in `scripts/tests/test_codec_input_noise.py`. See [AGENTS.md](AGENTS.md)'s
   the pedal should achieve, and it is the owner's.
 - **Nothing here says anything about the guitar input.** LIN1 is shorted at the pin, so this is the
   converter and the wiring to it. The input stage's own noise needs board 1 wired to LIN1 (stage 7).
+- **`arecord` can die with `pcm_read: Input/output error`, and it is the kernel, not the wiring**
+  (2026-10-12, twice). The RP1's AXI DMA controller rejects a descriptor on the I2S capture channel
+  — `dma2chan3`, which is `1f000a4000.i2s:rx` — 5 ms after the driver reports the channel non-idle,
+  and ALSA fails the stream. StarFive's fix for it is not in mainline; `rtpi/README.md` ("vip's
+  kernel: the first candidate change") now carries it as a candidate, and
+  [docs/audio-dma-irq.md](docs/audio-dma-irq.md) decodes the three messages. The measurement script
+  wraps each `arecord` arm in the kernel's log and retries the arm. `namchaind` holds the same
+  channel, so a reopen of its capture is the same race.
 
 **Next, unchanged: stage 7** — wire the codec (LIN1 j20 → codec LIN1, HPL → j30, HPR → j38, codec
 GND → the star tag, nothing else joining the two), then first sound: guitar into IN, Inst then Line,

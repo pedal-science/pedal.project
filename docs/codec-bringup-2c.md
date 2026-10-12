@@ -46,9 +46,17 @@ the lock — one measurement at a time:
 
     scripts/host-lock -- ssh vip 'systemctl stop namchaind'
     scripts/host-lock -- ssh vip 'arecord -l'                  # the card's name, and its formats
-    scripts/host-lock -- ssh vip 'arecord -D hw:wm8960 -f S32_LE -r 48000 -c 2 -d 60 /var/tmp/2c-leg0.wav'
+    scripts/host-lock -- ssh vip 'before=$(dmesg | wc -l); \
+        arecord -D hw:wm8960 -f S32_LE -r 48000 -c 2 -d 60 /var/tmp/2c-leg0.wav; rc=$?; \
+        dmesg -T | tail -n +$((before + 1)); exit $rc'         # the capture, and what the kernel said
     scripts/host-lock -- ssh vip 'systemctl start namchaind'
     scripts/status                                             # running/ok again, xruns unchanged
+
+**`arecord` can die on this platform** with `pcm_read: read error: Input/output error` — the RP1's
+DMA controller rejecting a descriptor on the I2S capture channel, not a fault in the wiring. The
+`dmesg` wrap above is what makes that visible, and
+[docs/audio-dma-irq.md](audio-dma-irq.md#when-the-capture-dies-pcm_read-inputoutput-error) is the
+page about it. `scripts/codec-input-noise.py` does the same wrap and retries the arm for you.
 
 **24-bit, not 16:** a −93 dBFS floor sits below 16-bit's last bit. This card answers
 `--dump-hw-params` with `FORMAT: S16_LE S24_LE S32_LE` — **no `S24_3LE`** — so a plain `arecord`
