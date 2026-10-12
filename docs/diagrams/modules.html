@@ -1,0 +1,501 @@
+<!-- The pedal as pluggable modules: every module, every cable, its connector and its pinout, and a
+     check, run in the page, that the ground wiring is a tree. Like plan-dependency-graph.html, this
+     file IS the rendering: open it in a browser. Edit the data (N, C, W) here; the reasoning is in
+     docs/modules.md. Positions are logical, not the panel layout. -->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pedal Modules Map</title>
+<style>
+:root{--bg:#f6f4ef;--ink:#1d1d1f;--muted:#5b5b60;--box:#ffffff;--box2:#eceff6;--boxline:#3a3a42;--case:#8a8a92;
+--audio:#c2410c;--power:#b91c1c;--digital:#1d4ed8;--control:#7e22ce;--service:#6b7280;--ext:#6b7280;--gnd:#15803d;
+--bad:#dc2626;--warn:#b45309;--ok:#15803d;--zoneA:#c2410c0d;--zoneD:#1d4ed80d;--sel:#d97706;--chip:#00000010}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16161a;--ink:#f1f1f3;--muted:#a9a9b2;--box:#23232a;
+--box2:#1c2232;--boxline:#c9c9d2;--case:#77777f;--audio:#fb923c;--power:#f87171;--digital:#60a5fa;--control:#c084fc;
+--service:#9ca3af;--ext:#9ca3af;--gnd:#4ade80;--bad:#f87171;--warn:#fbbf24;--ok:#4ade80;--zoneA:#fb923c12;--zoneD:#60a5fa12;
+--sel:#fbbf24;--chip:#ffffff14}}
+:root[data-theme="dark"]{--bg:#16161a;--ink:#f1f1f3;--muted:#a9a9b2;--box:#23232a;--box2:#1c2232;--boxline:#c9c9d2;
+--case:#77777f;--audio:#fb923c;--power:#f87171;--digital:#60a5fa;--control:#c084fc;--service:#9ca3af;--ext:#9ca3af;
+--gnd:#4ade80;--bad:#f87171;--warn:#fbbf24;--ok:#4ade80;--zoneA:#fb923c12;--zoneD:#60a5fa12;--sel:#fbbf24;--chip:#ffffff14}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,sans-serif}
+header,main{padding:0 16px}
+header{padding-top:18px}
+h1{margin:0 0 4px;font-size:26px}
+h2{font-size:19px;margin:26px 0 8px}
+.lede{margin:0 0 12px;color:var(--muted);max-width:980px}
+.controls{display:flex;flex-wrap:wrap;gap:10px 28px;margin:6px 0 10px}
+fieldset{border:1px solid var(--chip);border-radius:8px;padding:6px 10px 8px;margin:0}
+legend{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+label{display:block;font-size:14px;cursor:pointer;white-space:nowrap}
+.sw{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:4px;margin-right:6px}
+.sw.dash{border-top-style:dashed}
+#status{border-radius:8px;padding:8px 12px;margin:4px 0 10px;max-width:1100px;border:2px solid var(--ok)}
+#status.bad{border-color:var(--bad)}#status.warn{border-color:var(--warn)}
+#status b.okt{color:var(--ok)}#status b.badt{color:var(--bad)}#status b.warnt{color:var(--warn)}
+#status ul{margin:4px 0 0 18px;padding:0}
+.wrap{overflow-x:auto;border-radius:10px}
+svg{display:block;width:100%;min-width:1100px;height:auto}
+svg text{font-family:system-ui,-apple-system,sans-serif}
+.zoneA{fill:var(--zoneA)}.zoneD{fill:var(--zoneD)}
+.zlabel{font-size:12px;font-weight:700;fill:var(--muted);letter-spacing:.03em}
+.caseline{fill:none;stroke:var(--case);stroke-width:2;stroke-dasharray:10 6}
+.caselabel{font-size:12px;fill:var(--muted)}
+.cab .halo{fill:none;stroke:var(--bg);stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
+.cab .line{fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.cab .hit{fill:none;stroke:transparent;stroke-width:16;cursor:pointer}
+.k-audio .line{stroke:var(--audio)}.k-power .line{stroke:var(--power)}.k-digital .line{stroke:var(--digital)}
+.k-control .line{stroke:var(--control)}.k-service .line{stroke:var(--service)}.k-ext .line{stroke:var(--ext);stroke-width:1.6}
+.later .line{stroke-dasharray:8 5}.svc .line{stroke-dasharray:2 5}
+.svc.on .line{stroke-dasharray:none}
+.cab.sel .line{stroke-width:4.5}
+.cab.inloop .halo{stroke:var(--bad);stroke-opacity:.5;stroke-width:11}
+.tag{cursor:pointer}
+.tag rect{fill:var(--bg);stroke-width:1.3}
+.tag text{font:10.5px ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--ink)}
+.k-audio.tag rect{stroke:var(--audio)}.k-power.tag rect{stroke:var(--power)}.k-digital.tag rect{stroke:var(--digital)}
+.k-control.tag rect{stroke:var(--control)}.k-service.tag rect{stroke:var(--service)}
+.tag.sel rect{stroke-width:3;stroke:var(--sel)}
+.node{cursor:pointer}
+.node rect{fill:var(--box);stroke:var(--boxline);stroke-width:1.6}
+.node.bought rect{fill:var(--box2)}
+.node.panel rect{stroke-width:1.2}
+.node.ext rect{fill:var(--bg);stroke:var(--ext);stroke-dasharray:5 4}
+.node.future rect{stroke-dasharray:6 4}
+.node.future text{opacity:.75}
+.node.sel rect{stroke:var(--sel);stroke-width:3}
+.node .t{font-weight:700;font-size:13px;fill:var(--ink)}
+.node .s{font-size:11px;fill:var(--muted)}
+.mini{font-size:9.5px;fill:var(--muted)}
+.bus{fill:var(--gnd)}
+.star{fill:var(--gnd)}
+.join{fill:none;stroke:var(--gnd);stroke-width:2;stroke-dasharray:2 3}
+.board{fill:var(--box2);stroke:var(--muted);stroke-width:1}
+.glyph{fill:none;stroke:var(--case);stroke-width:1.8}
+.gnd path{fill:none;stroke:var(--gnd);stroke-opacity:.32;stroke-width:11;stroke-linecap:round;stroke-linejoin:round}
+.gnd .lane{stroke-opacity:.55;stroke-width:4;stroke-dasharray:6 4}
+.gnd .nog rect{fill:var(--bg);stroke:var(--muted);stroke-width:1}
+.gnd .nog text{font-size:9.5px;fill:var(--muted)}
+.bond{fill:none;stroke-width:2.4}
+.bond.on{stroke:var(--gnd)}.bond.off{stroke:var(--case);stroke-dasharray:3 4}
+.wi path{fill:none;stroke:var(--bad);stroke-width:2.6;stroke-dasharray:8 5}
+.wi text{font-size:11px;fill:var(--bad);font-weight:700}
+#map.hide-audio .k-audio,#map.hide-power .k-power,#map.hide-digital .k-digital,#map.hide-control .k-control,
+#map.hide-service .k-service,#map.hide-ext .k-ext,#map.hide-gnd #gndlayer{display:none}
+#detail{border:1px solid var(--chip);border-radius:8px;padding:10px 14px;margin:12px 0;max-width:1100px;min-height:44px}
+#detail h3{margin:0 0 6px;font-size:17px}
+#detail p{margin:4px 0}
+.pins{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;margin:4px 0 4px 22px;padding:0}
+.rules{max-width:1100px;margin:0;padding-left:20px}
+.rules li{margin:3px 0}
+table{border-collapse:collapse;font-size:13.5px;width:100%;max-width:1400px}
+th,td{text-align:left;vertical-align:top;padding:6px 8px;border-bottom:1px solid var(--chip)}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+tr.sel td{background:var(--chip)}
+tbody tr{cursor:pointer}
+td.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;white-space:nowrap}
+.chip{display:inline-block;padding:0 6px;border-radius:5px;border:1.5px solid;font:12px ui-monospace,Menlo,monospace}
+.c-audio{border-color:var(--audio)}.c-power{border-color:var(--power)}.c-digital{border-color:var(--digital)}
+.c-control{border-color:var(--control)}.c-service{border-color:var(--service)}
+.yes{color:var(--gnd);font-weight:700}.no{color:var(--muted)}
+.tablewrap{overflow-x:auto}
+footer{color:var(--muted);font-size:13px;padding:18px 16px 30px}
+</style></head><body>
+<header>
+<h1>Pedal modules — cables, connectors and grounds</h1>
+<p class="lede">A proposal (2026-10-11; reasoning in <code>docs/modules.md</code>): each circuit is its own small board,
+and every board has <b>one</b> cable that carries ground, pointing towards the root. Click a module or a cable for its
+details and pinout. Positions are logical, not the panel layout.</p>
+<div class="controls">
+<fieldset><legend>Show</legend>
+<label><input type="checkbox" data-layer="audio" checked> <i class="sw" style="border-color:var(--audio)"></i>Audio</label>
+<label><input type="checkbox" data-layer="power" checked> <i class="sw" style="border-color:var(--power)"></i>Power</label>
+<label><input type="checkbox" data-layer="digital" checked> <i class="sw" style="border-color:var(--digital)"></i>Digital</label>
+<label><input type="checkbox" data-layer="control" checked> <i class="sw" style="border-color:var(--control)"></i>Controls</label>
+<label><input type="checkbox" data-layer="service" checked> <i class="sw dash" style="border-color:var(--service)"></i>Service</label>
+<label><input type="checkbox" data-layer="ext" checked> <i class="sw" style="border-color:var(--ext)"></i>Outside the box</label>
+<label><input type="checkbox" data-layer="gnd" checked> <i class="sw" style="border-color:var(--gnd);border-top-width:8px;opacity:.5;vertical-align:1px"></i>Ground tree</label>
+</fieldset>
+<fieldset><legend>Connectors</legend>
+<label><input type="radio" name="opt" value="A" checked> A — JST-XH + IDC ribbon (recommended)</label>
+<label><input type="radio" name="opt" value="B"> B — JST-PH (STEMMA) on breakouts</label>
+<label><input type="radio" name="opt" value="C"> C — no-crimp plugs at the panel, XH between boards</label>
+</fieldset>
+<fieldset><legend>State</legend>
+<label><input type="checkbox" data-state="bond"> Case bond fitted (one jumper, at the star)</label>
+<label><input type="checkbox" data-w="USB"> Pico USB lead plugged in</label>
+</fieldset>
+<fieldset><legend>Try a mistake</legend>
+<label><input type="checkbox" data-w="W1"> OUT L sleeve also on its own wire to the star</label>
+<label><input type="checkbox" data-w="W2"> Pico ground also wired to the star</label>
+<label><input type="checkbox" data-w="W3"> USB-C socket's flange touching the case</label>
+<label><input type="checkbox" data-w="W4"> Display frame screwed to the case</label>
+<label><input type="checkbox" data-w="W5"> Bench: Debug Probes in, OUT L into the SSL, one Mac</label>
+</fieldset>
+</div>
+<div id="status"></div>
+</header>
+<main>
+<div class="wrap"><svg id="map" viewBox="0 0 1720 1110" role="img" aria-label="Diagram of the pedal's modules, the cables between them and the ground tree. The same information is in the tables below.">
+<g id="zones"></g><g id="caseg"></g><g id="gndlayer" class="gnd"></g><g id="cables"></g><g id="nodes"></g>
+<g id="deco"></g><g id="tags"></g><g id="whatif" class="wi"></g></svg></div>
+<div id="detail"><p class="no">Click a module or a cable for its job, its connector and its pinout.</p></div>
+
+<h2>The ground rules this map is checked against</h2>
+<ol class="rules">
+<li><b>One tree.</b> Every board has exactly one cable that carries ground, towards the root. Several ground wires in that one cable are good (the clocks need them); a second <i>route</i> between two boards is a loop.</li>
+<li><b>The audio star is on the codec carrier</b>: its analogue ground bus, on the codec's J5 GND pin. Each audio module reaches it in the cable that carries its signal.</li>
+<li><b>The Pi's side and the audio side meet once</b>: on the codec board's own ground plane, between its digital pins (where the I2S grounds land) and its analogue pins (where the bus is).</li>
+<li><b>A jack's sleeve travels with its tip</b>, twisted or screened, to its module — never on its own wire to the star as well.</li>
+<li><b>No ground in</b> the relay coil cable, the MIDI DIN wires, the battery-sense wires or the toggle's wires.</li>
+<li><b>The case touches nothing</b>: plastic jacks, nylon standoffs, insulated USB-C and display mounts — except, if you fit it, one jumper at the audio star.</li>
+</ol>
+
+<h2>Cables</h2>
+<div class="tablewrap"><table id="cabletable"><thead><tr><th>Cable</th><th>From → to</th><th>Ground</th><th>Connector</th><th>Pins</th><th>Wire</th><th>Notes</th></tr></thead><tbody></tbody></table></div>
+
+<h2>Modules and panel parts</h2>
+<div class="tablewrap"><table id="nodetable"><thead><tr><th>Part</th><th>Job</th><th>What is on it</th><th>Notes</th><th>Cables</th></tr></thead><tbody></tbody></table></div>
+</main>
+<footer>Data lives in this file (<code>N</code>: parts, <code>C</code>: cables, <code>W</code>: what-ifs). The ground check
+builds a graph from every cable that carries ground and reports any loop, as an audio loop when it passes through
+the audio side or the case, and as a digital-only loop otherwise.</footer>
+
+<script>
+// ---------------------------------------------------------------- parts
+// z: which side of the ground tree a part is on: A audio, D digital (the Pi's side), C the case, X outside the box.
+const N={
+ // outside the box
+ GTR:{x:10,y:112,w:125,h:56,k:'ext',z:'X',t:'Guitar',s:['source ≈ 10 kΩ'],job:'The source.',note:'Its cable’s sleeve is the input’s return; with no plug in, the IN jack’s tip switch holds the input at 0 V.'},
+ AMP:{x:10,y:340,w:125,h:180,k:'ext',z:'X',t:'Amp / interface',s:['chassis usually','mains-earthed','','today: the SSL 2+','on the Mac'],job:'What OUT L and OUT R feed.',note:'An earthed amp ties the pedal’s 0 V to earth through the output cable’s sleeve. Two outputs into one device make a loop through the two leads: keep them together, or use TRS into balanced inputs.'},
+ SUP9:{x:10,y:662,w:125,h:60,k:'ext',z:'X',t:'9 V supply',s:['isolated outlet','(Cioks DC7)'],job:'The analogue supply, when not on the battery.',note:'Isolated: its 0 V joins the pedal only at the star, through the 9 V power board.'},
+ PSU:{x:1565,y:318,w:145,h:84,k:'ext',z:'X',t:'USB-C PSU, 45 W',s:['Class II: its 0 V','floats on a Y-cap'],job:'The Pi’s supply.',note:'Its 0 V sits at a fraction of the mains through a Y-capacitor: microamps, but enough to push 50 Hz into a 1 MΩ node when nothing else earths the pedal (2026-10-11, tests 7 and 8). A grounded metal case shields the node from it.'},
+ MAC:{x:1565,y:452,w:145,h:72,k:'ext',z:'X',t:'Mac + Debug Probes',s:['bench only'],job:'Flashing, consoles, measurements.',note:'A plugged-in Debug Probe joins the Mac’s ground to the pedal. Unplug it, or run the Mac on battery, for noise measurements.'},
+ EXPP:{x:1565,y:724,w:145,h:58,k:'ext',z:'X',t:'Expression pedal',s:['passive, optional'],job:'A pot on a TRS lead.',note:''},
+ MIDIC:{x:1565,y:864,w:145,h:58,k:'ext',z:'X',t:'MIDI controller',s:['its own supply'],job:'Footswitches and MIDI out.',note:'Powered from the DC7’s USB-A. Its ground stops at the opto.'},
+ // on the panels
+ INJ:{x:172,y:112,w:96,h:56,k:'panel',z:'A',t:'IN jack',s:['TN → S at lugs'],job:'The guitar in.',has:'Neutrik NMJ6HF-S: plastic, so the case is never a ground path.',note:'TN soldered to S at the lugs, so an empty jack holds the input at 0 V.'},
+ OUTLJ:{x:172,y:347,w:96,h:56,k:'panel',z:'A',t:'OUT L jack',s:['R → S at lugs'],job:'Line out, left.',has:'NMJ6HF-S.',note:'Ring soldered to the sleeve at the lugs, so a TRS lead into a balanced input hums less.'},
+ OUTRJ:{x:172,y:462,w:96,h:56,k:'panel',z:'A',t:'OUT R jack',s:['R → S at lugs'],job:'Line out, right.',has:'NMJ6HF-S.',note:'As OUT L.'},
+ DCJ:{x:172,y:662,w:96,h:60,k:'panel',z:'A',t:'DC socket',s:['switched','centre −'],job:'9 V in.',has:'Switched 2.1 mm socket.',note:'Must keep 0 V off the case. Its switch takes the battery out whenever a plug is in.'},
+ PP3:{x:205,y:790,w:80,h:50,k:'panel',z:'A',t:'PP3',s:['battery'],job:'The battery option.',has:'PP3 and snap.',note:''},
+ TOG:{x:690,y:38,w:130,h:44,k:'panel',z:'A',t:'Inst/Line toggle',s:['SPDT on-on'],job:'Inst ×1, Line −9.7 dB.',has:'Gold-contact SPDT on-on.',note:'Its three wires are the 1 MΩ node. In today’s test the toggle and its leads were 14 dB of the input hum: keep them as short as the panel allows.'},
+ DISP:{x:1180,y:38,w:270,h:44,k:'bought',z:'D',t:'Display 8.8″, 1920×480',s:['mini-HDMI + USB (power, touch)'],job:'rigpa’s screen (D14).',has:'Prechen 8.8″ IPS touch bar.',note:'If its metal frame is on its HDMI/USB ground, metal screws bond the case at the Pi’s side: check with a meter; nylon screws or insulating washers if so.'},
+ USBC:{x:1478,y:331,w:52,h:58,k:'panel',z:'D',t:'USB-C',s:['panel'],job:'5 V in.',has:'A full USB-C extension, panel socket to the Pi’s own port.',note:'Its metal must not touch the case.'},
+ EXPJ:{x:1478,y:726,w:52,h:54,k:'panel',z:'D',t:'EXP',s:['TRS'],job:'Expression in (optional).',has:'NMJ6HF-S.',note:''},
+ DIN:{x:1478,y:866,w:52,h:54,k:'panel',z:'D',t:'MIDI',s:['DIN'],job:'MIDI in.',has:'5-pin DIN socket.',note:'Pin 2 (the shield) unconnected.'},
+ FOOT:{x:960,y:1012,w:230,h:52,k:'panel',z:'D',t:'Footswitches ×3 + LEDs ×4',s:['100 nF across each switch'],job:'Rig up, down, assignable; status.',has:'Momentary footswitches, LEDs in clips.',note:'A long press on one switch is the panic bypass.'},
+ UI:{x:1210,y:1012,w:170,h:52,k:'panel',z:'D',t:'Encoder + back',s:['rigpa: rotary, apply, back'],job:'rigpa’s controls (D14).',has:'EC11 with push, and a button.',note:''},
+ // modules
+ RELAY:{x:370,y:100,w:150,h:340,k:'module',z:'A',t:'Bypass relay',s:['de-energised = bypass'],job:'Bypass at boot and on any failure: de-energised, IN goes straight to OUT L.',has:'TQ2-5V DPDT relay with a 1N4148 across its coil; a 4.7–10 MΩ pull-down on the input side so switching in does not click.',note:'Each lane’s ground passes straight through and the two lanes are not joined here; neither touches the coil. Take the module out and A1→A2, A7→A8 become direct cables, same pinouts. OUT R is silent in bypass unless a third pole feeds it.'},
+ INPUT:{x:600,y:110,w:180,h:120,k:'module',z:'A',t:'Input buffer',s:['OPA2197 follower','bias = rail ÷ 3 · own filter','Inst ×1 · Line −9.7 dB'],job:'Buffer the guitar (about 1 MΩ in) and pad Line by −9.7 dB.',has:'C5, R5/R6, the OPA2197 on its adapter in an 8-pin socket, the bias divider R2–R4 with C4, and the supply filter R1 + C2 + C3 — moved here from the power board, so the module filters its own supply.',note:'Mount it right behind the IN jack and the toggle. It also runs from 5 V (the bias stays a third of the rail), with about 1 dB of headroom over the codec’s full scale instead of about 6.'},
+ MIC:{x:600,y:252,w:180,h:56,k:'future',z:'A',t:'Mic preamp (later)',s:['D5 → codec RIN1'],job:'The mic input (D5).',has:'Not designed.',note:'Plugs into IN2, which has IN1’s pinout.'},
+ OUTL:{x:600,y:330,w:180,h:90,k:'module',z:'A',t:'Output L',s:['10 µF bipolar · 100 Ω','1 MΩ bleed to ground'],job:'Keep the codec’s 1.65 V off the jack, hold the jack at 0 V, isolate the cable’s capacitance.',has:'10 µF bipolar, 100 Ω series, 1 MΩ bleed.',note:'Identical to Output R, so the two swap. Fewer joints: put both networks on the codec carrier; the grounds do not change.'},
+ OUTR:{x:600,y:445,w:180,h:90,k:'module',z:'A',t:'Output R',s:['same board as Output L'],job:'As Output L, for HPR.',has:'The same three parts.',note:''},
+ CODEC:{x:840,y:118,w:200,h:452,k:'module',z:'A',t:'Codec carrier',s:['WM8960 board in socket strips'],job:'The converter — and the audio star.',has:'The SparkFun WM8960 in two 16-pin socket strips; the analogue ground bus that every audio connector’s pin 1 and the board’s J5 GND sit on; the 9 V distribution; 2c’s options as jumpers (VIN from the Pi’s 5 V or a 78L05 on the 9 V side; AVDD from a 78L33 after the AVDD-ISO cut); the case-bond jumper; test points for LIN1, HPL, HPR, GND.',note:'D2’s grounds go to J4’s GND pins only; the analogue bus to J5’s GND only. The board’s own plane joins them: the one place the Pi’s side meets the audio side.'},
+ PWR9:{x:370,y:650,w:170,h:120,k:'module',z:'A',t:'9 V power',s:['1N5817 · 100 µF bulk','battery via socket switch','meter: top resistors'],job:'Take 9 V from the barrel or the battery, protect it, and hand it to the codec carrier.',has:'The switched socket’s wiring, a 1N5817, 100 µF bulk, the battery meter’s top resistors.',note:'No RC filter any more: the input module filters its own supply. An isolated DC-DC board can replace this one at the same plug.'},
+ ISO9:{x:370,y:880,w:170,h:66,k:'future',z:'A',t:'Isolated 9 V (later)',s:['isolated 5→9 V + LDO','same plug as 9 V power'],job:'The single-cable option (plan Phase 4): 9 V from the Pi’s 5 V, isolated.',has:'An isolated 5→9 V DC-DC (~1 W), a common-mode choke, an LDO.',note:'Input from the breakout’s 5 V and GND, output into P1’s socket: the isolation keeps the tree a tree.'},
+ HUB:{x:1100,y:330,w:120,h:120,k:'module',z:'D',t:'Core breakout',s:['40-way ribbon in','test points'],job:'Take the Pi’s header once, on a keyed ribbon, and give each board its own keyed cable.',has:'A 40-way box header; 14-way to the codec; LINK to the Pico; test points on BCLK, LRCLK, ADCDAT, DACDAT, SDA, SCL; optionally a Qwiic port and a header for listening to the link with a Debug Probe.',note:'vip to piv is one ribbon. If the I2S run proves too long, fold this board into the codec carrier’s digital end.'},
+ QWIIC:{x:1100,y:205,w:120,h:46,k:'future',z:'D',t:'Qwiic (optional)',s:['e.g. temperature'],job:'Where a Qwiic or STEMMA QT device would plug in: I2C only.',has:'For example a temperature sensor for Phase 4’s heat soak.',note:''},
+ CORE:{x:1280,y:190,w:150,h:320,k:'bought',z:'D',t:'Core: Pi 5 (vip)',s:['root of the ground tree'],job:'DSP, the screen, and the root of the ground tree.',has:'Raspberry Pi 5, 1 GB.',note:'The USB-C supply’s 0 V enters here. Its mounting holes are grounded: nylon standoffs only.'},
+ CTRL:{x:1080,y:640,w:260,h:170,k:'module',z:'D',t:'Control: Pico 2 WH',s:['Pico 2 WH in socket strips','1N5817 → VSYS · BC337 relay driver','LED resistors · ADC filters'],job:'Every physical control, MIDI, the relay and the LEDs.',has:'The Pico in socket strips; a 1N5817 from LINK’s 5 V into VSYS; the relay driver (BC337, 1 kΩ, 100 kΩ); LED resistors; the expression input’s 1 kΩ + 100 nF and clamps; the battery meter’s 330 kΩ and filter.',note:'Its ground comes from the Pi through LINK and goes out to everything it drives. It never touches the audio star.'},
+ MIDI:{x:1330,y:860,w:110,h:66,k:'module',z:'D',t:'MIDI in',s:['H11L1 opto'],job:'MIDI in, galvanically isolated.',has:'H11L1M, 220 Ω, a 1N4148 reversed across its LED, 100 nF, a 1 kΩ pull-up (bom.md).',note:'DIN pin 2 unconnected: the controller’s ground never reaches the pedal.'},
+};
+const LANES={'RELAY:IN':'the relay board’s IN lane','RELAY:OUT':'the relay board’s OUT L lane',CASE:'the case'};
+const zoneOf=n=>LANES[n]?(n==='CASE'?'C':'A'):N[n].z;
+const nameOf=n=>LANES[n]||N[n].t;
+
+// ---------------------------------------------------------------- cables
+// pins: pin 1 first. conn: a family per connector option (the pin count is the number of pins), or a fixed key.
+// g: the two ground nodes the cable joins, or null with nog saying why it carries none.
+const C=[
+ {id:'A1',k:'audio',from:'INJ',to:'RELAY',path:[[268,140],[370,140]],tag:[319,140],pins:['GND — the braid, = sleeve','TIP'],conn:{A:'XH',B:'PH',C:'TB'},g:['INJ','RELAY:IN'],wire:'single-core screened (CBBR4177); the braid is the return, bonded at both ends',note:'With no relay module, this plugs straight into the input buffer: same pinout.'},
+ {id:'A2',k:'audio',from:'RELAY',to:'INPUT',path:[[520,140],[600,140]],tag:[560,140],pins:['GND — the braid','TIP, to the input capacitor'],conn:{A:'XH',B:'PH',C:'XH'},g:['RELAY:IN','INPUT'],wire:'screened, as A1',note:'The relay switches the jack side of the input capacitor, which the guitar drives; the 1 MΩ node stays on the input board.'},
+ {id:'A3',k:'audio',from:'TOG',to:'INPUT',path:[[755,82],[755,110]],tag:[704,96],pill:[640,96],pins:['SW-I — Inst throw','SW-C — common','SW-L — Line throw'],conn:{A:'XH',B:'PH',C:'TB'},g:null,nog:'its three wires are the 1 MΩ node, not a ground',wire:'≤ 5 cm, twisted; if longer, 3-core screened with the screen on the module’s GND at that end only',note:'The toggle’s bushing may be on its common: meter the bushing against every lug before it goes into a metal panel.'},
+ {id:'A4',k:'audio',from:'INPUT',to:'CODEC',path:[[780,190],[840,190]],tag:[810,176],pins:['GND','LIN1 — the buffer’s output','GND','+9 V — from the carrier'],conn:{A:'XH',B:'PH',C:'XH'},g:['INPUT','CODEC'],wire:'four wires twisted together, 24 AWG',note:'The input board’s only ground: its signal return and its supply return, in the cable that carries its signal.'},
+ {id:'A10',k:'audio',later:1,from:'MIC',to:'CODEC',path:[[780,280],[840,280]],tag:[810,266],pins:['GND','RIN1','GND','+9 V'],conn:{A:'XH',B:'PH',C:'XH'},g:['MIC','CODEC'],wire:'as A4',note:'Later (D5). IN2 has IN1’s pinout, so a second instrument input could use it instead.'},
+ {id:'A5',k:'audio',from:'CODEC',to:'OUTL',path:[[840,360],[780,360]],tag:[810,346],pins:['GND','HPL — sits at 1.65 V DC','— (unused: three ways keeps it apart from the 2-way power socket)'],conn:{A:'XH',B:'PH',C:'XH'},g:['CODEC','OUTL'],wire:'twisted pair',note:'Never ground HPL: it is a driven output.'},
+ {id:'A6',k:'audio',from:'CODEC',to:'OUTR',path:[[840,480],[780,480]],tag:[810,466],pins:['GND','HPR — sits at 1.65 V DC','— (unused)'],conn:{A:'XH',B:'PH',C:'XH'},g:['CODEC','OUTR'],wire:'twisted pair',note:'Never ground HPR.'},
+ {id:'A7',k:'audio',from:'OUTL',to:'RELAY',path:[[600,375],[520,375]],tag:[560,375],pins:['GND','TIP'],conn:{A:'XH',B:'PH',C:'XH'},g:['OUTL','RELAY:OUT'],wire:'twisted pair',note:''},
+ {id:'A8',k:'audio',from:'RELAY',to:'OUTLJ',path:[[370,375],[268,375]],tag:[319,375],pins:['GND — sleeve, with the ring soldered to it at the jack','TIP'],conn:{A:'XH',B:'PH',C:'TB'},g:['RELAY:OUT','OUTLJ'],wire:'twisted pair',note:'With no relay module, A7 and A8 are one cable from Output L to the jack.'},
+ {id:'A9',k:'audio',from:'OUTR',to:'OUTRJ',path:[[600,490],[268,490]],tag:[319,490],pins:['GND — sleeve, with the ring soldered to it at the jack','TIP'],conn:{A:'XH',B:'PH',C:'TB'},g:['OUTR','OUTRJ'],wire:'twisted pair',note:''},
+ {id:'P1',k:'power',from:'PWR9',to:'CODEC',path:[[540,690],[900,690],[900,570]],tag:[720,690],pins:['GND','+9 V — protected, not filtered'],conn:{A:'XH',B:'PH',C:'XH'},g:['PWR9','CODEC'],wire:'twisted pair, 22 AWG',note:'The analogue supply joins the audio tree at the star. The carrier hands it on to each board that needs it, in that board’s own cable.'},
+ {id:'P2',k:'power',from:'DCJ',to:'PWR9',path:[[268,692],[370,692]],tag:[319,692],pins:['GND — the centre pin','+9 V — the sleeve','the switch lug: the battery’s + rides through it'],conn:{A:'XH',B:'PH',C:'TB'},g:['DCJ','PWR9'],wire:'three wires twisted',note:'Centre-negative: a standard switched socket breaks its switch from the sleeve contact, which here is +9 V — so it is the battery’s +, not its −, that goes through the switch. Check yours with the meter.'},
+ {id:'P3',k:'power',from:'PP3',to:'PWR9',path:[[285,815],[420,815],[420,770]],tag:[350,815],pins:['BAT −','— (unused: three ways, so the battery can never go into the 2-way 9 V output socket, where the adapter could charge it)','BAT +'],conn:{A:'XH',B:'PH',C:'TB'},g:['PP3','PWR9'],wire:'the snap’s own leads',note:''},
+ {id:'P4',k:'power',later:1,from:'PWR9',to:'CTRL',path:[[540,745],[1080,745]],tag:[985,745],pins:['VBAT — through 680 kΩ at the power end','VDC — through 100 kΩ at the power end','— (unused)'],conn:{A:'XH',B:'PH',C:'XH'},g:null,nog:'a high-value resistor at the power end of each wire; the microamps return through the tree',wire:'two wires',note:'Battery meter and “adapter present”, later. The bottom resistors and the filters sit at the Pico’s ADC pins.'},
+ {id:'P5',k:'power',from:'USBC',to:'CORE',path:[[1478,360],[1430,360]],tag:[1454,360],pins:['USB-C: 5.1 V at 5 A by USB PD'],conn:'USBC',g:['USBC','CORE'],wire:'full USB-C extension, 5 A, e-marked',note:'The supply’s 0 V enters the pedal here: the root of the tree.'},
+ {id:'D1',k:'digital',from:'CORE',to:'HUB',path:[[1280,390],[1220,390]],tag:[1250,376],pins:['the Pi’s 40-pin header, one to one — 8 of them GND'],conn:'IDC40',g:['CORE','HUB'],wire:'40-way ribbon, keyed, ≤ 15 cm',note:'Plug the Pi once; everything else unplugs at the breakout.'},
+ {id:'D2',k:'digital',from:'HUB',to:'CODEC',path:[[1100,390],[1040,390]],tag:[1070,376],pins:['GND','BCLK — from the codec','GND','LRCLK (DACLRC) — from the codec','GND','ADCDAT — codec → Pi','GND','DACDAT — Pi → codec','GND','SDA','SCL','GND','3V3 — Pi pin 1','5 V — Pi pin 2, to VIN'],conn:'IDC14',g:['HUB','CODEC'],wire:'14-way ribbon: every clock and data wire beside a ground',note:'Lands on the codec’s digital row (J4) and its GND pins only. On stripboard: a KK 254 14-way, or cut between the box header’s rows with a knife.'},
+ {id:'D3',k:'digital',from:'HUB',to:'CTRL',path:[[1160,450],[1160,640]],tag:[1160,560],pins:['GND','Pico TX (GP0) → Pi RXD, pin 10','Pico RX (GP1) ← Pi TXD, pin 8','+5 V hold — Pi pin 4'],conn:{A:'XH',B:'PH',C:'XH'},g:['HUB','CTRL'],wire:'four wires twisted together',note:'LINK. Pin 4’s 5 V stays up through a Pi reboot and shutdown (measured 2026-10-05); the 1N5817 into VSYS is on the control board.'},
+ {id:'D4',k:'digital',from:'CORE',to:'DISP',path:[[1330,190],[1330,82]],tag:[1330,132],pins:['video'],conn:'HDMI',g:['CORE','DISP'],bundle:'disp',wire:'micro-HDMI → mini-HDMI',note:'Run it beside D5.'},
+ {id:'D5',k:'digital',from:'CORE',to:'DISP',path:[[1390,190],[1390,82]],tag:[1390,156],pins:['power and touch'],conn:'USB',g:['CORE','DISP'],bundle:'disp',wire:'USB-A → the display',note:'Two cables between the same two boards, run together, count as one connection.'},
+ {id:'D6',k:'digital',later:1,from:'HUB',to:'QWIIC',path:[[1160,330],[1160,251]],tag:[1160,290],pins:['GND','3V3','SDA','SCL'],conn:'SH4',g:['HUB','QWIIC'],wire:'a Qwiic / STEMMA QT cable',note:'Where Qwiic belongs: I2C. Keep it short — the codec shares this bus, and its SDA timing has bitten once (2026-10-06).'},
+ {id:'C1',k:'control',from:'CTRL',to:'RELAY',path:[[1110,640],[1110,605],[445,605],[445,440]],tag:[700,605],pins:['COIL − — the BC337’s collector','— (unused: three ways keeps this 5 V plug out of the relay board’s 2-way audio sockets)','+5 V'],conn:{A:'XH',B:'PH',C:'XH'},g:null,nog:'the coil’s low side is switched on the control board, so no ground reaches the relay board',wire:'twisted pair',note:'Relay off = bypass, so no power, a crashed Pico and a booting Pi all bypass.'},
+ {id:'C2',k:'control',from:'CTRL',to:'MIDI',path:[[1340,790],[1380,790],[1380,860]],tag:[1380,826],pins:['GND','MIDI RX — a UART input, 31 250 baud','3V3'],conn:{A:'XH',B:'PH',C:'XH'},g:['CTRL','MIDI'],wire:'three wires twisted',note:''},
+ {id:'C3',k:'control',from:'DIN',to:'MIDI',path:[[1478,893],[1440,893]],tag:[1459,842],pill:[1459,822],pins:['DIN 4 → 220 Ω → the opto’s LED','DIN 5 ← the LED'],conn:{A:'XH',B:'PH',C:'TB'},g:null,nog:'opto-isolated: DIN pin 2 stays unconnected, so the controller’s ground never reaches the pedal',wire:'twisted pair',note:''},
+ {id:'C4',k:'control',from:'CTRL',to:'FOOT',path:[[1100,810],[1100,1012]],tag:[1100,960],pins:['GND','FS1','FS2','FS3','LED1','LED2','LED3','LED4'],conn:{A:'XH',B:'PH',C:'TB'},g:['CTRL','FOOT'],wire:'a loom, the ground among the switch wires',note:'100 nF across each switch, at the switch; the LED resistors on the control board.'},
+ {id:'C5',k:'control',from:'CTRL',to:'UI',path:[[1295,810],[1295,1012]],tag:[1295,960],pins:['GND','ENC A','ENC B','ENC push — apply','BACK','3V3'],conn:{A:'XH',B:'PH',C:'TB'},g:['CTRL','UI'],wire:'a loom',note:''},
+ {id:'C6',k:'control',later:1,from:'EXPJ',to:'CTRL',path:[[1478,753],[1340,753]],tag:[1409,753],pins:['GND — sleeve','TIP','RING','tip switch — plug detect','— (unused)'],conn:{A:'XH',B:'PH',C:'TB'},g:['EXPJ','CTRL'],wire:'2-core screened, or a loom',note:'Optional (the debt register decides). 1 kΩ + 100 nF and clamps at the ADC.'},
+ {id:'S1',k:'service',svc:'USB',from:'CORE',to:'CTRL',path:[[1390,510],[1390,600],[1300,600],[1300,640]],tag:[1345,600],pins:['USB: the Pico’s console and flashing'],conn:'USBM',g:['CORE','CTRL'],wire:'USB-A → micro-B, right-angle',note:'A second ground route between the Pi and the Pico: digital only, harmless to the audio. Keep it beside D3, or unplug it after flashing.'},
+ {id:'S2',k:'service',svc:'W5',from:'MAC',to:'CTRL',path:[[1610,524],[1610,620],[1365,620],[1365,680],[1340,680]],tag:[1545,620],pins:['SWCLK','GND','SWDIO'],conn:'SH3',g:['MAC','CTRL'],wire:'the Debug Probe’s own lead',note:'To the Pico’s 3-pin debug connector. Joins the Mac’s ground to the pedal while it is in.'},
+ {id:'S3',k:'service',svc:'W5',from:'MAC',to:'CORE',path:[[1565,488],[1430,488]],tag:[1503,488],pins:['TX','GND','RX'],conn:'SH3',g:['MAC','CORE'],wire:'the Debug Probe’s own lead',note:'vip’s console, ttyAMA10, on the Pi’s 3-pin UART connector.'},
+ {id:'X1',k:'ext',from:'GTR',to:'INJ',path:[[135,140],[172,140]]},
+ {id:'X2',k:'ext',from:'AMP',to:'OUTLJ',path:[[135,375],[172,375]]},
+ {id:'X3',k:'ext',from:'AMP',to:'OUTRJ',path:[[135,490],[172,490]]},
+ {id:'X4',k:'ext',from:'SUP9',to:'DCJ',path:[[135,692],[172,692]]},
+ {id:'X5',k:'ext',from:'PSU',to:'USBC',path:[[1565,360],[1530,360]]},
+ {id:'X6',k:'ext',from:'MIDIC',to:'DIN',path:[[1565,893],[1530,893]]},
+ {id:'X7',k:'ext',from:'EXPP',to:'EXPJ',path:[[1565,753],[1530,753]]},
+];
+
+// ---------------------------------------------------------------- what-ifs
+// Each adds ground connections (edges) and, usually, a red dashed wire to show where it is.
+const W={
+ USB:{edges:[],explain:''},
+ W1:{edges:[['OUTLJ','CODEC']],path:[[220,403],[220,440],[345,440],[345,592],[870,592],[870,570]],label:[352,586,'sleeve → star'],
+   explain:'The OUT L jack’s sleeve now reaches the star two ways — with its tip through Output L, and on its own wire. That is the loop the star rule exists to prevent. Keep one: in this design, the one through the module.'},
+ W2:{edges:[['CTRL','CODEC']],path:[[1080,700],[1010,700],[1010,570]],label:[1016,690,'Pico GND → star'],
+   explain:'The Pico’s ground already reaches the codec through LINK, the breakout and the Pi. A second wire to the star closes a loop through the audio star, and the relay coil’s and LEDs’ currents get a share of the audio ground.'},
+ W3:{edges:[['USBC','CASE']],path:[[1504,389],[1504,424]],glyph:[1504,430],label:[1514,446,'flange → case'],
+   explain:'One bond on its own is harmless. With the case bond fitted as well, the case becomes a ground wire in a loop from the Pi to the star. Insulate the socket (a plastic flange or insulating washers).'},
+ W4:{edges:[['DISP','CASE']],path:[[1180,70],[1150,70]],glyph:[1142,70],label:[1136,96,'frame → case'],
+   explain:'If the display’s frame is on its HDMI/USB ground, metal screws bond the case at the Pi’s side — with the case bond fitted, a loop. Check with a meter; nylon screws or insulating washers.'},
+ W5:{edges:[['AMP','OUTLJ'],['AMP','MAC']],path:[[72,520],[72,1095],[1714,1095],[1714,488],[1710,488]],label:[600,1088,'the SSL’s USB, into the same Mac'],
+   explain:'Through the Mac, the Debug Probes join the Pi and the Pico to the interface that OUT L feeds: a loop through the audio star. Unplug the probes, or run the Mac on battery, for noise measurements (its earth moved the hum by 3 dB on 2026-10-11).'},
+};
+
+const FAM={XH:'JST-XH, 2.5 mm',PH:'JST-PH, 2.0 mm (STEMMA)',TB:'5.08 mm pluggable terminal block',SH:'JST-SH, 1.0 mm'};
+const FIXED={IDC40:['IDC40','2×20 IDC box header + 40-way ribbon'],IDC14:['IDC14','2×7 IDC box header + 14-way ribbon (on stripboard: Molex KK 254, 14-way)'],
+ HDMI:['HDMI','micro-HDMI → mini-HDMI'],USB:['USB','USB-A → the display'],USBM:['USB','USB-A → micro-B'],USBC:['USB','USB-C panel extension'],
+ SH4:['SH4','JST-SH 4-way (Qwiic / STEMMA QT)'],SH3:['SH3','JST-SH 3-way (the Pi debug connector)']};
+function connOf(c,opt){
+ if(!c.conn) return null;
+ if(typeof c.conn==='string') return FIXED[c.conn];
+ const f=c.conn[opt],n=c.pins.length;
+ return [f+n,FAM[f]+', '+n+'-way'];
+}
+
+// ---------------------------------------------------------------- drawing
+const NS='http://www.w3.org/2000/svg';
+function el(tag,attrs,parent,text){const e=document.createElementNS(NS,tag);
+ for(const k in attrs) e.setAttribute(k,attrs[k]); if(text!=null) e.textContent=text; if(parent) parent.appendChild(e); return e;}
+const $=id=>document.getElementById(id);
+const dOf=pts=>'M'+pts.map(p=>p.join(' ')).join(' L');
+const state={opt:'A',bond:false,w:{},sel:null};
+
+function caseGlyph(g,x,y){
+ el('path',{d:`M${x-9} ${y} L${x+9} ${y} M${x-9} ${y} L${x-13} ${y+7} M${x} ${y} L${x-4} ${y+7} M${x+9} ${y} L${x+5} ${y+7}`,class:'glyph'},g);
+}
+function star(g,x,y,r){
+ const p=[];for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?r*0.45:r;p.push([x+rr*Math.cos(a),y+rr*Math.sin(a)].map(v=>v.toFixed(1)).join(' '));}
+ el('path',{d:'M'+p.join(' L')+' Z',class:'star'},g);
+}
+
+function drawStatic(){
+ const z=$('zones');
+ el('rect',{x:192,y:62,width:753,height:976,class:'zoneA'},z);
+ el('rect',{x:945,y:62,width:553,height:976,class:'zoneD'},z);
+ el('text',{x:205,y:84,class:'zlabel'},z,'AUDIO SIDE — every ground hangs off the codec carrier’s bus');
+ el('text',{x:955,y:84,class:'zlabel'},z,'DIGITAL SIDE — hangs off the Pi');
+ const cg=$('caseg');
+ el('rect',{x:190,y:60,width:1310,height:980,rx:14,class:'caseline'},cg);
+ el('text',{x:195,y:50,class:'caselabel'},cg,'The case (aluminium, on nylon standoffs): outside the ground tree, except one optional bond');
+
+ const nodes=$('nodes');
+ for(const id in N){const n=N[id];
+  const g=el('g',{class:'node '+n.k,id:'n-'+id,'data-id':id},nodes);
+  el('rect',{x:n.x,y:n.y,width:n.w,height:n.h,rx:n.k==='panel'?4:8},g);
+  const cx=n.x+n.w/2;
+  el('text',{x:cx,y:n.y+18,'text-anchor':'middle',class:'t'},g,n.t);
+  (n.s||[]).forEach((s,i)=>el('text',{x:cx,y:n.y+33+i*13,'text-anchor':'middle',class:'s'},g,s));
+  g.addEventListener('click',()=>select('n:'+id));
+ }
+
+ const d=$('deco');
+ // the codec carrier: the bus (the audio star), the board, its two rows, and the one join
+ el('rect',{x:852,y:170,width:10,height:394,rx:3,class:'bus'},d);
+ star(d,857,168,9);
+ el('text',{x:870,y:174,class:'mini'},d,'audio star = this bus');
+ el('rect',{x:900,y:232,width:112,height:250,rx:4,class:'board'},d);
+ el('text',{x:956,y:296,'text-anchor':'middle',class:'mini'},d,'SparkFun');
+ el('text',{x:956,y:309,'text-anchor':'middle',class:'mini'},d,'WM8960');
+ el('text',{x:0,y:0,class:'mini',transform:'translate(912 400) rotate(-90)'},d,'J5 · analogue row');
+ el('text',{x:0,y:0,class:'mini',transform:'translate(1001 300) rotate(90)'},d,'J4 · digital row');
+ el('path',{d:'M904 446 L1008 446',class:'join'},d);
+ el('text',{x:956,y:462,'text-anchor':'middle',class:'mini'},d,'its GND plane:');
+ el('text',{x:956,y:474,'text-anchor':'middle',class:'mini'},d,'the one join');
+ el('text',{x:952,y:507,'text-anchor':'middle',class:'mini'},d,'9 V in · VIN: Pi 5 V or 78L05');
+ el('text',{x:952,y:520,'text-anchor':'middle',class:'mini'},d,'AVDD: 78L33 (2c) · test points');
+ [['IN1',193],['IN2',283],['OUT L',363],['OUT R',494]].forEach(([t,y])=>el('text',{x:866,y,class:'mini'},d,t));
+ el('text',{x:1036,y:382,'text-anchor':'end',class:'mini'},d,'DIG');
+ el('text',{x:906,y:562,class:'mini'},d,'9 V');
+ // the relay board
+ el('text',{x:445,y:170,'text-anchor':'middle',class:'mini'},d,'pole A · IN');
+ el('path',{d:'M445 180 L445 344',class:'glyph','stroke-dasharray':'4 4'},d);
+ el('text',{x:452,y:266,class:'mini'},d,'bypass:');
+ el('text',{x:452,y:278,class:'mini'},d,'NC to NC');
+ el('text',{x:445,y:360,'text-anchor':'middle',class:'mini'},d,'pole B · OUT L');
+ el('text',{x:445,y:414,'text-anchor':'middle',class:'mini'},d,'coil + 1N4148');
+ el('text',{x:445,y:427,'text-anchor':'middle',class:'mini'},d,'TQ2-5V DPDT');
+ // the Pi: where the root is
+ el('text',{x:1424,y:350,'text-anchor':'end',class:'mini'},d,'the PSU’s 0 V enters here →');
+ // the case bond, drawn by draw()
+ el('g',{id:'bondg'},d);
+
+ const cab=$('cables'),tags=$('tags');
+ for(const c of C){
+  const cls='cab k-'+c.k+(c.later?' later':'')+(c.svc?' svc':'');
+  const g=el('g',{class:cls,id:'c-'+c.id},cab);
+  el('path',{d:dOf(c.path),class:'halo'},g);
+  el('path',{d:dOf(c.path),class:'line'},g);
+  if(c.k!=='ext'){
+   el('path',{d:dOf(c.path),class:'hit'},g).addEventListener('click',()=>select('c:'+c.id));
+   const t=el('g',{class:'tag k-'+c.k,id:'t-'+c.id},tags);
+   el('rect',{rx:4,height:16},t); el('text',{'text-anchor':'middle'},t);
+   t.addEventListener('click',()=>select('c:'+c.id));
+  }
+ }
+}
+
+function tagText(c){const k=connOf(c,state.opt);return c.id+(k?'·'+k[0]:'');}
+
+function draw(){
+ // tags follow the connector option
+ for(const c of C){ if(c.k==='ext') continue;
+  const t=$('t-'+c.id),s=tagText(c),w=s.length*6.3+10,[x,y]=c.tag;
+  const r=t.querySelector('rect'),tx=t.querySelector('text');
+  r.setAttribute('x',x-w/2);r.setAttribute('y',y-8);r.setAttribute('width',w);
+  tx.setAttribute('x',x);tx.setAttribute('y',y+4);tx.textContent=s;
+  $('c-'+c.id).classList.toggle('on',!!(c.svc&&state.w[c.svc]));
+ }
+ // ground tree overlay: every cable that carries ground, and is plugged in
+ const gl=$('gndlayer');gl.textContent='';
+ for(const c of C){ if(!c.g||(c.svc&&!state.w[c.svc])) continue;
+  el('path',{d:dOf(c.path),class:'k-'+c.k},gl);
+ }
+ el('path',{d:'M370 140 L520 140',class:'lane k-audio'},gl);
+ el('path',{d:'M370 375 L520 375',class:'lane k-audio'},gl);
+ for(const c of C){ if(c.g||!c.nog) continue;
+  const [x,y]=c.pill||[c.tag[0],c.tag[1]+17],g=el('g',{class:'nog k-'+c.k},gl);
+  el('rect',{x:x-24,y:y-7,width:48,height:14,rx:7},g);
+  el('text',{x,y:y+4,'text-anchor':'middle'},g,'no GND');
+ }
+ // the case bond
+ const bg=$('bondg');bg.textContent='';
+ el('path',{d:'M840 556 L818 556',class:'bond '+(state.bond?'on':'off')},bg);
+ caseGlyph(bg,810,556);
+ el('text',{x:796,y:560,'text-anchor':'end',class:'mini'},bg,state.bond?'case bond: fitted':'case bond: open');
+ // what-ifs
+ const wg=$('whatif');wg.textContent='';
+ for(const id in W){ const w=W[id]; if(!state.w[id]||!w.path) continue;
+  el('path',{d:dOf(w.path),id:'w-'+id},wg);
+  if(w.glyph) caseGlyph(wg,w.glyph[0],w.glyph[1]);
+  if(w.label) el('text',{x:w.label[0],y:w.label[1],'text-anchor':w.label[0]>1500?'start':(id==='W4'?'end':'start')},wg,w.label[2]);
+ }
+ check();
+ tables();
+ showDetail();
+}
+
+// ---------------------------------------------------------------- the ground check
+function edges(){
+ const E=[];
+ for(const c of C){ if(!c.g) continue; if(c.svc&&!state.w[c.svc]) continue;
+  E.push({a:c.g[0],b:c.g[1],via:[c.id],bundle:c.bundle||null}); }
+ if(state.bond) E.push({a:'CODEC',b:'CASE',via:['case bond']});
+ for(const id in W) if(state.w[id]) for(const [a,b] of W[id].edges) E.push({a,b,via:[id]});
+ // two cables between the same two boards, run together (bundle), count as one connection
+ const seen={},out=[];
+ for(const e of E){ const key=[e.a,e.b].sort().join('|');
+  if(e.bundle&&seen[key]&&seen[key].bundle===e.bundle){seen[key].via.push(...e.via);continue;}
+  seen[key]=e;out.push(e); }
+ return out;
+}
+function check(){
+ const E=edges(),P={},adj={},loops=[],nodes=new Set();
+ const f=x=>{if(P[x]===undefined)P[x]=x;while(P[x]!==x){P[x]=P[P[x]];x=P[x];}return x;};
+ for(const e of E){ nodes.add(e.a);nodes.add(e.b);
+  const ra=f(e.a),rb=f(e.b);
+  if(ra===rb){ // the path already in the forest, from b back to a, closes a loop with e
+   const prev={[e.b]:null},q=[e.b];
+   while(q.length){const u=q.shift();if(u===e.a)break;for(const {n,ed} of adj[u]||[]) if(!(n in prev)){prev[n]={u,ed};q.push(n);}}
+   const path=[e],ns=[e.a];let v=e.a;while(prev[v]){path.push(prev[v].ed);v=prev[v].u;ns.push(v);}
+   loops.push({edges:path,nodes:ns});
+  } else { P[ra]=rb;(adj[e.a]??=[]).push({n:e.b,ed:e});(adj[e.b]??=[]).push({n:e.a,ed:e}); }
+ }
+ document.querySelectorAll('.cab.inloop').forEach(x=>x.classList.remove('inloop'));
+ const st=$('status');let html='',bad=false,warn=false;
+ if(!loops.length){
+  const roots=new Set([...nodes].map(f));
+  html=`<b class="okt">✓ One tree.</b> ${nodes.size} grounded parts, ${E.length} ground connections, no loops`+
+   (roots.size>1?` — but ${roots.size} separate pieces`:'')+
+   `. The Pi’s side and the audio side meet once: on the codec board’s own ground plane. `+
+   (adj.CASE?`The case is bonded at one point: ${adj.CASE.map(x=>nameOf(x.n)).join(', ')}. `:'The case is bonded to nothing. ')+
+   `Deliberately no ground: ${C.filter(c=>c.nog).map(c=>c.id).join(', ')}.`;
+ } else {
+  const items=loops.map(l=>{
+   const audio=l.nodes.some(n=>['A','C'].includes(zoneOf(n)));
+   audio?bad=true:warn=true;
+   const via=[...new Set(l.edges.flatMap(e=>e.via))];
+   via.forEach(v=>{const g=$('c-'+v);if(g)g.classList.add('inloop');});
+   const why=via.filter(v=>W[v]&&W[v].explain).map(v=>W[v].explain).join(' ');
+   const fallback=via.includes('S1')?C.find(c=>c.id==='S1').note:'';
+   return `<li><b class="${audio?'badt':'warnt'}">${audio?'✗ A loop through the audio side':'⚠ A loop on the digital side only'}</b>: `+
+    l.nodes.map(nameOf).join(' → ')+` → ${nameOf(l.nodes[0])} (via ${via.join(', ')}). ${why||fallback}</li>`;
+  });
+  html=`<b class="${bad?'badt':'warnt'}">${bad?'✗ Not a tree':'⚠ A digital-only loop'}</b><ul>${items.join('')}</ul>`;
+ }
+ st.className=bad?'bad':(warn?'warn':'');st.innerHTML=html;
+}
+
+// ---------------------------------------------------------------- details and tables
+function pinsHtml(c){return '<ol class="pins">'+c.pins.map(p=>`<li>${p}</li>`).join('')+'</ol>';}
+function gndText(c){
+ if(c.g) return `<span class="yes">yes</span> — joins ${nameOf(c.g[0])} to ${nameOf(c.g[1])}`+(c.svc?' (only while plugged in)':'');
+ return `<span class="no">none</span> — ${c.nog}`;
+}
+function cablesOf(id){return C.filter(c=>c.k!=='ext'&&(c.from===id||c.to===id));}
+function select(s){state.sel=state.sel===s?null:s;showDetail();}
+function showDetail(){
+ document.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel'));
+ const box=$('detail'),s=state.sel;
+ if(!s){box.innerHTML='<p class="no">Click a module or a cable for its job, its connector and its pinout.</p>';return;}
+ const [kind,id]=s.split(':');
+ if(kind==='c'){const c=C.find(x=>x.id===id),k=connOf(c,state.opt);
+  ['c-','t-','r-'].forEach(p=>{const e=$(p+id);if(e)e.classList.add('sel');});
+  box.innerHTML=`<h3><span class="chip c-${c.k}">${c.id}</span> ${N[c.from].t} → ${N[c.to].t}${c.later?' (later)':''}</h3>`+
+   `<p><b>Connector:</b> ${k?k[1]:'—'}. <b>Ground:</b> ${gndText(c)}.</p><p><b>Pins</b>, pin 1 first:</p>${pinsHtml(c)}`+
+   `<p><b>Wire:</b> ${c.wire}.</p>${c.note?`<p>${c.note}</p>`:''}`;
+ } else {const n=N[id];
+  ['n-','m-'].forEach(p=>{const e=$(p+id);if(e)e.classList.add('sel');});
+  const cs=cablesOf(id).map(c=>`<span class="chip c-${c.k}">${c.id}</span>`).join(' ');
+  box.innerHTML=`<h3>${n.t}</h3><p><b>Job:</b> ${n.job}</p>${n.has?`<p><b>On it:</b> ${n.has}</p>`:''}`+
+   `${n.note?`<p>${n.note}</p>`:''}${cs?`<p><b>Cables:</b> ${cs}</p>`:''}`;
+ }
+}
+function tables(){
+ const tb=$('cabletable').querySelector('tbody');tb.textContent='';
+ for(const c of C){ if(c.k==='ext') continue; const k=connOf(c,state.opt);
+  const tr=document.createElement('tr');tr.id='r-'+c.id;
+  tr.innerHTML=`<td><span class="chip c-${c.k}">${c.id}</span>${c.later?' <span class="no">later</span>':''}</td>`+
+   `<td>${N[c.from].t} → ${N[c.to].t}</td><td>${c.g?'<span class="yes">yes</span>':'<span class="no">none</span>'}</td>`+
+   `<td>${k?k[1]:''}</td><td class="mono">${c.pins.map((p,i)=>(i+1)+' '+p.split(' — ')[0]).join('<br>')}</td>`+
+   `<td>${c.wire}</td><td>${c.g?'':c.nog+'. '}${c.note||''}</td>`;
+  tr.addEventListener('click',()=>select('c:'+c.id));tb.appendChild(tr);
+ }
+ const nb=$('nodetable').querySelector('tbody');nb.textContent='';
+ for(const id in N){ const n=N[id]; if(n.k==='ext') continue;
+  const tr=document.createElement('tr');tr.id='m-'+id;
+  tr.innerHTML=`<td><b>${n.t}</b></td><td>${n.job}</td><td>${n.has||''}</td><td>${n.note||''}</td>`+
+   `<td>${cablesOf(id).map(c=>`<span class="chip c-${c.k}">${c.id}</span>`).join(' ')}</td>`;
+  tr.addEventListener('click',()=>select('n:'+id));nb.appendChild(tr);
+ }
+}
+
+// ---------------------------------------------------------------- controls
+document.querySelectorAll('[data-layer]').forEach(i=>i.addEventListener('change',()=>{$('map').classList.toggle('hide-'+i.dataset.layer,!i.checked);}));
+document.querySelectorAll('input[name=opt]').forEach(i=>i.addEventListener('change',()=>{state.opt=i.value;draw();}));
+document.querySelector('[data-state=bond]').addEventListener('change',e=>{state.bond=e.target.checked;draw();});
+document.querySelectorAll('[data-w]').forEach(i=>i.addEventListener('change',()=>{state.w[i.dataset.w]=i.checked;draw();}));
+drawStatic();draw();
+</script>
+</body></html>

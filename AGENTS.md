@@ -182,7 +182,9 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
   and the thread accounting), `pairing.md` (BLE pairing, the pedal's own
   Wi-Fi network, and how ljoss joins it), `vip-image.md` (building vip's card,
   its rescue and pedal roots, boot fallback), `audio-dma-irq.md` (the audio DMA interrupt
-  thread: what it is, its measured cost, and why it outranks the render thread), `bom.md`.
+  thread: what it is, its measured cost, and why it outranks the render thread), `bom.md`,
+  `modules.md` (a proposal, 2026-10-11: the circuits as pluggable boards, their cables and
+  connectors, and the ground tree; its map, which checks the tree, is `diagrams/modules.html`).
 - `stripboard/`, `breadboard/` — board layouts as data; each script checks its placement against
   the netlist (`stripboard/board1.py` holds board 1's) and draws it.
 - `schematic/` — the pedal's schematic sheets as KiCad files, each written from the wiring table in

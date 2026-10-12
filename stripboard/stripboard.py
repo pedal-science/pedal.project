@@ -190,7 +190,7 @@ def copper(bw, bh, cuts, links):
 
 
 def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
-          carries=None):
+          carries=None, netlist=None):
     """Check one board.  Returns (errors, info).
 
     bw, bh      the outline, in holes (18, 20 is 45.72 x 50.8 mm of stripboard)
@@ -214,33 +214,37 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
     carries     the netlist parts this board carries.  A circuit built on more than one board
                 has its parts spread over them, so each board says which are its own; every
                 other part is another board's business.  None means "all of them".
+    netlist     what the leads and pads are checked against: `nets.py` unless the board
+                brings its own (the module boards do: `stripboard/module_kit.py`'s `Netlist`
+                has the same interface).
     """
+    netlist = NET if netlist is None else netlist
     errors = []
     cuts = set(cuts)
 
     # -- 1. the netlist agrees with the layout -------------------------------------------
     for ref, (kind, value, leads) in parts.items():
-        if ref not in NET.PARTS:
+        if ref not in netlist.PARTS:
             errors.append(f'{ref} is not a part in the netlist')
             continue
-        want = NET.nets_using(ref)
+        want = netlist.nets_using(ref)
         got = {f'{ref}.{i + 1}': net for i, (_, net) in enumerate(leads)}
-        if len(leads) != NET.PARTS[ref]['pins']:
+        if len(leads) != netlist.PARTS[ref]['pins']:
             errors.append(f'{ref} has {len(leads)} leads, the netlist says '
-                          f'{NET.PARTS[ref]["pins"]} pins')
+                          f'{netlist.PARTS[ref]["pins"]} pins')
         for pin, net in sorted(got.items()):
             if pin not in want:
                 errors.append(f'{pin} is on {net}, but {ref} has no such pin')
-            elif not NET.same_net(want[pin], net):
+            elif not netlist.same_net(want[pin], net):
                 errors.append(f'{pin} is on {net}, the netlist says {want[pin]}')
-    for ref in (NET.PARTS if carries is None else carries):
+    for ref in (netlist.PARTS if carries is None else carries):
         if ref not in parts:
             errors.append(f'{ref} is carried by this board but not placed on it')
     for ref in parts:
         if carries is not None and ref not in carries:
             errors.append(f'{ref} is on the board but not in its carries list')
     for label, (hole, net, _) in pads.items():
-        if net not in NET.NETS and net not in NET.RAILS:
+        if net not in netlist.NETS and net not in netlist.RAILS:
             errors.append(f'pad {label} is on net {net}, which is not in the netlist')
 
     # -- 2. the copper: union-find over holes, along the strips and through the links ----
@@ -250,7 +254,7 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
     # leads of *one part*, because a socket's pins are joined by nothing.
     bridged = [(a, b) for ref, (kind, _, leads) in parts.items()
                for i, (a, na) in enumerate(leads) for b, nb in leads[i + 1:]
-               if a[0] == b[0] and NET.same_net(na, nb)]
+               if a[0] == b[0] and netlist.same_net(na, nb)]
     find = copper(bw, bh, cuts, list(links) + bridged)
 
     used = {}                              # hole -> what is in it
@@ -264,9 +268,9 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
     hole_net = {}
     for ref, (_, _, leads) in parts.items():
         for h, net in leads:
-            hole_net.setdefault(h, NET.net_key(net))
+            hole_net.setdefault(h, netlist.net_key(net))
     for label, (h, net, _) in pads.items():
-        hole_net.setdefault(h, NET.net_key(net))
+        hole_net.setdefault(h, netlist.net_key(net))
 
     def occupy(h, what, wire=False, end=False, net=None):
         """Put something in a hole.
@@ -315,10 +319,10 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
             occupy(h, f'lead {ref}.{i + 1}')
             lead_holes.add(h)
             lead_ref[h] = f'{ref}.{i + 1}'
-            net_of[NET.net_key(net)].add(find(h))
+            net_of[netlist.net_key(net)].add(find(h))
     for label, (h, net, _) in pads.items():
         occupy(h, f'pad {label}')
-        net_of[NET.net_key(net)].add(find(h))
+        net_of[netlist.net_key(net)].add(find(h))
 
     # The wires.  A link is a straight run on the component side, so it is in every hole it
     # passes over and soldered in the two it ends in: a lead under it, or a pad under it, is a
@@ -358,7 +362,7 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
             errors.append(f'net {net} is split into {len(roots)} pieces')
     pad_roots = defaultdict(set)           # net -> islands a pad reaches
     for label, (h, net, _) in pads.items():
-        pad_roots[NET.net_key(net)].add(find(h))
+        pad_roots[netlist.net_key(net)].add(find(h))
     for net in off_board:
         if net not in net_of:
             errors.append(f'off_board names {net}, which is not a net on the board')
@@ -368,7 +372,7 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
     owner = {}
     for net, roots in net_of.items():
         for r in roots:
-            if r in owner and not NET.same_net(owner[r], net):
+            if r in owner and not netlist.same_net(owner[r], net):
                 errors.append(f'nets {owner[r]} and {net} are joined')
             owner[r] = net
 
@@ -403,10 +407,10 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
                 for ref, (_, _, leads) in parts.items():
                     for lh, net in leads:
                         if lh == p:
-                            piece_net[e].add(NET.net_key(net))
+                            piece_net[e].add(netlist.net_key(net))
                 for label, (ph, net, _) in pads.items():
                     if ph == p:
-                        piece_net[e].add(NET.net_key(net))
+                        piece_net[e].add(netlist.net_key(net))
         for a, b in links:
             for e in (a, b):
                 if e in lead_holes:
@@ -415,7 +419,7 @@ def check(bw, bh, cuts, links, parts, pads, expect_size=None, off_board=(),
                 for ref, (_, _, leads) in parts.items():
                     for lh, net in leads:
                         if bare(lh) == bare(e):
-                            names.add(NET.net_key(net))
+                            names.add(netlist.net_key(net))
                 names = {n for n in names if n is not None}
                 if len(names) > 1:
                     errors.append(f'a link ends at {e}, whose copper already carries '
