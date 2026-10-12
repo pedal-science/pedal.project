@@ -120,7 +120,7 @@ Where the fix stands (2026-10-12):
   channel and re-issues the descriptor instead of returning. OpenWrt carries it for its StarFive
   target and it is **not** in mainline:
   [1013-dmaengine-dw-axi-dmac-Handle-xfer-start-while-non-id.patch](https://git.cdn.openwrt.org/openwrt/staging/linusw/plain/target/linux/starfive/patches-6.12/1013-dmaengine-dw-axi-dmac-Handle-xfer-start-while-non-id.patch?id=0a1e1016b4d82dabedcb231dc4fd7fb65ba16736).
-  **`../rtpi/plan.md` carries it as a candidate.**
+  rtpi carries the rebase in `patches/vip/`, and that kernel is what vip boots.
 - **An upstream series** (Roland Dreier, 2026-10-06) decodes these errors — naming the offending
   bit instead of "Bad descriptor", and dumping LLIs only for non-data errors — and explicitly
   **leaves the transfer result and recovery path unchanged**:
@@ -129,8 +129,10 @@ Where the fix stands (2026-10-12):
 - **[raspberrypi/linux#7320](https://github.com/raspberrypi/linux/issues/7320)** is the same family
   on the playback channel (`dma2chan2`, a PCM512x HAT, ending in an oops) and is still open.
 
-vip runs Ubuntu's `linux-raspi-realtime` 7.0.0-1017 with rtpi's trim and no rtpi patches of its own,
-so it has neither fix.
+vip's running kernel is rtpi's trimmed raspi RT build plus `patches/vip/`'s rebase of StarFive's
+fix, promoted by `vip-boot try-kernel` on 2026-10-12
+(`7.0.0-1017-raspi-realtime-numaemu3-dmaidle1-trimmed`). The diagnostic series above is still not
+carried.
 
 **It matters beyond the bench.** `namchaind` holds `i2s:rx` as well, so every reopen of its capture
 — a device loss, a rig change, a restart — is the same start-while-non-idle dance. There the symptom

@@ -3,7 +3,7 @@
 # rigpa the UI you mean, and that the kernel is the rebuild you mean (docs/vip-kernel-image.md).
 snapshot=20260929T000000Z
 pedal=cb3292ae64285592ce316b58a703c8bec6321f2c
-rtpi=d4779fff3c9579e4143e02fe7da52201737e22dc
+rtpi=f8c3d7566a5b041a8afe2d924399b5066736dac8
 namchain=eba5eef57897899dab2d7560661a620679a9048f
 rigpa=179e202ce0c31a2ea097c8aec7602ece7766197c
 
@@ -11,12 +11,12 @@ rigpa=179e202ce0c31a2ea097c8aec7602ece7766197c
 # build/vip/ as artefacts and pins it by hash — make-card verifies every one of these before the
 # build starts, and the image build installs them. The spare slot boots the stock kernel instead,
 # which devices/vip/packages installs as a package (rtpi's FALLBACK_KERNEL).
-kernel=7.0.0-1017-raspi-realtime-numaemu3-trimmed
+kernel=7.0.0-1017-raspi-realtime-numaemu3-dmaidle1-trimmed
 kernel-kind=trimmed
-# numaemu1 with the screen's drivers kept through the trim (rtpi config/vip-keep.fragment: vc4, v3d,
-# USB HID, and the DDC driver, backlight and CEC vc4 needs to bind). Built from rtpi c797e84 and
-# promoted on vip by vip-boot try-kernel on 2026-10-10.
-kernel-rtpi=c797e848e89d1df5112951afb2c9547642e5d509
-kernel-boot-sha256=47938848a2383ccbffd050d74623cf63dc792b17981835c1263e1071f12fcd5c
-kernel-modules-sha256=c95033631dcdf5676ddb91a000f34191ae1c8e993938a6199889bd188b4f0255
+# numaemu3 plus StarFive's non-idle DMA fix (rtpi patches/vip/). Built from rtpi f8c3d75 and
+# promoted on vip by vip-boot try-kernel on 2026-10-12. Slot b on that boot kept numaemu3; a card
+# from this lock puts the stock kernel back in the spare slot.
+kernel-rtpi=f8c3d7566a5b041a8afe2d924399b5066736dac8
+kernel-boot-sha256=fa9faa01090520c9b7dce3c0d2af2472c16151972556a20ace6e6ec02009e769
+kernel-modules-sha256=1fa94e9c3ac6cfe4559d89a9cf6aa6f67f56f6e2e91ae381327f6db2749c80da
 kernel-dtb-sha256=1d1988efb6e918ffb516362cebef482f8f6c48bbb4462129b57e3d1888afd2c3
