@@ -1,0 +1,393 @@
+
+== host
+Linux vip 7.0.0-1017-raspi-realtime-numaemu3-trimmed #3 SMP PREEMPT_RT Sat Oct 10 18:35:52 UTC 2026 aarch64 GNU/Linux
+reboot=w coherent_pool=1M 8250.nr_uarts=1 pci=pcie_bus_safe numa_policy=interleave nvme.max_host_mem_size_mb=0  numa=fake=4 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=98:FE:54:15:25:8B vc_mem.mem_base=0x3fc00000 vc_mem.mem_size=0x40000000  root=LABEL=pedal net.ifnames=0 console=ttyAMA10,115200 console=tty1 rootfstype=ext4 rootwait fixrtc cfg80211.ieee80211_regdom=GB rd.shell=0 rd.emergency=reboot rd.retry=60 rd.timeout=90 panic=10 isolcpus=managed_irq,domain,1-3 nohz_full=1-3 rcu_nocbs=1-3 irqaffinity=0 skew_tick=1 vipboot.root=pedal vipboot.slot=b vipboot.profile=tuned
+ 16:06:41 up 5 min,  0 users,  load average: 0.39, 0.50, 0.26
+
+== applied
+commit=5c7a2e6
+applied=2026-10-12T16:03:03Z
+
+== isolation
+isolated=1-3 nohz_full=1-3
+
+== cpufreq
+policy0 performance max=2400000 cur=2400000
+
+== thermal
+cpu-thermal 42450
+
+== cpusets
+pedal.slice 0-3
+system.slice 0
+user.slice 0
+init.scope 0
+
+== interrupts
+           CPU0       CPU1       CPU2       CPU3       
+  9:          0          0          0          0    GICv2  25 Level     vgic
+ 11:          0          0          0          0    GICv2  30 Level     kvm guest ptimer
+ 12:          0          0          0          0    GICv2  27 Level     kvm guest vtimer
+ 13:     335242       1699        912        919    GICv2  26 Level     arch_timer
+ 15:        980          0          0          0    GICv2  65 Level     107c013880.mailbox
+ 16:         21          0          0          0    GICv2 152 Level     uart-pl011
+ 22:          0          0          0          0    GICv2 119 Level     DMA IRQ
+ 23:          0          0          0          0    GICv2 120 Level     DMA IRQ
+ 24:          0          0          0          0    GICv2 121 Level     DMA IRQ
+ 25:          0          0          0          0    GICv2 122 Level     DMA IRQ
+ 32:          0          0          0          0    GICv2  48 Level     arm-pmu
+ 33:          0          0          0          0    GICv2  49 Level     arm-pmu
+ 34:          0          0          0          0    GICv2  50 Level     arm-pmu
+ 35:          0          0          0          0    GICv2  51 Level     arm-pmu
+ 36:          0          0          0          0 interrupt-controller@7d508380   1 Level     107d508200.i2c
+ 37:       2732          0          0          0    GICv2 308 Level     ttyS0
+ 38:          0          0          0          0 interrupt-controller@7d508380   2 Level     107d508280.i2c
+ 40:          0          0          0          0    GICv2 261 Level     PCIe PME, aerdrv, PCIe bwctrl
+108:          0          0          0          0 rp1_irq_chip   6 Level     eth0
+110:        410          0          0          0 rp1_irq_chip   8 Level     1f00074000.i2c
+127:          0          0          0          0 rp1_irq_chip  25 Level     uart-pl011
+133:          1          0          0          0 rp1_irq_chip  31 Edge      xhci-hcd:usb1
+138:          1          0          0          0 rp1_irq_chip  36 Edge      xhci-hcd:usb3
+142:          0     801962          0          0 rp1_irq_chip  40 Level     dw_axi_dmac_platform
+160:          4          0          0          0 rp1_irq_chip  58 Level     1f00008000.mailbox
+163:          0          0          0          0 107d508500.gpio  20 Edge      pwr_button
+164:          0          0          0          0    GICv2 150 Level     107d004000.spi
+165:      15984          0          0          0    GICv2 305 Level     mmc0
+166:      54226          0          0          0    GICv2 306 Level     mmc1
+167:          0          0          0          0    GICv2 281 Level     v3d_core0
+168:          0          0          0          0    GICv2 282 Level     v3d_hub
+169:          0          0          0          0    GICv2 104 Level     pispbe
+170:          0          0          0          0    GICv2 130 Level     1000800000.codec
+171:          0          0          0          0 interrupt-controller@7c502000   2 Level     107c580000.hvs
+172:          0          0          0          0 interrupt-controller@7c502000   9 Level     107c580000.hvs
+173:          0          0          0          0 interrupt-controller@7c502000  16 Level     107c580000.hvs
+174:          0          0          0          0 interrupt-controller@7d510600   7 Level     vc4 hdmi hpd connected
+175:          0          0          0          0 interrupt-controller@7d510600   8 Level     vc4 hdmi hpd disconnected
+176:          0          0          0          0 interrupt-controller@7d510600   2 Level     vc4 hdmi cec rx
+177:          0          0          0          0 interrupt-controller@7d510600   1 Level     vc4 hdmi cec tx
+178:          0          0          0          0 interrupt-controller@7d510600  14 Level     vc4 hdmi hpd connected
+179:          0          0          0          0 interrupt-controller@7d510600  15 Level     vc4 hdmi hpd disconnected
+180:          0          0          0          0 interrupt-controller@7d510600  12 Level     vc4 hdmi cec rx
+181:          0          0          0          0 interrupt-controller@7d510600  11 Level     vc4 hdmi cec tx
+182:          0          0          0          0 interrupt-controller@7c502000   1 Level     107c500000.mop
+183:          0          0          0          0 interrupt-controller@7c502000   0 Level     107c501000.moplet
+184:          0          0          0          0    GICv2 133 Level     vc4 crtc
+185:          0          0          0          0    GICv2 142 Level     vc4 crtc
+IPI0:    413665         24         18     200565       Rescheduling interrupts
+IPI1:         2       1129       1131       1131       Function call interrupts
+IPI2:         0          0          0          0       CPU stop interrupts
+IPI3:         0          0          0          0       CPU stop NMIs
+IPI4:         0          0          0          0       Timer broadcast interrupts
+IPI5:      4483        793          3         28       IRQ work interrupts
+IPI6:         0          0          0          0       CPU backtrace interrupts
+IPI7:         0          0          0          0       KGDB roundup interrupts
+Err:          0
+
+== irq-affinity
+1 0
+10 0
+108 0
+11 0
+110 0
+12 0
+127 0
+13 0
+133 0
+138 0
+14 0
+142 1
+15 0
+16 0
+160 0
+163 0
+164 0
+165 0
+166 0
+167 0
+168 0
+169 0
+170 0
+171 0
+172 0
+173 0
+174 0
+175 0
+176 0
+177 0
+178 0
+179 0
+180 0
+181 0
+182 0
+183 0
+184 0
+185 0
+2 0
+22 0
+23 0
+24 0
+25 0
+3 0
+32 0
+33 1
+34 2
+35 3
+36 0
+37 0
+38 0
+4 0
+40 0
+5 0
+6 0
+7 0
+8 0
+9 0
+
+== irq-threads
+     60  FF     50   0 irq/15-107c013880.mailbox
+    256  FF     50   0 irq/36-107d508200.i2c
+    257  FF     50   0 irq/38-107d508280.i2c
+    259  FF     50   0 irq/40-PCIe PME
+    260  FF     50   0 irq/40-aerdrv
+    261  FF     49   0 irq/40-s-aerdrv
+    262  FF     50   0 irq/40-PCIe bwctrl
+    263  FF     50   0 irq/163-pwr_button
+    264  FF     50   0 irq/22-DMA IRQ
+    266  FF     50   0 irq/165-mmc0
+    268  FF     49   0 irq/165-s-mmc0
+    269  FF     50   0 irq/166-mmc1
+    270  FF     49   0 irq/166-s-mmc1
+    273  FF     50   0 irq/23-DMA IRQ
+    274  FF     50   0 irq/164-107d004000.spi
+    276  FF     85   0 irq/142-dw_axi_dmac_platform
+    277  FF     50   0 irq/160-1f00008000.mailbox
+    280  FF     50   0 irq/133-xhci-hcd:usb1
+    281  FF     50   0 irq/138-xhci-hcd:usb3
+    421  FF     50   0 irq/108-eth%d
+    434  FF     50   0 irq/167-v3d_core0
+    435  FF     50   0 irq/168-v3d_hub
+    444  FF     50   0 irq/169-pispbe
+    445  FF     50   0 irq/170-1000800000.codec
+    446  FF     49   0 irq/170-s-1000800000.codec
+    474  FF     50   0 irq/37-ttyS0
+    526  FF     50   0 irq/171-107c580000.hvs
+    527  FF     50   0 irq/172-107c580000.hvs
+    528  FF     50   0 irq/173-107c580000.hvs
+    529  FF     50   0 irq/174-vc4 hdmi hpd connected
+    530  FF     50   0 irq/175-vc4 hdmi hpd disconnected
+    532  FF     50   0 irq/176-vc4 hdmi cec rx
+    533  FF     49   0 irq/176-s-vc4 hdmi cec rx
+    534  FF     50   0 irq/177-vc4 hdmi cec tx
+    535  FF     49   0 irq/177-s-vc4 hdmi cec tx
+    536  FF     50   0 irq/24-DMA IRQ
+    539  FF     50   0 irq/178-vc4 hdmi hpd connected
+    541  FF     50   0 irq/179-vc4 hdmi hpd disconnected
+    543  FF     50   0 irq/180-vc4 hdmi cec rx
+    544  FF     49   0 irq/180-s-vc4 hdmi cec rx
+    546  FF     50   0 irq/181-vc4 hdmi cec tx
+    547  FF     49   0 irq/181-s-vc4 hdmi cec tx
+    555  FF     50   0 irq/25-DMA IRQ
+    557  FF     50   0 irq/182-107c500000.mop
+    558  FF     50   0 irq/183-107c501000.moplet
+    559  FF     50   0 irq/184-vc4 crtc
+    560  FF     50   0 irq/185-vc4 crtc
+    597  FF     50   0 irq/110-1f00074000.i2c
+   3213  FF     50   0 irq/16-uart-pl011
+  14318  FF     50   0 irq/127-uart-pl011
+
+== masked
+alsa-utils.service        masked enabled
+apt-daily-upgrade.service masked enabled
+apt-daily.service         masked enabled
+cryptdisks-early.service  masked enabled
+cryptdisks.service        masked enabled
+dpkg-db-backup.service    masked enabled
+e2scrub_all.service       masked enabled
+e2scrub_reap.service      masked enabled
+fstrim.service            masked enabled
+hwclock.service           masked enabled
+motd-news.service         masked enabled
+rpi-eeprom-update.service masked enabled
+sshd-keygen.service       masked enabled
+sudo.service              masked enabled
+systemd-firstboot.service masked enabled
+x11-common.service        masked enabled
+apt-daily-upgrade.timer   masked enabled
+apt-daily.timer           masked enabled
+dpkg-db-backup.timer      masked enabled
+e2scrub_all.timer         masked enabled
+fstrim.timer              masked enabled
+motd-news.timer           masked enabled
+
+== enabled
+getty@.service                       enabled enabled
+namchaind.service                    enabled enabled
+pedal-codec.service                  enabled enabled
+pedal-guard-maint.service            enabled enabled
+pedal-guard.service                  enabled enabled
+pedal-tune.service                   enabled enabled
+pedal-uart.service                   enabled enabled
+pedal-wifi.service                   enabled enabled
+pedald.service                       enabled enabled
+rigpa.service                        enabled enabled
+ssh.service                          enabled enabled
+systemd-network-generator.service    enabled enabled
+systemd-networkd-wait-online.service enabled enabled
+systemd-networkd.service             enabled enabled
+systemd-pstore.service               enabled enabled
+systemd-resolved.service             enabled enabled
+systemd-timesyncd.service            enabled enabled
+vip-boot-deadline.service            enabled enabled
+vip-boot-settle.service              enabled enabled
+vip-boot-validate.service            enabled enabled
+wpa_supplicant.service               enabled enabled
+systemd-networkd-resolve-hook.socket enabled enabled
+systemd-networkd-varlink.socket      enabled enabled
+systemd-networkd.socket              enabled enabled
+systemd-resolved-monitor.socket      enabled enabled
+systemd-resolved-varlink.socket      enabled enabled
+remote-fs.target                     enabled enabled
+
+== running
+dbus.service                  loaded active running D-Bus System Message Bus
+getty@tty1.service            loaded active running Getty on tty1
+pedald.service                loaded active running Pedal: the pedal service (Pico link, resume, the bank and the map)
+serial-getty@ttyAMA10.service loaded active running Serial Getty on ttyAMA10
+ssh.service                   loaded active running OpenBSD Secure Shell server
+systemd-journald.service      loaded active running Journal Service
+systemd-logind.service        loaded active running User Login Management
+systemd-networkd.service      loaded active running Network Management
+systemd-resolved.service      loaded active running Network Name Resolution
+systemd-timesyncd.service     loaded active running Network Time Synchronization
+systemd-udevd.service         loaded active running Rule-based Manager for Device Events and Files
+wpa_supplicant.service        loaded active running WPA supplicant
+wpa_supplicant@wlan0.service  loaded active running WPA supplicant daemon (for interface wlan0)
+
+== timers
+Mon 2026-10-12 16:16:31 UTC 9min - - systemd-tmpfiles-clean.timer systemd-tmpfiles-clean.service
+-                              - - - apt-daily-upgrade.timer      -
+-                              - - - apt-daily.timer              -
+-                              - - - dpkg-db-backup.timer         -
+-                              - - - e2scrub_all.timer            -
+-                              - - - fstrim.timer                 -
+-                              - - - motd-news.timer              -
+
+== sysctl
+vm.swappiness = 60
+vm.stat_interval = 10
+vm.dirty_ratio = 20
+vm.dirty_background_ratio = 10
+kernel.sched_rt_runtime_us = 950000
+
+== limits
+==> /etc/security/limits.d/10-coredump-debian.conf <==
+*               soft    core            0
+root            soft    core            0
+*               hard    core            infinity
+root            hard    core            infinity
+
+==> /etc/security/limits.d/90-pedal-rt.conf <==
+# Realtime limits for the audio group. Without them a normal user is refused SCHED_FIFO and
+# mlockall: the default is rtprio 0 and an 8 MB memlock. A systemd service does not get
+# these (no pam_limits); namchaind's unit must set LimitRTPRIO and LimitMEMLOCK itself.
+@audio   -  rtprio    95
+@audio   -  memlock   unlimited
+# A backstop against a runaway SCHED_FIFO loop, not a latency setting: SIGXCPU after 200 ms of
+# realtime CPU without blocking, ~150 periods at 64 frames. Deliberately NOT
+# sched_rt_runtime_us=-1, which removes the kernel's only escape from such a loop.
+@audio   -  rttime    200000
+
+== pedal-manifest
+file /etc/namchain/namchaind.json
+file /etc/pedal/codec/wm8960-codec-master.dts
+file /etc/pedal/codec/wm8960.mixer
+file /etc/pedal/default-rig.json
+file /etc/pedal/masked-units
+file /etc/pedal/tune.conf
+file /etc/security/limits.d/90-pedal-rt.conf
+file /etc/ssh/sshd_config.d/10-pedal-keys-only.conf
+file /etc/sysctl.d/90-pedal.conf
+file /etc/systemd/journald.conf.d/10-pedal.conf
+file /etc/systemd/network/20-eth0.network
+file /etc/systemd/network/20-wlan0.network
+file /etc/systemd/resolved.conf.d/10-pedal-mdns.conf
+file /etc/systemd/system/namchaind.service.d/10-pedal.conf
+file /etc/systemd/system/pedal-codec.service
+file /etc/systemd/system/pedal-maint.target
+file /etc/systemd/system/pedal-rt.slice
+file /etc/systemd/system/pedal-tune.service
+file /etc/systemd/system/pedal-wifi.service
+file /etc/systemd/system/system.slice.d/10-pedal-cpuset.conf
+file /etc/systemd/system/user.slice.d/10-pedal-cpuset.conf
+file /usr/local/bin/pedal-rt
+file /usr/local/sbin/pedal-codec
+file /usr/local/sbin/pedal-device
+file /usr/local/sbin/pedal-tune
+file /usr/local/sbin/pedal-wifi
+mask apt-daily.service
+mask apt-daily.timer
+mask apt-daily-upgrade.service
+mask apt-daily-upgrade.timer
+mask dpkg-db-backup.service
+mask dpkg-db-backup.timer
+mask e2scrub_all.service
+mask e2scrub_all.timer
+mask e2scrub_reap.service
+mask fstrim.service
+mask fstrim.timer
+mask motd-news.service
+mask motd-news.timer
+file /etc/pedal/applied
+file /etc/pedal/pedald.json
+file /etc/systemd/system/pedald.service
+file /usr/lib/sysusers.d/pedal.conf
+file /usr/local/lib/pedald/__init__.py
+file /usr/local/lib/pedald/config.py
+file /usr/local/lib/pedald/daemon.py
+file /usr/local/lib/pedald/engine.py
+file /usr/local/lib/pedald/httpd.py
+file /usr/local/lib/pedald/link.py
+file /usr/local/lib/pedald/mapping.py
+file /usr/local/lib/pedald/protocol.py
+file /usr/local/lib/pedald/resume.py
+file /usr/local/sbin/pedald
+file /etc/systemd/system/pedal-diag.service
+file /usr/local/sbin/pedal-diag
+file /etc/pedal/uart/uart0-enable.dts
+file /etc/systemd/system/pedal-uart.service
+file /usr/local/sbin/pedal-uart
+file /usr/local/sbin/dtoverlay-locked
+file /usr/local/lib/rpi-eeprom/eeprom.lock
+file /usr/local/sbin/vip-eeprom
+file /etc/namchain/cost.json
+file /etc/pedal/pedal-interface.json
+file /usr/local/lib/pedald/library.py
+file /etc/systemd/journald.conf.d/persistent.conf
+file /usr/lib/tmpfiles.d/journal-persistent.conf
+file /etc/systemd/system/pedal-measure.service
+file /usr/local/sbin/pedal-measure
+file /etc/rigpa/rigpa.json
+saved /etc/systemd/system/rigpa.service.d/10-pedal.conf
+file /etc/systemd/system/rigpa.service.d/10-pedal.conf
+file /usr/lib/sysusers.d/rigpa.conf
+file /etc/rigpa/kms.json
+file /etc/systemd/system/rigpa.service.d/20-vip.conf
+file /etc/systemd/system/pedal.benchtest.service
+file /usr/local/lib/benchtest/__init__.py
+file /usr/local/lib/benchtest/catalog.py
+file /usr/local/lib/benchtest/fakes.py
+file /usr/local/lib/benchtest/helper.py
+file /usr/local/lib/benchtest/lamps.py
+file /usr/local/lib/benchtest/main.py
+file /usr/local/lib/benchtest/real.py
+file /usr/local/lib/benchtest/runner.py
+file /usr/local/lib/benchtest/server.py
+file /usr/local/lib/benchtest/static/app.css
+file /usr/local/lib/benchtest/static/app.js
+file /usr/local/lib/benchtest/static/index.html
+file /usr/local/lib/benchtest/static/stopped.html
+file /usr/local/lib/benchtest/static/stopped.js
+file /usr/local/sbin/pedal-benchtest
+
+== host-slim-manifest
+none (taken over by pedal-device)

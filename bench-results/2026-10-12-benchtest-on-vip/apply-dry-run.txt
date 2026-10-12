@@ -1,0 +1,54 @@
+[1;34m==>[0m staging rootfs in vip:/var/tmp/pedal-stage-20261012T160239Z
+[1;34m==>[0m applying 5c7a2e6 (dry run)
+pedal-device: DRY RUN: nothing will change
+  DRY   mkdir -p /var/lib/pedal
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/etc/systemd/system/pedal.benchtest.service /etc/systemd/system/pedal.benchtest.service
+  installed /etc/systemd/system/pedal.benchtest.service
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/__init__.py /usr/local/lib/benchtest/__init__.py
+  installed /usr/local/lib/benchtest/__init__.py
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/catalog.py /usr/local/lib/benchtest/catalog.py
+  installed /usr/local/lib/benchtest/catalog.py
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/fakes.py /usr/local/lib/benchtest/fakes.py
+  installed /usr/local/lib/benchtest/fakes.py
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/helper.py /usr/local/lib/benchtest/helper.py
+  installed /usr/local/lib/benchtest/helper.py
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/lamps.py /usr/local/lib/benchtest/lamps.py
+  installed /usr/local/lib/benchtest/lamps.py
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/main.py /usr/local/lib/benchtest/main.py
+  installed /usr/local/lib/benchtest/main.py
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/real.py /usr/local/lib/benchtest/real.py
+  installed /usr/local/lib/benchtest/real.py
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/runner.py /usr/local/lib/benchtest/runner.py
+  installed /usr/local/lib/benchtest/runner.py
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/server.py /usr/local/lib/benchtest/server.py
+  installed /usr/local/lib/benchtest/server.py
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/static/app.css /usr/local/lib/benchtest/static/app.css
+  installed /usr/local/lib/benchtest/static/app.css
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/static/app.js /usr/local/lib/benchtest/static/app.js
+  installed /usr/local/lib/benchtest/static/app.js
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/static/index.html /usr/local/lib/benchtest/static/index.html
+  installed /usr/local/lib/benchtest/static/index.html
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/static/stopped.html /usr/local/lib/benchtest/static/stopped.html
+  installed /usr/local/lib/benchtest/static/stopped.html
+  DRY   install -D -m 0644 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/lib/benchtest/static/stopped.js /usr/local/lib/benchtest/static/stopped.js
+  installed /usr/local/lib/benchtest/static/stopped.js
+  DRY   install -D -m 0755 -o root -g root /var/tmp/pedal-stage-20261012T160239Z/rootfs/usr/local/sbin/pedal-benchtest /usr/local/sbin/pedal-benchtest
+  installed /usr/local/sbin/pedal-benchtest
+  masked by someone else, left alone: rpi-eeprom-update.service
+  DRY   systemctl daemon-reload
+  DRY   systemctl set-property --runtime system.slice AllowedCPUs=0
+  DRY   systemctl set-property --runtime user.slice AllowedCPUs=0
+  DRY   sysctl -q -p /etc/sysctl.d/90-pedal.conf
+  DRY   systemctl restart systemd-journald
+  DRY   systemctl enable pedal-tune.service
+  DRY   systemctl restart pedal-tune.service
+  DRY   systemd-sysusers
+  DRY   systemctl enable pedal-uart.service
+  DRY   systemctl restart pedal-uart.service
+  DRY   systemctl enable pedald.service
+  DRY   systemctl restart --no-block pedald.service
+  DRY   systemctl enable pedal-codec.service
+  DRY   systemctl restart pedal-codec.service
+  DRY   systemctl enable pedal-wifi.service
+  DRY   systemctl restart pedal-wifi.service
+pedal-device: done. Manifest: /var/lib/pedal/manifest
