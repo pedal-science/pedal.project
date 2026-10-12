@@ -74,6 +74,11 @@ DEFAULT_TRIM = 2.0
 #: 3 dB, a third of the capture's power is outside the 20 Hz-20 kHz band the figures use.
 OUTSIDE_BAND_DB = 3.0
 BANDS = [31.5, 63, 125, 250, 500, 1000, 2000, 4000, 8000, 16000, 20000]
+#: The mains family, as codec-noise.py reads it: the loudest bin within MAINS_SPAN_HZ of each of
+#: these, in Hz and dBFS. Hum is a spike here and hiss is a slope elsewhere, and a page that shows
+#: only the total leaves the reader to guess which one they are looking at.
+MAINS_HZ = (50.0, 100.0, 150.0)
+MAINS_SPAN_HZ = 2.0
 COLOURS = ["#1f77b4", "#d62728", "#2ca02c", "#9467bd", "#ff7f0e", "#8c564b", "#17becf"]
 
 F_TITLE, F_LABEL, F_TICK = None, None, None
@@ -166,7 +171,13 @@ def numbers(x, rate, full_scale=1.0):
            "dc_offset": round(dc, 12), "dc_offset_uv": round(dc * full_scale * 1e6, 2),
            "rms_uv": round(math.sqrt(ms) * full_scale * 1e6, 2),
            "rms_a_uv": round(math.sqrt(ms_a) * full_scale * 1e6, 2),
-           "bands": [], "lines": [], "lines_low": [], "lines_high": []}
+           "bands": [], "lines": [], "lines_low": [], "lines_high": [], "mains": []}
+    for hz in MAINS_HZ:
+        centre, half = int(round(hz / bin_hz)), max(1, int(round(MAINS_SPAN_HZ / bin_hz)))
+        k = max(range(max(1, centre - half), min(len(spec) - 1, centre + half) + 1),
+                key=lambda i: spec[i])
+        out["mains"].append({"nominal_hz": hz, "hz": round(k * bin_hz, 2),
+                             "dbfs": round(db(float(spec[k])), 2)})
     for b0, b1 in zip(BANDS, BANDS[1:]):
         k0, k1 = int(b0 / bin_hz), min(int(b1 / bin_hz) + 1, len(spec))
         pw = float(spec[k0:k1].sum())
@@ -340,13 +351,18 @@ def build_page(manifest, data, out_dir, compare_title, audio=True):
         bands = "".join("<tr><td>%g&ndash;%g Hz</td><td>%.1f dBFS</td><td>%.1f%%</td></tr>"
                         % (b["from"], b["to"], b["dbfs"], b["share"]) for b in n["bands"])
         audio = audio_block(n["id"], n["label"], n["norm_gain_db"]) if audio else ""
+        mains = " &middot; ".join("%g Hz %.1f dBFS" % (m["nominal_hz"], m["dbfs"])
+                                 for m in n["mains"]) or "not measured"
+        loudest = max(n["lines_low"], key=lambda l: l["dbfs"], default=None)
         rows.append("""
     <section>
       <h2>%s</h2>
       <p>%s</p>
       <p class="meta"><code>%s</code> &middot; %.1f s &middot; <strong>%.1f dBFS rms</strong>
          unweighted &middot; <strong>%.1f dBFS(A)</strong> &middot; peak %.1f dBFS &middot;
-         raw (unbanded) %.1f dBFS%s</p>      %s
+         raw (unbanded) %.1f dBFS%s</p>
+      <p class="meta">mains: %s &middot; largest line below 1 kHz: %s</p>
+      %s
       <img src="img/spectrum-%s.png" alt="spectrum">
       <img src="img/bands-%s.png" alt="octave bands">
       <div class="cols">
@@ -358,6 +374,8 @@ def build_page(manifest, data, out_dir, compare_title, audio=True):
                      (" &mdash; %.1f dB of it outside the 20 Hz&ndash;20 kHz band"
                       % n["outside_band_db"]) if (n.get("outside_band_db") or 0) >= OUTSIDE_BAND_DB
                      else "",
+                     mains,
+                     "%g Hz %.1f dBFS" % (loudest["hz"], loudest["dbfs"]) if loudest else "none",
                      audio, n["id"], n["id"], bands, lines or "<li>none</li>"))
 
     legend = "".join(

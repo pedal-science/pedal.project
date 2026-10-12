@@ -6,11 +6,16 @@
                                  [--no-audio] [--dry-run]
     scripts/codec-input-noise.py --rebuild DIR          re-draw a results directory, no pedal
 
-This is what `docs/codec-bringup-2c.md` describes in prose, as one command: the codec's input is
-shorted at the pin, the engine holds the codec, and the question is how much noise the converter
-reports. It stops `namchaind` for the captures that need the card to itself, starts it again
-afterwards, puts the mute back as it found it, and leaves a document of graphs and numbers in
+This is what `docs/codec-bringup-2c.md` describes in prose, as one command: the codec's input node
+is wired some way \u2014 shorted at the pin for the reference row, or through the input board, or
+with a jack in it \u2014 and the question is how much noise comes through it. It stops `namchaind`
+for the captures that need the card to itself, starts it again afterwards, puts the mute back as it
+found it, and leaves a document of graphs and numbers in
 `bench-results/<date>-codec-input-noise/`.
+
+**`--state` is required and is the record's only description of what was measured.** The script
+cannot see the wiring; it measures whatever is there. Every sentence the page writes about the
+setup is that line, so a wrong one is a wrong record \u2014 which is why there is no default.
 
 Three arms, each `--seconds` long, each analysed from 2 s in:
 
@@ -76,9 +81,10 @@ ARM_INFO = {
                "uses. 2026-10-11 read &minus;75.3 dBFS(A) here at 64-frame periods."),
     "playback": ("playback-open", "Engine stopped, a silent playback stream open",
                  "No engine, but a silent <code>aplay</code> holds the playback path open \u2014 "
-                 "the codec state the engine leaves it in. This converter's capture-only state is "
-                 "about 15 dB louder in the 4\u201316 kHz bands, so this arm is the quiet one: "
-                 "2026-10-11 read &minus;79.9 dBFS(A)."),
+                 "the codec state the engine leaves it in. On 2026-10-11 this converter's "
+                 "capture-only state was about 15 dB louder in the 4\u201316 kHz bands and this "
+                 "arm read &minus;79.9 dBFS(A), the quietest of that session's arms \u2014 not of "
+                 "every session's since."),
     "alone": ("capture-only", "Engine stopped, capture only (no playback stream)",
               "The engine stopped and <code>arecord</code> on its own. The arm the earlier logs "
               "quote, and the least repeatable of the three: 2026-10-11 read &minus;75.8 dBFS(A) "
@@ -277,21 +283,28 @@ def write_results(args, state_before, state_after, arms_done, notes, out_dir, ra
         "title": "The codec's input noise — %s" % args.date,
         "meta": "%s &middot; %s" % (args.date, args.state),
         "intro": [
-            "<p>This is the WM8960 codec on its jumpers to the Core host with its input shorted at "
-            "the pin, so the converter sees silence: <strong>everything in these captures is the "
-            "pedal's own noise</strong>, and nothing in them is the guitar, the input board or the "
-            "room. Each arm is %d s of the codec's own ADC, analysed from %.0f s in, because the "
-            "stream's start-up transient sits in the first seconds.</p>" % (args.seconds, SKIP_SECONDS),
-            "<p>The state line above is the owner's description of the bench, not something this "
-            "script can see: it measured whatever was wired, and only the numbers below say how "
-            "quiet that was.</p>",
+            "<p>Three arms, each %d s of the codec's own ADC \u2014 channel 0, LIN1 \u2014 "
+            "analysed from %.0f s in, because the stream's start-up transient sits in the first "
+            "seconds. What the input node is connected to decides what is in them: a pin shorted "
+            "to ground measures the converter and the wiring to it, an input board measures the "
+            "board, a jack measures whatever the jack is picking up.</p>"
+            % (args.seconds, SKIP_SECONDS),
+            "<p><strong>The state line above is the only description of the setup in this "
+            "record</strong>, and it is what the owner typed when the run was started. The script "
+            "cannot see the wiring and does not know what it measured; the numbers below say how "
+            "quiet whatever it was, was.</p>",
         ],
         "callout": "<p><strong>How to read it.</strong> Each capture has a spectrum in dBFS per "
                    "0.73 Hz bin and the same noise as octave-band bars. <em>Hum</em> is a spike at "
-                   "50 Hz and its harmonics; <em>hiss</em> is a broad slope across the high bands. "
-                   "The two arms that matter are the engine's own recording (the pedal's normal "
-                   "state) and the one with a silent playback stream open (the converter's quiet "
-                   "state).</p>",
+                   "50 Hz and its harmonics, and the mains line beside each graph is that spike: an "
+                   "A-weighted figure discounts 50 Hz by about 30 dB, which is why a hum reads far "
+                   "worse unweighted than weighted. <em>Hiss</em> is a broad slope across the high "
+                   "bands. <em>Drift</em> is energy below 20 Hz, which the band-limited figures do "
+                   "not count and the raw one does. The three arms are the converter in its three "
+                   "states \u2014 the engine running, a silent playback stream, and neither \u2014 "
+                   "so where they disagree the difference is the engine or the stream, and where "
+                   "they agree whatever it is sits ahead of both, in the wiring at the input "
+                   "node.</p>",
         "compare_title": "Every arm, one spectrum each",
         "footer": [
             "<p>Captured by <code>scripts/codec-input-noise.py</code>, analysed and drawn by "
@@ -355,17 +368,39 @@ def readme(args, out_dir, state_before, state_after, arms_done):
         n = numbers.get(cid)
         if not n:
             continue
-        rows.append("| `%s` | %s | %.2f dBFS | **%.2f dBFS(A)** | %.2f dBFS | %.2f | %.1f µV | %.1f µV |"
-                    % (cid, n["label"], n["rms_dbfs"], n["rms_a_dbfs"], n["raw_rms_dbfs"],
+        fifty = next((m["dbfs"] for m in n.get("mains", []) if m["nominal_hz"] == 50.0), None)
+        rows.append("| `%s` | %s | %.2f dBFS | **%.2f dBFS(A)** | %s | %.2f dBFS | %.2f | %.1f µV | %.1f µV |"
+                    % (cid, n["label"], n["rms_dbfs"], n["rms_a_dbfs"],
+                       "%.1f dBFS" % fifty if fifty is not None else "—", n["raw_rms_dbfs"],
                        n["peak_dbfs"], n["rms_uv"], n["rms_a_uv"]))
     unweighted = [numbers[ARM_INFO[a][0]]["rms_dbfs"] for a in ARMS if ARM_INFO[a][0] in numbers]
     present = [numbers[ARM_INFO[a][0]] for a in ARMS if ARM_INFO[a][0] in numbers]
     loudest = max(present, key=lambda n: n["raw_rms_dbfs"], default=None)
-    bar = ("The quietest arm reads **%.2f dBFS** unweighted, inside the bench test's codec-only "
-           "bar of %.0f ± %.0f dBFS." % (min(unweighted), BENCHTEST_BAR_DBFS,
-                                         BENCHTEST_TOLERANCE_DB)) if unweighted else \
-          "No numbers were written."
+    # Where the reading sits against the bench test's bar, in the bench test's own terms: above
+    # the bar its "Codec input on its own" check fails, and a failure paints the codec block.
+    limit = BENCHTEST_BAR_DBFS + BENCHTEST_TOLERANCE_DB
+    if unweighted:
+        quietest = min(unweighted)
+        if quietest <= limit:
+            bar = ("The quietest arm reads **%.2f dBFS** unweighted, inside the bench test's "
+                   "codec-only bar of %.0f ± %.0f dBFS." % (quietest, BENCHTEST_BAR_DBFS,
+                                                            BENCHTEST_TOLERANCE_DB))
+        else:
+            bar = ("The quietest arm reads **%.2f dBFS** unweighted, **%.1f dB outside** the "
+                   "bench test's codec-only bar of %.0f ± %.0f dBFS — its \u201cCodec input on "
+                   "its own\u201d check would fail and paint the codec block for this."
+                   % (quietest, quietest - limit, BENCHTEST_BAR_DBFS, BENCHTEST_TOLERANCE_DB))
+    else:
+        bar = "No numbers were written."
     caveat = []
+    if len(present) >= 2:
+        spread = max(n["rms_a_dbfs"] for n in present) - min(n["rms_a_dbfs"] for n in present)
+        if spread <= 1.5:
+            caveat.append(
+                "**All %d arms agree to within %.1f dB A-weighted**, so none of this is the engine "
+                "or the converter's stream state: whatever it is, it is common to all three and "
+                "sits before the converter \u2014 the wiring at the input node." % (len(present),
+                                                                                    spread))
     for n in present:
         if (n.get("outside_band_db") or 0) < OUTSIDE_BAND_DB:
             continue
@@ -388,8 +423,8 @@ def readme(args, out_dir, state_before, state_after, arms_done):
              "[noise-numbers.json](noise-numbers.json); the engine and host state before, during "
              "and after is in [state.json](state.json). The captures are in `captures/` and the "
              "playable copies in `audio/`, both untracked.", "",
-             "| arm | what it is | unweighted | A-weighted | raw (unbanded) | peak | rms | rms (A) |",
-             "|---|---|---|---|---|---|---|---|"] + rows + ["", bar, ""] + caveat + ["",
+             "| arm | what it is | unweighted | A-weighted | 50 Hz | raw (unbanded) | peak | rms | rms (A) |",
+             "|---|---|---|---|---|---|---|---|---|"] + rows + ["", bar, ""] + caveat + ["",
              "## What it is compared with", "",
              "| when | state | unweighted | A-weighted |", "|---|---|---|---|"]
     lines += ["| %s | %s | %.2f dBFS | %.2f dBFS(A) |" % r for r in REFERENCE]
@@ -469,10 +504,10 @@ def main():
                     help="seconds per arm (default %d)" % DEFAULT_SECONDS)
     ap.add_argument("--arms", default=",".join(ARMS),
                     help="which arms to run: %s (default all three)" % ", ".join(ARMS))
-    ap.add_argument("--state", default="LIN1 shorted to the codec's own GND, nothing else attached "
-                                       "to the pedal, vip and the codec only on the host's USB-C "
-                                       "supply",
-                    help="what is wired, as one line for the page and the record")
+    ap.add_argument("--state", default=None,
+                    help="what is wired, as one line for the page and the record: required, because "
+                         "it is the only description of the setup the record will contain and this "
+                         "script cannot see the wiring (--rebuild takes it from state.json)")
     ap.add_argument("--dir", help="results directory (default bench-results/<date>-codec-input-noise)")
     ap.add_argument("--device", default="hw:wm8960", help="the codec's ALSA device")
     ap.add_argument("--format", default=None,
@@ -502,6 +537,9 @@ def main():
 
     if args.dry_run:
         print("would run on %s, under scripts/host-lock:" % args.host)
+        print("  0. record the state line: %s" % (args.state and '"%s"' % args.state or
+                                                   "MISSING — a real run needs --state, because it "
+                                                   "is the record's only description of the wiring"))
         print("  1. read the engine's state, then %s" % (
             "mute it and `%s record start %s --seconds %d`, wait, and fetch "
             "capture.wav" % (CTL, recording_name, args.seconds) if "engine" in arms else
@@ -528,6 +566,10 @@ def main():
         argv += ["--", sys.executable, os.path.abspath(__file__)] + sys.argv[1:]
         os.execv(HOST_LOCK, argv)
 
+    if not args.state:
+        ap.error("--state is required: it is the record's only description of what was wired, and "
+                 "this script cannot see it. Say what the codec's input is connected to, e.g.\n"
+                 "  --state 'LIN1 shorted to the codec's own GND, nothing else attached'")
     for tool in (CODEC_NOISE, NOISE_DOCUMENT, HOST_LOCK):
         if not os.path.exists(tool):
             raise SystemExit("codec-input-noise.py: %s is missing" % tool)

@@ -60,7 +60,7 @@ DOC_PYTHON = document_python()
 
 
 def write_wav(path, seconds=3.0, rate=48000, channels=2, width=4, tone_hz=0.0,
-              level_dbfs=-90.0, drift=False):
+              level_dbfs=-90.0, drift=False, mains_hz=0.0, mains_dbfs=None):
     """A stereo capture: everything on channel 0, silence on channel 1.
 
     `drift` adds a very low frequency wander (0.5 Hz) far below the 20 Hz-20 kHz band every figure
@@ -72,6 +72,8 @@ def write_wav(path, seconds=3.0, rate=48000, channels=2, width=4, tone_hz=0.0,
     for i in range(int(rate * seconds)):
         t = i / rate
         v = scale * math.sin(2 * math.pi * tone_hz * t) if tone_hz else 0.0
+        if mains_hz and mains_dbfs is not None:
+            v += (10 ** (mains_dbfs / 20)) * math.sqrt(2) * peak * math.sin(2 * math.pi * mains_hz * t)
         if drift:
             v += 0.3 * peak * math.sin(2 * math.pi * 0.5 * t)
         s = max(-peak - 1, min(peak, int(round(v))))
@@ -85,7 +87,8 @@ def write_wav(path, seconds=3.0, rate=48000, channels=2, width=4, tone_hz=0.0,
 
 
 def make_results_dir(root, arms=("engine", "playback", "alone"), drift=("alone",),
-                     ran_at="2026-10-12T18:44:03+01:00"):
+                     ran_at="2026-10-12T18:44:03+01:00", level_dbfs=-90.0, mains_hz=0.0,
+                     mains_dbfs=None):
     """A results directory shaped like a real run's, with synthetic captures."""
     out = pathlib.Path(root)
     (out / "captures").mkdir(parents=True, exist_ok=True)
@@ -94,7 +97,8 @@ def make_results_dir(root, arms=("engine", "playback", "alone"), drift=("alone",
         # A tone inside the band, so the band-limited figure is a real one; the drift arm gets the
         # sub-audio wander on top of it, as the real capture-only arm has.
         write_wav(out / "captures" / ("%s.wav" % cid), seconds=3.0, tone_hz=1000.0,
-                  level_dbfs=-90.0, drift=arm in drift)
+                  level_dbfs=level_dbfs, drift=arm in drift, mains_hz=mains_hz,
+                  mains_dbfs=mains_dbfs)
     (out / "state.json").write_text(json.dumps({
         "before": {"namchaind": "active", "mute": False, "xruns": 2, "period_size": 64},
         "after": {"namchaind": "active", "mute": False, "xruns": 0, "period_size": 64},
@@ -267,13 +271,65 @@ class Rebuild(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             out = make_results_dir(d)
             proc = subprocess.run([sys.executable, str(DRIVER), "--dir", str(out), "--arms",
-                                   "engine"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                  text=True)
+                                   "engine", "--state", "a synthetic bench"],
+                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             self.assertEqual(proc.returncode, 1)
             self.assertIn("already holds captures", proc.stdout)
             self.assertIn("--rebuild", proc.stdout)
             # ... and what it refused to overwrite is still there.
             self.assertTrue((out / "captures" / "engine-muted.wav").exists())
+
+    @unittest.skipUnless(DOC_PYTHON, "no python with numpy and Pillow (the harness's bundled one)")
+    def test_the_bar_claim_follows_the_number_it_is_about(self):
+        # A run far above the bench test's bar must not be described as inside it. -63.7 dBFS is
+        # 11 dB outside, and the record said "inside" until this was fixed.
+        with tempfile.TemporaryDirectory() as d:
+            out = make_results_dir(d, arms=("engine",), drift=(), level_dbfs=-63.7)
+            self.run_rebuild(out)
+            readme = (out / "README.md").read_text()
+            self.assertIn("outside", readme)
+            self.assertIn("paint the codec block", readme)
+            self.assertNotIn("unweighted, inside the bench test", readme)
+        with tempfile.TemporaryDirectory() as d:
+            out = make_results_dir(d, arms=("engine",), drift=(), level_dbfs=-89.0)
+            self.run_rebuild(out)
+            readme = (out / "README.md").read_text()
+            self.assertIn("unweighted, inside the bench test", readme)
+            self.assertNotIn("outside", readme)
+
+    @unittest.skipUnless(DOC_PYTHON, "no python with numpy and Pillow (the harness's bundled one)")
+    def test_the_record_names_the_mains_line_and_what_agreement_means(self):
+        with tempfile.TemporaryDirectory() as d:
+            out = make_results_dir(d, arms=("engine", "playback", "alone"), drift=("alone",),
+                                   mains_hz=50.0, mains_dbfs=-68.0)
+            self.run_rebuild(out)
+            readme = (out / "README.md").read_text()
+            numbers = {c["id"]: c for c in json.loads(
+                (out / "noise-numbers.json").read_text())["captures"]}
+            for c in numbers.values():
+                fifty = [m for m in c["mains"] if m["nominal_hz"] == 50.0]
+                self.assertEqual(len(fifty), 1)
+                # A tone is not bin-centred (0.73 Hz bins), so the Hann-windowed peak bin reads
+                # about 2 dB under the tone's own level -- codec-noise.py's figure does the same,
+                # which is why the two agree exactly on a real capture.
+                self.assertAlmostEqual(fifty[0]["dbfs"], -68.0, delta=3.0)
+                self.assertLess(abs(fifty[0]["hz"] - 50.0), 2.0)
+            self.assertIn("| 50 Hz |", readme)
+            self.assertIn("All 3 arms agree", readme)
+
+    def test_a_real_run_will_not_start_without_a_state_line(self):
+        # The state line is the record's only description of the wiring, and the script cannot see
+        # it: a run with no --state would write a record that says nothing about what it measured.
+        proc = subprocess.run([sys.executable, str(DRIVER), "--dir", "/tmp/never-used",
+                               "--arms", "engine"], stdout=subprocess.PIPE,
+                              stderr=subprocess.STDOUT, text=True)
+        self.assertEqual(proc.returncode, 2)
+        self.assertIn("--state is required", proc.stdout)
+        # ... but a rehearsal writes no record, so it may go without one, and it says so.
+        proc = subprocess.run([sys.executable, str(DRIVER), "--dry-run"],
+                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        self.assertEqual(proc.returncode, 0, proc.stdout)
+        self.assertIn("MISSING", proc.stdout)
 
     def test_a_directory_that_is_not_a_run_is_refused_by_name(self):
         with tempfile.TemporaryDirectory() as d:
