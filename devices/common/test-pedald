@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# devices/common/test-pedald — the pedal service's unit tests.
+# devices/common/test-pedald — the pedal service's unit tests, then the workstation scripts' tests
+# and pedal.benchtest's browser test.
 #
 #   devices/common/test-pedald [-v] [test_name ...]
 #
@@ -8,7 +9,51 @@
 # the full one since 2026-10-04 (`devices/vip/packages` installs `python3`) — but the convention
 # is the Mac, and the Core host is shared and quiet (rule 8). The service needs that full
 # standard library: `termios` for the UART's line discipline, `hmac` for the bearer compare.
+#
+# Three suites, in order: devices/common/tests on system python3; scripts/tests (the benchtest
+# helper and its kin), also on python3; then devices/common/tests/browser, pedal.benchtest's page
+# in Chromium through Playwright, which `uv run --with playwright` brings for that step only (no
+# uv: the step is skipped and says so). Naming tests (`test-pedald -v test_benchtest_server`, or
+# `test_benchtest_runner.Lamps`) runs just those, from devices/common/tests, and nothing else.
 set -euo pipefail
 HERE=$(cd "$(dirname "$0")" && pwd)
+REPO=$(cd "$HERE/../.." && pwd)
 export PYTHONPATH="$HERE/rootfs/usr/local/lib${PYTHONPATH:+:$PYTHONPATH}"
-exec python3 -m unittest discover -s "$HERE/tests" -t "$HERE/tests" "$@"
+
+named=0 flags=() value_next=0
+for arg in "$@"; do
+  if (( value_next )); then value_next=0; continue; fi
+  case $arg in
+    -p|--pattern|-k|-s|--start-directory|-t|--top-level-directory) value_next=1 ;;
+    -v|--verbose|-q|--quiet|-f|--failfast|-b|--buffer|-c|--catch) flags+=("$arg") ;;
+    -*) ;;
+    *) named=1 ;;
+  esac
+done
+
+if (( named )); then
+  cd "$HERE/tests"
+  exec python3 -m unittest "$@"
+fi
+
+status=0
+python3 -m unittest discover -s "$HERE/tests" -t "$HERE/tests" "$@" || status=1
+
+echo "test-pedald: scripts/tests" >&2
+python3 -m unittest discover -s "$REPO/scripts/tests" -t "$REPO/scripts/tests" \
+  ${flags[@]+"${flags[@]}"} || status=1
+
+BROWSER="$HERE/tests/browser/test_benchtest_browser.py"
+if command -v uv >/dev/null 2>&1; then
+  echo "test-pedald: the benchtest browser test (Chromium through uv run --with playwright)" >&2
+  if uv run --quiet --no-project --with playwright playwright install chromium; then
+    uv run --quiet --no-project --with playwright python "$BROWSER" ${flags[@]+"${flags[@]}"} || status=1
+  else
+    echo "test-pedald: could not install Playwright's Chromium, so the browser test did not run" >&2
+    status=1
+  fi
+else
+  echo "test-pedald: SKIPPED the benchtest browser test: uv is not on PATH (it brings Playwright" \
+       "for that step; mise install uv, or see devices/common/tests/browser/)" >&2
+fi
+exit $status

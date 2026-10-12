@@ -66,8 +66,11 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
   fallback: docs/vip-image.md, "The bootloader EEPROM".
 - `devices/common/test-pedald`: the pedal service's tests (config, the engine client, the Pico link
   over a pty, the mapping, resume, the HTTP server) plus `test_diag.py` for the diagnostics tool's
-  report logic over captured fixtures — 156 of them, and they run on the Mac; the Core host could
-  run them (its `python3` is the full one since 2026-10-04) but it is shared and quiet (rule 8). The service
+  report logic over captured fixtures and `test_benchtest_*` for the bench test — 407 of them — then
+  `scripts/tests` and the bench test's page in Chromium (`devices/common/tests/browser/`, through
+  `uv run --with playwright`; skipped, and said so, without uv). Naming tests runs only those. They
+  run on the Mac; the Core host could run them (its `python3` is the full one since 2026-10-04) but
+  it is shared and quiet (rule 8). The service
   itself is `devices/common/rootfs/usr/local/lib/pedald/`, run by `pedald.service`; `docs/pedal-service.md`
   is its design and what each version is for. `sudo systemctl start pedal-diag` samples everything
   the host, the codec and the link are doing (docs/diagnostics.md, `scripts/diag`).
@@ -109,6 +112,10 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
   offset, unweighted and A-weighted RMS in dBFS and µV, and the spectral lines that show a hum comb.
   `--selftest` checks the weighting against the standard's figures; the procedure it belongs to is
   [docs/codec-bringup-2c.md](docs/codec-bringup-2c.md).
+- `scripts/benchtest [--host vip] [--fake]`: the bench test. Under the host's lock it starts
+  `pedal.benchtest` (on demand, never at boot; it stops itself after 5 idle minutes, or from Stop on
+  the page), opens its page — the pedal's blocks with a pass/fail lamp each — and stays as its audio
+  helper (sox and `scripts/codec-noise.py`). `--fake` runs it on the Mac with no pedal.
 - Write evidence into a repo's `bench-results/`, never `/tmp`.
 
 ## Architecture

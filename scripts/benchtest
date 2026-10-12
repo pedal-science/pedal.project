@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# scripts/benchtest [--host vip] [--device NAME] [--choose-device] [--no-browser] [--timeout <s>]
+# scripts/benchtest --fake [--device NAME] [--choose-device] [--no-browser]
+#
+# The pedal's bench test: starts pedal.benchtest on the Core host, opens its page in the browser,
+# and stays in the foreground as the page's audio helper (the interface captures with sox, the
+# spectrum maths with scripts/codec-noise.py, the Debug Probe's USB) until the service stops or
+# Ctrl-C. Ctrl-C leaves the service running; it stops itself 5 minutes after the page is closed.
+# Holds the host's lock for the whole session (scripts/host-lock). Recordings and their analyses
+# go to bench-results/benchtest/<date>/. The first capture asks which CoreAudio input is the audio
+# interface and remembers it (~/.config/pedal-benchtest/station.json); --device overrides that,
+# --choose-device asks again. --fake runs the app from this checkout on 127.0.0.1 with its fakes:
+# no ssh, no lock, stopped on Ctrl-C. scripts/benchtest-helper.py is the helper.
+set -euo pipefail
+
+ARGS=("$@")
+HOST=vip
+FAKE=0
+HELPER_ARGS=()
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --fake) FAKE=1 ;;
+    --device|--timeout) HELPER_ARGS+=("$1" "$2"); shift ;;
+    --choose-device|--no-browser) HELPER_ARGS+=("$1") ;;
+    -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+HERE=$(cd "$(dirname "$0")" && pwd)
+command -v python3 >/dev/null || { echo "benchtest: needs python3 on this computer" >&2; exit 1; }
+command -v sox >/dev/null || echo "benchtest: sox is not installed, so the noise tests will fail; brew install sox" >&2
+
+if (( FAKE )); then
+  exec python3 "$HERE/benchtest-helper.py" --fake ${HELPER_ARGS[@]+"${HELPER_ARGS[@]}"}
+fi
+
+[[ ${PEDAL_HOST_LOCK:-} == "$HOST" ]] || exec "$HERE/host-lock" --host "$HOST" -- "$0" ${ARGS[@]+"${ARGS[@]}"}
+
+SSH=(ssh -o BatchMode=yes -o ConnectTimeout=10 "$HOST")
+die() { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
+
+"${SSH[@]}" "systemctl cat pedal.benchtest.service >/dev/null 2>&1" ||
+  die "pedal.benchtest is not installed on $HOST: devices/$HOST/apply installs it, and only while namchaind is stopped"
+echo "benchtest: starting pedal.benchtest on $HOST" >&2
+"${SSH[@]}" "sudo -n systemctl start pedal.benchtest.service" ||
+  die "could not start pedal.benchtest on $HOST; its log: ssh $HOST journalctl -u pedal.benchtest -n 30"
+exec python3 "$HERE/benchtest-helper.py" --host "$HOST" ${HELPER_ARGS[@]+"${HELPER_ARGS[@]}"}
