@@ -66,6 +66,9 @@ So the Core host has two listeners:
 | `namchaind` | TCP 47810, token from `/etc/namchain/token` | protocol 2 (namchain's) | ljoss, `namchainctl`, the service |
 | the service | HTTP 47820, same token | this document | ljoss, scripts, a browser later |
 
+`pedal.benchtest` (`scripts/benchtest`) listens on HTTP 47830 with a token of its own while it
+runs, and on nothing otherwise: it is started on demand and stops itself.
+
 **The service reaches the engine over TCP at `127.0.0.1:47810`, not the Unix socket.** On Linux
 a Unix-socket reply is one datagram, about 208 KiB with the kernel default, and `engine.assets`
 or `engine.schema` is about 1 MB for a library of 1,500 impulse responses — the exact case

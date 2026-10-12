@@ -328,5 +328,21 @@ class Launcher(unittest.TestCase):
                 proc.stderr.close()
 
 
+class Port(unittest.TestCase):
+    def test_the_default_port_is_none_the_core_host_already_listens_on(self):
+        # pedald listens on its http_port for good; the unit's bind would fail with EADDRINUSE.
+        from benchtest import main
+        from pedald import config
+        taken = {config.DEFAULT_HTTP_PORT: "pedald's default"}
+        pedald = sorted(DEVICE.parent.glob("*/rootfs/etc/pedal/pedald.json"))
+        engine = sorted(DEVICE.parent.glob("*/rootfs/etc/namchain/namchaind.json"))
+        self.assertTrue(pedald and engine)
+        for path in pedald:
+            taken[json.loads(path.read_text())["http_port"]] = str(path)
+        for path in engine:
+            taken[json.loads(path.read_text())["tcp_port"]] = str(path)
+        self.assertNotIn(main.PORT, taken, "pedal.benchtest's port is taken by %s" % taken.get(main.PORT))
+
+
 if __name__ == "__main__":
     unittest.main()

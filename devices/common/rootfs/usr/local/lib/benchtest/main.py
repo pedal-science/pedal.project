@@ -20,7 +20,7 @@ from . import VERSION
 
 STATE_DIR = "/var/lib/pedal/benchtest"
 RUN_DIR = "/run/pedal-benchtest"
-PORT = 47820
+PORT = 47830
 IDLE_S = 300
 INTERFACE = "etc/pedal/pedal-interface.json"
 

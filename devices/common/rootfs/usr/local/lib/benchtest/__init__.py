@@ -1,7 +1,7 @@
 """pedal.benchtest — the on-demand bench test page on the Core host.
 
 Started from the workstation by `scripts/benchtest` (`sudo systemctl start pedal.benchtest`), it
-serves one page on port 47820: a block diagram of the pedal as it is built, a list of benchtests
+serves one page on port 47830: a block diagram of the pedal as it is built, a list of benchtests
 underneath, and a lamp on each block and each test saying how the last two runs that exercised it
 went. Health benchtests read `pedal-diag --json`; noise benchtests mute the engine, record, and hand
 the numbers to the workstation's helper for the spectrum. It is not a second diagnostic engine.

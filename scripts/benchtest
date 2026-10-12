@@ -46,5 +46,5 @@ die() { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
   die "pedal.benchtest is not installed on $HOST: devices/$HOST/apply installs it, and only while namchaind is stopped"
 echo "benchtest: starting pedal.benchtest on $HOST" >&2
 "${SSH[@]}" "sudo -n systemctl start pedal.benchtest.service" ||
-  die "could not start pedal.benchtest on $HOST; its log: ssh $HOST journalctl -u pedal.benchtest -n 30"
+  die "could not start pedal.benchtest on $HOST; its log: ssh $HOST sudo journalctl -u pedal.benchtest -n 30"
 exec python3 "$HERE/benchtest-helper.py" --host "$HOST" ${HELPER_ARGS[@]+"${HELPER_ARGS[@]}"}

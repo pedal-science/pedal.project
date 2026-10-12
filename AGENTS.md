@@ -66,7 +66,7 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
   fallback: docs/vip-image.md, "The bootloader EEPROM".
 - `devices/common/test-pedald`: the pedal service's tests (config, the engine client, the Pico link
   over a pty, the mapping, resume, the HTTP server) plus `test_diag.py` for the diagnostics tool's
-  report logic over captured fixtures and `test_benchtest_*` for the bench test — 407 of them — then
+  report logic over captured fixtures and `test_benchtest_*` for the bench test — 408 of them — then
   `scripts/tests` and the bench test's page in Chromium (`devices/common/tests/browser/`, through
   `uv run --with playwright`; skipped, and said so, without uv). Naming tests runs only those. They
   run on the Mac; the Core host could run them (its `python3` is the full one since 2026-10-04) but

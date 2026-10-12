@@ -565,7 +565,7 @@ def remote_reader(host, run=subprocess.run):
 
     def alive():
         if state["active"] in ("failed", "inactive"):
-            return ("%s on %s is %s; its log: ssh %s journalctl -u %s -n 30"
+            return ("%s on %s is %s; its log: ssh %s sudo journalctl -u %s -n 30"
                     % (UNIT, host, state["active"], host, UNIT))
         return None
 
