@@ -1,0 +1,129 @@
+#!/usr/bin/env bash
+# scripts/sandbox-cache [--print | --refresh | --status] [-- <command> [args...]]
+#
+# Point the tools that keep big caches at a copy inside the workspace, so that a session which may
+# write only under the workspace root can still run them — and so it does not download and rebuild
+# the world to do it.
+#
+# The problem this solves, measured on 2026-10-12: `devices/common/test-pedald`'s browser step runs
+# `uv run --with playwright` and then Playwright's Chromium. A file sandbox that allows writes only
+# under the workspace root refuses `~/.cache/uv` (uv wants to initialise a git repository inside
+# its sdist cache) and `~/Library/Caches/ms-playwright` (Playwright takes a `__dirlock` there), so
+# the step cannot run at all — and a fresh, writable cache directory makes it re-download and
+# re-install everything first, which took 7m53s and still failed.
+#
+# What it does instead: copy the caches that already exist on this Mac into `<workspace>/.cache/`
+# with `cp -Rc`, which on APFS is a clonefile — a copy-on-write clone, so 7.4 GB of caches land in
+# about 50 seconds and take no extra disk space until one of them is written to. Then it sets:
+#
+#   UV_CACHE_DIR                 <workspace>/.cache/uv
+#   PLAYWRIGHT_BROWSERS_PATH     <workspace>/.cache/ms-playwright
+#   UV_PYTHON_INSTALL_DIR        <workspace>/.cache/uv-python        (if the source exists)
+#
+# and either execs the command it was given or prints the exports for `eval`.
+#
+#   scripts/sandbox-cache -- devices/common/test-pedald          run the tests with them set
+#   eval "$(scripts/sandbox-cache --print)"                      set them in this shell
+#   scripts/sandbox-cache --refresh                              re-clone from the Mac's caches
+#   scripts/sandbox-cache --status                               what is there, and how big
+#
+# **It lives at the workspace root, not in a repository, and that is deliberate.** uv puts a git
+# repository inside its sdist cache; a copy of it under `pedal.project/` is a repository nested in
+# a repository, which is what `scripts/workspace check` counts and `tools/git-hooks/` refuses.
+# Everything here is hidden and outside every repository, like `.worktrees/`, so ripgrep skips it
+# and nothing needs a `.gitignore` entry. A clone is a copy: it does not see later changes in the
+# Mac's own caches — `--refresh` is how it catches up — and nothing here is ever committed.
+set -euo pipefail
+
+HERE=$(cd "$(dirname "$0")" && pwd)
+ROOT=$("$HERE/workspace" root)
+CACHE=$ROOT/.cache
+
+MODE=run
+REFRESH=0
+COMMAND=()
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --print) MODE=print ;;
+    --status) MODE=status ;;
+    --refresh) REFRESH=1 ;;
+    --) shift; COMMAND=("$@"); break ;;
+    -h|--help) sed -n '2,40p' "$0"; exit 0 ;;
+    *) COMMAND=("$@"); break ;;
+  esac
+  shift
+done
+
+# source path, destination under <workspace>/.cache, the variable the tool reads.
+#
+# The Mac's own caches are the source because that is where the work has already been done; a
+# missing source is not an error, it just means this cache is filled from scratch the first time
+# the tool runs.
+SOURCES=(
+  "$HOME/.cache/uv|uv|UV_CACHE_DIR"
+  "$HOME/Library/Caches/ms-playwright|ms-playwright|PLAYWRIGHT_BROWSERS_PATH"
+  "$HOME/.cache/ms-playwright|ms-playwright|PLAYWRIGHT_BROWSERS_PATH"
+  "$HOME/.local/share/uv/python|uv-python|UV_PYTHON_INSTALL_DIR"
+)
+
+clone() {                       # clone <source> <destination>
+  local src=$1 dst=$2
+  [[ -d $src ]] || return 1
+  mkdir -p "$(dirname "$dst")"
+  # clonefile: instant on APFS and no space until written. Anywhere else, a real copy, slower and
+  # the size of the cache; say which happened rather than leaving it to be guessed at.
+  if cp -Rc "$src" "$dst" 2>/dev/null; then
+    echo "sandbox-cache: cloned $src -> $dst"
+  else
+    echo "sandbox-cache: copied $src -> $dst (no clonefile here: this one uses real disk)" >&2
+    rm -rf "$dst"
+    cp -R "$src" "$dst"
+  fi
+}
+
+EXPORTS=()
+declare -A SEEN=()               # one variable per cache: the first source that exists wins
+for entry in "${SOURCES[@]}"; do
+  IFS='|' read -r src name var <<<"$entry"
+  dst=$CACHE/$name
+  # macOS and Linux keep Playwright's browsers in different places; the first that exists is it.
+  if [[ -n ${SEEN[$var]:-} ]]; then continue; fi
+  SEEN[$var]=1
+  [[ -d $src ]] || continue
+  if (( REFRESH )) && [[ -d $dst ]]; then
+    rm -rf "$dst"              # a clone is complete or it is not there; removing one is instant
+  fi
+  if [[ ! -d $dst ]]; then
+    clone "$src" "$dst" || continue
+  fi
+  EXPORTS+=("export $var=$dst")
+done
+
+case $MODE in
+  print)
+    printf '%s\n' "${EXPORTS[@]+"${EXPORTS[@]}"}"
+    ;;
+  status)
+    echo "sandbox-cache: $CACHE"
+    if [[ ${#EXPORTS[@]} -eq 0 ]]; then
+      echo "  nothing yet: no cache on this Mac to clone from, or none of the ones this knows"
+    fi
+    declare -A SHOWN=()
+    for entry in "${SOURCES[@]}"; do
+      IFS='|' read -r src name var <<<"$entry"
+      [[ -n ${SHOWN[$name]:-} ]] && continue
+      [[ -d $CACHE/$name ]] || continue
+      SHOWN[$name]=1
+      printf '  %-18s %8s  %s\n' "$name" "$(du -sh "$CACHE/$name" | cut -f1)" "$var"
+    done
+    ;;
+  run)
+    if [[ ${#COMMAND[@]} -eq 0 ]]; then
+      echo "sandbox-cache: no command, and no --print or --status (see --help)" >&2
+      exit 2
+    fi
+    # set -u safe when every export is missing.
+    for line in ${EXPORTS[@]+"${EXPORTS[@]}"}; do export "${line#export }"; done
+    exec "${COMMAND[@]}"
+    ;;
+esac

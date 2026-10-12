@@ -11,6 +11,7 @@ written on 2026-10-06, when the repositories moved into the workspace.
 ├── .pedal-workspace                       the marker: how scripts find this root
 ├── AGENTS.md, CLAUDE.md                   installed from pedal.project/workspace-root/
 ├── .worktrees/<session>/<repo>/            per-session git worktrees
+├── .cache/                                tool caches cloned in from $HOME (scripts/sandbox-cache)
 ├── pedal.project/                         rikkus/pedal.project
 ├── namchain/                              rikkus/namchain
 │   └── vendor/NeuralAmpModelerCore/       declared submodule, rikkus/OptimisationWorkOnNeuralAmpModelerCore

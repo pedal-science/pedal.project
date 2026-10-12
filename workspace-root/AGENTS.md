@@ -22,6 +22,10 @@ reaches the pedal. Each repository's own `AGENTS.md` is authoritative inside it.
 | `rigpa/` | The pedal's on-device UI (C++, Qt 6), on the Core host's screen |
 
 `.worktrees/` holds per-session git worktrees, when two agents need one repository at once.
+`.cache/` holds the tool caches a sandboxed session cannot use from `$HOME` — uv's, uv's pythons'
+and Playwright's — as clonefile copies of this Mac's own; `pedal.project/scripts/sandbox-cache`
+makes them and runs a command with the three variables set. Neither directory is ever committed,
+and both are hidden and outside every repository, so neither needs an ignore rule.
 
 ## Rules that belong to this level
 

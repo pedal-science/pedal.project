@@ -97,6 +97,16 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
 - `scripts/host-lock [--host vip] [--wait <s>] -- <command>`: run a command while
   holding the Core host's lock; `--who` says who holds it. Every soak, benchmark and
   deploy goes through it.
+- `scripts/sandbox-cache [--status|--print|--refresh] [-- <command>]`: the tool caches a session
+  cannot reach in `$HOME`, cloned into `<workspace>/.cache/` and the variables that point at them
+  (`UV_CACHE_DIR`, `PLAYWRIGHT_BROWSERS_PATH`, `UV_PYTHON_INSTALL_DIR`). `cp -Rc` is a clonefile:
+  7.4 GB lands in about 50 s and takes no disk until written to. Without it the browser step of
+  `devices/common/test-pedald` cannot run inside a session at all — `uv` writes its cache and
+  Playwright takes a lock in its browser directory, both outside the workspace — and with a fresh
+  empty cache it re-downloads everything first (measured: 7m53s, and it still failed). It is not a
+  way round the sandbox for things that are not caches: a test that needs a *device* outside the
+  workspace, like `test_link.py`'s pty, still needs approval. [docs/workspace.md](docs/workspace.md)
+  describes `.cache/` with `.worktrees/`.
 - `scripts/components-lock [--host vip] [--check]`: write `devices/<host>/components.lock`
   from what the host is running, or compare. Commit the file with the change.
 - `firmware/build.sh`, `firmware/flash.sh`, `firmware/tools/{echo,protocol}-test.py`: build,
