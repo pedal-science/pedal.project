@@ -2,7 +2,7 @@
 # scripts/deploy-rigpa and devices/<host>/apply call; scripts/status compares it with the host. Commit it with the change.
 host=vip
 board=Raspberry Pi 5 Model B Rev 1.1
-kernel=7.0.0-1017-raspi-realtime-numaemu3-trimmed
+kernel=7.0.0-1017-raspi-realtime-numaemu3-dmaidle1-trimmed
 namchain=eba5eef57897899dab2d7560661a620679a9048f
 rigpa=179e202
 devices=6a77997
