@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+"""pedal-benchtest — the bench test page on the Core host (pedal.benchtest.service). The code is a
+package in /usr/local/lib/benchtest; this is the thin entry point systemd and scripts/benchtest
+call. Run from a checkout, it finds the package in the same relative place, rootfs/usr/local/lib,
+so `devices/common/rootfs/usr/local/sbin/pedal-benchtest --fake --bind 127.0.0.1 --port 0` works
+on the workstation with nothing installed.
+
+    pedal-benchtest [--fake] [--bind ADDR] [--port N] [--state-dir DIR] [--run-dir DIR]
+                    [--idle-seconds N] [--diag PATH]
+"""
+import os
+import sys
+
+LIB = os.environ.get("PEDAL_BENCHTEST_LIB") or os.path.join(
+    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "lib")
+if LIB not in sys.path:
+    sys.path.insert(0, LIB)
+
+from benchtest.main import main  # noqa: E402  (after the path is set)
+
+if __name__ == "__main__":
+    sys.exit(main())

@@ -1,0 +1,59 @@
+<!doctype html>
+<!-- pedal.benchtest's one page. Static: app.js reads the session token from the address's
+     fragment (#token=...) and sends it on every /api call. No build step and nothing from a CDN. -->
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pedal bench test</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body data-run-status="idle" data-fake="false">
+<div id="top">
+  <header>
+    <h1>Pedal bench test</h1>
+    <span id="fake-badge" class="badge" hidden>fake benchtests: nothing on the pedal is touched</span>
+    <span id="helper-status" class="note"></span>
+    <button id="stop-button" type="button" class="quiet">Stop</button>
+  </header>
+  <div class="diagram-wrap"><svg id="diagram" viewBox="0 0 1240 400" preserveAspectRatio="xMinYMin meet" role="img"
+    aria-label="The pedal's modules that a benchtest can exercise, with a lamp on each for the last two runs that exercised it. The same results are in the test list below.">
+    <g id="zones"></g><g id="cables"></g><g id="modules"></g></svg></div>
+  <section id="detail" data-component="">
+    <p class="note">Click a block to see its job and run the benchtests that exercise it.</p>
+  </section>
+</div>
+<main>
+  <p id="message" class="message" role="status" hidden></p>
+  <section id="setup" hidden>
+    <h2 id="setup-title">Before the next benchtest</h2>
+    <div id="setup-steps"></div>
+    <button id="setup-done" type="button">Done, carry on</button>
+    <button id="setup-skip" type="button" class="quiet">Skip this benchtest</button>
+  </section>
+  <section id="tests">
+    <div class="actions">
+      <button id="test-button" type="button">Test</button>
+      <button id="cancel-button" type="button" class="quiet" hidden>Stop after this benchtest</button>
+      <span id="run-status" class="note"></span>
+      <button id="forget-button" type="button" class="quiet right">Forget previous results</button>
+    </div>
+    <div id="test-groups"></div>
+  </section>
+  <section id="fake-controls" hidden>
+    <h2>Fake outcomes</h2>
+    <p class="note">This control is here only because the service was started with
+      <code>--fake</code>. It sets the next outcome of a benchtest; the run after that one passes.</p>
+    <table><tbody id="fake-rows"></tbody></table>
+  </section>
+</main>
+<dialog id="leave-dialog">
+  <p><b>Leave the bench test?</b></p>
+  <p>The service on the pedal keeps running until you stop it, or for 5 minutes after the page is
+    closed.</p>
+  <div class="dialog-buttons">
+    <button id="leave-stay" type="button">Stay</button>
+    <button id="leave-go" type="button" class="quiet">Leave the page</button>
+    <button id="leave-stop" type="button" class="quiet">Leave and stop the service</button>
+  </div>
+</dialog>
+<script src="/static/app.js"></script>
+</body></html>

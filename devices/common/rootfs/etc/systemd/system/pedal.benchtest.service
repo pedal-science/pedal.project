@@ -1,0 +1,32 @@
+[Unit]
+Description=Pedal: the bench test page (started from the workstation by scripts/benchtest)
+Documentation=file:/usr/local/lib/benchtest
+# Started on demand and never at boot: there is no [Install] section, and pedal-device's enable list
+# does not name it. scripts/benchtest starts it with `sudo systemctl start pedal.benchtest`; it stops
+# itself on the page's Stop, or after 5 minutes with no browser, by exiting 0 — and Restart=no
+# leaves it stopped.
+After=namchaind.service pedald.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/pedal-benchtest
+Restart=no
+# Root, as pedal-diag is: the codec's register map is root-only, and so are the engine's token and
+# its recordings. The sandbox is what keeps that honest: the only writable path is its own history.
+User=root
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+StateDirectory=pedal/benchtest
+ReadWritePaths=/var/lib/pedal/benchtest
+# The URL file with the session's token: /run/pedal-benchtest/url, removed when the unit stops.
+RuntimeDirectory=pedal-benchtest
+RuntimeDirectoryMode=0700
+# A housekeeping job: off the render cores (1-3), below everything that matters, and small. The cap
+# covers pedal-diag too, which runs as this unit's child once per run.
+CPUAffinity=0
+Nice=10
+IOSchedulingClass=idle
+MemoryMax=128M
+StandardOutput=journal
+StandardError=journal

@@ -1,0 +1,16 @@
+<!doctype html>
+<!-- Where the Stop button lands. stopped.js asks the service to exit, so the page that says how
+     to start it again is already loaded when it goes. -->
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pedal bench test: stopped</title>
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body data-stopped="pending">
+<main>
+  <h1>Pedal bench test</h1>
+  <p id="stop-state">Stopping the service on the pedal…</p>
+  <p>To use this again, run <code>scripts/benchtest</code> on your computer.</p>
+</main>
+<script src="/static/stopped.js"></script>
+</body></html>
