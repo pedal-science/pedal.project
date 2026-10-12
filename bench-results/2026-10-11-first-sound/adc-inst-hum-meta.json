@@ -1,0 +1,38 @@
+{
+  "backend": "alsa_raw",
+  "capture_channels": 2,
+  "chains": [
+    {
+      "adopted_generation": 9,
+      "audible_generation": 9,
+      "failed_nodes": 0,
+      "generation": 9,
+      "guard_trips": 0,
+      "id": "64AD55DB-C889-41EC-B223-99AC8B26B40C",
+      "input_channel": 0,
+      "missing_assets": [],
+      "muted": false,
+      "name": "Guitar",
+      "output_channel": 0,
+      "slimmed_models": [],
+      "target_generation": 9,
+      "transition_active": false
+    }
+  ],
+  "device": "hw:CARD=wm8960,DEV=0",
+  "files": {
+    "capture.wav": "every capture channel, as the device delivered it",
+    "events.tsv": "per period: dropped, inserted (after it), xrun, burst; gap = ring overflow",
+    "playback.wav": "every playback period the render loop offered, dropped or not"
+  },
+  "format": "S32_LE",
+  "generation": 9,
+  "name": "inst-hum",
+  "output_queue_floor_periods": 2,
+  "output_queue_periods": 4,
+  "period_size": 64,
+  "playback_channels": 2,
+  "rig_name": "Standard",
+  "sample_rate": 48000,
+  "started": "2026-10-11T12:22:50Z"
+}

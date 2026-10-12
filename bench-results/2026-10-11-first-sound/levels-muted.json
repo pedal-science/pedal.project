@@ -1,0 +1,141 @@
+{
+  "mute": true,
+  "ok": true
+}
+{
+  "levels": {
+    "audible_generation": 9,
+    "blocks": 5581061,
+    "cache": {
+      "drains": 55826,
+      "first_frame": false,
+      "hits": 54438,
+      "misses": 6417,
+      "publish": "period",
+      "rate_hz": 8.0
+    },
+    "chains": [
+      {
+        "id": "64AD55DB-C889-41EC-B223-99AC8B26B40C",
+        "muted": false,
+        "name": "Guitar",
+        "nodes": [
+          {
+            "element": "in",
+            "frames": 6720,
+            "node": "in",
+            "peak": -34.2,
+            "rms": -40.9,
+            "role": ""
+          },
+          {
+            "element": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA",
+            "frames": 6720,
+            "node": "26E1FA8D-7E40-4BC4-B013-AB6F4986D5AA",
+            "peak": -10.2,
+            "rms": -16.9,
+            "role": ""
+          },
+          {
+            "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A",
+            "frames": 6720,
+            "node": "11B8C546-F3EC-443F-9D22-5C943AA07E7A",
+            "peak": -10.2,
+            "rms": -16.9,
+            "role": ""
+          },
+          {
+            "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A",
+            "frames": 6720,
+            "node": "11B8C546-F3EC-443F-9D22-5C943AA07E7A",
+            "peak": -10.2,
+            "rms": -16.9,
+            "role": "bass"
+          },
+          {
+            "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A",
+            "frames": 6720,
+            "node": "11B8C546-F3EC-443F-9D22-5C943AA07E7A",
+            "peak": -10.2,
+            "rms": -16.9,
+            "role": "mid"
+          },
+          {
+            "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A",
+            "frames": 6720,
+            "node": "11B8C546-F3EC-443F-9D22-5C943AA07E7A",
+            "peak": -10.2,
+            "rms": -16.9,
+            "role": "treble"
+          },
+          {
+            "element": "7A67DB6F-EDAA-4214-9877-726C3112C8C3",
+            "frames": 6720,
+            "node": "7A67DB6F-EDAA-4214-9877-726C3112C8C3",
+            "peak": -10.2,
+            "rms": -16.9,
+            "role": ""
+          },
+          {
+            "element": "out",
+            "frames": 0,
+            "node": "out",
+            "peak": -200.0,
+            "rms": -200.0,
+            "role": ""
+          }
+        ],
+        "out": {
+          "clipped": 0,
+          "frames": 6720,
+          "peak": -10.2,
+          "rms": -16.9
+        },
+        "output_channel": 0
+      }
+    ],
+    "generation": 9,
+    "input": {
+      "clipped": [
+        0,
+        0
+      ],
+      "frames": [
+        6720,
+        6720
+      ],
+      "peak": [
+        -34.2,
+        -80.6
+      ],
+      "rms": [
+        -40.9,
+        -109.6
+      ]
+    },
+    "nodes": 8,
+    "output": {
+      "clipped": [
+        0,
+        0
+      ],
+      "frames": [
+        6720,
+        6720
+      ],
+      "peak": [
+        -200.0,
+        -200.0
+      ],
+      "rms": [
+        -200.0,
+        -200.0
+      ]
+    },
+    "period_size": 64,
+    "sample_rate": 48000,
+    "state": "running",
+    "truncated": false
+  },
+  "ok": true
+}

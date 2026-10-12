@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>The pedal's noise: codec and Core only, 2026-10-11</title>
+<style>
+ body { font: 16px/1.55 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+        max-width: 1060px; margin: 0 auto; padding: 28px 20px 60px; color: #1a1a1a; }
+ h1 { font-size: 27px; margin: 0 0 6px; } h2 { font-size: 21px; margin: 34px 0 4px; }
+ h3 { font-size: 16px; margin: 18px 0 6px; }
+ p  { margin: 8px 0; } code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; }
+ img { width: 100%; height: auto; margin: 12px 0 4px; border: 1px solid #eee; border-radius: 4px; }
+ table { border-collapse: collapse; margin: 6px 0 12px; font-size: 14px; }
+ th, td { border-bottom: 1px solid #eee; padding: 4px 12px 4px 0; text-align: left; }
+ .meta { color: #555; font-size: 14px; }
+ .cols { display: flex; gap: 40px; flex-wrap: wrap; }
+ .swatch { display: inline-block; width: 13px; height: 13px; border-radius: 2px; margin-right: 8px; }
+ .callout { background: #f7f9fc; border-left: 4px solid #4a7fb5; padding: 12px 16px; margin: 16px 0; }
+ footer { margin-top: 40px; color: #666; font-size: 14px; border-top: 1px solid #eee; padding-top: 12px; }
+</style></head><body>
+
+<h1>The pedal's noise: codec and Core only</h1>
+<p class="meta">11 October 2026 &middot; board 1 and every input and output circuit disconnected
+&middot; LIN1 jumpered to the codec's own GND &middot; Pico removed</p>
+
+<p>These are the measurements that need nothing plugged in: the WM8960 codec on its jumpers to the
+Core host, its left input shorted at the pin so the converter sees silence, and
+<code>namchaind</code> on the Core. Nothing else is attached — no board 1, no jacks, no output
+fixture, no interface. Every capture is of the codec's own silence, so all of the noise below is the pedal's.</p>
+
+<div class="callout">
+<p><strong>How to read it.</strong> Each capture shows a spectrum in dBFS per 0.73 Hz bin, and the
+same noise as octave-band bars. <em>Hum</em> is a spike at 50 Hz and its harmonics; <em>hiss</em> is
+a broad slope across the high bands. The captures were deleted on 11 October, once this report had been read, so the page carries no audio: the graphs and the numbers below are the record, and the two players that stood here were the only part of it that needed the files.</p>
+<p>The quietest state measured here is the engine at 1024-frame periods, at
+<strong>-79.9 dBFS(A)</strong>; the loudest is the mains-hum reference at
+<strong>-65.3 dBFS(A)</strong>.</p>
+</div>
+
+<h2>One spectrum per capture</h2>
+<img src="img/spectra-compare.png" alt="all five spectra">
+      <table>
+      <tr><th>the five captures</th></tr>
+      <tr><td><span class="swatch" style="background:#1f77b4"></span>Engine running, 64-frame periods</td></tr>
+      <tr><td><span class="swatch" style="background:#d62728"></span>Engine running, 1024-frame periods</td></tr>
+      <tr><td><span class="swatch" style="background:#2ca02c"></span>Engine stopped, arecord alone</td></tr>
+      <tr><td><span class="swatch" style="background:#9467bd"></span>Engine stopped, arecord + silent playback</td></tr>
+      <tr><td><span class="swatch" style="background:#ff7f0e"></span>Reference — board 1 at node B, everything on mains</td></tr>
+      </table>
+
+
+    <section>
+      <h2>Engine running, 64-frame periods</h2>
+      <p>The pedal's normal state: <code>namchaind</code> holds the codec, is muted, and the document in it is silent. This is what the player's audio path carries.</p>
+      <p class="meta"><code>t16-A-engine-p64.wav</code> &middot; 18.0 s &middot; <strong>-75.7 dBFS rms</strong>
+         unweighted &middot; <strong>-75.3 dBFS(A)</strong> &middot; peak -60.5 dBFS</p>
+
+      <img src="img/spectrum-engine-p64.png" alt="spectrum">
+      <img src="img/bands-engine-p64.png" alt="octave bands">
+      <div class="cols">
+        <div><h3>Octave bands</h3><table><tr><th>band</th><th>level</th><th>share</th></tr><tr><td>31.5&ndash;63 Hz</td><td>-113.3 dBFS</td><td>0.0%</td></tr><tr><td>63&ndash;125 Hz</td><td>-110.0 dBFS</td><td>0.0%</td></tr><tr><td>125&ndash;250 Hz</td><td>-103.9 dBFS</td><td>0.2%</td></tr><tr><td>250&ndash;500 Hz</td><td>-100.5 dBFS</td><td>0.3%</td></tr><tr><td>500&ndash;1000 Hz</td><td>-81.9 dBFS</td><td>24.0%</td></tr><tr><td>1000&ndash;2000 Hz</td><td>-80.8 dBFS</td><td>31.1%</td></tr><tr><td>2000&ndash;4000 Hz</td><td>-80.4 dBFS</td><td>33.8%</td></tr><tr><td>4000&ndash;8000 Hz</td><td>-87.4 dBFS</td><td>6.8%</td></tr><tr><td>8000&ndash;16000 Hz</td><td>-91.0 dBFS</td><td>2.9%</td></tr><tr><td>16000&ndash;20000 Hz</td><td>-96.4 dBFS</td><td>0.9%</td></tr></table></div>
+        <div><h3>Lines above the broadband floor</h3><ul><li>none</li></ul></div>
+      </div>
+    </section>
+    <section>
+      <h2>Engine running, 1024-frame periods</h2>
+      <p>The same, with <code>period_size</code> temporarily 1024 and the config restored afterwards. The period-rate comb moves from 750 Hz to 46.9 Hz and the floor drops 4.3 dB.</p>
+      <p class="meta"><code>t16-B-engine-p1024.wav</code> &middot; 18.0 s &middot; <strong>-79.1 dBFS rms</strong>
+         unweighted &middot; <strong>-79.7 dBFS(A)</strong> &middot; peak -61.3 dBFS</p>
+
+      <img src="img/spectrum-engine-p1024.png" alt="spectrum">
+      <img src="img/bands-engine-p1024.png" alt="octave bands">
+      <div class="cols">
+        <div><h3>Octave bands</h3><table><tr><th>band</th><th>level</th><th>share</th></tr><tr><td>31.5&ndash;63 Hz</td><td>-97.4 dBFS</td><td>1.5%</td></tr><tr><td>63&ndash;125 Hz</td><td>-95.5 dBFS</td><td>2.3%</td></tr><tr><td>125&ndash;250 Hz</td><td>-90.0 dBFS</td><td>8.1%</td></tr><tr><td>250&ndash;500 Hz</td><td>-92.8 dBFS</td><td>4.2%</td></tr><tr><td>500&ndash;1000 Hz</td><td>-86.1 dBFS</td><td>19.8%</td></tr><tr><td>1000&ndash;2000 Hz</td><td>-86.2 dBFS</td><td>19.7%</td></tr><tr><td>2000&ndash;4000 Hz</td><td>-85.7 dBFS</td><td>21.9%</td></tr><tr><td>4000&ndash;8000 Hz</td><td>-88.3 dBFS</td><td>11.9%</td></tr><tr><td>8000&ndash;16000 Hz</td><td>-89.7 dBFS</td><td>8.7%</td></tr><tr><td>16000&ndash;20000 Hz</td><td>-96.0 dBFS</td><td>2.0%</td></tr></table></div>
+        <div><h3>Lines above the broadband floor</h3><ul><li>none</li></ul></div>
+      </div>
+    </section>
+    <section>
+      <h2>Engine stopped, arecord alone</h2>
+      <p>No engine and <em>no playback stream open</em>: the converter in its capture-only state. The 4–16 kHz hiss is 15 dB louder here than with a playback stream open.</p>
+      <p class="meta"><code>t16-C-arecord-alone.wav</code> &middot; 13.0 s &middot; <strong>-75.8 dBFS rms</strong>
+         unweighted &middot; <strong>-75.8 dBFS(A)</strong> &middot; peak -42.2 dBFS</p>
+
+      <img src="img/spectrum-arecord-alone.png" alt="spectrum">
+      <img src="img/bands-arecord-alone.png" alt="octave bands">
+      <div class="cols">
+        <div><h3>Octave bands</h3><table><tr><th>band</th><th>level</th><th>share</th></tr><tr><td>31.5&ndash;63 Hz</td><td>-89.8 dBFS</td><td>4.0%</td></tr><tr><td>63&ndash;125 Hz</td><td>-93.0 dBFS</td><td>1.9%</td></tr><tr><td>125&ndash;250 Hz</td><td>-96.4 dBFS</td><td>0.9%</td></tr><tr><td>250&ndash;500 Hz</td><td>-100.1 dBFS</td><td>0.4%</td></tr><tr><td>500&ndash;1000 Hz</td><td>-91.1 dBFS</td><td>3.0%</td></tr><tr><td>1000&ndash;2000 Hz</td><td>-80.5 dBFS</td><td>34.0%</td></tr><tr><td>2000&ndash;4000 Hz</td><td>-81.3 dBFS</td><td>28.4%</td></tr><tr><td>4000&ndash;8000 Hz</td><td>-83.3 dBFS</td><td>18.0%</td></tr><tr><td>8000&ndash;16000 Hz</td><td>-90.0 dBFS</td><td>3.8%</td></tr><tr><td>16000&ndash;20000 Hz</td><td>-94.9 dBFS</td><td>1.2%</td></tr></table></div>
+        <div><h3>Lines above the broadband floor</h3><ul><li>none</li></ul></div>
+      </div>
+    </section>
+    <section>
+      <h2>Engine stopped, arecord + silent playback</h2>
+      <p>No engine, but a silent <code>aplay</code> holds the playback path open — the codec state the engine leaves it in. The HF hiss is much lower; a drifting ~6.75 kHz line appears.</p>
+      <p class="meta"><code>t16-D-arecord-playback.wav</code> &middot; 13.0 s &middot; <strong>-79.7 dBFS rms</strong>
+         unweighted &middot; <strong>-79.9 dBFS(A)</strong> &middot; peak -62.5 dBFS</p>
+
+      <img src="img/spectrum-arecord-playback.png" alt="spectrum">
+      <img src="img/bands-arecord-playback.png" alt="octave bands">
+      <div class="cols">
+        <div><h3>Octave bands</h3><table><tr><th>band</th><th>level</th><th>share</th></tr><tr><td>31.5&ndash;63 Hz</td><td>-110.6 dBFS</td><td>0.1%</td></tr><tr><td>63&ndash;125 Hz</td><td>-108.1 dBFS</td><td>0.1%</td></tr><tr><td>125&ndash;250 Hz</td><td>-103.9 dBFS</td><td>0.4%</td></tr><tr><td>250&ndash;500 Hz</td><td>-95.5 dBFS</td><td>2.7%</td></tr><tr><td>500&ndash;1000 Hz</td><td>-87.8 dBFS</td><td>15.7%</td></tr><tr><td>1000&ndash;2000 Hz</td><td>-86.3 dBFS</td><td>22.2%</td></tr><tr><td>2000&ndash;4000 Hz</td><td>-85.9 dBFS</td><td>24.1%</td></tr><tr><td>4000&ndash;8000 Hz</td><td>-86.7 dBFS</td><td>20.0%</td></tr><tr><td>8000&ndash;16000 Hz</td><td>-89.6 dBFS</td><td>10.4%</td></tr><tr><td>16000&ndash;20000 Hz</td><td>-93.3 dBFS</td><td>4.4%</td></tr></table></div>
+        <div><h3>Lines above the broadband floor</h3><ul><li>none</li></ul></div>
+      </div>
+    </section>
+    <section>
+      <h2>Reference — board 1 at node B, everything on mains</h2>
+      <p><strong>Not</strong> a codec-and-Core measurement: this is the earlier capture with board 1's input node connected and every supply on mains, included so the hum can be seen and heard beside the hiss. 50 Hz and its harmonics, 25 dB above what the same node gives on batteries.</p>
+      <p class="meta"><code>t8-A-mains-noext.wav</code> &middot; 18.0 s &middot; <strong>-49.5 dBFS rms</strong>
+         unweighted &middot; <strong>-65.3 dBFS(A)</strong> &middot; peak -39.1 dBFS</p>
+
+      <img src="img/spectrum-hum-reference.png" alt="spectrum">
+      <img src="img/bands-hum-reference.png" alt="octave bands">
+      <div class="cols">
+        <div><h3>Octave bands</h3><table><tr><th>band</th><th>level</th><th>share</th></tr><tr><td>31.5&ndash;63 Hz</td><td>-52.3 dBFS</td><td>53.6%</td></tr><tr><td>63&ndash;125 Hz</td><td>-54.0 dBFS</td><td>36.0%</td></tr><tr><td>125&ndash;250 Hz</td><td>-60.5 dBFS</td><td>8.0%</td></tr><tr><td>250&ndash;500 Hz</td><td>-67.7 dBFS</td><td>1.5%</td></tr><tr><td>500&ndash;1000 Hz</td><td>-74.2 dBFS</td><td>0.3%</td></tr><tr><td>1000&ndash;2000 Hz</td><td>-75.2 dBFS</td><td>0.3%</td></tr><tr><td>2000&ndash;4000 Hz</td><td>-78.3 dBFS</td><td>0.1%</td></tr><tr><td>4000&ndash;8000 Hz</td><td>-75.1 dBFS</td><td>0.3%</td></tr><tr><td>8000&ndash;16000 Hz</td><td>-76.5 dBFS</td><td>0.2%</td></tr><tr><td>16000&ndash;20000 Hz</td><td>-80.7 dBFS</td><td>0.1%</td></tr></table></div>
+        <div><h3>Lines above the broadband floor</h3><ul><li>none</li></ul></div>
+      </div>
+    </section>
+
+<section>
+  <h2>What the graphs show</h2>
+  <ul>
+    <li><strong>No mains hum in any of the codec-only captures.</strong> There is no 50 Hz line to
+        find in the first four spectra — the largest line below 1 kHz in the engine's own capture is
+        the 750 Hz period-rate artefact, not hum. The hum appears only in the reference capture,
+        which is the one with board 1 attached.</li>
+    <li><strong>The engine's capture path carries a period-rate artefact.</strong> At 64-frame periods
+        there is a line at 750.0 Hz with harmonics at 1500, 2250 and 3000 Hz, each with &plusmn;0.7 Hz
+        sidebands, and the 1&ndash;4 kHz bands sit at the same level as that line. At 1024-frame
+        periods the whole family moves to 46.875 Hz and its harmonics and falls 13&ndash;15 dB; the
+        floor improves 4.3 dB A-weighted. A plain <code>arecord</code> at the same 64-frame periods
+        shows the same 750 Hz line 18 dB lower, so the boundary is real and the engine's handling of
+        it is what is worse.</li>
+    <li><strong>The high-frequency hiss depends on the playback state.</strong> With no playback
+        stream open, 4&ndash;16 kHz holds over 90% of the energy; open a silent playback stream and
+        it drops 15 dB. That is a property of this converter's capture-only state, not of the pedal's
+        input.</li>
+    <li><strong>Magnitude.</strong> The quietest configuration in these graphs is -79.7 dBFS rms
+        (-79.9 dB(A)); for scale, 2a's record for this converter with its input shorted is
+        &minus;90.6 dBFS unweighted and &minus;93.5 dB(A), and this host's own record from
+        2026-10-06 is &minus;88.0 dB(A).</li>
+  </ul>
+</section>
+
+<footer>
+  <p>Raw captures, the session log and every earlier test:
+  <a href="../2026-10-11-first-sound/troubleshooting-log.md">troubleshooting-log.md</a> and
+  <a href="../2026-10-11-first-sound/README.md">README.md</a>. Numbers on this page are in
+  <code>noise-numbers.json</code>; the page and graphs are built by <code>make-document.py</code>.
+  Conventions: dBFS at 1.0 V rms full scale, 20 Hz&ndash;20 kHz, channel 0 = LIN1, and a
+  2-channel capture throughout (an 8-channel capture of the same signal reads 11&ndash;12 dB
+  higher because of the interface itself).</p>
+  <p><strong>Sample format.</strong> The card offers <code>S16_LE S24_LE S32_LE</code> with
+  <code>SAMPLE_BITS: [16 32]</code> and rates of 8&ndash;48 kHz, and <em>no</em> float format:
+  I2S and the WM8960's DAI are integer PCM. These captures are 32-bit containers holding 24-bit
+  data &mdash; the bottom eight bits are zero in <em>every</em> sample of every capture here, which
+  is the converter's own resolution, left-justified. <code>namchaind</code> asks for S24_3LE,
+  S32_LE, S16_LE in that order and takes the first the device offers, which on this card is
+  S32_LE (4 bytes per sample). 16-bit would quantise at about &minus;96 dBFS, right where this
+  session is measuring, so it would mask the noise rather than show it.</p>
+</footer>
+</body></html>

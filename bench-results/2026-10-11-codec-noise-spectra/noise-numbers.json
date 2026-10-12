@@ -1,0 +1,632 @@
+[
+  {
+    "seconds": 18.0,
+    "rms_dbfs": -75.72,
+    "rms_a_dbfs": -75.29,
+    "peak_dbfs": -60.49,
+    "bands": [
+      {
+        "from": 31.5,
+        "to": 63,
+        "dbfs": -113.3,
+        "share": 0.0
+      },
+      {
+        "from": 63,
+        "to": 125,
+        "dbfs": -110.0,
+        "share": 0.0
+      },
+      {
+        "from": 125,
+        "to": 250,
+        "dbfs": -103.9,
+        "share": 0.2
+      },
+      {
+        "from": 250,
+        "to": 500,
+        "dbfs": -100.5,
+        "share": 0.3
+      },
+      {
+        "from": 500,
+        "to": 1000,
+        "dbfs": -81.9,
+        "share": 24.0
+      },
+      {
+        "from": 1000,
+        "to": 2000,
+        "dbfs": -80.8,
+        "share": 31.1
+      },
+      {
+        "from": 2000,
+        "to": 4000,
+        "dbfs": -80.4,
+        "share": 33.8
+      },
+      {
+        "from": 4000,
+        "to": 8000,
+        "dbfs": -87.4,
+        "share": 6.8
+      },
+      {
+        "from": 8000,
+        "to": 16000,
+        "dbfs": -91.0,
+        "share": 2.9
+      },
+      {
+        "from": 16000,
+        "to": 20000,
+        "dbfs": -96.4,
+        "share": 0.9
+      }
+    ],
+    "lines": [
+      {
+        "hz": 245.4,
+        "dbfs": -110.22,
+        "band": "low"
+      },
+      {
+        "hz": 749.3,
+        "dbfs": -90.11,
+        "band": "low"
+      },
+      {
+        "hz": 750.0,
+        "dbfs": -83.88,
+        "band": "low"
+      },
+      {
+        "hz": 750.7,
+        "dbfs": -89.7,
+        "band": "low"
+      },
+      {
+        "hz": 995.4,
+        "dbfs": -107.83,
+        "band": "low"
+      },
+      {
+        "hz": 1499.3,
+        "dbfs": -88.87,
+        "band": "high"
+      },
+      {
+        "hz": 1500.0,
+        "dbfs": -82.74,
+        "band": "high"
+      },
+      {
+        "hz": 1500.7,
+        "dbfs": -88.7,
+        "band": "high"
+      },
+      {
+        "hz": 2250.0,
+        "dbfs": -83.97,
+        "band": "high"
+      },
+      {
+        "hz": 3000.0,
+        "dbfs": -88.0,
+        "band": "high"
+      }
+    ],
+    "bin_hz": 0.732421875,
+    "id": "engine-p64",
+    "label": "Engine running, 64-frame periods",
+    "note": "The pedal's normal state: <code>namchaind</code> holds the codec, is muted, and the document in it is silent. This is what the player's audio path carries.",
+    "file": "t16-A-engine-p64.wav",
+    "norm_gain_db": 57.5
+  },
+  {
+    "seconds": 18.01,
+    "rms_dbfs": -79.09,
+    "rms_a_dbfs": -79.73,
+    "peak_dbfs": -61.29,
+    "bands": [
+      {
+        "from": 31.5,
+        "to": 63,
+        "dbfs": -97.4,
+        "share": 1.5
+      },
+      {
+        "from": 63,
+        "to": 125,
+        "dbfs": -95.5,
+        "share": 2.3
+      },
+      {
+        "from": 125,
+        "to": 250,
+        "dbfs": -90.0,
+        "share": 8.1
+      },
+      {
+        "from": 250,
+        "to": 500,
+        "dbfs": -92.8,
+        "share": 4.2
+      },
+      {
+        "from": 500,
+        "to": 1000,
+        "dbfs": -86.1,
+        "share": 19.8
+      },
+      {
+        "from": 1000,
+        "to": 2000,
+        "dbfs": -86.2,
+        "share": 19.7
+      },
+      {
+        "from": 2000,
+        "to": 4000,
+        "dbfs": -85.7,
+        "share": 21.9
+      },
+      {
+        "from": 4000,
+        "to": 8000,
+        "dbfs": -88.3,
+        "share": 11.9
+      },
+      {
+        "from": 8000,
+        "to": 16000,
+        "dbfs": -89.7,
+        "share": 8.7
+      },
+      {
+        "from": 16000,
+        "to": 20000,
+        "dbfs": -96.0,
+        "share": 2.0
+      }
+    ],
+    "lines": [
+      {
+        "hz": 93.8,
+        "dbfs": -97.43,
+        "band": "low"
+      },
+      {
+        "hz": 140.6,
+        "dbfs": -96.48,
+        "band": "low"
+      },
+      {
+        "hz": 187.5,
+        "dbfs": -96.3,
+        "band": "low"
+      },
+      {
+        "hz": 234.4,
+        "dbfs": -97.1,
+        "band": "low"
+      },
+      {
+        "hz": 562.5,
+        "dbfs": -98.95,
+        "band": "low"
+      },
+      {
+        "hz": 2015.6,
+        "dbfs": -97.1,
+        "band": "high"
+      },
+      {
+        "hz": 6000.0,
+        "dbfs": -97.17,
+        "band": "high"
+      },
+      {
+        "hz": 7968.8,
+        "dbfs": -102.48,
+        "band": "high"
+      },
+      {
+        "hz": 8015.6,
+        "dbfs": -96.75,
+        "band": "high"
+      },
+      {
+        "hz": 12000.0,
+        "dbfs": -99.84,
+        "band": "high"
+      }
+    ],
+    "bin_hz": 0.732421875,
+    "id": "engine-p1024",
+    "label": "Engine running, 1024-frame periods",
+    "note": "The same, with <code>period_size</code> temporarily 1024 and the config restored afterwards. The period-rate comb moves from 750 Hz to 46.9 Hz and the floor drops 4.3 dB.",
+    "file": "t16-B-engine-p1024.wav",
+    "norm_gain_db": 58.3
+  },
+  {
+    "seconds": 13.0,
+    "rms_dbfs": -75.83,
+    "rms_a_dbfs": -75.75,
+    "peak_dbfs": -42.24,
+    "bands": [
+      {
+        "from": 31.5,
+        "to": 63,
+        "dbfs": -89.8,
+        "share": 4.0
+      },
+      {
+        "from": 63,
+        "to": 125,
+        "dbfs": -93.0,
+        "share": 1.9
+      },
+      {
+        "from": 125,
+        "to": 250,
+        "dbfs": -96.4,
+        "share": 0.9
+      },
+      {
+        "from": 250,
+        "to": 500,
+        "dbfs": -100.1,
+        "share": 0.4
+      },
+      {
+        "from": 500,
+        "to": 1000,
+        "dbfs": -91.1,
+        "share": 3.0
+      },
+      {
+        "from": 1000,
+        "to": 2000,
+        "dbfs": -80.5,
+        "share": 34.0
+      },
+      {
+        "from": 2000,
+        "to": 4000,
+        "dbfs": -81.3,
+        "share": 28.4
+      },
+      {
+        "from": 4000,
+        "to": 8000,
+        "dbfs": -83.3,
+        "share": 18.0
+      },
+      {
+        "from": 8000,
+        "to": 16000,
+        "dbfs": -90.0,
+        "share": 3.8
+      },
+      {
+        "from": 16000,
+        "to": 20000,
+        "dbfs": -94.9,
+        "share": 1.2
+      }
+    ],
+    "lines": [
+      {
+        "hz": 19.8,
+        "dbfs": -99.6,
+        "band": "low"
+      },
+      {
+        "hz": 20.5,
+        "dbfs": -99.91,
+        "band": "low"
+      },
+      {
+        "hz": 21.2,
+        "dbfs": -100.24,
+        "band": "low"
+      },
+      {
+        "hz": 22.0,
+        "dbfs": -100.38,
+        "band": "low"
+      },
+      {
+        "hz": 22.7,
+        "dbfs": -100.78,
+        "band": "low"
+      },
+      {
+        "hz": 1500.0,
+        "dbfs": -96.33,
+        "band": "high"
+      },
+      {
+        "hz": 3000.0,
+        "dbfs": -96.67,
+        "band": "high"
+      },
+      {
+        "hz": 5999.3,
+        "dbfs": -96.8,
+        "band": "high"
+      },
+      {
+        "hz": 6000.0,
+        "dbfs": -90.88,
+        "band": "high"
+      },
+      {
+        "hz": 12000.0,
+        "dbfs": -95.68,
+        "band": "high"
+      }
+    ],
+    "bin_hz": 0.732421875,
+    "id": "arecord-alone",
+    "label": "Engine stopped, arecord alone",
+    "note": "No engine and <em>no playback stream open</em>: the converter in its capture-only state. The 4\u201316 kHz hiss is 15 dB louder here than with a playback stream open.",
+    "file": "t16-C-arecord-alone.wav",
+    "norm_gain_db": 39.2
+  },
+  {
+    "seconds": 13.0,
+    "rms_dbfs": -79.74,
+    "rms_a_dbfs": -79.86,
+    "peak_dbfs": -62.52,
+    "bands": [
+      {
+        "from": 31.5,
+        "to": 63,
+        "dbfs": -110.6,
+        "share": 0.1
+      },
+      {
+        "from": 63,
+        "to": 125,
+        "dbfs": -108.1,
+        "share": 0.1
+      },
+      {
+        "from": 125,
+        "to": 250,
+        "dbfs": -103.9,
+        "share": 0.4
+      },
+      {
+        "from": 250,
+        "to": 500,
+        "dbfs": -95.5,
+        "share": 2.7
+      },
+      {
+        "from": 500,
+        "to": 1000,
+        "dbfs": -87.8,
+        "share": 15.7
+      },
+      {
+        "from": 1000,
+        "to": 2000,
+        "dbfs": -86.3,
+        "share": 22.2
+      },
+      {
+        "from": 2000,
+        "to": 4000,
+        "dbfs": -85.9,
+        "share": 24.1
+      },
+      {
+        "from": 4000,
+        "to": 8000,
+        "dbfs": -86.7,
+        "share": 20.0
+      },
+      {
+        "from": 8000,
+        "to": 16000,
+        "dbfs": -89.6,
+        "share": 10.4
+      },
+      {
+        "from": 16000,
+        "to": 20000,
+        "dbfs": -93.3,
+        "share": 4.4
+      }
+    ],
+    "lines": [
+      {
+        "hz": 514.2,
+        "dbfs": -111.3,
+        "band": "low"
+      },
+      {
+        "hz": 529.5,
+        "dbfs": -112.42,
+        "band": "low"
+      },
+      {
+        "hz": 749.3,
+        "dbfs": -107.61,
+        "band": "low"
+      },
+      {
+        "hz": 750.0,
+        "dbfs": -102.06,
+        "band": "low"
+      },
+      {
+        "hz": 750.7,
+        "dbfs": -107.54,
+        "band": "low"
+      },
+      {
+        "hz": 1500.0,
+        "dbfs": -99.65,
+        "band": "high"
+      },
+      {
+        "hz": 2250.0,
+        "dbfs": -100.23,
+        "band": "high"
+      },
+      {
+        "hz": 6000.0,
+        "dbfs": -95.18,
+        "band": "high"
+      },
+      {
+        "hz": 7968.0,
+        "dbfs": -99.84,
+        "band": "high"
+      },
+      {
+        "hz": 12000.0,
+        "dbfs": -100.13,
+        "band": "high"
+      }
+    ],
+    "bin_hz": 0.732421875,
+    "id": "arecord-playback",
+    "label": "Engine stopped, arecord + silent playback",
+    "note": "No engine, but a silent <code>aplay</code> holds the playback path open \u2014 the codec state the engine leaves it in. The HF hiss is much lower; a drifting ~6.75 kHz line appears.",
+    "file": "t16-D-arecord-playback.wav",
+    "norm_gain_db": 59.5
+  },
+  {
+    "seconds": 18.0,
+    "rms_dbfs": -49.55,
+    "rms_a_dbfs": -65.33,
+    "peak_dbfs": -39.12,
+    "bands": [
+      {
+        "from": 31.5,
+        "to": 63,
+        "dbfs": -52.3,
+        "share": 53.6
+      },
+      {
+        "from": 63,
+        "to": 125,
+        "dbfs": -54.0,
+        "share": 36.0
+      },
+      {
+        "from": 125,
+        "to": 250,
+        "dbfs": -60.5,
+        "share": 8.0
+      },
+      {
+        "from": 250,
+        "to": 500,
+        "dbfs": -67.7,
+        "share": 1.5
+      },
+      {
+        "from": 500,
+        "to": 1000,
+        "dbfs": -74.2,
+        "share": 0.3
+      },
+      {
+        "from": 1000,
+        "to": 2000,
+        "dbfs": -75.2,
+        "share": 0.3
+      },
+      {
+        "from": 2000,
+        "to": 4000,
+        "dbfs": -78.3,
+        "share": 0.1
+      },
+      {
+        "from": 4000,
+        "to": 8000,
+        "dbfs": -75.1,
+        "share": 0.3
+      },
+      {
+        "from": 8000,
+        "to": 16000,
+        "dbfs": -76.5,
+        "share": 0.2
+      },
+      {
+        "from": 16000,
+        "to": 20000,
+        "dbfs": -80.7,
+        "share": 0.1
+      }
+    ],
+    "lines": [
+      {
+        "hz": 49.1,
+        "dbfs": -61.58,
+        "band": "low"
+      },
+      {
+        "hz": 49.8,
+        "dbfs": -54.09,
+        "band": "low"
+      },
+      {
+        "hz": 50.5,
+        "dbfs": -58.73,
+        "band": "low"
+      },
+      {
+        "hz": 99.6,
+        "dbfs": -56.01,
+        "band": "low"
+      },
+      {
+        "hz": 100.3,
+        "dbfs": -59.33,
+        "band": "low"
+      },
+      {
+        "hz": 1499.3,
+        "dbfs": -88.15,
+        "band": "high"
+      },
+      {
+        "hz": 1500.0,
+        "dbfs": -82.14,
+        "band": "high"
+      },
+      {
+        "hz": 1500.7,
+        "dbfs": -88.14,
+        "band": "high"
+      },
+      {
+        "hz": 2250.0,
+        "dbfs": -85.63,
+        "band": "high"
+      },
+      {
+        "hz": 3000.0,
+        "dbfs": -88.38,
+        "band": "high"
+      }
+    ],
+    "bin_hz": 0.732421875,
+    "id": "hum-reference",
+    "label": "Reference \u2014 board 1 at node B, everything on mains",
+    "note": "<strong>Not</strong> a codec-and-Core measurement: this is the earlier capture with board 1's input node connected and every supply on mains, included so the hum can be seen and heard beside the hiss. 50 Hz and its harmonics, 25 dB above what the same node gives on batteries.",
+    "file": "t8-A-mains-noext.wav",
+    "norm_gain_db": 36.1
+  }
+]

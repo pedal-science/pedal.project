@@ -65,7 +65,7 @@ def read_wav(path, channel=0):
     else:
         raise SystemExit("%s is %d bytes per sample; expected 2, 3 or 4" % (path, width))
     out = []
-    for i in range(channel * width, len(raw) - step + 1, step):
+    for i in range(channel * width, len(raw) - width + 1, step):
         if width == 3:
             v = int.from_bytes(raw[i:i + 3], "little", signed=True)
         else:
