@@ -1011,6 +1011,26 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
 
 ## Phase 4 — Enclosure, power and hardening
 
+**2026-10-13: the case changed, and the list below is for the case that changed.** The pedal's
+enclosure is the **Hammond 1456RH3 sloped console** (434.82 × 218.67 × 81.43 mm, 12-gauge aluminium,
+15° top) and it is **in hand**; the screen is the **Prechen 8.8″ bar** (D14, 2026-10-09), still to
+arrive. So the plastic stand-in below, the "three footswitches", the two-power-cut-out panel and the
+`enclosure/` model are all written for the **1590DD** and are kept for the record rather than
+followed. What the new case's panel actually has, as the owner has chalked it on the case
+(`imaginings/big-enclosure/panel-sketch/`, not yet drilled):
+
+- **six footswitches** — five in a row nearest the player, plus one for mute/tuner;
+- the bar screen's window, deferred until the screen is in hand;
+- "more rotary controllers" than the one the old panel had, which may need **a second Pico** for the
+  GPIO. That is a design change: it touches the UART contract, `pedalf`'s mapping and the firmware;
+- the rear wall as chalked: `PHONES?`, `OUT L`, `LINE?`, `OUT R`, `MIDI IN`, `MIDI`, `USB`/`5V`,
+  `PWR`, `POWER` (the owner's labels, not yet a decision).
+
+**Before that, the pedal gets used as it is**: the working Pi and the input and output boards, still
+on their breadboards, inside the big case with the Input 1 and Output L jacks, no screen — rigpa runs
+over VNC, so the UI is remote until the screen arrives. Drilling is a step drill for the round ports
+and positions drawn on the case first.
+
 **2026-10-04: the rear wall is being trialled in a plastic stand-in.** A temporary plastic box
 carries IN, OUT L and OUT R in the Neutrik jacks in exactly the arrangement this phase plans for the
 aluminium case, and vip's USB-C lead passes through a hole in that wall straight into the Pi's port
@@ -1239,6 +1259,61 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 - **Not designed yet:** the mic stage, cooling and the panel hardware.
 
 ## Next session starts with
+
+**The enclosure and the screen changed, and the pedal is now going to be *used* while the screen waits**
+(2026-10-13, evening). The owner's summary, in their words and mine:
+
+- **The pedal's case is a Hammond 1456RH3 sloped console, and it is in hand**: 434.82 × 218.67 ×
+  81.43 mm, 12-gauge (2.06 mm) aluminium, 15° sloped top, black top/black case (`1456RH3BKBK`). D14
+  named it on 2026-10-09; the BOM had it "due" and now has it in hand. Its drawing and the screen's
+  documents are in `imaginings/big-enclosure/` (`2720683.pdf`, `screen/`), with the owner's chalked
+  panel plan in `imaginings/big-enclosure/panel-sketch/`. Cover 418.78 × 212.32 mm, 6 cover screws at
+  409.55 × 204.77 mm spacing (⌀4.34), 4 rubber feet (⌀4.80), and a vent slot band ~27.78 mm tall.
+  **Nothing has been drilled yet, and the layout is not designed** — the BOM says so and it is now the
+  live job.
+- **`enclosure/`'s model and KiCad sandbox are the *old* layout and must not be drilled from.** That
+  model is a 1590DD-size box, 188 × 119 × 37.5 mm, carrying the 2.4″ ST7789 with three footswitches,
+  a 51 × 38.6 mm window and the rear connector row at z 16 mm. D14 (2026-10-09) replaced that case and
+  screen; the owner says the 1590DD "was becoming too difficult to lay out" and the big case has
+  "loads of room". `enclosure/README.md` now says this at the top. The positions in
+  `enclosure/src/layout.py` do **not** transfer.
+- **The screen is the Prechen 8.8″ 1920×480 (4:1) IPS touch bar.** It has **not arrived**, and the
+  owner is not looking forward to cutting its hole, so it is deferred: 236.5 × 68.5 × 18.7 mm, M4
+  mounts 75 × 50 mm, and its screws must not go more than 3 mm inside its case. Mini-HDMI video and
+  Type-C/USB touch, per D14.
+- **The pedal gets used first, without the screen.** Put the working Pi, the input board and the
+  output board — still on their breadboards — inside the big case, add the Input 1 and Output L jacks
+  (and probably the USB-C panel-mount extension), and play it. **The screen is not needed for that:
+  rigpa runs over VNC**, so the UI is viewed and driven from the laptop (and probably the iPad).
+- **Controls are growing.** The case takes **six footswitches** — five in a row nearest the player
+  plus one for **mute/tuner** — and the owner is "thinking of more rotary controllers". That may need
+  **a second Pico** to carry the extra controls, because the GPIO runs out. If it happens it touches
+  the UART contract, `pedalf`'s mapping and the firmware — a design decision, not a wiring detail.
+- **Drilling**: a step drill for the round ports, positions drawn neatly on the case first. No holes
+  yet.
+
+**It plays, and it plays heavy rigs without a glitch** (2026-10-13). The owner play-tested two rigs on
+the pedal — both deliberately ridiculous, stacking amp+cab NAM captures into one another (`Bob`, with
+an Ampeg SVT VR and a Super Reverb feeding each other, and `Standard`) — editing on the fly and
+switching rigs: **zero glitches**, 0 xruns, 48 kHz at 64-frame periods, engine `running`, DSP 73%,
+with the engine's own panel flagging `Health warn` and one node charged the unknown cost (0.050 of a
+core). Screenshot:
+[bench-results/2026-10-13-two-heavy-rigs-playtest.png](bench-results/2026-10-13-two-heavy-rigs-playtest.png);
+the warn and the unknown-cost row are the cost table's known open item, not a fault seen in playing.
+This is the first session that ends with the pedal being *enjoyed* rather than diagnosed, and the
+first evidence that D10's switching holds up under rigs this heavy.
+
+**Also from the evening, and worth not losing: the input board's wiring had a further fault.** The
+owner found `SW-C` and `LIN1` swapped on board 1 and corrected it; runs 21–30 were made with that
+swap (their own `_actually_` notes mark when each fault was found — run 25 for the Inst jumper, run 31
+for the LIN1 wire). **Run 31 is the first honest measurement of the corrected board: −86.53 dBFS
+unweighted, −89.92 dBFS(A), 50 Hz at −93.7 (20 µV)**, 1.5 dB(A) above the codec with its input
+shorted at its pin. Run 30's better 50 Hz figure (−106.1) is the *mis-wired* state — its 32–63 Hz band
+collapses 27 dB while everything above 4 kHz stays put — so it is not the pedal's number. Connecting
+the powered hifi amp to OUT L in run 30 dropped the LF by up to 27 dB, which is confounded with the
+fault and needs a clean pair. The evening's hum also does not track the input node's impedance the way
+the afternoon's did (4 dB from an empty node to a guitar, against 32 dB in the afternoon), so the
+Inst/Line prediction earlier that day is **not** supported by it and stays open.
 
 **The input stage is measured with a guitar on it, and the last 28 dB is the Core host's own supply**
 (2026-10-13). Twenty runs of `scripts/codec-input-noise.py`, one variable at a time, from the codec

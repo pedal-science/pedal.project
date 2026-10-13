@@ -1,8 +1,8 @@
 # 2026-10-13 — the input's 50 Hz hum, and the Core host's own supply
 
-Twenty runs of `scripts/codec-input-noise.py` on one bench, in one day, one variable at a time, from
-the codec with its input shorted at its own pin outwards to a guitar on a cable with the Core host on
-a battery pack. Every run's page, numbers and state are in [`../noise-tests/`](../noise-tests/); this
+Twenty runs of `scripts/codec-input-noise.py` on one bench, in one day — and eleven more that evening,
+in the last section here, which correct a further wiring fault and carry the number to keep. Every
+run's page, numbers and state are in [`../noise-tests/`](../noise-tests/); this
 file is the reading of them, including three things that were read wrongly at the time and are
 corrected below.
 
@@ -182,3 +182,58 @@ and graphs come from `scripts/noise-document.py`, which checks its own RMS again
 `scripts/codec-noise.py` for every capture (0.00 dB on all sixty) and recomputes each run's figures
 from the same captures this file quotes. The captures and the playable copies stay out of git, by a
 `.gitignore` in each run's directory; the numbers, pages, states and kernel messages are tracked.
+
+## The evening's runs, 21–31 — a further fault, and the corrected board's number
+
+The owner kept going after this file's twenty runs and made eleven more, and found **another wiring
+fault**: `SW-C` and `LIN1` were **swapped on board 1**, now corrected. Their own state lines date the
+discoveries — run 25 is `SW-C _actually_ jumpered to SW-I (Inst)`, run 31 is `LIN 1 _actually_ wired
+to input board LIN1` — which means runs 21–30 were made with the swap in place. In that state the
+follower's *output* drives the input network (so the node is actively driven and its pickup is
+shorted) while the codec's ADC input sits on the op-amp's + input.
+
+**So run 30's excellent figure is the mis-wired state, not the pedal.** Its 32–63 Hz band is 27 dB
+below run 29's and its 125–250 Hz band 20 dB below, with every band above 4 kHz unchanged — an input
+path that is not connected, rather than a quieter input. Run 29 (same state, amp not connected) reads
+−76.24 unweighted; run 30 (amp connected **and powered**) reads −90.42 with 50 Hz at −106.1.
+
+**Run 31 is the first measurement of the corrected board, and it is the number to keep**: engine
+**−86.53 dBFS unweighted, −89.92 dBFS(A)**, 50 Hz at **−93.7 (20 µV)**, 47.2 µV total; playback
+−90.38 dB(A); capture-only −90.85 dB(A). That is 1.5 dB(A) above the codec with its own input shorted
+at its pin (run 1, −91.39) — with a guitar at 10/10 on a 20 cm cable, the Out L circuit wired and
+connected to a powered hifi amp, and the host on an **Apple charger** (a third mains brick; its 20 µV
+is far below the Pi 45 W supply's 258 µV, but nothing about it is comparable yet, because the wiring
+changed underneath it — a clean trio in one state is still the test).
+
+Two things the evening's numbers say that the afternoon's did not:
+
+- **The hum no longer tracks the input node's impedance.** From an empty node with no jack (−73.6) to
+  a guitar plugged in (−77.9) it moves **4.3 dB**, against **31.8 dB** in the afternoon (open node
+  −40.0, guitar −71.8); and the Line → Inst change dated at run 25 moves it **0.7 dB**. So the
+  node-pickup model that fits runs 4, 16 and 17 does not explain the evening, and the Inst/Line
+  prediction in the "Open" list above is **not supported** by these runs.
+- **A powered amp on the output may be worth a lot** (run 30, up to 27 dB in the LF bands), but that
+  is confounded with the fault. The clean pair is run 31's exact state with the amp in and out.
+
+The state-line lesson repeats a third time: the line records what was *intended*, the board holds what
+is, and the corrections are dated only where the owner noticed them. Runs 16–24 were most likely in
+**Line** despite their lines saying Inst — which is what the owner said at the time — so their numbers
+are Line numbers, and the toggle's effect is still unmeasured in a state whose wiring is certain.
+
+## The same evening: it plays, and it plays heavy rigs without a glitch
+
+Not a noise measurement, and the best result of the day. The owner play-tested **two deliberately
+ridiculous rigs** — NAM captures that are already amp+cab, stacked into one another: `Bob` (an Ampeg
+SVT VR / 8×10 / Beta52A into a YA AMPG 410 HS Mix 02 cab, then a Fender Super Reverb EQ, then an
+Ampeg VT-40) and `Standard` — editing on the fly, playing, and switching rigs: **no glitches**, 0
+xruns, 48 kHz at 64-frame periods, engine `running`, DSP 73%. Screenshot:
+[2026-10-13-two-heavy-rigs-playtest.png](2026-10-13-two-heavy-rigs-playtest.png).
+
+Two things in that panel are worth knowing rather than worrying about: the engine reports
+**`Health warn`**, and it tells the UI that one node "is charged the unknown cost 0.050 of a core".
+The unknown-cost row is the cost table's known open item (`devices/vip/cost.json`'s provenance, and
+`pedal-measure`'s job to fill the rows this device has no number for) — it is the engine being honest
+about a number it does not have, not a fault seen in playing. The warn is not explained by this file
+and is left as an observation.
+
+

@@ -1,5 +1,14 @@
 # Enclosure model
 
+> **This is the old layout, and it must not be drilled from.** The pedal's enclosure is now a
+> **Hammond 1456RH3 sloped console, 434.82 × 218.67 × 81.43 mm** (D14, 2026-10-09; in hand
+> 2026-10-13), carrying the **Prechen 8.8″ bar screen** — not the 1590DD-size box and 2.4″ ST7789
+> modelled here. The owner says the 1590DD was becoming too difficult to lay out; the big case has
+> loads of room. The positions in `src/layout.py` are for the old case and do **not** transfer. The
+> new case's drawing and the screen's documents are in `imaginings/big-enclosure/`, with the owner's
+> chalked panel plan in `imaginings/big-enclosure/panel-sketch/`. See `plan.md`, "Next session starts
+> with", and Phase 4.
+
 A Blender model of the pedal built into a 1590DD-size box (188 x 119 x 37.5 mm), shown twice on
 a wooden floor:
 closed, and with the top face taken off so the insides show. The parts that mount on the top
