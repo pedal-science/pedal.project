@@ -620,6 +620,23 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
    - **Grounding is the bigger risk.** Sharing ground with the SSL through piv put a 90 Hz comb at
      −86 dBFS, 7 dB over the codec's own floor. In the pedal: one star, one path from piv's ground
      to it (the header GND), and nothing else that joins the two supplies.
+   - **Measured 2026-10-13: the Core host's own supply is the input's largest hum source, and it is
+     worth 28 dB.** With a guitar on a 20 cm cable into the Inst throw, the 50 Hz line at LIN1 read
+     −71.8 dBFS (258 µV) with vip on its 45 W USB-C supply, −67.4 (426 µV) on a second, Anker-brand
+     supply, and **−97.5 to −98.5 (12–13 µV) with vip on a USB battery pack** — two runs each,
+     agreeing to 1 dB, board 1 on the same 9 V battery throughout and the Cioks out. A mains brick's
+     output is isolated at DC but not at 50 Hz: the Y-capacitor that keeps its switching noise off
+     the mains also ties the output's common mode to it, so the current enters the pedal at the 0 V
+     of the host's own supply and returns through the room, or through any other mains-referenced
+     box joined to the pedal — a second one on the output was worth a further 3–8 dB. Three
+     consequences: (i) the analogue rail's isolation — the Cioks leg, and the open isolated-DC-DC
+     proposal — is **not** what fixes this, because the host's supply stays mains-referenced in every
+     variant of the plan; (ii) **a common-mode choke does nothing at 50 Hz** (2πfL: 47 mH is 15 Ω
+     against a loop of megohms of capacitance) — the choke belongs to the converter's 50–300 kHz
+     hash, which is the job the handoff gives it; (iii) what helps is where the current flows, which
+     is the one-star/one-path rule above, together with a signal that travels with its own return.
+     All twenty runs, the supply table and the pages:
+     [bench-results/2026-10-13-input-hum-and-the-host-supply.md](bench-results/2026-10-13-input-hum-and-the-host-supply.md).
    - **RINPUT1 stays reserved** (D5). Its input resistance is 49 kΩ at 0 dB PGA, 3 kΩ at +30 dB, and
      the mixer keeps it unrouted.
    - Also measured: the converters' round trip is 55–57 samples (1.16 ms).
@@ -1015,6 +1032,13 @@ recording before the aluminium one is drilled.
     panel, plugged into vip's own USB-C port. vip negotiates 5.1 V at 5 A and keeps its input
     protection. Rejected: a bare USB-C socket wired to vip's header pins. It can only get 3 A, and
     it bypasses vip's protection.
+  - **This leg is mains-referenced, and 2026-10-13 measured what that costs: 28 dB of 50 Hz at the
+    input** (the finding in Phase 2b, with the supply table). The brick stays outside the case; what
+    is inside is where its 0 V enters — at vip, per [docs/modules.md](docs/modules.md)'s ground tree
+    — and the ground below it, so the star layout is what decides how much of that current reaches
+    the input. Hold that number rather than shopping for a quieter brick: two mains supplies measured
+    4 dB apart (Pi 258 µV, Anker 426 µV) while the battery pack measured 12 µV. A medical-grade
+    supply (IEC 60601-1) is the only category where the leakage is a specified, limited number.
   - **The layout must make room for the plug.** In today's model, vip's USB-C port is about 2 mm
     from the front wall, and a right-angle plug needs about 8–10 mm. The likely fix: replace the
     Dupont leads on vip's header with a 40-way ribbon to board A. The ribbon is low enough for the
@@ -1039,6 +1063,9 @@ recording before the aluminium one is drilled.
     the choke and LDO handle the conducted noise (the part that reaches the audio), and
     distance/orientation — plus a steel screen only if it ends up near the 1 MΩ input — handle
     the radiated noise; the handoff records the split.
+    **Note (2026-10-13):** this isolates the *analogue rail*, not the host's supply — it leaves the
+    28 dB finding above untouched — and its choke is for the converter's 50–300 kHz hash, not for
+    50 Hz.
   - **Battery option (2026-10-02): a 9 V battery as an alternative to the 9 V barrel.** A
     **switched** 2.1 mm DC socket disconnects the battery when the barrel is plugged, so the barrel
     takes precedence and can never back-feed or charge the battery — which is what makes every
@@ -1212,6 +1239,46 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 - **Not designed yet:** the mic stage, cooling and the panel hardware.
 
 ## Next session starts with
+
+**The input stage is measured with a guitar on it, and the last 28 dB is the Core host's own supply**
+(2026-10-13). Twenty runs of `scripts/codec-input-noise.py`, one variable at a time, from the codec
+with LIN1 shorted at its own pin out to a guitar on a cable with the host on a battery pack. All
+twenty are in `noise-tests/noise-tests-1…20`, and
+[bench-results/2026-10-13-input-hum-and-the-host-supply.md](bench-results/2026-10-13-input-hum-and-the-host-supply.md)
+is the reading of them, including three things that were read wrongly at the time.
+
+- **The input chain costs nothing measurable above the codec** once the mains is out of it. With the
+  pin-3 short removed, the Inst throw and vip on a USB battery pack, the engine arm reads −88.10 and
+  −88.64 dBFS unweighted, −91.00 and −91.32 dBFS(A) against that day's codec-alone −89.33 / −91.39;
+  from 125 Hz to 20 kHz it is the codec's own floor band for band, and with the two surviving mains
+  lines taken out arithmetically it reads −88.95 / −89.49.
+- **The Core host's own supply is worth 28 dB of 50 Hz** — 258 µV on the Pi's USB-C supply, 426 µV
+  on an Anker one, **12–13 µV on a battery pack**, two runs each. This is 2026-10-11's finding
+  reproduced 2.4 dB larger, and it is now an entry in Phase 2b and Phase 4 with its mechanism: a mains
+  brick is isolated at DC and not at 50 Hz, so the current enters at the 0 V of the host's own supply.
+  **A common-mode choke does nothing about it** (2πfL at 50 Hz against a loop of megohms) — the choke
+  belongs to the isolated converter's 50–300 kHz hash. What helps is where the current flows.
+- **The 50 Hz voltage scales with the follower's input-node impedance at a fixed ~6–10 nA**: 1.01 MΩ
+  (node open) → 10 mV, 40 kΩ (guitar) → 331 µV, shorted → under 1 µV. Which is why a guitar *helps*
+  the hum and why an empty 1 MΩ node was the worst case this bench has seen (−51 dB(A), run 4).
+
+**Correction: the guitar entered the circuit at run 16, not run 8.** Runs 8, 9 and 12–15 all say
+"U1 pin 3 shorted to board ground", and the owner confirmed on 2026-10-13 that the jumper was still
+fitted — so those runs measured the buffer's ground rather than an instrument. They stand as ground
+measurements; the 50 Hz they show at −108…−119 is the ground, not a guitar.
+
+**Open.** Which throw runs 16–20 were in: their state lines say `SW-C jumpered to SW-I (Inst)`, the
+owner describes them as Line, and the check needs no run — power off, meter U1 pin 3 to the bias hole
+at (21, 4): **1.01 MΩ is Inst, 330 kΩ is Line** ([docs/build-board1.md](docs/build-board1.md)). It
+matters because with a guitar attached the Inst throw puts the source's own impedance across the
+follower's input (≈40 kΩ at 50 Hz) while the Line throw leaves the tap undamped (≈226 kΩ) — of order
+10–15 dB more hum for 9.7 dB less signal — so either way the next run is the other position, and it is
+a free test of the current-source model. Also open: **the Cioks has never been connected** in any of
+these runs, so the leg the isolated-outlet scheme rests on is unmeasured; the `playback-open` arm's
+unexplained flat +4.5 dB against the codec's own playback arm; and the generated pages' bench-bar
+sentence, which paints the codec block for hum that entered through a connected source.
+**Next on the bench:** the switch position, then LIN1 twisted with its own ground return — the pair
+the input's reference rides on — with this measurement as the readout.
 
 **The codec's input floor is 14 dB lower than October's, and the measurement is a command now**
 (2026-10-12). The owner re-seated the codec's wiring and left the pedal with only vip and the codec

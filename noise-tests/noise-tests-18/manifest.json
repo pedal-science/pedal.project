@@ -1,0 +1,40 @@
+{
+  "title": "The codec's input noise \u2014 2026-10-13",
+  "meta": "2026-10-13 &middot; LIN 1 wired to input board LIN1, input board GND to Codec GND. 9V battery + to V9, codec GND to battery -. U1 pin 3 short REMOVED. input board IN to jack tip, board GND to jack sleeve. 20cm TS cable in the jack, other end in the guitar, volume and tone at 10, player touching the strings. SW-C jumpered to SW-I (Inst). No output device connected, Cioks out. Core on battery (no mains power)",
+  "intro": [
+    "<p>Three arms, each 20 s of the codec's own ADC \u2014 channel 0, LIN1 \u2014 analysed from 2 s in, because the stream's start-up transient sits in the first seconds. What the input node is connected to decides what is in them: a pin shorted to ground measures the converter and the wiring to it, an input board measures the board, a jack measures whatever the jack is picking up.</p>",
+    "<p><strong>The state line above is the only description of the setup in this record</strong>, and it is what the owner typed when the run was started. The script cannot see the wiring and does not know what it measured; the numbers below say how quiet whatever it was, was.</p>"
+  ],
+  "callout": "<p><strong>How to read it.</strong> Each capture has a spectrum in dBFS per 0.73 Hz bin and the same noise as octave-band bars. <em>Hum</em> is a spike at 50 Hz and its harmonics, and the mains line beside each graph is that spike: an A-weighted figure discounts 50 Hz by about 30 dB, which is why a hum reads far worse unweighted than weighted. <em>Hiss</em> is a broad slope across the high bands. <em>Drift</em> is energy below 20 Hz, which the band-limited figures do not count and the raw one does. The three arms are the converter in its three states \u2014 the engine running, a silent playback stream, and neither \u2014 so where they disagree the difference is the engine or the stream, and where they agree whatever it is sits ahead of both, in the wiring at the input node.</p>",
+  "compare_title": "Every arm, one spectrum each",
+  "footer": [
+    "<p>Captured by <code>scripts/codec-input-noise.py</code>, analysed and drawn by <code>scripts/codec-noise.py</code> and <code>scripts/noise-document.py</code>. The engine and host state around the run is in <code>state.json</code>.</p>"
+  ],
+  "trim": 2.0,
+  "captures": [
+    {
+      "id": "engine-muted",
+      "path": "captures/engine-muted.wav",
+      "label": "Engine running, muted \u2014 the pedal's normal state",
+      "note": "<p>The engine holds the codec and renders its document, muted, which is what the player's audio path carries. Captured through <code>namchainctl record</code>: the engine's own capture path, the one the bench test's \u201cGuitar input noise\u201d uses. 2026-10-11 read &minus;75.3 dBFS(A) here at 64-frame periods.</p>",
+      "channel": 0,
+      "trim": 2.0
+    },
+    {
+      "id": "playback-open",
+      "path": "captures/playback-open.wav",
+      "label": "Engine stopped, a silent playback stream open",
+      "note": "<p>No engine, but a silent <code>aplay</code> holds the playback path open \u2014 the codec state the engine leaves it in. On 2026-10-11 this converter's capture-only state was about 15 dB louder in the 4\u201316 kHz bands and this arm read &minus;79.9 dBFS(A), the quietest of that session's arms \u2014 not of every session's since.</p>",
+      "channel": 0,
+      "trim": 2.0
+    },
+    {
+      "id": "capture-only",
+      "path": "captures/capture-only.wav",
+      "label": "Engine stopped, capture only (no playback stream)",
+      "note": "<p>The engine stopped and <code>arecord</code> on its own. The arm the earlier logs quote, and the least repeatable of the three: 2026-10-11 read &minus;75.8 dBFS(A) in the settled re-run, but 4\u201316 kHz dominated and 15 dB louder with the Pico attached earlier the same day.</p>",
+      "channel": 0,
+      "trim": 2.0
+    }
+  ]
+}

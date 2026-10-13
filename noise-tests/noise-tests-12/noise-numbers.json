@@ -1,0 +1,601 @@
+{
+  "title": "The codec's input noise \u2014 2026-10-13",
+  "meta": "2026-10-13 &middot; LIN 1 wired to input board LIN1, input board GND connected to Codec GND. input board V9 connected to 9V battery +, codec GND connected to battery -. input board IN to jack tip. input board GND connected to jack sleeve. 20cm TRS cable plugged into jack, other end connected to guitar, player touching the guitar strings. input board SW-C jumpered to SW-L. U1 pin 3 shorted to board ground. Output board connected to codec GND and codec HPL. output board connected to TRS cable to SSL input 1. SSL powered. SSL output 1 connected to hifi amplifier. Hifi amplifier powered off.",
+  "checked_against": "scripts/codec-noise.py",
+  "captures": [
+    {
+      "seconds": 18.0,
+      "rms_dbfs": -85.56,
+      "rms_a_dbfs": -87.54,
+      "peak_dbfs": -70.44,
+      "raw_rms_dbfs": -84.78,
+      "outside_band_db": 0.78,
+      "full_scale_v": 1.0,
+      "dc_offset": -1.670768e-06,
+      "dc_offset_uv": -1.67,
+      "rms_uv": 52.75,
+      "rms_a_uv": 42.0,
+      "bands": [
+        {
+          "from": 31.5,
+          "to": 63,
+          "dbfs": -108.5,
+          "share": 0.5
+        },
+        {
+          "from": 63,
+          "to": 125,
+          "dbfs": -107.5,
+          "share": 0.6
+        },
+        {
+          "from": 125,
+          "to": 250,
+          "dbfs": -106.8,
+          "share": 0.7
+        },
+        {
+          "from": 250,
+          "to": 500,
+          "dbfs": -104.4,
+          "share": 1.3
+        },
+        {
+          "from": 500,
+          "to": 1000,
+          "dbfs": -98.1,
+          "share": 5.6
+        },
+        {
+          "from": 1000,
+          "to": 2000,
+          "dbfs": -97.8,
+          "share": 6.0
+        },
+        {
+          "from": 2000,
+          "to": 4000,
+          "dbfs": -95.5,
+          "share": 10.0
+        },
+        {
+          "from": 4000,
+          "to": 8000,
+          "dbfs": -92.8,
+          "share": 18.7
+        },
+        {
+          "from": 8000,
+          "to": 16000,
+          "dbfs": -89.8,
+          "share": 37.3
+        },
+        {
+          "from": 16000,
+          "to": 20000,
+          "dbfs": -92.8,
+          "share": 18.9
+        }
+      ],
+      "lines": [
+        {
+          "hz": 19.8,
+          "dbfs": -119.88,
+          "band": "low"
+        },
+        {
+          "hz": 49.8,
+          "dbfs": -119.34,
+          "band": "low"
+        },
+        {
+          "hz": 749.3,
+          "dbfs": -108.38,
+          "band": "low"
+        },
+        {
+          "hz": 750.0,
+          "dbfs": -102.41,
+          "band": "low"
+        },
+        {
+          "hz": 750.7,
+          "dbfs": -108.48,
+          "band": "low"
+        },
+        {
+          "hz": 1499.3,
+          "dbfs": -112.17,
+          "band": "high"
+        },
+        {
+          "hz": 1500.0,
+          "dbfs": -106.12,
+          "band": "high"
+        },
+        {
+          "hz": 1500.7,
+          "dbfs": -112.05,
+          "band": "high"
+        },
+        {
+          "hz": 2250.0,
+          "dbfs": -109.38,
+          "band": "high"
+        },
+        {
+          "hz": 3000.0,
+          "dbfs": -115.15,
+          "band": "high"
+        }
+      ],
+      "lines_low": [
+        {
+          "hz": 19.8,
+          "dbfs": -119.88
+        },
+        {
+          "hz": 49.8,
+          "dbfs": -119.34
+        },
+        {
+          "hz": 749.3,
+          "dbfs": -108.38
+        },
+        {
+          "hz": 750.0,
+          "dbfs": -102.41
+        },
+        {
+          "hz": 750.7,
+          "dbfs": -108.48
+        }
+      ],
+      "lines_high": [
+        {
+          "hz": 1499.3,
+          "dbfs": -112.17
+        },
+        {
+          "hz": 1500.0,
+          "dbfs": -106.12
+        },
+        {
+          "hz": 1500.7,
+          "dbfs": -112.05
+        },
+        {
+          "hz": 2250.0,
+          "dbfs": -109.38
+        },
+        {
+          "hz": 3000.0,
+          "dbfs": -115.15
+        }
+      ],
+      "mains": [
+        {
+          "nominal_hz": 50.0,
+          "hz": 49.8,
+          "dbfs": -119.34
+        },
+        {
+          "nominal_hz": 100.0,
+          "hz": 99.61,
+          "dbfs": -121.24
+        },
+        {
+          "nominal_hz": 150.0,
+          "hz": 149.41,
+          "dbfs": -129.65
+        }
+      ],
+      "bin_hz": 0.732421875,
+      "id": "engine-muted",
+      "label": "Engine running, muted \u2014 the pedal's normal state",
+      "note": "<p>The engine holds the codec and renders its document, muted, which is what the player's audio path carries. Captured through <code>namchainctl record</code>: the engine's own capture path, the one the bench test's \u201cGuitar input noise\u201d uses. 2026-10-11 read &minus;75.3 dBFS(A) here at 64-frame periods.</p>",
+      "file": "engine-muted.wav",
+      "channel": 0,
+      "trim_seconds": 2.0,
+      "check_db": 0.0,
+      "checked": true,
+      "norm_gain_db": 67.4
+    },
+    {
+      "seconds": 18.0,
+      "rms_dbfs": -84.92,
+      "rms_a_dbfs": -86.98,
+      "peak_dbfs": -70.51,
+      "raw_rms_dbfs": -84.06,
+      "outside_band_db": 0.86,
+      "full_scale_v": 1.0,
+      "dc_offset": -4.00602e-07,
+      "dc_offset_uv": -0.4,
+      "rms_uv": 56.78,
+      "rms_a_uv": 44.76,
+      "bands": [
+        {
+          "from": 31.5,
+          "to": 63,
+          "dbfs": -111.2,
+          "share": 0.2
+        },
+        {
+          "from": 63,
+          "to": 125,
+          "dbfs": -109.3,
+          "share": 0.4
+        },
+        {
+          "from": 125,
+          "to": 250,
+          "dbfs": -106.6,
+          "share": 0.7
+        },
+        {
+          "from": 250,
+          "to": 500,
+          "dbfs": -103.7,
+          "share": 1.3
+        },
+        {
+          "from": 500,
+          "to": 1000,
+          "dbfs": -100.9,
+          "share": 2.5
+        },
+        {
+          "from": 1000,
+          "to": 2000,
+          "dbfs": -98.0,
+          "share": 4.9
+        },
+        {
+          "from": 2000,
+          "to": 4000,
+          "dbfs": -94.9,
+          "share": 10.0
+        },
+        {
+          "from": 4000,
+          "to": 8000,
+          "dbfs": -91.9,
+          "share": 19.9
+        },
+        {
+          "from": 8000,
+          "to": 16000,
+          "dbfs": -88.9,
+          "share": 40.0
+        },
+        {
+          "from": 16000,
+          "to": 20000,
+          "dbfs": -91.9,
+          "share": 20.0
+        }
+      ],
+      "lines": [
+        {
+          "hz": 29.3,
+          "dbfs": -120.17,
+          "band": "low"
+        },
+        {
+          "hz": 49.8,
+          "dbfs": -118.67,
+          "band": "low"
+        },
+        {
+          "hz": 146.5,
+          "dbfs": -120.63,
+          "band": "low"
+        },
+        {
+          "hz": 603.5,
+          "dbfs": -120.36,
+          "band": "low"
+        },
+        {
+          "hz": 849.6,
+          "dbfs": -120.72,
+          "band": "low"
+        },
+        {
+          "hz": 1552.7,
+          "dbfs": -120.02,
+          "band": "high"
+        },
+        {
+          "hz": 8419.9,
+          "dbfs": -120.23,
+          "band": "high"
+        },
+        {
+          "hz": 12240.2,
+          "dbfs": -120.16,
+          "band": "high"
+        },
+        {
+          "hz": 15451.2,
+          "dbfs": -120.24,
+          "band": "high"
+        },
+        {
+          "hz": 17900.4,
+          "dbfs": -119.81,
+          "band": "high"
+        }
+      ],
+      "lines_low": [
+        {
+          "hz": 29.3,
+          "dbfs": -120.17
+        },
+        {
+          "hz": 49.8,
+          "dbfs": -118.67
+        },
+        {
+          "hz": 146.5,
+          "dbfs": -120.63
+        },
+        {
+          "hz": 603.5,
+          "dbfs": -120.36
+        },
+        {
+          "hz": 849.6,
+          "dbfs": -120.72
+        }
+      ],
+      "lines_high": [
+        {
+          "hz": 1552.7,
+          "dbfs": -120.02
+        },
+        {
+          "hz": 8419.9,
+          "dbfs": -120.23
+        },
+        {
+          "hz": 12240.2,
+          "dbfs": -120.16
+        },
+        {
+          "hz": 15451.2,
+          "dbfs": -120.24
+        },
+        {
+          "hz": 17900.4,
+          "dbfs": -119.81
+        }
+      ],
+      "mains": [
+        {
+          "nominal_hz": 50.0,
+          "hz": 49.8,
+          "dbfs": -118.67
+        },
+        {
+          "nominal_hz": 100.0,
+          "hz": 99.61,
+          "dbfs": -120.82
+        },
+        {
+          "nominal_hz": 150.0,
+          "hz": 152.34,
+          "dbfs": -130.58
+        }
+      ],
+      "bin_hz": 0.732421875,
+      "id": "playback-open",
+      "label": "Engine stopped, a silent playback stream open",
+      "note": "<p>No engine, but a silent <code>aplay</code> holds the playback path open \u2014 the codec state the engine leaves it in. On 2026-10-11 this converter's capture-only state was about 15 dB louder in the 4\u201316 kHz bands and this arm read &minus;79.9 dBFS(A), the quietest of that session's arms \u2014 not of every session's since.</p>",
+      "file": "playback-open.wav",
+      "channel": 0,
+      "trim_seconds": 2.0,
+      "check_db": 0.0,
+      "checked": true,
+      "norm_gain_db": 67.5
+    },
+    {
+      "seconds": 18.0,
+      "rms_dbfs": -92.18,
+      "rms_a_dbfs": -94.36,
+      "peak_dbfs": -58.14,
+      "raw_rms_dbfs": -83.39,
+      "outside_band_db": 8.79,
+      "full_scale_v": 1.0,
+      "dc_offset": 3.5783078e-05,
+      "dc_offset_uv": 35.78,
+      "rms_uv": 24.6,
+      "rms_a_uv": 19.14,
+      "bands": [
+        {
+          "from": 31.5,
+          "to": 63,
+          "dbfs": -112.7,
+          "share": 0.9
+        },
+        {
+          "from": 63,
+          "to": 125,
+          "dbfs": -114.2,
+          "share": 0.6
+        },
+        {
+          "from": 125,
+          "to": 250,
+          "dbfs": -113.3,
+          "share": 0.8
+        },
+        {
+          "from": 250,
+          "to": 500,
+          "dbfs": -110.6,
+          "share": 1.4
+        },
+        {
+          "from": 500,
+          "to": 1000,
+          "dbfs": -108.1,
+          "share": 2.6
+        },
+        {
+          "from": 1000,
+          "to": 2000,
+          "dbfs": -105.2,
+          "share": 5.0
+        },
+        {
+          "from": 2000,
+          "to": 4000,
+          "dbfs": -102.3,
+          "share": 9.6
+        },
+        {
+          "from": 4000,
+          "to": 8000,
+          "dbfs": -99.4,
+          "share": 19.0
+        },
+        {
+          "from": 8000,
+          "to": 16000,
+          "dbfs": -96.3,
+          "share": 39.0
+        },
+        {
+          "from": 16000,
+          "to": 20000,
+          "dbfs": -99.1,
+          "share": 20.2
+        }
+      ],
+      "lines": [
+        {
+          "hz": 19.8,
+          "dbfs": -122.18,
+          "band": "low"
+        },
+        {
+          "hz": 20.5,
+          "dbfs": -122.77,
+          "band": "low"
+        },
+        {
+          "hz": 22.0,
+          "dbfs": -122.66,
+          "band": "low"
+        },
+        {
+          "hz": 24.9,
+          "dbfs": -122.6,
+          "band": "low"
+        },
+        {
+          "hz": 49.8,
+          "dbfs": -119.69,
+          "band": "low"
+        },
+        {
+          "hz": 2103.5,
+          "dbfs": -129.14,
+          "band": "high"
+        },
+        {
+          "hz": 12263.7,
+          "dbfs": -129.0,
+          "band": "high"
+        },
+        {
+          "hz": 15943.4,
+          "dbfs": -128.86,
+          "band": "high"
+        },
+        {
+          "hz": 16869.1,
+          "dbfs": -129.13,
+          "band": "high"
+        },
+        {
+          "hz": 19564.5,
+          "dbfs": -128.81,
+          "band": "high"
+        }
+      ],
+      "lines_low": [
+        {
+          "hz": 19.8,
+          "dbfs": -122.18
+        },
+        {
+          "hz": 20.5,
+          "dbfs": -122.77
+        },
+        {
+          "hz": 22.0,
+          "dbfs": -122.66
+        },
+        {
+          "hz": 24.9,
+          "dbfs": -122.6
+        },
+        {
+          "hz": 49.8,
+          "dbfs": -119.69
+        }
+      ],
+      "lines_high": [
+        {
+          "hz": 2103.5,
+          "dbfs": -129.14
+        },
+        {
+          "hz": 12263.7,
+          "dbfs": -129.0
+        },
+        {
+          "hz": 15943.4,
+          "dbfs": -128.86
+        },
+        {
+          "hz": 16869.1,
+          "dbfs": -129.13
+        },
+        {
+          "hz": 19564.5,
+          "dbfs": -128.81
+        }
+      ],
+      "mains": [
+        {
+          "nominal_hz": 50.0,
+          "hz": 49.8,
+          "dbfs": -119.69
+        },
+        {
+          "nominal_hz": 100.0,
+          "hz": 99.61,
+          "dbfs": -125.47
+        },
+        {
+          "nominal_hz": 150.0,
+          "hz": 149.41,
+          "dbfs": -134.23
+        }
+      ],
+      "bin_hz": 0.732421875,
+      "id": "capture-only",
+      "label": "Engine stopped, capture only (no playback stream)",
+      "note": "<p>The engine stopped and <code>arecord</code> on its own. The arm the earlier logs quote, and the least repeatable of the three: 2026-10-11 read &minus;75.8 dBFS(A) in the settled re-run, but 4\u201316 kHz dominated and 15 dB louder with the Pico attached earlier the same day.</p>",
+      "file": "capture-only.wav",
+      "channel": 0,
+      "trim_seconds": 2.0,
+      "check_db": 0.0,
+      "checked": true,
+      "norm_gain_db": 55.1
+    }
+  ]
+}

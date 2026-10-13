@@ -229,7 +229,13 @@ The risk splits two ways, and shielding answers only one:
   returning through the transformer's inter-winding capacitance. This is what reaches the
   audio, and a metal box does nothing: it is current on wires. Fix it electrically — a
   common-mode choke and capacitors right at the converter's output, before the wires run
-  anywhere, then the low-noise LDO.
+  anywhere, then the low-noise LDO. **Two frequency regimes, two different fixes** (measured
+  2026-10-13): the choke and capacitors above are for this converter's 50–300 kHz hash. The
+  50 Hz common-mode current a *mains* supply pushes into the pedal — its Y-capacitor path, worth
+  **28 dB** of hum at the input on this bench — is untouched by a choke, because 2πfL at 50 Hz is
+  nothing against a loop of megohms of capacitance. That one is answered by isolation, by keeping
+  mains-referenced boxes out of the loop, and by the star, never by inductance:
+  [bench-results/2026-10-13-input-hum-and-the-host-supply.md](../bench-results/2026-10-13-input-hum-and-the-host-supply.md).
 - **Radiated noise** — the field off the transformer and the switching loop. A shield helps
   here, but at ~50–300 kHz the near field is mostly magnetic, so a thin copper box does
   little and a ferrous (steel) screen is what works. Loop area matters more: keep the

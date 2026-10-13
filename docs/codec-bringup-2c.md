@@ -87,7 +87,17 @@ band, −83.0 raw).
 
 - One path between the pedal and the interface: the audio cable from the output jack. No USB between
   the interface and the Core host, no second supply, nothing else joining the two grounds.
-- Record which legs had that cable connected. That row moves more than any supply change will.
+- **Record how the Core host itself is powered — its mains supply or its own battery** (added
+  2026-10-13). That row moved **28 dB** of 50 Hz at LIN1 in the day's twenty runs: −71.8 dBFS
+  (258 µV) on the Pi's USB-C supply against −98.5 (12 µV) on a battery pack, same board, same guitar,
+  same 9 V battery on the analogue rail, two runs each. A mains brick's output is isolated at DC and
+  not at 50 Hz, so its Y-capacitor puts the current into the pedal at the host's own 0 V.
+  [bench-results/2026-10-13-input-hum-and-the-host-supply.md](../bench-results/2026-10-13-input-hum-and-the-host-supply.md)
+  has the table and the mechanism.
+- Record which legs had that cable connected. **That row moves more than any change to board 1's own
+  supply leg will** — leg 1 below — which is the comparison it was written for; it does *not* move
+  more than the host's supply does (3–8 dB for the cable against 28 dB for the host, measured
+  2026-10-13, so the line was scoped to the leg it was about rather than left as a general claim).
 - **Rule 1 applies to every leg:** nothing powered while you move a lead. Unplug the host's supply
   rather than trusting `poweroff`, because a Pi's 5 V header pin stays live.
 

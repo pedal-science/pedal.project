@@ -136,6 +136,9 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
   about why. `scripts/noise-document.py MANIFEST.json` is the page builder on its own, for
   any captures (numpy and Pillow: run it with the harness's bundled python). The result of the
   2026-10-12 run and what it means: [bench-results/2026-10-12-codec-input-noise.md](bench-results/2026-10-12-codec-input-noise.md).
+  `--dir` puts the results elsewhere, which is how the owner's twenty runs of 2026-10-13 come to be in
+  `noise-tests/`; they are read in
+  [bench-results/2026-10-13-input-hum-and-the-host-supply.md](bench-results/2026-10-13-input-hum-and-the-host-supply.md).
 - `scripts/benchtest [--host vip] [--fake]`: the bench test. Under the host's lock it starts
   `pedal.benchtest` (on demand, never at boot; it stops itself after 5 idle minutes, or from Stop on
   the page), opens its page — the pedal's blocks with a pass/fail lamp each — and stays as its audio

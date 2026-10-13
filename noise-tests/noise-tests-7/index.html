@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>The codec's input noise — 2026-10-13</title>
+<style>
+ body { font: 16px/1.55 -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+        max-width: 1060px; margin: 0 auto; padding: 28px 20px 60px; color: #1a1a1a; }
+ h1 { font-size: 27px; margin: 0 0 6px; } h2 { font-size: 21px; margin: 34px 0 4px; }
+ h3 { font-size: 16px; margin: 18px 0 6px; }
+ p  { margin: 8px 0; } code { background: #f4f4f4; padding: 1px 4px; border-radius: 3px; }
+ img { width: 100%; height: auto; margin: 12px 0 4px; border: 1px solid #eee; border-radius: 4px; }
+ table { border-collapse: collapse; margin: 6px 0 12px; font-size: 14px; }
+ th, td { border-bottom: 1px solid #eee; padding: 4px 12px 4px 0; text-align: left; }
+ .meta { color: #555; font-size: 14px; }
+ .cols { display: flex; gap: 40px; flex-wrap: wrap; }
+ .audio { background: #fafafa; border: 1px solid #eee; border-radius: 5px;
+          padding: 10px 14px; margin: 10px 0 18px; }
+ .audio audio { vertical-align: middle; margin: 4px 8px 4px 0; height: 34px; }
+ .alabel { display: inline-block; min-width: 190px; font-weight: 600; }
+ .hint { color: #666; font-size: 13px; display: block; margin-left: 190px; }
+ .swatch { display: inline-block; width: 13px; height: 13px; border-radius: 2px; margin-right: 8px; }
+ .callout { background: #f7f9fc; border-left: 4px solid #4a7fb5; padding: 12px 16px; margin: 16px 0; }
+ footer { margin-top: 40px; color: #666; font-size: 14px; border-top: 1px solid #eee;
+          padding-top: 12px; }
+</style></head><body>
+
+<h1>The codec's input noise — 2026-10-13</h1>
+<p class="meta">2026-10-13 &middot; LIN 1 wired to input board LIN1, input board GND connected to Codec GND. input board V9 connected to 9V battery +, input board GND connected to battery -. input board IN to jack tip. input board GND connected to jack sleeve. 20cm TRS cable plugged into jack. input board SW-C jumpered to SW-L. U1 pin 3 shorted to board ground.</p>
+
+<p>Three arms, each 20 s of the codec's own ADC — channel 0, LIN1 — analysed from 2 s in, because the stream's start-up transient sits in the first seconds. What the input node is connected to decides what is in them: a pin shorted to ground measures the converter and the wiring to it, an input board measures the board, a jack measures whatever the jack is picking up.</p>
+<p><strong>The state line above is the only description of the setup in this record</strong>, and it is what the owner typed when the run was started. The script cannot see the wiring and does not know what it measured; the numbers below say how quiet whatever it was, was.</p>
+<div class="callout">
+<p><strong>How to read it.</strong> Each capture has a spectrum in dBFS per 0.73 Hz bin and the same noise as octave-band bars. <em>Hum</em> is a spike at 50 Hz and its harmonics, and the mains line beside each graph is that spike: an A-weighted figure discounts 50 Hz by about 30 dB, which is why a hum reads far worse unweighted than weighted. <em>Hiss</em> is a broad slope across the high bands. <em>Drift</em> is energy below 20 Hz, which the band-limited figures do not count and the raw one does. The three arms are the converter in its three states — the engine running, a silent playback stream, and neither — so where they disagree the difference is the engine or the stream, and where they agree whatever it is sits ahead of both, in the wiring at the input node.</p>
+</div>
+
+<h2>Every arm, one spectrum each</h2>
+<img src="img/spectra-compare.png" alt="all the spectra">
+<table>
+      <tr><th>line</th><th>as captured</th><th>normalised</th></tr>
+      <tr><td><span class="swatch" style="background:#1f77b4"></span>Engine running, muted — the pedal's normal state</td>
+        <td><audio controls preload="none" src="audio/engine-muted.wav"></audio></td>
+        <td><audio controls preload="none" src="audio/engine-muted-normalised.wav"></audio></td></tr>
+      <tr><td><span class="swatch" style="background:#d62728"></span>Engine stopped, a silent playback stream open</td>
+        <td><audio controls preload="none" src="audio/playback-open.wav"></audio></td>
+        <td><audio controls preload="none" src="audio/playback-open-normalised.wav"></audio></td></tr>
+      <tr><td><span class="swatch" style="background:#2ca02c"></span>Engine stopped, capture only (no playback stream)</td>
+        <td><audio controls preload="none" src="audio/capture-only.wav"></audio></td>
+        <td><audio controls preload="none" src="audio/capture-only-normalised.wav"></audio></td></tr>
+      </table>
+
+    <section>
+      <h2>Engine running, muted — the pedal's normal state</h2>
+      <p><p>The engine holds the codec and renders its document, muted, which is what the player's audio path carries. Captured through <code>namchainctl record</code>: the engine's own capture path, the one the bench test's “Guitar input noise” uses. 2026-10-11 read &minus;75.3 dBFS(A) here at 64-frame periods.</p></p>
+      <p class="meta"><code>engine-muted.wav</code> &middot; 18.0 s &middot; <strong>-85.3 dBFS rms</strong>
+         unweighted &middot; <strong>-87.3 dBFS(A)</strong> &middot; peak -70.8 dBFS &middot;
+         raw (unbanded) -84.5 dBFS</p>
+      <p class="meta">mains: 50 Hz -123.1 dBFS &middot; 100 Hz -120.4 dBFS &middot; 150 Hz -128.6 dBFS &middot; largest line below 1 kHz: 750 Hz -101.8 dBFS</p>
+            <div class="audio">
+        <span class="alabel">Engine running, muted — the pedal's normal state</span>
+        <audio controls preload="none" src="audio/engine-muted.wav"></audio>
+        <span class="hint">as captured — very quiet, matches the numbers</span>
+        <audio controls preload="none" src="audio/engine-muted-normalised.wav"></audio>
+        <span class="hint">normalised to &minus;3&nbsp;dBFS peak (+68 dB) so it can be heard</span>
+      </div>
+
+      <img src="img/spectrum-engine-muted.png" alt="spectrum">
+      <img src="img/bands-engine-muted.png" alt="octave bands">
+      <div class="cols">
+        <div><h3>Octave bands</h3><table><tr><th>band</th><th>level</th><th>share</th></tr><tr><td>31.5&ndash;63 Hz</td><td>-108.6 dBFS</td><td>0.5%</td></tr><tr><td>63&ndash;125 Hz</td><td>-107.4 dBFS</td><td>0.6%</td></tr><tr><td>125&ndash;250 Hz</td><td>-106.2 dBFS</td><td>0.8%</td></tr><tr><td>250&ndash;500 Hz</td><td>-104.2 dBFS</td><td>1.3%</td></tr><tr><td>500&ndash;1000 Hz</td><td>-97.6 dBFS</td><td>5.8%</td></tr><tr><td>1000&ndash;2000 Hz</td><td>-97.3 dBFS</td><td>6.4%</td></tr><tr><td>2000&ndash;4000 Hz</td><td>-95.2 dBFS</td><td>10.4%</td></tr><tr><td>4000&ndash;8000 Hz</td><td>-92.7 dBFS</td><td>18.4%</td></tr><tr><td>8000&ndash;16000 Hz</td><td>-89.6 dBFS</td><td>37.0%</td></tr><tr><td>16000&ndash;20000 Hz</td><td>-92.6 dBFS</td><td>18.6%</td></tr></table></div>
+        <div><h3>Lines above the broadband floor</h3><ul><li>none</li></ul></div>
+      </div>
+    </section>
+    <section>
+      <h2>Engine stopped, a silent playback stream open</h2>
+      <p><p>No engine, but a silent <code>aplay</code> holds the playback path open — the codec state the engine leaves it in. On 2026-10-11 this converter's capture-only state was about 15 dB louder in the 4–16 kHz bands and this arm read &minus;79.9 dBFS(A), the quietest of that session's arms — not of every session's since.</p></p>
+      <p class="meta"><code>playback-open.wav</code> &middot; 18.0 s &middot; <strong>-87.2 dBFS rms</strong>
+         unweighted &middot; <strong>-89.3 dBFS(A)</strong> &middot; peak -72.6 dBFS &middot;
+         raw (unbanded) -86.3 dBFS</p>
+      <p class="meta">mains: 50 Hz -126.8 dBFS &middot; 100 Hz -122.3 dBFS &middot; 150 Hz -133.2 dBFS &middot; largest line below 1 kHz: 849.6 Hz -122.3 dBFS</p>
+            <div class="audio">
+        <span class="alabel">Engine stopped, a silent playback stream open</span>
+        <audio controls preload="none" src="audio/playback-open.wav"></audio>
+        <span class="hint">as captured — very quiet, matches the numbers</span>
+        <audio controls preload="none" src="audio/playback-open-normalised.wav"></audio>
+        <span class="hint">normalised to &minus;3&nbsp;dBFS peak (+70 dB) so it can be heard</span>
+      </div>
+
+      <img src="img/spectrum-playback-open.png" alt="spectrum">
+      <img src="img/bands-playback-open.png" alt="octave bands">
+      <div class="cols">
+        <div><h3>Octave bands</h3><table><tr><th>band</th><th>level</th><th>share</th></tr><tr><td>31.5&ndash;63 Hz</td><td>-114.1 dBFS</td><td>0.2%</td></tr><tr><td>63&ndash;125 Hz</td><td>-111.3 dBFS</td><td>0.4%</td></tr><tr><td>125&ndash;250 Hz</td><td>-109.0 dBFS</td><td>0.7%</td></tr><tr><td>250&ndash;500 Hz</td><td>-105.9 dBFS</td><td>1.4%</td></tr><tr><td>500&ndash;1000 Hz</td><td>-103.2 dBFS</td><td>2.5%</td></tr><tr><td>1000&ndash;2000 Hz</td><td>-100.3 dBFS</td><td>4.9%</td></tr><tr><td>2000&ndash;4000 Hz</td><td>-97.2 dBFS</td><td>9.9%</td></tr><tr><td>4000&ndash;8000 Hz</td><td>-94.2 dBFS</td><td>20.0%</td></tr><tr><td>8000&ndash;16000 Hz</td><td>-91.2 dBFS</td><td>39.9%</td></tr><tr><td>16000&ndash;20000 Hz</td><td>-94.2 dBFS</td><td>20.0%</td></tr></table></div>
+        <div><h3>Lines above the broadband floor</h3><ul><li>none</li></ul></div>
+      </div>
+    </section>
+    <section>
+      <h2>Engine stopped, capture only (no playback stream)</h2>
+      <p><p>The engine stopped and <code>arecord</code> on its own. The arm the earlier logs quote, and the least repeatable of the three: 2026-10-11 read &minus;75.8 dBFS(A) in the settled re-run, but 4–16 kHz dominated and 15 dB louder with the Pico attached earlier the same day.</p></p>
+      <p class="meta"><code>capture-only.wav</code> &middot; 18.0 s &middot; <strong>-92.6 dBFS rms</strong>
+         unweighted &middot; <strong>-94.7 dBFS(A)</strong> &middot; peak -60.6 dBFS &middot;
+         raw (unbanded) -85.1 dBFS &mdash; 7.5 dB of it outside the 20 Hz&ndash;20 kHz band</p>
+      <p class="meta">mains: 50 Hz -125.4 dBFS &middot; 100 Hz -127.5 dBFS &middot; 150 Hz -135.2 dBFS &middot; largest line below 1 kHz: 49.8 Hz -125.4 dBFS</p>
+            <div class="audio">
+        <span class="alabel">Engine stopped, capture only (no playback stream)</span>
+        <audio controls preload="none" src="audio/capture-only.wav"></audio>
+        <span class="hint">as captured — very quiet, matches the numbers</span>
+        <audio controls preload="none" src="audio/capture-only-normalised.wav"></audio>
+        <span class="hint">normalised to &minus;3&nbsp;dBFS peak (+58 dB) so it can be heard</span>
+      </div>
+
+      <img src="img/spectrum-capture-only.png" alt="spectrum">
+      <img src="img/bands-capture-only.png" alt="octave bands">
+      <div class="cols">
+        <div><h3>Octave bands</h3><table><tr><th>band</th><th>level</th><th>share</th></tr><tr><td>31.5&ndash;63 Hz</td><td>-115.6 dBFS</td><td>0.5%</td></tr><tr><td>63&ndash;125 Hz</td><td>-115.4 dBFS</td><td>0.5%</td></tr><tr><td>125&ndash;250 Hz</td><td>-113.7 dBFS</td><td>0.8%</td></tr><tr><td>250&ndash;500 Hz</td><td>-111.1 dBFS</td><td>1.4%</td></tr><tr><td>500&ndash;1000 Hz</td><td>-108.2 dBFS</td><td>2.7%</td></tr><tr><td>1000&ndash;2000 Hz</td><td>-105.7 dBFS</td><td>4.9%</td></tr><tr><td>2000&ndash;4000 Hz</td><td>-102.6 dBFS</td><td>9.8%</td></tr><tr><td>4000&ndash;8000 Hz</td><td>-99.7 dBFS</td><td>19.5%</td></tr><tr><td>8000&ndash;16000 Hz</td><td>-96.6 dBFS</td><td>39.5%</td></tr><tr><td>16000&ndash;20000 Hz</td><td>-99.5 dBFS</td><td>20.2%</td></tr></table></div>
+        <div><h3>Lines above the broadband floor</h3><ul><li>none</li></ul></div>
+      </div>
+    </section>
+
+
+<footer>
+  <p>Captured by <code>scripts/codec-input-noise.py</code>, analysed and drawn by <code>scripts/codec-noise.py</code> and <code>scripts/noise-document.py</code>. The engine and host state around the run is in <code>state.json</code>.</p>
+  <p>Numbers on this page are in <code>noise-numbers.json</code>; the page and every graph are
+  built by <code>scripts/noise-document.py</code> from a manifest of the captures. Its own RMS is checked against <code>scripts/codec-noise.py</code> for every capture (worst disagreement 0.00 dB, the bar is 0.05).
+  Conventions: dBFS at 1.0 V rms full scale, 20 Hz&ndash;20 kHz, channel 0 = LIN1. Frequency axes
+  are logarithmic from 20 Hz to 20 kHz; the spectra are 65536-point Hann segments, 0.73 Hz bins at
+  48 kHz, mean square per bin. The unweighted and A-weighted figures, like every earlier reading
+  of this converter, exclude what is below 20 Hz and above 20 kHz; the <em>raw</em> figure beside
+  them excludes nothing, so where the two disagree the capture holds energy outside the audio band
+  &mdash; a drift or a settling step rather than hiss.</p>
+</footer>
+</body></html>

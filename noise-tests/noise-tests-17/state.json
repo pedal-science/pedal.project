@@ -1,0 +1,63 @@
+{
+  "before": {
+    "namchaind": "active",
+    "kernel": "7.0.0-1017-raspi-realtime-numaemu3-dmaidle1-trimmed",
+    "state": "running",
+    "mute": false,
+    "sample_rate": 48000,
+    "period_size": 64,
+    "format": "S32_LE",
+    "xruns": 0,
+    "record": {
+      "active": false,
+      "enabled": true
+    },
+    "backend_diagnostics": {
+      "capture_overruns": 0,
+      "floor_inserted_frames": 64,
+      "gate_capture_xruns": 0,
+      "occupancy_mismatches": 0
+    },
+    "read_at": "2026-10-13T16:05:30+01:00"
+  },
+  "after": {
+    "namchaind": "active",
+    "kernel": "7.0.0-1017-raspi-realtime-numaemu3-dmaidle1-trimmed",
+    "state": "running",
+    "mute": false,
+    "sample_rate": 48000,
+    "period_size": 64,
+    "format": "S32_LE",
+    "xruns": 0,
+    "record": {
+      "active": false,
+      "enabled": true
+    },
+    "backend_diagnostics": {
+      "capture_overruns": 0,
+      "floor_inserted_frames": 0,
+      "gate_capture_xruns": 0,
+      "occupancy_mismatches": 0
+    },
+    "read_at": "2026-10-13T16:06:40+01:00"
+  },
+  "arms": [
+    "engine",
+    "playback",
+    "alone"
+  ],
+  "attempts": {
+    "engine": 1,
+    "playback": 1,
+    "alone": 1
+  },
+  "notes": [
+    "the engine's recording is /var/lib/namchain/recordings/codec-input-noise-20261013-160529/"
+  ],
+  "state_as_described": "LIN 1 wired to input board LIN1, input board GND to Codec GND. 9V battery + to V9, codec GND to battery -. U1 pin 3 short REMOVED. input board IN to jack tip, board GND to jack sleeve. 20cm TS cable in the jack, other end in the guitar, volume and tone at 10, player touching the strings. SW-C jumpered to SW-I (Inst). No output device connected, Cioks out.",
+  "seconds_per_arm": 20,
+  "skip_seconds": 2.0,
+  "device": "hw:wm8960",
+  "format": "S32_LE",
+  "ran_at": "2026-10-13T16:06:40+01:00"
+}

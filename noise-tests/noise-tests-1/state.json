@@ -1,0 +1,63 @@
+{
+  "before": {
+    "namchaind": "active",
+    "kernel": "7.0.0-1017-raspi-realtime-numaemu3-dmaidle1-trimmed",
+    "state": "running",
+    "mute": false,
+    "sample_rate": 48000,
+    "period_size": 64,
+    "format": "S32_LE",
+    "xruns": 0,
+    "record": {
+      "active": false,
+      "enabled": true
+    },
+    "backend_diagnostics": {
+      "capture_overruns": 0,
+      "floor_inserted_frames": 0,
+      "gate_capture_xruns": 0,
+      "occupancy_mismatches": 0
+    },
+    "read_at": "2026-10-12T23:58:08+01:00"
+  },
+  "after": {
+    "namchaind": "active",
+    "kernel": "7.0.0-1017-raspi-realtime-numaemu3-dmaidle1-trimmed",
+    "state": "running",
+    "mute": false,
+    "sample_rate": 48000,
+    "period_size": 64,
+    "format": "S32_LE",
+    "xruns": 0,
+    "record": {
+      "active": false,
+      "enabled": true
+    },
+    "backend_diagnostics": {
+      "capture_overruns": 0,
+      "floor_inserted_frames": 0,
+      "gate_capture_xruns": 0,
+      "occupancy_mismatches": 0
+    },
+    "read_at": "2026-10-12T23:59:21+01:00"
+  },
+  "arms": [
+    "engine",
+    "playback",
+    "alone"
+  ],
+  "attempts": {
+    "engine": 1,
+    "playback": 1,
+    "alone": 1
+  },
+  "notes": [
+    "the engine's recording is /var/lib/namchain/recordings/codec-input-noise-20261012-235807/"
+  ],
+  "state_as_described": "LIN 1 wired to Codec GND, input board not connected to anything",
+  "seconds_per_arm": 20,
+  "skip_seconds": 2.0,
+  "device": "hw:wm8960",
+  "format": "S32_LE",
+  "ran_at": "2026-10-12T23:59:21+01:00"
+}
