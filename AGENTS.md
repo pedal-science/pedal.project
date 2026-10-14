@@ -220,7 +220,9 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
   fails — the `pcm_read: Input/output error` that kills a capture, with its kernel log decoded
   and the fix `rtpi` may carry), `bom.md`,
   `modules.md` (a proposal, 2026-10-11: the circuits as pluggable boards, their cables and
-  connectors, and the ground tree; its map, which checks the tree, is `diagrams/modules.html`).
+  connectors, and the ground tree; its map, which checks the tree, is `diagrams/modules.html`),
+  `balanced-outputs.md` (a proposal, 2026-10-14: XLR outputs and impedance-balanced TRS, phantom,
+  mute, pad, ground lift, and where the case bonds).
 - `stripboard/`, `breadboard/` — board layouts as data; each script checks its placement against
   the netlist (`stripboard/board1.py` holds board 1's) and draws it.
 - `schematic/` — the pedal's schematic sheets as KiCad files, each written from the wiring table in

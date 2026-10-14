@@ -100,7 +100,7 @@ the middle of the op-amp's input range.
 
 | Part | CPC code | Qty | £ each | Status | Notes |
 |---|---|---|---|---|---|
-| 10 µF 50 V bipolar electrolytic (Panasonic) | CA09815 | 5 | 0.29 | in hand | HP_L/HP_R coupling, each with a 100 Ω and a 1 MΩ from the packs above. The build needs two, but CPC's minimum is five. 2a's measurements need this stage too, to keep the codec's 1.65 V bias off the SSL 2+ |
+| 10 µF 50 V bipolar electrolytic (Panasonic) | CA09815 | 5 | 0.29 | in hand | HP_L/HP_R coupling, each with a 100 Ω and a 1 MΩ from the packs above, and the same again on each jack's ring (2026-10-14, docs/balanced-outputs.md step 1). The build needs four; pair them on a meter, tip with ring. CPC's minimum is five. 2a's measurements need this stage too, to keep the codec's 1.65 V bias off the SSL 2+ |
 | Output jacks | — | — | — | in hand | Two of the five Neutrik jacks under Building |
 
 ## Power (Phases 2 and 4)
@@ -138,7 +138,7 @@ the middle of the op-amp's input range.
 
 | Part | CPC code | Qty | £ each | Status | Notes |
 |---|---|---|---|---|---|
-| 6.35 mm TRS jack, switched, plastic body and nut (Neutrik NMJ6HF-S) | CN26782 | 5 | 0.83 | in hand | IN, OUT L, OUT R, expression, and a spare. Being plastic all round, the case never becomes a ground path. Fits a panel under 3 mm thick. On the outputs, wire the ring to ground, so a TRS cable into a balanced input picks up less hum. Later, the switches on the expression and OUT R jacks can tell the Pico whether a cable is in |
+| 6.35 mm TRS jack, switched, plastic body and nut (Neutrik NMJ6HF-S) | CN26782 | 5 | 0.83 | in hand | IN, OUT L, OUT R, expression, and a spare. Being plastic all round, the case never becomes a ground path. Fits a panel under 3 mm thick. On the outputs, the ring goes to the output board's ring network (the tip's three parts, from ground), so a TRS cable into a balanced input is impedance-balanced and a TS cable is unbalanced (docs/balanced-outputs.md, step 1, 2026-10-14). Later, the switches on the expression and OUT R jacks can tell the Pico whether a cable is in |
 | Stripboard, FR4, 100 × 160 mm (Kemo E005) | PC01603 | 2 | 3.98 | in hand | Buffer and power on one, MIDI and the relay driver on the other |
 | 6-pin DIL socket | SC15351 | 10 | 0.17 | in hand | For the H11L1M. CPC's minimum is ten |
 | 20-way 2.54 mm socket strip | CN14539 | 5 | 0.43 | in hand | Seats the Pico (two strips) and the codec board (two cut to 16), so either can be swapped out. CPC's minimum is five |

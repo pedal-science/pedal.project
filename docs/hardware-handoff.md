@@ -169,9 +169,15 @@ happy driving 1 MΩ, so impedance never needs switching — only level does.
 
 ### Output stage
 
-Each of HP_L and HP_R: **10 µF series + 100 Ω + 1 MΩ bleed to ground** → TS jack.
-OUT3 unused and **disabled in the register configuration** — don't leave the driver
-enabled as a return path with nothing connected.
+Each of HP_L and HP_R: **10 µF series + 100 Ω + 1 MΩ bleed to ground** → the jack's tip.
+The ring gets **the same three parts from ground** (decided 2026-10-14), so a TRS lead into a
+balanced input is impedance-balanced and a TS lead is plain unbalanced. OUT3 unused and
+**disabled in the register configuration** — don't leave the driver enabled as a return path
+with nothing connected.
+
+**Balanced XLR outputs** beside these (male NC3MD-LX, a driver board, phantom protection, a mute,
+a pad and a ground lift) are decided in outline and designed in
+[balanced-outputs.md](balanced-outputs.md); where the case bonds is measured before it is fixed.
 
 ### Power
 

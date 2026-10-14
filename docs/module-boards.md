@@ -51,17 +51,25 @@ beside the op-amp.
 
 ![Output R](../stripboard/module-boards/output-r.svg)
 
-One design, built twice. 40.6 × 30.5 mm. Output L takes HPL from the carrier on A5 and sends
-the jack tip to the relay on A7. Output R takes HPR on A6 and sends the tip straight to the
-jack on A9; it does not pass through the relay. Ground arrives from the carrier. The capacitor
-is bipolar, and it is what keeps the codec's 1.65 V off the jack.
+One design, built twice. 45.7 × 30.5 mm. Output L takes HPL from the carrier on A5 and sends
+the jack tip and ring to the relay on A7. Output R takes HPR on A6 and sends them straight to
+the jack on A9; it does not pass through the relay. Ground arrives from the carrier. The tip's
+capacitor is bipolar, and it is what keeps the codec's 1.65 V off the jack.
+
+The ring has the same three parts with ground in place of HPL, so the jack is
+impedance-balanced on a TRS lead and plain unbalanced on a TS one
+([balanced-outputs.md](balanced-outputs.md), step 1, decided 2026-10-14). Pair the two 10 µF
+capacitors on a meter: the closer they match, the more hum a balanced input rejects. The jack
+cable is four-way (GND, tip, ring, unused), so it cannot go into the board's three-way HPL
+socket or the relay's coil socket.
 
 ## Bypass relay
 
 ![Bypass relay](../stripboard/module-boards/bypass-relay.svg)
 
 45.7 × 45.7 mm. Two grounds, kept apart: the input lane arrives on A2, from the input board,
-and the output lane arrives on A7, from output L. Neither touches the coil. C1, from the
+and the output lane arrives on A7, from output L. Neither touches the coil. OUT L's ring passes
+straight from A7 to A8; the relay switches only the tips. C1, from the
 control board, is the coil pair and has no ground. De-energised is bypass.
 
 Confirm the relay with a meter before wiring audio. The drawing uses the component-side view

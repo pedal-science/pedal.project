@@ -70,7 +70,11 @@ the meter before trusting either version.
 It is three parts: the 10 µF bipolar capacitor, the 100 Ω in series, and the 1 MΩ bleed to
 ground. Use one board per channel. They are identical, so they swap.
 
-The trade-off is two connector pairs for three passive parts. If you want fewer joints in the
+Since 2026-10-14 the ring gets the same three parts, from ground, so a TRS lead into a balanced
+input is impedance-balanced ([balanced-outputs.md](balanced-outputs.md), step 1). That makes six
+parts per board and a four-way jack cable.
+
+The trade-off is two connector pairs for six passive parts. If you want fewer joints in the
 output path, put both networks on the codec carrier and run the jack cables from there. The grounds
 don't change.
 

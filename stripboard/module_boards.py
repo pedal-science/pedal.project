@@ -33,39 +33,59 @@ def dip(x, y, n):
 
 # ---------------------------------------------------------------- the output board
 def output_board(side):
-    """One channel of the output network.  L and R are the same board."""
+    """One channel of the output network.  L and R are the same board.
+
+    The tip's network (C, R series, R bleed) keeps the codec's 1.65 V off the jack.  The ring's
+    is the same three parts with ground where HPL is, so a TRS lead into a balanced input sees
+    matched impedances on tip and ring: the jack is impedance-balanced on TRS and plain
+    unbalanced on TS (docs/balanced-outputs.md, step 1)."""
     left = side == 'L'
     cap, series, bleed = ('C6', 'R7', 'R8') if left else ('C7', 'R9', 'R10')
+    rcap, rseries, rbleed = ('C14', 'R24', 'R25') if left else ('C15', 'R26', 'R27')
     hot, mid, tip = (('HPL', 'OUT_L_N', 'OUT_L') if left else ('HPR', 'OUT_R_N', 'OUT_R'))
+    ring, rmid = ('OUT_L_RING', 'OUT_L_RN') if left else ('OUT_R_RING', 'OUT_R_RN')
     near, far = ('A5', 'A7') if left else ('A6', 'A9')
     node = 'OUTL' if left else 'OUTR'
     title = 'Output L' if left else 'Output R — the same board as Output L'
-    nl = K.Netlist(base=NET, keep_equiv=False)
+    nl = K.Netlist(
+        base=NET, keep_equiv=False,
+        parts={rcap: ('el6.3', '10µF bipolar', 2), rseries: ('r', '100Ω', 2),
+               rbleed: ('r', '1M', 2)},
+        nets={ring: {f'{rcap}.1', f'{rbleed}.1'}, rmid: {f'{rcap}.2', f'{rseries}.1'},
+              'GND_A': {f'{rseries}.2', f'{rbleed}.2'}})
     #            ref     kind      value              pin holes, in the netlist's pin order
     parts = {
-        cap:    ('el6.3', NET.PARTS[cap]['value'],    [(6, 3), (6, 4)]),
-        series: ('r',     NET.PARTS[series]['value'], [(9, 4), (9, 8)]),
-        bleed:  ('r',     NET.PARTS[bleed]['value'],  [(11, 8), (11, 2)]),
+        cap:     ('el6.3', NET.PARTS[cap]['value'],    [(6, 3), (6, 4)]),
+        series:  ('r',     NET.PARTS[series]['value'], [(9, 4), (9, 8)]),
+        bleed:   ('r',     NET.PARTS[bleed]['value'],  [(11, 8), (11, 2)]),
+        rcap:    ('el6.3', '10µF bipolar',             [(4, 6), (4, 7)]),
+        rseries: ('r',     '100Ω',                     [(10, 7), (10, 2)]),
+        rbleed:  ('r',     '1M',                       [(8, 6), (8, 2)]),
     }
     headers = [
         K.Header((1, 2), ['GND_A', hot, None], cable=near),                 # from the carrier
-        K.Header((14, 2), ['GND_A', tip], cable=far),                        # to the relay, or
+        K.Header((16, 2), ['GND_A', tip, ring, None], cable=far),            # to the relay, or
     ]                                                                        # straight to the jack
-    links = [link((12, 8), (12, 3), tip)]
+    links = [link((12, 8), (12, 3), tip), link((14, 4), (14, 6), ring)]
     return K.Board(
-        key=f'output-{side.lower()}', node=node, W=16, H=12, netlist=nl, parts=parts,
-        headers=headers, links=links, mounts=[(4, 10), (13, 10)],
-        carries={cap, series, bleed}, grounds={'GND_A': node},
-        alias={'GND_A': 'GND'},
+        key=f'output-{side.lower()}', node=node, W=18, H=12, netlist=nl, parts=parts,
+        headers=headers, links=links, mounts=[(4, 10), (15, 10)],
+        carries={cap, series, bleed, rcap, rseries, rbleed}, grounds={'GND_A': node},
+        alias={'GND_A': 'GND', ring: 'RING'},
         title=title,
         notes=[
             'Build it twice. The two boards are identical, so they swap: only the cable '
             'labels change.',
-            'The capacitor is bipolar. Either way round.',
+            'The capacitors are bipolar. Either way round.',
             'The bleed holds the jack at 0 V. The codec pin sits at about 1.65 V, so it '
             'must only ever meet the jack through the capacitor.',
+            f'The ring has the tip\'s network with ground in place of {hot}: {rcap}, '
+            f'{rseries} and {rbleed} match {cap}, {series} and {bleed}. A TRS lead into a '
+            'balanced input is then impedance-balanced; a TS plug shorts the ring to the '
+            'sleeve and the network does nothing. Pair the two capacitors on a meter: the '
+            'closer they are, the more hum a balanced input rejects.',
             'Ground arrives from the carrier with the signal and leaves for the jack in '
-            'the same cable as the tip. No separate sleeve wire.',
+            'the same cable as the tip and the ring. No separate sleeve wire.',
         ] if left else [
             'The same cuts, the same parts and the same holes as Output L.',
             'This channel does not pass through the relay. Its cable runs straight to '
@@ -219,6 +239,7 @@ def relay_board():
             'NCB': {'K1.8'},
             'COIL-': {'K1.10', 'D2.1'},
             'IN_GND': {'R15.2'},
+            'OUT_RING': set(),
         },
         rails={'OUT_GND': 'the OUT L lane’s ground, passed straight through'})
     parts = {
@@ -229,8 +250,8 @@ def relay_board():
     headers = [
         K.Header((1, 6), ['IN_GND', 'IN_TIP'], cable='A1'),
         K.Header((1, 12), ['IN_GND', 'NO_A'], cable='A2'),
-        K.Header((16, 12), ['OUT_GND', 'NO_B'], cable='A7'),
-        K.Header((16, 6), ['OUT_GND', 'OUT_TIP'], cable='A8'),
+        K.Header((16, 11), ['OUT_GND', 'NO_B', 'OUT_RING', None], cable='A7'),
+        K.Header((16, 6), ['OUT_GND', 'OUT_TIP', 'OUT_RING', None], cable='A8'),
         K.Header((1, 2), ['COIL-', None, 'COIL+'], cable='C1',
                  names=['COIL −', '—', '+5 V']),
     ]
@@ -241,8 +262,9 @@ def relay_board():
         link((10, 1), (10, 4), 'COIL-'),
         link((3, 6), (3, 12), 'IN_GND'),
         link((5, 13), (5, 8), 'NO_A'),
-        link((14, 6), (14, 12), 'OUT_GND'),
-        link((12, 13), (12, 8), 'NO_B'),
+        link((13, 6), (13, 11), 'OUT_GND'),
+        link((12, 12), (12, 8), 'NO_B'),
+        link((14, 8), (14, 13), 'OUT_RING'),
     ]
     return K.Board(
         key='bypass-relay', node='RELAY', W=18, H=18, netlist=nl, parts=parts,
@@ -251,6 +273,7 @@ def relay_board():
         title='Bypass relay',
         alias={'IN_GND': 'IN gnd', 'OUT_GND': 'OUT gnd', 'IN_TIP': 'IN tip',
                'OUT_TIP': 'OUT tip', 'NO_A': 'to input', 'NO_B': 'from out L',
+               'OUT_RING': 'OUT ring',
                'NC_LINK': 'bypass', 'COIL+': '+5 V', 'COIL-': 'coil −'},
         pin_labels={'K1': ['+', 'NC', '', 'IN', '→buf', '←out', 'OUT', '', 'NC', '−']},
         part_notes={
@@ -267,7 +290,8 @@ def relay_board():
             'and pin 7 to pin 9, should beep with the coil unpowered, and open when 5 V '
             'is across the coil.',
             'The IN lane’s ground and the OUT L lane’s ground both pass straight through, '
-            'and they are not joined. Neither touches the coil. The coil cable brings no '
+            'and they are not joined. OUT L’s ring passes straight through too: the relay '
+            'switches only the tips. Neither touches the coil. The coil cable brings no '
             'ground of its own: the transistor that switches it is on the control board.',
             'Unplug this board and the jack cables fit the input and output boards '
             'directly. The pinouts are the same.',
