@@ -149,7 +149,14 @@ the middle of the op-amp's input range.
 
 ## Not designed yet
 
-- The mic stage (D5): the jack, a preamp or the codec's mic path, and whether to offer phantom power.
+- The mic stage (D5): a preamp or the codec's mic path, and whether to offer phantom power. The
+  socket is chosen (2026-10-14): a **Neutrik NCJ9FI-S**, Combo I, female XLR with a switched 1/4"
+  stereo jack, solder cups, latch, rear-mounted, panel up to 7 mm. The switched jack lets a TRS
+  plug take the line path and disconnect the mic path, which matters most if phantom power is
+  ever offered: phantom must never reach a line source's TRS. Not the NCJ6FI-S (no switching
+  contacts), nor the NCJ10FI-S (switched, but discontinued). Its housing is plastic, so pin 1
+  goes to a lug on the case, as the XLR outputs' does (docs/balanced-outputs.md). Check which
+  contacts switch on Neutrik's datasheet drawing before wiring it.
 - Cooling, if Phase 4's heat soak inside the enclosure calls for it.
 - Tools aren't listed here.
 

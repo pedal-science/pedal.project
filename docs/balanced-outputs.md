@@ -42,8 +42,10 @@ switching contacts. Two problems on an output:
 2. **It looks like an input**, beside the Mic IN on the chalk plan. Someone will plug a mic into it.
 
 The flexibility you wanted is kept, just on two sockets: XLR on the male socket, and balanced TRS
-on the 1/4" jack for the same channel (step 1). **Use the NCJ6FI-S for Mic IN**, where it takes a
-mic on XLR and a line source on TRS. That is the job it was designed for.
+on the 1/4" jack for the same channel (step 1). **Use a combo socket for Mic IN**, where it takes a
+mic on XLR and a line source on TRS. That is the job it was designed for. The NCJ9FI-S, the
+same Combo I socket with a switched jack, is the better choice there (see bom.md, "Not designed
+yet").
 
 ### "Separate sockets for balanced and unbalanced": yes, and the 1/4" jacks become both
 
@@ -405,8 +407,8 @@ between the driver and the pins. Not needed now.
 
 ## Decisions, 2026-10-14
 
-1. **Male XLR (NC3MD-LX) plus impedance-balanced 1/4"**, not a combo socket. The NCJ6FI-S is for
-   Mic IN.
+1. **Male XLR (NC3MD-LX) plus impedance-balanced 1/4"**, not a combo socket. A combo socket (the
+   NCJ9FI-S) is for Mic IN.
 2. **Step 1 now.** Done in the layouts, the map and the BOM; the case's jacks are rewired when the
    output boards are built.
 3. **The XLRs are silent in panic bypass**, and at boot.
