@@ -124,7 +124,8 @@ common() {  # common <root> <kind>
   : > "$r/etc/machine-id"
   chroot "$r" systemctl mask -q systemd-firstboot.service
 
-  chroot "$r" useradd -m -s /bin/bash -G sudo "$USER_NAME"
+  # audio: aplay and amixer on the codec without sudo, for bench checks with namchaind stopped.
+  chroot "$r" useradd -m -s /bin/bash -G sudo,audio "$USER_NAME"
   local uid; uid=$(chroot "$r" id -u "$USER_NAME")
   install -d -m 700 -o "$uid" -g "$uid" "$r/home/$USER_NAME/.ssh"
   install -m 600 -o "$uid" -g "$uid" "$IN/authorized_keys" "$r/home/$USER_NAME/.ssh/authorized_keys"
