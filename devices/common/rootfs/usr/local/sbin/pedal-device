@@ -175,6 +175,7 @@ activate() {
   local conf=$1 hk
   hk=$(. "$conf"; echo "${HOUSEKEEPING_CPUS:-}")
   run systemctl daemon-reload
+  run udevadm control --reload
   # The drop-ins are read at daemon-reload, but a running slice's cgroup is only rewritten when
   # a property is set, so set it now too.
   if [[ -n $hk ]]; then
@@ -258,6 +259,7 @@ do_revert() {
   for s in system user machine; do run rmdir "/etc/systemd/system/$s.slice.d" 2>/dev/null || true; done
   run rmdir /etc/pedal 2>/dev/null || true
   run systemctl daemon-reload
+  run udevadm control --reload
   for s in system user machine; do run systemctl set-property --runtime "$s.slice" AllowedCPUs= 2>/dev/null || true; done
   run systemctl set-property --runtime init.scope AllowedCPUs=
   run systemctl restart systemd-journald

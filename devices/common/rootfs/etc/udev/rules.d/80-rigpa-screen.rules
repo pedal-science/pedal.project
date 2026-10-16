@@ -1,0 +1,7 @@
+# rigpa starts when a screen appears, not only at boot. Its unit runs only with an HDMI connector
+# connected (ExecCondition, rigpa.service.d/10-pedal.conf), checked once when it starts; at boot the
+# panel can come up after that check (2026-10-16: vc4 found no display at 8 s, rigpa skipped at
+# 14 s, the panel was there minutes later), and a screen plugged in later was never seen. DRM sends
+# a change event with HOTPLUG=1 on the card whenever a connector's state changes; starting an
+# active unit is a no-op, and on a disconnect the condition skips it.
+ACTION=="change", SUBSYSTEM=="drm", KERNEL=="card[0-9]*", ENV{HOTPLUG}=="1", RUN+="/usr/bin/systemctl --no-block start rigpa.service"
