@@ -216,8 +216,8 @@
       "periods": 6,
       "capture_channels": 2,
       "playback_channels": 2,
-      "capture_node": "/proc/asound/card0/pcm0c/sub0",
-      "playback_node": "/proc/asound/card0/pcm0p/sub0",
+      "capture_node": "/proc/asound/wm8960/pcm0c/sub0",
+      "playback_node": "/proc/asound/wm8960/pcm0p/sub0",
       "state_words": {
         "RUNNING": "the stream is live",
         "PREPARED": "opened and prepared, not started: the engine is between blocks, or it is stopped",
@@ -225,7 +225,7 @@
       },
       "faults": [
         {
-          "symptom": "no card 0 wm8960 in /proc/asound/cards",
+          "symptom": "no wm8960 in /proc/asound/cards",
           "likely": [
             "the codec is not answering on I2C (see codec.signals: 3V3 first, then SDA/SCL)",
             "the overlay did not load: check dmesg for 'wm8960 1-001a' and 'card wm8960 did not appear'"
@@ -238,7 +238,7 @@
             "another process holds the PCM (check the owner pid in the status file)",
             "hw_params do not match: the engine asks for an exact period size and refuses a device that cannot give it"
           ],
-          "check": "compare /proc/asound/card0/pcm0p/sub0/hw_params with this file's audio block, field by field"
+          "check": "compare /proc/asound/wm8960/pcm0p/sub0/hw_params with this file's audio block, field by field"
         }
       ]
     },

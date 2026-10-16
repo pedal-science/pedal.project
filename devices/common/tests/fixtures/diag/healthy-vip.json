@@ -1,5 +1,16 @@
 {
  "alsa": {
+  "card": {
+   "card": "wm8960",
+   "device": "hw:CARD=wm8960,DEV=0",
+   "device_source": "/etc/namchain/namchaind.json",
+   "dir": "/proc/asound/card0",
+   "id": "wm8960",
+   "index": 0,
+   "path": "/proc/asound/wm8960",
+   "pcm_device": 0,
+   "present": true
+  },
   "cards": "0 [wm8960         ]: simple-card - wm8960\n                      wm8960",
   "devices": [
    "by-path",

@@ -162,7 +162,7 @@ chrt -p "$(pgrep -f 'irq/.*dw_axi' | head -1)"
 grep -i dw_axi /proc/interrupts; sleep 5; grep -i dw_axi /proc/interrupts
 
 # Both directions of the stream:
-cat /proc/asound/card0/pcm0p/sub0/status /proc/asound/card0/pcm0c/sub0/status
+cat /proc/asound/wm8960/pcm0p/sub0/status /proc/asound/wm8960/pcm0c/sub0/status
 
 # Which channel the audio is on, and what else is using a channel (dma2chan2/3 are i2s tx/rx):
 sudo cat /sys/kernel/debug/dmaengine/summary

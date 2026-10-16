@@ -15,12 +15,14 @@ Why the import whitelist: the tool must run on the Core host, whose python3 is
 this holds pedal-diag to it the same way, and it is the assertion that keeps the tool deployable
 rather than merely present in the repo.
 """
+import ast
 import importlib.machinery
 import importlib.util
 import json
 import os
 import pathlib
 import sys
+import tempfile
 import textwrap
 import unittest
 
@@ -382,6 +384,153 @@ class HeatAndPressure(unittest.TestCase):
         self.assertIsNone(pd.sample_from_gather_output('{"a": 3}\nCOST nonsense\n').get("cost_cpu_s"))
         with self.assertRaises(SystemExit):
             pd.sample_from_gather_output("COST 0.5\n")
+
+
+def gatherer_function(name):
+    """One function out of the gatherer's source, on its own: the gatherer as a whole reads the
+    host at import, so it cannot be run here, but its pure parts can."""
+    tree = ast.parse(pd.GATHER_SOURCE)
+    wanted = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name in (name, "read")]
+    namespace = {"os": os}
+    exec(compile(ast.Module(body=wanted, type_ignores=[]), "<gatherer>", "exec"), namespace)
+    return namespace[name]
+
+
+def fake_asound(root, cards):
+    """A /proc/asound of numbered card directories, each with its id file and the kernel's
+    id -> cardN symlink beside it."""
+    for index, card_id in enumerate(cards):
+        os.makedirs(os.path.join(root, "card%d" % index, "pcm0p", "sub0"))
+        with open(os.path.join(root, "card%d" % index, "id"), "w") as f:
+            f.write(card_id + "\n")
+        os.symlink("card%d" % index, os.path.join(root, card_id))
+    return root
+
+
+class TheEngineCardIsFoundByIdNotNumber(unittest.TestCase):
+    """The PCM state is the engine's card's, whatever number the kernel gave it.
+
+    The gatherer read /proc/asound/card0 until 2026-10-16. Since the screen (D14) vip probes two
+    vc4 HDMI cards first, so card 0 is vc4hdmi0 and the codec is card 2, and the report's PCM
+    status, hw_params and sw_params were the HDMI port's, or empty. `cards-vip-with-screen.txt` is
+    that card list, in the kernel's format with the ids vip showed on 2026-10-16.
+    """
+
+    VIP = ["vc4hdmi0", "vc4hdmi1", "wm8960"]
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.asound = fake_asound(os.path.join(self.tmp.name, "asound"), self.VIP)
+
+    def tearDown(self):
+        self.tmp.cleanup()
+
+    def resolve(self, device, asound):
+        return gatherer_function("_alsa_card")(device, asound=asound)
+
+    def test_the_gatherer_never_reads_a_card_by_number(self):
+        self.assertNotIn("/proc/asound/card0", pd.GATHER_SOURCE)
+        self.assertNotIn("asound/card%", pd.GATHER_SOURCE)
+
+    def test_the_codec_behind_two_hdmi_cards_is_card_2(self):
+        card = self.resolve("hw:CARD=wm8960,DEV=0", asound=self.asound)
+        self.assertTrue(card["present"])
+        self.assertEqual(card["index"], 2)
+        self.assertEqual(card["id"], "wm8960")
+        self.assertEqual(os.path.basename(card["dir"]), "card2")
+        self.assertEqual(card["pcm_device"], 0)
+
+    def test_every_spelling_of_the_device_finds_the_same_card(self):
+        for device in ("hw:CARD=wm8960,DEV=0", "hw:wm8960,0", "hw:wm8960", "plughw:CARD=wm8960",
+                       "hw:2,0", "hw:2"):
+            card = self.resolve(device, asound=self.asound)
+            self.assertEqual((card["present"], card["index"]), (True, 2), device)
+
+    def test_the_device_number_is_kept(self):
+        self.assertEqual(self.resolve("hw:CARD=wm8960,DEV=1", asound=self.asound)["pcm_device"], 1)
+
+    def test_a_card_that_is_not_there_is_absent_rather_than_card_0(self):
+        card = self.resolve("hw:CARD=II,DEV=0", asound=self.asound)
+        self.assertFalse(card["present"])
+        self.assertIsNone(card["dir"])
+        self.assertIsNone(card["index"])
+
+    def three_cards(self):
+        """The healthy fixture as vip is now: the same streams, read from card 2."""
+        s = sample()
+        s["alsa"]["cards"] = (FIXTURES / "cards-vip-with-screen.txt").read_text().strip()
+        s["alsa"]["card"].update({"dir": "/proc/asound/card2", "index": 2})
+        for side, letter in (("capture", "c"), ("playback", "p")):
+            s["alsa"]["pcm"][side]["node"] = "/proc/asound/card2/pcm0%s/sub0" % letter
+        return s
+
+    def test_the_card_list_is_read_by_id(self):
+        cards = pd.parse_cards(self.three_cards()["alsa"]["cards"])
+        self.assertEqual([(c["index"], c["id"]) for c in cards],
+                         [(0, "vc4hdmi0"), (1, "vc4hdmi1"), (2, "wm8960")])
+        self.assertEqual(cards[2]["name"], "simple-card - wm8960")
+
+    def test_the_codec_as_card_2_is_a_healthy_pedal(self):
+        findings = report_for(self.three_cards()).findings
+        severity = {f["key"]: f["severity"] for f in findings}
+        self.assertEqual([f["key"] for f in findings if f["severity"] == "fail"], [])
+        self.assertIsNone(severity.get("codec.no_card"))
+        self.assertIsNone(severity.get("audio.card_absent"))
+        self.assertEqual(severity.get("audio.streaming"), "ok")
+        self.assertEqual(severity.get("audio.hw_params"), "ok")
+
+    def test_an_hdmi_card_alone_is_no_codec(self):
+        s = self.three_cards()
+        s["alsa"]["cards"] = "\n".join(s["alsa"]["cards"].splitlines()[:4])
+        f = finding(report_for(s).findings, "codec.no_card")
+        self.assertIsNotNone(f)
+        self.assertIn("vc4hdmi0", f["evidence"])
+
+    def test_a_closed_engine_names_its_own_card_not_the_first(self):
+        s = self.three_cards()
+        s["engine"]["status"]["state"] = "closed"
+        f = finding(report_for(s).findings, "audio.closed_with_codec")
+        self.assertIsNotNone(f)
+        self.assertIn("card 2 wm8960", f["evidence"])
+        self.assertNotIn("vc4hdmi", f["evidence"])
+
+    def test_the_advice_names_the_card_by_id(self):
+        s = self.three_cards()
+        s["engine"]["status"].pop("format", None)
+        f = finding(report_for(s).findings, "audio.format_unpublished")
+        self.assertIsNotNone(f)
+        self.assertIn("/proc/asound/wm8960/pcm0p/sub0/hw_params", f["check"])
+        self.assertNotIn("card0", f["check"])
+
+    def test_an_engine_card_that_is_absent_says_nothing_was_read(self):
+        """piv's engine opens the SSL 2+ (hw:CARD=II): unplugged, its PCM state is not empty
+        files to judge but a card that is not there."""
+        s = self.three_cards()
+        s["alsa"]["card"] = {"card": "II", "device": "hw:CARD=II,DEV=0", "pcm_device": 0,
+                             "present": False, "dir": None, "index": None, "id": None,
+                             "device_source": "/etc/namchain/namchaind.json"}
+        for side in ("capture", "playback"):
+            s["alsa"]["pcm"][side].update({"status": None, "hw_params": None, "sw_params": None})
+        f = finding(report_for(s).findings, "audio.card_absent")
+        self.assertIsNotNone(f)
+        self.assertEqual(f["severity"], "warn")
+        self.assertIn("hw:CARD=II", f["evidence"])
+        self.assertIn("2 wm8960", f["evidence"])
+
+    def test_a_sample_from_before_the_card_entry_still_reports(self):
+        """A watch log written by the old gatherer has no alsa.card; its card comes from the
+        interface model and the card list."""
+        s = self.three_cards()
+        del s["alsa"]["card"]
+        s["engine"]["status"]["state"] = "closed"
+        f = finding(report_for(s).findings, "audio.closed_with_codec")
+        self.assertIn("card 2 wm8960", f["evidence"])
+
+    def test_the_interface_model_names_no_card_by_number(self):
+        audio = pd.load_interface()[0]["host"]["audio"]
+        for key in ("capture_node", "playback_node"):
+            self.assertIn("/proc/asound/%s/" % audio["card_id"], audio[key])
+        self.assertNotIn("card0", json.dumps(audio))
 
 
 class TheInterfaceModelIsEnoughToNameWires(unittest.TestCase):

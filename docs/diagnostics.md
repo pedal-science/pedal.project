@@ -81,8 +81,9 @@ sockets. The list is long because the point is breadth; these are the parts wort
 
 - **the codec**: `/sys/kernel/debug/regmap/1-001a/registers` (root-only) with the register words
   decoded — clocking, the audio interface, the power domains — and the driver's access summary
-- **the audio device**: card list, `/proc/asound/card0/pcm0{c,p}/sub0/status` and `hw_params`,
-  who owns the PCM, and the state words explained
+- **the audio device**: card list, the engine's card found by its id rather than its number
+  (`/proc/asound/wm8960/pcm0{c,p}/sub0/status` and `hw_params`: on vip the codec is card 2, behind
+  the two HDMI cards), who owns the PCM, and the state words explained
 - **the engine**: `engine.status` over the TCP control protocol, with its issues, xruns, render
   histogram, queue drops and model budget; `engine.levels` once namchain publishes it (see below)
 - **the link**: `pedald`'s `/status` — session, frame counters, byte counters, drops, and how long

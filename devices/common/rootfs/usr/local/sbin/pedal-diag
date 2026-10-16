@@ -695,10 +695,56 @@ if out["codec"]["regmap_present"] and out["codec"]["registers"] is None:
     out["errors"].append("codec registers need root (debugfs is root-only)")
 
 # --- alsa -------------------------------------------------------------------
+def _alsa_card(device, asound="/proc/asound"):
+    """The card and PCM an ALSA device name means: "hw:CARD=wm8960,DEV=0", "hw:wm8960,0" or "hw:2,0".
+
+    By id, never by number. The cards are numbered in the order they probe, and on vip the two
+    vc4 HDMI cards probe first since the screen arrived (D14), so the codec is card 2 and card 0 is
+    vc4hdmi0. This read card0 until 2026-10-16, and the report's PCM state, hw_params and
+    sw_params were the HDMI port's, or empty. /proc/asound/<id> is the kernel's own symlink to the
+    card's numbered directory, which is the same lookup ALSA does for the engine.
+    """
+    spec = (device or "").split(":", 1)[-1]
+    fields = {}
+    for i, part in enumerate(p for p in spec.split(",") if p):
+        key, eq, value = part.partition("=")
+        if eq:
+            fields[key.strip().upper()] = value.strip()
+        else:
+            fields[("CARD", "DEV")[i] if i < 2 else str(i)] = part.strip()
+    card = fields.get("CARD") or "0"
+    try:
+        pcm = int(fields.get("DEV") or 0)
+    except ValueError:
+        pcm = 0
+    path = asound + "/" + (("card" + card) if card.isdigit() else card)
+    entry = {"device": device, "card": card, "pcm_device": pcm, "path": path,
+             "present": os.path.isdir(path), "dir": None, "index": None, "id": None}
+    if entry["present"]:
+        entry["dir"] = os.path.realpath(path)
+        base = os.path.basename(entry["dir"])
+        if base.startswith("card") and base[4:].isdigit():
+            entry["index"] = int(base[4:])
+        entry["id"] = read(entry["dir"] + "/id")
+    return entry
+
+# The device is the engine's own config first, because that is what it opens (piv's is the SSL 2+,
+# hw:CARD=II), then the interface model's, then the codec.
+_device, _device_source = None, None
+for _path, _keys in (("/etc/namchain/namchaind.json", ("device",)),
+                     ("/etc/pedal/pedal-interface.json", ("host", "audio", "engine_device"))):
+    _node = read_json(_path)
+    for _key in _keys:
+        _node = _node.get(_key) if isinstance(_node, dict) else None
+    if isinstance(_node, str) and _node:
+        _device, _device_source = _node, _path
+        break
 out["alsa"] = {"cards": read("/proc/asound/cards"), "devices": sorted(os.path.basename(x) for x in glob.glob("/dev/snd/*")),
-               "pcm": {}}
-for name, node in (("capture", "/proc/asound/card0/pcm0c/sub0"),
-                   ("playback", "/proc/asound/card0/pcm0p/sub0")):
+               "card": _alsa_card(_device or "hw:CARD=wm8960,DEV=0"), "pcm": {}}
+out["alsa"]["card"]["device_source"] = _device_source
+_card_dir = out["alsa"]["card"]["dir"] or out["alsa"]["card"]["path"]
+for name, node in (("capture", "%s/pcm%dc/sub0" % (_card_dir, out["alsa"]["card"]["pcm_device"])),
+                   ("playback", "%s/pcm%dp/sub0" % (_card_dir, out["alsa"]["card"]["pcm_device"]))):
     entry = {"node": node}
     for key, f in (("status", "status"), ("hw_params", "hw_params"), ("sw_params", "sw_params")):
         entry[key] = read(node + "/" + f)
@@ -1433,6 +1479,40 @@ class Report(object):
             node = node[key]
         return node
 
+    def codec_card_id(self):
+        return self.iface.get("host", {}).get("audio", {}).get("card_id") or "wm8960"
+
+    def listed_card(self, card_id):
+        """The /proc/asound/cards entry with this id, or None: matched by id, never by position."""
+        for card in parse_cards(self.dig("alsa", "cards")):
+            if card["id"] == card_id:
+                return card
+        return None
+
+    def engine_card(self):
+        """The card the engine's PCM state was read from, as the gatherer resolved it by id.
+
+        Samples from before 2026-10-16 have no `alsa.card`: their gatherer read card0, whatever
+        card0 was. For those the card is the interface model's, and its index is the card list's.
+        """
+        card = self.dig("alsa", "card")
+        if isinstance(card, dict):
+            return card
+        card_id = self.codec_card_id()
+        listed = self.listed_card(card_id)
+        return {"card": card_id, "id": card_id, "pcm_device": 0, "present": listed is not None,
+                "index": listed["index"] if listed else None, "legacy": True}
+
+    def card_text(self, card):
+        """A card as the operator would look for it: 'card 2 wm8960 (simple-card - wm8960)'."""
+        card_id = card.get("id") or card.get("card")
+        listed = self.listed_card(card_id) if card_id else None
+        index = card.get("index")
+        if index is None and listed:
+            index = listed["index"]
+        return "card %s %s%s" % ("?" if index is None else index, card_id or "?",
+                                 " (%s)" % listed["name"] if listed and listed["name"] else "")
+
     def write_codec_findings(self):
         codec = self.dig("codec") or {}
         i2c = self.dig("i2c", "devices") or []
@@ -1489,7 +1569,7 @@ class Report(object):
 
         # The card list being EMPTY is the case that matters most ("card wm8960 did not appear"),
         # so it is a fault as much as a list without wm8960 in it.
-        if "wm8960" not in (cards or ""):
+        if self.listed_card(self.codec_card_id()) is None:
             failed = self.kmsg_bus_lines("Failed to issue reset")
             failed += self.kmsg_bus_lines("probe with driver wm8960 failed")
             failed += self.kmsg_bus_lines("controller timed out")
@@ -1639,6 +1719,23 @@ class Report(object):
         engine_state = self.dig("engine", "status", "state")
         cfg = self.iface.get("host", {}).get("audio", {})
         want_dev = cfg.get("engine_device")
+        card = self.engine_card()
+
+        # The PCM state below is only the engine's if it came from the engine's card. A card
+        # missing from /proc/asound means nothing was read, and the report says so rather than
+        # judging empty files; when it is the codec's card, codec.no_card has already said it.
+        if card.get("present") is False and card.get("card") != self.codec_card_id():
+            self.add("warn", "audio.card_absent",
+                     "the engine's card %s is not in /proc/asound, so its PCM state was not read"
+                     % card.get("card"),
+                     "device %s (from %s); /proc/asound/cards: %s" % (
+                         card.get("device") or "?", card.get("device_source") or "the default",
+                         ", ".join("%d %s" % (c["index"], c["id"])
+                                   for c in parse_cards(self.dig("alsa", "cards"))) or "(empty)"),
+                     likely=["the interface the engine is configured for is unplugged or off",
+                             "the engine's config names a card by an id the kernel does not use"],
+                     check="the device in /etc/namchain/namchaind.json against the ids in "
+                           "/proc/asound/cards")
 
         def owner_text():
             if not owners:
@@ -1663,7 +1760,7 @@ class Report(object):
         if engine_state == "closed" and self.dig("codec", "regmap_present"):
             self.add("warn", "audio.closed_with_codec",
                      "the codec is bound but the engine has the device closed",
-                     "engine state closed; card %s" % (self.dig("alsa", "cards", "").split("\n")[0] if self.dig("alsa", "cards") else "?"),
+                     "engine state closed; %s" % self.card_text(self.engine_card()),
                      likely=["the engine is between device opens: it retries every "
                              "device_retry_ms, so this is a state to watch rather than one to panic at",
                              "the device open is failing: read the issues list for the reason"],
@@ -1697,7 +1794,9 @@ class Report(object):
                      likely=["not built yet: the daemon stores the format (active_format_) and "
                              "never reports it"],
                      check="the plan's namchain change adds it; until then read "
-                           "/proc/asound/card0/*/hw_params")
+                           "/proc/asound/%s/pcm%sp/sub0/hw_params" % (
+                               card.get("id") or card.get("card") or self.codec_card_id(),
+                               card.get("pcm_device") or 0))
 
         if play.get("state") == "RUNNING" and cap.get("state") not in ("RUNNING", None):
             self.add("warn", "audio.capture_not_running",
@@ -2144,7 +2243,8 @@ class Report(object):
                              mixer.get("rc"), (mixer.get("text") or "no output").strip()[:80]),
                          likely=["there is no wm8960 card, so there is no mixer",
                                  "the caller is not root and not in the audio group, so "
-                                 "/dev/snd/controlC0 cannot be opened"],
+                                 "/dev/snd/controlC%s cannot be opened" % (
+                                     (self.listed_card(self.codec_card_id()) or {}).get("index", "N"))],
                          check="the codec section above, and the card list")
             else:
                 self.add("ok", "wire.mixer_readable",
@@ -2368,6 +2468,23 @@ def fmt_db(values):
     if not values:
         return "?"
     return ", ".join("%.1f" % v if isinstance(v, (int, float)) else "?" for v in values)
+
+
+CARD_LINE = re.compile(r"^\s*(\d+)\s+\[([^\]\s]+)\s*\]:\s*(.*)$")
+
+
+def parse_cards(text):
+    """/proc/asound/cards as [{"index", "id", "name"}], in the kernel's order.
+
+    Each card is two lines, ' 2 [wm8960         ]: simple-card - wm8960' and its long name
+    indented beneath; only the first carries the number and the id.
+    """
+    out = []
+    for line in (text or "").splitlines():
+        m = CARD_LINE.match(line)
+        if m:
+            out.append({"index": int(m.group(1)), "id": m.group(2), "name": m.group(3).strip()})
+    return out
 
 
 def parse_pcm_status(text):
