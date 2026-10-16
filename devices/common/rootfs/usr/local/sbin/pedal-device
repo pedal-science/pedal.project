@@ -202,10 +202,12 @@ activate() {
   fi
   run systemctl enable pedald.service
   run systemctl restart --no-block pedald.service
-  # Every Pi host ships this unit; it fails, harmlessly, where no codec is wired.
+  # Every Pi host ships this unit; it fails, harmlessly, where no codec is wired — and must not stop
+  # the apply there (2026-10-16: vip with its codec off the header, and nothing after this ran).
   if [[ -e /etc/systemd/system/pedal-codec.service ]]; then
     run systemctl enable pedal-codec.service
-    run systemctl restart pedal-codec.service
+    run systemctl restart pedal-codec.service \
+      || echo "  note      pedal-codec failed: no codec answering? (journalctl -u pedal-codec)"
   fi
   # The unit follows wlan0, so it is only started where there is one: elsewhere the start would
   # wait for a device that never comes.
