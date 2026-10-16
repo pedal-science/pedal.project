@@ -671,6 +671,25 @@ def main():
         print("  results would go to %s" % os.path.relpath(out_dir, REPO))
         return 0
 
+    # Everything that can refuse a run without the host refuses it here, before the lock is taken:
+    # a run that was always going to be refused must not queue for the lock, or touch the host.
+    if not args.state:
+        ap.error("--state is required: it is the record's only description of what was wired, and "
+                 "this script cannot see it. Say what the codec's input is connected to, e.g.\n"
+                 "  --state 'LIN1 shorted to the codec's own GND, nothing else attached'")
+    for tool in (CODEC_NOISE, NOISE_DOCUMENT, HOST_LOCK):
+        if not os.path.exists(tool):
+            raise SystemExit("codec-input-noise.py: %s is missing" % tool)
+    # A run does not quietly replace an earlier one: the captures are the evidence, and the whole
+    # point of the record is that it can be gone back to. Say so, and name both ways out.
+    holding = os.path.join(out_dir, "captures")
+    if os.path.isdir(holding) and any(f.endswith(".wav") for f in os.listdir(holding)):
+        raise SystemExit(
+            "codec-input-noise.py: %s already holds captures.\n"
+            "  --rebuild %s   re-analyse and re-draw them, touching no pedal\n"
+            "  --dir <other>  measure into a directory of its own"
+            % (os.path.relpath(out_dir, os.getcwd()), os.path.relpath(out_dir, os.getcwd())))
+
     # Rule 8: one measurement at a time. Nested calls (PEDAL_HOST_LOCK already set) run directly.
     if os.environ.get("PEDAL_HOST_LOCK") != args.host:
         argv = [HOST_LOCK, "--host", args.host]
@@ -679,13 +698,6 @@ def main():
         argv += ["--", sys.executable, os.path.abspath(__file__)] + sys.argv[1:]
         os.execv(HOST_LOCK, argv)
 
-    if not args.state:
-        ap.error("--state is required: it is the record's only description of what was wired, and "
-                 "this script cannot see it. Say what the codec's input is connected to, e.g.\n"
-                 "  --state 'LIN1 shorted to the codec's own GND, nothing else attached'")
-    for tool in (CODEC_NOISE, NOISE_DOCUMENT, HOST_LOCK):
-        if not os.path.exists(tool):
-            raise SystemExit("codec-input-noise.py: %s is missing" % tool)
     run(ssh_base(args.host) + ["true"])                   # is the host there at all
 
     state_before = state_of(args.host)
@@ -699,15 +711,6 @@ def main():
         raise SystemExit("codec-input-noise.py: the engine is '%s', not running; fix that first"
                          % state_before.get("state"))
 
-    # A run does not quietly replace an earlier one: the captures are the evidence, and the whole
-    # point of the record is that it can be gone back to. Say so, and name both ways out.
-    holding = os.path.join(out_dir, "captures")
-    if os.path.isdir(holding) and any(f.endswith(".wav") for f in os.listdir(holding)):
-        raise SystemExit(
-            "codec-input-noise.py: %s already holds captures.\n"
-            "  --rebuild %s   re-analyse and re-draw them, touching no pedal\n"
-            "  --dir <other>  measure into a directory of its own"
-            % (os.path.relpath(out_dir, os.getcwd()), os.path.relpath(out_dir, os.getcwd())))
     os.makedirs(holding, exist_ok=True)
     if not args.no_audio:
         os.makedirs(os.path.join(out_dir, "audio"), exist_ok=True)

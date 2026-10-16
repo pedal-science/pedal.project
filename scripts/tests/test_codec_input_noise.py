@@ -10,14 +10,18 @@ document builder is tested only when numpy and Pillow are importable (they come 
 bundled python, not the system one): without them the tests say they were skipped, as the browser
 test does without uv.
 
-Nothing here opens an audio device, ssh, or the browser.
+Nothing here opens an audio device, ssh, or the browser. Every run of the driver goes through
+`run_driver`, whose PATH puts an `ssh` and an `scp` first that refuse and say so: a run that would
+have reached for the Core host (its lock, or the host itself) fails its test instead.
 """
+import atexit
 import importlib.machinery
 import importlib.util
 import json
 import math
 import os
 import pathlib
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -42,6 +46,32 @@ def load(name, path):
 
 
 driver = load("codec_input_noise", DRIVER)
+
+
+# `ssh` and `scp` for the driver's runs: they refuse, and say so, so no test can reach a host.
+NO_HOST = "a test reached for the Core host"
+NO_HOST_BIN = tempfile.mkdtemp(prefix="codec-input-noise-no-host-")
+atexit.register(shutil.rmtree, NO_HOST_BIN, True)
+for _tool in ("ssh", "scp"):
+    with open(os.path.join(NO_HOST_BIN, _tool), "w") as _fh:
+        _fh.write("#!/bin/sh\necho \"%s: %s $*\" >&2\nexit 97\n" % (NO_HOST, _tool))
+    os.chmod(os.path.join(NO_HOST_BIN, _tool), 0o755)
+
+
+def run_driver(*argv, check=False):
+    """Run codec-input-noise.py with ssh and scp refusing; a run that tried either fails here."""
+    env = dict(os.environ)
+    env["PATH"] = NO_HOST_BIN + os.pathsep + env.get("PATH", "")
+    env.pop("PEDAL_HOST_LOCK", None)
+    proc = subprocess.run([sys.executable, str(DRIVER), *argv], env=env, stdout=subprocess.PIPE,
+                          stderr=subprocess.STDOUT, text=True)
+    if NO_HOST in proc.stdout:
+        raise AssertionError("codec-input-noise.py %s tried to reach a host:\n%s"
+                             % (" ".join(argv), proc.stdout))
+    if check and proc.returncode != 0:
+        raise AssertionError("codec-input-noise.py %s exited %d:\n%s"
+                             % (" ".join(argv), proc.returncode, proc.stdout))
+    return proc
 
 
 def document_python():
@@ -296,9 +326,7 @@ class Retries(unittest.TestCase):
         self.assertNotIn("0 time(s)", run_with(0, True)[2])
 
     def test_a_negative_retry_is_refused(self):
-        proc = subprocess.run([sys.executable, str(DRIVER), "--dry-run", "--state", "x",
-                               "--retry", "-1"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                              text=True)
+        proc = run_driver("--dry-run", "--state", "x", "--retry", "-1")
         self.assertEqual(proc.returncode, 2)
         self.assertIn("--retry takes 0 or more", proc.stdout)
 
@@ -310,8 +338,7 @@ class Retries(unittest.TestCase):
             state["before"]["kernel"] = "7.0.0-1017-raspi-realtime-numaemu3-trimmed"
             state["after"]["kernel"] = "7.0.0-1017-raspi-realtime-numaemu3-trimmed"
             (out / "state.json").write_text(json.dumps(state))
-            subprocess.run([sys.executable, str(DRIVER), "--rebuild", str(out)], check=True,
-                           stdout=subprocess.DEVNULL)
+            run_driver("--rebuild", str(out), check=True)
             readme = (out / "README.md").read_text()
             self.assertIn("Kernel `7.0.0-1017-raspi-realtime-numaemu3-trimmed`", readme)
 
@@ -341,8 +368,7 @@ class Retries(unittest.TestCase):
             (out / "dmesg-capture-only.txt").write_text(
                 "[Mon Oct 12 20:25:02 2026] dma dma2chan3: Bad descriptor submitted for "
                 "dma2chan3, cookie: 54, irq: 0x00002000\n")
-            subprocess.run([sys.executable, str(DRIVER), "--rebuild", str(out)], check=True,
-                           stdout=subprocess.DEVNULL)
+            run_driver("--rebuild", str(out), check=True)
             readme = (out / "README.md").read_text()
             self.assertIn("Attempts: engine 1, alone 2", readme)
             self.assertIn("An arm was retried", readme)
@@ -363,17 +389,14 @@ class ArmsAndDryRun(unittest.TestCase):
         self.assertEqual(named, ["engine", "alone"])
 
     def test_an_unknown_arm_is_refused(self):
-        proc = subprocess.run([sys.executable, str(DRIVER), "--arms", "engine,sideways"],
-                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        proc = run_driver("--arms", "engine,sideways")
         self.assertEqual(proc.returncode, 2)
         self.assertIn("sideways", proc.stdout)
 
     def test_dry_run_says_what_it_would_do_and_writes_nothing(self):
         with tempfile.TemporaryDirectory() as d:
             out = os.path.join(d, "results")
-            proc = subprocess.run([sys.executable, str(DRIVER), "--dry-run", "--dir", out,
-                                   "--arms", "playback"], stdout=subprocess.PIPE,
-                                  stderr=subprocess.STDOUT, text=True)
+            proc = run_driver("--dry-run", "--dir", out, "--arms", "playback")
             self.assertEqual(proc.returncode, 0)
             self.assertIn("systemctl stop namchaind", proc.stdout)
             self.assertIn("arecord", proc.stdout)
@@ -392,8 +415,7 @@ class Rebuild(unittest.TestCase):
     """--rebuild: the numbers, the caveat and the record, from captures already on disk."""
 
     def run_rebuild(self, out, expect=0):
-        proc = subprocess.run([sys.executable, str(DRIVER), "--rebuild", str(out)],
-                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        proc = run_driver("--rebuild", str(out))
         self.assertEqual(proc.returncode, expect, proc.stdout)
         return proc.stdout
 
@@ -463,9 +485,7 @@ class Rebuild(unittest.TestCase):
     def test_a_run_does_not_quietly_replace_an_earlier_one(self):
         with tempfile.TemporaryDirectory() as d:
             out = make_results_dir(d)
-            proc = subprocess.run([sys.executable, str(DRIVER), "--dir", str(out), "--arms",
-                                   "engine", "--state", "a synthetic bench"],
-                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            proc = run_driver("--dir", str(out), "--arms", "engine", "--state", "a synthetic bench")
             self.assertEqual(proc.returncode, 1)
             self.assertIn("already holds captures", proc.stdout)
             self.assertIn("--rebuild", proc.stdout)
@@ -513,21 +533,27 @@ class Rebuild(unittest.TestCase):
     def test_a_real_run_will_not_start_without_a_state_line(self):
         # The state line is the record's only description of the wiring, and the script cannot see
         # it: a run with no --state would write a record that says nothing about what it measured.
-        proc = subprocess.run([sys.executable, str(DRIVER), "--dir", "/tmp/never-used",
-                               "--arms", "engine"], stdout=subprocess.PIPE,
-                              stderr=subprocess.STDOUT, text=True)
+        proc = run_driver("--dir", "/tmp/never-used", "--arms", "engine")
         self.assertEqual(proc.returncode, 2)
         self.assertIn("--state is required", proc.stdout)
         # ... but a rehearsal writes no record, so it may go without one, and it says so.
-        proc = subprocess.run([sys.executable, str(DRIVER), "--dry-run"],
-                              stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        proc = run_driver("--dry-run")
         self.assertEqual(proc.returncode, 0, proc.stdout)
         self.assertIn("MISSING", proc.stdout)
 
+    def test_a_run_that_would_reach_the_host_fails_its_test(self):
+        # The guard every test above relies on: a run with nothing to refuse goes for the host's
+        # lock, and the ssh it reaches for is the stub, which fails the test rather than connect.
+        with tempfile.TemporaryDirectory() as d:
+            with self.assertRaises(AssertionError) as caught:
+                run_driver("--dir", d, "--arms", "engine", "--state", "a synthetic bench",
+                           "--lock-wait", "0")
+            self.assertIn("tried to reach a host", str(caught.exception))
+            self.assertFalse(os.path.exists(os.path.join(d, "captures")))
+
     def test_a_directory_that_is_not_a_run_is_refused_by_name(self):
         with tempfile.TemporaryDirectory() as d:
-            proc = subprocess.run([sys.executable, str(DRIVER), "--rebuild", d],
-                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            proc = run_driver("--rebuild", d)
             self.assertEqual(proc.returncode, 1)
             self.assertIn("state.json", proc.stdout)
 
