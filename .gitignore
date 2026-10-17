@@ -25,3 +25,7 @@ scratch/
 # stay tracked -- untracking them would rewrite nothing in history and gain nothing -- but no new one
 # is added, so a backup commit carries the record and not the payload.
 devices/*/backups/*/files.tar
+
+# KiCad per-user state, and netlists exported to be checked (schematic/*.py export them)
+*.kicad_prl
+schematic/balanced-output/balanced-output.net

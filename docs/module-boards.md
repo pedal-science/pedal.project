@@ -63,6 +63,26 @@ capacitors on a meter: the closer they match, the more hum a balanced input reje
 cable is four-way (GND, tip, ring, unused), so it cannot go into the board's three-way HPL
 socket or the relay's coil socket.
 
+## XLR driver, left and right
+
+![XLR L](../stripboard/module-boards/xlr-l.svg)
+
+One design, built twice, 134.6 × 55.9 mm: one balanced output channel
+([balanced-outputs.md](balanced-outputs.md), step 2). Its schematic is
+`schematic/balanced-output/balanced-output.kicad_sch`, with the same references, and
+[the simulation](../bench-results/2026-10-17-balanced-output-sim/README.md) is of that circuit.
+The 9 V and ground run as rails along the top and the bottom, joined at the two edges; the input
+and its pad run along row 2; the op-amp sits in the middle with the mute relay below it; and the
+hot and cold legs mirror each other about the XLR socket on the right.
+
+Ground arrives on A11 (A12 for R), from the codec carrier, with the signal and the 9 V. The XLR
+cable brings none: pin 1 is the case's, through the lift toggle. The coil cable is C1's pinout,
+wired in parallel with the bypass relay's coil. The pad cable goes to an on-on toggle: common is
+the middle way. Diodes on this board are drawn anode first; KiCad numbers them the other way.
+
+Neither the carrier's A11 and A12 sockets nor the control board's C7 and C8 exist yet; both
+layouts mark them absent. This is a first layout, kept readable rather than packed.
+
 ## Bypass relay
 
 ![Bypass relay](../stripboard/module-boards/bypass-relay.svg)

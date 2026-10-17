@@ -7,7 +7,12 @@ balanced outputs beside OUT L and OUT R, so a player can use an amp and a PA at 
 the XLRs silent in panic bypass; a −20 dB pad. Step 1 is in the output-board layouts
 ([module-boards.md](module-boards.md)) and the module map. **Still open:** where the case bonds to
 0 V, which is measured first ([The case bond](#the-case-bond-balanced-outputs-force-the-decision)).
-Step 2's driver board is designed here but not laid out yet.
+Step 2's driver is drawn, simulated and laid out (2026-10-17): the schematic is
+`schematic/balanced-output/` with its wiring table `schematic/balanced-output.py`, the simulation is
+[bench-results/2026-10-17-balanced-output-sim](../bench-results/2026-10-17-balanced-output-sim/README.md),
+and the stripboard is XLR L and XLR R in [module-boards.md](module-boards.md). Simulating it changed
+two things, both below: a 1 kΩ in front of the mute, and a 10 Ω between each output capacitor and
+its pin.
 
 ## In short
 
@@ -169,21 +174,23 @@ is yanked. The NC3MD-LX it is.
 
 ### The driver: one channel, from the 9 V rail
 
-The values are provisional, in the same sense as bom.md's input stage.
+The values are provisional, in the same sense as bom.md's input stage. References are the
+schematic's and the stripboard's (one numbering across the pedal).
 
 ```
-input   HP_L -- 10 µF bp -- 9.1 kΩ -- X -- A+     Line: one pole of the pad toggle shorts the 9.1 kΩ
-        X -- 100 kΩ -- VREF
-        X -- 1 kΩ -- VREF                         Mic: the pad toggle's other pole
-        X -- mute relay, NC -- VREF
+input   HP -- C16 10 µF bp -- C_IN -- R28 9.1 kΩ -- TAP -- R29 1 kΩ -- VREF   (the pad divider, always fitted)
+pad     an on-on toggle, SW3: its common (PADCOM) to C_IN on Line, to TAP on Mic
+        PADCOM -- R30 1 kΩ -- X;   X -- R31 100 kΩ -- VREF;   X -- A+
+mute    K2 (TQ2-5V), both poles in parallel: COM to X, NC to VREF. De-energised = muted.
 hot     A is a unity follower.
-        A out -- 100 Ω -- H -- 100 µF 63 V bp -- pin 2;   pin 2 -- 100 kΩ -- GND
-cold    B is a unity inverter: A out -- 10 kΩ 0.1% -- B-;  B- -- 10 kΩ 0.1% -- B out;  B+ = VREF
-        B out -- 100 Ω -- C -- 100 µF 63 V bp -- pin 3;   pin 3 -- 100 kΩ -- GND
-clamps  H and C each: a 1N5817 to +9 V and a 1N5817 to GND
+        A out -- R34 100 Ω -- H -- C17 47 µF 63 V bp -- HC -- R41 10 Ω -- pin 2;  pin 2 -- R36 100 kΩ -- GND
+cold    B is a unity inverter: A out -- R32 10 kΩ 0.1% -- B-;  B- -- R33 10 kΩ 0.1% -- B out;  B+ = VREF
+        B out -- R35 100 Ω -- CN -- C18 47 µF 63 V bp -- CC -- R42 10 Ω -- pin 3;  pin 3 -- R37 100 kΩ -- GND
+clamps  H and CN each: a 1N5817 to the filtered 9 V and a 1N5817 from GND (D8-D11)
 pin 1   lift toggle, 10 nF across it, to a lug on the case at the connector. Never the board's ground.
-VREF    47 kΩ / 47 kΩ from +9 V, 100 µF to GND: 4.5 V, rising over about 2.4 s.
-pad     −20 dB: 1 kΩ / (9.1 kΩ + 1 kΩ). Input high-pass: 1.6 Hz on Mic, under 0.2 Hz on Line.
+VREF    R38/R39 47 kΩ / 47 kΩ from the filtered 9 V, C19 100 µF to GND: 4.5 V, rising over about 2.4 s.
+supply  +9 V -- R40 100 Ω -- filtered 9 V, C20 100 µF and C21 100 nF to GND (as on the input board)
+pad     −20 dB: 1 kΩ / (9.1 kΩ + 1 kΩ). Input high-pass 1.9 Hz (simulated).
 ```
 
 Why it is built this way:
@@ -204,11 +211,15 @@ Why it is built this way:
   possible, but it is off the datasheets' main path. Two op-amp halves are simpler, and every part
   of their behaviour is known. Revisit if a ± rail ever appears.
 - **The op-amp: OPA2197.** It is already on the BOM, rail-to-rail, and drives a long cable through
-  100 Ω.
-  - Both channels need two duals (or one OPA4197). Put them on SOIC adapters in sockets, as on the
-    input board.
-  - They draw about 4 mA from the 9 V in total.
+  100 Ω. One dual per channel, on a SOIC adapter in a socket, as on the input board; about 2 mA each
+  from the 9 V.
 - **The input taps HP_L at the carrier,** with its own 10 µF. The 1/4" output boards don't change.
+- **R30, 1 kΩ in front of the mute.** The first version shorted the pad's output straight to VREF,
+  which through C16 is a short across the codec's headphone amplifier at audio frequencies, the
+  same amplifier that drives OUT L and OUT R. With R30 the mute is a 1 kΩ load, and it still takes
+  the output down 86 dB (simulated).
+- **The pad is one on-on toggle,** three wires: the divider is always fitted, and the toggle picks
+  C_IN (Line) or its tap (Mic). The first version needed a two-pole toggle and four wires.
 
 ### Phantom power
 
@@ -224,7 +235,11 @@ output has to survive phantom left on, phantom being switched, and a cable hot-p
   That swings the driver side of the capacitor about 45 V negative, with the capacitor's whole
   charge behind it.
   - The Schottky diodes take that pulse. 1N5817s are already on the BOM, rated for a 25 A surge.
-  - The 100 Ω keeps the pulse out of the op-amp.
+  - **R41 and R42, 10 Ω between each capacitor and its pin, limit it.** Without them the simulation
+    put **69 A** through the clamp and asked 85 mA of the op-amp, past its ±65 mA limit; with them,
+    3.7 A and 51 mA, and the driver side of the capacitor stays between −0.6 V and +5.2 V. They are
+    matched (1 %) like the 100 Ω, so the balance doesn't change.
+  - The 100 Ω keeps what is left out of the op-amp.
 - **The 1/4" jacks' 10 µF 50 V capacitors are fine.** TRS line inputs don't carry phantom.
 
 The SSL 2+ has 48 V phantom on its combo inputs, which makes it the test rig.
@@ -239,10 +254,12 @@ A PA turns a thump into a bang. The thumps come from two places:
 2. **The 9 V rail coming up** and taking the drivers' outputs from 0 to 4.5 V. Starting VREF slowly
    (about 2.4 s) turns that step into a slow ramp, far below audio.
 
-**Proposal: a second TQ2-5V relay**, with one pole per channel:
+**A TQ2-5V on each driver board**, both poles muting in parallel:
 
-- **Wiring:** its coil goes in parallel with the bypass relay's, driven by the same BC337. Two coils
-  at about 28 mA each are well within the BC337's rating.
+- **Wiring:** its coil goes in parallel with the bypass relay's, driven by the same BC337 (cables
+  C7 and C8, C1's pinout). Three coils at about 28 mA each is about 84 mA: within the BC337's
+  rating, but check that its base drive still saturates it; the 1 kΩ base resistor may want to be
+  470 Ω.
 - **De-energised,** it shorts each driver's input to VREF. The input already sits at VREF through
   100 kΩ, so releasing the mute makes no step.
 - **No new GPIO is needed,** and the XLRs follow the pedal: silent while it boots, in panic bypass,
@@ -349,23 +366,27 @@ Each XLR output adds three parts to the rear wall: the XLR, the pad toggle and t
   - a 2-pair shielded cable from the board to the XLRs. Hot and cold are the twisted pair, and the
     shield goes to the case at the XLR end only.
 - **Driver:**
-  - 2 × OPA2197 on adapters
-  - 4 × 100 Ω 1%
+  - 2 × OPA2197 on SOIC adapters, 2 × 8-pin sockets
+  - 4 × 100 Ω 1% and 4 × 10 Ω 1%
   - 4 × 10 kΩ 0.1%
-  - 4 × 100 µF 63 V bipolar, paired
+  - 4 × 47 µF 63 V bipolar, paired within 5 % (a 10 mm can; the layout allows for it)
   - 8 × 1N5817
   - 4 × 100 kΩ bleeds and 2 × 100 kΩ bias resistors
 - **Input and pad:**
   - 2 × 10 µF bipolar (step 1 leaves one of the five in hand)
-  - 2 × 9.1 kΩ and 2 × 1 kΩ
-- **VREF:** 2 × 47 kΩ and 100 µF.
-- **Mute:** 1 × TQ2-5V with a 1N4148.
-- **Panel:** 2 × DPDT toggles (pad), 2 × SPST toggles (lift), 2 × 10 nF 100 V film.
+  - 2 × 9.1 kΩ and 4 × 1 kΩ
+- **VREF and supply, per board:** 2 × 47 kΩ, 2 × 100 µF 25 V, 100 Ω, 100 nF.
+- **Mute:** 2 × TQ2-5V, each with a 1N4148.
+- **Board-side headers (JST XH):** per board a 5-way (input), a 2-way (XLR), two 3-ways (pad, coil).
+- **Panel:** 2 × on-on toggles (pad), 2 × SPST toggles (lift), 2 × 10 nF 100 V film.
 
-On the module map ([diagrams/modules.html](diagrams/modules.html)) this is one new audio board. Its
-one ground arrives with HP_L and HP_R in its cable from the codec carrier (rule 2), and the 9 V
-arrives as the input board's does. The cable to the XLRs carries no ground, because pin 1 is the
-case's.
+On the module map ([diagrams/modules.html](diagrams/modules.html)) these are two new audio boards,
+XLR L and XLR R, one design built twice. Each one's only ground arrives from the codec carrier in
+the cable that carries its signal and its 9 V (A11, A12: GND, HP, GND, +9 V, and a fifth way left
+unused so it can't go into the carrier's 4-way or 3-way sockets), as the input board's does (rule
+2). The XLR cables (A13, A14), the pad cables (A15, A16) and the coil cables (C7, C8) carry no
+ground. The codec carrier and the control board don't have the sockets for A11, A12, C7 and C8 yet;
+their layouts mark them absent until they do.
 
 ### Tests
 
@@ -378,6 +399,9 @@ case's.
   - switch phantom on and off while playing;
   - then short pin 2 to pin 1 with phantom on. This is the clamp test.
 - **Boot:** record the SSL across a power-up and a reboot. There should be nothing above the noise.
+  The simulation puts 0.6 mV between the pins when the mute releases, and nothing while it is held;
+  a real pair of capacitors 5 % apart would add about 0.6 mV to the 0.56 V common-mode ramp at
+  power-up.
 - **The loop:** an amp on OUT L and the SSL on an XLR, lift in and out, measured at both. Then the
   case-bond comparison above.
 
@@ -419,6 +443,8 @@ between the driver and the pins. Not needed now.
 
 - Where the case bonds to 0 V: the root, the codec carrier, or not at all. The test is in
   [The case bond](#the-case-bond-balanced-outputs-force-the-decision).
-- Step 2's driver board: a stripboard layout in `stripboard/module_boards.py`, and its place in
-  the module map (one audio board, ground from the carrier with HPL and HPR).
+- The sockets the drivers plug into: A11 and A12 on the codec carrier, C7 and C8 on the control
+  board, and the BC337's base resistor for three coils.
+- Compacting the driver board: 134.6 × 55.9 mm is a first layout, and rows 3–5 and 17–19 are
+  mostly empty.
 - The rear-wall positions, once the D-size flange is checked against the vent band.

@@ -1259,7 +1259,8 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
   nylon standoffs to the case itself -- no FR4 plate. See the BOM.
 - **Not designed yet:** the mic stage, cooling and the panel hardware. Balanced outputs (D15) are
   designed in [docs/balanced-outputs.md](docs/balanced-outputs.md); step 1 is in the output-board
-  layouts, step 2's driver board is not laid out yet.
+  layouts, and step 2's driver is drawn, simulated and laid out (2026-10-17) but not built; the
+  carrier and control boards don't have its sockets yet.
 
 ## Next session starts with
 

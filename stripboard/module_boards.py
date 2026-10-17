@@ -491,7 +491,7 @@ def carrier_board():
     return K.Board(
         key='codec-carrier', node='CODEC', W=32, H=36, netlist=nl, parts=parts,
         headers=headers, links=links, mounts=[(1, 24), (7, 24)], cuts=cuts,
-        carries=set(parts), grounds={'DGND': 'CODEC', 'AGND': 'CODEC'},
+        carries=set(parts), grounds={'DGND': 'CODEC', 'AGND': 'CODEC'}, absent={'A11', 'A12'},
         modules={'M1': dict(outline=(13, 7, 24, 24), names=j4 + j5,
                             joined=[[1, 10, 11, 15, 16, 17]],
                             label='SparkFun WM8960\nin its socket strips')},
@@ -705,7 +705,7 @@ def control_board():
         key='control', node='CTRL', W=44, H=52, netlist=nl, parts=parts,
         headers=headers, links=links, cuts=cuts,
         mounts=[(12, 2), (42, 18)],
-        carries=set(parts), grounds={'GND': 'CTRL'}, absent={'C6'},
+        carries=set(parts), grounds={'GND': 'CTRL'}, absent={'C6', 'C7', 'C8'},
         modules={'M2': dict(outline=(16.2, 7.2, 22.8, 27.8), names=names, joined=[gnd_pins],
                             label='Pico 2 WH\nUSB this end')},
         alias={'GND': 'GND', 'V5': '5 V', 'VSYS': 'VSYS', 'COILN': 'coil −',
@@ -744,10 +744,161 @@ def control_board():
         ])
 
 
+# ---------------------------------------------------------------- the XLR driver
+def xlr_board(side):
+    """One balanced output channel (docs/balanced-outputs.md, D15). L and R are the same board.
+
+    The circuit is schematic/balanced-output/balanced-output.kicad_sch, with the same
+    references; schematic/balanced-output.py is its wiring table. The 9 V and ground run as
+    rails along the top and the bottom; the input and its pad along row 2; the op-amp in the
+    middle with the mute relay below it; and the two output legs mirror each other about the
+    XLR socket on the right. Diodes here are anode first, cathode second (KiCad numbers them
+    the other way)."""
+    left = side == 'L'
+    hp = 'HPL' if left else 'HPR'
+    nl = K.Netlist(
+        keep_equiv=False,
+        parts={
+            'U5': ('dip8', 'OPA2197', 8), 'K2': ('relay', 'TQ2-5V', 10),
+            'R28': ('r', '9.1k', 2), 'R29': ('r', '1k', 2), 'R30': ('r', '1k', 2),
+            'R31': ('r', '100k', 2), 'R32': ('r', '10k 0.1%', 2), 'R33': ('r', '10k 0.1%', 2),
+            'R34': ('r', '100Ω 1%', 2), 'R35': ('r', '100Ω 1%', 2), 'R36': ('r', '100k', 2),
+            'R37': ('r', '100k', 2), 'R38': ('rs', '47k', 2), 'R39': ('rs', '47k', 2),
+            'R40': ('r', '100Ω', 2), 'R41': ('r', '10Ω 1%', 2), 'R42': ('r', '10Ω 1%', 2),
+            'C16': ('el6.3', '10µF bipolar', 2), 'C17': ('el10', '47µF 63V bipolar', 2),
+            'C18': ('el10', '47µF 63V bipolar', 2), 'C19': ('el6.3', '100µF 25V', 2),
+            'C20': ('el6.3', '100µF 25V', 2), 'C21': ('cer', '100nF', 2),
+            'D7': ('ds', '1N4148', 2), 'D8': ('d', '1N5817', 2), 'D9': ('d', '1N5817', 2),
+            'D10': ('d', '1N5817', 2), 'D11': ('d', '1N5817', 2),
+        },
+        nets={
+            'GND': {'U5.4', 'C20.2', 'C21.2', 'R39.2', 'C19.2', 'D9.1', 'D11.1', 'R36.2',
+                    'R37.2'},
+            'V9': {'R40.1'},
+            'V9F': {'R40.2', 'C20.1', 'C21.1', 'U5.8', 'R38.1', 'D8.2', 'D10.2'},
+            'VREF': {'R38.2', 'R39.1', 'C19.1', 'R29.2', 'R31.2', 'U5.5', 'K2.2', 'K2.9'},
+            'HP': {'C16.1'},
+            'C_IN': {'C16.2', 'R28.1'},
+            'TAP': {'R28.2', 'R29.1'},
+            'PADCOM': {'R30.1'},
+            'X': {'R30.2', 'R31.1', 'U5.3', 'K2.4', 'K2.7'},
+            'AOUT': {'U5.1', 'U5.2', 'R34.1', 'R32.1'},
+            'H': {'R34.2', 'C17.1', 'D8.1', 'D9.2'},
+            'HC': {'C17.2', 'R41.1'},
+            'HOT': {'R41.2', 'R36.1'},
+            'INVN': {'R32.2', 'U5.6', 'R33.1'},
+            'BOUT': {'U5.7', 'R33.2', 'R35.1'},
+            'CN': {'R35.2', 'C18.1', 'D10.1', 'D11.2'},
+            'CC': {'C18.2', 'R42.1'},
+            'COLD': {'R42.2', 'R37.1'},
+            'COIL+': {'K2.1', 'D7.2'},
+            'COIL-': {'K2.10', 'D7.1'},
+            'K2_3': {'K2.3'}, 'K2_8': {'K2.8'}, 'K2_NOA': {'K2.5'}, 'K2_NOB': {'K2.6'},
+        })
+    parts = {
+        # supply: the 9 V filtered beside the op-amp's rails, as on the input board
+        'R40': ('r', '100Ω', [(6, 4), (6, 0)]),
+        'C20': ('el6.3', '100µF 25V', [(9, 0), (9, 1)]),
+        'C21': ('cer', '100nF', [(11, 0), (11, 1)]),
+        # the input and the pad, along row 2
+        'C16': ('el6.3', '10µF bipolar', [(12, 2), (13, 2)]),
+        'R28': ('r', '9.1k', [(15, 2), (19, 2)]),
+        'R29': ('r', '1k', [(21, 2), (25, 2)]),
+        # VREF: 4.5 V, rising over about 2.4 s
+        'R38': ('rs', '47k', [(26, 0), (26, 2)]),
+        'R39': ('rs', '47k', [(27, 2), (27, 1)]),
+        'C19': ('el6.3', '100µF 25V', [(32, 2), (32, 1)]),
+        # the pad's common to X, and X's bias
+        'R30': ('r', '1k', [(7, 10), (11, 10)]),
+        'R31': ('r', '100k', [(18, 10), (18, 14)]),
+        'U5': ('dip8', 'OPA2197', dip(24, 8, 8)),
+        'K2': ('relay', 'TQ2-5V', dip(13, 13, 10)),
+        'D7': ('ds', '1N4148', [(5, 15), (5, 17)]),
+        # the inverter
+        'R32': ('r', '10k 0.1%', [(31, 6), (31, 10)]),
+        'R33': ('r', '10k 0.1%', [(32, 10), (36, 10)]),
+        # hot: build-out, clamps, capacitor, 10 Ω, bleed
+        'R34': ('r', '100Ω 1%', [(34, 6), (38, 6)]),
+        'D8': ('d', '1N5817', [(39, 6), (39, 0)]),
+        'D9': ('d', '1N5817', [(41, 1), (41, 6)]),
+        'C17': ('el10', '47µF 63V bipolar', [(43, 6), (45, 6)]),
+        'R41': ('r', '10Ω 1%', [(47, 6), (47, 10)]),
+        'R36': ('r', '100k', [(48, 10), (48, 1)]),
+        # cold: the same, mirrored about rows 10 and 11
+        'R35': ('r', '100Ω 1%', [(38, 9), (38, 15)]),
+        'D10': ('d', '1N5817', [(39, 15), (39, 21)]),
+        'D11': ('d', '1N5817', [(41, 20), (41, 15)]),
+        'C18': ('el10', '47µF 63V bipolar', [(43, 15), (45, 15)]),
+        'R42': ('r', '10Ω 1%', [(47, 15), (47, 11)]),
+        'R37': ('r', '100k', [(48, 11), (48, 20)]),
+    }
+    cin, cxlr, cpad, ccoil = (('A11', 'A13', 'A15', 'C7') if left else ('A12', 'A14', 'A16', 'C8'))
+    headers = [
+        K.Header((2, 1), ['GND', 'HP', 'GND', 'V9', None], cable=cin),
+        K.Header((2, 9), ['C_IN', 'PADCOM', 'TAP'], cable=cpad),
+        K.Header((2, 15), ['COIL-', None, 'COIL+'], cable=ccoil),
+        K.Header((50, 10), ['HOT', 'COLD'], cable=cxlr),
+    ]
+    links = [
+        link((0, 1), (0, 20), 'GND'), link((52, 0), (52, 21), 'V9F'),     # the rails, joined
+        link((4, 3), (4, 1), 'GND'),
+        link((14, 2), (14, 9), 'C_IN'), link((20, 2), (20, 11), 'TAP'),
+        link((28, 2), (28, 11), 'VREF'), link((29, 11), (29, 14), 'VREF'),
+        link((29, 8), (29, 0), 'V9F'),
+        link((23, 8), (23, 9), 'AOUT'), link((22, 8), (22, 6), 'AOUT'),
+        link((23, 11), (23, 20), 'GND'),
+        link((17, 10), (17, 16), 'X'),
+        link((37, 10), (37, 9), 'BOUT'),
+        link((8, 15), (8, 12), 'COIL-'), link((19, 12), (19, 13), 'COIL-'),
+        link((10, 17), (10, 13), 'COIL+'),
+    ]
+    return K.Board(
+        key=f'xlr-{side.lower()}', node=f'XLR{side}', W=53, H=22, netlist=nl, parts=parts,
+        headers=headers, links=links, mounts=[(9, 6), (34, 18)],
+        carries=set(parts), grounds={'GND': f'XLR{side}'},
+        alias={'HP': hp, 'V9': '+9 V', 'V9F': '9 V filtered', 'COIL+': '+5 V',
+               'COIL-': 'coil −', 'PADCOM': 'pad common', 'C_IN': 'Line', 'TAP': 'Mic'},
+        title=f'XLR {side} driver' + ('' if left else ' — the same board as XLR L'),
+        pin_labels={'K2': ['+', 'NC', '', 'COM', 'NO', 'NO', 'COM', '', 'NC', '−']},
+        part_notes={
+            'U5': 'OPA2197 on its SOIC adapter, in an 8-pin socket. Pin 1 at the top left',
+            'K2': 'stripe to the top. Both poles mute in parallel: COM to X, NC to VREF',
+            'D7': 'across the coil, band towards +5 V',
+            'D8': 'band on the top rail (9 V filtered)',
+            'D9': 'band on row 6 (H)',
+            'D10': 'band on the bottom rail (9 V filtered)',
+            'D11': 'band on row 15 (CN)',
+            'C19': '+ on row 2 (VREF)',
+            'C20': '+ on row 0 (9 V filtered)',
+            'C17': '63 V bipolar: pair it with C18 on a meter, within 5 %',
+            'C18': '63 V bipolar: the pair of C17',
+            'R32': '0.1 %: sets how equal hot and cold are',
+            'R33': '0.1 %: the pair of R32',
+            'R34': '1 %: hot and cold must match, so R34 = R35 and R41 = R42',
+            'R41': 'limits a charged C17 shorting through the clamps (3.7 A, not 69 A)',
+        } if left else {},
+        notes=[
+            'Build it twice; L and R are identical and swap. The schematic, its wiring table '
+            'and the simulation are schematic/balanced-output/, schematic/balanced-output.py '
+            'and bench-results/2026-10-17-balanced-output-sim.',
+            'Ground arrives on the input cable from the codec carrier, with the signal and the '
+            '9 V, and that is this board’s only ground. Pin 1 of the XLR is the case’s, through '
+            'the lift toggle: the XLR cable brings no ground here.',
+            'The mute relay de-energised shorts X to VREF. Its coil is wired in parallel with '
+            'the bypass relay’s, so the XLR is silent at boot, in panic bypass and on any '
+            'failure. Confirm its contacts with a meter as for the bypass relay: pin 4 to pin 2 '
+            'and pin 7 to pin 9 should beep with the coil unpowered.',
+            'The pad and coil plugs are both three-way. Swapped, neither harms anything (the '
+            'toggle would only work the relay), but label them.',
+        ] if left else [
+            'The same cuts, the same parts and the same holes as XLR L.',
+        ])
+
+
 def boards():
     return [output_board('L'), output_board('R'), power_board(), midi_board(),
             relay_board(), input_board(), carrier_board(), breakout_board(),
-            control_board()]
+            control_board(), xlr_board('L'), xlr_board('R')]
 
 
 def main():
