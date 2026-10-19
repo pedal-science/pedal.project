@@ -1,6 +1,6 @@
 # The workspace
 
-The pedal's software is six repositories (rigpa joined on 2026-10-09), and a session works on all of them at once. This page
+The pedal's software is seven repositories (rigpa joined on 2026-10-09, comms on 2026-10-19), and a session works on all of them at once. This page
 says where they live, why they live that way, and what keeps the arrangement from rotting. It was
 written on 2026-10-06, when the repositories moved into the workspace.
 
@@ -18,7 +18,8 @@ written on 2026-10-06, when the repositories moved into the workspace.
 ├── ljoss/                                 rikkus/ljoss
 ├── rtpi/                                  rikkus/rtpi
 ├── NAMBench/                              rikkus/NAMBench
-└── rigpa/                                 rikkus/rigpa
+├── rigpa/                                 rikkus/rigpa
+└── comms/                                 rikkus/comms
 ```
 
 `pedal.project` is the only directory of that name; it is a direct child of the workspace root.

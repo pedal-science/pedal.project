@@ -4,7 +4,7 @@ This directory is the workspace root: the directory an agent session is opened o
 the file sandbox grants. Everything the pedal is made of is inside it, which is what makes working
 across the repositories ordinary rather than a series of permission requests.
 
-It is deliberately **not a git repository**, and must never become one. The six repositories
+It is deliberately **not a git repository**, and must never become one. The seven repositories
 below are independent, and a repository here could only record them as gitlinks — pointers to
 commits that clone as empty directories. There is nothing to commit at this level, so there is
 nothing to get wrong; `git init` here is the one mistake with no upside.
@@ -23,6 +23,7 @@ opened on `namchain/` can read its siblings but cannot write them.
 | `rtpi/` | The Core host's PREEMPT_RT kernel, its boot-slot safety net, and device-tree work |
 | `NAMBench/` | NAM and IR kernel research; it reaches the pedal through `namchain` |
 | `rigpa/` | The pedal's on-device UI (C++, Qt 6): runs on the Core host, talks to `namchaind` and `pedald` |
+| `comms/` | The website and the video; owns the public wording of facts that live in the other repositories |
 
 `.worktrees/` holds per-session git worktrees, when two agents need one repository at once. It is
 hidden, so ripgrep skips it.
