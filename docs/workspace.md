@@ -19,7 +19,7 @@ written on 2026-10-06, when the repositories moved into the workspace.
 ├── rtpi/                                  rikkus/rtpi
 ├── NAMBench/                              rikkus/NAMBench
 ├── rigpa/                                 rikkus/rigpa
-└── comms/                                 rikkus/comms
+└── comms/                                 pedal-science/comms
 ```
 
 `pedal.project` is the only directory of that name; it is a direct child of the workspace root.
