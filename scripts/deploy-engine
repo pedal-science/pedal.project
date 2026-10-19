@@ -74,7 +74,7 @@ if [[ $HOST == piv ]]; then
 set -euo pipefail
 rev=$1 tests=$2 bins=$3
 cd ~/pedal-build
-[[ -d namchain ]] || git clone -q git@github.com:rikkus/namchain.git
+[[ -d namchain ]] || git clone -q git@github.com:pedal-science/namchain.git
 cd namchain
 git config url."git@github.com:".insteadOf https://github.com/
 git fetch -q origin

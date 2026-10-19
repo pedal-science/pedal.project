@@ -48,11 +48,11 @@ The design uses the following hardware. N.B. the names "Core", "HumanInterface" 
 I am planning to use the following software that I've been working on:
 
 * On the Core host:
-    * `rtpi` - the Core host's kernel and boot configuration: a realtime (PREEMPT_RT) kernel, boot slots that fall back safely, and the isolation of the cores that run effect processing. This exists at https://github.com/rikkus/rtpi
-    * `namchain` - a code library whose job is to handle the processing-intensive realtime work - the processing of audio data, applying effects - plus `namchaind`, the daemon that renders the rig and drives ALSA directly. It is at http://github.com/rikkus/namchain
+    * `rtpi` - the Core host's kernel and boot configuration: a realtime (PREEMPT_RT) kernel, boot slots that fall back safely, and the isolation of the cores that run effect processing. This exists at https://github.com/pedal-science/rtpi
+    * `namchain` - a code library whose job is to handle the processing-intensive realtime work - the processing of audio data, applying effects - plus `namchaind`, the daemon that renders the rig and drives ALSA directly. It is at http://github.com/pedal-science/namchain
 
 * Outside of the pedal:
-    * 'ljoss', a SwiftUI application that runs on MacOS and iOS. This is a rig designer. It sends rigs - ready for running - to namchain (it's wired up to speak to namchaind over TCP). It's here: http://github.com/rikkus/ljoss
+    * 'ljoss', a SwiftUI application that runs on MacOS and iOS. This is a rig designer. It sends rigs - ready for running - to namchain (it's wired up to speak to namchaind over TCP). It's here: http://github.com/pedal-science/ljoss
 
 ## Some (and only some) of the pending work
 
@@ -77,7 +77,7 @@ I am planning to use the following software that I've been working on:
 
 ## Notes
 
-I have developed my own optimisations for NAM model processing. I created a repo to help me bring together my work in this area, which is at https://github.com/rikkus/NAMBench ... it may not be needed directly for work on this project, but I don't want it to be overlooked if there's point where it may be useful.
+I have developed my own optimisations for NAM model processing. I created a repo to help me bring together my work in this area, which is at https://github.com/pedal-science/NAMBench ... it may not be needed directly for work on this project, but I don't want it to be overlooked if there's point where it may be useful.
 
 ## Other resources
 

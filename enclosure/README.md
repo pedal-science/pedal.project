@@ -107,7 +107,7 @@ face (footswitches, display module, knob, LEDs, toggle) stay where they mount in
 
 Open `pedal.blend` in Blender 5.2 or later. It isn't in git (at 56 MB, every version would stay
 in the history): download it from the
-[`enclosure-1590dd` release](https://github.com/rikkus/pedal.project/releases/tag/enclosure-1590dd),
+[`enclosure-1590dd` release](https://github.com/pedal-science/pedal.project/releases/tag/enclosure-1590dd),
 or make it with `src/build --no-render`. It's self-contained, with textures packed.
 
 ### Playing with the layout in 2D

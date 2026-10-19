@@ -12,13 +12,13 @@ written on 2026-10-06, when the repositories moved into the workspace.
 ├── AGENTS.md, CLAUDE.md                   installed from pedal.project/workspace-root/
 ├── .worktrees/<session>/<repo>/            per-session git worktrees
 ├── .cache/                                tool caches cloned in from $HOME (scripts/sandbox-cache)
-├── pedal.project/                         rikkus/pedal.project
-├── namchain/                              rikkus/namchain
+├── pedal.project/                         pedal-science/pedal.project
+├── namchain/                              pedal-science/namchain
 │   └── vendor/NeuralAmpModelerCore/       declared submodule, rikkus/OptimisationWorkOnNeuralAmpModelerCore
-├── ljoss/                                 rikkus/ljoss
-├── rtpi/                                  rikkus/rtpi
-├── NAMBench/                              rikkus/NAMBench
-├── rigpa/                                 rikkus/rigpa
+├── ljoss/                                 pedal-science/ljoss
+├── rtpi/                                  pedal-science/rtpi
+├── NAMBench/                              pedal-science/NAMBench
+├── rigpa/                                 pedal-science/rigpa
 └── comms/                                 pedal-science/comms
 ```
 

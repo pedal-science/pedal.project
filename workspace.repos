@@ -11,11 +11,11 @@
 # sibling of the others or a declared submodule of one of them; there is no third shape, because
 # a checkout that is merely *inside* another repository is the accident the guard refuses
 # (tools/git-hooks/README.md).
-pedal.project|pedal.project|https://github.com/rikkus/pedal.project.git|main|repo
-namchain|namchain|https://github.com/rikkus/namchain|main|repo
+pedal.project|pedal.project|https://github.com/pedal-science/pedal.project.git|main|repo
+namchain|namchain|https://github.com/pedal-science/namchain|main|repo
 namchain/vendor/NeuralAmpModelerCore|namchain/vendor/NeuralAmpModelerCore|https://github.com/rikkus/OptimisationWorkOnNeuralAmpModelerCore|all-optimisations|submodule
-ljoss|ljoss|git@github.com:rikkus/ljoss.git|main|repo
-rtpi|rtpi|git@github.com:rikkus/rtpi.git|main|repo
-NAMBench|NAMBench|git@github.com:rikkus/NAMBench.git|main|repo
-rigpa|rigpa|git@github.com:rikkus/rigpa.git|main|repo
+ljoss|ljoss|git@github.com:pedal-science/ljoss.git|main|repo
+rtpi|rtpi|git@github.com:pedal-science/rtpi.git|main|repo
+NAMBench|NAMBench|git@github.com:pedal-science/NAMBench.git|main|repo
+rigpa|rigpa|git@github.com:pedal-science/rigpa.git|main|repo
 comms|comms|git@github.com:pedal-science/comms.git|main|repo
