@@ -230,8 +230,10 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
   the two output fixtures, the case's 4-way strip and the codec header as it is today). The script
   checks the wiring against KiCad's exported netlist; `schematic/renders/` holds the pictures.
 - `devices/<host>/rootfs/` — the Core host's configuration as code.
-- `enclosure/` — a Blender model of the pedal in a 1590DD-size box (parts, layout, wiring) and its
-  renders; `enclosure/README.md` says what's approximate and how to rebuild it.
+- `enclosure/` — two Blender models and their renders: the **console model**, the pedal in its
+  current case (the Hammond 1456RH3 and the 8.8″ bar screen; a design render, panel positions
+  provisional), and the superseded 1590DD-size box (parts, layout, wiring). `enclosure/README.md`
+  says which is which, what's approximate and how to rebuild each.
 - `docs/diagrams/` — draw.io, two layers: blocks and connections. The small squares on the
   connection layer are routing junctions, **not components**. When reasoning about the
   diagram, check that edges still have `source`/`target` set and that no junction joins two

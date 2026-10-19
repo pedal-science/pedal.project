@@ -1,13 +1,104 @@
-# Enclosure model
+# Enclosure models
 
-> **This is the old layout, and it must not be drilled from.** The pedal's enclosure is now a
-> **Hammond 1456RH3 sloped console, 434.82 × 218.67 × 81.43 mm** (D14, 2026-10-09; in hand
-> 2026-10-13), carrying the **Prechen 8.8″ bar screen** — not the 1590DD-size box and 2.4″ ST7789
-> modelled here. The owner says the 1590DD was becoming too difficult to lay out; the big case has
-> loads of room. The positions in `src/layout.py` are for the old case and do **not** transfer. The
-> new case's drawing and the screen's documents are in `imaginings/big-enclosure/`, with the owner's
-> chalked panel plan in `imaginings/big-enclosure/panel-sketch/`. See `plan.md`, "Next session starts
-> with", and Phase 4.
+There are two models here, and neither is a drilling template.
+
+| | The console model (current) | The 1590DD model (old) |
+|---|---|---|
+| Case | Hammond 1456RH3 sloped console, 434.82 × 218.67 × 81.43 mm | 1590DD-size box, 188 × 119 × 37.5 mm |
+| Screen | Prechen 8.8″ 1920×480 touch bar (D14) | 2.4″ ST7789 module |
+| Source | `src/console.py`, `src/bl_console.py`, `src/build_console.py`, `src/build-console` | `src/layout.py` and the rest of `src/` |
+| Built file | `console.blend` | `pedal.blend`, `layout.kicad_pcb` |
+| Renders | `renders/console_*.png` | `renders/1_hero.png` … `7_boards.png`, `board_a_*` |
+| Status | **A design render.** The case and screen are the makers' dimensions; every panel position is provisional, read off the owner's chalk | **Superseded** (D14, 2026-10-09). Kept for the record |
+
+## The console model: the pedal in its current case
+
+The pedal as it is now meant to be: the **Hammond 1456RH3 sloped console** (D14, 2026-10-09; in
+hand 2026-10-13) with the **Prechen 8.8″ bar screen** in its slope. It exists to show the pedal —
+on pedal.science and in the video (claim C12 in `../comms/docs/claims.md`, where the renders are
+captioned as design renders) — **not to drill from. The panel layout is not designed yet**, and
+nothing is drilled.
+
+![The console model](renders/console_1_hero.png)
+
+| File | Shows |
+|---|---|
+| `renders/console_1_hero.png` | The hero still: frame 1 of the turntable, from the front left |
+| `renders/console_2_exploded.png` | Exploded and labelled: the case, the boards inside, the screen, the cover |
+| `renders/console_3_front34.png` | Front three-quarter, lower and closer: the screen, the footswitches, the knobs |
+
+### What is measured and what is guessed
+
+**From the makers' drawings** (`imaginings/big-enclosure/`):
+
+- **The case** (Hammond drawing `2720683.pdf`): 434.82 × 218.67 × 81.43 mm outside, a 40.63 mm
+  front, the 15° slope, 12-gauge (2.06 mm) aluminium, black (`1456RH3BKBK`). It is two pieces,
+  modelled that way: the **case** is the base and the two end panels; the **cover** is one wrap —
+  front wall, slope, flat top and rear wall — 430.21 mm wide between the end panels, with foot
+  flanges (418.78 mm long) that the six cover screws go up into through the base (409.55 × 204.77
+  mm centres, ⌀4.34 clearance holes). The vent slots (3.18 × 22.23 mm) run in a band across the top
+  of the rear wall and in two groups through the base near the rear.
+- **The screen** (`screen/user-manual.pdf`, `specs.png`): 236.5 × 68.5 × 18.7 mm case, 4:1 active
+  area of 8.8″ (216.8 × 54.2 mm), M4 mounts at 75 × 50 mm on the back, mini-HDMI and USB-C on one end.
+- **The boards inside**: the input board, the two output boards and the 9 V power board are
+  `stripboard/module_boards.py`'s own layouts, read when the model builds — size in holes, every
+  part in its holes, the JST headers, wire links and standoff holes — so they cannot drift from
+  it. The Pi 5 and the SparkFun WM8960 are the same KiCad-built models the old model uses.
+
+**Guessed, and labelled so in `src/console.py`:**
+
+- **Every panel position.** They are the owner's chalk marks on the case
+  (`imaginings/big-enclosure/panel-sketch/`), read by eye from two photographs. On the slope: the
+  five footswitches in a row nearest the player (80 mm apart), the sixth (mute/tuner) left of the
+  screen, the screen centred, OUT VOLUME, the main rotary and its apply and back buttons at the
+  right. On the rear wall, from the player's left: power, USB-C, 9 V, battery, expression,
+  a Wi-Fi/Bluetooth window, MIDI thru, MIDI in, OUT L, OUT R, line in, mic in (a combo socket) and
+  guitar in. **Expression is not chalked** — it is in because the BOM has the jack, and `plan.md`'s
+  debt table still asks whether the pedal needs one. One chalk mark (two short bars between the
+  Wi-Fi window and the battery) is not modelled because it could not be read. The chalk was read
+  here as *GUITAR IN, MIC IN, LINE IN*; `plan.md` Phase 4 reads the same marks as *PHONES?, LINE?*,
+  so the owner's own list wins wherever they differ.
+- **How the screen mounts**: behind a 229 × 62 mm window in the slope, its glass against the
+  inside of the panel. The hole, its size and the fixing are all undecided (the owner is not
+  looking forward to cutting it).
+- **Where the boards sit inside**, the 8 mm nylon standoffs, the Pico 2 standing alone (the
+  control board it will sit on is not modelled), the parts' shapes (sizes, not models: a resistor
+  is a blue rod), the rubber feet (Hammond's 1421T3, ½ in), the bend radii and the flanges' depth.
+- **Not modelled**: wiring, the knobs' and footswitches' exact parts (the old model's MC7105 and
+  knob stand in), any printing on the panel.
+
+### Building it
+
+```bash
+src/build-console
+```
+
+builds `console.blend` (about 20 s) and renders the three stills at 1920 × 1080, 256 samples, on
+the GPU. `--no-render` stops at the `.blend`; `--turntable` also renders the hero camera over the
+turntable's 240 frames into `renders/console_turntable/` (gitignored) for the video. The pedal turns
+on a driver, so any frame of the `Console` scene is a turntable frame; frame 1 is the hero still.
+`console.blend` is not in git: it is rebuilt from the source in seconds.
+
+It needs Blender 5.2 on `PATH`. The Pi 5 and WM8960 models come from `src/make_parts.py`, which
+needs KiCad 10 the first time (they are cached in `assets/parts/`, shared with the old model);
+without them plain boards of the right size stand in, and the build says so. The screen shows
+**rigpa's own screenshot**, `../rigpa/docs/screenshots/two-rigs.png` in the workspace — read from
+rigpa's repository rather than copied, so a new screenshot there is the next build's screen.
+
+| Script | Does |
+|---|---|
+| `src/console.py` | Every dimension and position, in the case's own frame (x across, y front to rear, z up, mm) |
+| `src/bl_console.py` | The parts: case, cover, screen, the slope's and rear wall's parts, the boards inside |
+| `src/build_console.py` | Builds `console.blend`: two scenes on one studio sweep — `Console` (the closed pedal on its turntable, the hero and front 3/4 cameras) and `Console Exploded` (the parts pulled apart, with labels) |
+| `src/render_console.py` | Renders cameras in their own scenes: `blender -b console.blend -P src/render_console.py -- [--samples N] [--scale %] [--turntable [A-B]] [CON_...]` |
+| `src/build-console` | All of it |
+
+## The 1590DD model (old layout)
+
+> **This is the old layout, and it must not be drilled from.** The positions in `src/layout.py`
+> are for the 1590DD-size box and the 2.4″ ST7789, and do **not** transfer to the 1456RH3. The owner
+> says the 1590DD was becoming too difficult to lay out; the big case has loads of room. See
+> `plan.md`, "Next session starts with", and Phase 4.
 
 A Blender model of the pedal built into a 1590DD-size box (188 x 119 x 37.5 mm), shown twice on
 a wooden floor:
@@ -19,7 +110,7 @@ in the history): download it from the
 [`enclosure-1590dd` release](https://github.com/rikkus/pedal.project/releases/tag/enclosure-1590dd),
 or make it with `src/build --no-render`. It's self-contained, with textures packed.
 
-## Playing with the layout in 2D
+### Playing with the layout in 2D
 
 `layout.kicad_pcb` is the whole inside of the box seen from above, 1:1 in millimetres, as
 footprints you can drag around. It is a **layout sandbox**, not a schematic and not something to
@@ -55,7 +146,7 @@ model, move the positions into `src/layout.py`, which is what the Blender build 
 exports read. The `.kicad_pro` is committed too, so it opens as a project; `.kicad_prl` is
 per-user and ignored.
 
-## Renders
+### Renders
 
 `renders/`, 1920 x 1080, Cycles. They show the earlier 1590XX layout until they are rendered
 again from the current `pedal.blend`:
@@ -70,7 +161,7 @@ again from the current `pedal.blend`:
 | `6_wide.png` | The set: the floor lamps around the pedals |
 | `7_boards.png` | The codec board and the Pi |
 
-## What's in it
+### What's in it
 
 - **Enclosure.** 188 x 119 x 37.5 mm, drafted walls, a 3 mm fillet into the top face, lid-screw
   bosses in the corners, and a lipped base plate on four rubber feet. Black textured powder
@@ -96,7 +187,7 @@ again from the current `pedal.blend`:
 
 Positions for all of it live in `src/layout.py`.
 
-## Where the parts come from
+### Where the parts come from
 
 The parts are close, not exact.
 
@@ -114,7 +205,7 @@ The parts are close, not exact.
 - **Screen.** The image is rendered by `src/make_screen.py`.
 - **Floor.** Poly Haven's "Wood Floor" texture (CC0).
 
-## What the model says about the layout
+### What the model says about the layout
 
 None of this had been near hardware when it was drawn. **Since 2026-10-04, one part of it has:** a
 temporary plastic box stands in for the case, and its rear wall carries IN, OUT L and OUT R in the
@@ -138,7 +229,7 @@ meshes don't intersect except where they should touch (checked in Blender).
 - **The LEDs' legs are trimmed short**, so the Pico can sit under the left LED.
 - **The rear connectors sit at z 16 mm**, so the DIN socket clears the display board above it.
 
-## Rebuilding
+### Rebuilding
 
 ```bash
 src/build

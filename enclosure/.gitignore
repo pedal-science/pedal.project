@@ -2,6 +2,8 @@ assets/
 *.blend1
 __pycache__/
 pedal.blend
+console.blend
+renders/console_turntable/
 
 # KiCad's local preferences: per-user, not ours to commit. The .kicad_pro and the layout are.
 *.kicad_prl

@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Builds enclosure/console.blend -- the pedal in its current case, the Hammond 1456RH3 with the
+# Prechen 8.8" bar screen -- and renders its three stills into enclosure/renders/console_*.png.
+# A design render: the panel layout is provisional (src/console.py).
+#   src/build-console              everything: the Pi 5 and codec models if missing, scene, renders
+#   src/build-console --no-render  stop after writing console.blend
+#   src/build-console --turntable  also render the 240-frame turntable for the video
+# Needs Blender 5.2 (blender on PATH). KiCad 10 in /Applications only the first time, to build
+# the Pi 5 and WM8960 models (src/make_parts.py); without them plain boards stand in.
+# The screen shows rigpa's own screenshot, ../rigpa/docs/screenshots/two-rigs.png in the workspace.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+KPY=/Applications/KiCad/KiCad.app/Contents/Frameworks/Python.framework/Versions/3.9/bin/python3
+
+if [[ ! -f assets/parts/rpi5.glb || ! -f assets/parts/codec.glb ]]; then
+  if [[ -x "$KPY" ]]; then
+    src/fetch-assets
+    [[ -d assets/rpi5 ]] || unzip -o -q assets/rpi5-step.zip -d assets/rpi5
+    "$KPY" -u src/make_parts.py codec pi5 2>&1 | grep -v "create wxApp"
+  else
+    echo "no KiCad: the Pi 5 and the codec will be plain boards" >&2
+  fi
+fi
+blender -b --factory-startup --python-exit-code 1 -P src/build_console.py | grep -E "^(SAVED|WARNING)"
+if [[ "${1:-}" != "--no-render" ]]; then
+  blender -b console.blend --python-exit-code 1 -P src/render_console.py -- --samples 256 | grep -E "^RENDERED"
+fi
+if [[ "${1:-}" == "--turntable" ]]; then
+  blender -b console.blend --python-exit-code 1 -P src/render_console.py -- --samples 128 --turntable \
+    | grep -E "^RENDERED"
+fi

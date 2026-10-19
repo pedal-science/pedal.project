@@ -1016,8 +1016,10 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
 enclosure is the **Hammond 1456RH3 sloped console** (434.82 × 218.67 × 81.43 mm, 12-gauge aluminium,
 15° top) and it is **in hand**; the screen is the **Prechen 8.8″ bar** (D14, 2026-10-09), still to
 arrive. So the plastic stand-in below, the "three footswitches", the two-power-cut-out panel and the
-`enclosure/` model are all written for the **1590DD** and are kept for the record rather than
-followed. What the new case's panel actually has, as the owner has chalked it on the case
+`enclosure/` 1590DD model are all written for the **1590DD** and are kept for the record rather than
+followed. The new case has its own model beside the old one since 2026-10-19 — the **console model**
+(`enclosure/README.md`), a design render for pedal.science and the video whose panel positions are
+the chalk below read by eye, so it is not a drilling template either. What the new case's panel actually has, as the owner has chalked it on the case
 (`imaginings/big-enclosure/panel-sketch/`, not yet drilled):
 
 - **six footswitches** — five in a row nearest the player, plus one for mute/tuner;
