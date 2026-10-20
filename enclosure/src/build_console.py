@@ -1,8 +1,8 @@
 """Builds enclosure/console.blend: the pedal in its current case (Hammond 1456RH3 and the
-Prechen 8.8" bar screen), on a studio sweep. A design render, not a drilling template: every
+Prechen 8.8" bar screen), on the old model's wood floor in a dark room. A design render, not a drilling template: every
 panel position is provisional (console.py says why).
 
-Two scenes share the studio:
+Two scenes share the set:
   Console           the closed pedal on a turntable (it turns once over frames 1-240; frame 1
                     is the hero still), with the hero and front 3/4 cameras;
   Console Exploded  the same parts pulled apart, with labels.
@@ -65,48 +65,52 @@ def to_world(p, lift=0.0):
     return Vector(((p[0] - C.W / 2) * MM, (p[1] - C.D / 2) * MM, (p[2] + C.FOOT_H + lift) * MM))
 
 
-def sweep(coll):
-    """A seamless backdrop: floor, a curve, and a wall behind."""
-    bm = bmesh.new()
-    prof = [(-3.0, 0.0), (0.45, 0.0)]
-    r = 0.9
-    for k in range(1, 17):
-        a = -math.pi / 2 + (math.pi / 2) * k / 16
-        prof.append((0.45 + r * math.cos(a), r + r * math.sin(a)))
-    prof.append((0.45 + r, 3.0))
-    rows = []
-    for x in (-5.0, 5.0):
-        rows.append([bm.verts.new((x, y, z)) for y, z in prof])
-    for i in range(len(prof) - 1):
-        bm.faces.new((rows[0][i], rows[1][i], rows[1][i + 1], rows[0][i + 1]))
-    for f in bm.faces:
-        f.smooth = True
-    me = U.mesh_from_bm(bm, "Sweep")
-    m = U.principled("Sweep", (0.035, 0.035, 0.037), rough=0.7, spec=0.3)
-    return U.new_obj("Sweep", me, coll, mat=m)
-
-
-def studio(scene):
+def studio(scene, M):
+    """The old model's set, as the teaser lights it: a wood floor in a dark room with a little haze,
+    two LED tubes behind as practicals. A black box in the dark is drawn by its edges: a narrow cool
+    rim from behind and above on the left, a narrow warm kicker low behind the right end raking the
+    top, and the bar screen's own light on what is in front of it. A soft light overhead is kept low:
+    the screen's anti-glare glass shows it as a sheen."""
     coll = U.collection("Studio")
-    sweep(coll)
-    S.world_and_render(scene, samples=256)
-    w = scene.world
-    w.node_tree.nodes["Background"].inputs["Color"].default_value = (0.02, 0.02, 0.022, 1)
-    scene.view_settings.view_transform = "AgX"
-    scene.view_settings.look = "AgX - Medium High Contrast"
-    scene.view_settings.exposure = 0.0
+    S.floor(coll)
+    S.world_and_render(scene, samples=256, haze=0.025)
+    scene.view_settings.exposure = -0.25
     lights = U.collection("StudioLights", coll)
-    # A big soft box above and in front: the slope and the screen glass reflect it.
-    S.area(lights, "Key_Top", (-0.15, -0.55, 0.95), (0.0, 0.0, 0.03), (1.4, 0.9), 70.0, rgb=(1.0, 0.97, 0.93))
-    # From the left, lower: modelling on the end panel and the footswitches.
-    S.area(lights, "Key_Left", (-1.0, -0.45, 0.35), (0.0, 0.0, 0.04), (0.6, 0.6), 18.0, rgb=(1.0, 0.95, 0.9))
-    # Strip lights behind on both sides: they draw the case's edges against the sweep.
-    S.area(lights, "Rim_Left", (-0.75, 0.55, 0.45), (0.0, 0.05, 0.04), (0.12, 0.9), 30.0, rgb=(0.92, 0.96, 1.0))
-    S.area(lights, "Rim_Right", (0.8, 0.5, 0.4), (0.0, 0.05, 0.04), (0.12, 0.9), 24.0, rgb=(1.0, 0.85, 0.7))
-    S.area(lights, "Fill_Right", (0.9, -0.7, 0.25), (0.0, 0.0, 0.03), (0.8, 0.5), 8.0)
-    # The sweep behind, lit from below the camera's line so the backdrop falls off upward.
-    S.area(lights, "Backdrop", (0.0, 0.2, 0.05), (0.0, 1.4, 0.6), (2.0, 0.2), 10.0, rgb=(0.9, 0.93, 1.0))
-    return coll
+    # The tubes are the room's: the exploded view leaves them out, so they never sit behind a label.
+    prac = U.collection("Practicals", coll)
+    M.alu_dark = U.principled("AnodisedAlu", (0.08, 0.08, 0.085), metallic=1, rough=0.35)
+    orange, cyan = (1.0, 0.28, 0.03), (0.04, 0.55, 1.0)
+    S.tube_light(prac, M, "Tube_Orange", (-0.62, 0.62, 0), orange, strength=1.4, turn=0.4)
+    S.tube_light(prac, M, "Tube_Cyan", (0.78, 0.7, 0), cyan, strength=1.3, turn=-0.3)
+    # The tubes' light on the pedal and the floor: thin areas beside them, unseen by the camera.
+    # Deep blue rather than the tube's cyan, as in the old set.
+    S.area(prac, "Tube_Orange_Light", (-0.59, 0.58, 0.05), (0.0, 0.0, 0.03), (0.035, 0.3), 9.0, rgb=orange)
+    S.area(prac, "Tube_Blue_Light", (0.75, 0.66, 0.05), (0.0, 0.0, 0.03), (0.035, 0.3), 6.0, rgb=(0.02, 0.16, 1.0))
+    centre = to_world((C.W / 2, C.D / 2, 40.0))
+    rim = S.area(lights, "Rim", centre + Vector((-0.75, 0.95, 0.3)), centre, (0.35, 0.2), 14.0, rgb=(0.7, 0.82, 1.0))
+    rim.data.spread = math.radians(35)
+    kick = S.area(lights, "Kicker", to_world((C.W / 2 + 520.0, C.D / 2 + 380.0, 140.0)),
+                  to_world((C.W / 2, 120.0, 70.0)), (0.06, 0.06), 6.0, rgb=(1.0, 0.5, 0.2))
+    kick.data.spread = math.radians(30)
+    # A warm spot from the front left, as the old set's Fresnel: a pool on the floor that the pedal
+    # sits in, falling off to dark.
+    sp = bpy.data.lights.new("Pool", "SPOT")
+    sp.energy, sp.color = 30.0, (1.0, 0.78, 0.55)
+    sp.spot_size, sp.spot_blend, sp.shadow_soft_size = math.radians(42), 0.9, 0.08
+    po = bpy.data.objects.new("Pool", sp)
+    lights.objects.link(po)
+    loc = Vector((-0.75, -0.65, 1.1))
+    po.matrix_world = Matrix.Translation(loc) @ (Vector((0.05, 0.1, 0.0)) - loc).to_track_quat("-Z", "Y").to_matrix().to_4x4()
+    # The screen lights what is in front of it: the footswitches, the knobs, the slope's foot.
+    sc = to_world(C.slope_point(C.CX, C.SCREEN_S))
+    sn = Vector((0.0, -math.sin(math.radians(C.SLOPE)), math.cos(math.radians(C.SLOPE))))
+    S.area(lights, "ScreenGlow", sc + sn * 0.01, sc + sn, (0.2, 0.05), 1.5, rgb=(0.85, 0.7, 0.55))
+    # Soft light for the panel's detail, on the pedal only (main() links it and the rim), so the
+    # floor round it stays dark and the pools of the tubes and the kicker are all that shows of it.
+    key = S.area(lights, "Key_Top", (-0.15, -0.5, 0.95), (0.0, 0.0, 0.03), (0.9, 0.6), 10.0, rgb=(1.0, 0.95, 0.88))
+    fill = S.area(lights, "Fill_Front", (-0.35, -0.95, 0.3), (0.0, 0.0, 0.03), (0.6, 0.35), 4.0,
+                  rgb=(1.0, 0.93, 0.85))
+    return coll, (rim, key, fill)
 
 
 def copy_render(src, dst):
@@ -114,7 +118,7 @@ def copy_render(src, dst):
     dst.render.engine = "CYCLES"
     for k in ("device", "samples", "use_adaptive_sampling", "adaptive_threshold", "use_denoising", "denoiser",
               "max_bounces", "glossy_bounces", "transmission_bounces", "caustics_reflective",
-              "caustics_refractive", "use_light_tree"):
+              "caustics_refractive", "use_light_tree", "volume_step_rate", "volume_max_steps"):
         setattr(dst.cycles, k, getattr(src.cycles, k))
     for k in ("resolution_x", "resolution_y", "resolution_percentage"):
         setattr(dst.render, k, getattr(src.render, k))
@@ -256,7 +260,7 @@ def main():
     sc.name = "Console"
     src, g = groups(M)
     bpy.context.view_layer.layer_collection.children["ConsoleSource"].exclude = True
-    st = studio(sc)
+    st, pedal_lights = studio(sc, M)
 
     # The closed pedal, on a turntable.
     asm = U.collection("Console_Assembled_All", src)
@@ -281,12 +285,19 @@ def main():
     # The exploded pedal, in its own scene with the same studio.
     ex = bpy.data.scenes.new("Console Exploded")
     copy_render(sc, ex)
-    ex.collection.children.link(st)
+    for o in st.objects:
+        ex.collection.objects.link(o)
+    for c in st.children:
+        if c.name != "Practicals":
+            ex.collection.children.link(c)
     exc = U.collection("Exploded", ex.collection)
     inst_z = {}
+    lit = [ped]
     for k, c in g.items():
         inst_z[k] = EXPLODE[k]
-        e = instance("Exploded_" + k, c, exc, loc=(0, EXPLODE[k][0] * MM, EXPLODE[k][1] * MM))
+        lit.append(instance("Exploded_" + k, c, exc, loc=(0, EXPLODE[k][0] * MM, EXPLODE[k][1] * MM)))
+    for light in pedal_lights:
+        S.link_to(light, lit, "PedalOnly")
     ecams = U.collection("ExplodedCameras", ex.collection)
     cam = S.camera(ecams, "CON_2_Exploded", (-0.72, -1.22, 1.0), to_world((C.W / 2, C.D / 2, 175.0)), lens=50,
                    fstop=11.0)

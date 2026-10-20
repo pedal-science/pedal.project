@@ -27,6 +27,10 @@ nothing is drilled.
 | `renders/console_2_exploded.png` | Exploded and labelled: the case, the boards inside, the screen, the cover |
 | `renders/console_3_front34.png` | Front three-quarter, lower and closer: the screen, the footswitches, the knobs |
 
+They share the old model's set — its wood floor, its LED tubes behind (left out of the exploded
+view, so none sits behind a label) — lit as the teaser (`../comms/video/`) lights the console: a
+black box in the dark is drawn by its edges and by its own screen.
+
 ### What is measured and what is guessed
 
 **From the makers' drawings** (`imaginings/big-enclosure/`):
@@ -89,7 +93,7 @@ rigpa's repository rather than copied, so a new screenshot there is the next bui
 |---|---|
 | `src/console.py` | Every dimension and position, in the case's own frame (x across, y front to rear, z up, mm) |
 | `src/bl_console.py` | The parts: case, cover, screen, the slope's and rear wall's parts, the boards inside |
-| `src/build_console.py` | Builds `console.blend`: two scenes on one studio sweep — `Console` (the closed pedal on its turntable, the hero and front 3/4 cameras) and `Console Exploded` (the parts pulled apart, with labels) |
+| `src/build_console.py` | Builds `console.blend`: two scenes on one set, the old model's wood floor in a dark room lit as the teaser lights it (a cool rim, a warm kicker, the screen's own glow, anti-glare screen glass) — `Console` (the closed pedal on its turntable, the hero and front 3/4 cameras) and `Console Exploded` (the parts pulled apart, with labels) |
 | `src/render_console.py` | Renders cameras in their own scenes: `blender -b console.blend -P src/render_console.py -- [--samples N] [--scale %] [--turntable [A-B]] [CON_...]` |
 | `src/build-console` | All of it |
 

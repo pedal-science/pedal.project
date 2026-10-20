@@ -115,8 +115,9 @@ def stripboard_material():
 
 
 def screen_material():
-    """The bar's active area: rigpa's own screenshot (1920 x 480 at 4:1), lit, under glass."""
-    m = U.principled("BarScreen", (0.0, 0.0, 0.0), rough=0.08, coat=1.0, coat_rough=0.02)
+    """The bar's active area: rigpa's own screenshot (1920 x 480 at 4:1), lit, under anti-glare
+    glass: a light overhead shows as a sheen on it, not a hot spot over the picture."""
+    m = U.principled("BarScreen", (0.0, 0.0, 0.0), rough=0.3, coat=0.5, coat_rough=0.12)
     nt = m.node_tree
     b = nt.nodes["Principled BSDF"]
     if os.path.exists(RIGPA_SHOT):
