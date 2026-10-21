@@ -1266,6 +1266,29 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**The tuner is a view, not a block** (2026-10-20). Squatch-dsp's tuner became `nc.tuner` in namchain —
+one input, one output, and the output is silence — and both front ends now use it the way a pedal
+tuner actually works: the tuner takes the screen, the rig goes quiet, and the node that does the
+muting exists only for as long as the view does. rigpa has it as a **main view** (menu button above
+Settings); ljoss has it as a **panel in the left column**, half its height, behind a button left of
+the gear. Neither draws it on the canvas, saves it in a rig or puts it in an export: it is spliced
+into the document at publish time and stripped from anything read back.
+
+Two things this settled that are worth keeping:
+
+- **A node can stop being a block.** `engine.schema` grew `flags.in_palette`, so the engine says
+  which types a palette may offer instead of every client keeping a list of exclusions. The tuner is
+  nameable by a document — that is how it is mounted — but no palette offers it.
+- **Anything that persists the engine's document must drop a client's node.** pedald's resume record
+  would otherwise save the mounted tuner and boot the pedal muted, playing a node no editor draws;
+  it now strips `meta.ephemeral` nodes and heals the wiring (`resume.py`, with the test in
+  `devices/common/tests/test_resume.py`). The marker is namchain's, in `docs/tuner.md`.
+
+The pedal's own cost table has no `nc.tuner` row yet: it is charged `unknown.node` until
+`pedal-measure` measures it. Nothing about the tuner is deployed to vip yet — the engine and both
+apps are local commits, and the pedal's tuner button will be a footswitch through pedald when the
+Pico controls path exists (rigpa docs/tuner.md, "What is not here").
+
 **The enclosure and the screen changed, and the pedal is now going to be *used* while the screen waits**
 (2026-10-13, evening). The owner's summary, in their words and mine:
 
