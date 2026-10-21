@@ -1,0 +1,323 @@
+{
+  "formatVersion" : 3,
+  "state" : {
+    "board" : {
+      "columns" : 18,
+      "components" : [
+        {
+          "anchor" : {
+            "column" : 6,
+            "row" : 3
+          },
+          "axis" : "vertical",
+          "designator" : "C6/C7",
+          "flipped" : false,
+          "id" : "0711430A-8A15-5CB8-A48D-A2E9BD5CBFB8",
+          "legCount" : 2,
+          "reference" : {
+            "categoryID" : "capacitor",
+            "memberID" : "bipolar"
+          },
+          "span" : 2,
+          "value" : "10µF bipolar"
+        },
+        {
+          "anchor" : {
+            "column" : 9,
+            "row" : 4
+          },
+          "axis" : "vertical",
+          "designator" : "R7/R9",
+          "flipped" : false,
+          "id" : "E119932D-07E8-5B63-9BD7-D6020228673A",
+          "legCount" : 2,
+          "reference" : {
+            "categoryID" : "resistor",
+            "memberID" : "standard"
+          },
+          "span" : 5,
+          "value" : "100Ω"
+        },
+        {
+          "anchor" : {
+            "column" : 11,
+            "row" : 2
+          },
+          "axis" : "vertical",
+          "designator" : "R8/R10",
+          "flipped" : true,
+          "id" : "EB02F0D7-49D2-53C1-BFF8-AD5B5E219D5F",
+          "legCount" : 2,
+          "reference" : {
+            "categoryID" : "resistor",
+            "memberID" : "standard"
+          },
+          "span" : 7,
+          "value" : "1M"
+        },
+        {
+          "anchor" : {
+            "column" : 4,
+            "row" : 6
+          },
+          "axis" : "vertical",
+          "designator" : "C14/C15",
+          "flipped" : false,
+          "id" : "650250D6-582D-5E2C-9B11-5C4AF65BDC03",
+          "legCount" : 2,
+          "reference" : {
+            "categoryID" : "capacitor",
+            "memberID" : "bipolar"
+          },
+          "span" : 2,
+          "value" : "10µF bipolar"
+        },
+        {
+          "anchor" : {
+            "column" : 10,
+            "row" : 2
+          },
+          "axis" : "vertical",
+          "designator" : "R24/R26",
+          "flipped" : true,
+          "id" : "9D4390A9-0972-5101-8FC9-B427BDB31D78",
+          "legCount" : 2,
+          "reference" : {
+            "categoryID" : "resistor",
+            "memberID" : "standard"
+          },
+          "span" : 6,
+          "value" : "100Ω"
+        },
+        {
+          "anchor" : {
+            "column" : 8,
+            "row" : 2
+          },
+          "axis" : "vertical",
+          "designator" : "R25/R27",
+          "flipped" : true,
+          "id" : "5F961B1A-52CD-5907-875A-C99A292C201C",
+          "legCount" : 2,
+          "reference" : {
+            "categoryID" : "resistor",
+            "memberID" : "standard"
+          },
+          "span" : 5,
+          "value" : "1M"
+        },
+        {
+          "anchor" : {
+            "column" : 1,
+            "row" : 2
+          },
+          "axis" : "vertical",
+          "designator" : "A5/A6",
+          "flipped" : false,
+          "id" : "52CA8587-A4A2-548D-A19B-24C190E98D6E",
+          "legCount" : 3,
+          "pinNames" : [
+            "GND",
+            "HPL/HPR",
+            "—"
+          ],
+          "reference" : {
+            "categoryID" : "connector",
+            "memberID" : "jstXH"
+          },
+          "span" : 1,
+          "value" : "B3B-XH-A"
+        },
+        {
+          "anchor" : {
+            "column" : 16,
+            "row" : 2
+          },
+          "axis" : "vertical",
+          "designator" : "A7/A9",
+          "flipped" : false,
+          "id" : "A744AE66-F907-52BF-90D7-2F69243DD956",
+          "legCount" : 4,
+          "pinNames" : [
+            "GND",
+            "TIP",
+            "RING",
+            "—"
+          ],
+          "reference" : {
+            "categoryID" : "connector",
+            "memberID" : "jstXH"
+          },
+          "span" : 1,
+          "value" : "B4B-XH-A"
+        }
+      ],
+      "cutGaps" : [],
+      "cutHoles" : [
+        {
+          "column" : 9,
+          "row" : 3
+        },
+        {
+          "column" : 3,
+          "row" : 4
+        },
+        {
+          "column" : 11,
+          "row" : 4
+        }
+      ],
+      "jumpers" : [
+        {
+          "id" : "2E374CCA-C6FF-54F6-8285-758DE4FFC5F0",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 12,
+              "row" : 8
+            },
+            {
+              "column" : 12,
+              "row" : 7
+            },
+            {
+              "column" : 12,
+              "row" : 6
+            },
+            {
+              "column" : 12,
+              "row" : 5
+            },
+            {
+              "column" : 12,
+              "row" : 4
+            },
+            {
+              "column" : 12,
+              "row" : 3
+            }
+          ]
+        },
+        {
+          "id" : "0F2B6987-91E1-5A55-9C3F-7706F595C6F1",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 14,
+              "row" : 4
+            },
+            {
+              "column" : 14,
+              "row" : 5
+            },
+            {
+              "column" : 14,
+              "row" : 6
+            }
+          ]
+        }
+      ],
+      "mountHoles" : [
+        {
+          "column" : 4,
+          "row" : 10
+        },
+        {
+          "column" : 15,
+          "row" : 10
+        }
+      ],
+      "rows" : 12,
+      "solderedHoles" : [
+        {
+          "column" : 1,
+          "row" : 2
+        },
+        {
+          "column" : 8,
+          "row" : 2
+        },
+        {
+          "column" : 10,
+          "row" : 2
+        },
+        {
+          "column" : 11,
+          "row" : 2
+        },
+        {
+          "column" : 16,
+          "row" : 2
+        },
+        {
+          "column" : 1,
+          "row" : 3
+        },
+        {
+          "column" : 6,
+          "row" : 3
+        },
+        {
+          "column" : 16,
+          "row" : 3
+        },
+        {
+          "column" : 1,
+          "row" : 4
+        },
+        {
+          "column" : 6,
+          "row" : 4
+        },
+        {
+          "column" : 9,
+          "row" : 4
+        },
+        {
+          "column" : 16,
+          "row" : 4
+        },
+        {
+          "column" : 16,
+          "row" : 5
+        },
+        {
+          "column" : 4,
+          "row" : 6
+        },
+        {
+          "column" : 8,
+          "row" : 6
+        },
+        {
+          "column" : 4,
+          "row" : 7
+        },
+        {
+          "column" : 10,
+          "row" : 7
+        },
+        {
+          "column" : 9,
+          "row" : 8
+        },
+        {
+          "column" : 11,
+          "row" : 8
+        }
+      ]
+    },
+    "createdAt" : 814297682.0,
+    "history" : {
+      "cursor" : 0,
+      "entries" : []
+    },
+    "modifiedAt" : 814297682.0,
+    "view" : {
+      "orientation" : 0,
+      "panX" : 0,
+      "panY" : 0,
+      "side" : "top"
+    }
+  }
+}

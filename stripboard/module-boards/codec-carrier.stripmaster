@@ -1,0 +1,3138 @@
+{
+  "formatVersion" : 3,
+  "state" : {
+    "board" : {
+      "columns" : 32,
+      "components" : [
+        {
+          "anchor" : {
+            "column" : 14,
+            "row" : 8
+          },
+          "axis" : "vertical",
+          "designator" : "M1",
+          "flipped" : false,
+          "id" : "A4D3E02D-BB70-507C-AD59-459C9E280817",
+          "legCount" : 32,
+          "reference" : {
+            "categoryID" : "module",
+            "memberID" : "wm8960"
+          },
+          "span" : 1,
+          "value" : "WM8960"
+        },
+        {
+          "anchor" : {
+            "column" : 3,
+            "row" : 28
+          },
+          "axis" : "vertical",
+          "designator" : "U3",
+          "flipped" : false,
+          "id" : "588F62BE-8CAF-5A7B-B4B4-7F00153D708F",
+          "legCount" : 3,
+          "pinNames" : [
+            "OUT",
+            "GND",
+            "IN"
+          ],
+          "reference" : {
+            "categoryID" : "power",
+            "memberID" : "regulator"
+          },
+          "span" : 1,
+          "value" : "78L05"
+        },
+        {
+          "anchor" : {
+            "column" : 7,
+            "row" : 28
+          },
+          "axis" : "vertical",
+          "designator" : "C10",
+          "flipped" : false,
+          "id" : "9929155D-117D-5464-81FD-8F71AE7273DF",
+          "legCount" : 2,
+          "reference" : {
+            "categoryID" : "capacitor",
+            "memberID" : "electrolytic"
+          },
+          "span" : 2,
+          "value" : "10µF"
+        },
+        {
+          "anchor" : {
+            "column" : 8,
+            "row" : 31
+          },
+          "axis" : "vertical",
+          "designator" : "U4",
+          "flipped" : false,
+          "id" : "7A9C0ED9-E2CA-5C09-AD78-9534DD34285B",
+          "legCount" : 3,
+          "pinNames" : [
+            "OUT",
+            "GND",
+            "IN"
+          ],
+          "reference" : {
+            "categoryID" : "power",
+            "memberID" : "regulator"
+          },
+          "span" : 1,
+          "value" : "78L33"
+        },
+        {
+          "anchor" : {
+            "column" : 10,
+            "row" : 31
+          },
+          "axis" : "vertical",
+          "designator" : "C11",
+          "flipped" : false,
+          "id" : "F814F3DF-BAB0-5E4D-A1A1-96DCC611DE36",
+          "legCount" : 2,
+          "reference" : {
+            "categoryID" : "capacitor",
+            "memberID" : "electrolytic"
+          },
+          "span" : 2,
+          "value" : "10µF"
+        },
+        {
+          "anchor" : {
+            "column" : 2,
+            "row" : 8
+          },
+          "axis" : "vertical",
+          "designator" : "D2",
+          "flipped" : false,
+          "id" : "59F7AA41-C62B-50C1-846C-05814A67C81A",
+          "legCount" : 14,
+          "pinNames" : [
+            "GND",
+            "BCLK",
+            "GND",
+            "LRCLK (DACLRC)",
+            "GND",
+            "ADCDAT",
+            "GND",
+            "DACDAT",
+            "GND",
+            "SDA",
+            "SCL",
+            "GND",
+            "3V3",
+            "5 V"
+          ],
+          "reference" : {
+            "categoryID" : "connector",
+            "memberID" : "molexKK"
+          },
+          "span" : 1,
+          "value" : "KK 254 14-way"
+        },
+        {
+          "anchor" : {
+            "column" : 26,
+            "row" : 11
+          },
+          "axis" : "vertical",
+          "designator" : "A4",
+          "flipped" : false,
+          "id" : "9A100871-1EFD-5E3B-8317-5B7614F068AC",
+          "legCount" : 4,
+          "pinNames" : [
+            "GND",
+            "LIN1",
+            "GND",
+            "+9 V"
+          ],
+          "reference" : {
+            "categoryID" : "connector",
+            "memberID" : "jstXH"
+          },
+          "span" : 1,
+          "value" : "B4B-XH-A"
+        },
+        {
+          "anchor" : {
+            "column" : 26,
+            "row" : 16
+          },
+          "axis" : "vertical",
+          "designator" : "A5",
+          "flipped" : false,
+          "id" : "F2E4E834-3528-5C15-A719-840AEF997BBE",
+          "legCount" : 3,
+          "pinNames" : [
+            "GND",
+            "HPL",
+            "—"
+          ],
+          "reference" : {
+            "categoryID" : "connector",
+            "memberID" : "jstXH"
+          },
+          "span" : 1,
+          "value" : "B3B-XH-A"
+        },
+        {
+          "anchor" : {
+            "column" : 26,
+            "row" : 20
+          },
+          "axis" : "vertical",
+          "designator" : "A6",
+          "flipped" : false,
+          "id" : "CD82E316-9951-5F2B-950C-CC39A64AD49E",
+          "legCount" : 3,
+          "pinNames" : [
+            "GND",
+            "HPR",
+            "—"
+          ],
+          "reference" : {
+            "categoryID" : "connector",
+            "memberID" : "jstXH"
+          },
+          "span" : 1,
+          "value" : "B3B-XH-A"
+        },
+        {
+          "anchor" : {
+            "column" : 26,
+            "row" : 26
+          },
+          "axis" : "vertical",
+          "designator" : "A10",
+          "flipped" : false,
+          "id" : "F11E4222-8676-5E7E-9D89-BEBF24E8F80B",
+          "legCount" : 4,
+          "pinNames" : [
+            "GND",
+            "RIN1",
+            "GND",
+            "+9 V"
+          ],
+          "reference" : {
+            "categoryID" : "connector",
+            "memberID" : "jstXH"
+          },
+          "span" : 1,
+          "value" : "B4B-XH-A"
+        },
+        {
+          "anchor" : {
+            "column" : 26,
+            "row" : 4
+          },
+          "axis" : "vertical",
+          "designator" : "P1",
+          "flipped" : false,
+          "id" : "3CA63AFB-19CD-5426-A8DD-B1651A302BC7",
+          "legCount" : 2,
+          "pinNames" : [
+            "GND",
+            "+9 V"
+          ],
+          "reference" : {
+            "categoryID" : "connector",
+            "memberID" : "jstXH"
+          },
+          "span" : 1,
+          "value" : "B2B-XH-A"
+        },
+        {
+          "anchor" : {
+            "column" : 14,
+            "row" : 26
+          },
+          "axis" : "vertical",
+          "designator" : "VIN",
+          "flipped" : false,
+          "id" : "E10CB848-28EA-505F-BC8F-85803E1BB181",
+          "legCount" : 3,
+          "pinNames" : [
+            "Pi 5 V",
+            "VIN",
+            "78L05"
+          ],
+          "reference" : {
+            "categoryID" : "connector",
+            "memberID" : "headerVariable"
+          },
+          "span" : 1,
+          "value" : "shunt fitted"
+        },
+        {
+          "anchor" : {
+            "column" : 18,
+            "row" : 26
+          },
+          "axis" : "vertical",
+          "designator" : "AVDD",
+          "flipped" : false,
+          "id" : "510245BB-B8CC-562E-A410-3ECF330FC35E",
+          "legCount" : 2,
+          "pinNames" : [
+            "78L33",
+            "AVDD"
+          ],
+          "reference" : {
+            "categoryID" : "connector",
+            "memberID" : "headerVariable"
+          },
+          "span" : 1,
+          "value" : "open"
+        },
+        {
+          "anchor" : {
+            "column" : 22,
+            "row" : 26
+          },
+          "axis" : "vertical",
+          "designator" : "CASE",
+          "flipped" : false,
+          "id" : "B46CCC08-BE55-54D6-8C7A-8A1F9D28FC1C",
+          "legCount" : 2,
+          "pinNames" : [
+            "GND",
+            "case"
+          ],
+          "reference" : {
+            "categoryID" : "connector",
+            "memberID" : "headerVariable"
+          },
+          "span" : 1,
+          "value" : "open"
+        },
+        {
+          "anchor" : {
+            "column" : 30,
+            "row" : 12
+          },
+          "axis" : "vertical",
+          "designator" : "TP LIN1",
+          "flipped" : false,
+          "id" : "710928FC-B85E-5AB1-8D5B-907FB4A903CB",
+          "legCount" : 1,
+          "pinNames" : [
+            "LIN1"
+          ],
+          "reference" : {
+            "categoryID" : "misc",
+            "memberID" : "testpoint"
+          },
+          "span" : 1
+        },
+        {
+          "anchor" : {
+            "column" : 30,
+            "row" : 17
+          },
+          "axis" : "vertical",
+          "designator" : "TP HPL",
+          "flipped" : false,
+          "id" : "FC12010C-1B82-5C56-861C-E4126D8EA135",
+          "legCount" : 1,
+          "pinNames" : [
+            "HPL"
+          ],
+          "reference" : {
+            "categoryID" : "misc",
+            "memberID" : "testpoint"
+          },
+          "span" : 1
+        },
+        {
+          "anchor" : {
+            "column" : 30,
+            "row" : 21
+          },
+          "axis" : "vertical",
+          "designator" : "TP HPR",
+          "flipped" : false,
+          "id" : "F4712606-04ED-5E42-9E28-E8CA81CF4460",
+          "legCount" : 1,
+          "pinNames" : [
+            "HPR"
+          ],
+          "reference" : {
+            "categoryID" : "misc",
+            "memberID" : "testpoint"
+          },
+          "span" : 1
+        },
+        {
+          "anchor" : {
+            "column" : 30,
+            "row" : 8
+          },
+          "axis" : "vertical",
+          "designator" : "TP GND",
+          "flipped" : false,
+          "id" : "9743E971-8D91-58AA-8FA5-A57BC2FB90F3",
+          "legCount" : 1,
+          "pinNames" : [
+            "GND"
+          ],
+          "reference" : {
+            "categoryID" : "misc",
+            "memberID" : "testpoint"
+          },
+          "span" : 1
+        }
+      ],
+      "cutGaps" : [
+        {
+          "column" : 9,
+          "row" : 10
+        },
+        {
+          "column" : 9,
+          "row" : 11
+        },
+        {
+          "column" : 24,
+          "row" : 11
+        },
+        {
+          "column" : 9,
+          "row" : 12
+        },
+        {
+          "column" : 24,
+          "row" : 13
+        },
+        {
+          "column" : 9,
+          "row" : 14
+        },
+        {
+          "column" : 9,
+          "row" : 15
+        },
+        {
+          "column" : 9,
+          "row" : 16
+        },
+        {
+          "column" : 24,
+          "row" : 16
+        },
+        {
+          "column" : 9,
+          "row" : 17
+        },
+        {
+          "column" : 9,
+          "row" : 18
+        },
+        {
+          "column" : 24,
+          "row" : 18
+        },
+        {
+          "column" : 9,
+          "row" : 19
+        },
+        {
+          "column" : 24,
+          "row" : 19
+        },
+        {
+          "column" : 9,
+          "row" : 20
+        },
+        {
+          "column" : 9,
+          "row" : 21
+        },
+        {
+          "column" : 15,
+          "row" : 27
+        }
+      ],
+      "cutHoles" : [
+        {
+          "column" : 21,
+          "row" : 4
+        },
+        {
+          "column" : 21,
+          "row" : 5
+        },
+        {
+          "column" : 18,
+          "row" : 8
+        },
+        {
+          "column" : 18,
+          "row" : 9
+        },
+        {
+          "column" : 18,
+          "row" : 10
+        },
+        {
+          "column" : 18,
+          "row" : 11
+        },
+        {
+          "column" : 18,
+          "row" : 12
+        },
+        {
+          "column" : 18,
+          "row" : 13
+        },
+        {
+          "column" : 19,
+          "row" : 14
+        },
+        {
+          "column" : 25,
+          "row" : 14
+        },
+        {
+          "column" : 19,
+          "row" : 15
+        },
+        {
+          "column" : 20,
+          "row" : 16
+        },
+        {
+          "column" : 18,
+          "row" : 17
+        },
+        {
+          "column" : 25,
+          "row" : 17
+        },
+        {
+          "column" : 18,
+          "row" : 18
+        },
+        {
+          "column" : 15,
+          "row" : 19
+        },
+        {
+          "column" : 18,
+          "row" : 20
+        },
+        {
+          "column" : 25,
+          "row" : 20
+        },
+        {
+          "column" : 18,
+          "row" : 21
+        },
+        {
+          "column" : 25,
+          "row" : 21
+        },
+        {
+          "column" : 18,
+          "row" : 22
+        },
+        {
+          "column" : 25,
+          "row" : 22
+        },
+        {
+          "column" : 18,
+          "row" : 23
+        },
+        {
+          "column" : 15,
+          "row" : 26
+        },
+        {
+          "column" : 20,
+          "row" : 26
+        },
+        {
+          "column" : 20,
+          "row" : 27
+        },
+        {
+          "column" : 23,
+          "row" : 27
+        },
+        {
+          "column" : 20,
+          "row" : 28
+        },
+        {
+          "column" : 17,
+          "row" : 29
+        },
+        {
+          "column" : 16,
+          "row" : 33
+        }
+      ],
+      "jumpers" : [
+        {
+          "id" : "717BDA9B-A502-555F-A032-C7E91513DF1D",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 4,
+              "row" : 8
+            },
+            {
+              "column" : 4,
+              "row" : 9
+            },
+            {
+              "column" : 4,
+              "row" : 10
+            }
+          ]
+        },
+        {
+          "id" : "1CE0BB68-0666-5686-B64C-7FDAC95A5917",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 4,
+              "row" : 10
+            },
+            {
+              "column" : 4,
+              "row" : 11
+            },
+            {
+              "column" : 4,
+              "row" : 12
+            }
+          ]
+        },
+        {
+          "id" : "B140CF5C-15C5-5EE0-AC82-F160DFB1880A",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 4,
+              "row" : 12
+            },
+            {
+              "column" : 4,
+              "row" : 13
+            },
+            {
+              "column" : 4,
+              "row" : 14
+            }
+          ]
+        },
+        {
+          "id" : "4076FD1D-2877-57C1-B123-30A06EB39DA5",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 4,
+              "row" : 14
+            },
+            {
+              "column" : 4,
+              "row" : 15
+            },
+            {
+              "column" : 4,
+              "row" : 16
+            }
+          ]
+        },
+        {
+          "id" : "FA1B24E2-12B2-5120-9805-89B73446DC41",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 4,
+              "row" : 16
+            },
+            {
+              "column" : 4,
+              "row" : 17
+            },
+            {
+              "column" : 4,
+              "row" : 18
+            },
+            {
+              "column" : 4,
+              "row" : 19
+            }
+          ]
+        },
+        {
+          "id" : "1F5B12B4-09AE-5E14-86F8-F1C4E76F2A28",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 12,
+              "row" : 8
+            },
+            {
+              "column" : 12,
+              "row" : 9
+            },
+            {
+              "column" : 12,
+              "row" : 10
+            },
+            {
+              "column" : 12,
+              "row" : 11
+            },
+            {
+              "column" : 12,
+              "row" : 12
+            },
+            {
+              "column" : 12,
+              "row" : 13
+            },
+            {
+              "column" : 12,
+              "row" : 14
+            },
+            {
+              "column" : 12,
+              "row" : 15
+            },
+            {
+              "column" : 12,
+              "row" : 16
+            },
+            {
+              "column" : 12,
+              "row" : 17
+            }
+          ]
+        },
+        {
+          "id" : "7E6C7790-3E24-5FC8-8515-4FF547D27CD0",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 12,
+              "row" : 17
+            },
+            {
+              "column" : 12,
+              "row" : 18
+            }
+          ]
+        },
+        {
+          "id" : "172D545F-63D2-50DB-871D-161321318DC3",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 12,
+              "row" : 18
+            },
+            {
+              "column" : 12,
+              "row" : 19
+            },
+            {
+              "column" : 12,
+              "row" : 20
+            },
+            {
+              "column" : 12,
+              "row" : 21
+            },
+            {
+              "column" : 12,
+              "row" : 22
+            }
+          ]
+        },
+        {
+          "id" : "D4328F74-9CAE-583C-90D4-2BD3EBBCDE08",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 12,
+              "row" : 22
+            },
+            {
+              "column" : 12,
+              "row" : 23
+            }
+          ]
+        },
+        {
+          "id" : "A7E96A72-3DB3-5F00-93C6-A1B196922AAE",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 5,
+              "row" : 11
+            },
+            {
+              "column" : 5,
+              "row" : 10
+            },
+            {
+              "column" : 5,
+              "row" : 9
+            },
+            {
+              "column" : 5,
+              "row" : 8
+            },
+            {
+              "column" : 5,
+              "row" : 7
+            },
+            {
+              "column" : 5,
+              "row" : 6
+            },
+            {
+              "column" : 5,
+              "row" : 5
+            },
+            {
+              "column" : 5,
+              "row" : 4
+            },
+            {
+              "column" : 5,
+              "row" : 3
+            },
+            {
+              "column" : 5,
+              "row" : 2
+            },
+            {
+              "column" : 5,
+              "row" : 1
+            }
+          ]
+        },
+        {
+          "id" : "FB881F8F-CFAE-5B4A-B449-A5E5EDDFB021",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 5,
+              "row" : 1
+            },
+            {
+              "column" : 6,
+              "row" : 1
+            },
+            {
+              "column" : 7,
+              "row" : 1
+            },
+            {
+              "column" : 8,
+              "row" : 1
+            },
+            {
+              "column" : 9,
+              "row" : 1
+            },
+            {
+              "column" : 10,
+              "row" : 1
+            }
+          ]
+        },
+        {
+          "id" : "6AF32C08-CEDD-5D2C-AFB2-7F6FFCC6AC6D",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 10,
+              "row" : 1
+            },
+            {
+              "column" : 10,
+              "row" : 2
+            },
+            {
+              "column" : 10,
+              "row" : 3
+            },
+            {
+              "column" : 10,
+              "row" : 4
+            },
+            {
+              "column" : 10,
+              "row" : 5
+            },
+            {
+              "column" : 10,
+              "row" : 6
+            },
+            {
+              "column" : 10,
+              "row" : 7
+            },
+            {
+              "column" : 10,
+              "row" : 8
+            },
+            {
+              "column" : 10,
+              "row" : 9
+            },
+            {
+              "column" : 10,
+              "row" : 10
+            }
+          ]
+        },
+        {
+          "id" : "05560F4E-42B4-5E94-8A9B-0A350549D9BD",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 6,
+              "row" : 15
+            },
+            {
+              "column" : 6,
+              "row" : 14
+            },
+            {
+              "column" : 6,
+              "row" : 13
+            },
+            {
+              "column" : 6,
+              "row" : 12
+            },
+            {
+              "column" : 6,
+              "row" : 11
+            },
+            {
+              "column" : 6,
+              "row" : 10
+            },
+            {
+              "column" : 6,
+              "row" : 9
+            },
+            {
+              "column" : 6,
+              "row" : 8
+            },
+            {
+              "column" : 6,
+              "row" : 7
+            },
+            {
+              "column" : 6,
+              "row" : 6
+            },
+            {
+              "column" : 6,
+              "row" : 5
+            },
+            {
+              "column" : 6,
+              "row" : 4
+            },
+            {
+              "column" : 6,
+              "row" : 3
+            },
+            {
+              "column" : 6,
+              "row" : 2
+            }
+          ]
+        },
+        {
+          "id" : "B0CF7160-9203-5BF2-8654-B19C3DDD94B6",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 6,
+              "row" : 2
+            },
+            {
+              "column" : 7,
+              "row" : 2
+            },
+            {
+              "column" : 8,
+              "row" : 2
+            },
+            {
+              "column" : 9,
+              "row" : 2
+            },
+            {
+              "column" : 10,
+              "row" : 2
+            },
+            {
+              "column" : 11,
+              "row" : 2
+            }
+          ]
+        },
+        {
+          "id" : "4A5F2889-9898-5F93-801A-3B214AC2269C",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 11,
+              "row" : 2
+            },
+            {
+              "column" : 11,
+              "row" : 3
+            },
+            {
+              "column" : 11,
+              "row" : 4
+            },
+            {
+              "column" : 11,
+              "row" : 5
+            },
+            {
+              "column" : 11,
+              "row" : 6
+            },
+            {
+              "column" : 11,
+              "row" : 7
+            },
+            {
+              "column" : 11,
+              "row" : 8
+            },
+            {
+              "column" : 11,
+              "row" : 9
+            },
+            {
+              "column" : 11,
+              "row" : 10
+            },
+            {
+              "column" : 11,
+              "row" : 11
+            }
+          ]
+        },
+        {
+          "id" : "E90FFD4F-4355-507A-AD16-49972F230A9F",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 7,
+              "row" : 17
+            },
+            {
+              "column" : 7,
+              "row" : 16
+            },
+            {
+              "column" : 7,
+              "row" : 15
+            },
+            {
+              "column" : 7,
+              "row" : 14
+            },
+            {
+              "column" : 7,
+              "row" : 13
+            },
+            {
+              "column" : 7,
+              "row" : 12
+            },
+            {
+              "column" : 7,
+              "row" : 11
+            },
+            {
+              "column" : 7,
+              "row" : 10
+            },
+            {
+              "column" : 7,
+              "row" : 9
+            },
+            {
+              "column" : 7,
+              "row" : 8
+            },
+            {
+              "column" : 7,
+              "row" : 7
+            },
+            {
+              "column" : 7,
+              "row" : 6
+            },
+            {
+              "column" : 7,
+              "row" : 5
+            },
+            {
+              "column" : 7,
+              "row" : 4
+            },
+            {
+              "column" : 7,
+              "row" : 3
+            }
+          ]
+        },
+        {
+          "id" : "795DC8C0-2B57-5526-A27C-A93E0E54B75B",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 7,
+              "row" : 3
+            },
+            {
+              "column" : 8,
+              "row" : 3
+            },
+            {
+              "column" : 9,
+              "row" : 3
+            },
+            {
+              "column" : 10,
+              "row" : 3
+            },
+            {
+              "column" : 11,
+              "row" : 3
+            },
+            {
+              "column" : 12,
+              "row" : 3
+            },
+            {
+              "column" : 13,
+              "row" : 3
+            },
+            {
+              "column" : 14,
+              "row" : 3
+            },
+            {
+              "column" : 15,
+              "row" : 3
+            }
+          ]
+        },
+        {
+          "id" : "B9A0BF61-82B3-5DE1-9A60-534B9FE5C707",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 15,
+              "row" : 3
+            },
+            {
+              "column" : 15,
+              "row" : 4
+            },
+            {
+              "column" : 15,
+              "row" : 5
+            },
+            {
+              "column" : 15,
+              "row" : 6
+            },
+            {
+              "column" : 15,
+              "row" : 7
+            },
+            {
+              "column" : 15,
+              "row" : 8
+            },
+            {
+              "column" : 15,
+              "row" : 9
+            },
+            {
+              "column" : 15,
+              "row" : 10
+            },
+            {
+              "column" : 15,
+              "row" : 11
+            },
+            {
+              "column" : 15,
+              "row" : 12
+            },
+            {
+              "column" : 15,
+              "row" : 13
+            },
+            {
+              "column" : 15,
+              "row" : 14
+            },
+            {
+              "column" : 15,
+              "row" : 15
+            }
+          ]
+        },
+        {
+          "id" : "52B005A3-F230-5130-904F-1B3063D2E26B",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 8,
+              "row" : 18
+            },
+            {
+              "column" : 8,
+              "row" : 17
+            },
+            {
+              "column" : 8,
+              "row" : 16
+            },
+            {
+              "column" : 8,
+              "row" : 15
+            },
+            {
+              "column" : 8,
+              "row" : 14
+            },
+            {
+              "column" : 8,
+              "row" : 13
+            },
+            {
+              "column" : 8,
+              "row" : 12
+            },
+            {
+              "column" : 8,
+              "row" : 11
+            },
+            {
+              "column" : 8,
+              "row" : 10
+            },
+            {
+              "column" : 8,
+              "row" : 9
+            },
+            {
+              "column" : 8,
+              "row" : 8
+            },
+            {
+              "column" : 8,
+              "row" : 7
+            },
+            {
+              "column" : 8,
+              "row" : 6
+            },
+            {
+              "column" : 8,
+              "row" : 5
+            },
+            {
+              "column" : 8,
+              "row" : 4
+            }
+          ]
+        },
+        {
+          "id" : "72A0BF00-B47F-5D5D-8845-A4A7F03F8403",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 8,
+              "row" : 4
+            },
+            {
+              "column" : 9,
+              "row" : 4
+            },
+            {
+              "column" : 10,
+              "row" : 4
+            },
+            {
+              "column" : 11,
+              "row" : 4
+            },
+            {
+              "column" : 12,
+              "row" : 4
+            },
+            {
+              "column" : 13,
+              "row" : 4
+            },
+            {
+              "column" : 14,
+              "row" : 4
+            },
+            {
+              "column" : 15,
+              "row" : 4
+            },
+            {
+              "column" : 16,
+              "row" : 4
+            }
+          ]
+        },
+        {
+          "id" : "7DA4424A-B9C9-577C-B88C-CF4C4A41D713",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 16,
+              "row" : 4
+            },
+            {
+              "column" : 16,
+              "row" : 5
+            },
+            {
+              "column" : 16,
+              "row" : 6
+            },
+            {
+              "column" : 16,
+              "row" : 7
+            },
+            {
+              "column" : 16,
+              "row" : 8
+            },
+            {
+              "column" : 16,
+              "row" : 9
+            },
+            {
+              "column" : 16,
+              "row" : 10
+            },
+            {
+              "column" : 16,
+              "row" : 11
+            },
+            {
+              "column" : 16,
+              "row" : 12
+            },
+            {
+              "column" : 16,
+              "row" : 13
+            },
+            {
+              "column" : 16,
+              "row" : 14
+            }
+          ]
+        },
+        {
+          "id" : "C79ACDC1-D713-513F-BF76-9606D5D7DDDF",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 9,
+              "row" : 20
+            },
+            {
+              "column" : 9,
+              "row" : 19
+            },
+            {
+              "column" : 9,
+              "row" : 18
+            },
+            {
+              "column" : 9,
+              "row" : 17
+            },
+            {
+              "column" : 9,
+              "row" : 16
+            },
+            {
+              "column" : 9,
+              "row" : 15
+            },
+            {
+              "column" : 9,
+              "row" : 14
+            },
+            {
+              "column" : 9,
+              "row" : 13
+            },
+            {
+              "column" : 9,
+              "row" : 12
+            },
+            {
+              "column" : 9,
+              "row" : 11
+            },
+            {
+              "column" : 9,
+              "row" : 10
+            },
+            {
+              "column" : 9,
+              "row" : 9
+            },
+            {
+              "column" : 9,
+              "row" : 8
+            },
+            {
+              "column" : 9,
+              "row" : 7
+            },
+            {
+              "column" : 9,
+              "row" : 6
+            },
+            {
+              "column" : 9,
+              "row" : 5
+            }
+          ]
+        },
+        {
+          "id" : "AC3DB728-AC97-555C-8C6B-09EFC17E5FBF",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 9,
+              "row" : 5
+            },
+            {
+              "column" : 10,
+              "row" : 5
+            },
+            {
+              "column" : 11,
+              "row" : 5
+            },
+            {
+              "column" : 12,
+              "row" : 5
+            },
+            {
+              "column" : 13,
+              "row" : 5
+            },
+            {
+              "column" : 14,
+              "row" : 5
+            },
+            {
+              "column" : 15,
+              "row" : 5
+            },
+            {
+              "column" : 16,
+              "row" : 5
+            },
+            {
+              "column" : 17,
+              "row" : 5
+            }
+          ]
+        },
+        {
+          "id" : "A42C26CD-B3ED-5F7E-9BC8-264681BC62B9",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 17,
+              "row" : 5
+            },
+            {
+              "column" : 17,
+              "row" : 6
+            },
+            {
+              "column" : 17,
+              "row" : 7
+            },
+            {
+              "column" : 17,
+              "row" : 8
+            },
+            {
+              "column" : 17,
+              "row" : 9
+            },
+            {
+              "column" : 17,
+              "row" : 10
+            },
+            {
+              "column" : 17,
+              "row" : 11
+            },
+            {
+              "column" : 17,
+              "row" : 12
+            },
+            {
+              "column" : 17,
+              "row" : 13
+            },
+            {
+              "column" : 17,
+              "row" : 14
+            },
+            {
+              "column" : 17,
+              "row" : 15
+            },
+            {
+              "column" : 17,
+              "row" : 16
+            }
+          ]
+        },
+        {
+          "id" : "72958C84-B914-5B23-AE41-E6A32A18DA8B",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 5,
+              "row" : 21
+            },
+            {
+              "column" : 5,
+              "row" : 22
+            },
+            {
+              "column" : 5,
+              "row" : 23
+            },
+            {
+              "column" : 5,
+              "row" : 24
+            },
+            {
+              "column" : 5,
+              "row" : 25
+            },
+            {
+              "column" : 5,
+              "row" : 26
+            },
+            {
+              "column" : 5,
+              "row" : 27
+            }
+          ]
+        },
+        {
+          "id" : "C3E4117A-318C-5DC0-B43C-C241050AF122",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 5,
+              "row" : 27
+            },
+            {
+              "column" : 6,
+              "row" : 27
+            },
+            {
+              "column" : 7,
+              "row" : 27
+            },
+            {
+              "column" : 8,
+              "row" : 27
+            },
+            {
+              "column" : 9,
+              "row" : 27
+            },
+            {
+              "column" : 10,
+              "row" : 27
+            },
+            {
+              "column" : 11,
+              "row" : 27
+            },
+            {
+              "column" : 12,
+              "row" : 27
+            }
+          ]
+        },
+        {
+          "id" : "AC11DB66-2A91-59F2-9B74-B85D887A1B78",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 12,
+              "row" : 26
+            },
+            {
+              "column" : 12,
+              "row" : 27
+            }
+          ]
+        },
+        {
+          "id" : "5438198D-BCD2-5C0F-AC38-0FAC272F109B",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 11,
+              "row" : 20
+            },
+            {
+              "column" : 11,
+              "row" : 21
+            },
+            {
+              "column" : 11,
+              "row" : 22
+            },
+            {
+              "column" : 11,
+              "row" : 23
+            },
+            {
+              "column" : 11,
+              "row" : 24
+            },
+            {
+              "column" : 11,
+              "row" : 25
+            },
+            {
+              "column" : 11,
+              "row" : 26
+            },
+            {
+              "column" : 11,
+              "row" : 27
+            }
+          ]
+        },
+        {
+          "id" : "7251C97B-67C1-5CB9-83C8-9E4964260D75",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 16,
+              "row" : 19
+            },
+            {
+              "column" : 16,
+              "row" : 20
+            },
+            {
+              "column" : 16,
+              "row" : 21
+            },
+            {
+              "column" : 16,
+              "row" : 22
+            },
+            {
+              "column" : 16,
+              "row" : 23
+            },
+            {
+              "column" : 16,
+              "row" : 24
+            },
+            {
+              "column" : 16,
+              "row" : 25
+            },
+            {
+              "column" : 16,
+              "row" : 26
+            },
+            {
+              "column" : 16,
+              "row" : 27
+            }
+          ]
+        },
+        {
+          "id" : "1FA7B0A9-7A31-5914-A256-FFCC03D46440",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 16,
+              "row" : 31
+            },
+            {
+              "column" : 16,
+              "row" : 30
+            },
+            {
+              "column" : 16,
+              "row" : 29
+            },
+            {
+              "column" : 16,
+              "row" : 28
+            },
+            {
+              "column" : 16,
+              "row" : 27
+            },
+            {
+              "column" : 16,
+              "row" : 26
+            }
+          ]
+        },
+        {
+          "id" : "FA8478DC-835B-5CBD-9A64-A2219FD41A30",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 4,
+              "row" : 30
+            },
+            {
+              "column" : 4,
+              "row" : 31
+            },
+            {
+              "column" : 4,
+              "row" : 32
+            },
+            {
+              "column" : 4,
+              "row" : 33
+            },
+            {
+              "column" : 4,
+              "row" : 34
+            },
+            {
+              "column" : 4,
+              "row" : 35
+            }
+          ]
+        },
+        {
+          "id" : "FCC0D760-3BAB-54F4-9C87-E970D1C2DFCF",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 4,
+              "row" : 35
+            },
+            {
+              "column" : 5,
+              "row" : 35
+            },
+            {
+              "column" : 6,
+              "row" : 35
+            },
+            {
+              "column" : 7,
+              "row" : 35
+            },
+            {
+              "column" : 8,
+              "row" : 35
+            },
+            {
+              "column" : 9,
+              "row" : 35
+            },
+            {
+              "column" : 10,
+              "row" : 35
+            },
+            {
+              "column" : 11,
+              "row" : 35
+            },
+            {
+              "column" : 12,
+              "row" : 35
+            },
+            {
+              "column" : 13,
+              "row" : 35
+            },
+            {
+              "column" : 14,
+              "row" : 35
+            },
+            {
+              "column" : 15,
+              "row" : 35
+            },
+            {
+              "column" : 16,
+              "row" : 35
+            },
+            {
+              "column" : 17,
+              "row" : 35
+            },
+            {
+              "column" : 18,
+              "row" : 35
+            },
+            {
+              "column" : 19,
+              "row" : 35
+            },
+            {
+              "column" : 20,
+              "row" : 35
+            },
+            {
+              "column" : 21,
+              "row" : 35
+            },
+            {
+              "column" : 22,
+              "row" : 35
+            },
+            {
+              "column" : 23,
+              "row" : 35
+            },
+            {
+              "column" : 24,
+              "row" : 35
+            },
+            {
+              "column" : 25,
+              "row" : 35
+            },
+            {
+              "column" : 26,
+              "row" : 35
+            },
+            {
+              "column" : 27,
+              "row" : 35
+            },
+            {
+              "column" : 28,
+              "row" : 35
+            },
+            {
+              "column" : 29,
+              "row" : 35
+            },
+            {
+              "column" : 30,
+              "row" : 35
+            },
+            {
+              "column" : 31,
+              "row" : 35
+            }
+          ]
+        },
+        {
+          "id" : "FD734FC6-D378-5E97-8801-CD7F17A60713",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 31,
+              "row" : 35
+            },
+            {
+              "column" : 31,
+              "row" : 34
+            },
+            {
+              "column" : 31,
+              "row" : 33
+            },
+            {
+              "column" : 31,
+              "row" : 32
+            },
+            {
+              "column" : 31,
+              "row" : 31
+            },
+            {
+              "column" : 31,
+              "row" : 30
+            },
+            {
+              "column" : 31,
+              "row" : 29
+            }
+          ]
+        },
+        {
+          "id" : "78C2E0E6-46C2-5ADF-8B36-BDC4EB9726AF",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 31,
+              "row" : 29
+            },
+            {
+              "column" : 31,
+              "row" : 28
+            },
+            {
+              "column" : 31,
+              "row" : 27
+            },
+            {
+              "column" : 31,
+              "row" : 26
+            },
+            {
+              "column" : 31,
+              "row" : 25
+            },
+            {
+              "column" : 31,
+              "row" : 24
+            },
+            {
+              "column" : 31,
+              "row" : 23
+            },
+            {
+              "column" : 31,
+              "row" : 22
+            },
+            {
+              "column" : 31,
+              "row" : 21
+            },
+            {
+              "column" : 31,
+              "row" : 20
+            },
+            {
+              "column" : 31,
+              "row" : 19
+            },
+            {
+              "column" : 31,
+              "row" : 18
+            },
+            {
+              "column" : 31,
+              "row" : 17
+            },
+            {
+              "column" : 31,
+              "row" : 16
+            },
+            {
+              "column" : 31,
+              "row" : 15
+            },
+            {
+              "column" : 31,
+              "row" : 14
+            }
+          ]
+        },
+        {
+          "id" : "F7BA8347-D43C-5B03-9542-91C6D512B2D9",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 31,
+              "row" : 14
+            },
+            {
+              "column" : 31,
+              "row" : 13
+            },
+            {
+              "column" : 31,
+              "row" : 12
+            },
+            {
+              "column" : 31,
+              "row" : 11
+            },
+            {
+              "column" : 31,
+              "row" : 10
+            },
+            {
+              "column" : 31,
+              "row" : 9
+            },
+            {
+              "column" : 31,
+              "row" : 8
+            },
+            {
+              "column" : 31,
+              "row" : 7
+            },
+            {
+              "column" : 31,
+              "row" : 6
+            },
+            {
+              "column" : 31,
+              "row" : 5
+            }
+          ]
+        },
+        {
+          "id" : "AD621040-A6AF-5ADC-BF60-DBF0C6BD46D3",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 9,
+              "row" : 33
+            },
+            {
+              "column" : 9,
+              "row" : 34
+            },
+            {
+              "column" : 9,
+              "row" : 35
+            }
+          ]
+        },
+        {
+          "id" : "90E4ED37-BFCC-5B45-91E3-54C29EC3296E",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 29,
+              "row" : 4
+            },
+            {
+              "column" : 29,
+              "row" : 5
+            },
+            {
+              "column" : 29,
+              "row" : 6
+            },
+            {
+              "column" : 29,
+              "row" : 7
+            },
+            {
+              "column" : 29,
+              "row" : 8
+            }
+          ]
+        },
+        {
+          "id" : "72C5FF2B-FE3D-512D-B584-CDA60B98BE99",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 29,
+              "row" : 8
+            },
+            {
+              "column" : 29,
+              "row" : 9
+            },
+            {
+              "column" : 29,
+              "row" : 10
+            },
+            {
+              "column" : 29,
+              "row" : 11
+            }
+          ]
+        },
+        {
+          "id" : "A4D04AAD-D6BE-539F-9C42-3B328BE4A744",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 29,
+              "row" : 11
+            },
+            {
+              "column" : 29,
+              "row" : 12
+            },
+            {
+              "column" : 29,
+              "row" : 13
+            }
+          ]
+        },
+        {
+          "id" : "E1D20D8A-33D9-5283-A62A-9DD5D49421FA",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 29,
+              "row" : 13
+            },
+            {
+              "column" : 29,
+              "row" : 14
+            },
+            {
+              "column" : 29,
+              "row" : 15
+            },
+            {
+              "column" : 29,
+              "row" : 16
+            }
+          ]
+        },
+        {
+          "id" : "BABBBB04-EE07-5903-A460-62EE36DB6944",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 29,
+              "row" : 16
+            },
+            {
+              "column" : 29,
+              "row" : 17
+            },
+            {
+              "column" : 29,
+              "row" : 18
+            },
+            {
+              "column" : 29,
+              "row" : 19
+            }
+          ]
+        },
+        {
+          "id" : "F7FA03BC-B42B-5CF6-97B4-36E7A62C7E6C",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 29,
+              "row" : 19
+            },
+            {
+              "column" : 29,
+              "row" : 20
+            }
+          ]
+        },
+        {
+          "id" : "80E25438-8C76-5EDB-8421-85BA42316C28",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 29,
+              "row" : 20
+            },
+            {
+              "column" : 29,
+              "row" : 21
+            },
+            {
+              "column" : 29,
+              "row" : 22
+            },
+            {
+              "column" : 29,
+              "row" : 23
+            },
+            {
+              "column" : 29,
+              "row" : 24
+            },
+            {
+              "column" : 29,
+              "row" : 25
+            },
+            {
+              "column" : 29,
+              "row" : 26
+            }
+          ]
+        },
+        {
+          "id" : "4CCEF3E4-7958-577F-BB57-993754A9E8DA",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 29,
+              "row" : 26
+            },
+            {
+              "column" : 29,
+              "row" : 27
+            },
+            {
+              "column" : 29,
+              "row" : 28
+            }
+          ]
+        },
+        {
+          "id" : "7B9244B7-A769-50B8-A855-1B4BE484B7FC",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 2,
+              "row" : 29
+            },
+            {
+              "column" : 2,
+              "row" : 30
+            },
+            {
+              "column" : 2,
+              "row" : 31
+            },
+            {
+              "column" : 2,
+              "row" : 32
+            },
+            {
+              "column" : 2,
+              "row" : 33
+            },
+            {
+              "column" : 2,
+              "row" : 34
+            }
+          ]
+        },
+        {
+          "id" : "D159EF4E-F1B5-5FE5-B7F6-32DE2F293205",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 2,
+              "row" : 34
+            },
+            {
+              "column" : 3,
+              "row" : 34
+            },
+            {
+              "column" : 4,
+              "row" : 34
+            },
+            {
+              "column" : 5,
+              "row" : 34
+            },
+            {
+              "column" : 6,
+              "row" : 34
+            },
+            {
+              "column" : 7,
+              "row" : 34
+            },
+            {
+              "column" : 8,
+              "row" : 34
+            },
+            {
+              "column" : 9,
+              "row" : 34
+            },
+            {
+              "column" : 10,
+              "row" : 34
+            },
+            {
+              "column" : 11,
+              "row" : 34
+            },
+            {
+              "column" : 12,
+              "row" : 34
+            },
+            {
+              "column" : 13,
+              "row" : 34
+            },
+            {
+              "column" : 14,
+              "row" : 34
+            },
+            {
+              "column" : 15,
+              "row" : 34
+            },
+            {
+              "column" : 16,
+              "row" : 34
+            },
+            {
+              "column" : 17,
+              "row" : 34
+            },
+            {
+              "column" : 18,
+              "row" : 34
+            },
+            {
+              "column" : 19,
+              "row" : 34
+            },
+            {
+              "column" : 20,
+              "row" : 34
+            },
+            {
+              "column" : 21,
+              "row" : 34
+            },
+            {
+              "column" : 22,
+              "row" : 34
+            },
+            {
+              "column" : 23,
+              "row" : 34
+            },
+            {
+              "column" : 24,
+              "row" : 34
+            },
+            {
+              "column" : 25,
+              "row" : 34
+            },
+            {
+              "column" : 26,
+              "row" : 34
+            },
+            {
+              "column" : 27,
+              "row" : 34
+            },
+            {
+              "column" : 28,
+              "row" : 34
+            },
+            {
+              "column" : 29,
+              "row" : 34
+            }
+          ]
+        },
+        {
+          "id" : "A8F1024B-7B20-5166-A54F-FD699912CBA3",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 29,
+              "row" : 34
+            },
+            {
+              "column" : 29,
+              "row" : 33
+            },
+            {
+              "column" : 29,
+              "row" : 32
+            },
+            {
+              "column" : 29,
+              "row" : 31
+            },
+            {
+              "column" : 29,
+              "row" : 30
+            },
+            {
+              "column" : 29,
+              "row" : 29
+            },
+            {
+              "column" : 29,
+              "row" : 28
+            }
+          ]
+        },
+        {
+          "id" : "F4D8BB63-220E-5225-A390-359E2BCA1F2D",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 7,
+              "row" : 32
+            },
+            {
+              "column" : 7,
+              "row" : 33
+            },
+            {
+              "column" : 7,
+              "row" : 34
+            }
+          ]
+        },
+        {
+          "id" : "183CE556-2EAB-59D0-811E-0523E61B4F32",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 24,
+              "row" : 16
+            },
+            {
+              "column" : 24,
+              "row" : 15
+            },
+            {
+              "column" : 24,
+              "row" : 14
+            },
+            {
+              "column" : 24,
+              "row" : 13
+            },
+            {
+              "column" : 24,
+              "row" : 12
+            },
+            {
+              "column" : 24,
+              "row" : 11
+            },
+            {
+              "column" : 24,
+              "row" : 10
+            },
+            {
+              "column" : 24,
+              "row" : 9
+            },
+            {
+              "column" : 24,
+              "row" : 8
+            },
+            {
+              "column" : 24,
+              "row" : 7
+            }
+          ]
+        },
+        {
+          "id" : "9BC2C060-8F43-50A6-91B5-6C7303474ED8",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 24,
+              "row" : 7
+            },
+            {
+              "column" : 25,
+              "row" : 7
+            },
+            {
+              "column" : 26,
+              "row" : 7
+            },
+            {
+              "column" : 27,
+              "row" : 7
+            },
+            {
+              "column" : 28,
+              "row" : 7
+            }
+          ]
+        },
+        {
+          "id" : "08F577AC-53A9-563C-8E60-42FB3BA82599",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 28,
+              "row" : 7
+            },
+            {
+              "column" : 28,
+              "row" : 8
+            },
+            {
+              "column" : 28,
+              "row" : 9
+            },
+            {
+              "column" : 28,
+              "row" : 10
+            },
+            {
+              "column" : 28,
+              "row" : 11
+            },
+            {
+              "column" : 28,
+              "row" : 12
+            },
+            {
+              "column" : 28,
+              "row" : 13
+            },
+            {
+              "column" : 28,
+              "row" : 14
+            },
+            {
+              "column" : 28,
+              "row" : 15
+            },
+            {
+              "column" : 28,
+              "row" : 16
+            },
+            {
+              "column" : 28,
+              "row" : 17
+            }
+          ]
+        },
+        {
+          "id" : "8DA424AE-1128-5949-B103-378040C815AB",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 24,
+              "row" : 18
+            },
+            {
+              "column" : 24,
+              "row" : 19
+            },
+            {
+              "column" : 24,
+              "row" : 20
+            },
+            {
+              "column" : 24,
+              "row" : 21
+            },
+            {
+              "column" : 24,
+              "row" : 22
+            },
+            {
+              "column" : 24,
+              "row" : 23
+            },
+            {
+              "column" : 24,
+              "row" : 24
+            }
+          ]
+        },
+        {
+          "id" : "3FD3AF67-AD8C-5325-B23E-DBEF55595F6F",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 24,
+              "row" : 24
+            },
+            {
+              "column" : 25,
+              "row" : 24
+            },
+            {
+              "column" : 26,
+              "row" : 24
+            },
+            {
+              "column" : 27,
+              "row" : 24
+            },
+            {
+              "column" : 28,
+              "row" : 24
+            }
+          ]
+        },
+        {
+          "id" : "CE52B1DE-AAA4-5557-AA11-A349CE66FFD1",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 28,
+              "row" : 24
+            },
+            {
+              "column" : 28,
+              "row" : 23
+            },
+            {
+              "column" : 28,
+              "row" : 22
+            },
+            {
+              "column" : 28,
+              "row" : 21
+            }
+          ]
+        },
+        {
+          "id" : "3E030C8F-701C-5747-B1DC-508BAB7B7373",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 24,
+              "row" : 11
+            },
+            {
+              "column" : 24,
+              "row" : 12
+            },
+            {
+              "column" : 24,
+              "row" : 13
+            },
+            {
+              "column" : 24,
+              "row" : 14
+            },
+            {
+              "column" : 24,
+              "row" : 15
+            },
+            {
+              "column" : 24,
+              "row" : 16
+            },
+            {
+              "column" : 24,
+              "row" : 17
+            },
+            {
+              "column" : 24,
+              "row" : 18
+            },
+            {
+              "column" : 24,
+              "row" : 19
+            },
+            {
+              "column" : 24,
+              "row" : 20
+            },
+            {
+              "column" : 24,
+              "row" : 21
+            },
+            {
+              "column" : 24,
+              "row" : 22
+            },
+            {
+              "column" : 24,
+              "row" : 23
+            },
+            {
+              "column" : 24,
+              "row" : 24
+            },
+            {
+              "column" : 24,
+              "row" : 25
+            },
+            {
+              "column" : 24,
+              "row" : 26
+            },
+            {
+              "column" : 24,
+              "row" : 27
+            },
+            {
+              "column" : 24,
+              "row" : 28
+            },
+            {
+              "column" : 24,
+              "row" : 29
+            },
+            {
+              "column" : 24,
+              "row" : 30
+            },
+            {
+              "column" : 24,
+              "row" : 31
+            },
+            {
+              "column" : 24,
+              "row" : 32
+            },
+            {
+              "column" : 24,
+              "row" : 33
+            }
+          ]
+        },
+        {
+          "id" : "B044966A-615A-5237-8F47-C8AEC49D3D2F",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 24,
+              "row" : 33
+            },
+            {
+              "column" : 25,
+              "row" : 33
+            },
+            {
+              "column" : 26,
+              "row" : 33
+            },
+            {
+              "column" : 27,
+              "row" : 33
+            },
+            {
+              "column" : 28,
+              "row" : 33
+            }
+          ]
+        },
+        {
+          "id" : "92AB5A53-835B-5691-939A-B4AA1B9A4403",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 28,
+              "row" : 33
+            },
+            {
+              "column" : 28,
+              "row" : 32
+            },
+            {
+              "column" : 28,
+              "row" : 31
+            },
+            {
+              "column" : 28,
+              "row" : 30
+            },
+            {
+              "column" : 28,
+              "row" : 29
+            },
+            {
+              "column" : 28,
+              "row" : 28
+            },
+            {
+              "column" : 28,
+              "row" : 27
+            }
+          ]
+        }
+      ],
+      "mountHoles" : [
+        {
+          "column" : 1,
+          "row" : 24
+        },
+        {
+          "column" : 7,
+          "row" : 24
+        }
+      ],
+      "rows" : 36,
+      "solderedHoles" : [
+        {
+          "column" : 26,
+          "row" : 4
+        },
+        {
+          "column" : 26,
+          "row" : 5
+        },
+        {
+          "column" : 2,
+          "row" : 8
+        },
+        {
+          "column" : 14,
+          "row" : 8
+        },
+        {
+          "column" : 23,
+          "row" : 8
+        },
+        {
+          "column" : 30,
+          "row" : 8
+        },
+        {
+          "column" : 2,
+          "row" : 9
+        },
+        {
+          "column" : 14,
+          "row" : 9
+        },
+        {
+          "column" : 23,
+          "row" : 9
+        },
+        {
+          "column" : 2,
+          "row" : 10
+        },
+        {
+          "column" : 14,
+          "row" : 10
+        },
+        {
+          "column" : 23,
+          "row" : 10
+        },
+        {
+          "column" : 2,
+          "row" : 11
+        },
+        {
+          "column" : 14,
+          "row" : 11
+        },
+        {
+          "column" : 23,
+          "row" : 11
+        },
+        {
+          "column" : 26,
+          "row" : 11
+        },
+        {
+          "column" : 2,
+          "row" : 12
+        },
+        {
+          "column" : 14,
+          "row" : 12
+        },
+        {
+          "column" : 23,
+          "row" : 12
+        },
+        {
+          "column" : 26,
+          "row" : 12
+        },
+        {
+          "column" : 30,
+          "row" : 12
+        },
+        {
+          "column" : 2,
+          "row" : 13
+        },
+        {
+          "column" : 14,
+          "row" : 13
+        },
+        {
+          "column" : 23,
+          "row" : 13
+        },
+        {
+          "column" : 26,
+          "row" : 13
+        },
+        {
+          "column" : 2,
+          "row" : 14
+        },
+        {
+          "column" : 14,
+          "row" : 14
+        },
+        {
+          "column" : 23,
+          "row" : 14
+        },
+        {
+          "column" : 26,
+          "row" : 14
+        },
+        {
+          "column" : 2,
+          "row" : 15
+        },
+        {
+          "column" : 14,
+          "row" : 15
+        },
+        {
+          "column" : 23,
+          "row" : 15
+        },
+        {
+          "column" : 2,
+          "row" : 16
+        },
+        {
+          "column" : 14,
+          "row" : 16
+        },
+        {
+          "column" : 23,
+          "row" : 16
+        },
+        {
+          "column" : 26,
+          "row" : 16
+        },
+        {
+          "column" : 2,
+          "row" : 17
+        },
+        {
+          "column" : 14,
+          "row" : 17
+        },
+        {
+          "column" : 23,
+          "row" : 17
+        },
+        {
+          "column" : 26,
+          "row" : 17
+        },
+        {
+          "column" : 30,
+          "row" : 17
+        },
+        {
+          "column" : 2,
+          "row" : 18
+        },
+        {
+          "column" : 14,
+          "row" : 18
+        },
+        {
+          "column" : 23,
+          "row" : 18
+        },
+        {
+          "column" : 26,
+          "row" : 18
+        },
+        {
+          "column" : 2,
+          "row" : 19
+        },
+        {
+          "column" : 14,
+          "row" : 19
+        },
+        {
+          "column" : 23,
+          "row" : 19
+        },
+        {
+          "column" : 2,
+          "row" : 20
+        },
+        {
+          "column" : 14,
+          "row" : 20
+        },
+        {
+          "column" : 23,
+          "row" : 20
+        },
+        {
+          "column" : 26,
+          "row" : 20
+        },
+        {
+          "column" : 2,
+          "row" : 21
+        },
+        {
+          "column" : 14,
+          "row" : 21
+        },
+        {
+          "column" : 23,
+          "row" : 21
+        },
+        {
+          "column" : 26,
+          "row" : 21
+        },
+        {
+          "column" : 30,
+          "row" : 21
+        },
+        {
+          "column" : 14,
+          "row" : 22
+        },
+        {
+          "column" : 23,
+          "row" : 22
+        },
+        {
+          "column" : 26,
+          "row" : 22
+        },
+        {
+          "column" : 14,
+          "row" : 23
+        },
+        {
+          "column" : 23,
+          "row" : 23
+        },
+        {
+          "column" : 14,
+          "row" : 26
+        },
+        {
+          "column" : 18,
+          "row" : 26
+        },
+        {
+          "column" : 22,
+          "row" : 26
+        },
+        {
+          "column" : 26,
+          "row" : 26
+        },
+        {
+          "column" : 14,
+          "row" : 27
+        },
+        {
+          "column" : 18,
+          "row" : 27
+        },
+        {
+          "column" : 22,
+          "row" : 27
+        },
+        {
+          "column" : 26,
+          "row" : 27
+        },
+        {
+          "column" : 3,
+          "row" : 28
+        },
+        {
+          "column" : 7,
+          "row" : 28
+        },
+        {
+          "column" : 14,
+          "row" : 28
+        },
+        {
+          "column" : 26,
+          "row" : 28
+        },
+        {
+          "column" : 3,
+          "row" : 29
+        },
+        {
+          "column" : 7,
+          "row" : 29
+        },
+        {
+          "column" : 26,
+          "row" : 29
+        },
+        {
+          "column" : 3,
+          "row" : 30
+        },
+        {
+          "column" : 8,
+          "row" : 31
+        },
+        {
+          "column" : 10,
+          "row" : 31
+        },
+        {
+          "column" : 8,
+          "row" : 32
+        },
+        {
+          "column" : 10,
+          "row" : 32
+        },
+        {
+          "column" : 8,
+          "row" : 33
+        }
+      ]
+    },
+    "createdAt" : 814297682.0,
+    "history" : {
+      "cursor" : 0,
+      "entries" : []
+    },
+    "modifiedAt" : 814297682.0,
+    "view" : {
+      "orientation" : 0,
+      "panX" : 0,
+      "panY" : 0,
+      "side" : "top"
+    }
+  }
+}

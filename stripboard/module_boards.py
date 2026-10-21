@@ -11,6 +11,8 @@ pitch sits in the 2.54 mm holes; on a header this short the difference disappear
 holes.  The standoff holes are drilled 2.5 mm, for M2.5 nylon standoffs.
 
     python3 stripboard/module_boards.py
+
+`stripboard/stripmaster_export.py` writes three of these boards as stripmaster documents.
 """
 import sys
 from pathlib import Path
