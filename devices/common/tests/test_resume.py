@@ -94,6 +94,47 @@ class SaveRule(unittest.TestCase):
         self.assertTrue(os.path.exists(prev))
         self.assertEqual(json.loads(open(prev).read())["name"], "Crunch Lead")
 
+    def test_a_clients_view_node_is_never_saved(self):
+        # The tuner's node is mounted by a client while its view is up, and its output is silence
+        # (namchain docs/tuner.md). Saved as it stands, a power cycle would bring the pedal back
+        # muted, playing a node no editor draws -- so the record keeps the chain it had without it.
+        self.engine.document = {
+            "name": "Crunch Lead",
+            "chains": [{
+                "id": "main",
+                "nodes": [
+                    {"id": "in", "type": "nc.input"},
+                    {"id": "tuner", "type": "nc.tuner", "meta": {"ephemeral": "tuner"}},
+                    {"id": "amp", "type": "nc.nam", "model": "A2-Lite"},
+                    {"id": "out", "type": "nc.output"},
+                ],
+                "connections": [
+                    {"from": "in", "to": "tuner"},
+                    {"from": "tuner", "to": "amp"},
+                    {"from": "amp", "to": "out"},
+                ],
+            }],
+        }
+        self.r.tick(0, {"generation": 1, "params_applied": 0})
+        self.r.tick(3000, {"generation": 1, "params_applied": 0})
+        saved = json.loads(open(self.path).read())
+        chain = saved["chains"][0]
+        self.assertEqual([n["id"] for n in chain["nodes"]], ["in", "amp", "out"])
+        self.assertEqual(chain["connections"],
+                         [{"from": "in", "to": "amp"}, {"from": "amp", "to": "out"}])
+
+    def test_a_rig_without_a_view_node_is_saved_as_it_was(self):
+        # Nothing to strip means nothing rewritten: the document the engine ran is the one written,
+        # `from_port` and every other key included.
+        self.engine.document = {"name": "Crunch Lead", "chains": [{
+            "id": "main",
+            "nodes": [{"id": "in", "type": "nc.input"}, {"id": "out", "type": "nc.output"}],
+            "connections": [{"from": "in", "from_port": 0, "to": "out", "to_port": 0}],
+        }]}
+        self.r.tick(0, {"generation": 1, "params_applied": 0})
+        self.r.tick(3000, {"generation": 1, "params_applied": 0})
+        self.assertEqual(json.loads(open(self.path).read()), self.engine.document)
+
     def test_a_rig_load_is_saved_even_though_the_counters_do_not_move(self):
         # Measured against namchaind 2026-10-02: rig.load moves `rig`/`rig_name` and leaves
         # generation and params_applied alone. Watching the counters alone would never save a

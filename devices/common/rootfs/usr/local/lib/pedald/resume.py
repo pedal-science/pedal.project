@@ -58,6 +58,74 @@ def write_atomic_plain(path, text):
         os.close(fd)
 
 
+def strip_ephemeral(document):
+    """`document` without the nodes a client mounted around a view of its own.
+
+    The tuner is a UI element, not a block (namchain docs/tuner.md): while its view is up a client
+    puts one `nc.tuner` after each chain's input, marked `meta.ephemeral`, and that node's output is
+    silence -- which is how a pedal tuner mutes the rig. Saving that document as it stands would
+    bring the pedal back from a power cycle *muted*, playing a node nobody can see in any editor.
+
+    So the resume record is the document the player left, without them. The wiring is healed the way
+    the client mounted it: each consumer of an ephemeral node is repointed at whatever fed it, and
+    the node goes with its own wires. A return value of `document` itself when there was nothing to
+    do keeps the caller's "did it change" comparison honest.
+    """
+    def strip_graph(graph):
+        nodes = graph.get("nodes")
+        connections = graph.get("connections")
+        if not isinstance(nodes, list) or not isinstance(connections, list):
+            return graph, False
+        ephemeral = {n.get("id") for n in nodes
+                     if isinstance(n, dict) and isinstance(n.get("meta"), dict)
+                     and n["meta"].get("ephemeral")}
+        ephemeral.discard(None)
+        if not ephemeral:
+            return graph, False
+        source, source_port, healed = {}, {}, []
+        for c in connections:
+            if not isinstance(c, dict):
+                continue
+            if c.get("to") in ephemeral and c["to"] not in source:
+                source[c["to"]] = c.get("from")
+                source_port[c["to"]] = c.get("from_port", 0)
+        for c in connections:
+            if not isinstance(c, dict):
+                continue
+            if c.get("to") in ephemeral:
+                continue
+            if c.get("from") in ephemeral:
+                origin = c["from"]
+                if origin not in source:
+                    continue
+                c = dict(c)
+                c["from"] = source[origin]
+                if source_port[origin] != 0 or "from_port" in c:
+                    c["from_port"] = source_port[origin]
+            healed.append(c)
+        out = dict(graph)
+        out["nodes"] = [n for n in nodes
+                        if not (isinstance(n, dict) and n.get("id") in ephemeral)]
+        out["connections"] = healed
+        return out, True
+
+    chains = document.get("chains")
+    if not isinstance(chains, list):
+        out, changed = strip_graph(document)
+        return out if changed else document
+    stripped, changed = [], False
+    for chain in chains:
+        if isinstance(chain, dict):
+            chain, one = strip_graph(chain)
+            changed = changed or one
+        stripped.append(chain)
+    if not changed:
+        return document
+    out = dict(document)
+    out["chains"] = stripped
+    return out
+
+
 def canonical(document):
     """A stable rendering, so 'did the document change' is a string compare."""
     return json.dumps(document, sort_keys=True, separators=(",", ":"))
@@ -132,6 +200,9 @@ class Resume:
         document = self.running_document()
         if document is None:
             return
+        # A client's view node is never part of the rig that comes back (namchain docs/tuner.md):
+        # saving it would boot the pedal muted, with a node no editor draws.
+        document = strip_ephemeral(document)
         text = canonical(document)
         if text == self.written:
             self.saved_key = key

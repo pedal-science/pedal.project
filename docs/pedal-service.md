@@ -158,6 +158,11 @@ The behaviour of v0, with one owner and one difference — the service also know
   alone would never save a knob (R2). Documents are compared before a write, as v0 compares
   them. The settle window is what makes a knob drag one write to the SD card rather than
   hundreds.
+- **A client's view node is never saved.** `rig.get` returns the document the engine is *running*,
+  which while a tuner is on screen includes the `nc.tuner` nodes a client mounted around it
+  (namchain docs/tuner.md). Those are marked `meta.ephemeral` and are stripped before the write,
+  with the wiring healed the way the client mounted it — otherwise a power cycle would bring the
+  pedal back **muted**, playing a node no editor draws.
 - **Position.** The running document is the truth, and `state/bank.json` holds the last position
   as a hint. At boot, and after any change the service didn't make, it finds the rig's place by
   the document's own name (`engine.status`'s `rig_name`) in the current bank, starting from the
