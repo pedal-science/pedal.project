@@ -1284,6 +1284,18 @@ Two things this settled that are worth keeping:
   it now strips `meta.ephemeral` nodes and heals the wiring (`resume.py`, with the test in
   `devices/common/tests/test_resume.py`). The marker is namchain's, in `docs/tuner.md`.
 
+**Two refinements the owner asked for, the same day.** The node grew a switch — `mute`, a *rampable*
+flag — so a player can tune with the rig audible while the display carries on, and both front ends
+grew the toggle for it. Rampable is the whole point: a `rig.patch` of it is answered `smooth`, so the
+node fades the pass-through over 5 ms with no rebuild and no gap in the reading, where a rebuild
+would restart the node and visibly blink the display. And both front ends ported the **strobe** from
+squatch-tuner's reference app: three rows for partials 1, 2 and 4, labelled 1x/2x/4x, row k drifting
+k times as fast as the fundamental at 0.5 band periods per second per cent — so the bottom row shows
+an error the top one barely shows and in tune every row stands still. The law is written down once in
+namchain `docs/tuner.md` ("The strobe") and implemented per repo (`TunerModel` in rigpa,
+`TunerStrobe` in ljoss), because a client that computed it differently would disagree with the other
+about how fast a cent is.
+
 The pedal's own cost table has no `nc.tuner` row yet: it is charged `unknown.node` until
 `pedal-measure` measures it. Nothing about the tuner is deployed to vip yet — the engine and both
 apps are local commits, and the pedal's tuner button will be a footswitch through pedald when the
