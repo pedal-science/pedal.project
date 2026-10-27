@@ -225,8 +225,8 @@ Events are the only thing here that is not idempotent, so:
 - **Behind it, the Pico queues** in order, 16 deep. When the queue is full, a new value for a
   controller already waiting in it (`cc` *n*, `expression` *n*) replaces the waiting one, since
   the newest value is the one that matters; anything else is dropped and counted. The firmware
-  today refuses a new event while one is pending, which is enough for the bench's console; the
-  queue comes with step 5, with the switches and MIDI.
+  has queued since the footswitches (2026-10-27); queued events go with the session, as the one in
+  flight does.
 - The Core **dedupes on `seq`**: a repeat of the last `seq` it applied is `ACK`ed again and not
   re-applied, so a lost `ACK` cannot double-step a rig. **The dedupe belongs to the session**: the
   Core forgets it when it sends `WELCOME`, because a Pico that reboots starts its `seq` again.
@@ -250,7 +250,9 @@ Events are the only thing here that is not idempotent, so:
   survives a dead Pico and a dead service. A Core host that reboots while the Pico stays powered
   is the link-down rule's case.
 - **Panic bypass** (long press) is a Pico-local action; it is also sent as `bypass_set` so the
-  service and the display agree.
+  service and the display agree. It is a 1 s press on footswitch 3, the assignable one, and a
+  second long press takes it off (`firmware/src/footswitch.c`); footswitches 1 and 2 step rigs,
+  so a long press on either would step one first.
 - **Service down must never mean audio down** (D4): the service is not in the audio path, so this
   link dying cannot stop the engine. What the Pico loses without a service is rig switching, not
   sound.

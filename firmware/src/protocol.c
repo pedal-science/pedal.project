@@ -10,6 +10,7 @@
 #define RETRY_EVERY_MS 20u
 #define RETRY_MAX 5u
 #define NAME_MAX 48u
+#define QUEUE_MAX 16u
 
 static proto_send_fn send_bytes;
 static uint16_t caps;
@@ -38,6 +39,18 @@ static struct {
     uint32_t due_ms;
 } ev;
 static uint8_t next_seq;
+
+// Behind the one in flight, events wait in order (docs/uart-protocol.md, Reliability): a press
+// and its release, or two quick presses, must not refuse each other while an ACK is on its way.
+struct queued {
+    uint8_t kind;
+    uint8_t a;
+    uint8_t b;
+    uint8_t source;
+};
+static struct queued queue[QUEUE_MAX];
+static unsigned queue_head;
+static unsigned queue_len;
 
 static uint8_t state_flags;
 static int8_t state_rig = -1;
@@ -108,6 +121,48 @@ static void send_event(void) {
     send_frame(PROTO_MSG_EVENT, payload, sizeof(payload));
 }
 
+// Puts an event in flight now. Its seq is taken here, so seqs go out in the order they are sent.
+static void start_event(uint8_t kind, uint8_t a, uint8_t b, uint8_t source) {
+    ev.seq = next_seq++;
+    ev.kind = kind;
+    ev.a = a;
+    ev.b = b;
+    ev.source = source;
+    ev.tries = 0;
+    ev.due_ms = now_ms + RETRY_EVERY_MS;
+    ev.pending = true;
+    send_event();
+    printf("proto: event %u kind=0x%02x a=%u b=%u source=%u sent\n", (unsigned)ev.seq,
+           (unsigned)kind, (unsigned)a, (unsigned)b, (unsigned)source);
+}
+
+// The next waiting event, once nothing is in flight.
+static void start_next(void) {
+    if (ev.pending || queue_len == 0) {
+        return;
+    }
+    struct queued q = queue[queue_head];
+    queue_head = (queue_head + 1) % QUEUE_MAX;
+    queue_len--;
+    start_event(q.kind, q.a, q.b, q.source);
+}
+
+// Everything not yet acknowledged goes with the session: sent after a reconnect, a press would
+// act seconds after it was made (docs/uart-protocol.md, Reliability).
+static void drop_events(void) {
+    if (ev.pending) {
+        ev.pending = false;
+        events_lost++;
+        printf("proto: event %u dropped with the session\n", (unsigned)ev.seq);
+    }
+    if (queue_len) {
+        printf("proto: %u queued events dropped with the session\n", queue_len);
+    }
+    events_lost += queue_len;
+    queue_head = 0;
+    queue_len = 0;
+}
+
 static void handle_state(const uint8_t *p, uint8_t len) {
     if (len < 5) {  // flags, rig i8, bank i8, bank size, then the name's length byte
         return;
@@ -161,6 +216,7 @@ static void handle_frame(uint8_t type, const uint8_t *p, uint8_t len) {
                          (unsigned)p[1]);
                 printf("proto: version mismatch (%s)\n", text);
                 session_up = false;
+                drop_events();
                 send_error(PROTO_ERR_VERSION, text);
                 return;
             }
@@ -194,6 +250,7 @@ static void handle_frame(uint8_t type, const uint8_t *p, uint8_t len) {
                 ev.pending = false;
                 printf("proto: event %u acked after %u retries\n", (unsigned)ev.seq,
                        (unsigned)ev.tries);
+                start_next();
             }
             break;
 
@@ -302,19 +359,14 @@ void proto_tick(uint32_t ms) {
             ev.pending = false;
             events_lost++;
             printf("proto: event %u lost\n", (unsigned)ev.seq);
+            start_next();
         }
     }
 
     if ((int32_t)(now_ms - last_rx_ms) > (int32_t)LINK_DOWN_MS) {
         session_up = false;
         next_hello_ms = now_ms + HELLO_EVERY_MS;
-        // An event still pending goes with the session: sent after a reconnect, a press would act
-        // seconds after it was made (docs/uart-protocol.md, Reliability).
-        if (ev.pending) {
-            ev.pending = false;
-            events_lost++;
-            printf("proto: event %u dropped with the link\n", (unsigned)ev.seq);
-        }
+        drop_events();
         printf("proto: link down\n");
         return;
     }
@@ -334,22 +386,30 @@ bool proto_send_event(uint8_t kind, uint8_t a, uint8_t b, uint8_t source) {
         printf("proto: event refused, no session\n");
         return false;
     }
-    if (ev.pending) {
-        printf("proto: event refused, %u still pending\n", (unsigned)ev.seq);
-        return false;
+    if (!ev.pending) {
+        start_event(kind, a, b, source);
+        return true;
     }
-    ev.seq = next_seq++;
-    ev.kind = kind;
-    ev.a = a;
-    ev.b = b;
-    ev.source = source;
-    ev.tries = 0;
-    ev.due_ms = now_ms + RETRY_EVERY_MS;
-    ev.pending = true;
-    send_event();
-    printf("proto: event %u kind=0x%02x a=%u b=%u source=%u sent\n", (unsigned)ev.seq,
-           (unsigned)kind, (unsigned)a, (unsigned)b, (unsigned)source);
-    return true;
+    if (queue_len < QUEUE_MAX) {
+        queue[(queue_head + queue_len) % QUEUE_MAX] = (struct queued){kind, a, b, source};
+        queue_len++;
+        return true;
+    }
+    // Full. A new value for a controller already waiting replaces it, since the newest value is
+    // the one that matters; anything else is dropped and counted.
+    if (kind == PROTO_EV_CC || kind == PROTO_EV_EXPRESSION) {
+        for (unsigned i = 0; i < queue_len; i++) {
+            struct queued *q = &queue[(queue_head + i) % QUEUE_MAX];
+            if (q->kind == kind && q->a == a) {
+                q->b = b;
+                q->source = source;
+                return true;
+            }
+        }
+    }
+    events_lost++;
+    printf("proto: event kind=0x%02x dropped, queue full\n", (unsigned)kind);
+    return false;
 }
 
 uint8_t proto_state_flags(void) {

@@ -27,6 +27,7 @@ pico_sdk_init()
 add_executable(pedal-firmware
     src/main.c
     src/protocol.c
+    src/footswitch.c
 )
 
 # The firmware carries the commit it was built from, "-dirty" if the tree was

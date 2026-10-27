@@ -1,14 +1,16 @@
 // Pedal Pico firmware.
 //
 // Phase 3 of the plan. The link speaks the protocol in docs/uart-protocol.md
-// (version 1.0): framing, the HELLO/WELCOME session, PING/PONG, EVENTs with
-// ACK/retry, and STATE. Footswitches, DIN MIDI, the relay and LEDs arrive in
-// step 5; until then the USB console stands in for the controls:
+// (version 2.0): framing, the HELLO/WELCOME session, PING/PONG, EVENTs with
+// ACK/retry and a queue behind them, and STATE. The three footswitches are on
+// GP10-12 (footswitch.c, docs/build-footswitches.md); DIN MIDI, the relay and
+// LEDs arrive later in step 5. The USB console still stands in for controls
+// that are not wired:
 //
 //   e   send a rig_up EVENT
 //   d   send a rig_down EVENT
 //   b   send a bypass_toggle EVENT
-//   ?   print the protocol counters and the last STATE
+//   ?   print the protocol counters, the last STATE and the footswitches
 //
 // Build with -DFW_ECHO=ON (or FW_ECHO=1 firmware/build.sh) to get step 1's
 // byte echo back, for firmware/tools/echo-test.py.
@@ -20,6 +22,7 @@
 
 #include <stdio.h>
 
+#include "footswitch.h"
 #include "hardware/uart.h"
 #include "pico/stdlib.h"
 #include "protocol.h"
@@ -28,6 +31,10 @@
 #define LINK_BAUD   115200
 #define LINK_TX_PIN 0
 #define LINK_RX_PIN 1
+
+// HELLO's caps (docs/uart-protocol.md): bits 4-7 are the footswitch count. No relay, MIDI,
+// display or expression jack yet.
+#define BOARD_CAPS ((uint16_t)(FOOTSWITCH_COUNT << 4))
 
 // The build stamps the commit (CMakeLists.txt); a build outside git says so.
 #ifndef PEDAL_FW_VERSION
@@ -80,9 +87,8 @@ int main(void) {
     stdio_init_all();
     link_setup();
 
-    // No relay, MIDI, display or expression jack is wired yet, and no
-    // footswitches: the capabilities are honest until step 5 fills them in.
-    proto_init(link_send, 0x0000, PEDAL_FW_VERSION);
+    footswitch_init();
+    proto_init(link_send, BOARD_CAPS, PEDAL_FW_VERSION);
     printf("fw: %s, protocol %u.%u on UART0 GP%d/GP%d at %u baud\n", PEDAL_FW_VERSION,
            PROTO_VERSION_MAJOR, PROTO_VERSION_MINOR, LINK_TX_PIN, LINK_RX_PIN, LINK_BAUD);
 
@@ -93,7 +99,9 @@ int main(void) {
             proto_on_byte((uint8_t)uart_getc(LINK_UART));
         }
 
-        proto_tick(to_ms_since_boot(get_absolute_time()));
+        uint32_t now = to_ms_since_boot(get_absolute_time());
+        proto_tick(now);
+        footswitch_poll(now);
 
         // The bench's stand-in for the controls.
         int c = getchar_timeout_us(0);
@@ -112,6 +120,9 @@ int main(void) {
                        (unsigned long)proto_frames_ok(), (unsigned long)proto_frames_bad(),
                        (unsigned long)proto_events_lost(), (unsigned)proto_session_up(),
                        (int)proto_state_rig_index(), proto_state_rig_name());
+                printf("fs: 1=%s 2=%s 3=%s panic=%u\n", footswitch_pressed(0) ? "down" : "up",
+                       footswitch_pressed(1) ? "down" : "up", footswitch_pressed(2) ? "down" : "up",
+                       (unsigned)footswitch_panic());
                 break;
             default:
                 break;

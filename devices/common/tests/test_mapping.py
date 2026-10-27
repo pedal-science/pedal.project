@@ -91,9 +91,16 @@ class Map(unittest.TestCase):
     def test_the_footswitches_default_map(self):
         m = mapping.Mapping(["a", "b", "c"])
         m.note_rig("a")                                         # a position to step from
-        self.assertEqual(m.action("cc", 81)["rig"], "b")        # rig_up
-        self.assertEqual(m.action("cc", 80)["rig"], "a")        # rig_down
-        self.assertIsNone(m.action("cc", 82))                   # assignable, unassigned
+        self.assertEqual(m.action("cc", 81, 127)["rig"], "b")   # rig_up
+        self.assertEqual(m.action("cc", 80, 127)["rig"], "a")   # rig_down
+        self.assertIsNone(m.action("cc", 82, 127))              # assignable, unassigned
+
+    def test_a_switch_acts_on_its_press_not_its_release(self):
+        m = mapping.Mapping(["a", "b", "c"])
+        m.note_rig("a")
+        self.assertEqual(m.action("cc", 81, 127)["rig"], "b")   # press
+        self.assertIsNone(m.action("cc", 81, 0))                # release: one step, not two
+        self.assertEqual(m.position_state()["rig"], 1)
 
     def test_pc_by_name_moves_the_bank_window(self):
         m = mapping.Mapping([f"r{i}" for i in range(1, 11)],
@@ -103,7 +110,7 @@ class Map(unittest.TestCase):
 
     def test_an_entry_may_name_another_kind(self):
         m = mapping.Mapping(["a", "b"], midi_map={"cc": {"20": {"action": "bypass_toggle"}}})
-        self.assertEqual(m.action("cc", 20), {"action": "bypass", "on": True})
+        self.assertEqual(m.action("cc", 20, 127), {"action": "bypass", "on": True})
 
     def test_an_entry_naming_nothing_is_logged_not_raised(self):
         logs = []

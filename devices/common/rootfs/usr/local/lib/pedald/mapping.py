@@ -215,6 +215,11 @@ class Mapping:
             self.bypass = not self.bypass
             return {"action": "bypass", "on": self.bypass}
         if kind == "cc":
+            # Every cc in the map is a switch-type trigger, read as on or off at 64: a
+            # footswitch or a MIDI pedal's button sends 127 on its press and 0 on its release,
+            # and only the press acts (pedal-service.md, "The footswitches are triggers too").
+            if int(b) < 64:
+                return None
             return self._resolve(self.map.get("cc", {}).get(str(int(a))))
         if kind == "pc":
             return self._resolve(self.map.get("pc", {}).get(str(int(a))))
