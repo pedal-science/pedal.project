@@ -746,6 +746,95 @@ def control_board():
         ])
 
 
+def footswitch_board():
+    """The control board cut down to the footswitches, for the small case (2026-10-27).
+
+    The Pico, the link to the Pi with its 1N5817 into VSYS, and one 4-way header for the
+    three footswitches and their ground. The pins are the control board's: GP10, GP11 and
+    GP12 (physical pins 14, 15 and 16), held up by the Pico's own pull-ups and pulled to
+    ground by the switch. The 100 nF across each switch is soldered at the switch, so it is
+    not on this board. The header's four pins are the first four of the map's C4, in its
+    order; the LED pins and every other cable of the control board are left off.
+    """
+    gnd_pins = [3, 8, 13, 18, 23, 28, 33, 38]
+    nets = {
+        'GND': {f'M2.{n}' for n in gnd_pins},
+        'V5': {'D4.1'}, 'VSYS': {'D4.2', 'M2.39'},
+        'TX': {'M2.1'}, 'RX': {'M2.2'},
+        'FS1': {'M2.14'}, 'FS2': {'M2.15'}, 'FS3': {'M2.16'},
+    }
+    used = {pin for pins in nets.values() for pin in pins}
+    for pin in range(1, 41):
+        if f'M2.{pin}' not in used:
+            nets[f'P{pin}'] = {f'M2.{pin}'}
+    nl = K.Netlist(keep_equiv=False, parts={
+        'M2': ('module', 'Pico 2 WH', 40),
+        'D4': ('d', '1N5817', 2),
+    }, nets=nets)
+    PY, PX = 8, 9
+    left = [(PX, PY + i) for i in range(20)]
+    right = [(PX + 7, PY + 19 - i) for i in range(20)]
+    parts = {
+        'M2': ('module', 'Pico 2 WH', left + right),
+        'D4': ('d', '1N5817', [(6, 4), (10, 4)]),
+    }
+    # Each header's pins land on the Pico's own strips: TX and RX on pins 1 and 2, and the
+    # footswitches' ground and switches on pins 13 to 16.
+    headers = [
+        K.Header((2, 7), ['GND', 'TX', 'RX', 'V5'], cable='D3',
+                 names=['GND', 'TX GP0', 'RX GP1', '5 V']),
+        K.Header((2, 20), ['GND', 'FS1', 'FS2', 'FS3'], name='FS',
+                 names=['GND', 'FS1 GP10', 'FS2 GP11', 'FS3 GP12']),
+    ]
+    links = [
+        link((6, 7), (6, 10), 'GND'),
+        link((4, 10), (4, 4), 'V5'),
+        link((18, 4), (18, 9), 'VSYS'),
+    ]
+    gnd_rows = {PY + n - 1 for n in gnd_pins if n <= 20}
+    cuts = {(PX + 3, y) for y in range(PY, PY + 20) if y not in gnd_rows}
+    cuts |= {(5, 10), (8, 4)}
+    names = ['GP0 TX', 'GP1 RX', 'GND', 'GP2', 'GP3', 'GP4', 'GP5', 'GND',
+             'GP6', 'GP7', 'GP8', 'GP9', 'GND', 'GP10 FS1', 'GP11 FS2',
+             'GP12 FS3', 'GP13', 'GND', 'GP14', 'GP15',
+             'GP16', 'GP17', 'GND', 'GP18', 'GP19', 'GP20', 'GP21', 'GND',
+             'GP22', 'RUN', 'GP26', 'GP27', 'GND', 'GP28', 'ADC', '3V3', '3V3EN',
+             'GND', 'VSYS', 'VBUS']
+    return K.Board(
+        key='footswitch-pico', node='CTRL', W=20, H=29, netlist=nl, parts=parts,
+        headers=headers, links=links, cuts=cuts,
+        mounts=[(18, 2), (2, 27)],
+        carries=set(parts), grounds={'GND': 'CTRL'},
+        absent={'C1', 'C2', 'C4', 'C5', 'C6', 'C7', 'C8', 'P4'},
+        modules={'M2': dict(outline=(PX + 0.2, PY - 0.8, PX + 6.8, PY + 19.8), names=names,
+                            joined=[gnd_pins], label='Pico 2 WH\nUSB this end')},
+        alias={'GND': 'GND', 'V5': '5 V', 'VSYS': 'VSYS'},
+        title='Control, footswitches only',
+        job='The Pico, its link to the Pi, and three footswitches. The small case’s first '
+            'control board.',
+        pin_labels={'D4': ['a', 'k']},
+        part_notes={
+            'D4': 'band towards VSYS, the right-hand lead',
+        },
+        notes=[
+            'The control board with everything but the link and the footswitches left off. '
+            'The Pico sits where it sits on that board, relative to its own strips, and the '
+            'footswitch pins are the same: GP10, GP11 and GP12, physical pins 14, 15 and 16.',
+            'FS is the first four pins of the map’s C4, in its order: GND, FS1, FS2, FS3. '
+            'Each switch joins its pin to GND. No resistors: the Pico’s own pull-ups hold '
+            'the pins high, and the firmware turns them on.',
+            'The 100 nF across each switch is soldered on the switch’s two lugs, not here.',
+            'The diode is how the Pico keeps running when the Pi reboots: D3’s 5 V is the '
+            'Pi’s pin 4, and the band faces VSYS. If the Pico’s present lead already has a '
+            '1N5817 in it, take that one out: two in series cost the Pico 0.3 V for nothing.',
+            'Cut every strip between the Pico’s two rows at the marked hole, except its four '
+            'ground rows; then the strip between the diode’s leads, and D3’s 5 V strip '
+            'beside the header.',
+            'docs/build-footswitches.md is the wiring from FS to the switches’ lugs.',
+            'The USB console lead and the Debug Probe plug into the Pico’s own sockets.',
+        ])
+
+
 # ---------------------------------------------------------------- the XLR driver
 def xlr_board(side):
     """One balanced output channel (docs/balanced-outputs.md, D15). L and R are the same board.
@@ -900,7 +989,7 @@ def xlr_board(side):
 def boards():
     return [output_board('L'), output_board('R'), power_board(), midi_board(),
             relay_board(), input_board(), carrier_board(), breakout_board(),
-            control_board(), xlr_board('L'), xlr_board('R')]
+            control_board(), footswitch_board(), xlr_board('L'), xlr_board('R')]
 
 
 def main():

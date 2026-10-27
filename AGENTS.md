@@ -211,7 +211,9 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
 - `docs/`: `workspace.md` (the workspace and its guard), `working-across-repos.md` (repos, machines, rules), `hardware-handoff.md`
   (schematic findings and reasoning), `codec-bringup-2a.md` (the 2a bench walkthrough), `codec-bringup-2c.md` (2c: the
   shunt swap and the supply and ground legs, with `scripts/codec-noise.py` reading its captures),
-  `build-board1-breadboard.md` and `build-board1.md` (board 1 on the breadboard, then soldered), `rig-switch-strategies.md`, `uart-protocol.md`, `pedal-service.md` (the service's design: what
+  `build-board1-breadboard.md` and `build-board1.md` (board 1 on the breadboard, then soldered),
+  `build-footswitches.md` (the small case's three footswitches: the net, the lugs, and the cut-down
+  control board, `footswitch-pico.svg`), `rig-switch-strategies.md`, `uart-protocol.md`, `pedal-service.md` (the service's design: what
   it owns, storage, uploads, the mapping, failure modes, what is left to implement — in order —
   and the thread accounting), `pairing.md` (BLE pairing, the pedal's own
   Wi-Fi network, and how ljoss joins it), `vip-image.md` (building vip's card,
