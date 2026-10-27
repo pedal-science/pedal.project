@@ -228,11 +228,12 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
 - `stripboard/`, `breadboard/` — board layouts as data; each script checks its placement against
   the netlist (`stripboard/board1.py` holds board 1's) and draws it. `stripboard/module_boards.py`
   holds the module boards; `stripboard/stripmaster_export.py` writes the codec carrier, the input
-  buffer and the output board as `.stripmaster` documents beside their build sheets in
-  `stripboard/module-boards/`, for `../stripmaster`, and reads each back through stripmaster's
-  model to check every pin hole and net. The layout stays in `module_boards.py`: the documents are
-  derived, so an edit made in stripmaster is carried back there, and opening one in stripmaster
-  rewrites its saved view.
+  buffer, the output board and the footswitches' Pico board as `.stripmaster` documents beside
+  their build sheets in `stripboard/module-boards/`, for `../stripmaster`, and reads each back
+  through stripmaster's model to check every pin hole and net. The layout stays in
+  `module_boards.py`: the documents are derived, so an edit made in stripmaster is carried back
+  there, and opening one in stripmaster rewrites its saved view. Name documents on its command
+  line to write only those, so one edited in stripmaster and not carried back is left alone.
 - `schematic/` — the pedal's schematic sheets as KiCad files, each written from the wiring table in
   the script beside it (`schematic/case-wiring.py` holds the prototype case's: IN, OUT L and OUT R,
   the two output fixtures, the case's 4-way strip and the codec header as it is today). The script

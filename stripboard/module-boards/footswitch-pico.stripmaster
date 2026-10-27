@@ -1,0 +1,478 @@
+{
+  "formatVersion" : 3,
+  "state" : {
+    "board" : {
+      "columns" : 20,
+      "components" : [
+        {
+          "anchor" : {
+            "column" : 9,
+            "row" : 8
+          },
+          "axis" : "vertical",
+          "designator" : "M2",
+          "flipped" : false,
+          "id" : "000B7A68-0687-5AA0-B779-042E1AB86C73",
+          "legCount" : 40,
+          "reference" : {
+            "categoryID" : "module",
+            "memberID" : "pico"
+          },
+          "span" : 1,
+          "value" : "Pico 2 WH"
+        },
+        {
+          "anchor" : {
+            "column" : 6,
+            "row" : 4
+          },
+          "axis" : "horizontal",
+          "designator" : "D4",
+          "flipped" : false,
+          "id" : "2161D07A-699D-585D-BE00-A8A83B3589AD",
+          "legCount" : 2,
+          "reference" : {
+            "categoryID" : "diode",
+            "memberID" : "schottky"
+          },
+          "span" : 5,
+          "value" : "1N5817"
+        },
+        {
+          "anchor" : {
+            "column" : 2,
+            "row" : 7
+          },
+          "axis" : "vertical",
+          "designator" : "D3",
+          "flipped" : false,
+          "id" : "29144A28-7659-538D-8703-C904FA476E46",
+          "legCount" : 4,
+          "pinNames" : [
+            "GND",
+            "TX GP0",
+            "RX GP1",
+            "5 V"
+          ],
+          "reference" : {
+            "categoryID" : "connector",
+            "memberID" : "jstXH"
+          },
+          "span" : 1,
+          "value" : "B4B-XH-A"
+        },
+        {
+          "anchor" : {
+            "column" : 2,
+            "row" : 20
+          },
+          "axis" : "vertical",
+          "designator" : "FS",
+          "flipped" : false,
+          "id" : "B86DC299-1B0B-5F21-86F8-DA4BCDD7377C",
+          "legCount" : 4,
+          "pinNames" : [
+            "GND",
+            "FS1 GP10",
+            "FS2 GP11",
+            "FS3 GP12"
+          ],
+          "reference" : {
+            "categoryID" : "connector",
+            "memberID" : "headerVariable"
+          },
+          "span" : 1,
+          "value" : "B4B-XH-A"
+        }
+      ],
+      "cutGaps" : [],
+      "cutHoles" : [
+        {
+          "column" : 8,
+          "row" : 4
+        },
+        {
+          "column" : 12,
+          "row" : 8
+        },
+        {
+          "column" : 12,
+          "row" : 9
+        },
+        {
+          "column" : 5,
+          "row" : 10
+        },
+        {
+          "column" : 12,
+          "row" : 11
+        },
+        {
+          "column" : 12,
+          "row" : 12
+        },
+        {
+          "column" : 12,
+          "row" : 13
+        },
+        {
+          "column" : 12,
+          "row" : 14
+        },
+        {
+          "column" : 12,
+          "row" : 16
+        },
+        {
+          "column" : 12,
+          "row" : 17
+        },
+        {
+          "column" : 12,
+          "row" : 18
+        },
+        {
+          "column" : 12,
+          "row" : 19
+        },
+        {
+          "column" : 12,
+          "row" : 21
+        },
+        {
+          "column" : 12,
+          "row" : 22
+        },
+        {
+          "column" : 12,
+          "row" : 23
+        },
+        {
+          "column" : 12,
+          "row" : 24
+        },
+        {
+          "column" : 12,
+          "row" : 26
+        },
+        {
+          "column" : 12,
+          "row" : 27
+        }
+      ],
+      "jumpers" : [
+        {
+          "id" : "FEB13D98-2508-5C7F-A3E2-44FDD7D81B6F",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 6,
+              "row" : 7
+            },
+            {
+              "column" : 6,
+              "row" : 8
+            },
+            {
+              "column" : 6,
+              "row" : 9
+            },
+            {
+              "column" : 6,
+              "row" : 10
+            }
+          ]
+        },
+        {
+          "id" : "CCBA4D12-5BDC-52FC-8FDF-2A12FD2D7EFD",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 4,
+              "row" : 10
+            },
+            {
+              "column" : 4,
+              "row" : 9
+            },
+            {
+              "column" : 4,
+              "row" : 8
+            },
+            {
+              "column" : 4,
+              "row" : 7
+            },
+            {
+              "column" : 4,
+              "row" : 6
+            },
+            {
+              "column" : 4,
+              "row" : 5
+            },
+            {
+              "column" : 4,
+              "row" : 4
+            }
+          ]
+        },
+        {
+          "id" : "2F6BB4B1-1B62-5C1E-81E5-B2B27E638F1A",
+          "kind" : "insulated",
+          "route" : [
+            {
+              "column" : 18,
+              "row" : 4
+            },
+            {
+              "column" : 18,
+              "row" : 5
+            },
+            {
+              "column" : 18,
+              "row" : 6
+            },
+            {
+              "column" : 18,
+              "row" : 7
+            },
+            {
+              "column" : 18,
+              "row" : 8
+            },
+            {
+              "column" : 18,
+              "row" : 9
+            }
+          ]
+        }
+      ],
+      "mountHoles" : [
+        {
+          "column" : 18,
+          "row" : 2
+        },
+        {
+          "column" : 2,
+          "row" : 27
+        }
+      ],
+      "rows" : 29,
+      "solderedHoles" : [
+        {
+          "column" : 6,
+          "row" : 4
+        },
+        {
+          "column" : 10,
+          "row" : 4
+        },
+        {
+          "column" : 2,
+          "row" : 7
+        },
+        {
+          "column" : 2,
+          "row" : 8
+        },
+        {
+          "column" : 9,
+          "row" : 8
+        },
+        {
+          "column" : 16,
+          "row" : 8
+        },
+        {
+          "column" : 2,
+          "row" : 9
+        },
+        {
+          "column" : 9,
+          "row" : 9
+        },
+        {
+          "column" : 16,
+          "row" : 9
+        },
+        {
+          "column" : 2,
+          "row" : 10
+        },
+        {
+          "column" : 9,
+          "row" : 10
+        },
+        {
+          "column" : 16,
+          "row" : 10
+        },
+        {
+          "column" : 9,
+          "row" : 11
+        },
+        {
+          "column" : 16,
+          "row" : 11
+        },
+        {
+          "column" : 9,
+          "row" : 12
+        },
+        {
+          "column" : 16,
+          "row" : 12
+        },
+        {
+          "column" : 9,
+          "row" : 13
+        },
+        {
+          "column" : 16,
+          "row" : 13
+        },
+        {
+          "column" : 9,
+          "row" : 14
+        },
+        {
+          "column" : 16,
+          "row" : 14
+        },
+        {
+          "column" : 9,
+          "row" : 15
+        },
+        {
+          "column" : 16,
+          "row" : 15
+        },
+        {
+          "column" : 9,
+          "row" : 16
+        },
+        {
+          "column" : 16,
+          "row" : 16
+        },
+        {
+          "column" : 9,
+          "row" : 17
+        },
+        {
+          "column" : 16,
+          "row" : 17
+        },
+        {
+          "column" : 9,
+          "row" : 18
+        },
+        {
+          "column" : 16,
+          "row" : 18
+        },
+        {
+          "column" : 9,
+          "row" : 19
+        },
+        {
+          "column" : 16,
+          "row" : 19
+        },
+        {
+          "column" : 2,
+          "row" : 20
+        },
+        {
+          "column" : 9,
+          "row" : 20
+        },
+        {
+          "column" : 16,
+          "row" : 20
+        },
+        {
+          "column" : 2,
+          "row" : 21
+        },
+        {
+          "column" : 9,
+          "row" : 21
+        },
+        {
+          "column" : 16,
+          "row" : 21
+        },
+        {
+          "column" : 2,
+          "row" : 22
+        },
+        {
+          "column" : 9,
+          "row" : 22
+        },
+        {
+          "column" : 16,
+          "row" : 22
+        },
+        {
+          "column" : 2,
+          "row" : 23
+        },
+        {
+          "column" : 9,
+          "row" : 23
+        },
+        {
+          "column" : 16,
+          "row" : 23
+        },
+        {
+          "column" : 9,
+          "row" : 24
+        },
+        {
+          "column" : 16,
+          "row" : 24
+        },
+        {
+          "column" : 9,
+          "row" : 25
+        },
+        {
+          "column" : 16,
+          "row" : 25
+        },
+        {
+          "column" : 9,
+          "row" : 26
+        },
+        {
+          "column" : 16,
+          "row" : 26
+        },
+        {
+          "column" : 9,
+          "row" : 27
+        },
+        {
+          "column" : 16,
+          "row" : 27
+        }
+      ]
+    },
+    "createdAt" : 814805759.0,
+    "history" : {
+      "cursor" : 0,
+      "entries" : []
+    },
+    "modifiedAt" : 814805759.0,
+    "view" : {
+      "orientation" : 0,
+      "panX" : 0,
+      "panY" : 0,
+      "side" : "top"
+    }
+  }
+}

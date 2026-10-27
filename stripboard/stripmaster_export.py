@@ -2,8 +2,8 @@
 """The module boards as stripmaster documents.
 
 `stripboard/module_boards.py` is where the boards are laid out and checked against the
-netlist and the map.  This writes three of them -- the codec carrier, the input buffer and the
-output board -- as `.stripmaster` files beside their build sheets in `module-boards/`, so they
+netlist and the map.  This writes four of them -- the codec carrier, the input buffer, the
+output board and the footswitches' Pico board -- as `.stripmaster` files beside their build sheets in `module-boards/`, so they
 can be opened, turned over and edited in stripmaster (`../stripmaster`, the workspace's
 stripboard designer).  The layout stays here: these files are derived, and a change made in
 stripmaster is a change to carry back into `module_boards.py`.
@@ -28,7 +28,10 @@ stripmaster repository) and checked against the layout: the same holes for every
 dropped, and the same nets -- every hole `module_kit` puts on one net is on one stripmaster
 net, and no two nets meet.  Without the stripmaster checkout it says so and skips that check.
 
-    python3 stripboard/stripmaster_export.py
+    python3 stripboard/stripmaster_export.py [file.stripmaster ...]
+
+Name files to write only those: a document edited in stripmaster and not yet carried back
+is otherwise overwritten.
 """
 import json
 import subprocess
@@ -56,14 +59,18 @@ KINDS = {
     'ds': ('diode', 'signal'),
     'dip8': ('ic', 'opamp8'),
     'to92': ('power', 'regulator'),
-    'module': ('module', 'wm8960'),
 }
 TWO_LEAD = {'r', 'rs', 'film', 'cer', 'el5.2', 'el6.3', 'd', 'ds'}
 TO92_PINS = {'O': 'OUT', 'G': 'GND', 'I': 'IN'}
-# The catalogue's WM8960: two headers of 16, nine holes apart, numbered the same way down
-# each, with one ground plane joining these pins.  The carrier must agree.
-WM8960_JOINED = [[1, 10, 11, 15, 16, 17]]
-WM8960_ROW_SPACING = 9
+# The catalogue's modules, by the layout's value: (member, holes between the rows, both rows
+# numbered the same way down, the pins the module joins).  The WM8960 is two headers of 16
+# with one ground plane under both.  The Pico is a DIP-40 seven holes wide; the catalogue
+# joins its grounds but not AGND (pin 33), which a layout may still join on the board's copper,
+# and the read-back's net check is what holds it to that.
+MODULES = {
+    'WM8960': (('module', 'wm8960'), 9, True, [[1, 10, 11, 15, 16, 17]]),
+    'Pico 2 WH': (('module', 'pico'), 7, False, [[3, 8, 13, 18, 23, 28, 38]]),
+}
 
 
 # ---------------------------------------------------------------- stripmaster's geometry
@@ -177,6 +184,8 @@ class Writer:
             catalogue = KINDS[kind]
             if kind.startswith('el') and 'bipolar' in value:
                 catalogue = ('capacitor', 'bipolar')
+            if kind == 'd' and value.startswith('1N58'):
+                catalogue = ('diode', 'schottky')
             self.add(ref, catalogue, anchor, axis, flipped, holes, span=span, legs=2,
                      designator=designator, value=value)
         elif kind == 'dip8':
@@ -189,12 +198,16 @@ class Writer:
             self.add(ref, KINDS[kind], anchor, axis, flipped, holes,
                      designator=designator, value=value, pin_names=names)
         elif kind == 'module':
-            module = self.board.modules[ref]
-            if module.get('joined') != WM8960_JOINED:
-                raise SystemExit(f'{ref} joins {module.get("joined")}; the catalogue joins '
-                                 f'{WM8960_JOINED}')
-            anchor, axis, flipped = two_row_placement(holes, WM8960_ROW_SPACING, parallel=True)
-            self.add(ref, KINDS[kind], anchor, axis, flipped, holes,
+            if value_ not in MODULES:
+                raise SystemExit(f'{self.key}: {ref} is a {value_}, which the catalogue lacks')
+            catalogue, spacing, parallel, joins = MODULES[value_]
+            mine = [set(group) for group in self.board.modules[ref].get('joined', [])]
+            for group in joins:
+                if not any(set(group) <= m for m in mine):
+                    raise SystemExit(f'{ref}: the catalogue joins pins {group}, and the layout '
+                                     f'does not')
+            anchor, axis, flipped = two_row_placement(holes, spacing, parallel=parallel)
+            self.add(ref, catalogue, anchor, axis, flipped, holes,
                      designator=designator, value=value)
         else:
             raise SystemExit(f'{self.key}: {ref} is a {kind}, which the export does not know')
@@ -397,7 +410,14 @@ def main():
         ('codec-carrier.stripmaster', MB.carrier_board(), None),
         ('input-buffer.stripmaster', MB.input_board(), None),
         ('output.stripmaster', output, output_writer),
+        ('footswitch-pico.stripmaster', MB.footswitch_board(), None),
     ]
+    wanted = set(sys.argv[1:])
+    unknown = wanted - {name for name, _, _ in jobs}
+    if unknown:
+        raise SystemExit(f'no such document: {", ".join(sorted(unknown))}')
+    if wanted:
+        jobs = [job for job in jobs if job[0] in wanted]
     written, failed = [], 0
     for name, board, w in jobs:
         errs = board.check()
