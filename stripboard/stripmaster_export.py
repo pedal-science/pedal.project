@@ -364,8 +364,12 @@ def verify(paths_and_writers):
             if (got['reference'], got['designator'], got['pins']) != (ref, designator, holes):
                 errs.append(f'{designator}: wrote {ref} at {holes}, read {got["reference"]} at '
                             f'{got["pins"]}')
+        # The layout's nets are copper: strips, links and a module's own joins. stripmaster's
+        # `nets` also run through resistors and diodes, so read its copper nets where it has
+        # them; a stripmaster from before that change has only `nets`, and they are copper.
+        nets = dump.get('copperNets', dump['nets'])
         net_of = {}
-        for i, net in enumerate(dump['nets']):
+        for i, net in enumerate(nets):
             for h in net:
                 net_of[tuple(h)] = i
         seen, together = {}, joined_inside(w.board)
@@ -384,7 +388,7 @@ def verify(paths_and_writers):
                 print(f'      {e}')
         else:
             print(f'ok    {path.name} read back: {len(dump["parts"])} parts, '
-                  f'{len(dump["jumpers"])} links, {len(dump["nets"])} nets agree')
+                  f'{len(dump["jumpers"])} links, {len(nets)} nets agree')
     return failed
 
 
