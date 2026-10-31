@@ -8,7 +8,7 @@
 
 * Software: Use the [MIT licence](https://en.wikipedia.org/wiki/MIT_License) [text](mit-licence-text)
 * Hardware: Use the [CERN Open Hardware Licence, Version 2 – Permissive (CERN-OHL-P-2.0](https://cern-ohl.web.cern.ch/) [text](cern-ohl-p-2.0-licence-text)
-* Website and video: Use [Creative Commons Attribution 4.0 (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/) [text](cc-by-4.0-licence-text)
+* Content — prose, graphics, photos, renders, audio and video, such as the website and the video: Use [Creative Commons Attribution 4.0 (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/) [text](cc-by-4.0-licence-text)
 * Align with the original licence[s] and terms where contributing outside of pedal.science projects
   — e.g. rtpi's kernel patches are GPL-2.0-only, like the kernel [text](gpl-2.0-licence-text)
 
