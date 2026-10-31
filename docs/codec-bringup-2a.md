@@ -25,7 +25,7 @@ and the overlay and mixer state carry over too.
 | Soldering iron and solder | yes | 2 | |
 | Breadboard | yes | 8 | For the jack sockets and the output fixture. The codec board doesn't go in it |
 | **Multimeter** with continuity, resistance, DC volts and AC volts | ? | 1, 3, 5, 6, 8 | Essential. A **Hz** range helps in stage 6 but isn't needed |
-| **2.54 mm pin header**, 2 × 16 pins | yes | 2 | Both rows on the board have **16** pins. If the strip lying beside the board in `references/wm8960-photos/top.jpeg` is yours, you can start now |
+| **2.54 mm pin header**, 2 × 16 pins | yes | 2 | Both rows on the board have **16** pins. If the strip lying beside the board in `docs/photos/wm8960/top.jpeg` is yours, you can start now |
 | Female-to-female jumper leads, about 12 | yes | 4 | piv's header to the codec board. Short ones, 10–20 cm |
 | Female-to-male jumper leads, about 6 | yes | 8 | From codec pins into the breadboard. Without them, push a short piece of header into the breadboard and use female-to-female leads |
 | Two 6.35 mm jack sockets, with short wires soldered on so they sit in the breadboard | yes (the basic open-frame ones) | 8 | Socket A takes the signal from the SSL. Socket B takes the signal back to it |

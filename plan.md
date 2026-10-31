@@ -540,7 +540,7 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      Confirm SPKVDD → VIN with a meter.
    - Map the input R/C table by continuity. The board has no reference designators, so the
      silkscreen can't confirm it. LINPUT1 first.
-   - ~~Photos into `references/`.~~ Done: `references/wm8960-photos/`.
+   - ~~Photos into `references/`.~~ Done: `references/wm8960-photos/` (now `docs/photos/wm8960/`).
 2. **Wire it stock.**
    - VIN from the host's 5 V, so the onboard LDO feeds AVDD with AVDD-ISO intact.
    - 3V3, I2C and I2S from the host's header, on short leads.

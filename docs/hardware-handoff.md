@@ -107,7 +107,7 @@ pad → 100 Ω series → [47 nF to GND] → 1 µF series → codec pin
 - **SPKVDD jumper** selects 3.3 V or VIN; leaving both open means the class-D amp is
   unpowered and SPKVDD can be supplied at the header.
 
-### As received (inspected 2026-09-26, photos in `references/wm8960-photos/`)
+### As received (inspected 2026-09-26, photos in `docs/photos/wm8960/`)
 
 - **AVDD-ISO bridged**: onboard LDO feeds AVDD.
 - **SPKVDD bridged to VIN**, 3V3 side open (from the photo; confirm with a meter). With VIN
