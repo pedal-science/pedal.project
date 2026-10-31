@@ -15,8 +15,9 @@ This file is canonical for every agent. `CLAUDE.md` only imports it (and
   from an image (`devices/vip/make-card`), has no compiler, and is where testing happens until
   it's a working pedal nobody should disrupt; then the test hardware is chosen again.
 - **`piv`** (Raspberry Pi 500, aarch64) is the live bench device and build host. It isn't updated
-  in step with vip meanwhile (namchain 503aac9; `devices/piv/check` shows known differences) and
-  keeps its dev checkouts.
+  in step with vip meanwhile: it runs namchain `d4fb8e5`, deployed 2026-09-30, and
+  `scripts/status --host piv` shows how far behind that and its `devices/` tree are. Its dev
+  checkouts are under `~/code.local/pedal/`, as on the Mac.
 
 Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-handoff.md).
 
@@ -58,31 +59,18 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
   <dir>` applies the same tree to a root that isn't running (vip's image build);
   `devices/vip/test-offline-apply` checks that in the build container.
 - `devices/vip/eeprom-fetch` and, on the host, `sudo vip-eeprom status|verify|apply|clean`: the
-  bootloader EEPROM, which the card's fallbacks cannot reach. Ubuntu's `rpi-eeprom` package ships
-  images older than the board, so the image is pinned by commit and sha256 in
-  `devices/vip/rootfs/usr/local/lib/rpi-eeprom/eeprom.lock`; `eeprom-fetch` installs that tree,
-  `vip-eeprom` stages an update from it (never `-d`, never `-f`), and `check` diffs the version,
-  the three config keys and the pinned bytes. An EEPROM write is the one act with no card-level
-  fallback: docs/vip-image.md, "The bootloader EEPROM".
-- `devices/common/test-pedald`: the pedal service's tests (config, the engine client, the Pico link
-  over a pty, the mapping, resume, the HTTP server) plus `test_diag.py` for the diagnostics tool's
-  report logic over captured fixtures and `test_benchtest_*` for the bench test — 408 of them — then
-  `scripts/tests` and the bench test's page in Chromium (`devices/common/tests/browser/`, through
-  `uv run --with playwright`; skipped, and said so, without uv). Naming tests runs only those. They
-  run on the Mac; the Core host could run them (its `python3` is the full one since 2026-10-04) but
-  it is shared and quiet (rule 8). The service
-  itself is `devices/common/rootfs/usr/local/lib/pedald/`, run by `pedald.service`; `docs/pedal-service.md`
-  is its design and what each version is for. `sudo systemctl start pedal-diag` samples everything
-  the host, the codec and the link are doing (docs/diagnostics.md, `scripts/diag`).
-- `sudo systemctl start pedal-measure` measures the cost rows this device has no number for (P4):
-  it reads `/status`'s `engine.needs_measuring` — the units the engine is charging the `unknown`
-  cost (D8) — refuses when the pedal is unhappy (xruns, blocks over the deadline, the warm failsafe
-  holding, or the audible rig at the headroom), runs the deployed bench for **one** row on a core the
-  player is not using inside `pedal-bench.slice`, and writes the fragment to
-  `/var/lib/pedal/cost-fragments/<row>.json`. It does not merge: `devices/common/cost-merge` does that,
-  by hand, because a device's numbers are the device's and `devices/<host>/check` hashes the installed
-  table. `--dry-run` says what it would measure. It is a root oneshot, not part of `pedald`, because the
-  service runs as `User=pedal` on `CPUAffinity=0` and cannot enter that slice or pin to those cores.
+  bootloader EEPROM, pinned by `eeprom.lock`. Never `-d` or `-f`: an EEPROM write is the one act with
+  no card-level fallback (docs/vip-image.md, "The bootloader EEPROM").
+- `devices/common/test-pedald [<test>…]`: the pedal service's tests, the diagnostics and bench-test
+  tests, `scripts/tests`, and the bench test's page in Chromium (through uv and Playwright; run it
+  under `scripts/sandbox-cache` from a session). They run on the Mac, not on the Core host (rule 8).
+  The service is `devices/common/rootfs/usr/local/lib/pedald/`; `docs/pedal-service.md` is its
+  design. `sudo systemctl start pedal-diag` samples the host, the codec and the link
+  (docs/diagnostics.md, `scripts/diag`).
+- `sudo systemctl start pedal-measure`: measures one cost row the device has no number for (P4),
+  only while the pedal is healthy (`pedal-measure --dry-run` says which), and writes a fragment to
+  `/var/lib/pedal/cost-fragments/`. Merging is by hand, with `devices/common/cost-merge`
+  (docs/managing-processing-power-and-optimising-for-fast-switching.md).
 - `devices/vip/make-card [--image-only] [--disk /dev/diskN] [--dev]` (links to
   `devices/common/make-card`): build vip's whole card in colima from the commits in
   `devices/vip/image.lock` (namchain built and tested there, both roots, the boot partitions),
@@ -97,47 +85,28 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
 - `scripts/host-lock [--host vip] [--wait <s>] -- <command>`: run a command while
   holding the Core host's lock; `--who` says who holds it. Every soak, benchmark and
   deploy goes through it.
-- `scripts/sandbox-cache [--status|--print|--refresh] [-- <command>]`: the tool caches a session
-  cannot reach in `$HOME`, cloned into `<workspace>/.cache/` and the variables that point at them
-  (`UV_CACHE_DIR`, `PLAYWRIGHT_BROWSERS_PATH`, `UV_PYTHON_INSTALL_DIR`). `cp -Rc` is a clonefile:
-  7.4 GB lands in about 50 s and takes no disk until written to. Without it the browser step of
-  `devices/common/test-pedald` cannot run inside a session at all — `uv` writes its cache and
-  Playwright takes a lock in its browser directory, both outside the workspace — and with a fresh
-  empty cache it re-downloads everything first (measured: 7m53s, and it still failed). It is not a
-  way round the sandbox for things that are not caches: a test that needs a *device* outside the
-  workspace, like `test_link.py`'s pty, still needs approval. [docs/workspace.md](docs/workspace.md)
-  describes `.cache/` with `.worktrees/`.
+- `scripts/sandbox-cache [--status|--print|--refresh] [-- <command>]`: run a command with uv's and
+  Playwright's caches cloned into `<workspace>/.cache/`, which a sandboxed session needs for the
+  browser tests ([docs/workspace.md](docs/workspace.md), "Tool caches").
 - `scripts/components-lock [--host vip] [--check]`: write `devices/<host>/components.lock`
   from what the host is running, or compare. Commit the file with the change.
 - `firmware/build.sh`, `firmware/flash.sh`, `firmware/tools/{echo,protocol}-test.py`: build,
   flash and bench-test the Pico firmware (Pico 2 W; SDK 2.3.1 and Arm GNU Toolchain 15.3.rel1
   under `~/pico/`). `FW_ECHO=1` builds step 1's echo for the echo test.
-- `scripts/pico-power-test [--host vip] [--leg read|reboot|shutdown]`: Phase 3.6's question — does
-  the Pico keep its 5 V when the Core host reboots or shuts down? It reads the Pico's own uptime from
-  its USB console (`fw: up N s`, every 5 s; the counter runs from the Pico's reset, so it measures
-  power where `dmesg` cannot — the host re-enumerates the device on every boot either way), acts, and
-  reads again. `--leg read` is the control. Needs the USB cable in the Core host's port; `--leg
-  shutdown` needs the host powering back on by hand.
+- `scripts/pico-power-test [--host vip] [--leg read|reboot|shutdown]`: does the Pico keep its 5 V
+  through a Core host reboot or shutdown (plan 3.6)? Reads the Pico's own uptime from its USB console
+  before and after; `--leg shutdown` needs the host powered back on by hand.
 - `scripts/codec-noise.py <capture.wav>`: the codec's noise floor from an `arecord` capture — DC
   offset, unweighted and A-weighted RMS in dBFS and µV, and the spectral lines that show a hum comb.
   `--selftest` checks the weighting against the standard's figures; the procedure it belongs to is
   [docs/codec-bringup-2c.md](docs/codec-bringup-2c.md).
-- `scripts/codec-input-noise.py [--host vip] [--state "…"] [--arms engine,playback,alone]`: that
-  measurement as one command — the codec's input noise from its own ADC, captured, analysed and
-  graphed. It takes the host's lock, records the engine's own capture while it runs, stops
-  `namchaind` for the two `arecord` arms, starts it again and puts the mute back as it found it, and
-  writes `bench-results/<date>-codec-input-noise/`: `index.html` (a spectrum and octave-band chart
-  per arm, with the audio), the numbers, the state of the host around the run, and a README.
-  `--rebuild DIR` re-analyses captures already on disk without touching the pedal; `--dry-run` says
-  what it would do. Each `arecord` arm is wrapped in the kernel's log, which is kept as
-  `dmesg-<arm>.txt` beside the captures, and a failed arm is retried (`--retry`, default one) with
-  the attempt count in the record — `arecord` dies on this platform with
-  `pcm_read: Input/output error`, and [docs/audio-dma-irq.md](docs/audio-dma-irq.md) is the page
-  about why. `scripts/noise-document.py MANIFEST.json` is the page builder on its own, for
-  any captures (numpy and Pillow: run it with the harness's bundled python). The result of the
-  2026-10-12 run and what it means: [bench-results/2026-10-12-codec-input-noise.md](bench-results/2026-10-12-codec-input-noise.md).
-  `--dir` puts the results elsewhere, which is how the owner's twenty runs of 2026-10-13 come to be in
-  `noise-tests/`; they are read in
+- `scripts/codec-input-noise.py [--host vip] --state "…" [--arms engine,playback,alone]`: that
+  measurement as one command, under the host's lock — it stops and restarts `namchaind` for the
+  `arecord` arms, retries an arm that dies with `pcm_read: Input/output error`
+  ([docs/audio-dma-irq.md](docs/audio-dma-irq.md)), and writes a page of graphs and numbers to
+  `bench-results/<date>-codec-input-noise/`. `--rebuild DIR` re-analyses without the pedal;
+  `scripts/noise-document.py` is the page builder alone. Procedure:
+  [docs/codec-bringup-2c.md](docs/codec-bringup-2c.md); results so far:
   [bench-results/2026-10-13-input-hum-and-the-host-supply.md](bench-results/2026-10-13-input-hum-and-the-host-supply.md).
 - `scripts/benchtest [--host vip] [--fake]`: the bench test. Under the host's lock it starts
   `pedal.benchtest` (on demand, never at boot; it stops itself after 5 idle minutes, or from Stop on

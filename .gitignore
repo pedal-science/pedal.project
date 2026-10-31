@@ -28,4 +28,6 @@ devices/*/backups/*/files.tar
 
 # KiCad per-user state, and netlists exported to be checked (schematic/*.py export them)
 *.kicad_prl
+# KiCad's local history: a git repository of autosaves beside each project, never ours to commit
+.history/
 schematic/balanced-output/balanced-output.net

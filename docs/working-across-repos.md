@@ -41,7 +41,7 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 |---|---|---|
 | **M2** (MacBook Air) | Where editing and agent sessions happen, and where every deploy is started. Xcode, macOS builds of the engine | Holds every repo, all seven of them under `~/code.local/pedal/` |
 | **vip** (Pi 5, 1 GB, aarch64) | **The Core host** (from 2026-10-01), and nothing else. Built from an image (`devices/vip/make-card`, `docs/vip-image.md`); where testing happens until it's a pedal nobody should disrupt | No compiler: everything arrives built (the engine in colima on the Mac, `scripts/deploy-engine`) |
-| **piv** (Pi 500, aarch64) | The live bench device and the ARM build host: native aarch64, armv7 cross-compiler (GCC 15.2), `qemu-arm-static` for running armv7 tests | Allowed to be busy or down, so every build that runs on it also needs a fallback (colima on the Mac, which `rtpi` and vip's image already use). Its dev checkouts stay at `~/code.local/<repo>`: the workspace is the Mac's layout, and `scripts/workspace root --repo` falls back to that path, so the scripts work in both |
+| **piv** (Pi 500, aarch64) | The live bench device and the ARM build host: native aarch64, armv7 cross-compiler (GCC 15.2), `qemu-arm-static` for running armv7 tests | Allowed to be busy or down, so every build that runs on it also needs a fallback (colima on the Mac, which `rtpi` and vip's image already use). Its dev checkouts are at `~/code.local/pedal/<repo>`, the Mac's layout (`scripts/status` lists them); NAMBench is still at `~/NAMBench` |
 
 ## The rules
 

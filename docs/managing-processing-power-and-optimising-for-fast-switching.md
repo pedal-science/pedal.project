@@ -363,10 +363,12 @@ should have; **the worklist** — `pedald` aggregates those warnings into `/stat
 `engine.needs_measuring` (one entry per *row*, deduplicated, with a count and one reference to hand the
 bench); and **the measurer** — `pedal-measure`, a root oneshot beside `pedal-diag`
 (`devices/common/rootfs/usr/local/sbin/pedal-measure`, `pedal-measure.service`), which reads the
-worklist, refuses when the pedal is unhappy, runs the deployed bench for one row on a core the player
+worklist, refuses when the pedal is unhappy (xruns, blocks over the deadline, the warm failsafe
+holding, or the audible rig at the headroom), runs the deployed bench for one row on a core the player
 is not using inside `pedal-bench.slice`, and writes the fragment to
 `/var/lib/pedal/cost-fragments/<row>.json`. Twelve tests cover the decision (which row, and when to
-refuse); the measurement itself is the bench's, and namchain tests that.
+refuse); the measurement itself is the bench's, and namchain tests that. `pedal-measure --dry-run`
+says what it would measure.
 
 **Settled design for the rest:**
 

@@ -321,6 +321,27 @@ report_worktrees() {
   done < <(manifest_lines)
 }
 
+report_undeclared() {
+  local ws=$1 e base n=0 allowed
+  # What may sit at the root: the repositories workspace.repos declares there, and the root files.
+  # Hidden entries (.cache, .worktrees, the harness's .claude, Finder's .DS_Store) are tooling, and
+  # a .git is report_root's finding.
+  allowed=$( { manifest_lines | awk -F'|' '$5 == "repo" { print $2 }'
+               printf '%s\n' "${ROOT_FILES_LIST[@]}"; } )
+  for e in "$ws"/*; do
+    [[ -e $e ]] || continue
+    base=${e##*/}
+    printf '%s\n' "$allowed" | grep -qxF "$base" && continue
+    if is_repo "$e"; then
+      report_fail "$base: a repository at the workspace root that workspace.repos does not declare (scripts/workspace add, or move it)"
+    else
+      report_fail "$base: not a declared repository; it belongs in the repository that owns it"
+    fi
+    n=$((n + 1))
+  done
+  (( n > 0 )) || report_good "nothing at the workspace root that workspace.repos does not declare"
+}
+
 report_nested() {
   local ws=$1 name path url branch kind full g n=0 ignored=0 decl sub_paths
   while IFS='|' read -r name path url branch kind; do
@@ -350,7 +371,7 @@ cmd_check() {
   fi
   tmp=$(mktemp)
   trap 'rm -f "${tmp:-}"' EXIT
-  { report_root "$ws"; report_entries "$ws"; report_guard "$ws"; report_root_files "$ws"
+  { report_root "$ws"; report_entries "$ws"; report_undeclared "$ws"; report_guard "$ws"; report_root_files "$ws"
     report_worktrees "$ws"; report_nested "$ws"; } > "$tmp" 2>&1 || true
   problems=$(grep -c '^FAIL' "$tmp" || true)
   problems=${problems:-0}

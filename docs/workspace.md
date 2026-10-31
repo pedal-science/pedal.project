@@ -122,6 +122,10 @@ are.
 1. The workspace root is not inside a git repository, and has no `.git` of its own.
 2. Every `workspace.repos` entry is present, is a repository, and its `origin` is that repository
    (compared as host and path, so `https` and `ssh` spellings compare equal).
+   Nothing else visible sits at the root: an entry that is neither a declared repository nor one
+   of the root files fails, so a folder dropped there is moved into the repository that owns it
+   rather than left to drift. Hidden entries (`.cache/`, `.worktrees/`, the harness's `.claude/`)
+   are tooling and are not counted.
 3. A `submodule` entry is declared in its parent's `.gitmodules` **with a URL**, and is checked
    out. A detached HEAD is normal after a clone and is reported, not failed.
 4. No repository has a gitlink in its index or in `HEAD` that nothing declares.
@@ -143,6 +147,20 @@ lives inside its main repository).
 A worktree whose main repository is *outside* the workspace would not be covered. The check
 reports that case, and the four worktrees that existed before the move were removed rather than
 carried across, because their registrations hold absolute paths.
+
+## Tool caches
+
+A sandboxed session cannot write outside the workspace, and three tools keep their caches in `$HOME`:
+uv writes its cache, uv's pythons live in their own directory, and Playwright takes a lock in its
+browser directory. Without them the browser step of `devices/common/test-pedald` cannot run inside a
+session at all, and pointing them at a fresh empty cache re-downloads everything first (measured:
+7m53s, and it still failed).
+
+`scripts/sandbox-cache` clones the Mac's own caches into `<workspace>/.cache/` and runs a command with
+`UV_CACHE_DIR`, `PLAYWRIGHT_BROWSERS_PATH` and `UV_PYTHON_INSTALL_DIR` pointing at them
+(`--status`, `--print`, `--refresh`). `cp -Rc` is a clonefile: 7.4 GB lands in about 50 s and takes no
+disk until written to. It is not a way round the sandbox for things that are not caches: a test that
+needs a *device* outside the workspace, like `test_link.py`'s pty, still needs approval.
 
 ## Adding the next repository
 
