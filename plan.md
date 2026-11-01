@@ -189,11 +189,13 @@ handled it since the SSL 2+ with an untimed bring-up cycle, a prefilled output q
 xruns reported separately. `namchaind` had none of that and now has all of it: the bring-up cycle
 and the prefill, counting xruns from after them, with the startup count **visible** in
 `engine.status` as its own field — ignoring it means not calling it a fault, not pretending it did
-not happen. Implemented in namchain `fb7d4a5` (local).
+not happen. Implemented in namchain, local and unpushed; the commit has been amended three times, so
+this entry names no hash until it is pushed.
 
 **What the measurement said, against what this entry first claimed.** The paragraph above used to
-say the artefact lands in `status.xruns` and can raise the health `warn` at every power-up. **That
-is not what happens.** Ten fresh `namchaind` restarts on pro, sampled four times each, gave
+say the artefact lands in `status.xruns` and can raise the health `warn` at every power-up. The
+second half is wrong outright and the first is true only off the hosts' configuration. **As every
+pedal host is configured**, ten fresh `namchaind` restarts on pro, sampled four times each, gave
 `xruns 0` and `health ok` on all forty samples, and the mechanism is in the journal: the daemon
 publishes the resumed rig — model, IR, compiled plan — *before* the render loop opens the device,
 which is the ordering `soak.cpp`'s own comment credits with removing the block-0 overrun. The
@@ -216,10 +218,23 @@ prefill and the bring-up cycle go together, and the prefill is the completion of
 a standing bug. namchain withdrew the claim; checked here against the source and all three hosts'
 configuration.
 
-**Where the change does earn its keep.** `Config::output_queue_periods` defaults to **0**
+**Where the change does earn its keep, measured.** `Config::output_queue_periods` defaults to **0**
 (`include/namchain/daemon/config.h`), so a daemon run *without* that key — the dev loop, or a host
-whose configuration lost it — gets a one-period prime and is exposed. That is the case namchain is
-measuring now, the old binary against the new. Outstanding.
+whose configuration lost it — gets a one-period prime and is exposed. A/B on pro at that default,
+same config file, same device, both binaries installed, three rounds each: the **old** binary
+reported `xruns 1` with no `startup_xruns` field; the **new** one `xruns 0` and `startup_xruns 1`.
+`playback_underruns` was **1 on both sides**, as it has to be — the artefact is *attributed*, not
+prevented.
+
+**And the health `warn` is real but nobody could see it.** Polling the old binary every ~30 ms from
+the moment its socket appears: `warn` at blocks 4, 26, 48, 70 and 92, then `ok` from block 114. One
+decay step, **0.16 s measured** — `recent_xruns_` drains every `kRecentDecayBlocks` = 100 blocks
+(133 ms at 64 frames) and `decay_recent_trouble(1)` is 0, both checked in
+`include/namchain/daemon/daemon.h`. **So a startup xrun cannot be what raised `Health warn` in the
+2026-10-13 two-rig playtest**; the cost table's unknown-cost row stands as that explanation, as it
+was first read. What a startup xrun really leaves is `status.xruns == 1` for the whole life of the
+process — cumulative, never cleared, and what `scripts/status` and every diagnostic report. That is
+the consequence worth fixing, and the one the change fixes.
 
 **And the soak's condition is known.** Eight committed soak runs on pro report `bring-up xruns: 1` —
 the six sweep arms and the hour on 2026-10-31, and both RT runs on 2026-11-01 — and that line prints
