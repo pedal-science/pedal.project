@@ -119,6 +119,7 @@ the fallbacks. It has six choices for you at the end.
 | D13 | The five repositories live in one workspace, `~/code.local/pedal/`, which is deliberately **not** a repository; a guard installed by path refuses an embedded checkout that nothing declares | you + recommendation, 2026-10-06 | [docs/workspace.md](docs/workspace.md). A session opened on the workspace writes in all five with no extra permissions; `scripts/workspace check` and `scripts/status` keep the layout, the declaration and the guard from rotting silently |
 | D14 | The pedal gets a screen, an 8.8″ 1920×480 touch bar display (mini‑HDMI video, USB touch), in a larger enclosure (Hammond 1456RH3). Its UI is **rigpa** (C++, Qt 6), on the Core host's housekeeping core 0: a client of `namchaind` and of `pedald`'s library API that reads the library read‑only. The Pico keeps every physical control (D2 stands); the main rotary, apply and back join the footswitches on the UART. Supersedes "the Core host does DSP only" and 3.7's ST7789 | you, 2026-10-09 | `../rigpa/docs/spec.md` and `plan.md`. **Condition met 2026-10-10** (rigpa plan V2, [bench-results/2026-10-10-rigpa-soak-vip](bench-results/2026-10-10-rigpa-soak-vip/README.md)): rigpa off, idle, with meters and animating, on eglfs scanning out 1920×480, beside a 0.553 rig — 0 xruns, 0 overruns, worst block 58% in every arm; render p99 23% → 31% at the worst. vip's kernel (numaemu3), boot config (`vip-boot try-config`) and image carry the display stack (rigpa plan V1) |
 | D15 | Balanced outputs: two **male** XLR outputs (Neutrik NC3MD-LX) beside OUT L and OUT R, and the 1/4" jacks impedance-balanced on TRS (TS stays unbalanced, with nothing to switch or detect). Combo sockets are female and for inputs; the NCJ9FI-S (switched) suits Mic IN. The XLRs are silent at boot and in panic bypass. Pad −20 dB, a resistor to change | you, 2026-10-14 | [docs/balanced-outputs.md](docs/balanced-outputs.md). Step 1 (the ring networks) is in the output-board layouts and the module map now. Step 2 is a driver board: phantom-proof outputs, a mute relay on the bypass relay's coil drive, a pad and a ground lift per XLR. Where the case bonds to 0 V is measured before it is fixed, and the NC3MD-LX does not pre-empt it |
+| D16 | A Core host records its **application** — *in use* or *for development* — as data in `devices/<host>/`. And state is **reached with one `make`-like command**, not saved and restored by each operation: after development work, one command takes the host to a named state ("ready to play", or as far as it can go) | you, 2026-11-01 | Nothing has to discover whether the engine was up and put it back on a development host. `scripts/measure-core`'s `trap restore EXIT` and `codec-input-noise.py`'s stop/start come out once the command exists. **The command does not exist yet**, and its state vocabulary and planner are to be discussed — the note below |
 
 **On storage (D3).** The existing design already keeps models and IRs on the pedal, in
 `namchaind`'s `models_root` and `irs_root` on the SD card. D3 and D4 bring in the four things it
@@ -127,6 +128,69 @@ deliberately left out:
 - a rig library on the device
 - resuming at boot
 - keeping models loaded in RAM, ready to switch.
+
+**On a Core's application, and reaching a state (D16).**
+
+A host is either **in use** — outside development work, where the pedal is expected to play and a
+working engine is part of what the host *is* — or **for development**, where it is not. That is
+data in `devices/<host>/`, not something an agent infers from which machine it happens to be on.
+
+**Each host's value is the owner's to set, and vip is not obvious.** pro and piv are plainly for
+development today, and pro's changes when it moves into the bigger case. vip is both at once by its
+own description — the Core host, *and* "where testing happens until it's a working pedal nobody
+should disrupt" — and it is played (the 2026-10-13 two-rig playtest). So vip is the case the
+distinction has to answer rather than the easy one, and the answer is the owner's.
+
+What it buys: on a development host, nothing has to discover whether `namchaind` was up, remember
+it, and put it back after every soak, measurement or apply. Today each operation hand-rolls its own
+policy, and there are at least four of them — `scripts/measure-core` has `trap restore EXIT`,
+`scripts/codec-input-noise.py` stops and starts the engine around its `arecord` arms,
+`scripts/deploy-engine` restarts it because installing one is the point, and
+`devices/common/apply` *refuses* to run while the engine is up and does not restart it afterwards.
+
+**State is reached, not restored.** The owner's rule: after development work, run one command that
+takes the host to a named state, the way `make` reaches a target. No operation tries to put back
+what it found. **No such command exists today.** The pieces it would compose do, and each is
+already idempotent on its own:
+
+| Piece | What it brings into force | Idempotent today? |
+|---|---|---|
+| `devices/<host>/apply` | the configuration tree, masked units, the data volume | yes — "files that already match are left alone" |
+| `pedal-tune apply` | cores, interrupts, idle states, the governor | yes, and `pedal-tune check` asserts it |
+| `scripts/deploy-engine` | the engine at a commit, and restarts it | by commit |
+| `<host>-boot` profiles | the kernel and the boot profile — `tuned` and `loose` on both hosts (vip also selects its root, pro has a transient `trial`) | one-shot, promoted by validation |
+| `devices/<host>/check` | nothing — it asserts and reports | read-only |
+| `scripts/status` | nothing — it reports across repos and hosts | read-only |
+
+What is missing is what makes it `make` rather than a list: a **named goal state**, the **dependency
+order** between those pieces, and **check before act**, so asking for a state the host is already in
+does nothing. One dependency is not reversible in software — a boot profile change needs a reboot —
+so the command must be able to say "this state needs a reboot, here is the one step left" rather
+than rebooting a host somebody is playing.
+
+To discuss before building it (the owner asked for the discussion, not a design):
+
+- **The vocabulary.** One axis (`playing`, `idle-tuned`, `maintenance`, `off`) or a set of
+  independent facts the command reconciles?
+- **Where "as far as it is capable of going" is decided.** pro has no cost table and no signal
+  through its interface; vip has no Pico and no bypass relay. A command that reports *how far it
+  got and why it stopped* is more useful than one that fails.
+- **Whether `check` becomes the planner.** It already knows the difference between what is wanted
+  and what is in force, for the configuration and the tuning — which is most of a dependency graph
+  already written.
+- **A script here or a real `Makefile`.** A Makefile gets dependency resolution, `-n` and a
+  printable graph for free, and the project already reaches for `make` in rtpi.
+
+**On the engine's first block (decided 2026-11-01).** `namchaind` **ignores the xrun from the first
+block**, and no more time goes on establishing whether it needs to. The artefact is understood: the
+first period after START fills an empty capture ring, so its cost belongs to starting rather than to
+real time (namchain `src/soak/soak.cpp`, and its `plan.md` 1003-1004). `namchain-soak` has handled
+it since the SSL 2+ — an untimed bring-up cycle, a prefilled output queue, and startup xruns
+reported separately — and `namchaind` never got any of it, so the artefact lands in `status.xruns`
+and can raise the health `warn` at every power-up. That is the one signal a player should be able to
+trust. The engine gets the soak's bring-up cycle and prefill and counts from after them; the startup
+count stays **visible** in `engine.status` as its own field, because ignoring it means not calling it
+a fault, not pretending it did not happen. namchain's to implement.
 
 ---
 
