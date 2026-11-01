@@ -60,7 +60,12 @@ if [[ -z $pedal_kernel || -z $fallback_kernel ]]; then
     "PEDAL_KERNEL='$pedal_kernel' FALLBACK_KERNEL='$fallback_kernel'"
 else
   log "kernels: $pedal_kernel (active) and $fallback_kernel (fallback) on $DEV_HOST"
-  status=$(dev "sudo -n vip-boot status" 2>/dev/null || true)
+  # The host's own boot tool: vip-boot on vip (the Pi firmware's A/B slots), pro-boot on pro (GRUB
+  # entries). Both print the same "slot <name> [*] <state> <release> <args>" shape, which is what
+  # the parsing below reads, so this section is the same question on either kind of machine: does
+  # the pedal boot its own kernel, and is there a known-good one to fall back to?
+  boot_tool=$(dev "sed -n 's/^BOOT_TOOL=//p' /etc/rtpi/device.env" 2>/dev/null | tr -d '[:space:]')
+  status=$(dev "sudo -n ${boot_tool:-$DEV_NAME-boot} status" 2>/dev/null || true)
   # "slot a *   good  <release>  <args>": the star marks the active slot.
   active=$(awk '$1 == "slot" && $3 == "*" {print $2}' <<< "$status")
   spare=$(awk '$1 == "slot" && $3 != "*" {print $2}' <<< "$status")
@@ -132,13 +137,32 @@ fi
 # not there is a device nobody has measured -- the engine still plays, charging every unit its unknown
 # cost (D8), which is why this is the check that says so.
 cost="$DEV_DIR/rootfs/etc/namchain/cost.json"
+engine_rev=$(dev "sed -n 's/^rev=//p' /opt/namchain/current/MANIFEST 2>/dev/null" | tr -d '[:space:]' || true)
 if [[ -f $cost ]]; then
   log "cost table: devices/$DEV_NAME against what $DEV_HOST runs"
-  engine_rev=$(dev "sed -n 's/^rev=//p' /opt/namchain/current/MANIFEST 2>/dev/null" | tr -d '[:space:]' || true)
   kernel=$(dev "uname -r" | tr -d '[:space:]' || true)
   "$COMMON_DIR/cost-check" "$cost" --host "$DEV_NAME" --engine-commit "$engine_rev" --kernel "$kernel" || bad=1
+elif [[ -d $DEV_DIR/rootfs/etc/namchain ]]; then
+  # A device nobody has measured yet. The engine still plays, charging every unit its unknown cost
+  # (0.25 of a core for a NAM model), which is the safe direction: it admits fewer rigs than the
+  # device can really hold. So this is a note and not a failure — but it is a note that says the
+  # device's rig sizing is a guess until scripts/measure-core has run here.
+  printf '  --    %-50s %s\n' "cost table" \
+    "not measured on $DEV_NAME yet: the engine charges every unit its unknown cost"
 else
   printf '  FAIL  %-50s %s\n' "cost.json" "missing: devices/$DEV_NAME/rootfs/etc/namchain/cost.json"; bad=1
+fi
+
+# The build flags, where the host builds its own engine (devices/<host>/build.env). The flags that
+# made a binary are part of what it is: an engine built for the wrong microarchitecture is a
+# different engine, and on pro the difference is 9 Full models per core against 14
+# (bench-results/2026-10-31-cost-pro/README.md). deploy-engine writes them into the MANIFEST.
+if [[ -f $DEV_DIR/build.env ]]; then
+  log "engine build flags: devices/$DEV_NAME/build.env against the installed MANIFEST"
+  engine_flags=$(dev "sed -n 's/^flags=//p' /opt/namchain/current/MANIFEST 2>/dev/null" || true)
+  want_flags=$(. "$DEV_DIR/build.env"; echo "$NAMCHAIN_CXXFLAGS")
+  if [[ $engine_flags == "$want_flags" ]]; then printf '  ok    %-50s %s\n' "build flags" "$engine_flags"
+  else printf '  FAIL  %-50s %s (build.env says %s)\n' "build flags" "${engine_flags:-none}" "$want_flags"; bad=1; fi
 fi
 
 log "state on $DEV_HOST"

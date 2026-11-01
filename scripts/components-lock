@@ -37,7 +37,15 @@ if pid=$(pidof namchaind 2>/dev/null); then
 fi
 manifest() { sed -n "s/^$1=//p" "$dir/MANIFEST" 2>/dev/null; }
 printf 'host=%s\n' "$(hostname)"
-printf 'board=%s\n' "$(tr -d '\0' < /proc/device-tree/model)"
+# Arm boards have a device tree; the x86 hosts (pro) have DMI.
+board=; [[ -r /proc/device-tree/model ]] && board=$(tr -d '\0' < /proc/device-tree/model)
+if [[ -z $board ]]; then
+  vendor=$(cat /sys/class/dmi/id/sys_vendor 2>/dev/null)
+  product=$(cat /sys/class/dmi/id/product_name 2>/dev/null)
+  # HP puts the vendor in the product name too, so joining them gives "HP HP ProDesk 600 G5".
+  if [[ $product == "$vendor "* ]]; then board=$product; else board="$vendor $product"; fi
+fi
+printf 'board=%s\n' "$board"
 printf 'kernel=%s\n' "$(uname -r)"
 printf 'namchain=%s\n' "$(manifest commit)"
 # The UI, where there is one (D14): the installed build, whether or not the unit runs (it waits for a

@@ -8,10 +8,14 @@
 # (slice drop-ins, journald, sysctl, limits) are installed by pedal-device. What is left for this
 # script is state that only exists at runtime:
 #
-#   1. the clock: governor and cap, on the one policy all four cores share
+#   1. the clock: governor and cap, on every policy the host has
 #   2. init.scope's cpuset, which cannot take a drop-in (it is a transient unit)
 #   3. the audio interrupt: its affinity and its threads' realtime priority, unless the host
 #      leaves that to rtpi (AUDIO_IRQ_MATCH empty, as on piv)
+#   4. three things only pro asks for, each off unless its variable is set, so the Pi hosts are
+#      untouched: every other interrupt onto the housekeeping cores, deep C-states off the render
+#      cores, and unbound workqueues onto the housekeeping core. tune.conf on pro says why each one
+#      is needed there and why the kernel command line cannot do it.
 #
 # apply never fails the boot: a machine running untuned is still reachable, a failed unit here
 # would not make it better. check is the strict one.
@@ -29,6 +33,14 @@ ISOLATED_CPUS="${ISOLATED_CPUS:-$RT_CPUS}"
 AUDIO_IRQ_MATCH="${AUDIO_IRQ_MATCH:-}"
 AUDIO_IRQ_PRIO="${AUDIO_IRQ_PRIO:-85}"
 AUDIO_IRQ_CPU="${AUDIO_IRQ_CPU:-}"
+# Off unless the host's tune.conf asks for them (pro does; vip and piv do not).
+# Which interrupts the kernel refused to let us move, written by apply and read by check. Runtime
+# state, because it is a fact about this boot: a kernel change can make an interrupt managed or stop
+# it being so.
+MANAGED_LIST=/run/pedal-tune/managed-irqs
+IRQ_HOUSEKEEPING="${IRQ_HOUSEKEEPING:-0}"
+CPUIDLE_MAX_LATENCY_US="${CPUIDLE_MAX_LATENCY_US:-}"
+WORKQUEUE_CPUMASK="${WORKQUEUE_CPUMASK:-}"
 
 MODE="${1:-apply}"
 bad=0
@@ -51,6 +63,44 @@ cpus_count() { expand_cpus "$1" | wc -l | tr -d ' '; }
 cpu_of_thread() { sed 's/.*) //' "/proc/$1/stat" 2>/dev/null | awk '{print $37}'; }
 
 irq_threads() { ps -eLo tid=,comm= | awk -v p="irq/$1-" 'index($2, p) == 1 { print $1 }'; }
+
+# Where an interrupt is actually delivered: the chip's effective mask where it reports one, else the
+# requested one. The RP1's chained chip (vip's codec DMA) leaves effective_affinity_list empty.
+irq_where() {
+  local aff; aff=$(cat "/proc/irq/$1/effective_affinity_list" 2>/dev/null)
+  [[ -n $aff ]] || aff=$(cat "/proc/irq/$1/smp_affinity_list" 2>/dev/null)
+  echo "$aff"
+}
+# The name /proc/interrupts gives an interrupt, which is the last field of its line.
+irq_name() { awk -v i="$1:" '$1 == i { print $NF }' /proc/interrupts; }
+# How many times interrupt $1 has been delivered to the cpus in list $2 since boot. The per-CPU
+# columns start at field 2, and the row is bounded by the header's field count: scanning every
+# numeric field instead picks up the chip's hwirq number from the trailing columns and reports it as
+# a phantom cpu. The list is expanded to one cpu per line first, because awk would read a range
+# ("0-5") as the number 0 and quietly report one core's count as the whole set's.
+irq_count_on() {
+  local ncpu cpus; ncpu=$(awk 'NR == 1 { print NF; exit }' /proc/interrupts)
+  cpus=$(expand_cpus "$2" | tr '\n' ' ')
+  awk -v i="$1:" -v c="$cpus" -v n="$ncpu" \
+    '$1 == i { total = 0; split(c, want, " "); for (w in want) if (want[w] + 2 <= n + 1) total += $(want[w] + 2); print total }' \
+    /proc/interrupts
+}
+# Every interrupt that is not the audio one. The audio interrupt is placed on purpose, by the block
+# below this one, and must not be swept onto the housekeeping cores with the rest.
+other_irqs() {
+  local audio; audio=" $(audio_irqs | tr '\n' ' ')"
+  local i n
+  for i in /proc/irq/[0-9]*; do
+    n=${i##*/}
+    [[ $audio == *" $n "* ]] && continue
+    [[ -w $i/smp_affinity_list ]] || continue
+    # Nameless lines in /proc/interrupts are not devices: IRQ 2 is the legacy cascade, which has no
+    # affinity to set and refuses the write. Counting it as a failure would mean this check could
+    # never pass.
+    [[ -n $(irq_name "$n") ]] || continue
+    echo "$n"
+  done
+}
 
 apply() {
   local p irq tid
@@ -78,7 +128,59 @@ apply() {
       chrt -f -p "$AUDIO_IRQ_PRIO" "$tid" || say "WARNING: could not set priority on thread $tid"
     done
   done
-  check >/dev/null || say "applied, with differences; run 'pedal-tune check'"
+
+  # 4. every other interrupt onto the housekeeping cores. `irqaffinity=` on the kernel command line
+  # only sets the *default* mask, and only for interrupts that are allocated after it is parsed: a
+  # driver that asks for a CPU keeps it, and on pro the xHCI carrying the audio was being delivered
+  # to the active render core because of that. A managed (multiqueue) interrupt refuses the write
+  # with EIO — its placement is the kernel's, and `isolcpus=managed_irq` is what confines those —
+  # so a refusal is counted, not warned about.
+  if [[ $IRQ_HOUSEKEEPING == 1 ]]; then
+    local moved=0 managed=0
+    mkdir -p "$(dirname "$MANAGED_LIST")"
+    : > "$MANAGED_LIST"
+    for irq in $(other_irqs); do
+      if echo "$HOUSEKEEPING_CPUS" > "/proc/irq/$irq/smp_affinity_list" 2>/dev/null; then
+        moved=$((moved + 1))
+      else
+        # The kernel refused: this is a managed (driver-steered, multiqueue) interrupt, and its
+        # placement is not ours to set. Recorded so `check` can tell "the kernel owns this" apart
+        # from "we tried and it did not take" without having to write anything itself.
+        echo "$irq" >> "$MANAGED_LIST"
+        managed=$((managed + 1))
+      fi
+    done
+    say "interrupts: $moved moved to cpu $HOUSEKEEPING_CPUS, $managed left to the kernel (managed or per-CPU)"
+  fi
+
+  # 5. deep idle states off the render cores. An exit latency longer than a block is a core that
+  # cannot be back in time; tune.conf's threshold says which states that means. The housekeeping
+  # core keeps all of them, so the machine still idles cool.
+  if [[ -n $CPUIDLE_MAX_LATENCY_US ]]; then
+    local cpu state lat off=0
+    for cpu in $(expand_cpus "$ISOLATED_CPUS"); do
+      for state in /sys/devices/system/cpu/cpu"$cpu"/cpuidle/state*; do
+        [[ -w $state/disable ]] || continue
+        lat=$(cat "$state/latency" 2>/dev/null) || continue
+        (( lat > CPUIDLE_MAX_LATENCY_US )) || continue
+        echo 1 > "$state/disable" 2>/dev/null && off=$((off + 1))
+      done
+    done
+    say "cpuidle: $off state(s) over ${CPUIDLE_MAX_LATENCY_US}us disabled on cpu $ISOLATED_CPUS"
+  fi
+
+  # 6. unbound workqueues onto the housekeeping core. Nothing on the kernel command line covers
+  # these: isolcpus keeps the scheduler off a core, not a workqueue pool's own mask.
+  if [[ -n $WORKQUEUE_CPUMASK ]]; then
+    echo "$WORKQUEUE_CPUMASK" > /sys/devices/virtual/workqueue/cpumask 2>/dev/null \
+      || say "WARNING: could not set the unbound workqueue cpumask"
+  fi
+
+  # In a subshell, so that a bug in `check` cannot take `apply` down with it. The two have different
+  # promises — apply must never fail the boot, check must be strict — and on 2026-11-01 one
+  # unreadable thermal zone inside check killed apply and left the host untuned at boot. Honouring
+  # apply's promise structurally beats relying on check being faultless.
+  ( check ) >/dev/null 2>&1 || say "applied, with differences; run 'pedal-tune check'"
   say "applied"
 }
 
@@ -107,13 +209,34 @@ check() {
     expect "${p##*/} max kHz" "$(cat "$p/scaling_max_freq")" "$CPU_MAX_KHZ"
     note "${p##*/} cpus / now kHz" "$(cat "$p/related_cpus") / $(cat "$p/scaling_cur_freq")"
   done
-  local z c
+  local z c t_now t_trip
   for z in /sys/class/thermal/thermal_zone*; do
-    note "$(cat "$z/type") temperature" "$(( $(cat "$z/temp") / 1000 )) C (first trip $(( $(cat "$z/trip_point_0_temp" 2>/dev/null || echo 0) / 1000 )) C)"
+    # A zone can refuse the read: pro's thermal_zone1 is the WiFi radio (iwlwifi_1), and it answers
+    # "No data available" whenever the radio is not up. That left `$(( / 1000 ))`, and an arithmetic
+    # expansion with nothing in it is a FATAL expansion error in a non-interactive shell — so one
+    # transient read took the whole unit down on a boot where the radio was still associating
+    # (2026-11-01). This unit's first promise is that it never fails the boot; a temperature it
+    # cannot read is a line that says so.
+    t_now=$(cat "$z/temp" 2>/dev/null) || t_now=""
+    t_trip=$(cat "$z/trip_point_0_temp" 2>/dev/null) || t_trip=""
+    [[ $t_now =~ ^-?[0-9]+$ ]] || { note "$(cat "$z/type") temperature" "not readable"; continue; }
+    [[ $t_trip =~ ^-?[0-9]+$ ]] || t_trip=0
+    note "$(cat "$z/type") temperature" "$(( t_now / 1000 )) C (first trip $(( t_trip / 1000 )) C)"
   done
   for c in /sys/class/thermal/cooling_device*; do
     [[ $(cat "$c/type") == cpufreq-* ]] || continue
     expect "$(cat "$c/type") throttle state" "$(cat "$c/cur_state")" "0"
+  done
+  # x86 has no cpufreq cooling device; it counts throttle events per core instead. Cumulative since
+  # boot, so a note and not an expectation — but a non-zero count is the first thing to read after a
+  # soak that missed a deadline for no visible reason, because a package power or thermal event is
+  # exactly the kind of stall that shows up as the same work taking longer.
+  local t
+  for t in /sys/devices/system/cpu/cpu*/thermal_throttle; do
+    [[ -r $t/core_throttle_count ]] || continue
+    local c0=${t%/thermal_throttle}
+    note "${c0##*/} throttle events" \
+      "core $(cat "$t/core_throttle_count"), package $(cat "$t/package_throttle_count" 2>/dev/null || echo '-')"
   done
 
   echo "== cpusets"
@@ -136,6 +259,84 @@ check() {
           done | sort | uniq -c | awk '{printf "%s%s(%s)", s, $2, $1; s=" "}')
   if [[ -z $stray ]]; then okay "user tasks allowed on cpu $ISOLATED_CPUS" "none outside pedal-rt.slice"
   else fail "user tasks allowed on cpu $ISOLATED_CPUS" "$stray"; fi
+
+  # The three x86 knobs, each checked only where the host asked for it (tune.conf on pro).
+  if [[ $IRQ_HOUSEKEEPING == 1 ]]; then
+    echo "== other interrupts"
+    # Three different things can put a non-audio interrupt on a render core, and only one of them is
+    # ours to fix. Telling them apart is the whole job here, because a check that cries wolf about
+    # the other two is a check nobody reads.
+    local ours="" queued="" kernel_owned="" on_active=""
+    for irq in $(other_irqs); do
+      local want_mask where
+      want_mask=$(cat "/proc/irq/$irq/smp_affinity_list" 2>/dev/null)
+      where=$(irq_where "$irq")
+      cpus_overlap "${where:-$want_mask}" "$ISOLATED_CPUS" || continue
+      if ! cpus_overlap "$want_mask" "$ISOLATED_CPUS"; then
+        # The requested mask is right and only the delivery is behind: moving an edge-triggered
+        # interrupt happens from its own handler, so one that has not fired since the write has not
+        # moved yet. The IOMMU's dmar lines sit here for ever, having fired zero times.
+        queued+=" $irq($(irq_name "$irq"))@$where"
+      elif grep -qx "$irq" "$MANAGED_LIST" 2>/dev/null; then
+        # A managed (multiqueue) interrupt: the kernel refused our write, because its placement is
+        # the driver's. `isolcpus=managed_irq` cannot help when the mask is a SINGLE isolated CPU —
+        # the kernel documents it as having no effect then, and NVMe gives every CPU its own queue,
+        # so every queue's mask is one CPU. What matters is therefore not where it sits but whether
+        # it fires: a completion interrupt is delivered to the core that submitted the I/O, and the
+        # render thread must never do I/O. On pro, four of the five on render cores have never
+        # fired at all.
+        kernel_owned+=" $irq($(irq_name "$irq"))@$where=$(irq_count_on "$irq" "$where")"
+        cpus_overlap "$where" "$RT_CPUS" && \
+          on_active+=" $irq($(irq_name "$irq"))=$(irq_count_on "$irq" "$where")"
+      else
+        # Ours, and wrong: an interrupt we could have moved and did not. Either pedal-tune has not
+        # run since boot, or something moved it back.
+        ours+=" $irq($(irq_name "$irq"))@$where"
+      fi
+    done
+    if [[ -n $ours ]]; then
+      fail "non-audio interrupts off cpu $ISOLATED_CPUS" "on render cores, and movable:$ours"
+    else
+      okay "movable non-audio interrupts" "all asked for cpu $HOUSEKEEPING_CPUS"
+    fi
+    [[ -n $kernel_owned ]] && note "kernel-placed interrupts (counts)" \
+      "isolcpus cannot move a managed IRQ masked to one isolated cpu:$kernel_owned"
+    # The one that would actually cost a deadline. Not fatal on its own — a count here is usually
+    # boot-time I/O from before the cpusets took effect — but it is the number to read after a soak,
+    # because in steady state the render thread does no I/O and this must not grow.
+    [[ -n $on_active ]] && note "…of those, on the ACTIVE render core" \
+      "$on_active — must not grow while playing; re-read after a soak"
+    [[ -n $queued ]] && note "delivery not moved yet" \
+      "asked for $HOUSEKEEPING_CPUS, moves at the next interrupt:$queued"
+  fi
+
+  if [[ -n $CPUIDLE_MAX_LATENCY_US ]]; then
+    echo "== idle states (render cores, over ${CPUIDLE_MAX_LATENCY_US}us)"
+    local cpu state lat deep=""
+    for cpu in $(expand_cpus "$ISOLATED_CPUS"); do
+      for state in /sys/devices/system/cpu/cpu"$cpu"/cpuidle/state*; do
+        [[ -r $state/latency ]] || continue
+        lat=$(cat "$state/latency")
+        (( lat > CPUIDLE_MAX_LATENCY_US )) || continue
+        [[ $(cat "$state/disable" 2>/dev/null) == 1 ]] && continue
+        deep+=" cpu$cpu/$(cat "$state/name")(${lat}us)"
+      done
+    done
+    if [[ -z $deep ]]; then okay "deep idle states disabled" "cpu $ISOLATED_CPUS"
+    else fail "deep idle states disabled" "still enabled:$deep"; fi
+    note "housekeeping cpu $HOUSEKEEPING_CPUS" "keeps every state, by design"
+  fi
+
+  if [[ -n $WORKQUEUE_CPUMASK ]]; then
+    echo "== workqueues"
+    # Read back as hex, which the kernel may pad ("0000001" for "1"), so compare the number.
+    local wq; wq=$(cat /sys/devices/virtual/workqueue/cpumask 2>/dev/null | tr -d ',')
+    if (( 0x${wq:-0} == 0x$WORKQUEUE_CPUMASK )); then
+      okay "unbound workqueue cpumask" "$wq"
+    else
+      fail "unbound workqueue cpumask" "$wq (want $WORKQUEUE_CPUMASK)"
+    fi
+  fi
 
   if [[ -z $AUDIO_IRQ_MATCH ]]; then
     echo "== audio interrupt"; note "owner" "not this tree (AUDIO_IRQ_MATCH is empty)"

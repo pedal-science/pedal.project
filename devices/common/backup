@@ -19,6 +19,13 @@ section isolation; echo "isolated=$(cat /sys/devices/system/cpu/isolated) nohz_f
 section cpufreq;   for p in /sys/devices/system/cpu/cpufreq/policy*; do echo "${p##*/} $(cat $p/scaling_governor) max=$(cat $p/scaling_max_freq) cur=$(cat $p/scaling_cur_freq)"; done
 section thermal;   for z in /sys/class/thermal/thermal_zone*; do echo "$(cat $z/type) $(cat $z/temp)"; done
 section cpusets;   for s in /sys/fs/cgroup/*.slice /sys/fs/cgroup/init.scope; do echo "${s##*/} $(cat $s/cpuset.cpus.effective)"; done
+# x86 only: the idle states whose exit latency the render cores cannot afford, the unbound
+# workqueue mask, and the throttle counters. All three are things pedal-tune sets or reads on pro
+# and that no Pi host has (docs/pro.md).
+section cpuidle;   for c in /sys/devices/system/cpu/cpu[0-9]*/cpuidle; do printf '%s' "${c%/cpuidle}"; for s in $c/state*; do printf ' %s(%sus,dis=%s)' "$(cat $s/name)" "$(cat $s/latency)" "$(cat $s/disable)"; done; echo; done
+section workqueue; cat /sys/devices/virtual/workqueue/cpumask 2>/dev/null
+section throttle;  for t in /sys/devices/system/cpu/cpu[0-9]*/thermal_throttle; do echo "${t%/thermal_throttle} core=$(cat $t/core_throttle_count) package=$(cat $t/package_throttle_count 2>/dev/null)"; done 2>/dev/null
+section powercap;  for c in /sys/class/powercap/intel-rapl:[0-9]*; do echo "$(cat $c/name 2>/dev/null) $(for l in $c/constraint_*_name; do printf '%s=%s ' "$(cat $l)" "$(cat ${l%_name}_power_limit_uw 2>/dev/null)"; done)"; done 2>/dev/null
 section interrupts; cat /proc/interrupts
 section irq-affinity; for i in /proc/irq/[0-9]*; do echo "${i##*/} $(cat $i/smp_affinity_list)"; done
 section irq-threads; ps -eLo tid,cls,rtprio,psr,comm | grep 'irq/'
@@ -38,11 +45,14 @@ EOF
 dev 'bash -s' > "$out/files.tar" <<'EOF' || die "copying $DEV_HOST files failed"
 shopt -s nullglob
 cd /
-paths=(etc/pedal var/lib/pedal var/lib/namchain/host-slim
+paths=(etc/pedal var/lib/pedal var/lib/namchain/host-slim var/lib/pedal-device
        etc/systemd/system/*.slice.d etc/systemd/system/*.slice
        etc/systemd/system/pedal-* etc/systemd/system/namchain-host-slim-*
+       etc/systemd/system/namchaind.service.d etc/systemd/system/rigpa.service.d
        etc/systemd/journald.conf etc/systemd/journald.conf.d
-       etc/sysctl.d etc/security/limits.d etc/udev/rules.d usr/local/sbin usr/local/bin)
+       etc/namchain etc/asound.conf etc/rtpi etc/modules-load.d
+       etc/sysctl.d etc/security/limits.d etc/udev/rules.d usr/local/sbin usr/local/bin
+       usr/local/libexec etc/default/grub etc/default/grub.d etc/grub.d/42_pedal)
 existing=()
 for p in "${paths[@]}"; do [[ -e $p ]] && existing+=("$p"); done
 # What is data and what is the pedal's own: models and IRs are the Mac's library, mirrored down
@@ -51,8 +61,14 @@ for p in "${paths[@]}"; do [[ -e $p ]] && existing+=("$p"); done
 # last.json is the resume state and a stored rig exists only here, so they go in (R13,
 # docs/pedal-service.md). Soak results are evidence, and evidence lives in a repo's bench-results/
 # (rule 8), not in a backup that is committed — they were 4.8 MB of the 4.9 MB this tar used to be.
+# etc/namchain/token is the shared secret ljoss authenticates with, and these tars are committed:
+# it is the one file in the paths above that must never be in git. scratch is working space
+# (captures, builds, model copies, docs/pro.md) and cost-fragments are measurements waiting to be
+# merged, not configuration.
 sudo -n tar --exclude var/lib/pedal/library/models --exclude var/lib/pedal/library/irs \
   --exclude var/lib/pedal/images --exclude var/lib/pedal/soak \
+  --exclude var/lib/pedal/scratch --exclude var/lib/pedal/cost-fragments \
+  --exclude etc/namchain/token \
   --exclude var/lib/pedal/lost+found -cf - "${existing[@]}"
 EOF
 

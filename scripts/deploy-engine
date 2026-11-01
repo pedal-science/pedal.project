@@ -5,7 +5,9 @@
 # vip has no compiler, so for vip it's built on the Mac, in the image build's container
 # (devices/common/image/build-namchain, on the snapshot in devices/vip/image.lock and with the flags
 # in devices/vip/image.env): exactly as the engine on vip's card was built. piv builds it itself, in
-# a dedicated tree (~/pedal-build/namchain), never the dev checkout. Either way the tests run, then
+# a dedicated tree (~/pedal-build/namchain), never the dev checkout. pro (x86-64) builds it itself
+# too, from the commit's exported tree sent from the Mac (so the commit needn't be pushed), clean each
+# time, with the flags in devices/pro/build.env, and won't build while namchaind is running. Either way the tests run, then
 # it's installed into /opt/namchain/<commit>/, /opt/namchain/current swapped to it, namchain's own
 # unit installed (packaging/systemd/namchaind.service; devices/common adds the pedal's drop-in), a
 # TCP token made if there's none (normally it's installed from 1Password: docs/vip-image.md),
@@ -22,12 +24,12 @@ while [[ $# -gt 0 ]]; do
     --host) HOST=$2; shift ;;
     --commit) REV=$2; shift ;;
     --no-tests) TESTS=0 ;;
-    -h|--help) sed -n '2,13p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,15p' "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
   shift
 done
-[[ $HOST == piv || $HOST == vip ]] || { echo "deploy-engine: piv or vip" >&2; exit 2; }
+[[ $HOST == piv || $HOST == vip || $HOST == pro ]] || { echo "deploy-engine: piv, vip or pro" >&2; exit 2; }
 [[ ${PEDAL_HOST_LOCK:-} == "$HOST" ]] || exec "$(dirname "$0")/host-lock" --host "$HOST" -- "$0" "${ARGS[@]}"
 
 REPO=$(cd "$(dirname "$0")/.." && pwd)
@@ -50,18 +52,26 @@ sudo install -m 0644 "$stage/packaging/namchaind.service" "$dest/packaging/"
 sudo install -m 0644 "$stage/MANIFEST" "$dest/MANIFEST"
 sudo ln -sfn "$dest" /opt/namchain/current
 sudo install -m 0644 "$dest/packaging/namchaind.service" /etc/systemd/system/namchaind.service
-if ! sudo test -s /etc/namchain/token; then
-  sudo install -d -m 0755 /etc/namchain
-  (umask 077; od -An -tx1 -N32 /dev/urandom | tr -d ' \n' | sudo tee /etc/namchain/token >/dev/null)
-  sudo chmod 0600 /etc/namchain/token
-  echo "made a new TCP token in /etc/namchain/token" >&2
+# Start the service only where the pedal's configuration is in place (its config, and the drop-in
+# that points the unit at /opt/namchain/current): a host without them, like pro until devices/pro
+# exists, gets the binaries and nothing else changed.
+if [[ -s /etc/namchain/namchaind.json && -e /etc/systemd/system/namchaind.service.d/10-pedal.conf ]]; then
+  if ! sudo test -s /etc/namchain/token; then
+    sudo install -d -m 0755 /etc/namchain
+    (umask 077; od -An -tx1 -N32 /dev/urandom | tr -d ' \n' | sudo tee /etc/namchain/token >/dev/null)
+    sudo chmod 0600 /etc/namchain/token
+    echo "made a new TCP token in /etc/namchain/token" >&2
+  fi
+  sudo systemctl daemon-reload
+  sudo systemctl enable -q namchaind.service
+  sudo systemctl restart namchaind.service
+  sleep 3
+  systemctl is-active namchaind.service
+  sudo -n /opt/namchain/current/bin/namchainctl --compact status 2>&1 | head -c 600; echo
+else
+  sudo systemctl daemon-reload
+  echo "no pedal configuration for namchaind on this host: binaries installed, service left alone" >&2
 fi
-sudo systemctl daemon-reload
-sudo systemctl enable -q namchaind.service
-sudo systemctl restart namchaind.service
-sleep 3
-systemctl is-active namchaind.service
-sudo -n /opt/namchain/current/bin/namchainctl --compact status 2>&1 | head -c 600; echo
 echo "installed $commit"
 EOF
 )
@@ -70,7 +80,9 @@ BINS=(namchaind namchainctl namchain-soak namchain-latency namchain-render namch
 if [[ $HOST == piv ]]; then
   log "building $REV on $HOST"
   "${SSH[@]}" "mkdir -p ~/pedal-build && cat > ~/pedal-build/install.sh" <<<"$INSTALL"
-  "${SSH[@]}" bash -s -- "$REV" "$TESTS" "${BINS[*]}" <<'REMOTE'
+  # ssh joins its arguments into one string for the remote shell, which splits it again: quote them
+  # for it, or the list of binaries arrives as its first name only.
+  "${SSH[@]}" "bash -s -- $(printf '%q ' "$REV" "$TESTS" "${BINS[*]}")" <<'REMOTE'
 set -euo pipefail
 rev=$1 tests=$2 bins=$3
 cd ~/pedal-build
@@ -100,6 +112,42 @@ printf 'commit=%s\nrev=%s\nbuilt=%s\nhost=%s\nkernel=%s\n' "$commit" "$commit" \
   "$(date -u +%FT%TZ)" "$(hostname)" "$(uname -r)" > "$stage/MANIFEST"
 bash ~/pedal-build/install.sh "$stage" "$commit"
 REMOTE
+elif [[ $HOST == pro ]]; then
+  NC=${NAMCHAIN_REPO:-$("$REPO/scripts/workspace" root --repo namchain)}
+  # shellcheck disable=SC1091
+  source "$REPO/devices/$HOST/build.env"
+  git -C "$NC" fetch -q origin
+  full=$(git -C "$NC" rev-parse --verify "$REV^{commit}") || die "no commit $REV in $NC"
+  commit=${full:0:7}
+  playing=$("${SSH[@]}" "systemctl is-active namchaind.service" || true)
+  [[ $playing != active ]] || die "namchaind is running on $HOST: no builds while it plays (rule 8). Stop it first."
+  # shellcheck disable=SC1091
+  source "$REPO/devices/common/image/export.sh"
+  W=$(mktemp -d); trap 'rm -rf "$W"' EXIT
+  log "exporting $REV ($commit) and building it on $HOST ($NAMCHAIN_CXXFLAGS)"
+  export_tree "$NC" "$full" "$W/src"
+  # Not /tmp: that is a RAM disk on the Core hosts. ~/pedal-build is on the root volume.
+  "${SSH[@]}" "rm -rf ~/pedal-build/src ~/pedal-build/build && mkdir -p ~/pedal-build/src"
+  COPYFILE_DISABLE=1 tar --no-xattrs -C "$W/src" -czf - . | "${SSH[@]}" "tar -xzf - -C ~/pedal-build/src"
+  # ssh joins its arguments into one string for the remote shell, so quote them for it: the flags
+  # and the binaries' names are each several words.
+  "${SSH[@]}" "bash -s -- $(printf '%q ' "$commit" "$TESTS" "$NAMCHAIN_CXXFLAGS" "${BINS[*]}")" <<'REMOTE'
+set -euo pipefail
+commit=$1 tests=$2 flags=$3 bins=$4
+cd ~/pedal-build/src
+cmake -S . -B ../build -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_CXX_FLAGS=$flags" \
+  -DNAMCHAIN_BUILD_TESTS=ON -DNAMCHAIN_BUILD_TOOLS=ON > ../build-configure.log
+nice -n 19 cmake --build ../build -j4 > ../build.log || { tail -30 ../build.log >&2; exit 1; }
+# Serially, as on piv: timing tests fail from contention under parallelism, not from a defect.
+[[ $tests == 1 ]] && (cd ../build && nice -n 19 ctest --output-on-failure | tail -3)
+stage=~/pedal-build/stage
+rm -rf "$stage"; mkdir -p "$stage/bin" "$stage/packaging"
+for b in $bins; do cp "../build/$b" "$stage/bin/"; done
+cp packaging/systemd/namchaind.service "$stage/packaging/"
+printf 'commit=%s\nrev=%s\nbuilt=%s\nhost=%s\nkernel=%s\nflags=%s\n' "$commit" "$commit" \
+  "$(date -u +%FT%TZ)" "$(hostname)" "$(uname -r)" "$flags" > "$stage/MANIFEST"
+REMOTE
+  "${SSH[@]}" "bash -s -- \"\$HOME/pedal-build/stage\" $commit" <<<"$INSTALL"
 else
   NC=${NAMCHAIN_REPO:-$("$REPO/scripts/workspace" root --repo namchain)}
   # shellcheck disable=SC1091

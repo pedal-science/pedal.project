@@ -32,7 +32,9 @@ tree_commit() {
 }
 
 # Every file that goes on the host, as "<source path>\t</installed path>". The device's own
-# rootfs wins over the common one where both have a file.
+# rootfs wins over the common one where both have a file. A device with a `common-files` list (one
+# path under rootfs/ per line) takes only those from the common tree: the common tree is the Pi
+# hosts' (codec, UART, pedald), and a host that isn't one, like pro, names what it shares.
 rootfs_files() {
   local root rel
   declare -A seen=()
@@ -40,6 +42,9 @@ rootfs_files() {
     [[ -d $root ]] || continue
     while IFS= read -r rel; do
       [[ -n ${seen[$rel]:-} ]] && continue
+      if [[ $root == "$COMMON_DIR/rootfs" && -f $DEV_DIR/common-files ]]; then
+        grep -qxF -- "$rel" <(grep -v -e '^#' -e '^[[:space:]]*$' "$DEV_DIR/common-files") || continue
+      fi
       seen[$rel]=1
       printf '%s\t/%s\n' "$root/$rel" "$rel"
     done < <(cd "$root" && find . -type f ! -name .DS_Store ! -path '*/__pycache__/*' | sed 's|^\./||' | sort)

@@ -26,7 +26,13 @@ ROOT=""
 STATE=/var/lib/pedal
 MANIFEST=$STATE/manifest
 SAVED=$STATE/preexisting
-LOCK=/run/lock/$(hostname).lock  # the same lock scripts/host-lock will take (vip.lock on vip)
+LOCK=/run/lock/$(hostname).lock  # the host's own lock; scripts/host-lock takes pedal-host.lock
+
+# Where the library lives, on a host that has to make it rather than receive it in an image. Only
+# pro has this file: vip's pedal-data is a partition its card build writes, and piv uses its root.
+# Read from the staged tree on apply, so the file and the stage that installs it agree.
+STORAGE_CONF=/etc/pedal/storage.conf
+TUNE_CONF=/etc/pedal/tune.conf
 
 # namchain's tools/soak/host-slim.sh configured the hosts before this tree existed. apply takes
 # its place: it removes host-slim's files (saving them) and takes over the masks we share. The
@@ -89,6 +95,78 @@ adopt() {
 
 units() { grep -v -e '^#' -e '^[[:space:]]*$' "${UNITS_FILE:-/etc/pedal/masked-units}"; }
 
+# One value out of a KEY=value file, without letting the file set anything else in this shell.
+conf_value() { [[ -r $1 ]] || return 0; (. "$1"; eval "printf '%s' \"\${$2:-}\""); }
+
+# The library volume, where the host has to make its own (STORAGE_CONF). Two halves, because they
+# have to happen either side of install_tree: the volume must be mounted before anything is
+# recorded, since on such a host the manifest lives on it — and the directories cannot belong to the
+# service user until the sysusers.d file that creates that user has been installed.
+#
+# Made once if it is missing and never re-made; an existing volume is never formatted.
+storage_mount() {
+  local conf=$1 vg lv size mount
+  [[ -r $conf ]] || return 0
+  vg=$(conf_value "$conf" VG); lv=$(conf_value "$conf" DATA_LV)
+  size=$(conf_value "$conf" DATA_SIZE); mount=$(conf_value "$conf" DATA_MOUNT)
+  [[ -n $vg && -n $lv && -n $size && -n $mount ]] \
+    || { say "$conf names no volume; skipping storage"; return 0; }
+  mountpoint -q "$mount" && return 0
+  if ! lvs --noheadings "$vg/$lv" >/dev/null 2>&1; then
+    say "making $size logical volume $vg/$lv"
+    run lvcreate -y -L "$size" -n "$lv" "$vg"
+    # Only on a volume made a line ago. An existing one is never formatted.
+    run mkfs.ext4 -q -L "$lv" "/dev/$vg/$lv"
+  fi
+  run mkdir -p "$mount"
+  # nofail: a machine that cannot mount its library should still boot far enough to be fixed over
+  # ssh. namchaind's drop-in has RequiresMountsFor, so the engine waits for the mount rather than
+  # starting with an empty library.
+  grep -qE "^LABEL=$lv[[:space:]]" /etc/fstab \
+    || run sh -c "echo 'LABEL=$lv $mount ext4 defaults,nofail 0 2' >> /etc/fstab"
+  run systemctl daemon-reload
+  run mount "$mount"
+}
+
+storage_owner() {
+  local conf=$1 mount user login d
+  [[ -r $conf ]] || return 0
+  mount=$(conf_value "$conf" DATA_MOUNT)
+  user=$(conf_value "$conf" PEDAL_USER); login=$(conf_value "$conf" LOGIN_USER)
+  [[ -n $mount ]] || return 0
+  # activate() has already run sysusers, so the user exists; this is the belt for an offline or
+  # partial run. A host whose user still does not exist keeps root as the owner rather than failing.
+  id "$user" >/dev/null 2>&1 || { say "no user $user; leaving $mount owned by root"; user=root; }
+  for d in library/models library/irs library/rigs scratch; do
+    run install -d -o "$user" -g "$user" "$mount/$d"
+  done
+  run chown "$user:$user" "$mount" "$mount/library"
+  # Rigs are the service's to write (resume, and the library API), so they belong to it outright.
+  # Models and IRs are the Mac's, mirrored down by scripts/sync-library, which sets their modes.
+  run chown -R "$user:$user" "$mount/library/rigs"
+  # The owner's login gets realtime scheduling and memlock through group audio
+  # (etc/security/limits.d/90-pedal-rt.conf), which is what `sudo pedal-rt ./namchain-soak` needs.
+  if [[ -n $login ]] && ! id -nG "$login" 2>/dev/null | tr ' ' '\n' | grep -qx audio; then
+    say "adding $login to group audio (takes effect at the next login)"
+    run usermod -aG audio "$login"
+  fi
+}
+
+# namchaind is configured to start from "last.json" and starts silent without it. On the Pi hosts
+# `pedald seed` writes it; a host with no pedald gets the default rig once, here, and a rig saved
+# over it later is never overwritten.
+seed_rig() {
+  local conf=$1 mount user rig
+  [[ -r $conf ]] || return 0
+  [[ -x /usr/local/sbin/pedald ]] && return 0
+  mount=$(conf_value "$conf" DATA_MOUNT); user=$(conf_value "$conf" PEDAL_USER)
+  rig=$mount/library/rigs/last.json
+  [[ -n $mount && -e /etc/pedal/default-rig.json ]] || return 0
+  [[ -e $rig ]] && return 0
+  say "seeding $rig from /etc/pedal/default-rig.json"
+  run install -m 0644 -o "${user:-root}" -g "${user:-root}" /etc/pedal/default-rig.json "$rig"
+}
+
 install_tree() {
   local root=$1 rel dst mode
   while IFS= read -r rel; do
@@ -121,7 +199,18 @@ mask_units() {
       recorded "mask $u" || echo "  masked by someone else, left alone: $u"
       continue
     fi
-    run $(sc "$u") mask "${u#user:}" >/dev/null
+    # A mask is a symlink to /dev/null at /etc/systemd/system/<unit>, so a unit whose OWN file
+    # lives there cannot be masked: systemctl refuses rather than overwrite it. Snap-generated
+    # units are the case that found this (snap.hwctl.…socket on pro, 2026-11-01), and one of them
+    # must not take the whole apply down with it — so this reports and carries on. The unit is not
+    # recorded, so revert will not touch it, and `pedal-device status` fails on it afterwards,
+    # which is where an unmasked unit should become visible.
+    if ! run $(sc "$u") mask "${u#user:}" >/dev/null; then
+      echo "  CANNOT MASK  $u — its own unit file is at /etc/systemd/system, where the mask would go."
+      echo "               Left running. Remove the package or snap that ships it, or drop it from"
+      echo "               /etc/pedal/masked-units with a note saying why."
+      continue
+    fi
     record "mask $u"
     echo "  masked    $u"
   done < <(units)
@@ -185,10 +274,12 @@ activate() {
       d=${d%.d/*}; run systemctl set-property --runtime "${d##*/}" AllowedCPUs="$hk"
     done
   fi
-  run sysctl -q -p /etc/sysctl.d/90-pedal.conf
+  [[ -e /etc/sysctl.d/90-pedal.conf ]] && run sysctl -q -p /etc/sysctl.d/90-pedal.conf
   run systemctl restart systemd-journald
-  run systemctl enable pedal-tune.service
-  run systemctl restart pedal-tune.service
+  if [[ -e /etc/systemd/system/pedal-tune.service ]]; then
+    run systemctl enable pedal-tune.service
+    run systemctl restart pedal-tune.service
+  fi
   # namchaind itself is installed and enabled by scripts/deploy-engine, with its binaries.
   # pedald carries the resume job now, so pedal-resume retires and the user it runs as is made.
   retire_resume
@@ -200,8 +291,13 @@ activate() {
     run systemctl enable pedal-uart.service
     run systemctl restart pedal-uart.service
   fi
-  run systemctl enable pedald.service
-  run systemctl restart --no-block pedald.service
+  # The pedal service, where the host has one. pro has no UART link and no screen, so it has no
+  # pedald: the rig library is its own (seed_rig) and the footswitch mapping has nowhere to come
+  # from yet.
+  if [[ -e /etc/systemd/system/pedald.service ]]; then
+    run systemctl enable pedald.service
+    run systemctl restart --no-block pedald.service
+  fi
   # Every Pi host ships this unit; it fails, harmlessly, where no codec is wired — and must not stop
   # the apply there (2026-10-16: vip with its codec off the header, and nothing after this ran).
   if [[ -e /etc/systemd/system/pedal-codec.service ]]; then
@@ -209,10 +305,12 @@ activate() {
     run systemctl restart pedal-codec.service \
       || echo "  note      pedal-codec failed: no codec answering? (journalctl -u pedal-codec)"
   fi
-  # The unit follows wlan0, so it is only started where there is one: elsewhere the start would
-  # wait for a device that never comes.
+  # The unit follows the host's WiFi interface, so it is only started where there is one: elsewhere
+  # the start would wait for a device that never comes. The name is the Pi hosts' wlan0 unless the
+  # host's tune.conf says otherwise (pro has predictable names, so wlp0s20f3).
+  local wif; wif=$(conf_value "$conf" WIFI_INTERFACE); wif=${wif:-wlan0}
   run systemctl enable pedal-wifi.service
-  if [[ -e /sys/class/net/wlan0 ]]; then
+  if [[ -e /sys/class/net/$wif ]]; then
     run systemctl restart pedal-wifi.service
   fi
 }
@@ -223,11 +321,18 @@ do_apply() {
   UNITS_FILE=$stage/rootfs/etc/pedal/masked-units
   (( DRY )) && say "DRY RUN: nothing will change"
   offline && say "offline: applying to $ROOT, starting nothing"
+  # Before the manifest: on a host that makes its own library volume, the manifest is on it. The
+  # image build skips this — vip's partition is the card's, already mounted under $ROOT.
+  offline || storage_mount "$stage/rootfs$STORAGE_CONF"
   run mkdir -p "$ROOT$STATE"; (( DRY )) || touch "$ROOT$MANIFEST"
   offline || adopt
   install_tree "$stage/rootfs"
   mask_units
-  if offline; then activate_offline; else activate "$stage/rootfs/etc/pedal/tune.conf"; fi
+  if offline; then activate_offline; else activate "$stage/rootfs$TUNE_CONF"; fi
+  # After activate, which created the service user, and after install_tree, which is what put
+  # default-rig.json and the sysusers.d file there.
+  offline || storage_owner "$stage/rootfs$STORAGE_CONF"
+  offline || seed_rig "$stage/rootfs$STORAGE_CONF"
   if (( ! DRY )); then
     # SOURCE_DATE_EPOCH, when the image build sets it, keeps the image reproducible.
     printf 'commit=%s\napplied=%s\n' "$commit" "$(date -u ${SOURCE_DATE_EPOCH:+-d @$SOURCE_DATE_EPOCH} +%FT%TZ)" > "$ROOT/etc/pedal/applied"
@@ -272,6 +377,10 @@ do_revert() {
   (( DRY )) || mv "$MANIFEST" "$MANIFEST.reverted-$(date -u +%Y%m%dT%H%M%SZ)"
   say "reverted. The audio interrupt keeps its affinity and priority until the next reboot."
   say "host-slim's files, if this took over from it, are in $STATE/adopted and $SAVED."
+  # Deliberately left: they hold data, or cost nothing, and removing them would be the one
+  # irreversible act in here.
+  [[ -r $STORAGE_CONF ]] && say "The library volume, its fstab line and group audio are left in place."
+  true
 }
 
 do_status() {
@@ -285,10 +394,19 @@ do_status() {
     done < <(units)
     printf '  ok    %-34s %s\n' "masked units" "$n"
   fi
-  if [[ -e /sys/class/net/wlan0 && -x /usr/local/sbin/pedal-wifi ]]; then
-    wifi=$(/usr/local/sbin/pedal-wifi status wlan0 2>&1 || true)
-    if [[ $wifi == "wlan0: power saving off" ]]; then printf '  ok    %-34s %s\n' "wlan0 power saving" "off"
-    else printf '  FAIL  %-34s %s (want off)\n' "wlan0 power saving" "${wifi#wlan0: power saving }"; bad=1; fi
+  # The library volume, where the host makes its own. Mounted is the test: namchaind waits for the
+  # mount, so an unmounted volume is a pedal that will not play.
+  if [[ -r $STORAGE_CONF ]]; then
+    local mount; mount=$(conf_value "$STORAGE_CONF" DATA_MOUNT)
+    if mountpoint -q "$mount"; then
+      printf '  ok    %-34s %s\n' "$mount" "$(findmnt -no SOURCE,SIZE,USE% "$mount" | tr -s ' ')"
+    else printf '  FAIL  %-34s %s\n' "$mount" "not mounted"; bad=1; fi
+  fi
+  local wif; wif=$(conf_value "$TUNE_CONF" WIFI_INTERFACE); wif=${wif:-wlan0}
+  if [[ -e /sys/class/net/$wif && -x /usr/local/sbin/pedal-wifi ]]; then
+    wifi=$(/usr/local/sbin/pedal-wifi status "$wif" 2>&1 || true)
+    if [[ $wifi == "$wif: power saving off" ]]; then printf '  ok    %-34s %s\n' "$wif power saving" "off"
+    else printf '  FAIL  %-34s %s (want off)\n' "$wif power saving" "${wifi#"$wif": power saving }"; bad=1; fi
   fi
   # This device's measured cost table (P2). Printed rather than asserted: the table is a measurement,
   # and whether it is the right one for what the device runs is `devices/<host>/check`'s question

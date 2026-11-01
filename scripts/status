@@ -133,8 +133,20 @@ if [[ -n $ui ]] && git -C "$RG" cat-file -e "$ui" 2>/dev/null; then
 fi
 applied=$(on "$HOST" "sed -n 's/^commit=//p' /etc/pedal/applied" 2>/dev/null || true)
 if [[ -n $applied && -d $ROOT/devices/$HOST ]]; then
-  # Only the rootfs trees go on the host; the apply scripts themselves run on the Mac.
-  last=$(git -C "$ROOT" log -1 --format=%h -- devices/common/rootfs "devices/$HOST/rootfs")
+  # Only the rootfs trees go on the host; the apply scripts themselves run on the Mac. And only the
+  # files this host actually installs: a host with a `common-files` list takes a handful from the
+  # common tree rather than all of it (pro does), so measuring it against every commit that touched
+  # devices/common/rootfs would call it stale for a change to pedald or the codec — neither of which
+  # it has. The pathspec is therefore the host's own tree plus exactly what it names.
+  paths=("devices/$HOST/rootfs")
+  if [[ -f $ROOT/devices/$HOST/common-files ]]; then
+    while IFS= read -r rel; do
+      [[ -n $rel ]] && paths+=("devices/common/rootfs/$rel")
+    done < <(grep -v -e '^#' -e '^[[:space:]]*$' "$ROOT/devices/$HOST/common-files")
+  else
+    paths+=(devices/common/rootfs)
+  fi
+  last=$(git -C "$ROOT" log -1 --format=%h -- "${paths[@]}")
   if git -C "$ROOT" merge-base --is-ancestor "$last" "${applied%-dirty}" 2>/dev/null; then
     note "devices/$HOST: applied $applied, nothing newer committed"
   else
