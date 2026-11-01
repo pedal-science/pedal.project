@@ -1,0 +1,13 @@
+namchain-warm-bench 0.1.0  measure
+unit:       NAM.WaveNet.full -- ORNG-V30-421-Center, full, no cab
+bar:        p99 under the deadline, overruns recorded (see the note in this mode's comment); quantum 64, deadline 1333 us, 15 s a point, cpu 2
+
+       n      p50 us      p99 us    p99.9 us      max us   p99 %dl  max %dl  overruns  behind  verdict
+scheduling: SCHED_FIFO priority 70, cpu 2
+      8      1200.4     1235.7     1242.8     1470.9      92.7    110.3        2       1  fits*
+
+n = 8: 8 copies of this unit keep their p99 under the deadline on cpu 2. One unit costs 1/n = 0.125 of a core.
+    D7's stricter bar (zero overruns too) would say n = 0: 1/n = 0. The overrun count at the edge is not monotone in n; see the note at the top.
+--max 8 was reached without a miss: the cost above is an upper bound, not the cliff.
+fragment: {"unit":"NAM.WaveNet.full","core_percent":0.125,"bar":"p99","quantum":64,"deadline_us":1333.333,"sources":{"n":8,"p99_at_n":0.927,"overruns_at_n":2,"p99_at_n_plus_1":null,"overruns_at_n_plus_1":null,"p99_at_n_plus_2":null,"blocks_behind_at_n_plus_1":null,"at_most":true,"why":"--max 8 reached without a miss"},"curve":[{"n":8,"p50":1200.357,"p99":1235.674,"p999":1242.759,"max":1470.943,"p99_fraction":0.927,"overruns":2,"behind":1,"pass":true,"strict":false}]}
+wrote par-5-c2.json

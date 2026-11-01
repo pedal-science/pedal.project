@@ -1,0 +1,32 @@
+pacing:           wall clock
+blocks:           2700000
+audio:            3600.000 s in 3599.967 s wall (RTF 1.0000)
+deadline:         1333333 ns
+split (p50):      read 6846 ns, chain 206521 ns, write 17034 ns
+split (tail):     read p99 21502 max 532185, chain p99 237399 max 2026857, write p99 24961 max 1917992 ns
+chain p99:        237399 ns (17.80% of deadline)
+device wait:      p50 1231606 ns, p99 1639365 ns, max 2505217 ns
+render path cpu:  p99 wall vs cpu is the deadline question: cpu max 2026954 ns, wall max 2026857 ns
+                  557.89 s of CPU over 559.01 s of wall in the render path (99.8%), 0 blocks lost >= 0.5 ms to not being on CPU
+slowest blocks:   block 1029028 cpu 2026954 ns (wall 2026857 ns), block 1029027 cpu 1525182 ns (wall 1525100 ns), block 1028393 cpu 1342224 ns (wall 1342222 ns), block 1028492 cpu 1116788 ns (wall 1116664 ns), block 1028378 cpu 846506 ns (wall 846409 ns)
+cpu spike bursts: 12 blocks over half a period of CPU, in 11 runs; runs start every 3..1152623 blocks (0.0..1536.8 s at 48 k/64)
+                  run at block 102797..102797 (1 long), worst 693693 ns of CPU
+                  run at block 307723..307723 (1 long), worst 669108 ns of CPU
+                  run at block 1028378..1028378 (1 long), worst 846506 ns of CPU
+                  run at block 1028393..1028393 (1 long), worst 1342224 ns of CPU
+                  run at block 1028492..1028492 (1 long), worst 1116788 ns of CPU
+                  run at block 1028495..1028495 (1 long), worst 677541 ns of CPU
+                  run at block 1029027..1029028 (2 long), worst 2026954 ns of CPU
+                  run at block 1144236..1144236 (1 long), worst 690574 ns of CPU
+block time:       p50 233783 ns, p99 274765 ns, max 2418849 ns
+p99/deadline:     20.61% (gate <= 80.00%)
+max lateness:     0.000 ms
+render-path alloc:0 allocations, 0 frees (must be 0)
+bring-up xruns:   1 (before the measured loop)
+first overrun at: block 1028393 of 2700000
+deadline overruns:4
+driver xruns:     1
+  by direction:   0 capture overruns, 1 playback underruns
+result:           FAIL
+soak-exit=
+active

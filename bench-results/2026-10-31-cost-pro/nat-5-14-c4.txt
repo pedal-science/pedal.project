@@ -1,0 +1,10 @@
+namchain-warm-bench 0.1.0  measure
+unit:       NAM.WaveNet.full -- ORNG-V30-421-Center, full, no cab
+bar:        p99 under the deadline, overruns recorded (see the note in this mode's comment); quantum 64, deadline 1333 us, 15 s a point, cpu 4
+
+       n      p50 us      p99 us    p99.9 us      max us   p99 %dl  max %dl  overruns  behind  verdict
+scheduling: SCHED_FIFO priority 70, cpu 4
+     14      1485.8     1744.2     1754.1     1763.2     130.8    132.2    11250    1596  MISSES
+
+n = 0: even one copy misses the deadline on cpu 4. There is no cost this unit could be admitted with; it is refused (D8's direction).
+fragment: {"unit":"NAM.WaveNet.full","core_percent":1,"bar":"p99","quantum":64,"deadline_us":1333.333,"curve":[{"n":14,"p50":1485.788,"p99":1744.208,"p999":1754.079,"max":1763.180,"p99_fraction":1.308,"overruns":11250,"behind":1596,"pass":false,"strict":false}]}

@@ -1,0 +1,162 @@
+=== quantum 128
+                  is queued -- and so the stall it can absorb -- is whatever the run holds
+queue control:    0 output drops (gate <= 0), 0 capture bursts
+occupancy check:  44964 samples where delay disagreed with the pointer pair
+plan:             single model chain, 4 nodes, 3 buffers (1536 bytes)
+quantum:          128
+pacing:           wall clock
+blocks:           16875
+audio:            45.000 s in 45.001 s wall (RTF 1.0000)
+deadline:         2666667 ns
+split (p50):      read 10273 ns, chain 367801 ns, write 16852 ns
+split (tail):     read p99 20474 max 29859, chain p99 379655 max 701596, write p99 31562 max 127730 ns
+chain p99:        379655 ns (14.24% of deadline)
+device wait:      p50 2512208 ns, p99 2908935 ns, max 3046680 ns
+render path cpu:  p99 wall vs cpu is the deadline question: cpu max 701045 ns, wall max 701596 ns
+                  6.17 s of CPU over 6.18 s of wall in the render path (99.8%), 0 blocks lost >= 0.5 ms to not being on CPU
+slowest blocks:   block 5781 cpu 701045 ns (wall 701596 ns), block 9100 cpu 569813 ns (wall 570292 ns), block 3093 cpu 501347 ns (wall 501936 ns), block 14883 cpu 445621 ns (wall 446139 ns), block 4595 cpu 425659 ns (wall 426104 ns)
+block time:       p50 395725 ns, p99 416288 ns, max 754739 ns
+p99/deadline:     15.61% (gate <= 80.00%)
+max lateness:     0.000 ms
+render-path alloc:0 allocations, 0 frees (must be 0)
+bring-up xruns:   1 (before the measured loop)
+deadline overruns:0
+driver xruns:     0
+  by direction:   0 capture overruns, 0 playback underruns
+result:           PASS
+exit=0
+=== quantum 64
+                  is queued -- and so the stall it can absorb -- is whatever the run holds
+queue control:    0 output drops (gate <= 0), 0 capture bursts
+occupancy check:  33758 samples where delay disagreed with the pointer pair
+plan:             single model chain, 4 nodes, 3 buffers (768 bytes)
+quantum:          64
+pacing:           wall clock
+blocks:           33750
+audio:            45.000 s in 44.999 s wall (RTF 1.0000)
+deadline:         1333333 ns
+split (p50):      read 3482 ns, chain 190531 ns, write 15766 ns
+split (tail):     read p99 3804 max 529504, chain p99 197629 max 523194, write p99 23682 max 204975 ns
+chain p99:        197629 ns (14.82% of deadline)
+device wait:      p50 1287887 ns, p99 1389789 ns, max 1652647 ns
+render path cpu:  p99 wall vs cpu is the deadline question: cpu max 523275 ns, wall max 523194 ns
+                  6.44 s of CPU over 6.44 s of wall in the render path (100.0%), 0 blocks lost >= 0.5 ms to not being on CPU
+slowest blocks:   block 11931 cpu 523275 ns (wall 523194 ns), block 2426 cpu 381575 ns (wall 381597 ns), block 32460 cpu 338407 ns (wall 338449 ns), block 8433 cpu 334867 ns (wall 334788 ns), block 33070 cpu 327201 ns (wall 327381 ns)
+block time:       p50 209698 ns, p99 217563 ns, max 735770 ns
+p99/deadline:     16.32% (gate <= 80.00%)
+max lateness:     0.000 ms
+render-path alloc:0 allocations, 0 frees (must be 0)
+bring-up xruns:   1 (before the measured loop)
+deadline overruns:0
+driver xruns:     0
+  by direction:   0 capture overruns, 0 playback underruns
+result:           PASS
+exit=0
+=== quantum 48
+                  is queued -- and so the stall it can absorb -- is whatever the run holds
+queue control:    0 output drops (gate <= 0), 0 capture bursts
+occupancy check:  92306 samples where delay disagreed with the pointer pair
+plan:             single model chain, 4 nodes, 3 buffers (576 bytes)
+quantum:          48
+pacing:           wall clock
+blocks:           45000
+audio:            45.000 s in 44.998 s wall (RTF 1.0000)
+deadline:         1000000 ns
+split (p50):      read 3442 ns, chain 156851 ns, write 15724 ns
+split (tail):     read p99 3785 max 54876, chain p99 161279 max 473626, write p99 18665 max 279769 ns
+chain p99:        161279 ns (16.13% of deadline)
+device wait:      p50 823719 ns, p99 912824 ns, max 972172 ns
+render path cpu:  p99 wall vs cpu is the deadline question: cpu max 473669 ns, wall max 473626 ns
+                  7.05 s of CPU over 7.05 s of wall in the render path (100.0%), 0 blocks lost >= 0.5 ms to not being on CPU
+slowest blocks:   block 24917 cpu 473669 ns (wall 473626 ns), block 2918 cpu 428495 ns (wall 428492 ns), block 24984 cpu 426912 ns (wall 426903 ns), block 24967 cpu 425270 ns (wall 425300 ns), block 30249 cpu 372559 ns (wall 372568 ns)
+block time:       p50 175672 ns, p99 181701 ns, max 495852 ns
+p99/deadline:     18.17% (gate <= 80.00%)
+max lateness:     0.000 ms
+render-path alloc:0 allocations, 0 frees (must be 0)
+bring-up xruns:   1 (before the measured loop)
+deadline overruns:0
+driver xruns:     0
+  by direction:   0 capture overruns, 0 playback underruns
+result:           PASS
+exit=0
+=== quantum 32
+plan:             single model chain, 4 nodes, 3 buffers (384 bytes)
+quantum:          32
+pacing:           wall clock
+blocks:           67500
+audio:            45.000 s in 44.999 s wall (RTF 1.0000)
+deadline:         666667 ns
+split (p50):      read 3104 ns, chain 98206 ns, write 19658 ns
+split (tail):     read p99 3256 max 36929, chain p99 126172 max 606883, write p99 21612 max 300578 ns
+chain p99:        126172 ns (18.93% of deadline)
+device wait:      p50 609353 ns, p99 630893 ns, max 992345 ns
+render path cpu:  p99 wall vs cpu is the deadline question: cpu max 606896 ns, wall max 606883 ns
+                  7.12 s of CPU over 7.12 s of wall in the render path (100.0%), 0 blocks lost >= 0.5 ms to not being on CPU
+slowest blocks:   block 57173 cpu 606896 ns (wall 606883 ns), block 23208 cpu 569350 ns (wall 569383 ns), block 13804 cpu 290242 ns (wall 290222 ns), block 61857 cpu 280595 ns (wall 280566 ns), block 1791 cpu 260123 ns (wall 260140 ns)
+cpu spike bursts: 2 blocks over half a period of CPU, in 2 runs; runs start every 33965..33965 blocks (45.3..45.3 s at 48 k/64)
+                  run at block 23208..23208 (1 long), worst 569350 ns of CPU
+                  run at block 57173..57173 (1 long), worst 606896 ns of CPU
+block time:       p50 121542 ns, p99 143729 ns, max 649265 ns
+p99/deadline:     21.56% (gate <= 80.00%)
+max lateness:     0.000 ms
+render-path alloc:0 allocations, 0 frees (must be 0)
+bring-up xruns:   1 (before the measured loop)
+deadline overruns:0
+driver xruns:     0
+  by direction:   0 capture overruns, 0 playback underruns
+result:           PASS
+exit=0
+=== quantum 24
+queue control:    0 output drops (gate <= 0), 3 capture bursts
+occupancy check:  139037 samples where delay disagreed with the pointer pair
+plan:             single model chain, 4 nodes, 3 buffers (288 bytes)
+quantum:          24
+pacing:           wall clock
+blocks:           90000
+audio:            45.000 s in 45.000 s wall (RTF 1.0000)
+deadline:         500000 ns
+split (p50):      read 3347 ns, chain 82191 ns, write 15689 ns
+split (tail):     read p99 10453 max 29834, chain p99 124462 max 220947, write p99 17951 max 1568076 ns
+chain p99:        124462 ns (24.89% of deadline)
+device wait:      p50 398420 ns, p99 496153 ns, max 642735 ns
+render path cpu:  p99 wall vs cpu is the deadline question: cpu max 220787 ns, wall max 220947 ns
+                  7.50 s of CPU over 7.50 s of wall in the render path (100.0%), 0 blocks lost >= 0.5 ms to not being on CPU
+slowest blocks:   block 64381 cpu 220787 ns (wall 220947 ns), block 56372 cpu 217910 ns (wall 217813 ns), block 24337 cpu 204410 ns (wall 204405 ns), block 8319 cpu 200056 ns (wall 199751 ns), block 16328 cpu 197251 ns (wall 197242 ns)
+block time:       p50 101242 ns, p99 152661 ns, max 1669582 ns
+p99/deadline:     30.53% (gate <= 80.00%)
+max lateness:     0.000 ms
+render-path alloc:0 allocations, 0 frees (must be 0)
+bring-up xruns:   1 (before the measured loop)
+first overrun at: block 77531 of 90000
+deadline overruns:1
+driver xruns:     1
+  by direction:   0 capture overruns, 1 playback underruns
+result:           FAIL
+exit=0
+=== quantum 16
+quantum:          16
+pacing:           wall clock
+blocks:           135000
+audio:            45.000 s in 44.999 s wall (RTF 1.0000)
+deadline:         333333 ns
+split (p50):      read 3170 ns, chain 63978 ns, write 15354 ns
+split (tail):     read p99 5298 max 37080, chain p99 80896 max 190881, write p99 18139 max 867697 ns
+chain p99:        80896 ns (24.27% of deadline)
+device wait:      p50 291040 ns, p99 350480 ns, max 965308 ns
+render path cpu:  p99 wall vs cpu is the deadline question: cpu max 190905 ns, wall max 190881 ns
+                  8.87 s of CPU over 8.86 s of wall in the render path (100.0%), 0 blocks lost >= 0.5 ms to not being on CPU
+slowest blocks:   block 69387 cpu 190905 ns (wall 190881 ns), block 9321 cpu 174987 ns (wall 174979 ns), block 57374 cpu 162718 ns (wall 162759 ns), block 129453 cpu 160713 ns (wall 160782 ns), block 103390 cpu 157703 ns (wall 157514 ns)
+cpu spike bursts: 2 blocks over half a period of CPU, in 2 runs; runs start every 60066..60066 blocks (80.1..80.1 s at 48 k/64)
+                  run at block 9321..9321 (1 long), worst 174987 ns of CPU
+                  run at block 69387..69387 (1 long), worst 190905 ns of CPU
+block time:       p50 82511 ns, p99 100400 ns, max 938956 ns
+p99/deadline:     30.12% (gate <= 80.00%)
+max lateness:     0.000 ms
+render-path alloc:0 allocations, 0 frees (must be 0)
+bring-up xruns:   1 (before the measured loop)
+first overrun at: block 11540 of 135000
+deadline overruns:3
+driver xruns:     1
+  by direction:   0 capture overruns, 1 playback underruns
+result:           FAIL
+exit=0

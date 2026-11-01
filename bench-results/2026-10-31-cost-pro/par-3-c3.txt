@@ -1,0 +1,12 @@
+namchain-warm-bench 0.1.0  measure
+unit:       NAM.WaveNet.full -- ORNG-V30-421-Center, full, no cab
+bar:        p99 under the deadline, overruns recorded (see the note in this mode's comment); quantum 64, deadline 1333 us, 15 s a point, cpu 3
+
+       n      p50 us      p99 us    p99.9 us      max us   p99 %dl  max %dl  overruns  behind  verdict
+scheduling: SCHED_FIFO priority 70, cpu 3
+      8      1135.4     1169.2     1199.4     1261.2      87.7     94.6        0       0  fits
+
+n = 8: 8 copies of this unit keep their p99 under the deadline on cpu 3. One unit costs 1/n = 0.125 of a core.
+--max 8 was reached without a miss: the cost above is an upper bound, not the cliff.
+fragment: {"unit":"NAM.WaveNet.full","core_percent":0.125,"bar":"p99","quantum":64,"deadline_us":1333.333,"sources":{"n":8,"p99_at_n":0.877,"overruns_at_n":0,"p99_at_n_plus_1":null,"overruns_at_n_plus_1":null,"p99_at_n_plus_2":null,"blocks_behind_at_n_plus_1":null,"at_most":true,"why":"--max 8 reached without a miss"},"curve":[{"n":8,"p50":1135.443,"p99":1169.239,"p999":1199.441,"max":1261.184,"p99_fraction":0.877,"overruns":0,"behind":0,"pass":true,"strict":true}]}
+wrote par-3-c3.json
