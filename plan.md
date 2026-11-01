@@ -236,7 +236,7 @@ was first read. What a startup xrun really leaves is `status.xruns == 1` for the
 process — cumulative, never cleared, and what `scripts/status` and every diagnostic report. That is
 the consequence worth fixing, and the one the change fixes.
 
-**And the soak's condition is known.** Eight committed soak runs on pro report `bring-up xruns: 1` —
+**And the soak's condition is known.** Nine committed soak runs on pro report `bring-up xruns: 1` —
 the six sweep arms and the hour on 2026-10-31, and both RT runs on 2026-11-01 — and that line prints
 only when the count is non-zero, so it was 1 in every one. The reason is
 `bench-results/2026-11-01-soak-pro-rt/soak.sh`: it passes `--periods 6` and no
