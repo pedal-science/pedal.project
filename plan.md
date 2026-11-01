@@ -1200,6 +1200,13 @@ cannot be tested from a shell, and the design turns on what the spikes find):
   packing and the catch-up path are the same either way.
 - DSP when you want it: noise gate, tuner, reverb, compressor, modulation.
 - ljoss on iOS: it compiles, but the touch path has never been run.
+- **pro, the x86 Core host for the bigger case** (2026-11-01). It runs the same `devices/` tooling as
+  the Pi hosts on Ubuntu's signed RT kernel, with cores 1-5 isolated, and holds an hour at 64 frames
+  with no overruns and no xruns ([docs/pro.md](docs/pro.md)). **Not a dependency of the pedal**: vip
+  is the Core host and everything is built around it. pro becomes a decision only if the bigger case
+  wants more cores than a Pi 5 has — and the five-core slowdown that prompted the move (13-21% per
+  model with five cores busy) is still unexplained, so the larger-L3 reason it was chosen for is not
+  confirmed.
 
 ---
 
@@ -1269,6 +1276,57 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
   carrier and control boards don't have its sockets yet.
 
 ## Next session starts with
+
+**pro runs the Pi hosts' own tooling, and it holds an hour** (2026-11-01). The x86 candidate for the
+bigger case (HP ProDesk 600 G5 Mini, i5-9500T, 16 GB) stopped being a machine with its own scripts:
+`devices/pro/{apply,check,backup}` are the same symlinks into `devices/common/` that vip and piv
+use, and the host-side script is `pedal-device` itself. The separate `pro-device` and
+`pedal-governor` are retired, because a second implementation of "configuration as code" would have
+drifted from the first. [docs/pro.md](docs/pro.md) is pro's own record; this is what the plan needs
+to know.
+
+- **It is isolated, and checked at every boot.** Six cores split 0 housekeeping / 1-5 render with 5
+  active; `isolcpus`, `nohz_full` and `rcu_nocbs` on 1-5; deep idle states off the render cores (C10
+  alone exits in 890 µs against a 1,333 µs deadline); cpusets holding services and logins on core 0;
+  72 units masked. `etc/pedal/tune.conf` is the one place the core map is written, and `check`
+  asserts it against the kernel command line and the slice drop-ins.
+- **The audio interrupt was on the active render core.** The xHCI IRQ carrying the UMC202HD was
+  being delivered to core 5 — R4 breaking, the one core whose preemption *is* a missed deadline. It
+  is on core 1 now with its handler at SCHED_FIFO 85. `irqaffinity=0` could not have fixed it: that
+  sets only the default mask, for interrupts allocated after it is parsed.
+- **The kernel is Ubuntu's signed amd64 `realtime`, not a rebuild.** Secure Boot is on, so a kernel
+  built the way vip's is would not load, and the flavour already carries everything rtpi's fragment
+  asks for. rtpi gained `devices/pro/` and `pro-boot`, which drives GRUB's one-shot the way
+  `vip-boot` drives the firmware's `tryboot`: tried once, promoted only by validation, rolled back
+  by itself. The fallback was rehearsed with a trial *meant* to fail, not assumed.
+- **The hour that failed on 2026-10-31 now passes.** Same load, same 64-frame period: 2 700 000
+  blocks, p99 18.47% of the deadline, slowest block 290 µs of CPU against the 2.03 ms of CPU that
+  failed it (worst block time 346 µs), 0 deadline overruns and 0 driver xruns
+  ([bench-results/2026-11-01-soak-pro-rt/](bench-results/2026-11-01-soak-pro-rt/README.md)).
+- **And the soak found the likely cause of that failure.** The first attempt recorded **726
+  system-management interrupts in a single 10-second window** and none in the other 355 samples,
+  with `fwupd-refresh.service` starting inside it. An SMI takes the core in firmware, where the
+  kernel can neither see it, schedule around it nor account for it — which is the signature of the
+  old stall: 2.03 ms of *CPU* time with wall equal to CPU. With fwupd masked the rerun recorded
+  zero. The mechanism fits; it was not caught in the act, SMIs were never measured in October, and
+  the kernel, the isolation and the masking all changed together.
+
+**What this does not mean.** vip is still the Core host and nothing here changes that. pro has had
+**no signal through its interface**, no live-rig hour through `namchaind` (this was
+`namchain-soak`'s load, not T10), and no cost table, so rig admission there charges every unit its
+unknown cost. [docs/pro.md](docs/pro.md)'s "Next steps" is pro's own list, including whether to arm
+its watchdog — off today, and `nohz_full` has turned the kernel's soft lockup detector off on cores
+1-5, so nothing is watching for a spinning thread there.
+
+**One thing that reaches vip.** The shared changes in `devices/common/` — `pedal-device`,
+`pedal-tune`, `check`, `backup` — are what let one tree serve both kinds of host, with every new
+behaviour off unless a device's config asks for it. They are **unverified against vip**:
+`devices/vip/check` is the confirmation and it has not been run. One of them was a latent bug that
+would have reached vip on its own: a thermal zone answering "No data available" left an empty
+arithmetic expansion, which is fatal in a non-interactive shell, so one transient read failed
+`pedal-tune` and left the host untuned for that boot. It is guarded now, and `apply` calls `check`
+in a subshell, so "a check never fails the boot" holds structurally rather than depending on
+`check` being faultless.
 
 **The tuner is a view, not a block** (2026-10-20). Squatch-dsp's tuner became `nc.tuner` in namchain —
 one input, one output, and the output is silence — and both front ends now use it the way a pedal

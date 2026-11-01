@@ -9,8 +9,8 @@ time, so the thread was not preempted: something made the same work slow. That w
 core and two dozen daemons running. Does it still happen once none of that is true?
 
 **In one line:** **the hour passes now** — 2.7 million blocks, p99 at 18.47% of the deadline, **0
-deadline overruns, 0 xruns**, and a worst block of 290 µs against the 2.0 ms burst that failed it
-before. Getting there turned up the likely mechanism: the first attempt measured **726
+deadline overruns, 0 xruns**, and a slowest block of 290 µs of CPU time against the 2.0 ms burst
+that failed it before (the worst *block time*, which includes waiting on the device, was 346 µs). Getting there turned up the likely mechanism: the first attempt measured **726
 system-management interrupts in a single 10-second window** as **`fwupd`** woke up and enumerated
 the machine's firmware — a daemon this host's own `masked-units` named in its prose and had left out
 of the list. With fwupd masked, the rerun recorded **no SMIs at all**.
@@ -179,8 +179,9 @@ The middle column is the one that explains the first. The 2026-10-31 failure was
 **2.0 ms of CPU time** with wall equal to CPU — work that was never preempted and simply took
 longer, which is what an SMI looks like from inside Linux. Attempt 1 caught 726 of them in one
 window, arriving as fwupd enumerated the machine's firmware. Attempt 2, with fwupd masked, recorded
-**none** and the worst block in 2.7 million was **290 µs** — a seventh of the failing burst, and
-under a quarter of the deadline.
+**none**, and the slowest block in 2.7 million took **290 µs of CPU** — a seventh of the failing
+burst. Like for like: both figures are CPU time, which is what the table's row compares. The worst
+*block time* was 346 µs, a little over a quarter of the deadline.
 
 **What this is fair to claim.** On the tuned host with fwupd masked, pro renders two A2-Full models
 at a 64-frame period for an hour with no overrun and no xrun, and nothing in the machine's power,
