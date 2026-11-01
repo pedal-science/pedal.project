@@ -184,13 +184,33 @@ To discuss before building it (the owner asked for the discussion, not a design)
 **On the engine's first block (decided 2026-11-01).** `namchaind` **ignores the xrun from the first
 block**, and no more time goes on establishing whether it needs to. The artefact is understood: the
 first period after START fills an empty capture ring, so its cost belongs to starting rather than to
-real time (namchain `src/soak/soak.cpp`, and its `plan.md` 1003-1004). `namchain-soak` has handled
-it since the SSL 2+ — an untimed bring-up cycle, a prefilled output queue, and startup xruns
-reported separately — and `namchaind` never got any of it, so the artefact lands in `status.xruns`
-and can raise the health `warn` at every power-up. That is the one signal a player should be able to
-trust. The engine gets the soak's bring-up cycle and prefill and counts from after them; the startup
-count stays **visible** in `engine.status` as its own field, because ignoring it means not calling it
-a fault, not pretending it did not happen. namchain's to implement.
+real time (namchain `src/soak/soak.cpp`, and its `plan.md` 1003-1004), and `namchain-soak` has
+handled it since the SSL 2+ with an untimed bring-up cycle, a prefilled output queue and startup
+xruns reported separately. `namchaind` had none of that and now has all of it: the bring-up cycle
+and the prefill, counting xruns from after them, with the startup count **visible** in
+`engine.status` as its own field — ignoring it means not calling it a fault, not pretending it did
+not happen. Implemented in namchain `060586c` (local).
+
+**What the measurement said, against what this entry first claimed.** The paragraph above used to
+say the artefact lands in `status.xruns` and can raise the health `warn` at every power-up. **That
+is not what happens.** Ten fresh `namchaind` restarts on pro, sampled four times each, gave
+`xruns 0` and `health ok` on all forty samples, and the mechanism is in the journal: the daemon
+publishes the resumed rig — model, IR, compiled plan — *before* the render loop opens the device,
+which is the ordering `soak.cpp`'s own comment credits with removing the block-0 overrun. The
+daemon had the fix structurally and nobody had noticed. The claim was mine, by inference from the
+soak's behaviour, and it was wrong.
+
+**The real defect was beside it.** `namchaind` never called `prefill_output_queue` at all, so it ran
+its whole life a period short of the output-queue target its own configuration asked for. That is
+independent of xruns, and it matters by the engine's own numbers: §9.5 item 8 measured 8 playback
+underruns at `--output-queue-periods 4` against 92 for the 4-period ring.
+
+**Still open, and it is the soak rather than the daemon.** Eight committed soak runs on pro report
+`bring-up xruns: 1` — the six sweep arms and the hour on 2026-10-31, and both RT runs on 2026-11-01
+— and that line prints only when the count is non-zero, so it was 1 in every one. Five fresh soak
+runs on the same device reported 0. The artefact is therefore **conditional, with the condition
+unknown**; the likeliest discriminator is how the device was left before `start`, since what fills
+is a capture ring. Not resolved, and not to be written down as "pro does not do this".
 
 ---
 
