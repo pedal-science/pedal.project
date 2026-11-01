@@ -189,7 +189,7 @@ handled it since the SSL 2+ with an untimed bring-up cycle, a prefilled output q
 xruns reported separately. `namchaind` had none of that and now has all of it: the bring-up cycle
 and the prefill, counting xruns from after them, with the startup count **visible** in
 `engine.status` as its own field — ignoring it means not calling it a fault, not pretending it did
-not happen. Implemented in namchain `060586c` (local).
+not happen. Implemented in namchain `fb7d4a5` (local).
 
 **What the measurement said, against what this entry first claimed.** The paragraph above used to
 say the artefact lands in `status.xruns` and can raise the health `warn` at every power-up. **That
@@ -200,17 +200,35 @@ which is the ordering `soak.cpp`'s own comment credits with removing the block-0
 daemon had the fix structurally and nobody had noticed. The claim was mine, by inference from the
 soak's behaviour, and it was wrong.
 
-**The real defect was beside it.** `namchaind` never called `prefill_output_queue` at all, so it ran
-its whole life a period short of the output-queue target its own configuration asked for. That is
-independent of xruns, and it matters by the engine's own numbers: §9.5 item 8 measured 8 playback
-underruns at `--output-queue-periods 4` against 92 for the 4-period ring.
+**The daemon is protected twice over, and neither guard was designed for this.** The first is the
+ordering above. The second is the playback ring's **prime**: `prime_playback` fills
+`queue_prime_frames(period, output_queue_periods)` inside `start()`, which is **one** period when no
+queue target is set and the **target's** worth when one is (namchain `src/io/alsa_raw.cpp`,
+`src/io/alsa_params.cpp`). Every pedal host asks for four — `devices/{vip,piv,pro}`'s
+`rootfs/etc/namchain/namchaind.json` all set `output_queue_periods: 4` — so all three start with
+three periods of cushion beyond anything a bring-up cycle could spend.
 
-**Still open, and it is the soak rather than the daemon.** Eight committed soak runs on pro report
-`bring-up xruns: 1` — the six sweep arms and the hour on 2026-10-31, and both RT runs on 2026-11-01
-— and that line prints only when the count is non-zero, so it was 1 in every one. Five fresh soak
-runs on the same device reported 0. The artefact is therefore **conditional, with the condition
-unknown**; the likeliest discriminator is how the device was left before `start`, since what fills
-is a capture ring. Not resolved, and not to be written down as "pro does not do this".
+**Withdrawn: the "ran a period short" defect.** This entry briefly said `namchaind` never called
+`prefill_output_queue` and so ran its whole life a period short of its configured output-queue
+target. **It did not.** The prime establishes that target inside `start()`; the prefill only tops up
+what a bring-up cycle spends, which on pro's UMC202HD is 8 frames — 0.167 ms, not a period. The
+prefill and the bring-up cycle go together, and the prefill is the completion of the one rather than
+a standing bug. namchain withdrew the claim; checked here against the source and all three hosts'
+configuration.
+
+**Where the change does earn its keep.** `Config::output_queue_periods` defaults to **0**
+(`include/namchain/daemon/config.h`), so a daemon run *without* that key — the dev loop, or a host
+whose configuration lost it — gets a one-period prime and is exposed. That is the case namchain is
+measuring now, the old binary against the new. Outstanding.
+
+**And the soak's condition is known.** Eight committed soak runs on pro report `bring-up xruns: 1` —
+the six sweep arms and the hour on 2026-10-31, and both RT runs on 2026-11-01 — and that line prints
+only when the count is non-zero, so it was 1 in every one. The reason is
+`bench-results/2026-11-01-soak-pro-rt/soak.sh`: it passes `--periods 6` and no
+`--output-queue-periods`, so the prime is one period and the bring-up cycle empties it. Add
+`--output-queue-periods 4` and the line goes away. It is not a property of pro, of the model or of
+the instance count — a passthrough arm with no queue options also reported 1 — but of the
+output-queue configuration.
 
 ---
 
