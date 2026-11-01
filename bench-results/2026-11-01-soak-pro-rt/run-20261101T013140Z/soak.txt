@@ -1,0 +1,43 @@
+backend:          alsa_raw
+device:           /dev/snd/pcmC0D0c -> /dev/snd/pcmC0D0p
+period/buffer:    64 / 384 frames
+sample format:    S32_LE (4 bytes/sample)
+mlockall:         locked
+scheduling:       SCHED_FIFO priority 80, cpu 5
+chain:            2 x ORNG-V30-421-Center.nam
+model type:       nam::container::ContainerModel
+ring occupancy:   capture min/max 0/56, playback min/max 80/145 (last 144) frames
+                  playback queue 1.25..2.27 periods (last 2.25); the floor is the stall the device
+                  absorbs without starving: 1.25 periods = 1.667 ms
+                  p1 1.89, p50 2.06 periods; 0 of 2700000 blocks held less than one
+                  period (0.00 %), which is the window a stall has to miss
+queue target:     none: the loop writes whenever the kernel has room, so how much audio
+                  is queued -- and so the stall it can absorb -- is whatever the run holds
+queue control:    0 output drops (gate <= 0), 0 capture bursts
+occupancy check:  2700005 samples where delay disagreed with the pointer pair
+plan:             single model chain, 4 nodes, 3 buffers (768 bytes)
+quantum:          64
+pacing:           wall clock
+blocks:           2700000
+audio:            3600.000 s in 3599.966 s wall (RTF 1.0000)
+deadline:         1333333 ns
+split (p50):      read 3658 ns, chain 196969 ns, write 17010 ns
+split (tail):     read p99 3730 max 198089, chain p99 204253 max 1087054, write p99 17268 max 427673 ns
+chain p99:        204253 ns (15.32% of deadline)
+device wait:      p50 1281925 ns, p99 1284966 ns, max 1469642 ns
+render path cpu:  p99 wall vs cpu is the deadline question: cpu max 1087824 ns, wall max 1087054 ns
+                  533.61 s of CPU over 533.24 s of wall in the render path (100.1%), 0 blocks lost >= 0.5 ms to not being on CPU
+slowest blocks:   block 2538681 cpu 1087824 ns (wall 1087054 ns), block 2538682 cpu 933834 ns (wall 933317 ns), block 2538684 cpu 928444 ns (wall 927913 ns), block 2538680 cpu 924696 ns (wall 924101 ns), block 2538685 cpu 921235 ns (wall 920545 ns)
+cpu spike bursts: 9 blocks over half a period of CPU, in 2 runs; runs start every 679..679 blocks (0.9..0.9 s at 48 k/64)
+                  run at block 2538000..2538000 (1 long), worst 799142 ns of CPU
+                  run at block 2538679..2538686 (8 long), worst 1087824 ns of CPU
+block time:       p50 217504 ns, p99 223304 ns, max 1105938 ns
+p99/deadline:     16.75% (gate <= 80.00%)
+max lateness:     0.000 ms
+render-path alloc:0 allocations, 0 frees (must be 0)
+bring-up xruns:   1 (before the measured loop)
+deadline overruns:0
+driver xruns:     0
+  by direction:   0 capture overruns, 0 playback underruns
+result:           PASS
+soak-exit=0

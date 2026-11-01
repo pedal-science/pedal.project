@@ -1,0 +1,13 @@
+  installed /usr/local/sbin/pedal-tune
+  absent    irqbalance.service
+  absent    power-profiles-daemon.service
+  absent    tuned.service
+  absent    bluetooth.service
+  absent    user:pipewire.socket
+  absent    user:pipewire.service
+  absent    user:pipewire-pulse.socket
+  absent    user:pipewire-pulse.service
+  absent    user:wireplumber.service
+  absent    user:filter-chain.service
+Unit /etc/systemd/system/pedal-wifi.service is added as a dependency to a non-existent unit sys-subsystem-net-devices-wlp0s20f3.device.
+pedal-device: done. Manifest: /var/lib/pedal/manifest

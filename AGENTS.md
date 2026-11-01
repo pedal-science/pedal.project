@@ -18,6 +18,17 @@ This file is canonical for every agent. `CLAUDE.md` only imports it (and
   in step with vip meanwhile: it runs namchain `d4fb8e5`, deployed 2026-09-30, and
   `scripts/status --host piv` shows how far behind that and its `devices/` tree are. Its dev
   checkouts are under `~/code.local/pedal/`, as on the Mac.
+- **`pro`** (HP ProDesk 600 G5 Mini, i5-9500T with 9 MiB L3, 16 GB, 2 TB NVMe, x86-64, Ubuntu
+  Server 26.04) is the Core host candidate for the bigger case, picked for its larger L3 after a
+  Pi 5 struggled with many parallel A2-Full instances; a Behringer UMC202HD (USB) is its audio
+  interface. `ssh pro` works. Measured 2026-10-31: 9 Full models per core (14 with `-march=native`),
+  but 13-21% slower per model with five cores busy, so the cache explanation is not confirmed.
+  Since 2026-11-01 it runs **the Pi hosts' own tooling**: `devices/pro/{apply,check,backup}` are the
+  same links into `devices/common/` and the host-side script is `pedal-device` (the separate
+  `pro-device` is retired), with six cores split 0 housekeeping / 1-5 render / 5 active, 72 units
+  masked, and Ubuntu's **signed** amd64 RT kernel booted through GRUB's one-shot by rtpi's
+  `pro-boot`. `scripts/deploy-engine --host pro` builds on pro itself (it has a compiler).
+  [docs/pro.md](docs/pro.md).
 
 Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.md](docs/hardware-handoff.md).
 
@@ -49,7 +60,7 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
 
 - `scripts/deploy-engine [--host vip] [--commit <rev>] [--no-tests]`: build a namchain
   commit and run its tests (for vip on the Mac, in the image build's container,
-  `devices/common/image/build-namchain`; piv builds in a dedicated tree of its own), install
+  `devices/common/image/build-namchain`; piv and pro build in a dedicated tree of their own), install
   into `/opt/namchain/<commit>/`, swap `current`, write the manifest, restart `namchaind`.
 - `scripts/sync-library [--host vip] [--dry-run]`: mirror `~/Documents/Audio/NAM` and
   `IRs` into `/var/lib/pedal/library/{models,irs}` on the Core host, and ask
@@ -193,7 +204,8 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
   `modules.md` (a proposal, 2026-10-11: the circuits as pluggable boards, their cables and
   connectors, and the ground tree; its map, which checks the tree, is `diagrams/modules.html`),
   `balanced-outputs.md` (a proposal, 2026-10-14: XLR outputs and impedance-balanced TRS, phantom,
-  mute, pad, ground lift, and where the case bonds).
+  mute, pad, ground lift, and where the case bonds), `pro.md` (the x86 Core host for the bigger
+  case: why, what it is, what is not yet done).
 - `stripboard/`, `breadboard/` — board layouts as data; each script checks its placement against
   the netlist (`stripboard/board1.py` holds board 1's) and draws it. `stripboard/module_boards.py`
   holds the module boards; `stripboard/stripmaster_export.py` writes the codec carrier, the input

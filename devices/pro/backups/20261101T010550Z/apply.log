@@ -1,0 +1,84 @@
+  installed /etc/asound.conf
+  installed /etc/namchain/namchaind.json
+  installed /etc/pedal/default-rig.json
+  installed /etc/pedal/masked-units
+  installed /etc/pedal/storage.conf
+  installed /etc/pedal/tune.conf
+  installed /etc/security/limits.d/90-pedal-rt.conf
+  installed /etc/sysctl.d/90-pedal.conf
+  installed /etc/systemd/journald.conf.d/10-pedal.conf
+  installed /etc/systemd/system/namchaind.service.d/10-pedal.conf
+  installed /etc/systemd/system/pedal-maint.target
+  installed /etc/systemd/system/pedal-rt.slice
+  installed /etc/systemd/system/pedal-tune.service
+  installed /etc/systemd/system/pedal-wifi.service
+  installed /etc/systemd/system/system.slice.d/10-pedal-cpuset.conf
+  installed /etc/systemd/system/user.slice.d/10-pedal-cpuset.conf
+  installed /usr/lib/sysusers.d/pedal.conf
+  installed /usr/local/bin/pedal-rt
+  installed /usr/local/sbin/pedal-device
+  installed /usr/local/sbin/pedal-tune
+  installed /usr/local/sbin/pedal-wifi
+Created symlink '/etc/systemd/system/apt-daily.service' → '/dev/null'.
+  masked    apt-daily.service
+Masking 'apt-daily.service', but its triggering units are still active:
+apt-daily.timer
+Created symlink '/etc/systemd/system/apt-daily.timer' → '/dev/null'.
+  masked    apt-daily.timer
+Created symlink '/etc/systemd/system/apt-daily-upgrade.service' → '/dev/null'.
+  masked    apt-daily-upgrade.service
+Masking 'apt-daily-upgrade.service', but its triggering units are still active:
+apt-daily-upgrade.timer
+Created symlink '/etc/systemd/system/apt-daily-upgrade.timer' → '/dev/null'.
+  masked    apt-daily-upgrade.timer
+Created symlink '/etc/systemd/system/unattended-upgrades.service' → '/dev/null'.
+  masked    unattended-upgrades.service
+Created symlink '/etc/systemd/system/dpkg-db-backup.service' → '/dev/null'.
+  masked    dpkg-db-backup.service
+Masking 'dpkg-db-backup.service', but its triggering units are still active:
+dpkg-db-backup.timer
+Created symlink '/etc/systemd/system/dpkg-db-backup.timer' → '/dev/null'.
+  masked    dpkg-db-backup.timer
+Created symlink '/etc/systemd/system/man-db.timer' → '/dev/null'.
+  masked    man-db.timer
+Created symlink '/etc/systemd/system/update-notifier-download.timer' → '/dev/null'.
+  masked    update-notifier-download.timer
+Created symlink '/etc/systemd/system/update-notifier-motd.timer' → '/dev/null'.
+  masked    update-notifier-motd.timer
+Created symlink '/etc/systemd/system/motd-news.service' → '/dev/null'.
+Masking 'motd-news.service', but its triggering units are still active:
+motd-news.timer
+  masked    motd-news.service
+Created symlink '/etc/systemd/system/motd-news.timer' → '/dev/null'.
+  masked    motd-news.timer
+Created symlink '/etc/systemd/system/ubuntu-advantage.service' → '/dev/null'.
+  masked    ubuntu-advantage.service
+Created symlink '/etc/systemd/system/ua-reboot-cmds.service' → '/dev/null'.
+  masked    ua-reboot-cmds.service
+Created symlink '/etc/systemd/system/ua-timer.timer' → '/dev/null'.
+  masked    ua-timer.timer
+Created symlink '/etc/systemd/system/ua-timer.service' → '/dev/null'.
+  masked    ua-timer.service
+Created symlink '/etc/systemd/system/snapd.service' → '/dev/null'.
+Masking 'snapd.service', but its triggering units are still active:
+snapd.socket
+  masked    snapd.service
+Created symlink '/etc/systemd/system/snapd.socket' → '/dev/null'.
+  masked    snapd.socket
+Created symlink '/etc/systemd/system/snapd.seeded.service' → '/dev/null'.
+  masked    snapd.seeded.service
+Created symlink '/etc/systemd/system/snapd.apparmor.service' → '/dev/null'.
+  masked    snapd.apparmor.service
+Created symlink '/etc/systemd/system/snapd.autoimport.service' → '/dev/null'.
+  masked    snapd.autoimport.service
+Created symlink '/etc/systemd/system/snapd.core-fixup.service' → '/dev/null'.
+  masked    snapd.core-fixup.service
+Created symlink '/etc/systemd/system/snapd.recovery-chooser-trigger.service' → '/dev/null'.
+  masked    snapd.recovery-chooser-trigger.service
+Created symlink '/etc/systemd/system/snapd.system-shutdown.service' → '/dev/null'.
+  masked    snapd.system-shutdown.service
+Created symlink '/etc/systemd/system/snapd.snap-repair.service' → '/dev/null'.
+  masked    snapd.snap-repair.service
+Created symlink '/etc/systemd/system/snapd.snap-repair.timer' → '/dev/null'.
+  masked    snapd.snap-repair.timer
+Failed to mask unit: File '/etc/systemd/system/snap.hwctl.hwctl-daemon.hwctl-socket.socket' already exists

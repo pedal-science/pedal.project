@@ -1,0 +1,18 @@
+  ok    /etc/asound.conf
+  ok    /etc/namchain/namchaind.json
+  ok    /etc/pedal/pro.conf
+  ok    /etc/security/limits.d/90-pedal-rt.conf
+  ok    /etc/sysctl.d/90-pedal.conf
+  ok    /etc/systemd/system/namchaind.service.d/10-pedal.conf
+  ok    /etc/systemd/system/pedal-governor.service
+  ok    /usr/local/sbin/pedal-governor
+  ok    /usr/local/sbin/pro-device
+  --    namchain                                           efcdae7
+  ok    build flags                                        -march=skylake -mtune=skylake
+commit=f19d670-dirty
+applied=2026-10-31T16:51:25Z
+  ok    /var/lib/pedal                 /dev/mapper/ubuntu--vg-pedal--data 195.8G
+  ok    group audio                    rik is a member
+  ok    cpufreq governor               performance
+  ok    /tmp                           tmpfs (7.5G): RAM, keep large files off it
+  --    namchaind                      disabled / inactive

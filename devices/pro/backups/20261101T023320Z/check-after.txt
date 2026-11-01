@@ -1,0 +1,107 @@
+  ok    /etc/asound.conf
+  ok    /etc/namchain/namchaind.json
+  ok    /etc/pedal/default-rig.json
+  ok    /etc/pedal/masked-units
+  ok    /etc/pedal/storage.conf
+  ok    /etc/pedal/tune.conf
+  ok    /etc/security/limits.d/90-pedal-rt.conf
+  ok    /etc/sysctl.d/90-pedal.conf
+  ok    /etc/systemd/journald.conf.d/10-pedal.conf
+  ok    /etc/systemd/system/namchaind.service.d/10-pedal.conf
+  ok    /etc/systemd/system/pedal-maint.target
+  ok    /etc/systemd/system/pedal-rt.slice
+  ok    /etc/systemd/system/pedal-tune.service
+  ok    /etc/systemd/system/pedal-wifi.service
+  ok    /etc/systemd/system/system.slice.d/10-pedal-cpuset.conf
+  ok    /etc/systemd/system/user.slice.d/10-pedal-cpuset.conf
+  ok    /usr/lib/sysusers.d/pedal.conf
+  ok    /usr/local/bin/pedal-rt
+  ok    /usr/local/sbin/pedal-device
+  ok    /usr/local/sbin/pedal-tune
+  ok    /usr/local/sbin/pedal-wifi
+  ok    alsa-utils
+  ok    rsync
+  ok    python3
+  ok    util-linux
+  ok    procps
+  ok    kmod
+  ok    build-essential
+  ok    cmake
+  ok    ninja-build
+  ok    pkg-config
+  ok    libasound2-dev
+  ok    git
+  ok    linux-tools-common
+  ok    sysstat
+  ok    powercap-utils
+  ok    lvm2
+  ok    active slot (pedal): 7.0.0-38-realtime, good
+  ok    7.0.0-38-realtime: modules, kernel and initramfs in the root
+  ok    fallback slot (stock): 7.0.0-42-generic, good
+  ok    7.0.0-42-generic: modules, kernel and initramfs in the root
+  --    cost table                                         not measured on pro yet: the engine charges every unit its unknown cost
+  ok    build flags                                        -march=skylake -mtune=skylake
+commit=af027da-dirty
+applied=2026-11-01T02:33:36Z
+  ok    masked units                       72
+  ok    /var/lib/pedal                     /dev/mapper/ubuntu--vg-pedal--data 195.8G 0%
+  ok    wlp0s20f3 power saving             off
+  --    cost table                         not installed: the engine charges every unit its unknown cost
+  --    pedal-tune.service                 enabled / active
+== kernel isolation (rtpi)
+  ok    isolated cpus                      1-5
+  ok    nohz_full cpus                     1-5
+== core roles
+  ok    non-render cores (R1)              1
+  ok    render cores (R1)                  5
+  ok    housekeeping and render cores disjoint 0 / 1-5
+== clock
+  ok    policy0 governor                   performance
+  ok    policy0 max kHz                    3700000
+  --    policy0 cpus / now kHz             0 / 3400002
+  ok    policy1 governor                   performance
+  ok    policy1 max kHz                    3700000
+  --    policy1 cpus / now kHz             1 / 800000
+  ok    policy2 governor                   performance
+  ok    policy2 max kHz                    3700000
+  --    policy2 cpus / now kHz             2 / 800000
+  ok    policy3 governor                   performance
+  ok    policy3 max kHz                    3700000
+  --    policy3 cpus / now kHz             3 / 800000
+  ok    policy4 governor                   performance
+  ok    policy4 max kHz                    3700000
+  --    policy4 cpus / now kHz             4 / 800000
+  ok    policy5 governor                   performance
+  ok    policy5 max kHz                    3700000
+  --    policy5 cpus / now kHz             5 / 800000
+  --    pch_cannonlake temperature         41 C (first trip 120 C)
+  --    x86_pkg_temp temperature           62 C (first trip -274 C)
+  --    iwlwifi_1 temperature              47 C (first trip -274 C)
+  --    cpu0 throttle events               core 0, package 0
+  --    cpu1 throttle events               core 0, package 0
+  --    cpu2 throttle events               core 0, package 0
+  --    cpu3 throttle events               core 0, package 0
+  --    cpu4 throttle events               core 0, package 0
+  --    cpu5 throttle events               core 0, package 0
+== cpusets
+  ok    system.slice                       0
+  ok    user.slice                         0
+  ok    init.scope                         0
+  ok    pedal-rt.slice loads               loaded
+  ok    user tasks allowed on cpu 1-5      none outside pedal-rt.slice
+== other interrupts
+  ok    movable non-audio interrupts       all asked for cpu 0
+  --    kernel-placed interrupts (counts)  isolcpus cannot move a managed IRQ masked to one isolated cpu: 134(nvme0q1)@1=0 135(nvme0q2)@3=0 136(nvme0q3)@4=0 137(nvme0q4)@5=32 138(nvme0q5)@2=0
+  --    …of those, on the ACTIVE render core  137(nvme0q4)=32 — must not grow while playing; re-read after a soak
+== idle states (render cores, over 50us)
+  ok    deep idle states disabled          cpu 1-5
+  --    housekeeping cpu 0                 keeps every state, by design
+== workqueues
+  ok    unbound workqueue cpumask          01
+== audio interrupt (xhci_hcd)
+  ok    IRQ 124 affinity                   1
+  ok    IRQ 124 affinity vs render set (R3) cpu 1 is inside 1-5
+  ok    IRQ 124 is not on the active core (R4) cpu 1, active core 5
+  ok    thread irq/124-xhci_hcd prio       85
+  --    thread irq/124-xhci_hcd core       1 (observed; its mask cannot be set from here)
+  --    repo tree                          af027da-dirty

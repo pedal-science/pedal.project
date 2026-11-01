@@ -1,0 +1,22 @@
+[Unit]
+Description=Pedal: WiFi power saving off on wlp0s20f3
+Documentation=file:/usr/local/sbin/pedal-wifi
+# pro's own copy of devices/common's unit, which follows `wlan0`. pro has predictable interface
+# names (there is no net.ifnames=0 on its command line: renaming the one interface that carries ssh
+# is not a thing to do for tidiness), so the interface is wlp0s20f3 and the device unit's name
+# carries it.
+#
+# The kernel turns power saving on each time the interface is created, so this follows the
+# interface: started when it appears, stopped when it goes.
+BindsTo=sys-subsystem-net-devices-wlp0s20f3.device
+After=sys-subsystem-net-devices-wlp0s20f3.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/pedal-wifi off wlp0s20f3
+# Stopping it, as `pedal-device revert` does, gives the kernel's default back.
+ExecStop=-/usr/local/sbin/pedal-wifi on wlp0s20f3
+
+[Install]
+WantedBy=sys-subsystem-net-devices-wlp0s20f3.device

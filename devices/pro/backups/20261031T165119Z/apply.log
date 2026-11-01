@@ -1,0 +1,11 @@
+  installed /etc/asound.conf
+  installed /etc/namchain/namchaind.json
+  installed /etc/pedal/pro.conf
+  installed /etc/security/limits.d/90-pedal-rt.conf
+  installed /etc/sysctl.d/90-pedal.conf
+  installed /etc/systemd/system/namchaind.service.d/10-pedal.conf
+  installed /etc/systemd/system/pedal-governor.service
+  installed /usr/local/sbin/pedal-governor
+  installed /usr/local/sbin/pro-device
+Created symlink '/etc/systemd/system/multi-user.target.wants/pedal-governor.service' → '/etc/systemd/system/pedal-governor.service'.
+pro-device: done. Manifest: /var/lib/pedal-device/manifest. Restart namchaind (scripts/deploy-engine --host pro) to pick up its configuration.

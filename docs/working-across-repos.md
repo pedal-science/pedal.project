@@ -1,6 +1,6 @@
 # Working across the repos
 
-The pedal's software is spread over several repositories and three machines. This page says what
+The pedal's software is spread over several repositories and four machines. This page says what
 each one owns, how a change travels from an editor to the pedal, and the few rules that stop the
 copies drifting apart. It was written on 2026-09-23 from a survey of every checkout. What that
 survey found is recorded in `plan.md` under "Where things stand", because it describes a moment
@@ -10,18 +10,18 @@ rather than a rule.
 
 ## The pieces
 
-| Repo (GitHub `rikkus/…`) | Checkout on the Mac | Owns |
+| Repo (GitHub) | Checkout on the Mac | Owns |
 |---|---|---|
-| `pedal.project` | `~/code.local/pedal/pedal.project` | The pedal as a system: goal, hardware design, diagrams, decisions, plan. The Core host's appliance configuration (`devices/`), the Pico firmware (`firmware/`), and the pedal service (`pedald`, in `devices/common/rootfs/usr/local/lib/pedald/`) beside `namchaind` |
-| `namchain` | `~/code.local/pedal/namchain` | The engine library, `namchaind`, `namchainctl`, the soak and bench tools, and **the control protocol** (protocol 2) |
-| `ljoss` | `~/code.local/pedal/ljoss` | The rig designer (macOS/iOS), including flattening the rig tree into an engine graph |
-| `rtpi` | `~/code.local/pedal/rtpi` | The Core host's kernel, the boot-slot safety net, RT tuning, and so any **device-tree** change such as the WM8960 sound card |
-| `NAMBench` | `~/code.local/pedal/NAMBench` | NAM and IR kernel research. It reaches the pedal only through `namchain`, as a vendor patch or a port |
-| `rigpa` | `~/code.local/pedal/rigpa` | The pedal's on-device UI (C++, Qt 6) on the Core host's screen (D14). A client of `namchain`'s protocol and of `pedald`'s library API, never their owner; reads the library read-only. Its deployment on the Core host is `devices/`'s, like the engine's |
-| `comms` | `~/code.local/pedal/comms` | The website and the video. Owns the public *wording* of the pedal's claims and a register (`docs/claims.md`) linking each to its evidence here or in the other repos; owns no technical fact itself |
-| `OptimisationWorkOnNeuralAmpModelerCore` (fork) | `~/code.local/pedal/namchain/vendor/NeuralAmpModelerCore` | The planar NEON kernels (upstream PR #313). It is **vendored into `namchain` as a declared submodule** at `all-optimisations`, so there is one checkout of it, not two |
-| `AudioDSPTools` (fork) | not checked out here | The partitioned-FFT IR branch, which `namchain` carries as a port — `nc.cab.ir` doesn't use AudioDSPTools. `rikkus/AudioDSPTools` no longer exists on GitHub; the only copy of `partitioned-ir` is `~/code.local/nam/AudioDSPTools-spread` |
-| `midi-commander-custom` (fork) | `~/code.local/comidi/midi-commander-custom-rikkus` | The MIDI Commander's firmware and button configuration. Deliberately outside the workspace: it is a peripheral, and its two sibling clones in `comidi/` are other people's |
+| `pedal-science/pedal.project` | `~/code.local/pedal/pedal.project` | The pedal as a system: goal, hardware design, diagrams, decisions, plan. The Core host's appliance configuration (`devices/`), the Pico firmware (`firmware/`), and the pedal service (`pedald`, in `devices/common/rootfs/usr/local/lib/pedald/`) beside `namchaind` |
+| `pedal-science/namchain` | `~/code.local/pedal/namchain` | The engine library, `namchaind`, `namchainctl`, the soak and bench tools, and **the control protocol** (protocol 2) |
+| `pedal-science/ljoss` | `~/code.local/pedal/ljoss` | The rig designer (macOS/iOS), including flattening the rig tree into an engine graph |
+| `pedal-science/rtpi` | `~/code.local/pedal/rtpi` | The Core host's kernel, the boot-slot safety net, RT tuning, and so any **device-tree** change such as the WM8960 sound card |
+| `pedal-science/NAMBench` | `~/code.local/pedal/NAMBench` | NAM and IR kernel research. It reaches the pedal only through `namchain`, as a vendor patch or a port |
+| `pedal-science/rigpa` | `~/code.local/pedal/rigpa` | The pedal's on-device UI (C++, Qt 6) on the Core host's screen (D14). A client of `namchain`'s protocol and of `pedald`'s library API, never their owner; reads the library read-only. Its deployment on the Core host is `devices/`'s, like the engine's |
+| `pedal-science/comms` | `~/code.local/pedal/comms` | The website and the video. Owns the public *wording* of the pedal's claims and a register (`docs/claims.md`) linking each to its evidence here or in the other repos; owns no technical fact itself |
+| `rikkus/OptimisationWorkOnNeuralAmpModelerCore` (fork) | `~/code.local/pedal/namchain/vendor/NeuralAmpModelerCore` | The planar NEON kernels (upstream PR #313). It is **vendored into `namchain` as a declared submodule** at `all-optimisations`, so there is one checkout of it, not two |
+| `rikkus/AudioDSPTools` (fork) | not checked out here | The partitioned-FFT IR branch, which `namchain` carries as a port — `nc.cab.ir` doesn't use AudioDSPTools. `rikkus/AudioDSPTools` no longer exists on GitHub; the only copy of `partitioned-ir` is `~/code.local/nam/AudioDSPTools-spread` |
+| `rikkus/midi-commander-custom` (fork) | `~/code.local/comidi/midi-commander-custom-rikkus` | The MIDI Commander's firmware and button configuration. Deliberately outside the workspace: it is a peripheral, and its two sibling clones in `comidi/` are other people's |
 
 Those five rows above `AudioDSPTools` are the ones the workspace holds, plus this repository: the
 seven checkouts under `~/code.local/pedal/` are the accepted layout since 2026-10-06, declared in
@@ -42,6 +42,7 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 | **M2** (MacBook Air) | Where editing and agent sessions happen, and where every deploy is started. Xcode, macOS builds of the engine | Holds every repo, all seven of them under `~/code.local/pedal/` |
 | **vip** (Pi 5, 1 GB, aarch64) | **The Core host** (from 2026-10-01), and nothing else. Built from an image (`devices/vip/make-card`, `docs/vip-image.md`); where testing happens until it's a pedal nobody should disrupt | No compiler: everything arrives built (the engine in colima on the Mac, `scripts/deploy-engine`) |
 | **piv** (Pi 500, aarch64) | The live bench device and the ARM build host: native aarch64, armv7 cross-compiler (GCC 15.2), `qemu-arm-static` for running armv7 tests | Allowed to be busy or down, so every build that runs on it also needs a fallback (colima on the Mac, which `rtpi` and vip's image already use). Its dev checkouts are at `~/code.local/pedal/<repo>`, the Mac's layout (`scripts/status` lists them); NAMBench is still at `~/NAMBench` |
+| **pro** (HP ProDesk 600 G5 Mini, Core i5-9500T, 9 MiB L3, 16 GB, 2 TB NVMe, **x86-64**, Ubuntu Server 26.04) | The Core host candidate for the **bigger case** (from 2026-10-31), chosen for its larger L3 cache; a Behringer UMC202HD (USB) is the audio interface inside the case | Builds namchain itself (`scripts/deploy-engine --host pro`, gcc 15.2, flags in `devices/pro/build.env`). Runs the **same** `devices/` tooling as the Pi hosts since 2026-11-01 — `devices/pro/apply` and `pedal-device`, six cores split 0/1-5, 72 units masked — and Ubuntu's signed amd64 RT kernel through GRUB's one-shot (`rtpi`'s `pro-boot`). `scripts/{status,host-lock,components-lock,sync-library,deploy-engine} --host pro` all work. Cost measured 2026-10-31 ([docs/pro.md](pro.md)) |
 
 ## The rules
 

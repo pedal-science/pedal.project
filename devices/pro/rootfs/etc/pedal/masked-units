@@ -1,0 +1,195 @@
+# Units masked on pro, one per line. Mask, not disable: a disabled unit can still be started by a
+# socket, a timer or a dependency. Units that do not exist on the host are skipped.
+#
+# vip's pedal root is built from a package list, so most of this was never installed there and its
+# list is short (devices/vip/rootfs/etc/pedal/masked-units). pro is a hand-installed Ubuntu Server,
+# so everything Ubuntu enables by default is here and has to be turned off by name. piv's list
+# (devices/piv/rootfs/etc/pedal/masked-units) is the closer precedent, and this is that list plus
+# what pro actually runs, read from the host on 2026-10-31.
+#
+# The test applied to each one: does it wake up on its own, scan, index, write disk, phone home, or
+# change the clock or the CPU's frequency behind the engine's back? A gig is not the time for any of
+# those. What a reader should take from the length of this list is that an appliance built from a
+# general-purpose server image carries a lot it does not need.
+#
+# One of these has a measurement behind it rather than a principle: fwupd, below. The rest are the
+# principle, and the honest position is that none of them has been shown to cost this pedal anything
+# — they are off because a thing that cannot wake up cannot interrupt the audio, which is cheaper
+# than proving each one harmless.
+
+# ---------------------------------------------------------------- package maintenance
+# Updates happen when you choose, not mid-gig.
+apt-daily.service
+apt-daily.timer
+apt-daily-upgrade.service
+apt-daily-upgrade.timer
+unattended-upgrades.service
+dpkg-db-backup.service
+dpkg-db-backup.timer
+man-db.timer
+update-notifier-download.timer
+update-notifier-motd.timer
+motd-news.service
+motd-news.timer
+ubuntu-advantage.service
+ua-reboot-cmds.service
+ua-timer.timer
+ua-timer.service
+
+# ---------------------------------------------------------------- snaps
+# Three snaps are installed (core24, snapd, hwctl) and none of them is the pedal's. snapd refreshes
+# on its own schedule, which means downloading and remounting squashfs images under a playing
+# engine. The .mount units are left alone: they are loop mounts that cost nothing once nothing
+# refreshes them, and masking them would strand the files.
+snapd.service
+snapd.socket
+snapd.seeded.service
+snapd.apparmor.service
+snapd.autoimport.service
+snapd.core-fixup.service
+snapd.recovery-chooser-trigger.service
+snapd.system-shutdown.service
+snapd.snap-repair.service
+snapd.snap-repair.timer
+
+# ---------------------------------------------------------------- first-boot provisioning
+# `cloud-init status` already says "disabled", but the units are still enabled: a re-enable or an
+# upgrade would bring them back, and what they do is rewrite the network configuration.
+cloud-init-local.service
+cloud-init-network.service
+cloud-init-main.service
+cloud-config.service
+cloud-final.service
+cloud-init-hotplugd.socket
+cloud-init-hotplugd.service
+
+# ---------------------------------------------------------------- the firmware update daemon
+# MEASURED, not assumed. On 2026-11-01 the hour-long soak recorded **726 system-management
+# interrupts in a single 10-second window** and zero in the other 355 samples — and pro's journal
+# puts `fwupd-refresh.service` starting at 02:28:12, inside that window, running `fwupdmgr refresh`
+# and activating `fwupd.service`. fwupd enumerates firmware: the UEFI capsule interface, the TPM,
+# SPI flash, NVMe, USB. Reading those traps into firmware, and an SMI steals the core in a way the
+# kernel cannot see, schedule around or account for — which is exactly the signature of the stall
+# that failed pro's first hour on 2026-10-31 (2.0 ms of *CPU* time for one block, wall equal to CPU).
+#
+# So this is not hygiene, it is the leading candidate for the one unexplained failure on this host.
+# It was in this file's prose from the start and missing from the list, which is why the timer still
+# fired; `bench-results/2026-11-01-soak-pro-rt/` has the measurement.
+#
+# All three: the timer is what fires, but fwupd.service is dbus-activated
+# (org.freedesktop.fwupd), so masking the timer alone leaves anything that asks over dbus able to
+# start it. fwupd-refresh.service is `static` and pulled in by the timer.
+fwupd.service
+fwupd-refresh.service
+fwupd-refresh.timer
+
+# ---------------------------------------------------------------- the frequency and thermal daemons
+# thermald is the dangerous one: it adjusts frequency and power limits to hold a temperature target,
+# which is exactly the DVFS jitter pedal-tune's performance governor exists to remove, and it does
+# it without telling anyone. Ubuntu's `linux-realtime` meta package *recommends* it, which is why
+# rtpi installs the kernel with --no-install-recommends.
+#
+# irqbalance is not installed. It is named anyway because if it ever is, it will quietly undo
+# pedal-tune's interrupt placement, and a masked unit that does not exist costs one skipped line.
+thermald.service
+irqbalance.service
+power-profiles-daemon.service
+tuned.service
+upower.service
+
+# ---------------------------------------------------------------- hardware pro does not have
+ModemManager.service
+bluetooth.service
+multipathd.service
+open-iscsi.service
+iscsid.service
+iscsid.socket
+udisks2.service
+# VMware's guest tools, installed by the Ubuntu Server image on bare metal.
+open-vm-tools.service
+vgauth.service
+# No md array and no xfs filesystem.
+mdcheck_start.timer
+mdcheck_continue.timer
+mdmonitor-oneshot.timer
+mdmonitor.service
+xfs_scrub_all.timer
+xfs_scrub_all.service
+# The iGPU's X11 helper. pro is headless; when rigpa comes, it will not be through this.
+gpu-manager.service
+
+# ---------------------------------------------------------------- crash dumps and reports
+# kdump-tools is the reason `crashkernel=2G-4G:320M,…` is on Ubuntu's kernel command line: it
+# reserves 512 MB on this machine and loads a second kernel at boot. pro-boot's own entries do not
+# carry crashkernel, and this is the unit that would otherwise want it.
+kdump-tools.service
+apport.service
+apport-autoreport.service
+apport-autoreport.path
+apport-autoreport.timer
+apport-forward.socket
+
+# ---------------------------------------------------------------- logging and accounting
+# The journal, bounded and on disk (etc/systemd/journald.conf.d/10-pedal.conf), is the record.
+rsyslog.service
+sysstat.service
+sysstat-collect.timer
+sysstat-rotate.timer
+sysstat-summary.timer
+
+# ---------------------------------------------------------------- disk maintenance
+e2scrub_all.service
+e2scrub_all.timer
+e2scrub_reap.service
+fstrim.service
+fstrim.timer
+
+# ---------------------------------------------------------------- odds and ends
+# cron: nothing the pedal does is scheduled, and vip has no cron at all. Timers that matter are
+# systemd's and are named above.
+cron.service
+# A dispatcher for network-change hooks. Nothing on pro has any.
+networkd-dispatcher.service
+# Offers to install LXD on first use. A socket, so it is listening for exactly that.
+lxd-installer.socket
+# Per-user audio, masked for every user ("user:" = systemctl --global). It starts with any login,
+# SSH included, grabs every sound card and rewrites their mixers. namchaind uses ALSA directly, and
+# the UMC202HD is the device it opens by name.
+user:pipewire.socket
+user:pipewire.service
+user:pipewire-pulse.socket
+user:pipewire-pulse.service
+user:wireplumber.service
+user:filter-chain.service
+
+# ---------------------------------------------------------------- deliberately NOT masked
+#   chrony                  pro's only time source. Masking the clock on a machine that timestamps
+#                           evidence is a self-inflicted wound (namchain host-slim's guard makes the
+#                           same point). It steps the clock, which a soak's timestamps notice, so
+#                           stop it by hand for a measurement that cares.
+#   systemd-networkd, netplan-wpa-wlp0s20f3, wpa_supplicant, systemd-resolved
+#                           WiFi is the way in: eno1 has no cable.
+#   systemd-networkd-wait-online
+#                           it only delays network-online.target, and a boot that waits is better
+#                           than pro-boot validating a trial before the network is up.
+#   ssh.service, ssh.socket the way in, both of them.
+#   ufw                     a firewall is a security decision, not a latency one, and it is a
+#                           boot-time oneshot that costs nothing while running. Ask before removing
+#                           it; namchaind's TCP port (47810) already works through it.
+#   apparmor, secureboot-db also security, also oneshots.
+#   lvm2-monitor, dm-event.socket, blk-availability, finalrd
+#                           the root volume is LVM. These are what notice a volume in trouble.
+#   logrotate.timer         bounded daily work that keeps /var/log from growing without end. With
+#                           rsyslog masked there is little left to rotate, but an unbounded log is
+#                           worse than one daily wake-up on the housekeeping core.
+#   systemd-pstore          reads the firmware's crash record once at boot. It is evidence.
+#   polkit                  dbus-activated, and what is left of its callers is masked.
+#   snap.hwctl.hwctl-daemon.hwctl-socket.socket
+#                           HP's certification agent, from the `hwctl` snap. It CANNOT be masked:
+#                           a mask is a symlink at /etc/systemd/system/<unit>, and this unit's own
+#                           file is already at that path (snapd puts it there), so systemctl
+#                           refuses rather than overwrite it. It is a socket, so nothing runs until
+#                           something connects, and nothing does. The real answer is to remove the
+#                           snap — `snap remove hwctl` — which is a decision about what is installed
+#                           on the machine, not something this tree should do behind the owner's
+#                           back. Until then it listens and does nothing.

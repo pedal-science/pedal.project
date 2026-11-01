@@ -1,0 +1,4 @@
+  installed /etc/pedal/default-rig.json
+  installed /usr/local/sbin/pro-device
+pro-device: seeding /var/lib/pedal/library/rigs/last.json from /etc/pedal/default-rig.json
+pro-device: done. Manifest: /var/lib/pedal-device/manifest. Restart namchaind (scripts/deploy-engine --host pro) to pick up its configuration.

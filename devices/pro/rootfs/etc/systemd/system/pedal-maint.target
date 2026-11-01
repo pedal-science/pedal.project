@@ -1,0 +1,27 @@
+# The loose profile's target: `pro-boot loose` boots once with systemd.unit=pedal-maint.target,
+# `pro-boot default loose` every time (rtpi, devices/pro/device.env, LOOSE_ARGS).
+#
+# Everything needed to reach pro and work on it, and nothing that plays: not namchaind and not
+# pedal-tune, since those are wanted by multi-user.target, which this doesn't pull in. So a boot
+# that lands here has no isolated cores, no pinned interrupt and no engine — which is what you want
+# when the question is "did the tuning do this?".
+#
+# pro-boot refuses a loose boot while this file is missing: without it systemd would drop to
+# emergency mode, with no network.
+[Unit]
+Description=Pedal maintenance: reachable, not playing (the loose profile)
+Documentation=file:/etc/pedal/tune.conf
+Requires=basic.target
+# pro's network is netplan's: networkd plus a per-interface wpa_supplicant unit netplan generates.
+# The name carries the interface, so it is pro's and not devices/common's.
+Wants=network.target systemd-networkd.service systemd-resolved.service
+Wants=netplan-wpa-wlp0s20f3.service wpa_supplicant.service
+Wants=ssh.service chrony.service getty.target pedal-wifi.service
+# Removes /run/nologin. multi-user.target pulls it in; without it here, pam_nologin refuses every
+# login in the loose profile ("System is booting up"), so ssh answers and nobody gets in.
+Wants=systemd-user-sessions.service
+# The library volume, so a loose boot can still read and write rigs and evidence.
+Wants=var-lib-pedal.mount
+After=basic.target
+Conflicts=rescue.service rescue.target
+AllowIsolate=yes

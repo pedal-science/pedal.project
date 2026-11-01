@@ -1,0 +1,7 @@
+# What pro runs. Written by scripts/components-lock, which scripts/deploy-engine,
+# scripts/deploy-rigpa and devices/<host>/apply call; scripts/status compares it with the host. Commit it with the change.
+host=pro
+board=HP ProDesk 600 G5 Desktop Mini
+kernel=7.0.0-38-realtime
+namchain=efcdae7
+devices=af027da-dirty

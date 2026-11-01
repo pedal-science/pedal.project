@@ -1,0 +1,110 @@
+  installed /etc/pedal/masked-units
+  installed /usr/local/sbin/pedal-device
+Created symlink '/etc/systemd/system/cloud-init-local.service' → '/dev/null'.
+  masked    cloud-init-local.service
+Created symlink '/etc/systemd/system/cloud-init-network.service' → '/dev/null'.
+  masked    cloud-init-network.service
+Created symlink '/etc/systemd/system/cloud-init-main.service' → '/dev/null'.
+  masked    cloud-init-main.service
+Created symlink '/etc/systemd/system/cloud-config.service' → '/dev/null'.
+  masked    cloud-config.service
+Created symlink '/etc/systemd/system/cloud-final.service' → '/dev/null'.
+  masked    cloud-final.service
+Created symlink '/etc/systemd/system/cloud-init-hotplugd.socket' → '/dev/null'.
+  masked    cloud-init-hotplugd.socket
+Created symlink '/etc/systemd/system/cloud-init-hotplugd.service' → '/dev/null'.
+  masked    cloud-init-hotplugd.service
+Created symlink '/etc/systemd/system/thermald.service' → '/dev/null'.
+  masked    thermald.service
+  absent    irqbalance.service
+  absent    power-profiles-daemon.service
+  absent    tuned.service
+Created symlink '/etc/systemd/system/upower.service' → '/dev/null'.
+  masked    upower.service
+Created symlink '/etc/systemd/system/ModemManager.service' → '/dev/null'.
+  masked    ModemManager.service
+  absent    bluetooth.service
+Created symlink '/etc/systemd/system/multipathd.service' → '/dev/null'.
+  masked    multipathd.service
+Created symlink '/etc/systemd/system/open-iscsi.service' → '/dev/null'.
+  masked    open-iscsi.service
+Created symlink '/etc/systemd/system/iscsid.service' → '/dev/null'.
+  masked    iscsid.service
+Masking 'iscsid.service', but its triggering units are still active:
+iscsid.socket
+Created symlink '/etc/systemd/system/iscsid.socket' → '/dev/null'.
+  masked    iscsid.socket
+Created symlink '/etc/systemd/system/udisks2.service' → '/dev/null'.
+  masked    udisks2.service
+Created symlink '/etc/systemd/system/open-vm-tools.service' → '/dev/null'.
+  masked    open-vm-tools.service
+Created symlink '/etc/systemd/system/vgauth.service' → '/dev/null'.
+  masked    vgauth.service
+Created symlink '/etc/systemd/system/mdcheck_start.timer' → '/dev/null'.
+  masked    mdcheck_start.timer
+Created symlink '/etc/systemd/system/mdcheck_continue.timer' → '/dev/null'.
+  masked    mdcheck_continue.timer
+Created symlink '/etc/systemd/system/mdmonitor-oneshot.timer' → '/dev/null'.
+  masked    mdmonitor-oneshot.timer
+Created symlink '/etc/systemd/system/mdmonitor.service' → '/dev/null'.
+  masked    mdmonitor.service
+Created symlink '/etc/systemd/system/xfs_scrub_all.timer' → '/dev/null'.
+  masked    xfs_scrub_all.timer
+Created symlink '/etc/systemd/system/xfs_scrub_all.service' → '/dev/null'.
+  masked    xfs_scrub_all.service
+Created symlink '/etc/systemd/system/gpu-manager.service' → '/dev/null'.
+  masked    gpu-manager.service
+Created symlink '/etc/systemd/system/kdump-tools.service' → '/dev/null'.
+  masked    kdump-tools.service
+Created symlink '/etc/systemd/system/apport.service' → '/dev/null'.
+  masked    apport.service
+Created symlink '/etc/systemd/system/apport-autoreport.service' → '/dev/null'.
+  masked    apport-autoreport.service
+Created symlink '/etc/systemd/system/apport-autoreport.path' → '/dev/null'.
+  masked    apport-autoreport.path
+Created symlink '/etc/systemd/system/apport-autoreport.timer' → '/dev/null'.
+  masked    apport-autoreport.timer
+Created symlink '/etc/systemd/system/apport-forward.socket' → '/dev/null'.
+  masked    apport-forward.socket
+Created symlink '/etc/systemd/system/rsyslog.service' → '/dev/null'.
+  masked    rsyslog.service
+Created symlink '/etc/systemd/system/sysstat.service' → '/dev/null'.
+  masked    sysstat.service
+Created symlink '/etc/systemd/system/sysstat-collect.timer' → '/dev/null'.
+  masked    sysstat-collect.timer
+Created symlink '/etc/systemd/system/sysstat-rotate.timer' → '/dev/null'.
+  masked    sysstat-rotate.timer
+Created symlink '/etc/systemd/system/sysstat-summary.timer' → '/dev/null'.
+  masked    sysstat-summary.timer
+Created symlink '/etc/systemd/system/e2scrub_all.service' → '/dev/null'.
+  masked    e2scrub_all.service
+Masking 'e2scrub_all.service', but its triggering units are still active:
+e2scrub_all.timer
+Created symlink '/etc/systemd/system/e2scrub_all.timer' → '/dev/null'.
+  masked    e2scrub_all.timer
+Created symlink '/etc/systemd/system/e2scrub_reap.service' → '/dev/null'.
+  masked    e2scrub_reap.service
+Created symlink '/etc/systemd/system/fstrim.service' → '/dev/null'.
+  masked    fstrim.service
+Masking 'fstrim.service', but its triggering units are still active:
+fstrim.timer
+Created symlink '/etc/systemd/system/fstrim.timer' → '/dev/null'.
+  masked    fstrim.timer
+Created symlink '/etc/systemd/system/cron.service' → '/dev/null'.
+  masked    cron.service
+Created symlink '/etc/systemd/system/networkd-dispatcher.service' → '/dev/null'.
+  masked    networkd-dispatcher.service
+Created symlink '/etc/systemd/system/lxd-installer.socket' → '/dev/null'.
+  masked    lxd-installer.socket
+  absent    user:pipewire.socket
+  absent    user:pipewire.service
+  absent    user:pipewire-pulse.socket
+  absent    user:pipewire-pulse.service
+  absent    user:wireplumber.service
+  absent    user:filter-chain.service
+Created symlink '/etc/systemd/system/multi-user.target.wants/pedal-tune.service' → '/etc/systemd/system/pedal-tune.service'.
+Creating group 'pedal' with GID 982.
+Creating user 'pedal' (pedal service) with UID 982 and GID 982.
+Created symlink '/etc/systemd/system/sys-subsystem-net-devices-wlp0s20f3.device.wants/pedal-wifi.service' → '/etc/systemd/system/pedal-wifi.service'.
+Unit /etc/systemd/system/pedal-wifi.service is added as a dependency to a non-existent unit sys-subsystem-net-devices-wlp0s20f3.device.
+pedal-device: done. Manifest: /var/lib/pedal/manifest

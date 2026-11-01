@@ -1,0 +1,11 @@
+[Unit]
+Description=Pedal realtime work: namchaind and measurements, allowed onto the render cores
+Documentation=file:/etc/pedal/tune.conf
+Before=slices.target
+
+# pro's own copy of devices/common's slice, which says 0-3 for the Pi hosts' four cores. This one is
+# the only slice whose cpuset includes cores 1-5, so its processes can pin a thread there. Their
+# other threads run on the housekeeping core; the pin is what puts the render thread on 5 and the
+# warm threads on 1-4.
+[Slice]
+AllowedCPUs=0-5

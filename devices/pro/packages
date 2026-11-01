@@ -1,0 +1,45 @@
+# Packages devices/pro/check asserts are installed on pro, beyond what Ubuntu Server 26.04.1 puts
+# there itself. This is not an image's input list the way devices/vip/packages is — pro was
+# installed by hand from the ISO — so it is the other direction: the record of what was added, which
+# `check` turns into a test. It cannot notice a package that should not be there; what should not run
+# is in etc/pedal/masked-units instead.
+#
+# The kernel is deliberately absent: rtpi owns it (rtpi/devices/pro/device.env pins the release, and
+# devices/common/check reads it back from the host), exactly as for vip.
+
+# ---------------------------------------------------------------- the engine's own needs
+# alsa-utils is what namchain's tools and every capture use (amixer, arecord, aplay, speaker-test).
+alsa-utils
+# scripts/sync-library mirrors the model and IR library with it.
+rsync
+# pedal-wifi speaks nl80211 in python; pedal-device's status reads the cost table with it.
+python3
+# chrt, taskset and flock (util-linux); ps (procps); modprobe (kmod).
+util-linux
+procps
+kmod
+
+# ---------------------------------------------------------------- building the engine here
+# pro has a compiler and builds its own namchain (scripts/deploy-engine --host pro, flags in
+# build.env), because it is x86 and the Mac cannot cross-build for it the way the image build does
+# for vip.
+build-essential
+cmake
+ninja-build
+pkg-config
+libasound2-dev
+git
+
+# ---------------------------------------------------------------- measuring it
+# turbostat (SMI count, the real clock, package power and temperature) and perf. The versioned
+# package follows the kernel, so the generic one is what is named: `turbostat` from
+# linux-tools-common works through the kernel's own tools directory.
+linux-tools-common
+# mpstat and pidstat. Its three collection timers are masked: the tools are wanted, the cron-like
+# accounting is not.
+sysstat
+# The thermal and power limits the first hour-long soak could not rule out (P4): RAPL constraints,
+# throttle counters.
+powercap-utils
+# lvextend -r, for growing either volume into the 1.57 TB left unallocated.
+lvm2

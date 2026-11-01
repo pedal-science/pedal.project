@@ -1,0 +1,87 @@
+== kernel
+7.0.0-38-realtime
+#38.1-Ubuntu SMP PREEMPT_RT Thu Sep 10 15:24:56 UTC 2026
+== cmdline
+BOOT_IMAGE=/vmlinuz-7.0.0-38-realtime root=/dev/mapper/ubuntu--vg-ubuntu--lv ro rd.shell=0 rd.emergency=reboot rd.retry=60 rd.timeout=90 panic=10 isolcpus=managed_irq,domain,1-5 nohz_full=1-5 rcu_nocbs=1-5 irqaffinity=0 skew_tick=1 drm_kms_helper.poll=0 pedalboot.profile=tuned pedalboot.entry=pedal-tuned
+== isolation
+isolated=1-5 nohz_full=1-5
+== engine
+commit=efcdae7
+flags=-march=skylake -mtune=skylake
+== clock
+policy0 performance max=3700000
+policy1 performance max=3700000
+policy2 performance max=3700000
+policy3 performance max=3700000
+policy4 performance max=3700000
+policy5 performance max=3700000
+== idle
+POLL(0us,dis=0) C1(2us,dis=0) C1E(10us,dis=0) C3(70us,dis=1) C6(85us,dis=1) C7s(124us,dis=1) C8(200us,dis=1) C9(480us,dis=1) C10(890us,dis=1) 
+== audio irq
+ 124:         54   15022407          0          0          0          0 IR-PCI-MSI-0000:00:14.0    0-edge      xhci_hcd
+== irq thread
+    125  FF     85   1 irq/124-xhci_hcd
+== throttle
+/sys/devices/system/cpu/cpu0 core=0 pkg=0
+/sys/devices/system/cpu/cpu1 core=0 pkg=0
+/sys/devices/system/cpu/cpu2 core=0 pkg=0
+/sys/devices/system/cpu/cpu3 core=0 pkg=0
+/sys/devices/system/cpu/cpu4 core=0 pkg=0
+/sys/devices/system/cpu/cpu5 core=0 pkg=0
+== workqueue
+01
+== pedal-tune
+== kernel isolation (rtpi)
+  ok    isolated cpus                      1-5
+  ok    nohz_full cpus                     1-5
+== core roles
+  ok    non-render cores (R1)              1
+  ok    render cores (R1)                  5
+  ok    housekeeping and render cores disjoint 0 / 1-5
+== clock
+  ok    policy0 governor                   performance
+  ok    policy0 max kHz                    3700000
+  --    policy0 cpus / now kHz             0 / 3400003
+  ok    policy1 governor                   performance
+  ok    policy1 max kHz                    3700000
+  --    policy1 cpus / now kHz             1 / 800000
+  ok    policy2 governor                   performance
+  ok    policy2 max kHz                    3700000
+  --    policy2 cpus / now kHz             2 / 800000
+  ok    policy3 governor                   performance
+  ok    policy3 max kHz                    3700000
+  --    policy3 cpus / now kHz             3 / 800000
+  ok    policy4 governor                   performance
+  ok    policy4 max kHz                    3700000
+  --    policy4 cpus / now kHz             4 / 800000
+  ok    policy5 governor                   performance
+  ok    policy5 max kHz                    3700000
+  --    policy5 cpus / now kHz             5 / 800000
+  --    pch_cannonlake temperature         42 C (first trip 120 C)
+  --    x86_pkg_temp temperature           62 C (first trip -274 C)
+  --    iwlwifi_1 temperature              46 C (first trip -274 C)
+  --    cpu0 throttle events               core 0, package 0
+  --    cpu1 throttle events               core 0, package 0
+  --    cpu2 throttle events               core 0, package 0
+  --    cpu3 throttle events               core 0, package 0
+  --    cpu4 throttle events               core 0, package 0
+  --    cpu5 throttle events               core 0, package 0
+== cpusets
+  ok    system.slice                       0
+  ok    user.slice                         0
+  ok    init.scope                         0
+  ok    pedal-rt.slice loads               loaded
+  ok    user tasks allowed on cpu 1-5      none outside pedal-rt.slice
+== other interrupts
+  ok    movable non-audio interrupts       all asked for cpu 0
+== idle states (render cores, over 50us)
+  ok    deep idle states disabled          cpu 1-5
+  --    housekeeping cpu 0                 keeps every state, by design
+== workqueues
+  ok    unbound workqueue cpumask          01
+== audio interrupt (xhci_hcd)
+  ok    IRQ 124 affinity                   1
+  ok    IRQ 124 affinity vs render set (R3) cpu 1 is inside 1-5
+  ok    IRQ 124 is not on the active core (R4) cpu 1, active core 5
+  ok    thread irq/124-xhci_hcd prio       85
+  --    thread irq/124-xhci_hcd core       1 (observed; its mask cannot be set from here)

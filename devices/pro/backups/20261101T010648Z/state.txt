@@ -1,0 +1,378 @@
+
+== host
+Linux pro 7.0.0-42-generic #42-Ubuntu SMP PREEMPT_DYNAMIC Thu Oct 15 08:06:44 UTC 2026 x86_64 GNU/Linux
+BOOT_IMAGE=/vmlinuz-7.0.0-42-generic root=/dev/mapper/ubuntu--vg-ubuntu--lv ro crashkernel=2G-4G:320M,4G-32G:512M,32G-64G:1024M,64G-128G:2048M,128G-:4096M
+ 01:06:49 up  7:20,  2 users,  load average: 0.26, 0.22, 0.13
+
+== applied
+not applied
+
+== isolation
+isolated= nohz_full=
+
+== cpufreq
+policy0 powersave max=3700000 cur=3700006
+policy1 powersave max=3700000 cur=3687511
+policy2 powersave max=3700000 cur=800000
+policy3 powersave max=3700000 cur=800000
+policy4 powersave max=3700000 cur=3700350
+policy5 powersave max=3700000 cur=800000
+
+== thermal
+pch_cannonlake 34000
+iwlwifi_1 37000
+x86_pkg_temp 49000
+
+== cpusets
+system.slice 0
+user.slice 0
+init.scope 0-5
+
+== cpuidle
+/sys/devices/system/cpu/cpu0 POLL(0us,dis=0) C1(2us,dis=0) C1E(10us,dis=0) C3(70us,dis=0) C6(85us,dis=0) C7s(124us,dis=0) C8(200us,dis=0) C9(480us,dis=0) C10(890us,dis=0)
+/sys/devices/system/cpu/cpu1 POLL(0us,dis=0) C1(2us,dis=0) C1E(10us,dis=0) C3(70us,dis=0) C6(85us,dis=0) C7s(124us,dis=0) C8(200us,dis=0) C9(480us,dis=0) C10(890us,dis=0)
+/sys/devices/system/cpu/cpu2 POLL(0us,dis=0) C1(2us,dis=0) C1E(10us,dis=0) C3(70us,dis=0) C6(85us,dis=0) C7s(124us,dis=0) C8(200us,dis=0) C9(480us,dis=0) C10(890us,dis=0)
+/sys/devices/system/cpu/cpu3 POLL(0us,dis=0) C1(2us,dis=0) C1E(10us,dis=0) C3(70us,dis=0) C6(85us,dis=0) C7s(124us,dis=0) C8(200us,dis=0) C9(480us,dis=0) C10(890us,dis=0)
+/sys/devices/system/cpu/cpu4 POLL(0us,dis=0) C1(2us,dis=0) C1E(10us,dis=0) C3(70us,dis=0) C6(85us,dis=0) C7s(124us,dis=0) C8(200us,dis=0) C9(480us,dis=0) C10(890us,dis=0)
+/sys/devices/system/cpu/cpu5 POLL(0us,dis=0) C1(2us,dis=0) C1E(10us,dis=0) C3(70us,dis=0) C6(85us,dis=0) C7s(124us,dis=0) C8(200us,dis=0) C9(480us,dis=0) C10(890us,dis=0)
+
+== workqueue
+3f
+
+== throttle
+/sys/devices/system/cpu/cpu0 core=0 package=0
+/sys/devices/system/cpu/cpu1 core=0 package=0
+/sys/devices/system/cpu/cpu2 core=0 package=0
+/sys/devices/system/cpu/cpu3 core=0 package=0
+/sys/devices/system/cpu/cpu4 core=0 package=0
+/sys/devices/system/cpu/cpu5 core=0 package=0
+
+== powercap
+package-0 long_term=35000000 short_term=69000000 
+core long_term=0 
+uncore long_term=0 
+dram long_term=0 
+psys long_term=61000000 short_term=69000000 
+
+== interrupts
+            CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       
+   8:          0          0          0          0          0          0 IR-IO-APIC    8-edge      rtc0
+   9:         17          0          0          0          0          0 IR-IO-APIC    9-fasteoi   acpi
+  16:          0          0          0          0          0          7 IR-IO-APIC   16-fasteoi   i801_smbus
+ 120:          0          0          0          0          0          0 DMAR-MSI 1024-edge      dmar0-prq
+ 121:          0          0          0          0          0          0 DMAR-MSI    0-edge      dmar0
+ 122:          0          0          0          0          0          0 DMAR-MSI    1-edge      dmar1
+ 123:          0          0          0          0          1          0 IR-PCI-MSI-0000:00:1b.0    0-edge      PCIe PME, aerdrv, pcie-dpc, PCIe bwctrl
+ 124:          0          0          0          0          0   56867220 IR-PCI-MSI-0000:00:14.0    0-edge      xhci_hcd
+ 131:          0      13215          0          0          0          0 IR-PCI-MSI-0000:00:1f.6    0-edge      eno1
+ 132:          0          0          0          0          0          0 IR-PCI-MSI-0000:00:17.0    0-edge      ahci[0000:00:17.0]
+ 133:          0          0          0        244          0          0 IR-PCI-MSIX-0000:01:00.0    0-edge      nvme0q0
+ 134:          0      12501          0          0          0          0 IR-PCI-MSIX-0000:01:00.0    1-edge      nvme0q1
+ 135:          0          0          0      10663          0          0 IR-PCI-MSIX-0000:01:00.0    2-edge      nvme0q2
+ 136:          0          0          0          0       6815          0 IR-PCI-MSIX-0000:01:00.0    3-edge      nvme0q3
+ 137:          0          0          0          0          0       3681 IR-PCI-MSIX-0000:01:00.0    4-edge      nvme0q4
+ 138:          0          0       6789          0          0          0 IR-PCI-MSIX-0000:01:00.0    5-edge      nvme0q5
+ 139:      11585          0          0          0          0          0 IR-PCI-MSIX-0000:01:00.0    6-edge      nvme0q6
+ 140:          0          0          0          0     331161          0 IR-PCI-MSI-0000:00:14.3    0-edge      iwlwifi
+ 141:       2300          0          0          0          0          0 IR-PCI-MSI-0000:00:02.0    0-edge      i915
+ 142:          0        313          0          0          0          0 IR-PCI-MSI-0000:00:1f.3    0-edge      snd_hda_intel:card1
+ NMI:         40         37         32         71         23       1046   Non-maskable interrupts
+ LOC:    3715407     400788     310397     612415     416544   13845002   Local timer interrupts
+ SPU:          0          0          0          0          0          0   Spurious interrupts
+ PMI:         40         37         32         71         23       1046   Performance monitoring interrupts
+ IWI:        294        715        915        391        476        335   IRQ work interrupts
+ RTR:          0          0          0          0          0          0   APIC ICR read retries
+ RES:        311        144        126        101        103        968   Rescheduling interrupts
+ CAL:      23767      25024      22809      26471      20632      27075   Function call interrupts
+ TLB:       1329       1594       1681       1533       1720       2260   TLB shootdowns
+ TRM:          0          0          0          0          0          0   Thermal event interrupts
+ THR:          0          0          0          0          0          0   Threshold APIC interrupts
+ DFR:          0          0          0          0          0          0   Deferred Error APIC interrupts
+ MCE:          0          0          0          0          0          0   Machine check exceptions
+ MCP:         81         82         82         82         82         82   Machine check polls
+ ERR:          0
+ MIS:          0
+ PIN:          0          0          0          0          0          0   Posted-interrupt notification event
+ NPI:          0          0          0          0          0          0   Nested posted-interrupt event
+ PIW:          0          0          0          0          0          0   Posted-interrupt wakeup event
+VPMI:          0          0          0          0          0          0  Perf Guest Mediated PMI
+
+== irq-affinity
+0 0-5
+1 0-5
+10 0-5
+11 0-5
+12 0-5
+120 0-5
+121 0-5
+122 0-5
+123 0-5
+124 0-5
+13 0-5
+131 0-5
+132 0-5
+133 0-5
+134 1
+135 3
+136 4
+137 5
+138 2
+139 0
+14 0-5
+140 0-5
+141 0-5
+142 0-5
+15 0-5
+16 0-5
+2 0-5
+3 0-5
+4 0-5
+5 0-5
+6 0-5
+7 0-5
+8 0-5
+9 0-5
+
+== irq-threads
+     68  FF     50   0 irq/9-acpi
+     80  FF     50   1 irq/120-dmar0-prq
+     84  FF     50   4 irq/123-aerdrv
+     85  FF     50   4 irq/123-pcie-dpc
+    711  FF     50   4 irq/140-iwlwifi
+
+== masked
+alsa-utils.service                     masked enabled
+apt-daily-upgrade.service              masked enabled
+apt-daily.service                      masked enabled
+cryptdisks-early.service               masked enabled
+cryptdisks.service                     masked enabled
+dpkg-db-backup.service                 masked enabled
+hwclock.service                        masked enabled
+motd-news.service                      masked enabled
+screen-cleanup.service                 masked enabled
+snapd.apparmor.service                 masked enabled
+snapd.autoimport.service               masked enabled
+snapd.core-fixup.service               masked enabled
+snapd.recovery-chooser-trigger.service masked enabled
+snapd.seeded.service                   masked enabled
+snapd.service                          masked enabled
+snapd.snap-repair.service              masked enabled
+snapd.system-shutdown.service          masked enabled
+sudo.service                           masked enabled
+ua-reboot-cmds.service                 masked enabled
+ua-timer.service                       masked enabled
+ubuntu-advantage.service               masked enabled
+unattended-upgrades.service            masked enabled
+x11-common.service                     masked enabled
+snapd.socket                           masked enabled
+apt-daily-upgrade.timer                masked enabled
+apt-daily.timer                        masked enabled
+dpkg-db-backup.timer                   masked enabled
+man-db.timer                           masked enabled
+motd-news.timer                        masked enabled
+snapd.snap-repair.timer                masked enabled
+ua-timer.timer                         masked enabled
+update-notifier-download.timer         masked enabled
+update-notifier-motd.timer             masked enabled
+
+== enabled
+snap-core24-1643.mount                      enabled enabled
+snap-hwctl-123.mount                        enabled enabled
+snap-hwctl-131.mount                        enabled enabled
+snap-snapd-27710.mount                      enabled enabled
+apport-autoreport.path                      enabled enabled
+tpm-udev.path                               enabled enabled
+apparmor.service                            enabled enabled
+apport.service                              enabled enabled
+blk-availability.service                    enabled enabled
+chrony.service                              enabled enabled
+cloud-config.service                        enabled enabled
+cloud-final.service                         enabled enabled
+cloud-init-local.service                    enabled enabled
+cloud-init-main.service                     enabled enabled
+cloud-init-network.service                  enabled enabled
+console-setup.service                       enabled enabled
+cron.service                                enabled enabled
+dmesg.service                               enabled enabled
+e2scrub_reap.service                        enabled enabled
+finalrd.service                             enabled enabled
+getty@.service                              enabled enabled
+gpu-manager.service                         enabled enabled
+grub-initrd-fallback.service                enabled enabled
+grub2-common.service                        enabled enabled
+kdump-tools.service                         enabled enabled
+keyboard-setup.service                      enabled enabled
+lvm2-monitor.service                        enabled enabled
+ModemManager.service                        enabled enabled
+multipathd.service                          enabled enabled
+namchaind.service                           enabled enabled
+netplan-configure.service                   enabled enabled
+networkd-dispatcher.service                 enabled enabled
+open-iscsi.service                          enabled enabled
+open-vm-tools.service                       enabled enabled
+rsyslog.service                             enabled enabled
+secureboot-db.service                       enabled enabled
+setvtrgb.service                            enabled enabled
+sshd-keygen.service                         enabled enabled
+sysstat.service                             enabled enabled
+systemd-networkd-wait-online.service        enabled enabled
+systemd-networkd.service                    enabled enabled
+systemd-pstore.service                      enabled enabled
+systemd-resolved.service                    enabled enabled
+thermald.service                            enabled enabled
+udisks2.service                             enabled enabled
+ufw.service                                 enabled enabled
+vgauth.service                              enabled enabled
+wpa_supplicant.service                      enabled enabled
+system-xfs_scrub.slice                      enabled enabled
+apport-forward.socket                       enabled enabled
+cloud-init-hotplugd.socket                  enabled enabled
+dm-event.socket                             enabled enabled
+iscsid.socket                               enabled enabled
+lvm2-lvmpolld.socket                        enabled enabled
+lxd-installer.socket                        enabled enabled
+polkit-agent-helper.socket                  enabled enabled
+snap.hwctl.hwctl-daemon.hwctl-socket.socket enabled enabled
+ssh.socket                                  enabled enabled
+systemd-networkd.socket                     enabled enabled
+systemd-resolved-monitor.socket             enabled enabled
+systemd-resolved-varlink.socket             enabled enabled
+uuidd.socket                                enabled enabled
+remote-fs.target                            enabled enabled
+apport-autoreport.timer                     enabled enabled
+e2scrub_all.timer                           enabled enabled
+fstrim.timer                                enabled enabled
+fwupd-refresh.timer                         enabled enabled
+logrotate.timer                             enabled enabled
+mdcheck_continue.timer                      enabled enabled
+mdcheck_start.timer                         enabled enabled
+mdmonitor-oneshot.timer                     enabled enabled
+sysstat-collect.timer                       enabled enabled
+sysstat-rotate.timer                        enabled enabled
+sysstat-summary.timer                       enabled enabled
+xfs_scrub_all.timer                         enabled enabled
+
+== running
+chrony.service                loaded active running chrony, an NTP client/server
+cron.service                  loaded active running Regular background program processing daemon
+dbus.service                  loaded active running D-Bus System Message Bus
+fwupd.service                 loaded active running Firmware update daemon
+getty@tty1.service            loaded active running Getty on tty1
+ModemManager.service          loaded active running Modem Manager
+multipathd.service            loaded active running Device-Mapper Multipath Device Controller
+netplan-wpa-wlp0s20f3.service loaded active running WPA supplicant for netplan wlp0s20f3
+networkd-dispatcher.service   loaded active running Dispatcher daemon for systemd-networkd
+packagekit.service            loaded active running PackageKit Daemon
+polkit.service                loaded active running Authorization Manager
+rsyslog.service               loaded active running System Logging Service
+snapd.service                 masked active running snapd.service
+ssh.service                   loaded active running OpenBSD Secure Shell server
+systemd-journald.service      loaded active running Journal Service
+systemd-logind.service        loaded active running User Login Management
+systemd-networkd.service      loaded active running Network Management
+systemd-resolved.service      loaded active running Network Name Resolution
+systemd-udevd.service         loaded active running Rule-based Manager for Device Events and Files
+thermald.service              loaded active running Thermal Daemon Service
+udisks2.service               loaded active running Disk Manager
+unattended-upgrades.service   masked active running unattended-upgrades.service
+upower.service                loaded active running Daemon for power management
+user@1000.service             loaded active running User Manager for UID 1000
+wpa_supplicant.service        loaded active running WPA supplicant
+
+== timers
+Sun 2026-11-01 01:10:00 UTC 3min 8s Sun 2026-11-01 01:00:19 UTC     6min ago sysstat-collect.timer          sysstat-collect.service
+Sun 2026-11-01 02:14:31 UTC 1h 7min Sun 2026-11-01 01:06:01 UTC      50s ago fwupd-refresh.timer            fwupd-refresh.service
+Sun 2026-11-01 03:10:06 UTC 2h 3min Fri 2026-10-30 20:56:56 UTC            - e2scrub_all.timer              e2scrub_all.service
+Sun 2026-11-01 03:10:41 UTC 2h 3min Fri 2026-10-30 20:56:56 UTC            - xfs_scrub_all.timer            xfs_scrub_all.service
+Sun 2026-11-01 18:01:25 UTC     16h Sat 2026-10-31 18:01:25 UTC       7h ago systemd-tmpfiles-clean.timer   systemd-tmpfiles-clean.service
+Mon 2026-11-02 00:00:00 UTC     22h Sun 2026-11-01 00:00:19 UTC  1h 6min ago sysstat-rotate.timer           sysstat-rotate.service
+Mon 2026-11-02 00:07:00 UTC     23h Sun 2026-11-01 00:07:19 UTC    59min ago sysstat-summary.timer          sysstat-summary.service
+Mon 2026-11-02 00:10:15 UTC     23h Sun 2026-11-01 00:26:19 UTC    40min ago logrotate.timer                logrotate.service
+Mon 2026-11-02 01:24:48 UTC     24h Fri 2026-10-30 20:56:56 UTC            - fstrim.timer                   fstrim.service
+-                                 - -                                      - apport-autoreport.timer        apport-autoreport.service
+-                                 - Sat 2026-10-31 06:55:37 UTC            - apt-daily-upgrade.timer        -
+-                                 - Sun 2026-11-01 01:04:59 UTC 1min 51s ago apt-daily.timer                -
+-                                 - Sun 2026-11-01 00:00:19 UTC  1h 6min ago dpkg-db-backup.timer           -
+-                                 - Sun 2026-11-01 01:05:59 UTC      51s ago man-db.timer                   -
+-                                 - Sun 2026-11-01 01:05:58 UTC      53s ago motd-news.timer                -
+-                                 - -                                      - snapd.snap-repair.timer        -
+-                                 - -                                      - ua-timer.timer                 -
+-                                 - Sat 2026-10-31 17:51:25 UTC       7h ago update-notifier-download.timer -
+-                                 - Fri 2026-10-30 20:56:57 UTC            - update-notifier-motd.timer     -
+
+== sysctl
+vm.swappiness = 60
+vm.stat_interval = 10
+vm.dirty_ratio = 20
+vm.dirty_background_ratio = 10
+kernel.sched_rt_runtime_us = 950000
+
+== limits
+==> /etc/security/limits.d/10-coredump-debian.conf <==
+*               soft    core            0
+root            soft    core            0
+*               hard    core            infinity
+root            hard    core            infinity
+
+==> /etc/security/limits.d/90-pedal-rt.conf <==
+# Realtime limits for the audio group. Without them a normal user is refused SCHED_FIFO and
+# mlockall: the default is rtprio 0 and an 8 MB memlock. A systemd service does not get
+# these (no pam_limits); namchaind's unit must set LimitRTPRIO and LimitMEMLOCK itself.
+@audio   -  rtprio    95
+@audio   -  memlock   unlimited
+# A backstop against a runaway SCHED_FIFO loop, not a latency setting: SIGXCPU after 200 ms of
+# realtime CPU without blocking, ~150 periods at 64 frames. Deliberately NOT
+# sched_rt_runtime_us=-1, which removes the kernel's only escape from such a loop.
+@audio   -  rttime    200000
+
+== pedal-manifest
+file /etc/asound.conf
+file /etc/namchain/namchaind.json
+file /etc/pedal/default-rig.json
+file /etc/pedal/masked-units
+file /etc/pedal/storage.conf
+file /etc/pedal/tune.conf
+file /etc/security/limits.d/90-pedal-rt.conf
+file /etc/sysctl.d/90-pedal.conf
+file /etc/systemd/journald.conf.d/10-pedal.conf
+file /etc/systemd/system/namchaind.service.d/10-pedal.conf
+file /etc/systemd/system/pedal-maint.target
+file /etc/systemd/system/pedal-rt.slice
+file /etc/systemd/system/pedal-tune.service
+file /etc/systemd/system/pedal-wifi.service
+file /etc/systemd/system/system.slice.d/10-pedal-cpuset.conf
+file /etc/systemd/system/user.slice.d/10-pedal-cpuset.conf
+file /usr/lib/sysusers.d/pedal.conf
+file /usr/local/bin/pedal-rt
+file /usr/local/sbin/pedal-device
+file /usr/local/sbin/pedal-tune
+file /usr/local/sbin/pedal-wifi
+mask apt-daily.service
+mask apt-daily.timer
+mask apt-daily-upgrade.service
+mask apt-daily-upgrade.timer
+mask unattended-upgrades.service
+mask dpkg-db-backup.service
+mask dpkg-db-backup.timer
+mask man-db.timer
+mask update-notifier-download.timer
+mask update-notifier-motd.timer
+mask motd-news.service
+mask motd-news.timer
+mask ubuntu-advantage.service
+mask ua-reboot-cmds.service
+mask ua-timer.timer
+mask ua-timer.service
+mask snapd.service
+mask snapd.socket
+mask snapd.seeded.service
+mask snapd.apparmor.service
+mask snapd.autoimport.service
+mask snapd.core-fixup.service
+mask snapd.recovery-chooser-trigger.service
+mask snapd.system-shutdown.service
+mask snapd.snap-repair.service
+mask snapd.snap-repair.timer
+
+== host-slim-manifest
+none (taken over by pedal-device)

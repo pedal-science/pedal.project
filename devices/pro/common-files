@@ -1,0 +1,33 @@
+# The files devices/pro takes from devices/common/rootfs (see rootfs_files in lib.sh): everything
+# else there is the Pi hosts' (the codec, the UART link, pedald, rigpa, the bench test).
+#
+# pro has its own copy of a few of these paths — the namchaind drop-in, pedal-rt.slice,
+# pedal-wifi.service, the journald drop-in — and a device's own file always wins, so they are not
+# named here.
+
+# The realtime limits and the vmstat interval: the same on every Core host.
+etc/security/limits.d/90-pedal-rt.conf
+etc/sysctl.d/90-pedal.conf
+
+# The rig the library is seeded with, once, where there is no pedald to save one.
+etc/pedal/default-rig.json
+
+# The appliance tool and the runtime tuning it starts. pedal-device is the same script the Pi hosts
+# run; what it does on pro is decided by which of these files exist and by /etc/pedal/{tune,storage}
+# .conf (it was pro-device until 2026-11-01, which had drifted into a second implementation of the
+# same job).
+usr/local/sbin/pedal-device
+usr/local/sbin/pedal-tune
+etc/systemd/system/pedal-tune.service
+
+# The wrapper that runs a command in pedal-rt.slice, the only place a thread may pin to a render
+# core: `sudo pedal-rt ./namchain-soak --cpu 5 …`.
+usr/local/bin/pedal-rt
+
+# WiFi power saving off. The script takes the interface as an argument, so it is pro's unit (above)
+# that names wlp0s20f3, not this.
+usr/local/sbin/pedal-wifi
+
+# The service user the library belongs to (etc/pedal/storage.conf, PEDAL_USER). The same user as on
+# vip, by name, because the scripts that write rigs chown to it.
+usr/lib/sysusers.d/pedal.conf
