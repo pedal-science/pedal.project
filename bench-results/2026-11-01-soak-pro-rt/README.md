@@ -211,3 +211,34 @@ Two run directories, the failed attempt and the good one.
 with `pedal-tune check`. `after.txt` has the throttle counters afterwards and the boot's kernel log,
 filtered. `soak.sh` is the runner: it writes everything on the host under `setsid` and polls for a
 `soak-done` marker, so neither a WiFi roam nor a closed laptop can cost another hour.
+
+## The runner grew a second arm (2026-11-01, after these runs)
+
+Both runs above, and the nine arms across this directory and `2026-10-31-soak-pro`, were run with
+**no output-queue options** — and that is not the stream the pedal plays. `prime_playback` primes
+one period when no target is set and the target's worth when one is, and every host configures four
+(`devices/{vip,piv,pro}/rootfs/etc/namchain/namchaind.json`). So the harness had been characterising
+a one-period prime while the engine ran a four-period one, which is also the whole reason these runs
+report `bring-up xruns: 1` and a run with the target does not.
+
+`soak.sh` therefore takes `--arms`, and runs **both** by default:
+
+| Arm | Flags | What it is for |
+|---|---|---|
+| `bare` | none | The RT baseline. **Its flags must not change** — the nine committed arms are measured against it, and re-flagging them would make every future run incomparable |
+| `queue` | `--output-queue-periods 4 --output-queue-floor-periods 2` | The stream the engine actually runs |
+
+Neither subsumes the other: the target brings the cap's refusals and the floor's insertions with it
+(namchain plan §9.5 item 8 — 8 playback underruns at a 4-period target against 92 for the bare
+4-period ring). `--arms bare` reproduces exactly what produced the runs above.
+
+Two consequences for reading this directory. The default is now **two hours**, one per arm. And a
+future run's files are named per arm — `bare-soak.txt`, `queue-turbostat.txt` and so on — while the
+two directories above keep the single-arm names they were written with; `before.txt` stays once per
+run, since the host's state does not change between arms.
+
+`before.txt` and each arm's `after.txt` also now record `/proc/loadavg` and the busiest processes.
+pro is used for compilations (the owner, 2026-11-01), and the host's lock keeps other *measurements*
+away but cannot stop a build. A soak that shared the machine with one is not a measurement of a
+quiet host, and without that snapshot nobody could tell afterwards which kind of run they were
+reading. None of the runs above has it, so take their quietness as unverified rather than established.
