@@ -1,0 +1,59 @@
+== throttle
+/sys/devices/system/cpu/cpu0 core=0 pkg=0
+/sys/devices/system/cpu/cpu1 core=0 pkg=0
+/sys/devices/system/cpu/cpu2 core=0 pkg=0
+/sys/devices/system/cpu/cpu3 core=0 pkg=0
+/sys/devices/system/cpu/cpu4 core=0 pkg=0
+/sys/devices/system/cpu/cpu5 core=0 pkg=0
+== load
+0.37 0.37 0.36 1/200 61644
+== busiest
+%CPU PSR COMMAND
+ 2.7   1 irq/124-xhci_hcd
+ 0.0   0 ktimers/0
+ 0.0   0 irq/140-iwlwifi
+ 0.0   0 irq/140-s-iwlwifi
+ 0.0   0 systemd
+ 0.0   0 kworker/0:0-events_freezable
+ 0.0   0 systemd
+== kernel log
+Nov 01 03:41:36 pro kernel: iwlwifi 0000:00:14.3: WRT: Overriding region id 21
+Nov 01 03:41:36 pro kernel: iwlwifi 0000:00:14.3: WRT: Overriding region id 28
+Nov 01 03:41:36 pro kernel: iwlwifi 0000:00:14.3: loaded firmware version 46.7e3e4b69.0 9000-pu-b0-jf-b0-46.ucode op_mode iwlmvm
+Nov 01 03:41:36 pro kernel: iwlwifi 0000:00:14.3: base HW address: 80:32:53:fb:f9:73, OTP minor version: 0x4
+Nov 01 03:41:36 pro kernel: ieee80211 phy0: Selected rate control algorithm 'iwl-mvm-rs'
+Nov 01 03:41:38 pro kernel: iwlwifi 0000:00:14.3 wlp0s20f3: renamed from wlan0
+Nov 01 03:41:40 pro kernel: i915 0000:00:02.0: [drm] Found coffeelake (device ID 3e92) integrated display version 9.00 stepping N/A
+Nov 01 03:41:40 pro kernel: i915 0000:00:02.0: [drm] VT-d active for gfx access
+Nov 01 03:41:40 pro kernel: i915 0000:00:02.0: vgaarb: deactivate vga console
+Nov 01 03:41:40 pro kernel: i915 0000:00:02.0: [drm] Transparent Hugepage support is recommended for optimal performance when IOMMU is enabled!
+Nov 01 03:41:40 pro kernel: i915 0000:00:02.0: vgaarb: VGA decodes changed: olddecodes=io+mem,decodes=io+mem:owns=io+mem
+Nov 01 03:41:40 pro kernel: i915 0000:00:02.0: [drm] Finished loading DMC firmware i915/kbl_dmc_ver1_04.bin (v1.4)
+Nov 01 03:41:41 pro kernel: usbcore: registered new interface driver snd-usb-audio
+Nov 01 03:41:41 pro kernel: i915 0000:00:02.0: [drm] [ENCODER:109:DDI A/PHY A] failed to retrieve link info, disabling eDP
+Nov 01 03:41:41 pro kernel: i915 0000:00:02.0: [drm] Registered 3 planes with drm panic
+Nov 01 03:41:41 pro kernel: [drm] Initialized i915 1.6.0 for 0000:00:02.0 on minor 1
+Nov 01 03:41:41 pro kernel: i915 0000:00:02.0: [drm] Cannot find any crtc or sizes
+Nov 01 03:41:42 pro kernel: i915 0000:00:02.0: [drm] Cannot find any crtc or sizes
+Nov 01 03:41:42 pro kernel: i915 0000:00:02.0: [drm] Cannot find any crtc or sizes
+Nov 01 03:41:42 pro kernel: snd_hda_intel 0000:00:1f.3: enabling device (0100 -> 0102)
+Nov 01 03:41:42 pro kernel: snd_hda_intel 0000:00:1f.3: bound 0000:00:02.0 (ops intel_audio_component_bind_ops [i915])
+Nov 01 03:41:42 pro kernel: snd_hda_codec_conexant hdaudioC1D0: CX20632: BIOS auto-probing.
+Nov 01 03:41:42 pro kernel: snd_hda_codec_conexant hdaudioC1D0: autoconfig for CX20632: line_outs=2 (0x19/0x1c/0x0/0x0/0x0) type:hp
+Nov 01 03:41:42 pro kernel: snd_hda_codec_conexant hdaudioC1D0:    speaker_outs=1 (0x1f/0x0/0x0/0x0/0x0)
+Nov 01 03:41:42 pro kernel: snd_hda_codec_conexant hdaudioC1D0:    hp_outs=0 (0x0/0x0/0x0/0x0/0x0)
+Nov 01 03:41:42 pro kernel: snd_hda_codec_conexant hdaudioC1D0:    mono: mono_out=0x0
+Nov 01 03:41:42 pro kernel: snd_hda_codec_conexant hdaudioC1D0:    inputs:
+Nov 01 03:41:42 pro kernel: snd_hda_codec_conexant hdaudioC1D0:      Mic=0x1a
+Nov 01 05:18:35 pro kernel: iwlwifi 0000:00:14.3: missed beacons exceeds threshold, but receiving data. Stay connected, Expect bugs.
+Nov 01 05:18:35 pro kernel: iwlwifi 0000:00:14.3: missed_beacons:19, missed_beacons_since_rx:1
+Nov 01 05:18:36 pro kernel: iwlwifi 0000:00:14.3: missed beacons exceeds threshold, but receiving data. Stay connected, Expect bugs.
+Nov 01 05:18:36 pro kernel: iwlwifi 0000:00:14.3: missed_beacons:20, missed_beacons_since_rx:2
+Nov 01 05:18:36 pro kernel: iwlwifi 0000:00:14.3: missed beacons exceeds threshold, but receiving data. Stay connected, Expect bugs.
+Nov 01 05:18:36 pro kernel: iwlwifi 0000:00:14.3: missed_beacons:21, missed_beacons_since_rx:3
+Nov 01 05:22:57 pro kernel: iwlwifi 0000:00:14.3: missed beacons exceeds threshold, but receiving data. Stay connected, Expect bugs.
+Nov 01 05:22:57 pro kernel: iwlwifi 0000:00:14.3: missed_beacons:19, missed_beacons_since_rx:1
+Nov 01 14:58:18 pro kernel: iwlwifi 0000:00:14.3: missed beacons exceeds threshold, but receiving data. Stay connected, Expect bugs.
+Nov 01 14:58:18 pro kernel: iwlwifi 0000:00:14.3: missed_beacons:19, missed_beacons_since_rx:1
+Nov 01 14:58:18 pro kernel: iwlwifi 0000:00:14.3: missed beacons exceeds threshold, but receiving data. Stay connected, Expect bugs.
+Nov 01 14:58:18 pro kernel: iwlwifi 0000:00:14.3: missed_beacons:20, missed_beacons_since_rx:2

@@ -1,0 +1,48 @@
+backend:          alsa_raw
+device:           /dev/snd/pcmC0D0c -> /dev/snd/pcmC0D0p
+period/buffer:    64 / 384 frames
+sample format:    S32_LE (4 bytes/sample)
+mlockall:         locked
+scheduling:       SCHED_FIFO priority 80, cpu 5
+chain:            2 x ORNG-V30-421-Center.nam
+model type:       nam::container::ContainerModel
+ring occupancy:   capture min/max 0/24, playback min/max 176/200 (last 200) frames
+                  playback queue 2.75..3.12 periods (last 3.12); the floor is the stall the device
+                  absorbs without starving: 2.75 periods = 3.667 ms
+                  p1 2.77, p50 2.95 periods; 0 of 2700000 blocks held less than one
+                  period (0.00 %), which is the window a stall has to miss
+queue target:     4 periods = 5.333 ms: a cap on the ring's contents, so a burst
+                  cannot buy latency beyond it. Not a promise of cushion -- the
+                  floor held above is the number to read
+queue floor:      2 periods after each write, so 1 periods = 1.333 ms at the worst
+                  instant; held by inserting silence 0 times (0 frames =
+                  0.000 ms of audio delayed rather than skipped, never needed)
+queue control:    0 output drops (not gated: each refusal is the target's trade), 0 capture bursts
+                  0 of those drops were the queue target refusing a period that
+                  would have raised the ring past 4 periods; 0 were the ring itself
+                  being full
+queue prefill:    8 frames of silence written before block 0 to bring the ring
+                  to its target (0.167 ms of output latency, paid once)
+occupancy check:  8100002 samples where delay disagreed with the pointer pair
+plan:             single model chain, 4 nodes, 3 buffers (768 bytes)
+quantum:          64
+pacing:           wall clock
+blocks:           2700000
+audio:            3600.000 s in 3599.968 s wall (RTF 1.0000)
+deadline:         1333333 ns
+split (p50):      read 25757 ns, chain 191846 ns, write 21361 ns
+split (tail):     read p99 35900 max 47952, chain p99 200193 max 301564, write p99 22071 max 64082 ns
+chain p99:        200193 ns (15.01% of deadline)
+device wait:      p50 1252540 ns, p99 1348320 ns, max 1405320 ns
+render path cpu:  p99 wall vs cpu is the deadline question: cpu max 301662 ns, wall max 301564 ns
+                  521.50 s of CPU over 521.24 s of wall in the render path (100.0%), 0 blocks lost >= 0.5 ms to not being on CPU
+slowest blocks:   block 2394297 cpu 301662 ns (wall 301564 ns), block 1667706 cpu 285134 ns (wall 286256 ns), block 2490661 cpu 282199 ns (wall 282031 ns), block 1113459 cpu 275284 ns (wall 275056 ns), block 926110 cpu 274252 ns (wall 275407 ns)
+block time:       p50 238388 ns, p99 250631 ns, max 351285 ns
+p99/deadline:     18.80% (gate <= 80.00%)
+max lateness:     0.000 ms
+render-path alloc:0 allocations, 0 frees (must be 0)
+deadline overruns:0
+driver xruns:     0
+  by direction:   0 capture overruns, 0 playback underruns
+result:           PASS
+soak-exit=0

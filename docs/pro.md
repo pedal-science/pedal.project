@@ -117,7 +117,7 @@ order that settles the question:
 The flavour lags generic (38 against 42) because it is a separate source package. Both kernels are
 held, so they move when we move them.
 
-### `pro-boot`: the same policy as vip, a fifth of the code
+### `pro-boot`: the same policy as vip, about half the code (550 lines against 1035)
 
 GRUB already provides the mechanism vip's two FAT kernel slots exist to provide, which is why
 `rtpi/devices/pro/usr/local/sbin/pro-boot` is small:
@@ -308,7 +308,8 @@ T10).
   spikes happened elsewhere. Because wall time equals CPU time, the thread was not preempted: something
   made the same work slow (an SMI, a frequency or power-limit change, or a stall in memory or USB), on a
   stock kernel with no isolation. Cause not found.
-- Every run also reports one xrun at bring-up, before the measured loop; not yet investigated.
+- Every run also reports one xrun at bring-up, before the measured loop. Explained on 2026-11-02:
+  it is the output-queue prime, not the host — see below.
 
 ### A clean hour, and the cause of the stall, 2026-11-01
 
@@ -343,13 +344,40 @@ version and never put in the list, so its timer kept firing. The measurement fou
 
 2.7 million blocks, 3600.000 s of audio in 3599.965 s of wall clock, no allocation on the render
 path, and the NVMe completion interrupt that `isolcpus` cannot move off core 5 did not fire once in
-the whole hour. The one xrun at bring-up is still there and still unexplained.
+the whole hour. The one xrun at bring-up is still there; it was explained the next day, below.
 
 **What this does not prove.** Nobody measured SMIs on 2026-10-31, and the two events sat at
 different offsets (22 min 51 s against 56 min 30 s), so fwupd is the mechanism that fits rather than
 the one caught in the act. The RT kernel, the isolation and the masking all changed together, so the
 hour cannot apportion credit between them. And **no signal has been through the interface** — this
 is T10's load, not T10.
+
+### Two arms, and the bring-up xrun explained, 2026-11-02
+
+[run-20261101T215947Z](../bench-results/2026-11-01-soak-pro-rt/README.md#both-arms-an-hour-each-2026-11-02).
+Two hours back to back on the same host, the only difference between them one flag set: `bare` with
+no output-queue options, `queue` with `--output-queue-periods 4 --output-queue-floor-periods 2`,
+which is what every host's `namchaind.json` configures. **Both PASS** — 0 deadline overruns, 0
+driver xruns, 0 playback underruns, 0 SMIs and 0 throttle events in either hour, p99 at 19.17% and
+18.80% of the deadline.
+
+**The bring-up xrun is the prime, not the host.** `bare` reports one, `queue` reports none, and the
+soak prints that line only when the count is non-zero (`tools/soak/namchain-soak.cpp:805`). Same
+kernel, same load, same hour, one flag apart — so it is a property of running with no output-queue
+target, which no pedal host does. `namchaind` on pro, restarted after the run, reports
+`startup_xruns 0` and `xruns 0`: with a 4-period target nothing is banked at bring-up at all.
+
+**What the target costs.** The ring's floor — the stall the device absorbs without starving — was
+2.00 periods (2.667 ms) bare against **2.75 periods (3.667 ms)** with the target, for about half a
+period more audio held (+0.667 ms of output latency). In 2.7 million blocks the cap never refused a
+period and the floor never inserted silence, so the extra millisecond of cushion cost latency and
+nothing else. The underrun difference that justified keeping both arms (namchain plan §9.5 item 8)
+could not be exercised: both arms underran zero times.
+
+**And the host was verifiably quiet** — 15-minute load 0.35 going in, 0.36 and 0.46 after each arm,
+no compiler in the busiest eight at any sample, and no kernel messages at all during either hour.
+pro is used for compilations, so earlier runs' quietness was assumed; this is the first one where it
+is recorded.
 
 ## Status
 
@@ -375,9 +403,9 @@ Not done, and not claimed:
 - **A live-rig hour.** The hour above is `namchain-soak`'s load, not `namchaind` serving a rig with
   switching, which is what vip's T10 is. That is the soak that would make pro a pedal rather than a
   host that can render.
-- The bring-up xrun explained — every run on this host reports exactly one, before the measured
-  loop, and the RT kernel did not change that. 32 frames is still the smallest period seen to pass,
-  in one 45 s run on the old kernel.
+- 32/24-frame reruns on the tuned host. 32 frames is still the smallest period seen to pass, in one
+  45 s run on the old kernel. (The bring-up xrun that used to sit in this list was explained on
+  2026-11-02: it is the output-queue prime, above.)
 - **No audio has been through the interface.** Nothing was plugged in for any of this.
 - A cost table for pro (the engine otherwise charges 0.25 per model), so rig admission here is a
   guess.

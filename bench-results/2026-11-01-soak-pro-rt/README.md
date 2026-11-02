@@ -198,8 +198,6 @@ between them.
 
 ## Files
 
-## Files
-
 Two run directories, the failed attempt and the good one.
 
 | | |
@@ -242,3 +240,104 @@ pro is used for compilations (the owner, 2026-11-01), and the host's lock keeps 
 away but cannot stop a build. A soak that shared the machine with one is not a measurement of a
 quiet host, and without that snapshot nobody could tell afterwards which kind of run they were
 reading. None of the runs above has it, so take their quietness as unverified rather than established.
+
+## Both arms, an hour each (2026-11-02)
+
+`run-20261101T215947Z/`. The first run of the two-arm harness, and the first back-to-back A/B of the
+prime on one host: 21:59:47Z to 00:00:48Z, `bare` then `queue`, **both PASS**.
+
+| | `bare`<br>no queue options | `queue`<br>target 4, floor 2 |
+|---|---|---|
+| Result | **PASS** | **PASS** |
+| p99 / deadline | 19.17% | 18.80% |
+| Deadline overruns | 0 | 0 |
+| Driver xruns | 0 | 0 |
+| — capture overruns / playback underruns | 0 / 0 | 0 / 0 |
+| **bring-up xruns** | **1** | **none** |
+| Max lateness | 0.000 ms | 0.000 ms |
+| Worst block, CPU time | 304,495 ns | 301,662 ns |
+| Block time p50 / p99 / max | 243,134 / 255,647 / 336,202 ns | 238,388 / 250,631 / 351,285 ns |
+| Chain p99 | 212,656 ns | 200,193 ns |
+| Render-path allocations | 0 | 0 |
+| **SMI count**, 360 samples | **0** | **0** |
+| Throttle counters, after | 0 on every core | 0 on every core |
+| Package peak temp / mean power | 63 °C / 11.48 W | 62 °C / 10.84 W |
+
+### What the A/B settles: the bring-up xrun
+
+`bare` reports `bring-up xruns: 1`. `queue` reports none — and that is a real zero, not a dropped
+line: `tools/soak/namchain-soak.cpp:805` guards the print with `startup_driver_xruns > 0`.
+
+Same host, same kernel, same load, same hour, one after the other, with **one flag set the only
+difference**. That makes the ring prime the discriminator by measurement rather than by argument,
+which is what the earlier runs could not do — they differed in configuration *and* in host, model
+count and date. The mechanism read from the source holds: `queue_prime_frames` primes one period
+when no target is set and the target's worth when one is, so `bare`'s untimed bring-up cycle empties
+a single period and `queue` starts with four.
+
+So the startup xrun is **not** a property of pro, of the model, of the instance count or of the RT
+kernel. It is a property of running with no output-queue target — which no pedal host does.
+
+### What the target costs and buys
+
+The two arms' rings are the interesting part, and neither number was available before:
+
+| | `bare` | `queue` |
+|---|---|---|
+| Playback ring, frames | 128..168 | 176..200 |
+| Playback queue, periods | 2.00..2.62 (p50 2.45) | 2.75..3.12 (p50 2.95) |
+| **Floor** — the stall the device absorbs without starving | **2.00 periods = 2.667 ms** | **2.75 periods = 3.667 ms** |
+| Blocks holding less than one period | 0 of 2,700,000 | 0 of 2,700,000 |
+| Target refusals (the cap declining a period) | n/a, no gate | **0** |
+| Floor insertions | n/a | **0 times, 0 frames** |
+| Prefill | — | 8 frames, 0.167 ms, paid once |
+
+The trade, measured: the target holds about half a period more audio (p50 2.95 against 2.45, so
+**+0.667 ms of output latency**) and in exchange the worst instant has **+1.0 ms more cushion**
+(2.75 periods against 2.00). Over 2.7 million blocks the cap never once refused a period and the
+floor never once inserted silence, so on this host that millisecond is bought with latency alone and
+nothing else.
+
+**What did not reproduce.** The second arm was justified by namchain plan §9.5 item 8 — 8 playback
+underruns at a 4-period target against 92 for the bare 4-period ring — and that comparison **could
+not be exercised here**: both arms underran zero times. The arms still answer different questions,
+but this hour gave neither of them any trouble to handle, so it says nothing about how they differ
+when there is some.
+
+### The host really was quiet, and this is the first run that can say so
+
+| | `before.txt` | after `bare` | after `queue` |
+|---|---|---|---|
+| Load average, 15 min | 0.35 | 0.36 | 0.46 |
+| Compiler in the busiest eight | no | no | no |
+
+The busiest processes at every sample were `namchaind` (before only), `irq/124-xhci_hcd` and
+systemd. And the filtered kernel log in both `after.txt` files is byte-identical, ending at
+`Nov 01 14:58` — **nothing was logged by the kernel during either hour**.
+
+One thing did go wrong, in the harness rather than on the host: the Mac's wait on the `queue` arm
+printed `Timeout, server pro not responding`. The host-side run continued under `setsid` and the
+runner picked the result up from the `soak-done` marker, which is the path the runner was built for
+after attempt 1 lost an hour's verdict. This is the first time it has actually been exercised rather
+than argued for.
+
+### The production engine, restarted by the trap
+
+`namchaind` came back at 00:00:48 UTC and reports `xruns 0`, `startup_xruns 0`,
+`playback_underruns 0`, `health ok`. It is configured with `output_queue_periods: 4`, which is the
+`queue` arm — so on a pedal host **nothing is banked at bring-up at all**, and the explicit-ignore
+machinery added for it (namchain `e2cf95b`) is a belt-and-braces for configurations no host uses.
+
+**Noticed, not chased.** `occupancy_mismatches` — the soaks' `samples where delay disagreed with the
+pointer pair` — is large and steady: 4,860,075 over 2.7 M blocks in `bare` (1.8 per block),
+8,100,002 in `queue` (3.0 per block), and about 2.0 per block in `namchaind` in production. A couple
+of frames of disagreement between `snd_pcm_delay()` and the pointer arithmetic on every block, with
+zero underruns and zero drops alongside it. Nobody has checked whether that is the USB driver's
+delay granularity or something the floor logic should care about, and it is recorded here as an
+observation rather than a finding.
+
+### Files
+
+| | |
+|---|---|
+| `run-20261101T215947Z/` | `before.txt` once; then `bare-soak.txt`, `bare-turbostat.txt`, `bare-after.txt` and the same three for `queue` |

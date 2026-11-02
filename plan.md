@@ -210,6 +210,17 @@ queue target is set and the **target's** worth when one is (namchain `src/io/als
 `rootfs/etc/namchain/namchaind.json` all set `output_queue_periods: 4` — so all three start with
 three periods of cushion beyond anything a bring-up cycle could spend.
 
+**That second guard is now measured rather than read (2026-11-02).** Two hours on pro back to back,
+the only difference one flag set: without a target the soak reports `bring-up xruns: 1`, with
+`--output-queue-periods 4 --output-queue-floor-periods 2` it reports **none** — and the soak prints
+that line only when the count is non-zero (`tools/soak/namchain-soak.cpp:805`, checked). Same host,
+same kernel, same hour, so the prime is the discriminator by measurement and not by inference from
+the source. `namchaind`, restarted after the run with its usual 4-period target, reports
+`startup_xruns 0` as well as `xruns 0`: on a pedal host there is nothing to ignore in the first
+place, and the explicit-ignore machinery is the belt to the prime's braces, for the default-0
+configuration above.
+[bench-results/2026-11-01-soak-pro-rt](bench-results/2026-11-01-soak-pro-rt/README.md#both-arms-an-hour-each-2026-11-02).
+
 **Withdrawn: the "ran a period short" defect.** This entry briefly said `namchaind` never called
 `prefill_output_queue` and so ran its whole life a period short of its configured output-queue
 target. **It did not.** The prime establishes that target inside `start()`; the prefill only tops up
@@ -1393,6 +1404,34 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
   carrier and control boards don't have its sockets yet.
 
 ## Next session starts with
+
+**Two arms, two hours, and the bring-up xrun closed** (2026-11-02). `soak.sh` grew a second arm and
+ran both on pro back to back: `bare` (no output-queue options, the frozen RT baseline the nine
+earlier arms share) and `queue` (`--output-queue-periods 4 --output-queue-floor-periods 2`, the
+stream every host's `namchaind.json` actually configures). **Both PASS** — 0 deadline overruns, 0
+driver xruns, 0 playback underruns, 0 SMIs and 0 throttle events across both hours, p99 at 19.17%
+and 18.80% of the deadline.
+[bench-results/2026-11-01-soak-pro-rt](bench-results/2026-11-01-soak-pro-rt/README.md#both-arms-an-hour-each-2026-11-02).
+
+- **The bring-up xrun is the ring prime, measured.** `bare` reports one, `queue` reports none, same
+  host and hour, one flag apart — so it is not pro, not the model, not the instance count and not
+  the kernel. It is running with no output-queue target, which no pedal host does. The note above,
+  "On the engine's first block", carries the detail; `docs/pro.md` no longer calls it unexplained.
+- **What the target costs, now a number.** The ring's floor — the stall the device absorbs without
+  starving — went from 2.00 periods (2.667 ms) to **2.75 periods (3.667 ms)** for about half a
+  period more audio held (+0.667 ms of output latency). The cap never refused a period and the floor
+  never inserted silence in 2.7 million blocks, so the cushion cost latency and nothing else.
+- **The underrun difference that justified two arms did not appear.** namchain plan §9.5 item 8 (8
+  playback underruns at a 4-period target against 92 for the bare ring) could not be exercised:
+  both arms underran zero times. Keep both arms — they still ask different questions — but this
+  hour says nothing about how they differ under trouble, because there was none.
+- **And pro was verifiably quiet.** 15-minute load 0.35 going in, 0.36 and 0.46 after each arm, no
+  compiler in the busiest eight, no kernel messages in either hour. pro is used for compilations, so
+  every earlier run's quietness was assumed; this is the first one that recorded it.
+
+**What this does not mean.** Still no signal through pro's interface, still no live-rig hour through
+`namchaind` (vip's T10), still no cost table for pro, and `devices/common`'s shared changes are
+still unverified against vip.
 
 **pro runs the Pi hosts' own tooling, and it holds an hour** (2026-11-01). The x86 candidate for the
 bigger case (HP ProDesk 600 G5 Mini, i5-9500T, 16 GB) stopped being a machine with its own scripts:
