@@ -1405,6 +1405,26 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**The build is going back to the 1590DD, for now** (2026-11-02, the owner's decision). The big case
+(Hammond 1456RH3, D14) is paused, not withdrawn, while the owner tries to get the pedal working in
+the 188 × 119 × 37.5 mm box. The Pi, codec, output board, jacks, USB-C extension and footswitches
+are nearly all in it, and the owner thinks the wiring is good. What that build leaves out for now:
+
+- **No input board.** It has not fitted on a small stripboard yet (`stripboard/module-boards/`
+  has the attempts), so the input is an **external buffer**, probably, with **no Inst/Line switch**.
+  The buffer must stay in the chain: a guitar straight into the codec input is loaded down badly
+  (the source-impedance table in `docs/hardware-handoff.md`).
+- **One input and one output jack**, OUT L. A second output may fit, but it is tight.
+- **Footswitches on the cut-down Pico board** (`docs/build-footswitches.md`). The firmware is
+  written; it has not been flashed, and `pedald`'s fix for acting on a release has not been deployed.
+
+Still open, and being tried by hand: **shorter soft-touch footswitches** (the MC7105s work, but are
+big inside the box); **a screen**, with a 4.3″ QLED and one or two smaller ones to try, since rigpa
+is designed for a screen big enough to touch and would not suit one much below 4″; and **cooling**,
+with coolers to compare and no vents cut yet, the owner wanting as little fan noise as possible.
+`enclosure/`'s README still calls the console model current, and its 1590DD model's layout was not
+drawn for this build, so neither is a drilling template.
+
 **pro has a cost table, and the NAM core now vectorises on x86** (2026-11-02). The vendored
 NeuralAmpModelerCore moved to `97d7cd4` (`rikkus/OptimisationWorkOnNeuralAmpModelerCore`,
 `all-optimisations`), which widens the A2 planar gate to x86-64 AVX2+FMA; pro's engine is namchain
