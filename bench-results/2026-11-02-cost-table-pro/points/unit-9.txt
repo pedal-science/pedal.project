@@ -1,0 +1,20 @@
+namchain-warm-bench 0.1.0  measure
+unit:       node.nc.output -- nc.output, default params, levels off
+bar:        p99 under the deadline, overruns recorded (see the note in this mode's comment); quantum 64, deadline 1333 us, 30 s a point, cpu 2
+
+       n      p50 us      p99 us    p99.9 us      max us   p99 %dl  max %dl  overruns  behind  verdict
+scheduling: SCHED_FIFO priority 80, cpu 2
+      1         0.6        0.6        0.8        1.4       0.0      0.1        0       0  fits
+      2         1.0        1.0        1.2       16.5       0.1      1.2        0       0  fits
+      4         1.9        1.9        2.1       18.5       0.1      1.4        0       0  fits
+      8         3.5        3.6        3.7       17.3       0.3      1.3        0       0  fits
+     16         6.9        7.0        7.6       22.3       0.5      1.7        0       0  fits
+     32        13.6       18.9       22.9       43.8       1.4      3.3        0       0  fits
+     64        27.2       27.5       27.6       37.3       2.1      2.8        0       0  fits
+    128        64.3       69.3       70.5       71.2       5.2      5.3        0       0  fits
+    126        64.7       69.0       69.8       70.5       5.2      5.3        0       0  fits
+    127        64.4       68.8       69.8       74.1       5.2      5.6        0       0  fits
+
+n = 128: 128 copies of this unit keep their p99 under the deadline on cpu 2. One unit costs 1/n = 0.00781 of a core.
+--max 128 was reached without a miss: the cost above is an upper bound, not the cliff.
+fragment: {"unit":"node.nc.output","core_percent":0.00781,"bar":"p99","quantum":64,"deadline_us":1333.333,"sources":{"n":128,"p99_at_n":0.052,"overruns_at_n":0,"p99_at_n_plus_1":null,"overruns_at_n_plus_1":null,"p99_at_n_plus_2":null,"blocks_behind_at_n_plus_1":null,"at_most":true,"why":"--max 128 reached without a miss"},"curve":[{"n":1,"p50":0.578,"p99":0.603,"p999":0.792,"max":1.395,"p99_fraction":0.000,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":2,"p50":0.954,"p99":0.983,"p999":1.188,"max":16.528,"p99_fraction":0.001,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":4,"p50":1.857,"p99":1.928,"p999":2.094,"max":18.475,"p99_fraction":0.001,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":8,"p50":3.520,"p99":3.572,"p999":3.734,"max":17.328,"p99_fraction":0.003,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":16,"p50":6.880,"p99":7.014,"p999":7.564,"max":22.330,"p99_fraction":0.005,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":32,"p50":13.646,"p99":18.940,"p999":22.884,"max":43.838,"p99_fraction":0.014,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":64,"p50":27.158,"p99":27.473,"p999":27.624,"max":37.294,"p99_fraction":0.021,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":126,"p50":64.661,"p99":68.978,"p999":69.817,"max":70.492,"p99_fraction":0.052,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":127,"p50":64.444,"p99":68.783,"p999":69.759,"max":74.132,"p99_fraction":0.052,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":128,"p50":64.294,"p99":69.309,"p999":70.471,"max":71.223,"p99_fraction":0.052,"overruns":0,"behind":0,"pass":true,"strict":true}]}

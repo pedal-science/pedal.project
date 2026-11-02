@@ -1405,6 +1405,42 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**pro has a cost table, and the NAM core now vectorises on x86** (2026-11-02). The vendored
+NeuralAmpModelerCore moved to `97d7cd4` (`rikkus/OptimisationWorkOnNeuralAmpModelerCore`,
+`all-optimisations`), which widens the A2 planar gate to x86-64 AVX2+FMA; pro's engine is namchain
+`ae6f853` built with `-march=skylake`, and `scripts/measure-core --host pro --seconds 30` then
+measured all 14 rows of
+[devices/pro/rootfs/etc/namchain/cost.json](devices/pro/rootfs/etc/namchain/cost.json).
+`namchaind` no longer reports `cost_table_missing`.
+[bench-results/2026-11-02-cost-table-pro](bench-results/2026-11-02-cost-table-pro/README.md).
+
+- **One A2-Full costs 0.04 of a core on pro — 25 per core, against vip's 9.** Lite is 0.0105 (95 per
+  core). With `headroom` 0.8, admission seats 20 Full per render core here against 7 on vip.
+- **The parity test had to be made target-aware, and that was the real work.** It asserted
+  bit-identity under `NAM_A2_PLANAR`, a macro the bump now defines on x86 — where the core explicitly
+  does *not* claim bit-identity, because its AVX2 kernels keep the NEON per-tap FMA order while the
+  Eigen-backed reference packs differently for N≥4. On a perfectly correct build the test would have
+  failed and aborted the deploy. It now asserts bit-identity where the core claims it and a −120 dB
+  error floor where it does not, and prints the measured dB on every comparison. Measured on pro:
+  C=3 **bit-identical** on all 14 block sizes, C=8 between **−133.5 and −134.2 dB** — the core's own
+  documented figure, with 13.5 dB of margin on the floor.
+- **Most of the 2.77× is the kernels, not the box.** The IR ladder improves only 1.22×, and per-copy
+  p50 went 133 us (x86-64 baseline, Eigen) → 86 us (AVX2, Eigen) → **41 us** (AVX2, planar). pro's
+  single core is about 2.8 Pi 5 cores *for NAM work* and about 1.2-1.5 for convolution.
+- **The table is a one-core table.** Every row was measured with the other render cores idle. The
+  13-21% five-core penalty from 2026-10-31 has not been re-measured with the planar kernels — which
+  move more data per instruction, so by that run's own reasoning they may suffer more — and pro's
+  table has no `coexistence` block where vip's does. Admission here is no longer a guess, but it is a
+  one-core guess about a six-core machine.
+- **P9 again, on pro:** the level meter costs about 0.45 us per node per block, +53% on a biquad's p99
+  at 128 nodes (on vip it roughly doubled). Both arms exhaust the `--max 128` ladder, so the row stays
+  at the 0.00781 floor and the engine's charge still does not reflect the meter. Eight of pro's 14
+  rows are floors of that kind.
+
+**What this does not mean.** Still no signal through pro's interface, still no live-rig hour through
+`namchaind` (vip's T10), no pro equivalent of vip's T2 (16 rigs against the table), and
+`devices/common`'s shared changes are still unverified against vip.
+
 **Two arms, two hours, and the bring-up xrun closed** (2026-11-02). `soak.sh` grew a second arm and
 ran both on pro back to back: `bare` (no output-queue options, the frozen RT baseline the nine
 earlier arms share) and `queue` (`--output-queue-periods 4 --output-queue-floor-periods 2`, the
@@ -1430,8 +1466,8 @@ and 18.80% of the deadline.
   every earlier run's quietness was assumed; this is the first one that recorded it.
 
 **What this does not mean.** Still no signal through pro's interface, still no live-rig hour through
-`namchaind` (vip's T10), still no cost table for pro, and `devices/common`'s shared changes are
-still unverified against vip.
+`namchaind` (vip's T10), no cost table for pro (measured later the same day — the entry above), and
+`devices/common`'s shared changes are still unverified against vip.
 
 **pro runs the Pi hosts' own tooling, and it holds an hour** (2026-11-01). The x86 candidate for the
 bigger case (HP ProDesk 600 G5 Mini, i5-9500T, 16 GB) stopped being a machine with its own scripts:

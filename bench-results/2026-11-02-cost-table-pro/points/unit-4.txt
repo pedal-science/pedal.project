@@ -1,0 +1,26 @@
+namchain-warm-bench 0.1.0  measure
+unit:       IR.4096 -- YA ORNG 412 V30 421v-CNT, 4096 taps
+bar:        p99 under the deadline, overruns recorded (see the note in this mode's comment); quantum 64, deadline 1333 us, 30 s a point, cpu 2
+
+       n      p50 us      p99 us    p99.9 us      max us   p99 %dl  max %dl  overruns  behind  verdict
+scheduling: SCHED_FIFO priority 80, cpu 2
+      1        37.0       85.3       87.6       99.8       6.4      7.5        0       0  fits
+      2        72.1      107.4      110.4      127.1       8.1      9.5        0       0  fits
+      4        79.1      153.0      154.8      156.7      11.5     11.8        0       0  fits
+      8        92.5      242.7      245.4      257.6      18.2     19.3        0       0  fits
+     16       121.5      424.8      426.4      434.3      31.9     32.6        0       0  fits
+     32       175.6      786.9      789.9      871.4      59.0     65.4        0       0  fits
+     64       292.1     1519.0     1541.7     1631.0     113.9    122.3     2812       1  MISSES
+     48       234.6     1150.1     1152.1     1177.1      86.3     88.3        0       0  fits
+     56       264.3     1334.2     1371.1     1516.3     100.1    113.7      357       1  MISSES
+     52       248.3     1241.8     1243.9     1291.4      93.1     96.9        0       1  fits
+     54       255.1     1287.7     1328.3     1453.8      96.6    109.0       20       1  fits*
+     55       260.2     1311.7     1314.4     1363.0      98.4    102.2        2       1  fits*
+     57       266.1     1358.3     1391.0     1454.2     101.9    109.1     1887       1  MISSES
+     53       253.2     1265.6     1267.6     1320.4      94.9     99.0        0       1  fits
+     58       269.9     1379.9     1414.4     1493.8     103.5    112.0     1905       1  MISSES
+     59       275.1     1403.5     1405.6     1462.3     105.3    109.7     2812       1  MISSES
+
+n = 55: 55 copies of this unit keep their p99 under the deadline on cpu 2. One unit costs 1/n = 0.0182 of a core.
+    D7's stricter bar (zero overruns too) would say n = 53: 1/n = 0.0189. The overrun count at the edge is not monotone in n; see the note at the top.
+fragment: {"unit":"IR.4096","core_percent":0.0182,"bar":"p99","quantum":64,"deadline_us":1333.333,"sources":{"n":55,"p99_at_n":0.984,"overruns_at_n":2,"p99_at_n_plus_1":1.001,"overruns_at_n_plus_1":357,"p99_at_n_plus_2":1.019,"blocks_behind_at_n_plus_1":1,"at_most":false},"curve":[{"n":1,"p50":36.967,"p99":85.267,"p999":87.561,"max":99.776,"p99_fraction":0.064,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":2,"p50":72.051,"p99":107.409,"p999":110.390,"max":127.141,"p99_fraction":0.081,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":4,"p50":79.136,"p99":153.004,"p999":154.789,"max":156.671,"p99_fraction":0.115,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":8,"p50":92.520,"p99":242.746,"p999":245.373,"max":257.597,"p99_fraction":0.182,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":16,"p50":121.473,"p99":424.780,"p999":426.406,"max":434.325,"p99_fraction":0.319,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":32,"p50":175.624,"p99":786.881,"p999":789.930,"max":871.398,"p99_fraction":0.590,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":48,"p50":234.602,"p99":1150.101,"p999":1152.093,"max":1177.071,"p99_fraction":0.863,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":52,"p50":248.334,"p99":1241.826,"p999":1243.939,"max":1291.414,"p99_fraction":0.931,"overruns":0,"behind":1,"pass":true,"strict":true},{"n":53,"p50":253.227,"p99":1265.619,"p999":1267.596,"max":1320.418,"p99_fraction":0.949,"overruns":0,"behind":1,"pass":true,"strict":true},{"n":54,"p50":255.146,"p99":1287.664,"p999":1328.256,"max":1453.803,"p99_fraction":0.966,"overruns":20,"behind":1,"pass":true,"strict":false},{"n":55,"p50":260.161,"p99":1311.746,"p999":1314.404,"max":1363.045,"p99_fraction":0.984,"overruns":2,"behind":1,"pass":true,"strict":false},{"n":56,"p50":264.296,"p99":1334.170,"p999":1371.101,"max":1516.265,"p99_fraction":1.001,"overruns":357,"behind":1,"pass":false,"strict":false},{"n":57,"p50":266.086,"p99":1358.269,"p999":1390.967,"max":1454.223,"p99_fraction":1.019,"overruns":1887,"behind":1,"pass":false,"strict":false},{"n":58,"p50":269.887,"p99":1379.860,"p999":1414.438,"max":1493.829,"p99_fraction":1.035,"overruns":1905,"behind":1,"pass":false,"strict":false},{"n":59,"p50":275.052,"p99":1403.539,"p999":1405.622,"max":1462.283,"p99_fraction":1.053,"overruns":2812,"behind":1,"pass":false,"strict":false},{"n":64,"p50":292.107,"p99":1519.026,"p999":1541.712,"max":1630.951,"p99_fraction":1.139,"overruns":2812,"behind":1,"pass":false,"strict":false}]}

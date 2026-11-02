@@ -1,0 +1,15 @@
+--unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0
+--unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 0.0
+--unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 8192
+--unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 4096
+--unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 2048
+--unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 1024
+--unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 512
+--unit node --node nc.input --no-levels
+--unit node --node nc.output --no-levels
+--unit node --node nc.gain --no-levels
+--unit node --node nc.eq.biquad --no-levels
+--unit node --node nc.delay --node-param samples=4800 --no-levels
+--unit node --node nc.mix --no-levels
+--unit node --node nc.split --no-levels
+--unit node --node nc.eq.biquad --levels-publish-period

@@ -1,0 +1,158 @@
+{
+  "bar": "p99 under the deadline, overruns recorded, paced offline; the live soak confirms zero xruns",
+  "core_percent": {
+    "IR": {
+      "1024": 0.00781,
+      "2048": 0.00781,
+      "4096": 0.0182,
+      "512": 0.00781,
+      "8192": 0.0182
+    },
+    "NAM": {
+      "WaveNet": {
+        "full": 0.04,
+        "lite": 0.0105
+      }
+    },
+    "node": {
+      "nc.delay": 0.00781,
+      "nc.eq.biquad": 0.00781,
+      "nc.gain": 0.00781,
+      "nc.input": 0.00781,
+      "nc.mix": 0.00781,
+      "nc.output": 0.00781,
+      "nc.split": 0.00781
+    }
+  },
+  "deadline_us": 1333.3333333333333,
+  "engine_commit": "ae6f853",
+  "headroom": 0.8,
+  "host": "pro",
+  "input": {
+    "file": "guitar-di.wav",
+    "bytes": 8182024,
+    "sha256": "1afd0bae0d933e1c29a25579b9efd012a4b71d550120d026cee2aab4dac3f517",
+    "note": "The same signal vip's table was measured with, byte-for-byte (scripts/measure-core copies the repo's own guitar-di.wav to the host), so pro's rows and vip's are directly comparable. P4's first-sight measurement must use it too; pedal-measure checks it before it writes a fragment."
+  },
+  "kernel": "7.0.0-38-realtime",
+  "measured": "2026-11-02T02:27:51Z",
+  "quantum": 64,
+  "rate": 48000,
+  "sources": {
+    "IR.1024": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.418,
+      "why": "--max 128 reached without a miss"
+    },
+    "IR.2048": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.941,
+      "why": "--max 128 reached without a miss"
+    },
+    "IR.4096": {
+      "at_most": false,
+      "blocks_behind_at_n_plus_1": 1,
+      "n": 55,
+      "overruns_at_n": 2,
+      "overruns_at_n_plus_1": 357,
+      "p99_at_n": 0.984,
+      "p99_at_n_plus_1": 1.001,
+      "p99_at_n_plus_2": 1.019
+    },
+    "IR.512": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.25,
+      "why": "--max 128 reached without a miss"
+    },
+    "IR.8192": {
+      "at_most": false,
+      "blocks_behind_at_n_plus_1": 1,
+      "n": 55,
+      "overruns_at_n": 70,
+      "overruns_at_n_plus_1": 2617,
+      "p99_at_n": 0.991,
+      "p99_at_n_plus_1": 1.01,
+      "p99_at_n_plus_2": 1.027
+    },
+    "NAM.WaveNet.full": {
+      "at_most": false,
+      "blocks_behind_at_n_plus_1": 1,
+      "n": 25,
+      "overruns_at_n": 100,
+      "overruns_at_n_plus_1": 368,
+      "p99_at_n": 0.979,
+      "p99_at_n_plus_1": 1.02,
+      "p99_at_n_plus_2": 1.052
+    },
+    "NAM.WaveNet.lite": {
+      "at_most": false,
+      "blocks_behind_at_n_plus_1": 1,
+      "n": 95,
+      "overruns_at_n": 187,
+      "overruns_at_n_plus_1": 299,
+      "p99_at_n": 0.996,
+      "p99_at_n_plus_1": 1.014,
+      "p99_at_n_plus_2": 1.019
+    },
+    "node.nc.delay": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.065,
+      "why": "--max 128 reached without a miss"
+    },
+    "node.nc.eq.biquad": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.124,
+      "why": "--max 128 reached without a miss"
+    },
+    "node.nc.gain": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.057,
+      "why": "--max 128 reached without a miss"
+    },
+    "node.nc.input": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.051,
+      "why": "--max 128 reached without a miss"
+    },
+    "node.nc.mix": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.059,
+      "why": "--max 128 reached without a miss"
+    },
+    "node.nc.output": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.052,
+      "why": "--max 128 reached without a miss"
+    },
+    "node.nc.split": {
+      "at_most": true,
+      "n": 128,
+      "overruns_at_n": 0,
+      "p99_at_n": 0.059,
+      "why": "--max 128 reached without a miss"
+    }
+  },
+  "unknown": {
+    "IR": 0.1,
+    "NAM": 0.25,
+    "node": 0.05
+  }
+}

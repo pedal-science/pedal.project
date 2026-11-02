@@ -1,0 +1,20 @@
+namchain-warm-bench 0.1.0  measure
+unit:       IR.2048 -- YA ORNG 412 V30 421v-CNT, 2048 taps
+bar:        p99 under the deadline, overruns recorded (see the note in this mode's comment); quantum 64, deadline 1333 us, 30 s a point, cpu 2
+
+       n      p50 us      p99 us    p99.9 us      max us   p99 %dl  max %dl  overruns  behind  verdict
+scheduling: SCHED_FIFO priority 80, cpu 2
+      1        26.1       68.6       70.1       78.9       5.1      5.9        0       0  fits
+      2        52.3       81.6       83.5       88.2       6.1      6.6        0       0  fits
+      4        75.1      105.8      110.7      120.0       7.9      9.0        0       0  fits
+      8        86.5      135.9      137.6      139.1      10.2     10.4        0       0  fits
+     16       109.6      209.7      218.5      239.9      15.7     18.0        0       0  fits
+     32       155.3      355.8      357.6      362.7      26.7     27.2        0       0  fits
+     64       248.2      649.4      679.6      766.9      48.7     57.5        0       0  fits
+    128       439.8     1254.2     1256.8     1271.9      94.1     95.4        0       1  fits
+    126       434.8     1233.5     1287.1     1408.8      92.5    105.7        5       1  fits*
+    127       437.7     1243.0     1245.6     1264.5      93.2     94.8        0       0  fits
+
+n = 128: 128 copies of this unit keep their p99 under the deadline on cpu 2. One unit costs 1/n = 0.00781 of a core.
+--max 128 was reached without a miss: the cost above is an upper bound, not the cliff.
+fragment: {"unit":"IR.2048","core_percent":0.00781,"bar":"p99","quantum":64,"deadline_us":1333.333,"sources":{"n":128,"p99_at_n":0.941,"overruns_at_n":0,"p99_at_n_plus_1":null,"overruns_at_n_plus_1":null,"p99_at_n_plus_2":null,"blocks_behind_at_n_plus_1":null,"at_most":true,"why":"--max 128 reached without a miss"},"curve":[{"n":1,"p50":26.069,"p99":68.567,"p999":70.140,"max":78.940,"p99_fraction":0.051,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":2,"p50":52.307,"p99":81.573,"p999":83.491,"max":88.158,"p99_fraction":0.061,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":4,"p50":75.133,"p99":105.815,"p999":110.701,"max":120.049,"p99_fraction":0.079,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":8,"p50":86.513,"p99":135.881,"p999":137.625,"max":139.116,"p99_fraction":0.102,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":16,"p50":109.617,"p99":209.664,"p999":218.492,"max":239.927,"p99_fraction":0.157,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":32,"p50":155.331,"p99":355.767,"p999":357.565,"max":362.736,"p99_fraction":0.267,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":64,"p50":248.233,"p99":649.399,"p999":679.608,"max":766.900,"p99_fraction":0.487,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":126,"p50":434.795,"p99":1233.479,"p999":1287.136,"max":1408.770,"p99_fraction":0.925,"overruns":5,"behind":1,"pass":true,"strict":false},{"n":127,"p50":437.682,"p99":1243.039,"p999":1245.619,"max":1264.500,"p99_fraction":0.932,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":128,"p50":439.809,"p99":1254.242,"p999":1256.795,"max":1271.903,"p99_fraction":0.941,"overruns":0,"behind":1,"pass":true,"strict":true}]}

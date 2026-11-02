@@ -1,0 +1,23 @@
+namchain-warm-bench 0.1.0  measure
+unit:       NAM.WaveNet.full -- Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160, full, no cab
+bar:        p99 under the deadline, overruns recorded (see the note in this mode's comment); quantum 64, deadline 1333 us, 30 s a point, cpu 2
+
+       n      p50 us      p99 us    p99.9 us      max us   p99 %dl  max %dl  overruns  behind  verdict
+scheduling: SCHED_FIFO priority 80, cpu 2
+      1       101.2      117.5      123.2      134.5       8.8     10.1        0       0  fits
+      2       134.9      151.1      157.9      168.3      11.3     12.6        0       0  fits
+      4       204.4      227.0      238.3      241.3      17.0     18.1        0       0  fits
+      8       343.8      390.7      411.9      445.1      29.3     33.4        0       0  fits
+     16       647.0      762.6      805.8      918.3      57.2     68.9        0       0  fits
+     32      1382.7     1722.2     1812.4     2005.8     129.2    150.4    22500    1381  MISSES
+     24      1013.8     1251.7     1316.8     1448.0      93.9    108.6        4       1  fits*
+     28      1178.7     1461.9     1544.9     1568.7     109.6    117.6     1185       1  MISSES
+     26      1081.0     1360.4     1452.3     1639.8     102.0    123.0      368       1  MISSES
+     25      1034.5     1304.7     1372.2     1410.0      97.9    105.7      100       1  fits*
+     27      1127.5     1403.2     1505.5     1721.9     105.2    129.1     1247       2  MISSES
+     23       960.9     1188.1     1252.0     1262.5      89.1     94.7        0       0  fits
+     29      1230.0     1531.4     1622.6     1869.9     114.9    140.2     2173      12  MISSES
+
+n = 25: 25 copies of this unit keep their p99 under the deadline on cpu 2. One unit costs 1/n = 0.04 of a core.
+    D7's stricter bar (zero overruns too) would say n = 23: 1/n = 0.0435. The overrun count at the edge is not monotone in n; see the note at the top.
+fragment: {"unit":"NAM.WaveNet.full","core_percent":0.04,"bar":"p99","quantum":64,"deadline_us":1333.333,"sources":{"n":25,"p99_at_n":0.979,"overruns_at_n":100,"p99_at_n_plus_1":1.020,"overruns_at_n_plus_1":368,"p99_at_n_plus_2":1.052,"blocks_behind_at_n_plus_1":1,"at_most":false},"curve":[{"n":1,"p50":101.245,"p99":117.526,"p999":123.163,"max":134.531,"p99_fraction":0.088,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":2,"p50":134.873,"p99":151.129,"p999":157.904,"max":168.281,"p99_fraction":0.113,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":4,"p50":204.418,"p99":227.016,"p999":238.292,"max":241.325,"p99_fraction":0.170,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":8,"p50":343.813,"p99":390.691,"p999":411.860,"max":445.104,"p99_fraction":0.293,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":16,"p50":646.954,"p99":762.613,"p999":805.762,"max":918.287,"p99_fraction":0.572,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":23,"p50":960.879,"p99":1188.094,"p999":1252.026,"max":1262.493,"p99_fraction":0.891,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":24,"p50":1013.847,"p99":1251.700,"p999":1316.788,"max":1447.975,"p99_fraction":0.939,"overruns":4,"behind":1,"pass":true,"strict":false},{"n":25,"p50":1034.517,"p99":1304.732,"p999":1372.225,"max":1409.985,"p99_fraction":0.979,"overruns":100,"behind":1,"pass":true,"strict":false},{"n":26,"p50":1080.996,"p99":1360.405,"p999":1452.280,"max":1639.796,"p99_fraction":1.020,"overruns":368,"behind":1,"pass":false,"strict":false},{"n":27,"p50":1127.486,"p99":1403.208,"p999":1505.454,"max":1721.915,"p99_fraction":1.052,"overruns":1247,"behind":2,"pass":false,"strict":false},{"n":28,"p50":1178.695,"p99":1461.881,"p999":1544.883,"max":1568.666,"p99_fraction":1.096,"overruns":1185,"behind":1,"pass":false,"strict":false},{"n":29,"p50":1230.026,"p99":1531.351,"p999":1622.643,"max":1869.893,"p99_fraction":1.149,"overruns":2173,"behind":12,"pass":false,"strict":false},{"n":32,"p50":1382.714,"p99":1722.211,"p999":1812.421,"max":2005.758,"p99_fraction":1.292,"overruns":22500,"behind":1381,"pass":false,"strict":false}]}

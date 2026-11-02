@@ -92,8 +92,8 @@ the command line would not have fixed it on its own, because that sets only the 
 for interrupts allocated after it is parsed. `pedal-tune` moves it, and `pedal-tune check` now fails
 if it is ever delivered there again.
 
-Still not done here: a cost table for pro (`namchaind` charges every unit its unknown cost, 0.25 of a
-core per model, until one is measured and installed), and pedald.
+Still not done here: pedald. (A cost table **was** measured and installed on 2026-11-02 — 14 rows,
+one A2-Full at 0.04 of a core — so the unknown cost of 0.25 no longer applies; see below.)
 
 ## The kernel and the boot: `rtpi/devices/pro/`
 
@@ -216,9 +216,12 @@ keeping written down because each would have been invisible until it mattered:
 
 ## Differences from vip that matter
 
-- **x86-64, not aarch64.** The planar-NEON kernels in the vendored NeuralAmpModelerCore fork are
-  Arm-only, so A2 takes the Eigen path on pro. Every number in vip's cost table is a Pi 5 number;
-  [pro's own](../bench-results/2026-10-31-cost-pro/README.md) is below.
+- **x86-64, not aarch64.** This used to mean A2 took the Eigen path here, because the planar kernels
+  in the vendored NeuralAmpModelerCore fork were Arm-only. **Not true since 2026-11-02:** core
+  `97d7cd4` widened the gate to x86-64 AVX2+FMA (`NAM_A2_PLANAR_AVX2`), so pro runs planar kernels
+  too, and the parity test now asserts bit-identity on Arm and a −120 dB error floor on AVX2, because
+  the core only claims the weaker property there. Every number in vip's cost table is still a Pi 5
+  number; [pro's own](../bench-results/2026-11-02-cost-table-pro/README.md) is below.
 - **pro builds its own engine.** vip has no compiler and receives built artefacts; pro has gcc 15.2
   and namchain builds in about two minutes, so `scripts/deploy-engine --host pro` exports the commit
   from the Mac (it need not be pushed), builds it clean on pro in `~/pedal-build`, runs the tests, and
@@ -261,6 +264,32 @@ better; what the bigger L3 was bought for, **the cost of running many instances 
 solved**: the same work takes 13-21% longer when five cores run it than when one does. Part of that
 is the clock (3.43 GHz against 3.65), and the rest is not yet attributed to the L3 rather than memory
 bandwidth or power limits. The cache explanation remains a hypothesis.
+
+### The table, measured and installed, 2026-11-02
+
+[bench-results/2026-11-02-cost-table-pro/README.md](../bench-results/2026-11-02-cost-table-pro/README.md).
+pro now has a real cost table — 14 rows in
+[devices/pro/rootfs/etc/namchain/cost.json](../devices/pro/rootfs/etc/namchain/cost.json), measured
+with `scripts/measure-core --host pro --seconds 30` on an isolated render core of the tuned RT host,
+with the engine at namchain `ae6f853` (`-march=skylake`, vendored core `97d7cd4`, parity gate green).
+`namchaind` no longer reports `cost_table_missing`.
+
+| unit | vip | pro | vip/pro |
+|---|---|---|---|
+| `NAM.WaveNet.full` | 0.111 (9/core) | **0.04 (25/core)** | 2.77× |
+| `NAM.WaveNet.lite` | 0.0333 (30) | **0.0105 (95)** | 3.17× |
+| `IR.8192` / `IR.4096` | 0.0222 (45) | **0.0182 (55)** | 1.22× |
+| `IR.2048` | 0.01 (100) | 0.00781 (≥128) | ≥1.28× |
+| `IR.1024`, `IR.512`, all seven node types | 0.00781 (≥128) | 0.00781 (≥128) | — |
+
+**Three things this changes and one it does not.** It changes the 9-per-core figure in the table
+above: with the planar AVX2 kernels one core fits **25**, where the same host with AVX2 but Eigen fit
+14 and the x86-64 baseline fit 9. It changes rig sizing, which was a guess at 0.25 per unit. And it
+makes pro, for NAM work, about 2.8 times a Pi 5 per core rather than equal to one. What it does
+**not** change is the five-core question above: every row is a one-core-busy row, the 13-21%
+multi-core penalty has not been re-measured with the planar kernels, and pro's table carries no
+`coexistence` block where vip's does, so nothing corrects for it. The win is also narrower than the
+headline: the IR ladder improves only 1.22×, so most of the 2.77× is the A2 kernels, not the box.
 
 ### What the RT kernel and the isolation actually changed
 
@@ -407,8 +436,12 @@ Not done, and not claimed:
   45 s run on the old kernel. (The bring-up xrun that used to sit in this list was explained on
   2026-11-02: it is the output-queue prime, above.)
 - **No audio has been through the interface.** Nothing was plugged in for any of this.
-- A cost table for pro (the engine otherwise charges 0.25 per model), so rig admission here is a
-  guess.
+- The cost table's **multi-core correction**. The 14 rows are measured and installed (2026-11-02,
+  above), but each on one busy core; the 13-21% five-core penalty has not been re-measured with the
+  planar kernels, and pro has no `coexistence` block where vip has one. Admission is no longer a
+  guess, but it is still a one-core guess about a five-core machine.
+- The cost table **confirmed against a live rig**: vip's T2 (16 heterogeneous rigs against the table)
+  and T10 (an hour of real playing) have no pro equivalent.
 - The L3 hypothesis tested: `perf stat` counters, a pinned-clock rerun, the five-core arm on vip.
 - Wired networking, and how ljoss finds pro (Wi-Fi at a DHCP address).
 - The watchdog: off by default, and whether this chipset will even give us one is unknown
@@ -421,9 +454,11 @@ Not done, and not claimed:
 1. **A live-rig hour through `namchaind`**, as vip's T10: rig switching, the warm set, the control
    path, and a signal actually through the interface. That is what would make this a pedal rather
    than a host that renders.
-2. **Measure and install pro's cost table** (`scripts/measure-core`, which needs an x86 path — it
-   builds its bench in the aarch64 container today). Until then admission charges every unit its
-   unknown cost and rig sizing here is a guess.
+2. ~~Measure and install pro's cost table.~~ **Done 2026-11-02** (above). `scripts/measure-core` runs
+   against pro with `--no-build` plus the host's own deployed bench; its build step still assumes the
+   aarch64 container and `devices/<host>/image.env`, which pro has not got, so an x86 build path in
+   that script is the remaining tidy-up. What is left of the question is the multi-core correction and
+   a live-rig confirmation, both listed above.
 3. **Confirm fwupd was the 2026-10-31 stall**, if it is worth the time: the `hwlat` tracer in this
    kernel measures SMI stalls directly, so an hour with fwupd deliberately unmasked and `hwlat`
    running would catch one in the act instead of inferring it.
