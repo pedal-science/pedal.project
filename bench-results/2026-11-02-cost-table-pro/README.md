@@ -112,6 +112,25 @@ on the render path. Because both arms hit the 128 cap, the table's row is the 0.
 way: **the charge the engine makes does not reflect the meter.** That is unchanged from vip and is
 P9's open end, not a pro finding.
 
+## The engine reads it
+
+Installed with `devices/pro/apply` (`namchaind` stopped for it and restarted, under the host lock);
+`devices/pro/check` then reports **`pro matches devices/pro and it is in force`** and
+`devices/pro/components.lock` records `devices=adebe3a`. `namchainctl status` after the restart
+(`engine-status-after.json`):
+
+```
+"table": "/etc/namchain/cost.json",  "table_ok": true,  "table_detail": "loaded",
+"table_rows": 14,  "table_host": "pro",  "table_engine_commit": "ae6f853",
+"issues": []
+```
+
+`cost_table_missing` is gone. The rig pro happened to have loaded (`last.json`: `in` → NAM Ampeg
+GVT52 Full → an 8192-tap Orange 4×12 IR → `out`) is now charged **0.07382 of a core, with all four
+nodes `measured: true`** — none of them falling back. The same rig under the unknown costs would have
+been charged 0.05 + 0.25 + 0.1 + 0.05 = **0.45**, so admission was over-charging it about sixfold,
+and `verdict: fits` now means something.
+
 ## Limits of this table
 
 - **Every row is a one-core-busy row.** Each point ran on cpu 2 with the other render cores idle.
@@ -142,3 +161,4 @@ P9's open end, not a pro finding.
 | `points/unit-N.txt` | `namchain-warm-bench measure`'s own output, one file per unit, in `units` order |
 | `units` | The unit set, one bench invocation per line |
 | `session.log` | What ran on the host, in order |
+| `engine-status-after.json` | `namchainctl status` once the table was installed and `namchaind` restarted |

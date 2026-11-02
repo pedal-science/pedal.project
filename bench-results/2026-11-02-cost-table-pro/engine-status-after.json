@@ -1,0 +1,441 @@
+{
+  "ok": true,
+  "status": {
+    "adopted_generation": 1,
+    "assets": {
+      "irs": 520,
+      "irs_root": "/var/lib/pedal/library/irs",
+      "models": 64,
+      "models_root": "/var/lib/pedal/library/models",
+      "scan": 1
+    },
+    "audible_generation": 1,
+    "backend": "alsa_raw",
+    "backend_diagnostics": {
+      "buffer_size": 384,
+      "bytes_per_sample": 4,
+      "capture_overruns": 0,
+      "floor_inserted_frames": 0,
+      "gate_capture_xruns": 0,
+      "occupancy_mismatches": 82378,
+      "output_target_drops": 0,
+      "period_exact": 1,
+      "playback_underruns": 0,
+      "recoveries": 0,
+      "settle_discarded_frames": 0
+    },
+    "blocks": 33835,
+    "capture_channels": 2,
+    "catch_up": {
+      "blocks": 0,
+      "device_period_size": 64,
+      "fill": "none",
+      "frames": 0,
+      "full": "idle",
+      "history_block_frames": 0,
+      "hold": {
+        "abandoned": 0,
+        "abandoned_at": 0,
+        "exact": 0,
+        "exact_at": 0
+      },
+      "hold_frames": 0,
+      "period_mismatch": 0,
+      "progress": "idle",
+      "replay": "none",
+      "ring": {
+        "armed": false,
+        "block_frames": 0,
+        "blocks": 0,
+        "channels": 0,
+        "configured": false,
+        "consumed": 0,
+        "dropped": 0,
+        "head": 0,
+        "newest_seq": 0,
+        "oldest_seq": 0,
+        "tail": 0,
+        "written": 0
+      },
+      "running": false,
+      "seq": {
+        "executed": 0,
+        "fed": 0
+      },
+      "state": "none",
+      "window": {
+        "blocks": 0,
+        "contiguous": 0,
+        "held": 0,
+        "need": 0
+      }
+    },
+    "chains": [
+      {
+        "adopted_generation": 1,
+        "audible_generation": 1,
+        "failed_nodes": 0,
+        "generation": 1,
+        "guard_trips": 0,
+        "id": "main",
+        "input_channel": 0,
+        "missing_assets": [],
+        "muted": false,
+        "name": "",
+        "output_channel": 0,
+        "slimmed_models": [],
+        "target_generation": 1,
+        "transition_active": false
+      }
+    ],
+    "control": {
+      "tcp_address": "0.0.0.0",
+      "tcp_connections": 0,
+      "tcp_listening": true,
+      "tcp_max_connections": 8,
+      "tcp_max_message_bytes": 1048576,
+      "tcp_port": 47810,
+      "tcp_token_required": true,
+      "unix_connections": 1,
+      "unix_socket": "/run/namchain/namchaind.sock"
+    },
+    "cost": {
+      "coexistence": 1.0,
+      "coexistence_warm_documents": 0,
+      "cost": 0.07382,
+      "effective": 0.07382,
+      "full_cost": 0.07382,
+      "headroom": 0.8,
+      "lite_first": false,
+      "nodes": [
+        {
+          "chain": "main",
+          "cost": 0.00781,
+          "element": "in",
+          "full_cost": 0.00781,
+          "measured": true,
+          "node": "in",
+          "reference": "",
+          "row": "node.nc.input",
+          "slimmed": false,
+          "working_set_bytes": 0
+        },
+        {
+          "chain": "main",
+          "cost": 0.04,
+          "element": "amp",
+          "full_cost": 0.04,
+          "measured": true,
+          "node": "amp",
+          "reference": "Ampeg GVT52 - Channel 2/AMPEG_CH 2 NEUTRAL G5",
+          "row": "NAM.WaveNet.full",
+          "slimmed": false,
+          "working_set_bytes": 300808
+        },
+        {
+          "chain": "main",
+          "cost": 0.0182,
+          "element": "cab",
+          "full_cost": 0.0182,
+          "measured": true,
+          "node": "cab",
+          "reference": "Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT",
+          "row": "IR.8192",
+          "slimmed": false,
+          "working_set_bytes": 0
+        },
+        {
+          "chain": "main",
+          "cost": 0.00781,
+          "element": "out",
+          "full_cost": 0.00781,
+          "measured": true,
+          "node": "out",
+          "reference": "",
+          "row": "node.nc.output",
+          "slimmed": false,
+          "working_set_bytes": 0
+        }
+      ],
+      "over": false,
+      "table": "/etc/namchain/cost.json",
+      "table_detail": "loaded",
+      "table_engine_commit": "ae6f853",
+      "table_host": "pro",
+      "table_measured": "2026-11-02T02:27:51Z",
+      "table_ok": true,
+      "table_rows": 14,
+      "trimmed": false,
+      "unknown": {
+        "IR": 0.1,
+        "NAM": 0.25,
+        "node": 0.05
+      },
+      "verdict": "fits"
+    },
+    "device": "hw:CARD=U192k,DEV=0",
+    "device_lost": 0,
+    "device_restored": 0,
+    "fade_ms": 5.0,
+    "failed_nodes": 0,
+    "features": [
+      "multi_chain",
+      "documents",
+      "rig_apply",
+      "rig_get_document",
+      "structural_crossfade",
+      "smooth_params",
+      "bypass",
+      "guard",
+      "per_chain_mute",
+      "schema",
+      "tcp_transport",
+      "assets",
+      "record",
+      "local_transitions",
+      "meta",
+      "bypass_ramp",
+      "cost",
+      "node_state",
+      "levels"
+    ],
+    "format": "S32_LE",
+    "generation": 1,
+    "guard_trips": 0,
+    "health": "ok",
+    "issues": [],
+    "last_transitions": [
+      {
+        "chain": "main",
+        "kind": "crossfade"
+      }
+    ],
+    "levels": {
+      "audible_generation": 1,
+      "blocks": 33786,
+      "cache": {
+        "drains": 321,
+        "first_frame": false,
+        "hits": 3,
+        "misses": 0,
+        "publish": "period",
+        "rate_hz": 8.0
+      },
+      "chains": [
+        {
+          "id": "main",
+          "muted": false,
+          "name": "",
+          "nodes": [
+            {
+              "element": "in",
+              "frames": 6720,
+              "node": "in",
+              "peak": -66.2,
+              "rms": -73.1,
+              "role": ""
+            },
+            {
+              "element": "amp",
+              "frames": 6720,
+              "node": "amp",
+              "peak": -60.6,
+              "rms": -65.5,
+              "role": ""
+            },
+            {
+              "element": "cab",
+              "frames": 6720,
+              "node": "cab",
+              "peak": -43.6,
+              "rms": -48.1,
+              "role": ""
+            },
+            {
+              "element": "out",
+              "frames": 0,
+              "node": "out",
+              "peak": -200.0,
+              "rms": -200.0,
+              "role": ""
+            }
+          ],
+          "out": {
+            "clipped": 0,
+            "frames": 6720,
+            "peak": -43.6,
+            "rms": -48.1
+          },
+          "output_channel": 0
+        }
+      ],
+      "generation": 1,
+      "input": {
+        "clipped": [
+          0,
+          0
+        ],
+        "frames": [
+          6720,
+          6720
+        ],
+        "peak": [
+          -66.2,
+          -90.5
+        ],
+        "rms": [
+          -73.1,
+          -200.0
+        ]
+      },
+      "nodes": 4,
+      "output": {
+        "clipped": [
+          0,
+          0
+        ],
+        "frames": [
+          6720,
+          6720
+        ],
+        "peak": [
+          -43.6,
+          -200.0
+        ],
+        "rms": [
+          -48.1,
+          -200.0
+        ]
+      },
+      "period_size": 64,
+      "sample_rate": 48000,
+      "state": "running",
+      "truncated": false
+    },
+    "local_base_mismatches": 0,
+    "local_transitions": 0,
+    "max_chains": 8,
+    "max_concurrent_transitions": 0,
+    "memory_locked": true,
+    "mute": false,
+    "param_edits": "ramped",
+    "params_applied": 0,
+    "params_stale": 0,
+    "period_size": 64,
+    "playback_channels": 2,
+    "protocol": 2,
+    "queue": {
+      "capture_bursts": 0,
+      "floor_insertions": 0,
+      "output_drops": 0,
+      "output_queue_floor_periods": 2,
+      "output_queue_periods": 4,
+      "output_target_drops": 0,
+      "prefill_frames": 8
+    },
+    "realtime": true,
+    "record": {
+      "active": false,
+      "enabled": true
+    },
+    "render": {
+      "deadline_us": 1333.333,
+      "load_histogram": [
+        [
+          3,
+          8
+        ],
+        [
+          4,
+          26947
+        ],
+        [
+          5,
+          5127
+        ],
+        [
+          6,
+          1579
+        ],
+        [
+          7,
+          133
+        ],
+        [
+          8,
+          36
+        ],
+        [
+          9,
+          5
+        ]
+      ],
+      "over_90_percent": 0,
+      "over_deadline": 0,
+      "worst_percent": 9.409952352488087,
+      "worst_us": 125.466
+    },
+    "render_cores": 0,
+    "render_degraded": false,
+    "render_errors": 0,
+    "render_threads": 1,
+    "render_threads_configured": 1,
+    "retired_pending": 0,
+    "rig": "/var/lib/pedal/library/rigs/last.json",
+    "rig_name": "",
+    "rig_source": "file",
+    "role": "namchaind",
+    "rt_policy": 1,
+    "rt_priority": 80,
+    "sample_rate": 48000,
+    "startup_xruns": 0,
+    "state": "running",
+    "structural_transitions": "crossfade",
+    "target_generation": 1,
+    "transition_active": false,
+    "transitions_started": 0,
+    "version": "0.1.0",
+    "warm": {
+      "active_doc": 0,
+      "cold_switches": 0,
+      "cores": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "device_core": 5,
+      "enabled": true,
+      "max_behind_blocks": 8,
+      "pressure_cools": 0,
+      "pressure_holding": false,
+      "priority": 70,
+      "set": [
+        {
+          "audible": true,
+          "behind_blocks": 0,
+          "blocks": 33835,
+          "blocks_dropped": 0,
+          "core": 5,
+          "cost": 0.07382,
+          "doc": 0,
+          "generation": 1,
+          "handover_blocks": 0,
+          "name": "",
+          "publish_holds": 0,
+          "rig": "/var/lib/pedal/library/rigs/last.json",
+          "slimmed": false,
+          "source": "file",
+          "state": "audible",
+          "verdict": "fits",
+          "warm_blocks": 0,
+          "worst_behind_blocks": 0
+        }
+      ],
+      "switches": 0,
+      "thread_core": 1,
+      "withdrawn": 0
+    },
+    "xruns": 0
+  }
+}
