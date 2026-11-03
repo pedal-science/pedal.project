@@ -1,8 +1,8 @@
 # Running the pedal as a fleet: the operations plan
 
-**Status: a draft for the owner to check, 2026-11-03. Nothing in it is decided until then.** The
-questions that need an answer are in "Decisions for the owner", near the end. `plan.md` stays the
-record of where the pedal is; this page says how the work gets organised.
+**Status: agreed with the owner on 2026-11-03, and Phase 0 is under way.** The owner's answers are in
+"Decisions", near the end. `plan.md` stays the record of where the pedal is; this page says how the
+work gets organised.
 
 This repository is public, so this page names no network details, and neither must anything that
 follows from it.
@@ -54,8 +54,8 @@ Measured on 2026-11-03.
 
 **Some private details are already public.** A scan of the public repos found bench logs and a test fixture carrying a
 home IPv6 prefix, a LAN address and device MAC addresses, and one committed page naming a LAN address.
-The Wi-Fi name and the current external IPv4 were not found, in any tree or in history. Phase 0 deals
-with it.
+The Wi-Fi name and the current external IPv4 were not found in any tree. The owner has decided to leave
+what is there as it is (Decision 2), and `scripts/public-check` stops anything new.
 
 ## The words we will use
 
@@ -140,10 +140,11 @@ anywhere and refused with a reason where it does not fit.
 | **rigpa, compact** | `box` | Keep `rigpa_core` (protocol, models, navigation) and add a second set of views. The spec's layout is in 1920×480 pixels today, so this is real work. Two sizes to design for: 800×480 touch if the 4.3″ fits, and a non-touch 3.5″-or-under driven by an encoder through the Pico. The size is chosen by a fit test, not by guessing |
 | **Nothing, or LEDs** | `pocket` | Footswitches, a status LED, and the phone |
 | **ljoss, desktop and iPad** | All | As now |
-| **ljoss, phone** | All, and the main editor on `pocket` | A layout in ljoss, not a new app: it is one multiplatform target that already builds for iPhone, with a stack instead of a split view. Borrow from rigpa what suits one hand on a stage: rig list, big switches, tuner. Chain editing comes second |
+| **ljoss, iPhone** | All, and the main editor on `pocket` | A layout in ljoss, not a new app: it is one multiplatform target that already builds for iPhone, with a stack instead of a split view. Borrow from rigpa what suits one hand on a stage: rig list, big switches, tuner. Chain editing comes second |
+| **Android** | All, and the main editor on `pocket` | A new front end, and two ways to make it. **Qt**: `rigpa_core` is already the protocol, models and navigation in C++, and rigpa has shown Qt works well. Compact views written for `box`'s screen could be most of a phone's, so one body of work serves both. **Kotlin and Jetpack Compose**: the platform's own way, which feels most native and shares nothing. **Recommended first step: a small spike of `rigpa_core` and one compact view on an Android phone**, connecting to a Core over Wi-Fi, before choosing. If it goes well, Qt on iPhone becomes an option too, though ljoss stays the plan there. Bluetooth pairing (`docs/pairing.md`) is the part to test early |
 
-`pocket` cannot be usable before the phone layout and the pairing work (`docs/pairing.md`) are, so
-they are on its track.
+`pocket` cannot be usable before a phone UI and the pairing work (`docs/pairing.md`) are, so they are
+on its track.
 
 **Rigs and libraries move between Cores.** A rig is the same document everywhere. Each build gets a
 library profile (`sync-library --profile`), because zap's card and memory cannot hold what pro can.
@@ -194,8 +195,8 @@ list of things that failed is the backlog.
 | Linux x86-64 | mp | Rolled back to a VM snapshot each time |
 | Linux arm64 | piv | A throwaway container, `HOME` empty |
 | Apple | GitHub's macOS runners if they carry a new enough SDK, else a clean clone and scratch user on the M2 | Fresh checkout |
-| zap and vip | Spare card, flashed from the drill's own image | The card, with the real one left safe |
-| pro | A spare drive; until there is one, `apply` in a VM on mp, without the RT kernel, as a partial proof | Marked partial on the page |
+| zap and vip | A spare SD card (in hand), flashed from the drill's own image | The card, with the real one left safe |
+| pro | `apply` in a VM on mp, without the RT kernel, as a partial proof. A full one needs a drive to install on: an old SATA SSD from storage, when it is worth doing. No new drive is being bought | Marked partial on the page |
 
 A drill records its inputs, the hashes it produced, how long it took, and **how many steps needed a
 person** (inserting a card is fair; logging in to fix something is a failure). Its report is committed
@@ -210,9 +211,11 @@ same reason.
 A private bucket holding what is not in git, addressed by hash, listed in a committed `inputs.lock`:
 kernel artefacts, the bench DI, the library, enclosure sources, and pinned toolchain archives.
 
-- **Recommended: Cloudflare R2.** The site is already on Cloudflare, and a script on any machine can
-  reach it with a scoped token. Dropbox is the alternative, but it is awkward to reach from a headless
-  host.
+- **Cloudflare R2.** The site is already on Cloudflare, and a script on any machine can reach it with a
+  scoped token.
+- **Dropbox is where the owner keeps third-party models** (`/NAM`, as of 2026-09-03, with one IR among
+  them; the 520 IRs on the Mac are not there). It stays the owner's copy. Phase 2 reconciles the two, and
+  the lab fetches by hash from R2, so a build never depends on what a shared folder holds that day.
 - **Secrets are never stored there.** Images with Wi-Fi keys in them are rebuilt, not kept.
 - **Third-party models and IRs stay private.** Public CI uses free inputs: the vendored core's example
   models and `make_test_ir.py`. The private library is for rungs 4 to 6.
@@ -223,7 +226,7 @@ kernel artefacts, the bench DI, the library, enclosure sources, and pinned toolc
 | Machine | Role in steady state | What it needs first |
 |---|---|---|
 | **M2** | The desk: editing, agent sessions, Xcode (only Apple builds need it), writing cards. Nothing else depends on it being open | The vault token stops being Mac-only |
-| **piv** | The lab's coordinator, because it is always on: arm64 builds, drills, running scheduled tests, publishing the dashboard. If it is down the page says so | docker enabled, harness, a scoped vault token. Bench measurement and coordination must not collide: both go through the host lock |
+| **piv** | **The machine that stays up** (Decision 7): the lab's coordinator, arm64 builds, drills, running scheduled tests, publishing the dashboard. If it is down the page says so | docker enabled, harness, a scoped vault token. Bench measurement and coordination must not collide: both go through the host lock |
 | **mp** | The x86-64 clean room: builds pro's binaries, conformance, drills, a second place to run an agent. A VM, so never a source of timing numbers | docker, gh, ninja, harness, a snapshot to return to |
 | **pro, vip, zap** | Cores. Quiet, measured, never building | Standing permission for the lab (below) |
 
@@ -239,8 +242,8 @@ and nothing comes in.
 signal at the input and a do-not-disturb flag. Long jobs have quiet hours.
 
 **Agents follow the same rules.** A harness on piv or mp opens the workspace, reads `AGENTS.md` and
-holds no vault token of its own. Two agents on one repo use worktrees, as now. The rule that nothing
-touches vip without asking stays until the owner replaces it (Decision 4).
+holds no vault token of its own. Two agents on one repo use worktrees, as now. The lab may read vip and
+pro on a timer (Decision 4); anything else that touches vip still asks first.
 
 ## The dashboard
 
@@ -306,8 +309,9 @@ trigger a site build or a commit, and a missing file shows "no data" rather than
 page shows how old its data is, and says plainly when it is stale.
 
 `comms` owns the page and its wording; `pedal.project` owns the facts and the schema (rules 1 and 2).
-Today `comms` says the NAM numbers quoted are the Pi 5's and that every claim goes through its register,
-so a page showing pro's and zap's numbers needs that rule amended (Decision 5).
+Today `comms` says the NAM numbers quoted are the Pi 5's and that every claim goes through its register.
+The owner has agreed the page may show every Core's figures as dated measurements (Decision 5), so
+Phase 5 amends that rule in `comms`.
 
 ## The work, in order
 
@@ -316,15 +320,15 @@ before the next one starts**, and any step that touches vip asks first.
 
 ### Phase 0: stop the leaks and tell the truth (S)
 
-- Remove the private details from the public repos, after Decision 2 on history.
-- Add `scripts/public-check`, and run it before pushes and in CI.
+- Add `scripts/public-check`, and run it before pushes and in CI. What is already public stays, listed
+  in each repository's allow file (Decision 2).
 - Commit, or deliberately drop, every untracked file that a clean clone needs.
-- Record zap, mp and piv's new roles in `docs/working-across-repos.md`.
+- Record zap, mp and piv's roles in `docs/working-across-repos.md`.
 - Get CI green: fix namchain's RTSan segfault and TSan job, and NAMBench's six jobs, or mark a
   failure as known with a reason.
 
-**Done when:** the scan is clean on every repo's tree, CI is green or explained, and a clean clone has
-every script.
+**Done when:** the scan is clean on every repo's tree, apart from what is listed, CI is green or
+explained, and a clean clone has every script.
 
 ### Phase 1: name everything, and see it (M)
 
@@ -375,7 +379,8 @@ owner's go-ahead.
 
 ### Phase 6: keep proving it (S to set up, then ongoing)
 
-- Scheduled drills for vip and pro. Spare card and spare drive bought if agreed.
+- Scheduled drills for vip and pro, on spare cards, and a partial proof for pro until a drive is worth
+  fitting.
 - Sets become the normal way to deploy. Ages on the page start to matter.
 
 **Done when:** every build has been rebuilt from nothing at least once, and the page shows when.
@@ -390,7 +395,7 @@ build's file.
 - **`console`:** signal through pro's interface; a live-rig hour; the case laid out and drilled; the
   8.8″ screen; rigpa on x86-64.
 - **`pocket`:** numbers first; then decide what it is; the RT kernel; battery noise and runtime measured;
-  the phone layout; pairing.
+  a phone UI, iPhone and Android; pairing.
 
 ## What could go wrong
 
@@ -404,30 +409,22 @@ build's file.
 | Timing numbers from the wrong place | The rule stays: only a quiet real Core gives timing. CI, qemu and mp never do |
 | Too many formats | Fleet files point at `devices/` and locks, and do not copy them. If one fact ends up in two files, that is a bug |
 
-## Decisions for the owner
+## Decisions
 
-1. **Names:** `console`, `box` and `pocket` for the builds, and "set", "proof" and "drill" as words?
-2. **The leak in git history:** rewriting `pedal.project`'s history removes the details from GitHub's
-   tree but changes every later commit hash, breaks the commit references in docs and locks, and
-   cannot recall any clones. The alternative is deleting them going forward and accepting that a home
-   IPv6 prefix and LAN address remain in old commits. **Recommendation: fix going forward,** since the
-   rewrite costs much, and check whether the prefix is still current.
-3. **What "identifies me" covers:** commits already show a full name and an email address, on public
-   repos, and the plan does not change that. Is that acceptable, or should the page and new commits go
-   further? **Recommendation: the page shows no names; leave commits alone.**
-4. **Standing permission for the lab:** today every touch of vip is asked for. The lab needs read-only
-   status from vip and pro on a schedule, and tests in quiet hours. **Recommendation:** allow read-only
-   on a timer now; allow tests only after you have seen them run, with a do-not-disturb flag you control.
-5. **Numbers on the public page:** may it show pro's and zap's figures, and capacities? That needs
-   `comms`' rules amended. **Recommendation: yes, as measurements with dates, not as claims.**
-6. **The store:** Cloudflare R2, private, for kernel artefacts, the library and the rest? And is a
-   private copy of third-party models acceptable to you?
-7. **piv as coordinator:** the docs say it is "allowed to be busy or down". Is it now the one that stays
-   up? **Recommendation: yes, with the page showing staleness when it is not.**
-8. **zap's operating system:** **Recommendation: Ubuntu 26.04 arm64 from the same snapshot as vip**, so
-   tooling carries over, unless a real-time kernel for this SoC turns out to be far easier elsewhere.
-9. **Purchases:** a spare card per Pi, a spare drive for pro's drills, and a lead for pro's test loop.
-10. **Phone scope:** iPhone only, through ljoss, for now?
+The owner's answers, 2026-11-03.
+
+| # | Question | Decision |
+|---|---|---|
+| 1 | Names | `console`, `box` and `pocket` for the builds; "set", "proof" and "drill" as the words |
+| 2 | The details already in the public repos, and their history | Leave them. No history rewrite and no clean-up. `scripts/public-check` lists them as known and stops anything new |
+| 3 | What "identifies me" covers | Home network details. A full name and an email address are fine to publish, so nothing looks for them |
+| 4 | The lab's access to Cores | Read-only on a timer, now. Tests only after the owner has seen them run, with a do-not-disturb flag the owner controls |
+| 5 | Numbers on the public page | Every Core's figures may appear, as dated measurements rather than claims |
+| 6 | The store | Cloudflare R2, with a private copy of third-party models and IRs. Dropbox stays the owner's copy of the models |
+| 7 | Which machine stays up | piv. The M2 is often closed, so piv does the builds, the co-ordinating and the scheduled work |
+| 8 | zap's operating system | Ubuntu 26.04 arm64, from the same snapshot as vip |
+| 9 | Purchases | None. Spare SD cards and leads are in hand. An old SATA SSD from storage will do for pro if a drive is ever needed |
+| 10 | Phones | iPhone through ljoss, and Android too, by a new front end. Qt is a real candidate, thanks to rigpa |
 
 ## How this page relates to the others
 

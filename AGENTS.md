@@ -99,6 +99,11 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
 - `scripts/sandbox-cache [--status|--print|--refresh] [-- <command>]`: run a command with uv's and
   Playwright's caches cloned into `<workspace>/.cache/`, which a sandboxed session needs for the
   browser tests ([docs/workspace.md](docs/workspace.md), "Tool caches").
+- `scripts/public-check [--all|--workspace|--range A..B] [--no-live]`: every repository here is public, so
+  what a push adds must not name a LAN address, a global IPv6 address, a MAC address, a secret, or this
+  household's own details (read live, stored nowhere, never printed). The pre-push hook and CI run it. A
+  match stops the push: mask the value, or list the path in the repository's `.public-check-allow` with
+  the reason. A name and an email address are fine (docs/operations-plan.md, Decision 3).
 - `scripts/components-lock [--host vip] [--check]`: write `devices/<host>/components.lock`
   from what the host is running, or compare. Commit the file with the change.
 - `firmware/build.sh`, `firmware/flash.sh`, `firmware/tools/{echo,protocol}-test.py`: build,
@@ -195,7 +200,7 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
   `build-footswitches.md` (the small case's three footswitches: the net, the lugs, and the cut-down
   control board, `footswitch-pico.svg`), `rig-switch-strategies.md`, `uart-protocol.md`, `pedal-service.md` (the service's design: what
   it owns, storage, uploads, the mapping, failure modes, what is left to implement — in order —
-  and the thread accounting), `operations-plan.md` (a proposal, 2026-11-03: running the Cores as a fleet, rebuilding from nothing, the
+  and the thread accounting), `operations-plan.md` (agreed 2026-11-03: running the Cores as a fleet, rebuilding from nothing, the
   public dashboard), `pro.md` and `zap.md` (the other two Core hosts), `pairing.md` (BLE pairing, the pedal's own
   Wi-Fi network, and how ljoss joins it), `vip-image.md` (building vip's card,
   its rescue and pedal roots, boot fallback), `audio-dma-irq.md` (the audio DMA interrupt

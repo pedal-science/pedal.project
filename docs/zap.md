@@ -35,9 +35,9 @@ Pi images. The engine will not be. What the build was checked against:
 
 None of this has been exercised on a Zero 2 W, so expect to fix something.
 
-1. Flash a 64-bit OS with the hostname `zap` and your SSH key, and give `rik` passwordless `sudo`, as
-   vip and pro have. Add `zap` to `~/.ssh/config`. Ubuntu Server 26.04 arm64 is the recommendation, but
-   the static bench does not care.
+1. Flash Ubuntu Server 26.04 arm64 (decided 2026-11-03: the same userland as vip) with the hostname
+   `zap` and your SSH key, and give `rik` passwordless `sudo`, as vip and pro have. Add `zap` to
+   `~/.ssh/config`.
 2. Install `rsync` if it is missing, then copy the library. The whole of it is small (55 MB):
    ```bash
    scripts/sync-library --host zap
