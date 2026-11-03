@@ -1,0 +1,6 @@
+# The same two arms as the fixed run's ends, with every core's clock held at 3.0 GHz -- below the
+# 3.052 GHz the part settled to with five cores busy, so both arms run at the same speed and the
+# frequency term is removed by construction rather than by arithmetic. Whatever gap is left is the
+# shared L3 and memory, and it should come out near the +69% the IPC drop implies.
+fixed  | pinned-full-n25-k1 | 1 | 25 | 25 | 25 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0
+fixed  | pinned-full-n25-k5 | 5 | 25 | 25 | 25 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0

@@ -4,4 +4,4 @@ host=pro
 board=HP ProDesk 600 G5 Desktop Mini
 kernel=7.0.0-38-realtime
 namchain=ae6f853
-devices=adebe3a
+devices=3857d3e-dirty

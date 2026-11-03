@@ -1,0 +1,26 @@
+2026-11-03T01:37:58Z stopping namchaind
+2026-11-03T01:38:01Z ARM 1 full-fit-k1 mode=bisect k=1 neighbour_n=25 start=8 max=32 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 1.0
+2026-11-03T01:53:14Z ARM full-fit-k1 DONE
+2026-11-03T01:53:14Z ARM 2 full-fit-k2 mode=bisect k=2 neighbour_n=25 start=8 max=32 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 1.0
+2026-11-03T01:53:59Z neighbours up: 2 bench process(es)
+2026-11-03T02:09:23Z ARM full-fit-k2 DONE
+2026-11-03T02:09:23Z ARM 3 full-fit-k3 mode=bisect k=3 neighbour_n=25 start=8 max=32 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 1.0
+2026-11-03T02:10:08Z neighbours up: 3 bench process(es)
+2026-11-03T02:27:17Z ARM full-fit-k3 DONE
+2026-11-03T02:27:17Z ARM 4 full-fit-k4 mode=bisect k=4 neighbour_n=25 start=8 max=32 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 1.0
+2026-11-03T02:28:02Z neighbours up: 4 bench process(es)
+2026-11-03T02:44:21Z ARM full-fit-k4 DONE
+2026-11-03T02:44:21Z ARM 5 full-fit-k5 mode=bisect k=5 neighbour_n=25 start=8 max=32 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 1.0
+2026-11-03T02:45:06Z neighbours up: 5 bench process(es)
+2026-11-03T02:57:13Z ARM full-fit-k5 DONE
+2026-11-03T02:57:13Z ARM 6 lite-fit-k1 mode=bisect k=1 neighbour_n=95 start=16 max=128 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 0.0
+2026-11-03T03:16:57Z ARM lite-fit-k1 DONE
+2026-11-03T03:16:57Z ARM 7 lite-fit-k5 mode=bisect k=5 neighbour_n=95 start=16 max=128 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 0.0
+2026-11-03T03:17:42Z neighbours up: 5 bench process(es)
+2026-11-03T03:34:23Z ARM lite-fit-k5 DONE
+2026-11-03T03:34:23Z ARM 8 ir8192-fit-k1 mode=bisect k=1 neighbour_n=55 start=16 max=96 -- --unit ir --ir /var/lib/pedal/library/irs/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav --taps 8192
+2026-11-03T03:52:29Z ARM ir8192-fit-k1 DONE
+2026-11-03T03:52:29Z ARM 9 ir8192-fit-k5 mode=bisect k=5 neighbour_n=55 start=16 max=96 -- --unit ir --ir /var/lib/pedal/library/irs/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav --taps 8192
+2026-11-03T03:53:14Z neighbours up: 5 bench process(es)
+2026-11-03T04:11:19Z ARM ir8192-fit-k5 DONE
+2026-11-03T04:11:19Z namchaind restarted (active)

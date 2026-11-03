@@ -1,0 +1,102 @@
+== the arms (build/pro/coexistence/fixed)
+arm              k    n    p50 us    p99 us  p99 %dl  over  per copy  verdict
+full-n25-k1      1   25    1040.6    1304.7     97.9   565      41.6  fits
+full-n25-k2      2   25    1168.4    1481.6    111.1  4880      46.7  MISSES
+full-n25-k3      3   25    1308.5    1747.9    131.1 28380      52.3  MISSES
+full-n25-k4      4   25    1586.7    2134.6    160.1 90000      63.5  MISSES
+full-n25-k5      5   25    1935.9    2574.3    193.1 90000      77.4  MISSES
+lite-n95-k1      1   95     919.8    1347.2    101.0  1177       9.7  MISSES
+lite-n95-k5      5   95    2295.5    3551.5    266.4 90000      24.2  MISSES
+ir8192-n55-k1    1   55     336.2    1322.7     99.2    72       6.1  fits
+ir8192-n55-k5    5   55     306.6    1343.2    100.7 10775       5.6  MISSES
+full-n25-k1b     1   25    1040.9    1307.1     98.0   627      41.6  fits
+
+== the same work, k cores busy (fixed arms, against that unit's k=1)
+arm              k    p50 us   vs k=1    p99 us   vs k=1  clock GHz   IPC  L3 miss %  miss/kinsn
+full-n25-k1      1    1040.6    -0.0%    1304.7    -0.2%      3.366  1.93      25.66      10.162
+full-n25-k2      2    1168.4   +12.3%    1481.6   +13.3%      3.413  1.69      50.35      20.161
+full-n25-k3      3    1308.5   +25.7%    1747.9   +33.7%      3.391  1.52      60.86      24.023
+full-n25-k4      4    1586.7   +52.4%    2134.6   +63.3%      3.183  1.33      67.76      25.938
+full-n25-k5      5    1935.9   +86.0%    2574.3   +96.9%      3.052  1.14      72.96      26.574
+lite-n95-k1      1     919.8    +0.0%    1347.2    +0.0%      3.272  1.28      57.28      52.677
+lite-n95-k5      5    2295.5  +149.6%    3551.5  +163.6%      3.225  0.52      89.17      55.001
+ir8192-n55-k1    1     336.2    +0.0%    1322.7    +0.0%      3.145  2.64      12.77       2.120
+ir8192-n55-k5    5     306.6    -8.8%    1343.2    +1.5%      3.413  2.46      56.26       9.473
+full-n25-k1b     1    1040.9    +0.0%    1307.1    +0.0%      3.369  1.92      26.21      10.318
+
+== every core over each fixed arm's window (busy from /proc/stat, clock from aperf/mperf)
+  full-n25-k1 (k=1, neighbours at n=25, window 65s)
+    cpu0   busy   1.5%  clock  3.401 GHz  IPC  0.47  L3 miss   9.44%
+    cpu1   busy   0.0%  clock  3.491 GHz  IPC  0.00  L3 miss  24.96%
+    cpu2   busy  80.2%  clock  3.366 GHz  IPC  1.93  L3 miss  25.66%
+    cpu3   busy   0.0%  clock  3.468 GHz  IPC  0.00  L3 miss  21.80%
+    cpu4   busy   0.0%  clock  3.476 GHz  IPC  0.00  L3 miss  18.33%
+    cpu5   busy   0.0%  clock  3.489 GHz  IPC  0.00  L3 miss  17.11%
+  full-n25-k2 (k=2, neighbours at n=25, window 65s)
+    cpu0   busy   1.5%  clock  3.413 GHz  IPC  0.48  L3 miss  12.22%
+    cpu1   busy  90.2%  clock  3.413 GHz  IPC  1.69  L3 miss  49.68%
+    cpu2   busy  89.8%  clock  3.413 GHz  IPC  1.69  L3 miss  50.35%
+    cpu3   busy   0.0%  clock  3.466 GHz  IPC  0.03  L3 miss  24.89%
+    cpu4   busy   0.0%  clock  3.461 GHz  IPC  0.03  L3 miss  19.66%
+    cpu5   busy   0.0%  clock  3.473 GHz  IPC  0.03  L3 miss  17.31%
+  full-n25-k3 (k=3, neighbours at n=25, window 65s)
+    cpu0   busy   1.6%  clock  3.320 GHz  IPC  0.45  L3 miss  14.84%
+    cpu1   busy 100.0%  clock  3.391 GHz  IPC  1.51  L3 miss  60.47%
+    cpu2   busy  99.7%  clock  3.391 GHz  IPC  1.52  L3 miss  60.86%
+    cpu3   busy 100.0%  clock  3.391 GHz  IPC  1.51  L3 miss  60.83%
+    cpu4   busy   0.0%  clock  3.424 GHz  IPC  0.01  L3 miss  24.53%
+    cpu5   busy   0.0%  clock  3.444 GHz  IPC  0.01  L3 miss  24.78%
+  full-n25-k4 (k=4, neighbours at n=25, window 65s)
+    cpu0   busy   1.5%  clock  3.125 GHz  IPC  0.44  L3 miss  14.77%
+    cpu1   busy 100.0%  clock  3.183 GHz  IPC  1.33  L3 miss  67.96%
+    cpu2   busy  99.7%  clock  3.183 GHz  IPC  1.33  L3 miss  67.76%
+    cpu3   busy 100.0%  clock  3.183 GHz  IPC  1.33  L3 miss  68.66%
+    cpu4   busy 100.0%  clock  3.183 GHz  IPC  1.32  L3 miss  68.09%
+    cpu5   busy   0.0%  clock  3.224 GHz  IPC  0.03  L3 miss  33.84%
+  full-n25-k5 (k=5, neighbours at n=25, window 65s)
+    cpu0   busy   1.8%  clock  3.002 GHz  IPC  0.43  L3 miss  14.52%
+    cpu1   busy 100.0%  clock  3.052 GHz  IPC  1.14  L3 miss  73.01%
+    cpu2   busy  99.7%  clock  3.052 GHz  IPC  1.14  L3 miss  72.96%
+    cpu3   busy 100.0%  clock  3.052 GHz  IPC  1.15  L3 miss  72.72%
+    cpu4   busy 100.0%  clock  3.052 GHz  IPC  1.14  L3 miss  72.40%
+    cpu5   busy 100.0%  clock  3.052 GHz  IPC  1.14  L3 miss  72.06%
+  lite-n95-k1 (k=1, neighbours at n=95, window 65s)
+    cpu0   busy   2.2%  clock  2.757 GHz  IPC  0.46  L3 miss  12.14%
+    cpu1   busy   0.0%  clock  3.428 GHz  IPC  0.00  L3 miss  16.70%
+    cpu2   busy  71.8%  clock  3.272 GHz  IPC  1.28  L3 miss  57.28%
+    cpu3   busy   0.0%  clock  3.448 GHz  IPC  0.00  L3 miss  23.24%
+    cpu4   busy   0.0%  clock  3.445 GHz  IPC  0.00  L3 miss  18.02%
+    cpu5   busy   0.0%  clock  3.436 GHz  IPC  0.00  L3 miss  17.15%
+  lite-n95-k5 (k=5, neighbours at n=95, window 65s)
+    cpu0   busy   1.7%  clock  3.210 GHz  IPC  0.27  L3 miss  10.87%
+    cpu1   busy 100.0%  clock  3.225 GHz  IPC  0.51  L3 miss  89.49%
+    cpu2   busy  99.5%  clock  3.225 GHz  IPC  0.52  L3 miss  89.17%
+    cpu3   busy 100.0%  clock  3.225 GHz  IPC  0.51  L3 miss  89.23%
+    cpu4   busy 100.0%  clock  3.225 GHz  IPC  0.51  L3 miss  89.64%
+    cpu5   busy 100.0%  clock  3.225 GHz  IPC  0.51  L3 miss  89.83%
+  ir8192-n55-k1 (k=1, neighbours at n=55, window 65s)
+    cpu0   busy   2.3%  clock  1.807 GHz  IPC  0.61  L3 miss   5.88%
+    cpu1   busy   0.0%  clock  3.448 GHz  IPC  0.00  L3 miss  24.43%
+    cpu2   busy  33.8%  clock  3.145 GHz  IPC  2.64  L3 miss  12.77%
+    cpu3   busy   0.0%  clock  3.458 GHz  IPC  0.00  L3 miss  21.85%
+    cpu4   busy   0.0%  clock  3.462 GHz  IPC  0.00  L3 miss  19.44%
+    cpu5   busy   0.0%  clock  3.461 GHz  IPC  0.00  L3 miss  18.20%
+  ir8192-n55-k5 (k=5, neighbours at n=55, window 65s)
+    cpu0   busy   1.5%  clock  3.413 GHz  IPC  0.46  L3 miss   7.77%
+    cpu1   busy  32.9%  clock  3.413 GHz  IPC  2.45  L3 miss  55.62%
+    cpu2   busy  32.9%  clock  3.413 GHz  IPC  2.46  L3 miss  56.26%
+    cpu3   busy  32.8%  clock  3.413 GHz  IPC  2.46  L3 miss  57.08%
+    cpu4   busy  33.0%  clock  3.413 GHz  IPC  2.45  L3 miss  56.10%
+    cpu5   busy  33.1%  clock  3.413 GHz  IPC  2.45  L3 miss  55.38%
+  full-n25-k1b (k=1, neighbours at n=25, window 65s)
+    cpu0   busy   1.7%  clock  3.405 GHz  IPC  0.62  L3 miss  11.24%
+    cpu1   busy   0.0%  clock  3.435 GHz  IPC  0.00  L3 miss  17.82%
+    cpu2   busy  80.4%  clock  3.369 GHz  IPC  1.92  L3 miss  26.21%
+    cpu3   busy   0.0%  clock  3.449 GHz  IPC  0.00  L3 miss  18.81%
+    cpu4   busy   0.0%  clock  3.436 GHz  IPC  0.00  L3 miss  21.91%
+    cpu5   busy   0.0%  clock  3.427 GHz  IPC  0.00  L3 miss  19.69%
+
+== the factor a coexistence block would carry (bisect arms)
+   (no bisect arm produced a fitted n)
+   * at_most: the bisection hit its --max without a miss, so n is a floor and the
+     factor read against it is a lower bound on the real one.

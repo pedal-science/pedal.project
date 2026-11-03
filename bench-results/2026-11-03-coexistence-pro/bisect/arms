@@ -1,0 +1,19 @@
+# The fitted n under load, which is what the factor is read off: factor = n(k=1) / n(k).
+#
+# Every unit gets its own k=1 arm here rather than borrowing the table's n, so the ratio is between
+# two measurements taken the same way in the same session -- the table's rows were measured at 30 s
+# a point and these at 90, and the fixed arms have already shown the lite row to be marginal at the
+# longer point. A factor read across two different methods would not be a factor.
+#
+# --start is deliberately well below the expected fit: the bench's bisection only narrows between a
+# n that fitted and one that did not, so a --start that misses on its first probe reports no fitted
+# n at all. At k=5 a Full model costs about twice what it costs alone, so 16 would have missed.
+bisect | full-fit-k1   | 1 | 25 |  8 |  32 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0
+bisect | full-fit-k2   | 2 | 25 |  8 |  32 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0
+bisect | full-fit-k3   | 3 | 25 |  8 |  32 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0
+bisect | full-fit-k4   | 4 | 25 |  8 |  32 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0
+bisect | full-fit-k5   | 5 | 25 |  8 |  32 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0
+bisect | lite-fit-k1   | 1 | 95 | 16 | 128 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 0.0
+bisect | lite-fit-k5   | 5 | 95 | 16 | 128 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 0.0
+bisect | ir8192-fit-k1 | 1 | 55 | 16 |  96 | --unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 8192
+bisect | ir8192-fit-k5 | 5 | 55 | 16 |  96 | --unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 8192

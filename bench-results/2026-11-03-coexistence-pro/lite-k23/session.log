@@ -1,0 +1,8 @@
+2026-11-03T04:13:53Z stopping namchaind
+2026-11-03T04:13:56Z ARM 1 lite-fit-k2 mode=bisect k=2 neighbour_n=95 start=32 max=128 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 0.0
+2026-11-03T04:14:41Z neighbours up: 2 bench process(es)
+2026-11-03T04:33:19Z ARM lite-fit-k2 DONE
+2026-11-03T04:33:19Z ARM 2 lite-fit-k3 mode=bisect k=3 neighbour_n=95 start=32 max=96 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 0.0
+2026-11-03T04:34:05Z neighbours up: 3 bench process(es)
+2026-11-03T04:50:45Z ARM lite-fit-k3 DONE
+2026-11-03T04:50:45Z namchaind restarted (active)

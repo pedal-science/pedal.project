@@ -1,0 +1,11 @@
+2026-11-03T04:51:55Z stopping namchaind
+2026-11-03T04:51:58Z clock pinned to 3000000 kHz on all cores
+2026-11-03T04:51:58Z ARM 1 pinned-full-n25-k1 mode=fixed k=1 neighbour_n=25 start=25 max=25 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 1.0
+2026-11-03T04:52:43Z perf window on cpus 0,1,2,3,4,5 opens, 65s
+2026-11-03T04:54:03Z ARM pinned-full-n25-k1 DONE
+2026-11-03T04:54:03Z ARM 2 pinned-full-n25-k5 mode=fixed k=5 neighbour_n=25 start=25 max=25 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 1.0
+2026-11-03T04:54:48Z neighbours up: 5 bench process(es)
+2026-11-03T04:55:33Z perf window on cpus 0,1,2,3,4,5 opens, 65s
+2026-11-03T04:57:52Z ARM pinned-full-n25-k5 DONE
+2026-11-03T04:57:52Z clock unpinned: scaling_max_freq put back
+2026-11-03T04:57:52Z namchaind restarted (active)

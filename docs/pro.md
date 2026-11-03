@@ -93,7 +93,9 @@ for interrupts allocated after it is parsed. `pedal-tune` moves it, and `pedal-t
 if it is ever delivered there again.
 
 Still not done here: pedald. (A cost table **was** measured and installed on 2026-11-02 — 14 rows,
-one A2-Full at 0.04 of a core — so the unknown cost of 0.25 no longer applies; see below.)
+one A2-Full at 0.04 of a core — so the unknown cost of 0.25 no longer applies, and on 2026-11-03 it
+gained the `coexistence` block that says what those rows cost when the other render cores are busy
+too: 14 Full models a core, not 25. Both below.)
 
 ## The kernel and the boot: `rtpi/devices/pro/`
 
@@ -265,6 +267,11 @@ solved**: the same work takes 13-21% longer when five cores run it than when one
 is the clock (3.43 GHz against 3.65), and the rest is not yet attributed to the L3 rather than memory
 bandwidth or power limits. The cache explanation remains a hypothesis.
 
+> **Both of those were settled on 2026-11-03** — "The coexistence cost" below. Re-run with the
+> planar kernels the penalty is **+86%**, four times what this arm measured, and it **is** the L3:
+> with every core pinned to one clock, +68.4% of the 86% survives. The 13-21% figures above belong
+> to the Eigen builds and should not be quoted for the engine pro actually runs.
+
 ### The table, measured and installed, 2026-11-02
 
 [bench-results/2026-11-02-cost-table-pro/README.md](../bench-results/2026-11-02-cost-table-pro/README.md).
@@ -286,10 +293,50 @@ with the engine at namchain `ae6f853` (`-march=skylake`, vendored core `97d7cd4`
 above: with the planar AVX2 kernels one core fits **25**, where the same host with AVX2 but Eigen fit
 14 and the x86-64 baseline fit 9. It changes rig sizing, which was a guess at 0.25 per unit. And it
 makes pro, for NAM work, about 2.8 times a Pi 5 per core rather than equal to one. What it does
-**not** change is the five-core question above: every row is a one-core-busy row, the 13-21%
-multi-core penalty has not been re-measured with the planar kernels, and pro's table carries no
-`coexistence` block where vip's does, so nothing corrects for it. The win is also narrower than the
-headline: the IR ladder improves only 1.22×, so most of the 2.77× is the A2 kernels, not the box.
+**not** change is the five-core question above: every row is a one-core-busy row. The win is also
+narrower than the headline: the IR ladder improves only 1.22×, so most of the 2.77× is the A2
+kernels, not the box. (The one-core-busy gap was closed the next day — below. The rows themselves
+were re-measured there at 90 s a point and **confirmed**, except `lite`, which is one copy
+optimistic: 94 fits, not 95.)
+
+### The coexistence cost, measured 2026-11-03
+
+[bench-results/2026-11-03-coexistence-pro/README.md](../bench-results/2026-11-03-coexistence-pro/README.md),
+with the new [scripts/measure-coexistence](../scripts/measure-coexistence): one core is the subject,
+k-1 of the others each carry a full core's worth of the same unit, and the fitted n is measured
+*under* that load. 23 arms, 136 points, 3h 51m.
+
+**What fits, with the other render cores busy:**
+
+| unit | alone | 1 nbr | 2 nbr | 3 nbr | 4 nbr | factor at 4 nbr |
+|---|---|---|---|---|---|---|
+| `NAM.WaveNet.full` | 25 | 22 | 19 | 16 | **14** | 1.786 |
+| `NAM.WaveNet.lite` | 94 | 76 | 55 | — | **41** | 2.293 |
+| `IR.8192` | 55 | — | — | — | **51** | 1.078 |
+
+So the whole machine holds about **70 Full models**, not the 150 the single-core row suggests. pro's
+table now carries a `coexistence` block for the first time — `{"1": 1.24, "2": 1.71}`, the worst
+row's factor at each key, since the factor multiplies a whole rig. It is installed, in force, and
+**inert until something warms a document**, which on pro means until pedald exists: the engine
+returns 1.0 for zero warm documents. It was verified live all the same, by warming a document from a
+file — the charge went 0.07382 → 0.0915368, exactly ×1.24.
+
+**The planar kernels are four times as sensitive to a busy neighbour as the Eigen build was**, and
+10-31's open question is answered. With n held at 25, five busy cores cost **+86%** on the p50
+(10-31: +21% on `-march=native`). The clock falls only 9.3%, 3.366 → 3.052 GHz; IPC falls 41%,
+1.93 → 1.14; the L3 miss rate goes 26% → 73%. And pinning every core to 3.0 GHz leaves **+68.4%** of
+the 86% — the figure the IPC drop alone implies. **It is the shared L3, not the clock.** The cache
+contention pro was bought to fix is real, measured, and it is what limits the box.
+
+The penalty is also strongly unit-dependent, which no earlier run saw: `lite` is worst (+150%, IPC
+collapsing to 0.52, because a quiet 9 MiB L3 holds a small working set and five busy cores take that
+away), while `IR.8192` barely cares and its p50 actually *fell* 8.8% — a partitioned FFT is already
+memory-bound and has little residency to lose.
+
+One caveat that matters for reading the number against vip's: a neighbour here is a **saturated
+core**, where vip's T5 neighbour was one real warm document. pro's 1.24 and vip's 1.25 therefore
+agree by coincidence, and pro's factor charges more than a light warm document costs. That is the
+safe direction, and the refinement is vip's T5 on pro, which needs pedald.
 
 ### What the RT kernel and the isolation actually changed
 
@@ -436,13 +483,19 @@ Not done, and not claimed:
   45 s run on the old kernel. (The bring-up xrun that used to sit in this list was explained on
   2026-11-02: it is the output-queue prime, above.)
 - **No audio has been through the interface.** Nothing was plugged in for any of this.
-- The cost table's **multi-core correction**. The 14 rows are measured and installed (2026-11-02,
-  above), but each on one busy core; the 13-21% five-core penalty has not been re-measured with the
-  planar kernels, and pro has no `coexistence` block where vip has one. Admission is no longer a
-  guess, but it is still a one-core guess about a five-core machine.
 - The cost table **confirmed against a live rig**: vip's T2 (16 heterogeneous rigs against the table)
   and T10 (an hour of real playing) have no pro equivalent.
-- The L3 hypothesis tested: `perf stat` counters, a pinned-clock rerun, the five-core arm on vip.
+- **A warm-document-shaped coexistence measurement** — vip's T5 on pro. The factors installed on
+  2026-11-03 are measured against a *saturated* neighbour core, so they are an upper bound on what
+  one warm document costs. T5 needs pedald.
+- The five-core arm **on vip**, for the same comparison from the other side. pro's own arm is done
+  (2026-11-03) and the L3 hypothesis is settled for pro; vip has never been measured this way, so
+  "vip struggled with parallel instances" is still the owner's observation rather than a number.
+- Coexistence factors for the **eight floor rows** (the node types, IR.512/1024/2048). They are
+  `at_most` values at the `--max 128` ceiling, so a factor read against them would be a ratio of two
+  floors.
+- The `lite` row's one-copy correction: 2026-11-03 measured 94, not the table's 95, and at 120 s n=95
+  misses. Left for the next `measure-core` run rather than patched in from another harness.
 - Wired networking, and how ljoss finds pro (Wi-Fi at a DHCP address).
 - The watchdog: off by default, and whether this chipset will even give us one is unknown
   (`harden-pro --watchdog` reports it).
@@ -454,11 +507,12 @@ Not done, and not claimed:
 1. **A live-rig hour through `namchaind`**, as vip's T10: rig switching, the warm set, the control
    path, and a signal actually through the interface. That is what would make this a pedal rather
    than a host that renders.
-2. ~~Measure and install pro's cost table.~~ **Done 2026-11-02** (above). `scripts/measure-core` runs
-   against pro with `--no-build` plus the host's own deployed bench; its build step still assumes the
-   aarch64 container and `devices/<host>/image.env`, which pro has not got, so an x86 build path in
-   that script is the remaining tidy-up. What is left of the question is the multi-core correction and
-   a live-rig confirmation, both listed above.
+2. ~~Measure and install pro's cost table.~~ **Done 2026-11-02**, and ~~its multi-core
+   correction~~ **done 2026-11-03** (both above). `scripts/measure-core` runs against pro with
+   `--no-build` plus the host's own deployed bench; its build step still assumes the aarch64
+   container and `devices/<host>/image.env`, which pro has not got, so an x86 build path in that
+   script is the remaining tidy-up. What is left of the question is a live-rig confirmation, and a
+   warm-document-shaped T5 once pedald exists — both listed above.
 3. **Confirm fwupd was the 2026-10-31 stall**, if it is worth the time: the `hwlat` tracer in this
    kernel measures SMI stalls directly, so an hour with fwupd deliberately unmasked and `hwlat`
    running would catch one in the act instead of inferring it.
@@ -467,7 +521,9 @@ Not done, and not claimed:
    `make harden-pro-watchdog` says whether this chipset will even provide one — the BIOS's own
    "Watchdog Timer" is `Disable`.
 5. Rerun 32 and 24 frames for longer than 45 s, now that 64 is proven for an hour.
-6. Find what the five-core slowdown is (counters, pinned clock, vip's arm) before trusting the cache
-   story or sizing rigs from the 12-per-core figure.
+6. ~~Find what the five-core slowdown is (counters, pinned clock, vip's arm)~~ **Done 2026-11-03 for
+   pro** (above): the counters and the pinned-clock rerun say it is the shared L3, and the figure to
+   size rigs from is 14 Full models a core with the others busy, not 25. What is left of this item is
+   **vip's arm**, for the same reading from the Pi's side.
 7. Wired networking. The WiFi roam that cost attempt 1 its verdict is a reason of its own: a cable
    would have avoided it, and ljoss has to find pro at a DHCP address as things stand.

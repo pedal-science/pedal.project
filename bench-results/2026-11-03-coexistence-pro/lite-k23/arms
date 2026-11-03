@@ -1,0 +1,13 @@
+# coexistence.factors multiplies a whole rig's cost, so each key has to carry the worst unit's
+# factor, not one unit's. k=2 and k=3 -- one and two warm documents -- were measured for the Full
+# row only; lite is much the worse row at k=5 (2.293 against 1.786), so these two arms are what
+# decide factors{"1"} and factors{"2"}.
+#
+# IR.8192 is deliberately not re-run here. Its factor at k=5 is 1.078, and a factor cannot fall as
+# cores are added, so IR at k=2 or k=3 is at most 1.078 -- below the Full row's 1.136 at k=2. It
+# cannot be the binding row at any k, so measuring it would cost 35 minutes to change nothing.
+#
+# The ranges start near the expected fit (the Full row's factors suggest ~78 and ~63) because a
+# bisection that begins far below its answer spends points getting there.
+bisect | lite-fit-k2 | 2 | 95 | 32 | 128 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 0.0
+bisect | lite-fit-k3 | 3 | 95 | 32 |  96 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 0.0

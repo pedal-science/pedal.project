@@ -1,0 +1,12 @@
+namchain-warm-bench 0.1.0  measure
+unit:       NAM.WaveNet.full -- Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160, full, no cab
+bar:        p99 under the deadline, overruns recorded (see the note in this mode's comment); quantum 64, deadline 1333 us, 120 s a point, cpu 2
+
+       n      p50 us      p99 us    p99.9 us      max us   p99 %dl  max %dl  overruns  behind  verdict
+scheduling: SCHED_FIFO priority 80, cpu 2
+     25      1040.9     1307.1     1396.4     1712.5      98.0    128.4      627       1  fits*
+
+n = 25: 25 copies of this unit keep their p99 under the deadline on cpu 2. One unit costs 1/n = 0.04 of a core.
+    D7's stricter bar (zero overruns too) would say n = 0: 1/n = 0. The overrun count at the edge is not monotone in n; see the note at the top.
+--max 25 was reached without a miss: the cost above is an upper bound, not the cliff.
+fragment: {"unit":"NAM.WaveNet.full","core_percent":0.04,"bar":"p99","quantum":64,"deadline_us":1333.333,"sources":{"n":25,"p99_at_n":0.980,"overruns_at_n":627,"p99_at_n_plus_1":null,"overruns_at_n_plus_1":null,"p99_at_n_plus_2":null,"blocks_behind_at_n_plus_1":null,"at_most":true,"why":"--max 25 reached without a miss"},"curve":[{"n":25,"p50":1040.922,"p99":1307.146,"p999":1396.420,"max":1712.460,"p99_fraction":0.980,"overruns":627,"behind":1,"pass":true,"strict":false}]}

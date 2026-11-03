@@ -1,0 +1,29 @@
+== the arms (build/pro/coexistence/bisect)
+arm              k    n    p50 us    p99 us  p99 %dl  over  per copy  verdict
+full-fit-k1      1   25    1047.6    1311.6     98.4   428      41.9  fits
+full-fit-k2      2   22    1021.8    1293.9     97.0   464      46.4  fits
+full-fit-k3      3   19     980.3    1260.6     94.5   428      51.6  fits
+full-fit-k4      4   16     970.5    1313.0     98.5   424      60.7  fits
+full-fit-k5      5   14     999.5    1330.7     99.8   635      71.4  fits
+lite-fit-k1      1   94     889.9    1315.4     98.7   463       9.5  fits
+lite-fit-k5      5   41     785.8    1323.7     99.3   611      19.2  fits
+ir8192-fit-k1    1   55     337.5    1324.4     99.3    39       6.1  fits
+ir8192-fit-k5    5   51     291.5    1258.7     94.4     1       5.7  fits
+
+== the same work, k cores busy (fixed arms, against that unit's k=1)
+arm              k    p50 us   vs k=1    p99 us   vs k=1  clock GHz   IPC  L3 miss %  miss/kinsn
+
+== every core over each fixed arm's window (busy from /proc/stat, clock from aperf/mperf)
+
+== the factor a coexistence block would carry (bisect arms)
+  full-fit: k=1 n=25, k=2 n=22, k=3 n=19, k=4 n=16, k=5 n=14
+    k=2: 25 fits alone, 22 with 1 neighbour(s) -> factor 1.136  (cost/core 0.04 -> 0.04545)
+    k=3: 25 fits alone, 19 with 2 neighbour(s) -> factor 1.316  (cost/core 0.04 -> 0.05263)
+    k=4: 25 fits alone, 16 with 3 neighbour(s) -> factor 1.562  (cost/core 0.04 -> 0.0625)
+    k=5: 25 fits alone, 14 with 4 neighbour(s) -> factor 1.786  (cost/core 0.04 -> 0.07143)
+  ir8192-fit: k=1 n=55, k=5 n=51
+    k=5: 55 fits alone, 51 with 4 neighbour(s) -> factor 1.078  (cost/core 0.01818 -> 0.01961)
+  lite-fit: k=1 n=94, k=5 n=41
+    k=5: 94 fits alone, 41 with 4 neighbour(s) -> factor 2.293  (cost/core 0.01064 -> 0.02439)
+   * at_most: the bisection hit its --max without a miss, so n is a floor and the
+     factor read against it is a lower bound on the real one.

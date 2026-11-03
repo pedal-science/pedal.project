@@ -1,0 +1,38 @@
+2026-11-03T01:06:33Z stopping namchaind
+2026-11-03T01:06:36Z ARM 1 full-n25-k1 mode=fixed k=1 neighbour_n=25 start=25 max=25 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 1.0
+2026-11-03T01:07:21Z perf window on cpus 0,1,2,3,4,5 opens, 65s
+2026-11-03T01:08:41Z ARM full-n25-k1 DONE
+2026-11-03T01:08:41Z ARM 2 full-n25-k2 mode=fixed k=2 neighbour_n=25 start=25 max=25 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 1.0
+2026-11-03T01:09:27Z neighbours up: 2 bench process(es)
+2026-11-03T01:10:12Z perf window on cpus 0,1,2,3,4,5 opens, 65s
+2026-11-03T01:11:32Z ARM full-n25-k2 DONE
+2026-11-03T01:11:32Z ARM 3 full-n25-k3 mode=fixed k=3 neighbour_n=25 start=25 max=25 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 1.0
+2026-11-03T01:12:17Z neighbours up: 3 bench process(es)
+2026-11-03T01:13:02Z perf window on cpus 0,1,2,3,4,5 opens, 65s
+2026-11-03T01:14:24Z ARM full-n25-k3 DONE
+2026-11-03T01:14:24Z ARM 4 full-n25-k4 mode=fixed k=4 neighbour_n=25 start=25 max=25 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 1.0
+2026-11-03T01:15:09Z neighbours up: 4 bench process(es)
+2026-11-03T01:15:54Z perf window on cpus 0,1,2,3,4,5 opens, 65s
+2026-11-03T01:17:41Z ARM full-n25-k4 DONE
+2026-11-03T01:17:41Z ARM 5 full-n25-k5 mode=fixed k=5 neighbour_n=25 start=25 max=25 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 1.0
+2026-11-03T01:18:26Z neighbours up: 5 bench process(es)
+2026-11-03T01:19:11Z perf window on cpus 0,1,2,3,4,5 opens, 65s
+2026-11-03T01:21:30Z ARM full-n25-k5 DONE
+2026-11-03T01:21:30Z ARM 6 lite-n95-k1 mode=fixed k=1 neighbour_n=95 start=95 max=95 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 0.0
+2026-11-03T01:22:15Z perf window on cpus 0,1,2,3,4,5 opens, 65s
+2026-11-03T01:23:36Z ARM lite-n95-k1 DONE
+2026-11-03T01:23:36Z ARM 7 lite-n95-k5 mode=fixed k=5 neighbour_n=95 start=95 max=95 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 0.0
+2026-11-03T01:24:22Z neighbours up: 5 bench process(es)
+2026-11-03T01:25:07Z perf window on cpus 0,1,2,3,4,5 opens, 65s
+2026-11-03T01:28:04Z ARM lite-n95-k5 DONE
+2026-11-03T01:28:04Z ARM 8 ir8192-n55-k1 mode=fixed k=1 neighbour_n=55 start=55 max=55 -- --unit ir --ir /var/lib/pedal/library/irs/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav --taps 8192
+2026-11-03T01:28:49Z perf window on cpus 0,1,2,3,4,5 opens, 65s
+2026-11-03T01:30:10Z ARM ir8192-n55-k1 DONE
+2026-11-03T01:30:10Z ARM 9 ir8192-n55-k5 mode=fixed k=5 neighbour_n=55 start=55 max=55 -- --unit ir --ir /var/lib/pedal/library/irs/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav --taps 8192
+2026-11-03T01:30:55Z neighbours up: 5 bench process(es)
+2026-11-03T01:31:40Z perf window on cpus 0,1,2,3,4,5 opens, 65s
+2026-11-03T01:33:00Z ARM ir8192-n55-k5 DONE
+2026-11-03T01:33:00Z ARM 10 full-n25-k1b mode=fixed k=1 neighbour_n=25 start=25 max=25 -- --unit nam --model /var/lib/pedal/library/models/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam --slim 1.0
+2026-11-03T01:33:45Z perf window on cpus 0,1,2,3,4,5 opens, 65s
+2026-11-03T01:35:06Z ARM full-n25-k1b DONE
+2026-11-03T01:35:06Z namchaind restarted (active)

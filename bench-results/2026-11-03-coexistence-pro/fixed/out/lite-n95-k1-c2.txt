@@ -1,0 +1,10 @@
+namchain-warm-bench 0.1.0  measure
+unit:       NAM.WaveNet.lite -- Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160, lite, no cab
+bar:        p99 under the deadline, overruns recorded (see the note in this mode's comment); quantum 64, deadline 1333 us, 120 s a point, cpu 2
+
+       n      p50 us      p99 us    p99.9 us      max us   p99 %dl  max %dl  overruns  behind  verdict
+scheduling: SCHED_FIFO priority 80, cpu 2
+     95       919.8     1347.2     1469.7     1781.8     101.0    133.6     1177       1  MISSES
+
+n = 0: even one copy misses the deadline on cpu 2. There is no cost this unit could be admitted with; it is refused (D8's direction).
+fragment: {"unit":"NAM.WaveNet.lite","core_percent":1,"bar":"p99","quantum":64,"deadline_us":1333.333,"curve":[{"n":95,"p50":919.817,"p99":1347.170,"p999":1469.731,"max":1781.839,"p99_fraction":1.010,"overruns":1177,"behind":1,"pass":false,"strict":false}]}

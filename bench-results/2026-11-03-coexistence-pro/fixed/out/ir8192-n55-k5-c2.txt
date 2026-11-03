@@ -1,0 +1,10 @@
+namchain-warm-bench 0.1.0  measure
+unit:       IR.8192 -- YA ORNG 412 V30 421v-CNT, 8192 taps
+bar:        p99 under the deadline, overruns recorded (see the note in this mode's comment); quantum 64, deadline 1333 us, 120 s a point, cpu 2
+
+       n      p50 us      p99 us    p99.9 us      max us   p99 %dl  max %dl  overruns  behind  verdict
+scheduling: SCHED_FIFO priority 80, cpu 2
+     55       306.6     1343.2     1347.0     1490.2     100.7    111.8    10775       1  MISSES
+
+n = 0: even one copy misses the deadline on cpu 2. There is no cost this unit could be admitted with; it is refused (D8's direction).
+fragment: {"unit":"IR.8192","core_percent":1,"bar":"p99","quantum":64,"deadline_us":1333.333,"curve":[{"n":55,"p50":306.621,"p99":1343.155,"p999":1347.017,"max":1490.224,"p99_fraction":1.007,"overruns":10775,"behind":1,"pass":false,"strict":false}]}

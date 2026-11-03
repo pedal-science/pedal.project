@@ -1414,6 +1414,44 @@ x86 kernels. **zap** is a Raspberry Pi Zero 2 W, on order; its bench is built an
 ([docs/zap.md](docs/zap.md)), and nothing has run on one yet. Colima's VM was recreated today, so its
 image cache is new.
 
+**pro's cost table now says what a unit costs when the pedal is rendering on every core, and the
+cache story is settled** (2026-11-03):
+[bench-results/2026-11-03-coexistence-pro/README.md](bench-results/2026-11-03-coexistence-pro/README.md),
+with the new `scripts/measure-coexistence` and `scripts/src/coexistence-read.py`. 23 arms, 136 points,
+3h 51m on pro under the lock; the host was left clean and nothing is pushed.
+
+- **The planar kernels are four times as sensitive to a busy neighbour as the Eigen build was.** With
+  n held at 25 Full models, five busy cores cost **+86%** on the p50, against 2026-10-31's +21% on
+  `-march=native`. That run guessed the wider kernels "might suffer more"; they suffer far more.
+- **It is the shared L3, not the clock, and this is now shown rather than hypothesised** — the thing
+  pro was bought on. The clock falls 9.3% (3.366 → 3.052 GHz) while IPC falls 41% (1.93 → 1.14) and
+  the L3 miss rate goes 26% → 73%. Pinning every core to 3.0 GHz leaves **+68.4%** of the 86%, which
+  is what the IPC drop alone implies. 10-31's "It is not shown to be the L3" is answered.
+- **What fits with the other four cores busy:** 14 Full models a core, not 25; 41 lite, not 94; 51
+  IR.8192, not 55. So the machine holds about **70 Full models**, not 150. pro's table carries a
+  `coexistence` block for the first time, `{"1": 1.24, "2": 1.71}` — the worst row's factor at each
+  key, because the factor multiplies a whole rig.
+- **The penalty is strongly unit-dependent**, which no earlier run saw: lite is worst (+150%, IPC
+  down to 0.52) because a quiet 9 MiB L3 holds its small working set and five busy cores take that
+  away; `IR.8192` barely cares and its p50 actually *fell* 8.8%, a partitioned FFT having little
+  residency to lose.
+- **The 11-02 table's own rows were independently re-measured** at three times the point length and
+  **confirmed**: Full 25, IR.8192 55. `lite` is one copy optimistic — 94 fits, not 95, and at 120 s
+  n=95 misses. Left for the next `measure-core` rather than patched in from another harness; with
+  headroom 0.8 admission seats 76, so it does not bite.
+- Two pro-specific measurement traps are now documented in the harness: **`nproc` returns 1** in an
+  ssh session (`user.slice` is narrowed to the housekeeping core), and **`scaling_cur_freq` reads the
+  800 MHz floor on an isolated core** however busy it is, because it cannot IPI a `nohz_full` core.
+  Every clock figure above is aperf/mperf × TSC through `perf stat -A`.
+
+**What this does not mean.** The factors are an **upper bound**: a neighbour here is a saturated
+core, where vip's T5 neighbour was one real warm document, so pro's 1.24 and vip's 1.25 agree by
+coincidence and pro's charge is the conservative one. The block is also **inert on pro today** — the
+engine charges 1.0 for zero warm documents and nothing warms one without pedald — though it was
+verified live by warming a document from a file (0.07382 → 0.0915368, exactly ×1.24). vip has still
+never been measured this way, so "vip struggled with parallel instances" remains an observation
+rather than a number, and there is still no signal through pro's interface.
+
 **The build is going back to the 1590DD, for now** (2026-11-02, the owner's decision). The big case
 (Hammond 1456RH3, D14) is paused, not withdrawn, while the owner tries to get the pedal working in
 the 188 × 119 × 37.5 mm box. The Pi, codec, output board, jacks, USB-C extension and footswitches
@@ -1460,7 +1498,8 @@ measured all 14 rows of
   13-21% five-core penalty from 2026-10-31 has not been re-measured with the planar kernels — which
   move more data per instruction, so by that run's own reasoning they may suffer more — and pro's
   table has no `coexistence` block where vip's does. Admission here is no longer a guess, but it is a
-  one-core guess about a six-core machine.
+  one-core guess about a six-core machine. **(Measured the next day — the entry above. They suffer
+  far more: +86%, not 21%.)**
 - **P9 again, on pro:** the level meter costs about 0.45 us per node per block, +53% on a biquad's p99
   at 128 nodes (on vip it roughly doubled). Both arms exhaust the `--max 128` ladder, so the row stays
   at the 0.00781 floor and the engine's charge still does not reflect the meter. Eight of pro's 14

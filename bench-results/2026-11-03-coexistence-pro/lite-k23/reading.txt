@@ -1,0 +1,15 @@
+== the arms (build/pro/coexistence/lite-k23)
+arm              k    n    p50 us    p99 us  p99 %dl  over  per copy  verdict
+lite-fit-k2      2   76     846.7    1304.7     97.9   472      11.1  fits
+lite-fit-k3      3   55     830.7    1331.5     99.9   661      15.1  fits
+
+== the same work, k cores busy (fixed arms, against that unit's k=1)
+arm              k    p50 us   vs k=1    p99 us   vs k=1  clock GHz   IPC  L3 miss %  miss/kinsn
+
+== every core over each fixed arm's window (busy from /proc/stat, clock from aperf/mperf)
+
+== the factor a coexistence block would carry (bisect arms)
+  lite-fit: k=2 n=76, k=3 n=55
+    no k=1 arm, so no factor can be read off this unit here
+   * at_most: the bisection hit its --max without a miss, so n is a floor and the
+     factor read against it is a lower bound on the real one.

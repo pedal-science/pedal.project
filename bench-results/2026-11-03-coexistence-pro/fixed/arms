@@ -1,0 +1,13 @@
+# The same work, one to five cores loaded. n is the table's own fitted n for each row, so every arm
+# of a unit is the identical job and the p50s compare directly. full-n25-k1 is measured first and
+# again last, so drift across the session is visible rather than assumed away.
+fixed  | full-n25-k1   | 1 | 25 | 25 | 25 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0
+fixed  | full-n25-k2   | 2 | 25 | 25 | 25 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0
+fixed  | full-n25-k3   | 3 | 25 | 25 | 25 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0
+fixed  | full-n25-k4   | 4 | 25 | 25 | 25 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0
+fixed  | full-n25-k5   | 5 | 25 | 25 | 25 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0
+fixed  | lite-n95-k1   | 1 | 95 | 95 | 95 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 0.0
+fixed  | lite-n95-k5   | 5 | 95 | 95 | 95 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 0.0
+fixed  | ir8192-n55-k1 | 1 | 55 | 55 | 55 | --unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 8192
+fixed  | ir8192-n55-k5 | 5 | 55 | 55 | 55 | --unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav" --taps 8192
+fixed  | full-n25-k1b  | 1 | 25 | 25 | 25 | --unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam" --slim 1.0

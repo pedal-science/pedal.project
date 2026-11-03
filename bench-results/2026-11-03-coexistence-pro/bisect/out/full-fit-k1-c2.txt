@@ -1,0 +1,20 @@
+namchain-warm-bench 0.1.0  measure
+unit:       NAM.WaveNet.full -- Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160, full, no cab
+bar:        p99 under the deadline, overruns recorded (see the note in this mode's comment); quantum 64, deadline 1333 us, 90 s a point, cpu 2
+
+       n      p50 us      p99 us    p99.9 us      max us   p99 %dl  max %dl  overruns  behind  verdict
+scheduling: SCHED_FIFO priority 80, cpu 2
+      8       345.1      391.9      413.1     1370.1      29.4    102.8        1       1  fits*
+     16       647.1      761.5      808.7     1014.3      57.1     76.1        0       0  fits
+     32      1386.7     1723.2     1818.3     2050.1     129.2    153.8    67500    4295  MISSES
+     24      1010.5     1257.5     1326.4     1537.5      94.3    115.3       33       1  fits*
+     28      1182.1     1466.1     1548.1     1723.0     110.0    129.2     3671       3  MISSES
+     26      1085.6     1360.5     1433.4     1602.5     102.0    120.2     1416       1  MISSES
+     25      1047.6     1311.6     1401.2     1516.1      98.4    113.7      428       1  fits*
+     27      1130.3     1405.9     1482.4     1658.6     105.4    124.4     3595       2  MISSES
+     23       967.5     1194.8     1261.9     1536.9      89.6    115.3        8       1  fits*
+     29      1235.9     1532.4     1617.4     1847.4     114.9    138.6     7479      13  MISSES
+
+n = 25: 25 copies of this unit keep their p99 under the deadline on cpu 2. One unit costs 1/n = 0.04 of a core.
+    D7's stricter bar (zero overruns too) would say n = 16: 1/n = 0.0625. The overrun count at the edge is not monotone in n; see the note at the top.
+fragment: {"unit":"NAM.WaveNet.full","core_percent":0.04,"bar":"p99","quantum":64,"deadline_us":1333.333,"sources":{"n":25,"p99_at_n":0.984,"overruns_at_n":428,"p99_at_n_plus_1":1.020,"overruns_at_n_plus_1":1416,"p99_at_n_plus_2":1.054,"blocks_behind_at_n_plus_1":1,"at_most":false},"curve":[{"n":8,"p50":345.144,"p99":391.926,"p999":413.121,"max":1370.089,"p99_fraction":0.294,"overruns":1,"behind":1,"pass":true,"strict":false},{"n":16,"p50":647.053,"p99":761.477,"p999":808.719,"max":1014.300,"p99_fraction":0.571,"overruns":0,"behind":0,"pass":true,"strict":true},{"n":23,"p50":967.535,"p99":1194.805,"p999":1261.887,"max":1536.937,"p99_fraction":0.896,"overruns":8,"behind":1,"pass":true,"strict":false},{"n":24,"p50":1010.464,"p99":1257.489,"p999":1326.374,"max":1537.460,"p99_fraction":0.943,"overruns":33,"behind":1,"pass":true,"strict":false},{"n":25,"p50":1047.572,"p99":1311.569,"p999":1401.248,"max":1516.085,"p99_fraction":0.984,"overruns":428,"behind":1,"pass":true,"strict":false},{"n":26,"p50":1085.590,"p99":1360.453,"p999":1433.434,"max":1602.451,"p99_fraction":1.020,"overruns":1416,"behind":1,"pass":false,"strict":false},{"n":27,"p50":1130.268,"p99":1405.903,"p999":1482.417,"max":1658.647,"p99_fraction":1.054,"overruns":3595,"behind":2,"pass":false,"strict":false},{"n":28,"p50":1182.140,"p99":1466.114,"p999":1548.103,"max":1722.956,"p99_fraction":1.100,"overruns":3671,"behind":3,"pass":false,"strict":false},{"n":29,"p50":1235.884,"p99":1532.395,"p999":1617.366,"max":1847.396,"p99_fraction":1.149,"overruns":7479,"behind":13,"pass":false,"strict":false},{"n":32,"p50":1386.679,"p99":1723.162,"p999":1818.313,"max":2050.106,"p99_fraction":1.292,"overruns":67500,"behind":4295,"pass":false,"strict":false}]}

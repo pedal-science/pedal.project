@@ -24,6 +24,14 @@
       "nc.split": 0.00781
     }
   },
+  "coexistence": {
+    "factors": {
+      "1": 1.24,
+      "2": 1.71
+    },
+    "measured": "2026-11-03",
+    "note": "scripts/measure-coexistence, 9 bisection arms plus 12 fixed-n arms at 90-120 s a point: the fitted n for a unit on cpu 2 while k-1 of the other render cores each carry a full core's worth of the same unit at this table's own n. NAM.WaveNet.full fits 25 alone, then 22, 19, 16 and 14 with one to four neighbours; NAM.WaveNet.lite fits 94 alone, then 76, 55 and 41 with one, two and four; IR.8192 fits 55 alone and 51 with four. The factor is n(alone)/n(k), and each key carries the WORST row's, because this multiplies a whole rig: 94/76 = 1.237 for one neighbour and 94/55 = 1.709 for two, both the lite row, rounded up. IR.8192's is 1.078 at four neighbours and a factor cannot fall as cores are added, so IR can never be the binding row and was not re-run at k=2 or k=3. READ THIS AS AN UPPER BOUND, and not as the same quantity vip's block holds: a neighbour here is a saturated core, where vip's T5 neighbour was one real warm document, so these factors charge more than a light warm document costs and will refuse some warms pro could afford. The refinement is vip's T5 on pro, which needs pedald. Nothing is charged today in any case -- the engine returns 1.0 for zero warm documents, and with no pedald nothing warms one on pro. Why the figures are this big: with n held at 25, five busy cores cost +86% on the Full row's p50, four times 2026-10-31's +21% on the Eigen build, and it is the shared L3 rather than the clock -- the clock falls 9.3% (3.366 -> 3.052 GHz) while IPC falls 41% and the L3 miss rate goes 26% -> 73%; pinning every core to 3.0 GHz leaves +68.4%, against the +69% the IPC drop alone implies. See bench-results/2026-11-03-coexistence-pro/README.md"
+  },
   "deadline_us": 1333.3333333333333,
   "engine_commit": "ae6f853",
   "headroom": 0.8,

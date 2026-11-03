@@ -1,0 +1,30 @@
+== the arms (build/pro/coexistence/pinned)
+arm              k    n    p50 us    p99 us  p99 %dl  over  per copy  verdict
+pinned-full-n25-k1 1   25    1144.7    1403.6    105.3  4852      45.8  MISSES
+pinned-full-n25-k5 5   25    1927.6    2534.5    190.1 90000      77.1  MISSES
+
+== the same work, k cores busy (fixed arms, against that unit's k=1)
+arm              k    p50 us   vs k=1    p99 us   vs k=1  clock GHz   IPC  L3 miss %  miss/kinsn
+pinned-full-n25-k1 1    1144.7    +0.0%    1403.6    +0.0%      3.011  1.96      26.23      10.306
+pinned-full-n25-k5 5    1927.6   +68.4%    2534.5   +80.6%      3.011  1.17      72.41      26.380
+
+== every core over each fixed arm's window (busy from /proc/stat, clock from aperf/mperf)
+  pinned-full-n25-k1 (k=1, neighbours at n=25, window 65s)
+    cpu0   busy   1.6%  clock  3.011 GHz  IPC  0.50  L3 miss   9.61%
+    cpu1   busy   0.0%  clock  3.068 GHz  IPC  0.48  L3 miss  26.41%
+    cpu2   busy  87.7%  clock  3.011 GHz  IPC  1.96  L3 miss  26.23%
+    cpu3   busy   0.0%  clock  3.074 GHz  IPC  0.49  L3 miss  17.29%
+    cpu4   busy   0.0%  clock  3.069 GHz  IPC  0.48  L3 miss  18.10%
+    cpu5   busy   0.0%  clock  3.063 GHz  IPC  0.47  L3 miss  17.27%
+  pinned-full-n25-k5 (k=5, neighbours at n=25, window 65s)
+    cpu0   busy   1.3%  clock  3.011 GHz  IPC  0.30  L3 miss  12.33%
+    cpu1   busy 100.0%  clock  3.011 GHz  IPC  1.16  L3 miss  72.82%
+    cpu2   busy  99.8%  clock  3.011 GHz  IPC  1.17  L3 miss  72.41%
+    cpu3   busy 100.0%  clock  3.011 GHz  IPC  1.16  L3 miss  72.17%
+    cpu4   busy 100.0%  clock  3.011 GHz  IPC  1.15  L3 miss  72.34%
+    cpu5   busy 100.0%  clock  3.011 GHz  IPC  1.15  L3 miss  71.87%
+
+== the factor a coexistence block would carry (bisect arms)
+   (no bisect arm produced a fitted n)
+   * at_most: the bisection hit its --max without a miss, so n is a floor and the
+     factor read against it is a lower bound on the real one.
