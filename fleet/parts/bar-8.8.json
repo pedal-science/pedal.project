@@ -1,0 +1,8 @@
+{
+  "id": "bar-8.8",
+  "name": "Prechen 8.8″ 1920×480 touch bar",
+  "kind": "screen",
+  "needs": [
+    "video-out"
+  ]
+}

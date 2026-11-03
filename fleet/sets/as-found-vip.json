@@ -1,0 +1,11 @@
+{
+  "id": "as-found-vip",
+  "date": "2026-11-03",
+  "note": "What vip was recorded as running when sets began. Nobody chose this combination: it is the starting point, not a release.",
+  "components": {
+    "namchain": "eba5eef",
+    "rigpa": "179e202",
+    "devices": "6a77997",
+    "kernel": "7.0.0-1017-raspi-realtime-numaemu3-dmaidle1-trimmed"
+  }
+}

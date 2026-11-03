@@ -1,0 +1,8 @@
+{
+  "id": "wm8960",
+  "name": "SparkFun WM8960 breakout, stock",
+  "kind": "audio",
+  "needs": [
+    "i2s"
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "id": "vip",
+  "name": "Raspberry Pi 5, 1 GB",
+  "kind": "core",
+  "arch": "aarch64",
+  "cpu": "BCM2712, 4 × Cortex-A76 at 2.4 GHz, 2 MB L3",
+  "ram_mb": 1024,
+  "status": "in-use",
+  "provides": [
+    "i2s",
+    "uart",
+    "video-out",
+    "usb"
+  ],
+  "footprint_mm": [
+    85,
+    56,
+    20
+  ],
+  "devices": "devices/vip",
+  "cost_table": "devices/vip/rootfs/etc/namchain/cost.json",
+  "kernel_route": "rtpi's rebuild, in slots",
+  "install_route": "card image, built by make-card on the Mac"
+}

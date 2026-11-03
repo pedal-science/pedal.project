@@ -1,0 +1,62 @@
+{
+  "id": "box",
+  "purpose": "The compact pedal, and probably the first to be really usable.",
+  "core": "vip",
+  "picture": "1_hero.png",
+  "slots": {
+    "case": {
+      "part": "1590dd",
+      "state": "fitted"
+    },
+    "audio": {
+      "part": "wm8960",
+      "state": "fitted",
+      "note": "External buffer for now; one output"
+    },
+    "screen": {
+      "part": "waveshare-4.3",
+      "state": "ordered",
+      "note": "Size still being tried"
+    },
+    "controls": {
+      "part": "pico-3fs",
+      "state": "in-hand",
+      "note": "Firmware not flashed"
+    },
+    "power": {
+      "part": "usb-c-45w",
+      "state": "fitted"
+    },
+    "ui": {
+      "part": "rigpa-compact",
+      "state": "planned"
+    }
+  },
+  "set": "as-found-vip",
+  "next": [
+    {
+      "title": "It plays, heavy rigs, no glitches",
+      "state": "done"
+    },
+    {
+      "title": "Footswitches flashed and working",
+      "state": "now"
+    },
+    {
+      "title": "Case closed, cooling proved",
+      "state": "next"
+    },
+    {
+      "title": "A screen chosen",
+      "state": "next"
+    },
+    {
+      "title": "rigpa compact",
+      "state": "next"
+    },
+    {
+      "title": "The input board made small",
+      "state": "next"
+    }
+  ]
+}

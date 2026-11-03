@@ -1,0 +1,62 @@
+{
+  "id": "console",
+  "purpose": "The full pedal: a lot of NAM and a big touchscreen.",
+  "core": "pro",
+  "picture": "console_1_hero.png",
+  "slots": {
+    "case": {
+      "part": "hammond-1456rh3",
+      "state": "in-hand",
+      "note": "Paused, undrilled"
+    },
+    "audio": {
+      "part": "umc202hd",
+      "state": "fitted"
+    },
+    "screen": {
+      "part": "bar-8.8",
+      "state": "planned",
+      "note": "Not arrived when last recorded"
+    },
+    "controls": {
+      "part": "pico-6fs",
+      "state": "planned"
+    },
+    "power": {
+      "part": "mains-pc",
+      "state": "fitted"
+    },
+    "ui": {
+      "part": "rigpa-wide",
+      "state": "planned",
+      "note": "Runs on vip; not yet on x86-64"
+    }
+  },
+  "set": "as-found-pro",
+  "next": [
+    {
+      "title": "Engine and cost table on pro",
+      "state": "done"
+    },
+    {
+      "title": "Two-hour soak",
+      "state": "done"
+    },
+    {
+      "title": "Signal through the interface",
+      "state": "now"
+    },
+    {
+      "title": "A live-rig hour",
+      "state": "next"
+    },
+    {
+      "title": "Case laid out and drilled",
+      "state": "next"
+    },
+    {
+      "title": "rigpa on x86-64",
+      "state": "next"
+    }
+  ]
+}

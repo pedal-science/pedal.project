@@ -1,0 +1,24 @@
+{
+  "id": "zap",
+  "name": "Raspberry Pi Zero 2 W",
+  "kind": "core",
+  "arch": "aarch64",
+  "cpu": "RP3A0, 4 × Cortex-A53 at 1 GHz",
+  "ram_mb": 512,
+  "status": "on-order",
+  "provides": [
+    "i2s",
+    "uart",
+    "video-out",
+    "usb"
+  ],
+  "footprint_mm": [
+    65,
+    30,
+    12
+  ],
+  "devices": "devices/zap",
+  "kernel_route": "undecided: an RT kernel for this SoC is open work in rtpi",
+  "install_route": "undecided: make-card is written for the Pi 5",
+  "note": "Ubuntu 26.04 arm64 decided. Its bench is built (docs/zap.md); nothing has run on one."
+}

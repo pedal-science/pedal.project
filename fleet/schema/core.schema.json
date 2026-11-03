@@ -1,0 +1,73 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "kind",
+    "arch",
+    "cpu",
+    "ram_mb",
+    "status",
+    "provides",
+    "footprint_mm"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "core"
+      ]
+    },
+    "arch": {
+      "enum": [
+        "aarch64",
+        "x86_64"
+      ]
+    },
+    "cpu": {
+      "type": "string"
+    },
+    "ram_mb": {
+      "type": "integer"
+    },
+    "status": {
+      "enum": [
+        "in-use",
+        "on-order"
+      ]
+    },
+    "provides": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "footprint_mm": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "devices": {
+      "type": "string"
+    },
+    "cost_table": {
+      "type": "string"
+    },
+    "kernel_route": {
+      "type": "string"
+    },
+    "install_route": {
+      "type": "string"
+    },
+    "note": {
+      "type": "string"
+    }
+  }
+}

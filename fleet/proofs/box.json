@@ -1,0 +1,19 @@
+{
+  "id": "box",
+  "proofs": [
+    {
+      "rung": "hour",
+      "date": "2026-10-09",
+      "result": "pass",
+      "evidence": "bench-results/2026-10-09-core-rules-vip/README.md",
+      "note": "vip's T10: an hour of playing and switching rigs on the pedal, zero xruns."
+    },
+    {
+      "rung": "played",
+      "date": "2026-10-13",
+      "result": "pass",
+      "evidence": "plan.md",
+      "note": "The owner's two-rig playtest, on the breadboards: heavy rigs, edited live, no glitches."
+    }
+  ]
+}

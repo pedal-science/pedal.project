@@ -1,0 +1,5 @@
+{
+  "id": "mains-pc",
+  "name": "The mini PC's own mains supply",
+  "kind": "power"
+}

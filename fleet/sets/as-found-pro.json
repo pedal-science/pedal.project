@@ -1,0 +1,10 @@
+{
+  "id": "as-found-pro",
+  "date": "2026-11-03",
+  "note": "What pro was recorded as running when sets began. Nobody chose this combination: it is the starting point, not a release.",
+  "components": {
+    "namchain": "ae6f853",
+    "devices": "3857d3e",
+    "kernel": "7.0.0-38-realtime"
+  }
+}

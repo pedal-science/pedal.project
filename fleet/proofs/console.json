@@ -1,0 +1,12 @@
+{
+  "id": "console",
+  "proofs": [
+    {
+      "rung": "hour",
+      "date": "2026-11-02",
+      "result": "partial",
+      "evidence": "bench-results/2026-11-01-soak-pro-rt/README.md",
+      "note": "Two one-hour soaks: 0 overruns, 0 xruns. The bench's own rig, not a live rig through namchaind, and no signal through the interface."
+    }
+  ]
+}

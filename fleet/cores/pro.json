@@ -1,0 +1,23 @@
+{
+  "id": "pro",
+  "name": "HP ProDesk 600 G5 Mini",
+  "kind": "core",
+  "arch": "x86_64",
+  "cpu": "i5-9500T, 6 cores, 9 MB L3",
+  "ram_mb": 16384,
+  "status": "in-use",
+  "provides": [
+    "video-out",
+    "usb"
+  ],
+  "footprint_mm": [
+    177,
+    175,
+    34
+  ],
+  "devices": "devices/pro",
+  "cost_table": "devices/pro/rootfs/etc/namchain/cost.json",
+  "kernel_route": "Ubuntu's signed RT, by GRUB one-shot",
+  "install_route": "Ubuntu installer by hand, then devices/pro/apply; builds on itself today",
+  "note": "No I2S or header UART, so no WM8960; how the Pico reaches it is undecided."
+}

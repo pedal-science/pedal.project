@@ -1,0 +1,9 @@
+{
+  "id": "pico-3fs",
+  "name": "Pico with three footswitches",
+  "kind": "controls",
+  "needs": [
+    "uart"
+  ],
+  "note": "Board designed (docs/build-footswitches.md); firmware written, not flashed."
+}

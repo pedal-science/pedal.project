@@ -1,0 +1,9 @@
+{
+  "id": "waveshare-4.3",
+  "name": "Waveshare 4.3″ screen",
+  "kind": "screen",
+  "needs": [
+    "video-out"
+  ],
+  "note": "Ordered instead of the 3.5″, which was out of stock. It may not fit."
+}

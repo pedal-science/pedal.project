@@ -1,0 +1,213 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "purpose",
+    "core",
+    "slots",
+    "set",
+    "next"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "purpose": {
+      "type": "string"
+    },
+    "core": {
+      "type": "string"
+    },
+    "picture": {
+      "type": "string"
+    },
+    "slots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case",
+        "audio",
+        "screen",
+        "controls",
+        "power",
+        "ui"
+      ],
+      "properties": {
+        "case": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state"
+          ],
+          "properties": {
+            "part": {
+              "type": "string"
+            },
+            "state": {
+              "enum": [
+                "fitted",
+                "in-hand",
+                "ordered",
+                "planned",
+                "undecided"
+              ]
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "audio": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state"
+          ],
+          "properties": {
+            "part": {
+              "type": "string"
+            },
+            "state": {
+              "enum": [
+                "fitted",
+                "in-hand",
+                "ordered",
+                "planned",
+                "undecided"
+              ]
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "screen": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state"
+          ],
+          "properties": {
+            "part": {
+              "type": "string"
+            },
+            "state": {
+              "enum": [
+                "fitted",
+                "in-hand",
+                "ordered",
+                "planned",
+                "undecided"
+              ]
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "controls": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state"
+          ],
+          "properties": {
+            "part": {
+              "type": "string"
+            },
+            "state": {
+              "enum": [
+                "fitted",
+                "in-hand",
+                "ordered",
+                "planned",
+                "undecided"
+              ]
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "power": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state"
+          ],
+          "properties": {
+            "part": {
+              "type": "string"
+            },
+            "state": {
+              "enum": [
+                "fitted",
+                "in-hand",
+                "ordered",
+                "planned",
+                "undecided"
+              ]
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "ui": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state"
+          ],
+          "properties": {
+            "part": {
+              "type": "string"
+            },
+            "state": {
+              "enum": [
+                "fitted",
+                "in-hand",
+                "ordered",
+                "planned",
+                "undecided"
+              ]
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "set": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "next": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "title",
+          "state"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "done",
+              "now",
+              "next"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

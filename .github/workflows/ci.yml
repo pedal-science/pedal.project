@@ -11,3 +11,12 @@ permissions:
 jobs:
   public-check:
     uses: ./.github/workflows/public-check.yml
+
+  fleet:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: The fleet's files, and each build with its own Core
+        run: scripts/fleet check
+      - name: The tools' own tests
+        run: python3 -m unittest discover -s scripts/tests -t scripts/tests -p 'test_[fp]*.py'

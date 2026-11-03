@@ -1,0 +1,11 @@
+{
+  "id": "hammond-1456rh3",
+  "name": "Hammond 1456RH3 sloped console",
+  "kind": "case",
+  "inner_mm": [
+    430,
+    214,
+    75
+  ],
+  "note": "Paused for now, not withdrawn. Inner size approximate."
+}

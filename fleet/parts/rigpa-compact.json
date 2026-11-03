@@ -1,0 +1,10 @@
+{
+  "id": "rigpa-compact",
+  "name": "rigpa, compact views",
+  "kind": "ui",
+  "needs": [
+    "video-out"
+  ],
+  "needs_ram_mb": 1024,
+  "note": "Not written yet."
+}

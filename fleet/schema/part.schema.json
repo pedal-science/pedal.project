@@ -1,0 +1,45 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "name",
+    "kind"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "case",
+        "audio",
+        "screen",
+        "controls",
+        "power",
+        "ui"
+      ]
+    },
+    "needs": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "needs_ram_mb": {
+      "type": "integer"
+    },
+    "inner_mm": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "note": {
+      "type": "string"
+    }
+  }
+}

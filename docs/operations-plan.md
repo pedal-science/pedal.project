@@ -1,6 +1,6 @@
 # Running the pedal as a fleet: the operations plan
 
-**Status: agreed with the owner on 2026-11-03. Phase 0 is done; Phase 1 is next, after the owner's review.** The owner's answers are in
+**Status: agreed with the owner on 2026-11-03. Phase 0 is done; Phase 1 is built and waits for the owner's review.** The owner's answers are in
 "Decisions", near the end. `plan.md` stays the record of where the pedal is; this page says how the
 work gets organised.
 
@@ -378,12 +378,16 @@ which goes to the store in Phase 2.
 
 ### Phase 1: name everything, and see it (M)
 
-- `fleet/` with its schema and today's truth in it: three builds, four Cores, their parts, and the set
+- `fleet/` with its schema and today's truth in it: three builds, three Cores, their parts, and the set
   each is really running.
 - `scripts/fleet status --json`, reading every Core, CI, locks and drift.
 - **A private dashboard, served locally,** so we see the shape early and argue with it.
 
 **Done when:** one page shows all of it, including its uncomfortable parts.
+
+**Built 2026-11-03:** `scripts/fleet check`, `status` and `serve`, with the page in
+`fleet/dashboard/index.html`. Its probes only read. Still to come: vip's and zap's real sets, since vip
+was out of reach when this was built, so `box` shows vip's lock file and says so.
 
 ### Phase 2: inputs and builders (M)
 

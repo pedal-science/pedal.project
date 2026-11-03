@@ -1,0 +1,8 @@
+{
+  "id": "umc202hd",
+  "name": "Behringer UMC202HD",
+  "kind": "audio",
+  "needs": [
+    "usb"
+  ]
+}

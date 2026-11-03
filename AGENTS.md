@@ -96,6 +96,11 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
 - `scripts/status [--host vip] [--no-fetch]`: every repo on the Mac and piv, the Core
   host's lock, `namchaind`'s status, and whether `devices/<host>/components.lock`, the engine and
   `devices/` are current. Start every session with it.
+- `scripts/fleet check [BUILD] [--core CORE]`, `status [--json] [--no-hosts]`, `serve [--port 8765]`:
+  the fleet in `fleet/` (Cores, parts, builds, sets, proofs, docs/operations-plan.md). `check` validates
+  the files and judges a combination by its parts, so `box --core pro` is refused with reasons. `status`
+  reads every Core, CI and the lab, and changes nothing. `serve` is the private dashboard, on this machine
+  only.
 - `scripts/host-lock [--host vip] [--wait <s>] -- <command>`: run a command while
   holding the Core host's lock; `--who` says who holds it. Every soak, benchmark and
   deploy goes through it.
@@ -194,6 +199,7 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
 - `workspace.repos`, `scripts/workspace`, `workspace-root/`, `tools/git-hooks/` — the workspace:
   what it holds, the files at its root, and the guard that stops a checkout being embedded in a
   repository. [docs/workspace.md](docs/workspace.md) is the design.
+- `fleet/` — the fleet as data, with its schemas and the dashboard page; `scripts/fleet` reads it.
 - `firmware/` — the Pico firmware; [docs/uart-protocol.md](docs/uart-protocol.md) is the
   Pico ↔ Core host contract.
 - `docs/`: `workspace.md` (the workspace and its guard), `working-across-repos.md` (repos, machines, rules), `hardware-handoff.md`

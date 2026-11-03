@@ -1,0 +1,10 @@
+{
+  "id": "rigpa-wide",
+  "name": "rigpa, 1920×480 touch",
+  "kind": "ui",
+  "needs": [
+    "video-out"
+  ],
+  "needs_ram_mb": 1024,
+  "note": "Soaked on 1 GB; untested on less."
+}

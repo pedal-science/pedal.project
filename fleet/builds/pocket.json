@@ -1,0 +1,58 @@
+{
+  "id": "pocket",
+  "purpose": "One amp in a stompbox, on a battery, for a long gig.",
+  "core": "zap",
+  "slots": {
+    "case": {
+      "state": "undecided"
+    },
+    "audio": {
+      "part": "wm8960",
+      "state": "undecided",
+      "note": "Likely"
+    },
+    "screen": {
+      "state": "undecided",
+      "note": "None, or almost none"
+    },
+    "controls": {
+      "state": "undecided",
+      "note": "Possibly straight on the Zero's GPIO"
+    },
+    "power": {
+      "state": "undecided",
+      "note": "Its own lithium battery"
+    },
+    "ui": {
+      "state": "undecided",
+      "note": "The phone, mostly"
+    }
+  },
+  "set": null,
+  "next": [
+    {
+      "title": "Bench built, ready for the board",
+      "state": "done"
+    },
+    {
+      "title": "First numbers on a real Zero 2 W",
+      "state": "now"
+    },
+    {
+      "title": "Decide what it is",
+      "state": "next"
+    },
+    {
+      "title": "An RT kernel",
+      "state": "next"
+    },
+    {
+      "title": "Battery noise and runtime measured",
+      "state": "next"
+    },
+    {
+      "title": "A phone UI and pairing",
+      "state": "next"
+    }
+  ]
+}

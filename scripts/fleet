@@ -1,0 +1,463 @@
+#!/usr/bin/env python3
+"""scripts/fleet: what the pedals are, what they are running, and how much of it has been proved.
+
+    scripts/fleet check [BUILD] [--core CORE]   validate fleet/, and say whether a combination is legal
+    scripts/fleet status [--json] [--no-hosts]  every build, Core, machine and repository, in one view
+    scripts/fleet serve [--port 8765]           the same as a private page, on this machine only
+
+fleet/ describes what things are (docs/operations-plan.md). `devices/<host>/` stays the home of device
+state, and components.lock of what a Core runs; fleet files point at them rather than copying them.
+
+Reading a Core is read-only and takes no lock: one ssh call, which starts and stops nothing. An
+unreachable Core is a fact to show, not an error. Nothing here writes to any machine.
+"""
+
+import argparse
+import concurrent.futures
+import datetime
+import http.server
+import json
+import os
+import pathlib
+import re
+import subprocess
+import sys
+import threading
+import time
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+FLEET = ROOT / "fleet"
+WORKSPACE = ROOT.parent
+SSH = ("ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=4")
+SUPPORT = ("piv", "mp")
+REPOS = ("pedal.project", "namchain", "NAMBench", "ljoss", "rtpi", "rigpa", "comms")
+SLOTS = ("case", "audio", "screen", "controls", "power", "ui")
+
+# The proof ladder (docs/operations-plan.md): a rung's age limit in days. It is amber past that, and
+# grey past twice that. `played` never expires, and shows its age instead.
+RUNGS = (
+    ("code", "Code", 7),
+    ("artefacts", "Artefacts", 14),
+    ("together", "Together", 14),
+    ("install", "Install", 45),
+    ("device", "Device", 120),
+    ("hour", "Hour", 90),
+    ("played", "Played", None),
+)
+
+
+# ---------------------------------------------------------------- fleet/ and its schema
+def validate(value, schema, where="file"):
+    """The part of JSON Schema these files use. Returns a list of problems."""
+    errors = []
+    if "enum" in schema and value not in schema["enum"]:
+        errors.append(f"{where}: {value!r} is not one of {schema['enum']}")
+    kinds = schema.get("type")
+    if kinds is not None:
+        types = {"object": dict, "array": list, "string": str, "integer": int, "number": (int, float),
+                 "null": type(None)}
+        allowed = kinds if isinstance(kinds, list) else [kinds]
+        if not any(isinstance(value, types[k]) and not isinstance(value, bool) for k in allowed):
+            return errors + [f"{where}: expected {'/'.join(allowed)}"]
+    if isinstance(value, str) and "pattern" in schema and not re.fullmatch(schema["pattern"], value):
+        errors.append(f"{where}: {value!r} does not match {schema['pattern']}")
+    if isinstance(value, dict):
+        for key in schema.get("required", ()):
+            if key not in value:
+                errors.append(f"{where}: {key} is required")
+        props = schema.get("properties", {})
+        extra = schema.get("additionalProperties", True)
+        for key, item in value.items():
+            if key in props:
+                errors += validate(item, props[key], f"{where}.{key}")
+            elif extra is False:
+                errors.append(f"{where}: {key} is not an allowed field")
+            elif isinstance(extra, dict):
+                errors += validate(item, extra, f"{where}.{key}")
+    if isinstance(value, list) and "items" in schema:
+        for i, item in enumerate(value):
+            errors += validate(item, schema["items"], f"{where}[{i}]")
+    return errors
+
+
+def load_dir(name, schema_name, errors):
+    schema = json.loads((FLEET / "schema" / f"{schema_name}.schema.json").read_text())
+    found = {}
+    for path in sorted((FLEET / name).glob("*.json")):
+        data = json.loads(path.read_text())
+        where = f"fleet/{name}/{path.name}"
+        errors += validate(data, schema, where)
+        if data.get("id") != path.stem:
+            errors.append(f"{where}: its id is {data.get('id')!r}")
+        found[path.stem] = data
+    return found
+
+
+def load():
+    errors = []
+    fleet = {
+        "cores": load_dir("cores", "core", errors),
+        "parts": load_dir("parts", "part", errors),
+        "builds": load_dir("builds", "build", errors),
+        "sets": load_dir("sets", "set", errors),
+        "proofs": load_dir("proofs", "proofs", errors),
+    }
+    for build in fleet["builds"].values():
+        where = f"fleet/builds/{build['id']}.json"
+        if build["core"] not in fleet["cores"]:
+            errors.append(f"{where}: no Core {build['core']}")
+        if build["set"] is not None and build["set"] not in fleet["sets"]:
+            errors.append(f"{where}: no set {build['set']}")
+        for slot, content in build["slots"].items():
+            part = content.get("part")
+            if part is None:
+                continue
+            if part not in fleet["parts"]:
+                errors.append(f"{where}: no part {part}")
+            elif fleet["parts"][part]["kind"] != slot:
+                errors.append(f"{where}: {part} is a {fleet['parts'][part]['kind']}, in the {slot} slot")
+    return fleet, errors
+
+
+def combination_problems(fleet, build, core_id):
+    """Why this Core cannot go in this build: the parts' needs against what it provides, and its size."""
+    core = fleet["cores"][core_id]
+    problems = []
+    for slot, content in build["slots"].items():
+        part = fleet["parts"].get(content.get("part"))
+        if part is None:
+            continue
+        for need in part.get("needs", ()):
+            if need not in core["provides"]:
+                problems.append(f"{part['name']} needs {need}, which {core_id} does not have")
+        if part.get("needs_ram_mb", 0) > core["ram_mb"]:
+            problems.append(f"{part['name']} needs {part['needs_ram_mb']} MB, and {core_id} has {core['ram_mb']} MB")
+        if "inner_mm" in part and any(
+            c > i for c, i in zip(sorted(core["footprint_mm"]), sorted(part["inner_mm"]))
+        ):
+            problems.append(f"{core_id} ({'×'.join(map(str, core['footprint_mm']))} mm) does not fit in "
+                            f"{part['name']} ({'×'.join(map(str, part['inner_mm']))} mm)")
+    return problems
+
+
+# ---------------------------------------------------------------- what is true now
+def run(*cmd, timeout=15, cwd=None):
+    try:
+        done = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, cwd=cwd, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return done.stdout.strip() if done.returncode == 0 else None
+
+
+CORE_PROBE = r"""
+dir=/opt/namchain/current
+echo "kernel=$(uname -r)"
+echo "namchain=$(sed -n 's/^commit=//p' "$dir/MANIFEST" 2>/dev/null | cut -c1-7)"
+[ -r /opt/rigpa/current/MANIFEST ] && echo "rigpa=$(sed -n 's/^commit=//p' /opt/rigpa/current/MANIFEST | cut -c1-7)"
+echo "devices=$(sed -n 's/^commit=//p' /etc/pedal/applied 2>/dev/null)"
+systemctl is-active -q namchaind.service && sudo -n "$dir/bin/namchainctl" --compact status 2>/dev/null
+"""
+
+
+def read_core(core):
+    """A Core's running state, from the fields this page shows and no others."""
+    if core["status"] == "on-order":
+        return {"reachable": False, "why": "on order"}
+    try:
+        done = subprocess.run([*SSH, core["id"], "bash -s"], input=CORE_PROBE, capture_output=True,
+                              text=True, timeout=20, check=False)
+        out = done.stdout if done.returncode in (0, 1, 3) and done.stdout else None
+    except (OSError, subprocess.SubprocessError):
+        out = None
+    if out is None:
+        return {"reachable": False, "why": "unreachable"}
+    state = {"reachable": True, "running": {}, "engine": None}
+    for line in out.splitlines():
+        match = re.fullmatch(r"(kernel|namchain|rigpa|devices)=(\S*)", line)
+        if match and match.group(2):
+            state["running"][match.group(1)] = match.group(2)
+        elif line.startswith("{"):
+            try:
+                status = json.loads(line)["status"]
+            except (ValueError, KeyError):
+                continue
+            state["engine"] = {k: status.get(k) for k in ("state", "health", "xruns", "guard_trips")}
+    return state
+
+
+def read_locked(core_id):
+    """devices/<host>/components.lock: what the repository says this Core runs."""
+    path = ROOT / "devices" / core_id / "components.lock"
+    if not path.exists():
+        return {}
+    found = {}
+    for line in path.read_text().splitlines():
+        match = re.fullmatch(r"(kernel|namchain|rigpa|devices)=(\S+)", line)
+        if match:
+            found[match.group(1)] = match.group(2)
+    return found
+
+
+def capacity(core):
+    """A2-Full and Lite per core, from the Core's own measured table, and when it was measured."""
+    table = core.get("cost_table")
+    if not table or not (ROOT / table).exists():
+        return None
+    data = json.loads((ROOT / table).read_text())
+    costs = data["core_percent"]["NAM"]["WaveNet"]
+    return {
+        "full_per_core": round(1 / costs["full"]),
+        "lite_per_core": round(1 / costs["lite"]),
+        "measured": data.get("measured", "")[:10],
+    }
+
+
+def read_repo(name):
+    path = WORKSPACE / name
+    if not (path / ".git").exists():
+        return {"name": name, "present": False}
+    head = run("git", "-C", str(path), "rev-parse", "--short=7", "HEAD")
+    counts = run("git", "-C", str(path), "rev-list", "--left-right", "--count", "HEAD...@{upstream}")
+    ahead, behind = (int(n) for n in counts.split()) if counts else (0, 0)
+    dirty = run("git", "-C", str(path), "status", "--porcelain")
+    return {"name": name, "present": True, "head": head, "ahead": ahead, "behind": behind,
+            "dirty": len(dirty.splitlines()) if dirty else 0, "ci": read_ci(name)}
+
+
+def read_ci(name):
+    """The newest finished run of each workflow on main."""
+    out = run("gh", "run", "list", "--repo", f"pedal-science/{name}", "--branch", "main", "--limit", "20",
+              "--json", "workflowName,conclusion,status,createdAt,headSha", timeout=20)
+    if out is None:
+        return []
+    newest = {}
+    for item in json.loads(out):
+        if item["status"] == "completed" and item["conclusion"] != "cancelled":
+            newest.setdefault(item["workflowName"], item)
+    return [{"workflow": w, "conclusion": i["conclusion"], "date": i["createdAt"][:10], "commit": i["headSha"][:7]}
+            for w, i in sorted(newest.items())]
+
+
+def read_machine(name):
+    out = run(*SSH, name, "cut -d' ' -f1 /proc/loadavg; uptime -p", timeout=12)
+    if out is None:
+        return {"name": name, "reachable": False}
+    load, *up = out.splitlines()
+    return {"name": name, "reachable": True, "load": float(load), "up": up[0] if up else ""}
+
+
+def rung_ladder(proofs, code_runs, today):
+    """Each rung's newest proof, with how old it is and what that makes it."""
+    ladder = []
+    for key, title, limit in RUNGS:
+        found = [p for p in proofs if p["rung"] == key]
+        newest = max(found, key=lambda p: p["date"]) if found else None
+        if key == "code" and code_runs and newest is None:
+            failing = [r for r in code_runs if r["conclusion"] != "success"]
+            newest = {
+                "rung": key, "date": min(r["date"] for r in code_runs),
+                "result": "fail" if failing else "pass",
+                "evidence": "", "note": ("CI failing: " + ", ".join(r["workflow"] for r in failing)) if failing
+                else f"CI passing on {len(code_runs)} workflow(s), as of the oldest date shown.",
+            }
+        rung = {"key": key, "title": title, "limit_days": limit, "age": "none"}
+        if newest:
+            days = (today - datetime.date.fromisoformat(newest["date"])).days
+            age = "fresh"
+            if limit is not None and days > 2 * limit:
+                age = "expired"
+            elif limit is not None and days > limit:
+                age = "stale"
+            rung.update(age=age, days=days, date=newest["date"], result=newest["result"],
+                        note=newest["note"], evidence=newest["evidence"])
+        ladder.append(rung)
+    return ladder
+
+
+def collect(hosts=True):
+    fleet, errors = load()
+    today = datetime.date.today()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=12) as pool:
+        repos = list(pool.map(read_repo, REPOS))
+        core_states = {}
+        if hosts:
+            core_states = dict(zip(fleet["cores"], pool.map(read_core, fleet["cores"].values())))
+        machines = list(pool.map(read_machine, SUPPORT)) if hosts else []
+    by_repo = {r["name"]: r for r in repos}
+
+    cores = []
+    for core_id, core in fleet["cores"].items():
+        state = core_states.get(core_id, {"reachable": None, "why": "not read"})
+        cores.append({**core, "capacity": capacity(core), "locked": read_locked(core_id), "state": state})
+    core_index = {c["id"]: c for c in cores}
+
+    # What each build's repositories say on CI: the engine and the project for all of them, and the UI
+    # or kernel only where the build carries one.
+    builds = []
+    for build_id, build in fleet["builds"].items():
+        core = core_index[build["core"]]
+        wanted = fleet["sets"][build["set"]]["components"] if build["set"] else {}
+        running = core["state"].get("running") or core["locked"]
+        source = "host" if core["state"].get("running") else "lock"
+        software = []
+        for component in sorted(set(wanted) | set(running)):
+            want, have = wanted.get(component), running.get(component)
+            matches = bool(want and have and (want.startswith(have) or have.startswith(want)))
+            software.append({"component": component, "set": want, "running": have, "matches": matches})
+        repos_used = ["pedal.project", "namchain"] + (["rigpa"] if "rigpa" in wanted else [])
+        if core["arch"] == "aarch64":
+            repos_used.append("rtpi")
+        code_runs = [run_ for name in repos_used for run_ in by_repo[name].get("ci", [])]
+        slots = []
+        for slot in SLOTS:
+            content = build["slots"][slot]
+            part = fleet["parts"].get(content.get("part"), {})
+            slots.append({"slot": slot, "state": content["state"], "name": part.get("name"), "note": content.get("note")})
+        builds.append({
+            "id": build_id, "purpose": build["purpose"], "core": build["core"], "picture": build.get("picture"),
+            "slots": slots, "set": build["set"], "software": software, "software_source": source,
+            "drift": bool(wanted) and any(not s["matches"] for s in software if s["set"] and s["running"]),
+            "ladder": rung_ladder(fleet["proofs"][build_id]["proofs"] if build_id in fleet["proofs"] else [],
+                                  code_runs, today),
+            "next": build["next"],
+        })
+    return {
+        "generated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%MZ"),
+        "hosts_read": hosts,
+        "errors": errors,
+        "builds": builds,
+        "cores": [{k: c[k] for k in ("id", "name", "arch", "cpu", "ram_mb", "status", "capacity", "state", "locked", "kernel_route", "install_route", "note") if k in c} for c in cores],
+        "repos": repos,
+        "machines": machines,
+        "workspace_proofs": fleet["proofs"].get("workspace", {}).get("proofs", []),
+    }
+
+
+# ---------------------------------------------------------------- the commands
+def cmd_check(args):
+    fleet, errors = load()
+    for error in errors:
+        print(f"FAIL  {error}")
+    if errors:
+        return 1
+    print(f"ok    fleet/: {sum(len(v) for v in fleet.values())} files valid")
+    builds = [args.build] if args.build else list(fleet["builds"])
+    bad = 0
+    for build_id in builds:
+        if build_id not in fleet["builds"]:
+            print(f"FAIL  no build {build_id}")
+            return 2
+        build = fleet["builds"][build_id]
+        core = args.core or build["core"]
+        if core not in fleet["cores"]:
+            print(f"FAIL  no Core {core}")
+            return 2
+        problems = combination_problems(fleet, build, core)
+        if problems:
+            bad += 1
+            print(f"NO    {build_id} with {core}")
+            for problem in problems:
+                print(f"      {problem}")
+        else:
+            print(f"ok    {build_id} with {core}")
+    return 1 if bad else 0
+
+
+def cmd_status(args):
+    data = collect(hosts=not args.no_hosts)
+    if args.json:
+        print(json.dumps(data, indent=2, ensure_ascii=False))
+        return 0
+    for error in data["errors"]:
+        print(f"FAIL  {error}")
+    for build in data["builds"]:
+        core = next(c for c in data["cores"] if c["id"] == build["core"])
+        state = core["state"]
+        engine = state.get("engine") or {}
+        live = (f"{engine.get('state')}, {engine.get('health')}, xruns {engine.get('xruns')}" if engine
+                else state.get("why", "engine not running"))
+        print(f"\n{build['id']}  on {build['core']}  ({live})")
+        print(f"  {build['purpose']}")
+        print("  parts    " + ", ".join(f"{s['slot']}: {s['name'] or '—'} [{s['state']}]" for s in build["slots"]))
+        print(f"  set      {build['set'] or 'none'}" + ("  DRIFT" if build["drift"] else ""))
+        for item in build["software"]:
+            mark = "" if item["matches"] or not item["set"] else "  differs"
+            print(f"    {item['component']:<9} set {item['set'] or '—':<10} running {item['running'] or '—'}{mark}")
+        print("  proof    " + "  ".join(
+            f"{r['title']}: {r.get('result', '—')}" + (f" {r['days']}d" if "days" in r else "") + ("" if r["age"] in ("fresh", "none") else f" ({r['age']})")
+            for r in build["ladder"]))
+        print("  next     " + (next((n["title"] for n in build["next"] if n["state"] == "now"), "—")))
+    print("\nrepositories")
+    for repo in data["repos"]:
+        if not repo["present"]:
+            print(f"  {repo['name']:<14} missing")
+            continue
+        failing = [c["workflow"] for c in repo["ci"] if c["conclusion"] != "success"]
+        ci = "no CI" if not repo["ci"] else ("CI failing: " + ", ".join(failing) if failing else "CI passing")
+        print(f"  {repo['name']:<14} {repo['head']}  ahead {repo['ahead']} behind {repo['behind']}  dirty {repo['dirty']}  {ci}")
+    print("\nmachines")
+    for machine in data["machines"]:
+        print(f"  {machine['name']:<5} " + (f"load {machine['load']}, {machine['up']}" if machine["reachable"] else "unreachable"))
+    return 1 if data["errors"] else 0
+
+
+def cmd_serve(args):
+    """The private page: on this machine only, and it reads what it shows every minute at most."""
+    cache = {"at": 0.0, "body": b"{}"}
+    lock = threading.Lock()
+    renders = ROOT / "enclosure" / "renders"
+
+    def status_body():
+        with lock:
+            if time.time() - cache["at"] > 60:
+                cache["body"] = json.dumps(collect(hosts=not args.no_hosts), ensure_ascii=False).encode()
+                cache["at"] = time.time()
+            return cache["body"]
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def log_message(self, *_):
+            pass
+
+        def send(self, body, kind):
+            self.send_response(200)
+            self.send_header("Content-Type", kind)
+            self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            self.wfile.write(body)
+
+        def do_GET(self):
+            path = self.path.split("?")[0]
+            if path == "/":
+                self.send((FLEET / "dashboard" / "index.html").read_bytes(), "text/html; charset=utf-8")
+            elif path == "/status.json":
+                self.send(status_body(), "application/json")
+            elif re.fullmatch(r"/render/[A-Za-z0-9_]+\.png", path) and (renders / path[8:]).exists():
+                self.send((renders / path[8:]).read_bytes(), "image/png")
+            else:
+                self.send_error(404)
+
+    server = http.server.ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
+    print(f"fleet dashboard: http://127.0.0.1:{args.port}/", flush=True)
+    server.serve_forever()
+    return 0
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    sub = parser.add_subparsers(dest="command", required=True)
+    check = sub.add_parser("check")
+    check.add_argument("build", nargs="?")
+    check.add_argument("--core")
+    status = sub.add_parser("status")
+    status.add_argument("--json", action="store_true")
+    status.add_argument("--no-hosts", action="store_true")
+    serve = sub.add_parser("serve")
+    serve.add_argument("--port", type=int, default=8765)
+    serve.add_argument("--no-hosts", action="store_true")
+    args = parser.parse_args()
+    return {"check": cmd_check, "status": cmd_status, "serve": cmd_serve}[args.command](args)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
