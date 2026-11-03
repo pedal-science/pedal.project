@@ -33,7 +33,7 @@ Measured on 2026-11-03.
 | Area | Today | The gap |
 |---|---|---|
 | Repositories | Seven public repos in `pedal-science`, one workspace, a guard (`scripts/workspace`) | stripmaster is outside `workspace.repos`, though the stripboard export reads back through it |
-| CI | Only `namchain` and `NAMBench` have any, on GitHub's runners | Both are red: namchain's last push fails RTSan (a segfault in the unit tests) and TSan; NAMBench's conformance fails on three Linux jobs. Nothing covers `pedald`, firmware, rigpa, ljoss or rtpi in CI |
+| CI | Only `namchain` and `NAMBench` have any, on GitHub's runners | Both are red: namchain's last push fails RTSan (a segfault in the unit tests) and TSan; NAMBench's conformance fails on six jobs (five Linux, one Windows). Nothing covers `pedald`, firmware, rigpa, ljoss or rtpi in CI |
 | What is running | `components.lock` per host: vip is on namchain `eba5eef`, piv on `d4fb8e5`, pro on `ae6f853` | Three engines on three hosts, and nothing says that is intended. Nothing states which versions belong together |
 | Deploy routes | vip by image, built in colima on the Mac; piv and pro build on themselves | Three routes. Compiling on pro means it is not quiet, and its quiet was assumed until 2 Nov |
 | Seeing it | `scripts/status`: text, one Core at a time, run by hand | No overall view, no history, nothing a browser can read |
@@ -320,7 +320,7 @@ before the next one starts**, and any step that touches vip asks first.
 - Add `scripts/public-check`, and run it before pushes and in CI.
 - Commit, or deliberately drop, every untracked file that a clean clone needs.
 - Record zap, mp and piv's new roles in `docs/working-across-repos.md`.
-- Get CI green: fix namchain's RTSan segfault and TSan job, and NAMBench's Linux jobs, or mark a
+- Get CI green: fix namchain's RTSan segfault and TSan job, and NAMBench's six jobs, or mark a
   failure as known with a reason.
 
 **Done when:** the scan is clean on every repo's tree, CI is green or explained, and a clean clone has
