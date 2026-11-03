@@ -195,7 +195,8 @@ run it at **3.3 V**. Its switch pull-ups go to VCC and RP2350 GPIO is not 5 V to
   `build-footswitches.md` (the small case's three footswitches: the net, the lugs, and the cut-down
   control board, `footswitch-pico.svg`), `rig-switch-strategies.md`, `uart-protocol.md`, `pedal-service.md` (the service's design: what
   it owns, storage, uploads, the mapping, failure modes, what is left to implement — in order —
-  and the thread accounting), `pairing.md` (BLE pairing, the pedal's own
+  and the thread accounting), `operations-plan.md` (a proposal, 2026-11-03: running the Cores as a fleet, rebuilding from nothing, the
+  public dashboard), `pro.md` and `zap.md` (the other two Core hosts), `pairing.md` (BLE pairing, the pedal's own
   Wi-Fi network, and how ljoss joins it), `vip-image.md` (building vip's card,
   its rescue and pedal roots, boot fallback), `audio-dma-irq.md` (the audio DMA interrupt
   thread: what it is, its measured cost, why it outranks the render thread, and the one way it

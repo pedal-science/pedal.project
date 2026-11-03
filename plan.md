@@ -1405,6 +1405,13 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**A plan for running this as a fleet is waiting for the owner's check** (2026-11-03):
+[docs/operations-plan.md](docs/operations-plan.md). Three Cores (zap, vip, pro), named builds and sets,
+a proof ladder, rebuilding from nothing, and a public dashboard. It is a proposal, and its Decisions
+section needs answers. **zap** is a Raspberry Pi Zero 2 W, on order; its bench is built and waiting
+([docs/zap.md](docs/zap.md)), and nothing has run on one yet. Colima's VM was recreated today, so its
+image cache is new.
+
 **The build is going back to the 1590DD, for now** (2026-11-02, the owner's decision). The big case
 (Hammond 1456RH3, D14) is paused, not withdrawn, while the owner tries to get the pedal working in
 the 188 × 119 × 37.5 mm box. The Pi, codec, output board, jacks, USB-C extension and footswitches

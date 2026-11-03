@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/measure-core [--host vip] [--seconds S] [--units FILE] [--out DIR] [--no-build] [--dry-run]
+# scripts/measure-core [--host vip] [--seconds S] [--units FILE] [--out DIR] [--no-build] [--build-only] [--dry-run]
 #                     -- measure a Core device's cost table where it matters: on the device.
 #
 # P1 and P2 of docs/managing-processing-power-and-optimising-for-fast-switching.md. The rule is
@@ -18,6 +18,9 @@
 # A units file is one `measure` argument list per line (after the mode), '#' comments and blank lines
 # ignored, with $M and $I standing for the host's models/ and irs/ roots. With none, the standard set
 # below is used: the two NAM submodel sizes off one model, the IR ladder, and the node types.
+#
+# --build-only builds the bench and stops, touching no host: a board that has not arrived can have
+# its bench ready, and `--no-build --out <that dir>` measures with it later.
 set -euo pipefail
 
 HOST=vip
@@ -25,6 +28,7 @@ SECONDS_PER_POINT=30
 UNITS=""
 OUT=""
 BUILD=1
+BUILD_ONLY=0
 DRY=0
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -33,8 +37,9 @@ while [[ $# -gt 0 ]]; do
     --units) UNITS=$2; shift ;;
     --out) OUT=$2; shift ;;
     --no-build) BUILD=0 ;;
+    --build-only) BUILD_ONLY=1 ;;
     --dry-run) DRY=1 ;;
-    -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,23p' "$0"; exit 0 ;;
     *) echo "measure-core: unknown argument $1" >&2; exit 2 ;;
   esac
   shift
@@ -111,10 +116,14 @@ if (( BUILD )); then
   docker image inspect "$TAG" >/dev/null 2>&1 \
     || docker build -q -t "$TAG" --build-arg SNAPSHOT="$SNAPSHOT" "$ROOT/devices/common/image" >/dev/null
   docker run --rm -v "$W:/w" -v "$ROOT:/in/pedal:ro" "$TAG" \
-    /in/pedal/devices/common/image/build-bench /w/src "$NAMCHAIN_CXXFLAGS" /w
+    /in/pedal/devices/common/image/build-bench /w/src "$NAMCHAIN_CXXFLAGS${BENCH_EXTRA_FLAGS:+ $BENCH_EXTRA_FLAGS}" /w
   cp "$W/bin/namchain-warm-bench" "$OUT/namchain-warm-bench"
 fi
 [[ -x $OUT/namchain-warm-bench ]] || die "no bench binary (build it, or --no-build with one already in $OUT)"
+if (( BUILD_ONLY )); then
+  log "--build-only: $OUT/namchain-warm-bench, for $HOST; nothing was run"
+  exit 0
+fi
 
 # The bench runs on the device, from the device's own library, with the device quiet: namchaind
 # stopped and the host lock held, so nothing else is playing while the numbers are taken.

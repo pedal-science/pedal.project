@@ -1,0 +1,4 @@
+# What zap's binaries are built from. Only the snapshot so far: it names the build container
+# (devices/common/image/Dockerfile), the same one vip's image and engine are built in. zap has no
+# card build yet, so devices/common/make-card cannot read this file.
+snapshot=20260929T000000Z
