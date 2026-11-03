@@ -1,0 +1,4 @@
+[project]
+name = "hi"
+version = "1"
+dependencies = ["sounddevice", "soundfile", "numpy"]

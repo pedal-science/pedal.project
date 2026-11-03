@@ -15,6 +15,8 @@ build/
 
 # Python bytecode, left by importing the layout scripts
 __pycache__/
+# A uv project's environment (scripts/loop); its pyproject.toml and uv.lock make it again
+.venv/
 
 # pedal-diag --watch writes its log here when run from a checkout
 scratch/

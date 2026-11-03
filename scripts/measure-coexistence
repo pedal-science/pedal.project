@@ -1,0 +1,338 @@
+#!/usr/bin/env bash
+# scripts/measure-coexistence [--host pro] [--seconds S] [--cpu 2] [--others 1,3,4,5]
+#                            [--arms FILE] [--out DIR] [--pin-khz N] [--no-perf] [--dry-run]
+#          — what a unit costs when the *other* render cores are busy too.
+#
+# Every row in a device's cost table is measured on one core with the other render cores idle
+# (`scripts/measure-core`). A pedal does not run that way: admission seats a rig across the render
+# cores, and the engine holds a warm document on another one. The rows are therefore an upper bound
+# on what fits, and the table's `coexistence` block is where the correction belongs
+# (devices/common/cost.schema.json, and vip's own block from T5).
+#
+# This measures the correction directly. One core is the *subject* (--cpu, default 2, the core
+# measure-core uses); k-1 of the others (--others) are *neighbours*, each rendering a full core's
+# worth of the same unit — the table's own fitted n — for as long as the subject's arm lasts. What
+# the subject then reports is the same unit under the load the pedal will really present.
+#
+# Two kinds of arm, and the arms file says which per line:
+#
+#   fixed    one point at a fixed n, k cores loaded. The subject's n is held at the table's n, so
+#            the arms across k are the same work and their p50s are directly comparable: this is
+#            the "+13%/+21% with five cores busy" reading of bench-results/2026-10-31-cost-pro.
+#            Instrumented with `perf stat -A` over a window inside the arm: every core's cycles,
+#            instructions, L3 references and misses, and its real clock from aperf/mperf. That pair
+#            is what 10-31 said was missing — it could not separate frequency from the shared L3.
+#   bisect   the bench's own bisection, k cores loaded, so the fitted n *under* that load is
+#            measured rather than inferred. The coexistence factor is then n(k=1) / n(k), which is
+#            the same form as vip's "headroom over the knee".
+#
+# Arms file: one arm per line, fields separated by `|`, '#' comments and blank lines ignored.
+#
+#   mode | label | k | neighbour n | start | max | the bench's unit arguments
+#
+# `$M` and `$I` stand for the host's models/ and irs/ roots, read from the device's own
+# namchaind.json. For a `fixed` arm, start and max are both the n to hold. For a `bisect` arm they
+# bound the search (`--start`/`--max`); the bench measures n+1 and n+2 either way.
+#
+# The bench is the host's deployed one (/opt/namchain/current), so the engine and the bench are the
+# same commit and the same flags, and the DI is the repo's, checked by hash against the signal the
+# table was measured with. The device is quiet for the run: namchaind stopped, the host's lock held
+# (this script takes it itself), and the run detached on the host and polled, so a dropped ssh
+# session cannot take hours of measurements with it. namchaind is restarted and any pinned clock put
+# back by the host-side trap, whether the run finishes or dies.
+#
+# Nothing here writes a cost table. The reading is `scripts/src/coexistence-read.py`, and
+# `devices/common/cost-merge` does not touch `coexistence` -- that block is written by hand from
+# this run's report, as vip's was.
+set -u
+
+HOST=pro
+SECS=90
+CPU=2
+OTHERS=1,3,4,5
+ARMS=""
+OUT=""
+PIN_KHZ=0
+PERF=1
+DRY=0
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --seconds) SECS=$2; shift ;;
+    --cpu) CPU=$2; shift ;;
+    --others) OTHERS=$2; shift ;;
+    --arms) ARMS=$2; shift ;;
+    --out) OUT=$2; shift ;;
+    --pin-khz) PIN_KHZ=$2; shift ;;
+    --no-perf) PERF=0 ;;
+    --dry-run) DRY=1 ;;
+    -h|--help) sed -n '2,46p' "$0"; exit 0 ;;
+    *) echo "measure-coexistence: unknown argument $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+HERE="$ROOT/devices/$HOST"
+[[ -d $HERE ]] || { echo "measure-coexistence: no devices/$HOST" >&2; exit 2; }
+
+# Rule 8: one measurement at a time. host-lock nests, so an outer lock is not taken twice, and the
+# host lets go within 30 s if this script or the Mac goes away.
+if [[ ${PEDAL_HOST_LOCK:-} != "$HOST" ]]; then
+  again=(--host "$HOST" --seconds "$SECS" --cpu "$CPU" --others "$OTHERS" --pin-khz "$PIN_KHZ")
+  [[ -n $ARMS ]] && again+=(--arms "$ARMS")
+  [[ -n $OUT ]] && again+=(--out "$OUT")
+  (( PERF )) || again+=(--no-perf)
+  (( DRY )) && again+=(--dry-run)
+  exec "$ROOT/scripts/host-lock" --host "$HOST" --wait 300 -- "$0" "${again[@]}"
+fi
+
+STAMP=$(date -u +%Y%m%dT%H%M%SZ)
+OUT=${OUT:-$ROOT/build/$HOST/coexistence/$STAMP}
+mkdir -p "$OUT"; OUT=$(cd "$OUT" && pwd)
+exec > >(tee "$OUT/report.txt") 2>&1
+
+die() { printf '\033[1;31m[x]\033[0m %s\n' "$*" >&2; exit 1; }
+log() { printf '\033[1m==\033[0m %s\n' "$*" >&2; }
+
+models_root=$(sed -n 's/.*"models_root"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$HERE/rootfs/etc/namchain/namchaind.json")
+irs_root=$(sed -n 's/.*"irs_root"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$HERE/rootfs/etc/namchain/namchaind.json")
+[[ -n $models_root && -n $irs_root ]] || die "devices/$HOST names no models_root/irs_root"
+
+# The arms. With none, the default set: the three rows the table has a real number for, each at the
+# n the table fitted, across one to five loaded cores; then the fitted n under load, which is what
+# the factor is read off. NAM.full gets every k because it is the row that decides a rig.
+if [[ -n $ARMS ]]; then
+  [[ -f $ARMS ]] || die "no arms file $ARMS"
+  cp "$ARMS" "$OUT/arms"
+else
+  NAM='--unit nam --model "$M/NAM Ampeg VT-40/Ampeg VT-40 - Vol 4, Bass 6, Mid 5, Treble 8, M160.nam"'
+  IR='--unit ir --ir "$I/Orange 4x12/York Audio ORNG 412 V30 v1.00/48k (Fractal, Line 6, Two Notes, etc.)/Natural Phase Singles/YA ORNG 412 V30 421v-CNT.wav"'
+  cat > "$OUT/arms" <<EOF
+# The same work, one to five cores loaded: 10-31's reading, with the clock and the L3 counted.
+fixed  | full-n25-k1   | 1 | 25 | 25 | 25 | $NAM --slim 1.0
+fixed  | full-n25-k2   | 2 | 25 | 25 | 25 | $NAM --slim 1.0
+fixed  | full-n25-k3   | 3 | 25 | 25 | 25 | $NAM --slim 1.0
+fixed  | full-n25-k4   | 4 | 25 | 25 | 25 | $NAM --slim 1.0
+fixed  | full-n25-k5   | 5 | 25 | 25 | 25 | $NAM --slim 1.0
+fixed  | lite-n95-k1   | 1 | 95 | 95 | 95 | $NAM --slim 0.0
+fixed  | lite-n95-k5   | 5 | 95 | 95 | 95 | $NAM --slim 0.0
+fixed  | ir8192-n55-k1 | 1 | 55 | 55 | 55 | $IR --taps 8192
+fixed  | ir8192-n55-k5 | 5 | 55 | 55 | 55 | $IR --taps 8192
+# The fitted n under load. k=2 and k=3 are the one and two warm documents the engine can hold, so
+# they are what coexistence.factors is keyed on; k=5 is the whole pedal rendering.
+bisect | full-fit-k1   | 1 | 25 | 16 | 32  | $NAM --slim 1.0
+bisect | full-fit-k2   | 2 | 25 | 16 | 32  | $NAM --slim 1.0
+bisect | full-fit-k3   | 3 | 25 | 16 | 32  | $NAM --slim 1.0
+bisect | full-fit-k4   | 4 | 25 | 16 | 32  | $NAM --slim 1.0
+bisect | full-fit-k5   | 5 | 25 | 16 | 32  | $NAM --slim 1.0
+bisect | lite-fit-k5   | 5 | 95 | 56 | 112 | $NAM --slim 0.0
+bisect | ir8192-fit-k5 | 5 | 55 | 32 | 64  | $IR --taps 8192
+EOF
+fi
+n_arms=$(sed '/^[[:space:]]*#/d; /^[[:space:]]*$/d' "$OUT/arms" | wc -l | tr -d ' ')
+
+# What the host is running, recorded with the numbers: a figure that does not name its engine cannot
+# be compared with another host's.
+ENGINE=$(ssh "$HOST" "readlink -f /opt/namchain/current" 2>/dev/null || true)
+KERNEL=$(ssh "$HOST" "uname -r" 2>/dev/null || true)
+echo "measure-coexistence: what a unit costs with the other render cores busy."
+echo "host $HOST, subject cpu $CPU, neighbours $OTHERS, ${SECS}s a point, $n_arms arm(s)"
+echo "engine $ENGINE, kernel $KERNEL"
+[[ $PIN_KHZ == 0 ]] || echo "clock pinned to $PIN_KHZ kHz for the run (scaling_max_freq), put back at the end"
+echo
+
+DEST=/var/tmp/measure-coex
+DI_SHA=$(shasum -a 256 "$ROOT/guitar-di.wav" | cut -d' ' -f1)
+log "checking the DI on $HOST (sha ${DI_SHA:0:12}…)"
+ssh "$HOST" "mkdir -p $DEST && test -s $DEST/guitar-di.wav && sha256sum $DEST/guitar-di.wav | grep -q $DI_SHA" \
+  || scp -q "$ROOT/guitar-di.wav" "$HOST:$DEST/guitar-di.wav"
+ssh "$HOST" "sha256sum $DEST/guitar-di.wav | grep -q $DI_SHA" \
+  || die "the DI on $HOST is not the signal the table was measured with"
+ssh "$HOST" "cat > $DEST/arms" < "$OUT/arms"
+
+if (( DRY )); then
+  log "--dry-run: wrote $OUT/arms and checked the DI; nothing was run on $HOST"
+  exit 0
+fi
+
+# ------------------------------------------------------------------ the host side
+
+# A neighbour: a full core's worth of the unit, relaunched until the arm says stop, so a long
+# bisection cannot outlive its load. Its arguments arrive as argv, so nothing is re-quoted.
+ssh "$HOST" "cat > $DEST/nbr.sh" <<'NBREOF'
+set -u
+DEST=$1 BENCH=$2 DI=$3 cpu=$4 nbr=$5 label=$6
+shift 6
+# stdbuf, because a neighbour is stopped mid-point and a block-buffered stdout would be thrown
+# away with it -- and its first lines are the only proof it got the cpu and the priority it was
+# asked for.
+while [ ! -f "$DEST/out/STOP" ]; do
+  stdbuf -oL "$BENCH" measure --input "$DI" --seconds 1800 --cpu "$cpu" --start "$nbr" \
+    --max "$nbr" --no-curve "$@" >> "$DEST/out/$label-nbr-c$cpu.txt" 2>&1 || exit 0
+done
+NBREOF
+
+# Detached, because the run is hours long and over WiFi. The trap is the contract: namchaind comes
+# back and the clock is unpinned however this ends.
+ssh "$HOST" "cat > $DEST/run.sh" <<HOSTEOF
+set -u
+DEST=$DEST
+BENCH=/opt/namchain/current/bin/namchain-warm-bench
+DI=\$DEST/guitar-di.wav
+CPU=$CPU
+SECS=$SECS
+PERF=$PERF
+PIN_KHZ=$PIN_KHZ
+export M='$models_root' I='$irs_root'
+IFS=, read -r -a OTHERS <<< "$OTHERS"
+# Not \`nproc\`: this session runs in user.slice, whose cpuset the device narrows to the housekeeping
+# core, so nproc says 1 and the clock sampler would watch one core of six.
+ALL_CPUS=(\$(ls -d /sys/devices/system/cpu/cpu[0-9]* | sed 's|.*/cpu||' | sort -n))
+
+rm -rf \$DEST/out; mkdir -p \$DEST/out
+: > \$DEST/out/session.log
+say() { echo "\$(date -u +%FT%TZ) \$*" >> \$DEST/out/session.log; }
+
+stop_neighbours() {
+  touch \$DEST/out/STOP
+  for c in "\${OTHERS[@]}"; do sudo -n systemctl stop "coex-nbr-c\$c" >/dev/null 2>&1 || true; done
+  sudo -n pkill -f 'namchain-warm-bench measure' >/dev/null 2>&1 || true
+}
+
+restore() {
+  stop_neighbours
+  if [ "\$PIN_KHZ" != 0 ] && [ -s \$DEST/out/maxfreq.before ]; then
+    i=0
+    while read -r f; do
+      echo "\$f" | sudo -n tee /sys/devices/system/cpu/cpu\$i/cpufreq/scaling_max_freq >/dev/null || true
+      i=\$((i+1))
+    done < \$DEST/out/maxfreq.before
+    say "clock unpinned: scaling_max_freq put back"
+  fi
+  sudo -n systemctl start namchaind >/dev/null 2>&1 || true
+  say "namchaind restarted (\$(systemctl is-active namchaind))"
+}
+trap restore EXIT
+
+say "stopping namchaind"
+sudo -n systemctl stop namchaind
+sleep 3
+
+if [ "\$PIN_KHZ" != 0 ]; then
+  for c in "\${ALL_CPUS[@]}"; do cat /sys/devices/system/cpu/cpu\$c/cpufreq/scaling_max_freq; done > \$DEST/out/maxfreq.before
+  for c in "\${ALL_CPUS[@]}"; do
+    echo "\$PIN_KHZ" | sudo -n tee /sys/devices/system/cpu/cpu\$c/cpufreq/scaling_max_freq >/dev/null
+  done
+  say "clock pinned to \$PIN_KHZ kHz on all cores"
+fi
+
+CPU_LIST=\$(IFS=,; echo "\${ALL_CPUS[*]}")
+arm_no=0
+while IFS='|' read -r mode label k nbr start max unit; do
+  case "\$(echo \$mode)" in ''|'#'*) continue ;; esac
+  mode=\$(echo \$mode); label=\$(echo \$label); k=\$(echo \$k)
+  nbr=\$(echo \$nbr); start=\$(echo \$start); max=\$(echo \$max)
+  [ -n "\$label" ] || continue
+  arm_no=\$((arm_no+1))
+  eval "set -- \$unit"
+  say "ARM \$arm_no \$label mode=\$mode k=\$k neighbour_n=\$nbr start=\$start max=\$max -- \$*"
+
+  rm -f \$DEST/out/STOP
+  i=0
+  while [ \$i -lt \$((k-1)) ]; do
+    c=\${OTHERS[\$i]}
+    sudo -n systemd-run --quiet --unit="coex-nbr-c\$c" --slice=pedal-bench.slice --collect \
+      /bin/bash \$DEST/nbr.sh "\$DEST" "\$BENCH" "\$DI" "\$c" "\$nbr" "\$label" "\$@" \
+      || say "could not start the neighbour on cpu \$c"
+    i=\$((i+1))
+  done
+  # Long enough for every neighbour to have loaded its models and be pacing blocks, not loading.
+  if [ \$k -gt 1 ]; then
+    sleep 45
+    say "neighbours up: \$(sudo -n pgrep -c -f 'namchain-warm-bench measure' || echo 0) bench process(es)"
+  fi
+
+  perf_pid=""
+  if [ "\$mode" = fixed ] && [ "\$PERF" = 1 ]; then
+    # A window inside the subject's own, so its warm-up is not counted: in late, out early. The
+    # window is recorded with the counters, because a counter with no window means nothing.
+    #
+    # Every core, not just the subject's, and seven events:
+    #   cycles, instructions                 what the core got done
+    #   cache-references, cache-misses       LONGEST_LAT_CACHE.{REFERENCE,MISS} -- the shared L3
+    #   msr/aperf/, msr/mperf/, msr/tsc/     the frequency it ran at, aperf/mperf x TSC
+    # The last three are the only honest source for an isolated core's clock: sysfs
+    # scaling_cur_freq cannot IPI a nohz_full core and reads the 800 MHz floor however busy it is
+    # (seen on pro, 2026-11-03). Frequency and L3 pressure in one window is what separates the two
+    # explanations 2026-10-31 could not tell apart.
+    ( sleep 45
+      say "perf window on cpus \$CPU_LIST opens, \$((SECS - 55))s"
+      sudo -n perf stat -A -C \$CPU_LIST -x, \
+        -e cycles,instructions,cache-references,cache-misses,msr/aperf/,msr/mperf/,msr/tsc/ \
+        -o \$DEST/out/\$label.perf -- sleep \$((SECS - 55)) >/dev/null 2>&1 ) &
+    perf_pid=\$!
+  fi
+
+  # Per-core busy across the subject's own window: the proof that the neighbours loaded the cores
+  # they were given, rather than an assumption that systemd-run did what it was told.
+  awk '/^cpu[0-9]/{u=\$2+\$3+\$4+\$7+\$8+\$9; print \$1, u, u+\$5}' /proc/stat > \$DEST/out/\$label.cpustat.before
+
+  curve=""
+  [ "\$mode" = fixed ] && curve="--no-curve"
+  sudo -n systemd-run --quiet --scope --slice=pedal-bench.slice \
+    \$BENCH measure --input \$DI --seconds \$SECS --cpu \$CPU --start \$start --max \$max \$curve "\$@" \
+    > \$DEST/out/\$label-c\$CPU.txt 2>&1 || true
+
+  awk '/^cpu[0-9]/{u=\$2+\$3+\$4+\$7+\$8+\$9; print \$1, u, u+\$5}' /proc/stat > \$DEST/out/\$label.cpustat.after
+  [ -n "\$perf_pid" ] && kill \$perf_pid 2>/dev/null
+  grep -h '^fragment: ' \$DEST/out/\$label-c\$CPU.txt | sed 's/^fragment: //' \
+    | sed "s/^{/{\"arm\":\"\$label\",\"k\":\$k,\"neighbour_n\":\$nbr,/" >> \$DEST/out/fragments.jsonl || true
+  stop_neighbours
+  sleep 5
+  say "ARM \$label DONE"
+done < \$DEST/arms
+
+echo DONE > \$DEST/out/DONE
+HOSTEOF
+
+log "running $n_arms arm(s) on $HOST, detached, under this script's lock"
+ssh "$HOST" "rm -f $DEST/out/DONE"
+ssh "$HOST" "setsid nohup bash $DEST/run.sh > $DEST/run.log 2>&1 < /dev/null & echo started"
+
+# One ssh a poll, so a dropped connection cannot answer one question and not another -- and three
+# consecutive readings of "gone, and no DONE" before giving up, because a single failed poll over
+# WiFi is not evidence that an hour-long run has died.
+missing=0
+while true; do
+  sleep 60
+  state=$(ssh "$HOST" "cd $DEST/out 2>/dev/null || exit 9
+    printf '%s|' \"\$(grep -c 'DONE\$' session.log 2>/dev/null || echo 0)\"
+    printf '%s|' \"\$(test -f DONE && echo yes || echo no)\"
+    printf '%s|' \"\$(pgrep -f 'measure-coex/run.sh' >/dev/null && echo yes || echo no)\"
+    printf '%s' \"\$(tail -1 session.log 2>/dev/null | cut -c1-110)\"" 2>/dev/null) || state=""
+  if [[ -z $state ]]; then
+    missing=$((missing + 1))
+    log "  (no answer from $HOST, $missing)"
+    (( missing >= 3 )) && { log "$HOST stopped answering; the run may still be going -- re-attach with --out $OUT"; break; }
+    continue
+  fi
+  IFS='|' read -r done_arms finished running where <<< "$state"
+  log "  $done_arms of $n_arms arms done — $where"
+  [[ $finished == yes ]] && break
+  if [[ $running == no ]]; then
+    missing=$((missing + 1))
+    (( missing >= 3 )) && { log "the run on $HOST is no longer running and did not finish"; break; }
+  else
+    missing=0
+  fi
+done
+
+mkdir -p "$OUT/out"
+for f in $(ssh "$HOST" "ls $DEST/out/ 2>/dev/null"); do
+  scp -q "$HOST:$DEST/out/$f" "$OUT/out/$f" 2>/dev/null || true
+done
+
+echo
+log "collected $(ls "$OUT/out" | wc -l | tr -d ' ') file(s) into $OUT/out"
+log "next: scripts/src/coexistence-read.py $OUT"
