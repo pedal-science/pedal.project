@@ -54,6 +54,23 @@ a state that cannot be fetched and does not fail. Both were measured in lifeload
 submodule is right for one thing only: a *vendored dependency* at a pinned commit, which is what
 `namchain/vendor/NeuralAmpModelerCore` is.
 
+## Starting from nothing
+
+The workspace is something `scripts/bootstrap` makes, not something a machine has to already hold. It
+needs git and the network, with no key, account or existing checkout, because every repository is
+public. It clones `pedal.project`, and everything else follows from that repository: `workspace.repos`
+says what belongs in the workspace, `workspace-root/` holds the files at its root, and `tools/git-hooks`
+is the guard. So the root's `AGENTS.md` describes what *should* be there, and running bootstrap again
+repairs whatever is not. See the top of `README.md` for the one command.
+
+It says which tools are missing, and installing them is still by hand. git is the only requirement for
+reading and editing. `python3` runs the service's tests and most tools. `cmake`, `ninja` and `gcc` build
+the engine, and `docker` builds a Pi's binaries and cards. `gh` is for pushing and CI, `uv` for the bench
+test's browser step, and `rsync` for copying to a Core. Xcode, for ljoss, is Mac only.
+
+What a fresh workspace cannot do yet is in [operations-plan.md](operations-plan.md): the public inputs
+arrive in its Phase 2.
+
 ## What each harness does with it
 
 - **Open the workspace, not a repository inside it.** A session opened on `namchain/` can read its

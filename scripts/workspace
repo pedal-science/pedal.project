@@ -164,7 +164,7 @@ cmd_clone() {
     parent=${path%%/*}
     is_repo "$ws/$parent" || die "$parent is missing, so $path cannot be initialised"
     printf 'submodule %s in %s\n' "${path#*/}" "$parent"
-    git -C "$ws/$parent" submodule update --init -- "$path"
+    git -C "$ws/$parent" submodule update --init --recursive -- "$path"
   done < <(manifest_lines)
 }
 

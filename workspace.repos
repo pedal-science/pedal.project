@@ -7,15 +7,19 @@
 # kind=repo      an independent checkout, a direct child of the workspace root
 # kind=submodule a repository another one vendors, declared in its .gitmodules at a pinned commit
 #
+# The URLs are https because the repositories are public: scripts/bootstrap clones them all with no
+# key and no account. A checkout that uses ssh instead is fine, since `check` compares repositories
+# rather than spellings.
+#
 # Nothing else belongs under the workspace root. A repository that appears here is either a
 # sibling of the others or a declared submodule of one of them; there is no third shape, because
 # a checkout that is merely *inside* another repository is the accident the guard refuses
 # (tools/git-hooks/README.md).
 pedal.project|pedal.project|https://github.com/pedal-science/pedal.project.git|main|repo
-namchain|namchain|https://github.com/pedal-science/namchain|main|repo
+namchain|namchain|https://github.com/pedal-science/namchain.git|main|repo
 namchain/vendor/NeuralAmpModelerCore|namchain/vendor/NeuralAmpModelerCore|https://github.com/rikkus/OptimisationWorkOnNeuralAmpModelerCore|all-optimisations|submodule
-ljoss|ljoss|git@github.com:pedal-science/ljoss.git|main|repo
-rtpi|rtpi|git@github.com:pedal-science/rtpi.git|main|repo
-NAMBench|NAMBench|git@github.com:pedal-science/NAMBench.git|main|repo
-rigpa|rigpa|git@github.com:pedal-science/rigpa.git|main|repo
-comms|comms|git@github.com:pedal-science/comms.git|main|repo
+ljoss|ljoss|https://github.com/pedal-science/ljoss.git|main|repo
+rtpi|rtpi|https://github.com/pedal-science/rtpi.git|main|repo
+NAMBench|NAMBench|https://github.com/pedal-science/NAMBench.git|main|repo
+rigpa|rigpa|https://github.com/pedal-science/rigpa.git|main|repo
+comms|comms|https://github.com/pedal-science/comms.git|main|repo

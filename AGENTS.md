@@ -34,6 +34,9 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
 
 ## How to start a session
 
+- **On an empty machine, run `scripts/bootstrap`** ([README.md](README.md) has the one-line version).
+  It needs only git and the network, and it makes the whole workspace. Nothing depends on what a
+  machine already has checked out.
 - **Open the workspace, not a repository inside it.** Everything the pedal is made of lives in
   `~/code.local/pedal/`: this repository as `pedal.project/` beside `namchain/`, `ljoss/`, `rtpi/`
   and `NAMBench/`. A session opened on that folder can read and write all of them with no extra

@@ -4,6 +4,11 @@ This directory is the workspace root: the folder a session is opened on, and the
 sandbox grants. The pedal's seven repositories are inside it, so an agent can read and write all of
 them with no extra permissions and no per-project settings.
 
+**If anything below is missing, nothing is lost:** this file describes what belongs here, not what
+happens to be here. `pedal.project/scripts/bootstrap` restores it all from GitHub. With no
+`pedal.project` at all, run
+`curl -fsSL https://raw.githubusercontent.com/pedal-science/pedal.project/main/scripts/bootstrap | bash`.
+
 **Before doing anything, read `pedal.project/AGENTS.md`.** It is canonical for the whole project —
 goal, hardware constraints, commands, working rules — and
 `pedal.project/docs/working-across-repos.md` says which repository owns what and how a change
