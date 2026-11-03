@@ -1,0 +1,19 @@
+# Paths scripts/public-check leaves alone, each with its reason. Anything else that matches stops a
+# push. Prefer masking a value to adding a line here.
+
+# Logs and records from before the check. They stay as they are: the owner's decision, 2026-11-03.
+bench-results/2026-10-02-boot-time-vip/*
+bench-results/2026-11-01-soak-pro-rt/*
+bench-results/vip-card/*
+bench-results/vip-spike/*
+docs/pro.md
+devices/common/tests/fixtures/diag/healthy-vip.json    # a real capture, kept as the test's input
+
+# Every device backup records the kernel command line, which carries the board's MAC address.
+devices/*/backups/*/state.txt
+
+# Matches that are not what they look like.
+devices/common/image/build-image                       # checks the first line of a key it is handed
+devices/common/tests/test_config.py                    # a made-up engine address
+docs/pairing.md                                        # a proposed address on the pedal's own network
+scripts/tests/test_public_check.py                     # plants values to prove they are caught

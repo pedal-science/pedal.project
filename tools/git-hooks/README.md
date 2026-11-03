@@ -1,6 +1,7 @@
 # The pedal workspace's git guards
 
-Two hooks, one rule: **a repository may be embedded in another only if it is declared.**
+Two hooks, two rules: **a repository may be embedded in another only if it is declared**, and **a
+push must not add a private network detail**, since every repository here is public.
 
 Installed by machine, not by repository. `~/.gitconfig` carries
 
@@ -18,7 +19,7 @@ local config, so a clone silently had no guard at all.
 | Hook | When | What it refuses |
 |---|---|---|
 | `pre-commit` | before a commit is made | a staged gitlink (mode 160000) whose path is not declared in `.gitmodules` with a URL |
-| `pre-push` | before refs are published | the same, judged on the tip tree of each ref being pushed |
+| `pre-push` | before refs are published | the same, judged on the tip tree of each ref being pushed; and, through `scripts/public-check`, any commit that would add a private network detail |
 
 **The rule is deliberately not "no gitlinks".** `namchain` vendors
 `OptimisationWorkOnNeuralAmpModelerCore` as a declared submodule at a pinned commit, and that is

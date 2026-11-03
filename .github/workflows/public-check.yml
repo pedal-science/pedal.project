@@ -1,0 +1,38 @@
+# What a push adds must not name a private network detail (scripts/public-check). Every repository
+# in the workspace calls this, so the rule and the patterns have one home. CI has none of the
+# household's own details to look for; the pre-push hook checks those on the way out.
+name: public-check
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  public-check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          repository: pedal-science/pedal.project
+          path: .pedal-project
+          sparse-checkout: |
+            scripts/public-check
+      - name: What this push adds
+        env:
+          BEFORE: ${{ github.event.before }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          AFTER: ${{ github.sha }}
+        run: |
+          if [ -n "$BASE" ]; then
+            .pedal-project/scripts/public-check --no-live --repo . --range "$BASE..$AFTER"
+          elif [ -z "$BEFORE" ] || [ "$BEFORE" = 0000000000000000000000000000000000000000 ] \
+               || ! git cat-file -e "$BEFORE" 2>/dev/null; then
+            .pedal-project/scripts/public-check --no-live --repo . --all
+          else
+            .pedal-project/scripts/public-check --no-live --repo . --range "$BEFORE..$AFTER"
+          fi
