@@ -6,7 +6,7 @@
       "date": "2026-11-03",
       "result": "partial",
       "evidence": "bench-results/2026-11-03-bootstrap/README.md",
-      "note": "An empty HOME and folder became a full workspace, and the engine configured from it. Nothing was built, and pedal.project came from a local copy of its commit."
+      "note": "The one-line install, from GitHub, on a machine that never held it: a full workspace in 75 s, and it checks out. Nothing was built, because mp lacks the tools."
     }
   ]
 }
