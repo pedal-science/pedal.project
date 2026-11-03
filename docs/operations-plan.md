@@ -1,6 +1,6 @@
 # Running the pedal as a fleet: the operations plan
 
-**Status: agreed with the owner on 2026-11-03, and Phase 0 is under way.** The owner's answers are in
+**Status: agreed with the owner on 2026-11-03. Phase 0 is done; Phase 1 is next, after the owner's review.** The owner's answers are in
 "Decisions", near the end. `plan.md` stays the record of where the pedal is; this page says how the
 work gets organised.
 
@@ -329,6 +329,12 @@ before the next one starts**, and any step that touches vip asks first.
 
 **Done when:** the scan is clean on every repo's tree, apart from what is listed, CI is green or
 explained, and a clean clone has every script.
+
+**Done, 2026-11-03.** `public-check` passes in all seven repositories; namchain's CI passes 7 of 7 jobs
+at `70a6e3f` and NAMBench's all-variants conformance 17 of 17 at `259ab19`. Both of namchain's failures
+were faults in its tests, not the engine. NAMBench carries two known failures, written down in its
+`CONFORMANCE.md`, whose causes have not been looked for. `measure-core` still needs `guitar-di.wav`,
+which goes to the store in Phase 2.
 
 ### Phase 1: name everything, and see it (M)
 

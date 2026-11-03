@@ -1408,9 +1408,10 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 **The pedal is now run as a fleet, and that plan is agreed** (2026-11-03):
 [docs/operations-plan.md](docs/operations-plan.md). Three Cores (zap, vip, pro), named builds and sets,
 a proof ladder, rebuilding from nothing, and a public dashboard, with the owner's decisions recorded
-there. **Phase 0 is under way.** `scripts/public-check` guards every push. The sanitizer failures in
-namchain's CI were two bad JSON lookups in one test, not the engine. NAMBench's comparer now knows the
-x86 kernels. **zap** is a Raspberry Pi Zero 2 W, on order; its bench is built and waiting
+there. **Phase 0 is done, and Phase 1 waits for the owner's review.** `scripts/public-check` guards every
+push, and CI is green everywhere it exists. namchain's failures were faults in its tests (two bad JSON
+lookups, and a levels check that raced the render thread), not the engine. NAMBench's comparer now knows
+the x86 kernels, and has two known failures written down. **zap** is a Raspberry Pi Zero 2 W, on order; its bench is built and waiting
 ([docs/zap.md](docs/zap.md)), and nothing has run on one yet. Colima's VM was recreated today, so its
 image cache is new.
 
