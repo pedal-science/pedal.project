@@ -224,6 +224,11 @@ keeping written down because each would have been invisible until it mattered:
   too, and the parity test now asserts bit-identity on Arm and a −120 dB error floor on AVX2, because
   the core only claims the weaker property there. Every number in vip's cost table is still a Pi 5
   number; [pro's own](../bench-results/2026-11-02-cost-table-pro/README.md) is below.
+  (**"The Eigen path", "the Eigen build" and "the planar build"** are used throughout this file and
+  the bench-results; what they are, which one a set of flags gives you, and how to tell from a built
+  tree is namchain's `docs/a2-kernels.md`. Worth reading before comparing any two cost figures:
+  pro's own deployed engine was built with the planar AVX2 kernels while its configure summary said
+  they were off.)
 - **pro builds its own engine.** vip has no compiler and receives built artefacts; pro has gcc 15.2
   and namchain builds in about two minutes, so `scripts/deploy-engine --host pro` exports the commit
   from the Mac (it need not be pushed), builds it clean on pro in `~/pedal-build`, runs the tests, and
