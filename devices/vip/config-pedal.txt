@@ -1,5 +1,9 @@
 # vip's pedal boot partition: appended to the config.txt that rtpi's vip-boot writes.
-# Nothing yet. No KMS display driver (it isn't loaded, so there's no HDMI audio card either): the
-# pedal has no screen, and the GPU's memory traffic is what namchain's docs/distro-slimming.md
-# says to keep off the housekeeping cores. The Pi 5's firmware ignores dtparam=audio. The WM8960
-# overlay is loaded at runtime by pedal-codec, not here.
+# Waveshare 4.3″ DSI QLED (800×480) on CAM/DISP 1 — verified on vip 2026-11-05 with
+# 7.0.0-1017-raspi-realtime-numaemu3-dmaidle1-qled2-trimmed (DSI connector connected,
+# backlight, edt-ft5x06). A card from init-pedal-boot starts with a fresh profile.txt, so
+# these lines must live here or the next card boots with neither KMS nor the panel. The Pi 5's
+# firmware ignores dtparam=audio. The WM8960 overlay is loaded at runtime by pedal-codec, not
+# here.
+dtoverlay=vc4-kms-v3d
+dtoverlay=vc4-kms-dsi-waveshare-800x480

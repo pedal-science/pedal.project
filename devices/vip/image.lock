@@ -11,12 +11,13 @@ rigpa=179e202ce0c31a2ea097c8aec7602ece7766197c
 # build/vip/ as artefacts and pins it by hash — make-card verifies every one of these before the
 # build starts, and the image build installs them. The spare slot boots the stock kernel instead,
 # which devices/vip/packages installs as a package (rtpi's FALLBACK_KERNEL).
-kernel=7.0.0-1017-raspi-realtime-numaemu3-dmaidle1-trimmed
+kernel=7.0.0-1017-raspi-realtime-numaemu3-dmaidle1-qled2-trimmed
 kernel-kind=trimmed
-# numaemu3 plus StarFive's non-idle DMA fix (rtpi patches/vip/). Built from rtpi f8c3d75 and
-# promoted on vip by vip-boot try-kernel on 2026-10-12. Slot b on that boot kept numaemu3; a card
-# from this lock puts the stock kernel back in the spare slot.
-kernel-rtpi=f8c3d7566a5b041a8afe2d924399b5066736dac8
-kernel-boot-sha256=fa9faa01090520c9b7dce3c0d2af2472c16151972556a20ace6e6ec02009e769
-kernel-modules-sha256=1fa94e9c3ac6cfe4559d89a9cf6aa6f67f56f6e2e91ae381327f6db2749c80da
-kernel-dtb-sha256=1d1988efb6e918ffb516362cebef482f8f6c48bbb4462129b57e3d1888afd2c3
+# dmaidle1 plus the Waveshare 4.3″ DSI keep-list including drm_rp1_dsi (rtpi
+# config/vip-keep.fragment). Built from rtpi 10eff4a (keep-list still uncommitted at pin time)
+# and promoted on vip by vip-boot try-kernel on 2026-11-05. The spare slot on that boot kept
+# qled1; a card from this lock puts the stock kernel back in the spare slot.
+kernel-rtpi=10eff4a109372cc638359bca9186caddcb2aae6d
+kernel-boot-sha256=97ceea4a7a78fb0bfaf07e679e1a4ff0d130fdb26de05a6159a15fed094e54a9
+kernel-modules-sha256=3091a6fa710eacaec24cd1b30dcbb50a92d79689e3cc7b65d93c4c641321fb08
+kernel-dtb-sha256=0fa45a2a1c0991f55ce426888f005c9cd75c35baa78d72aa4a670a4d60c60fe3
