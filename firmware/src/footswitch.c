@@ -5,8 +5,17 @@
 #include "pico/stdlib.h"
 #include "protocol.h"
 
-// The control board's pins, which the cut-down board keeps (stripboard/module_boards.py).
-static const uint8_t pins[FOOTSWITCH_COUNT] = {10, 11, 12};
+// The control board's pins, which the cut-down board keeps (stripboard/module_boards.py), in the
+// order the player numbers the switches, left to right. The box's loom does not follow the
+// board's FS1-FS3 labels: the left switch is on GP12 (FS pin 4), the middle one on GP10 (FS pin
+// 2) and the right one on GP11 (FS pin 3). Found on the bench 2026-11-07
+// (docs/build-footswitches.md, "As built in the box").
+static const uint8_t pins[FOOTSWITCH_COUNT] = {12, 10, 11};
+
+// The box's switches are wired COM to NC: closed at rest, open while pressed. So a press lets the
+// pull-up win and the pin reads high. Set this to 0 for a loom wired COM to NO, as the design
+// first drew it, where a press pulls the pin to ground.
+#define PRESS_OPENS 1
 
 // Footswitches 1-3 send the general-purpose switch controllers (U8, decided 2026-10-06).
 #define CC_FIRST 80u
@@ -34,7 +43,15 @@ static bool panic_on;
 static uint32_t last_poll_ms;
 
 static bool read_pressed(unsigned i) {
+#if PRESS_OPENS
+    // Pulled up, and grounded by the switch at rest: a press opens it and the pin goes high. A
+    // loom that comes unplugged reads as all three held. At power-up that is no press at all
+    // (footswitch_init), but pulled out while running it is three presses and, a second later,
+    // the panic bypass.
+    return gpio_get(pins[i]);
+#else
     return !gpio_get(pins[i]);  // pulled up: the switch pulls the pin to ground
+#endif
 }
 
 void footswitch_init(void) {
@@ -54,8 +71,9 @@ void footswitch_init(void) {
         sw[i].long_done = true;
     }
     last_poll_ms = now;
-    printf("fs: footswitches on GP%u/GP%u/GP%u, panic is a %u ms press on %u\n", pins[0],
-           pins[1], pins[2], LONG_PRESS_MS, PANIC_SWITCH + 1);
+    printf("fs: footswitches 1/2/3 on GP%u/GP%u/GP%u, a press %s, panic is a %u ms press on %u\n",
+           pins[0], pins[1], pins[2], PRESS_OPENS ? "opens" : "closes", LONG_PRESS_MS,
+           PANIC_SWITCH + 1);
 }
 
 static void on_change(unsigned i, bool pressed, uint32_t now_ms) {

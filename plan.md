@@ -929,7 +929,11 @@ ADC from DACLRC (`wlf,shared-lrclk`, `wlf,gpio-cfg`).
      (`bench-results/2026-10-04-the-pedal-plays-in-a-case.md`).
 5. **Firmware v1.**
    - Three footswitches, with 100 nF at each switch, debounce and long-press. **Firmware written
-     2026-10-27, not yet on a Pico** (`firmware/src/footswitch.c`): GP10–12 with pull-ups, 10 ms
+     2026-10-27, on the box's Pico 2026-11-07**, where it was found that the box's loom is wired
+     COM to NC and not in the board's order; the firmware takes it as built (`PRESS_OPENS`, and
+     `pins[]` = GP12/GP10/GP11 for switches 1–3, left to right), and the Pico's console showed
+     each press and release and the panic long-press on and off. Through `pedald` on vip: not yet
+     checked. (`firmware/src/footswitch.c`): GP10–12 with pull-ups, 10 ms
      debounce, `cc` 80–82 with 127/0, panic bypass a 1 s press on switch 3, caps 3 footswitches,
      and the 16-deep event queue. `pedald`'s map now acts on a `cc` only at 64 and up, or every
      release would have stepped the rig again. The board and loom: `docs/build-footswitches.md`.

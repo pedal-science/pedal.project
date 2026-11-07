@@ -3,7 +3,7 @@
 // Phase 3 of the plan. The link speaks the protocol in docs/uart-protocol.md
 // (version 2.0): framing, the HELLO/WELCOME session, PING/PONG, EVENTs with
 // ACK/retry and a queue behind them, and STATE. The three footswitches are on
-// GP10-12 (footswitch.c, docs/build-footswitches.md); DIN MIDI, the relay and
+// GP10-12, in the box's order and sense (footswitch.c, docs/build-footswitches.md); DIN MIDI, the relay and
 // LEDs arrive later in step 5. The USB console still stands in for controls
 // that are not wired:
 //
