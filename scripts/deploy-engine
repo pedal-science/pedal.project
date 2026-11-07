@@ -96,7 +96,9 @@ git submodule update -q --init --recursive
 commit=$(git rev-parse --short=7 HEAD)
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_CXX_FLAGS=-march=armv8-a -mtune=cortex-a76" \
   -DNAMCHAIN_BUILD_TESTS=ON -DNAMCHAIN_BUILD_TOOLS=ON > build-configure.log
-grep -q 'A2 planar NEON:  ON' build-configure.log || { echo "planar NEON kernels are off" >&2; exit 1; }
+# namchain's summary line was "A2 planar NEON:  ON" until 0c1a6d8 (2026-11-03) and is "A2 planar:  ON (NEON)"
+# or "(AVX2)" since: either says the planar kernels are compiled in.
+grep -qE 'A2 planar NEON: +ON|A2 planar: +ON' build-configure.log || { echo "planar kernels are off" >&2; exit 1; }
 nice cmake --build build -j2 > build.log || { tail -30 build.log >&2; exit 1; }
 # Serially: under -j2 one timing test fails from contention, not from a defect.
 [[ $tests == 1 ]] && (cd build && nice ctest --output-on-failure | tail -3)

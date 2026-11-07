@@ -15,7 +15,8 @@ cd "$SRC"
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release "-DCMAKE_CXX_FLAGS=$FLAGS" \
   -DNAMCHAIN_BUILD_TESTS=ON -DNAMCHAIN_BUILD_TOOLS=ON > "$LOGS/namchain-configure.log" 2>&1 \
   || { tail -30 "$LOGS/namchain-configure.log" >&2; exit 1; }
-grep -q 'A2 planar NEON:  ON' "$LOGS/namchain-configure.log" || die "planar NEON kernels are off"
+# "A2 planar NEON:  ON" until namchain 0c1a6d8 (2026-11-03), "A2 planar:  ON (NEON)" since.
+grep -qE 'A2 planar NEON: +ON|A2 planar: +ON \(NEON\)' "$LOGS/namchain-configure.log" || die "planar NEON kernels are off"
 cmake --build build -j"$(nproc)" > "$LOGS/namchain-build.log" 2>&1 || { tail -40 "$LOGS/namchain-build.log" >&2; exit 1; }
 (( TESTS )) || exit 0
 # The golden test builds the vendored core's own render tool on first run, with an unbounded
