@@ -24,7 +24,7 @@ tables, the Pico link, and the rig the footswitches reach next, held warm in the
 
 | Job | Owner |
 |---|---|
-| The rig document: library, editing, flattening into a graph | ljoss |
+| The rig document: library, editing, flattening into a graph | ljoss. **Superseded by D17 (2026-11-07):** the pedal (this service and `namchaind`) owns the documents, and ljoss and rigpa are views ([pedal-owns-state.md](pedal-owns-state.md)) |
 | The running plan, ramps, transitions, the device and its health | `namchaind` |
 | The library on the pedal, the bank, resume, uploads, the mapping tables | **the service** |
 | Which rigs in the bank can play, and skipping the ones that cannot | **the service**, answered by `namchaind`'s `rig.cost` (below) |
@@ -222,7 +222,8 @@ app" and ljoss's "send to pedal" were waiting for.
   word. The service reads the same header sniff the engine's scanner reads, and it never loads a
   model either. The rate follows the weights, at the end of the file (`assets.md`), so the check
   runs on the staged file, before the rename, not at the door.
-- **Rig documents are stored, not applied.** The app owns the document and applies it to the
+- **Rig documents are stored, not applied** (**superseded by D17**, 2026-11-07: the pedal owns the
+  document, and pedald saves what the engine plays). The app owns the document and applies it to the
   engine itself (D2). The library entry is what the bank and the ready set can name, and what
   the resume snapshot is compared against.
 - **An empty bank means nothing happens** (found 2026-10-10, measuring T11): with the library
@@ -774,6 +775,8 @@ crossfade. Changed: `audible_generation > 0` with the device running.
 document wins" on connect would undo the player's choice (`rig-edits.md` C12). The failure table
 said the engine was the only writer. Proposed: ljoss follows the device's rig on connect, or
 asks, before v2.
+**Closed by D17 (2026-11-07):** ljoss follows the pedal's rig on connect and never applies its own; the
+pedal owns the documents ([pedal-owns-state.md](pedal-owns-state.md)).
 
 **R7. MIDI has no "release".** "Committed on release" is a slider's rule (namchain's
 `schema.md`). Changed: a continuous controller drives rampable parameters only, streamed as
