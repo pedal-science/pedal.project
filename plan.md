@@ -1410,6 +1410,18 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**The pedal owns its state: D17, and the plan that gets there** (2026-11-07):
+[docs/pedal-owns-state.md](docs/pedal-owns-state.md). The pedal (pedald and `namchaind`) owns rigs,
+banks, the model/IR library and the block catalogue; ljoss and rigpa become views that send commands
+and are told of every change with its cause. Rik's answers to two rounds of questions are recorded
+there, milestone by milestone, with a demo and a review after each. **Done: M0** (the decision and the
+plan) **and C1** (rigpa `ed481e6`: `display.layout` / `--layout compact` gives the 800×480 panel's
+views on the Mac: Play as home, Rigs, Edit, Tuner, Settings, by touch and by the rotary; 24 of 24
+tests pass). C1 also fixed the bar's tuner, whose ticks were all drawn at the scale's left end.
+**Next: Rik's review of C1, then C2** (compact editing: the node editor, picker and palette fitted to
+the panel), **then C3** (the panel on vip: the DSI connector is published by `drm_rp1_dsi`, not vc4, so
+`devices/vip/rootfs/etc/rigpa/kms.json` changes, and the unit's `ExecCondition` must accept DSI).
+
 **The pedal is now run as a fleet, and that plan is agreed** (2026-11-03):
 [docs/operations-plan.md](docs/operations-plan.md). Three Cores (zap, vip, pro), named builds and sets,
 a proof ladder, rebuilding from nothing, and a public dashboard, with the owner's decisions recorded
