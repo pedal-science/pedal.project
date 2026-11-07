@@ -67,7 +67,10 @@ if [[ -s /etc/namchain/namchaind.json && -e /etc/systemd/system/namchaind.servic
   sudo systemctl restart namchaind.service
   sleep 3
   systemctl is-active namchaind.service
-  sudo -n /opt/namchain/current/bin/namchainctl --compact status 2>&1 | head -c 600; echo
+  # The first 600 characters of the status, read whole first: `| head -c 600` closed the pipe on a
+  # long status, and under pipefail that SIGPIPE ended the deploy before components-lock ran.
+  status=$(sudo -n /opt/namchain/current/bin/namchainctl --compact status 2>&1) || true
+  printf '%s\n' "${status:0:600}"
 else
   sudo systemctl daemon-reload
   echo "no pedal configuration for namchaind on this host: binaries installed, service left alone" >&2
