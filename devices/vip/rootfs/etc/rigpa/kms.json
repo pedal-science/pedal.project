@@ -1,4 +1,4 @@
 {
-  "device": "/dev/dri/by-path/platform-axi:gpu-card",
+  "device": "/dev/dri/by-path/platform-1f00130000.dsi-card",
   "hwcursor": false
 }
