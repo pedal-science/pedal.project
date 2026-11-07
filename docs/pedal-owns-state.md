@@ -183,7 +183,7 @@ Two phases, in this order. A demo on the Mac, and Rik's review, follow every mil
   - `wide` keeps today's numbers.
   - `compact` is:
     - 800×480, a 52 px top bar, a 40 px bottom bar, and no menu or info columns;
-    - tiles of 132×72, a tuner bar of 600, a flowEQ curve of 460×188;
+    - tiles of 132×72, a tuner bar of 560, a flowEQ curve of 280×188;
     - an 800 px keyboard and a 60 px title on the Play view.
 - Make the sizes that are fixed in C++ settable:
   - `RigEditorModel`'s style gets a setter;

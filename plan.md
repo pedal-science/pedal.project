@@ -1418,8 +1418,8 @@ there, milestone by milestone, with a demo and a review after each. **Done: M0**
 plan) **and C1** (rigpa `ed481e6`: `display.layout` / `--layout compact` gives the 800×480 panel's
 views on the Mac: Play as home, Rigs, Edit, Tuner, Settings, by touch and by the rotary; 24 of 24
 tests pass). C1 also fixed the bar's tuner, whose ticks were all drawn at the scale's left end.
-**Next: Rik's review of C1, then C2** (compact editing: the node editor, picker and palette fitted to
-the panel), **then C3** (the panel on vip: the DSI connector is published by `drm_rp1_dsi`, not vc4, so
+**C2 done too** (rigpa: flowEQ's panel fitted; the other overlays already fit, checked by
+screenshot). **Next: Rik's review of C2, then C3** (the panel on vip: the DSI connector is published by `drm_rp1_dsi`, not vc4, so
 `devices/vip/rootfs/etc/rigpa/kms.json` changes, and the unit's `ExecCondition` must accept DSI).
 
 **The pedal is now run as a fleet, and that plan is agreed** (2026-11-03):
