@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+# run-o1 [--host vip] [--seconds 600] [--target 0.70] -- O1's check on the pedal (pedal.project
+# docs/pedal-owns-state.md): does a subscriber to namchaind's events, with a knob streamed at 100 Hz,
+# cost the render core anything?
+#
+# Three arms, RUN seconds each, the same heavy rig playing in all of them (built as C3's was: the
+# playing rig's chains repeated until rig.cost is just under --target), rigpa and pedald running as
+# they always do:
+#
+#   base      nothing extra                                     the control
+#   events    o1-stream.py: a subscriber to every event, and a  the load O1 adds: one rig.params
+#             ramped parameter swept +-5% at 100 Hz             frame per 50 ms to the subscriber
+#   base2     nothing extra again                               did anything drift?
+#
+# Each arm: soak-monitor.sh (engine.status every 10 s) and soak-summary.py (the gate: 0 xruns, 0
+# deadline overruns, 0 guard trips, no block over 90%), namchaind's PSS and CPU, per-core busy.
+# The swept parameter is put back where it was; the rig, pedald's resume files and the test rig are
+# put back by the cleanup, whatever happens.
+set -euo pipefail
+ARGS=("$@")
+HOST=vip
+RUN=600
+TARGET=0.70
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --host) HOST=$2; shift ;;
+    --seconds) RUN=$2; shift ;;
+    --target) TARGET=$2; shift ;;
+    -h|--help) sed -n '2,27p' "$0"; exit 0 ;;
+    *) echo "unknown argument: $1" >&2; exit 2 ;;
+  esac
+  shift
+done
+HERE=$(cd "$(dirname "$0")" && pwd)
+REPO=$(git -C "$HERE" rev-parse --show-toplevel)
+[[ ${PEDAL_HOST_LOCK:-} == "$HOST" ]] || exec "$REPO/scripts/host-lock" --host "$HOST" -- "$0" "${ARGS[@]}"
+
+OUT=${O1_OUT:-$HERE/run}
+mkdir -p "$OUT"
+SSH=(ssh -o BatchMode=yes -o ConnectTimeout=10 "$HOST")
+CTL="sudo /opt/namchain/current/bin/namchainctl --token-file /etc/namchain/token"
+RIG=o1-heavy.json
+R=/var/tmp/o1-events          # the harness's own files (resume backup, logs)
+log() { printf '%s  %s\n' "$(date -u +%H:%M:%SZ)" "$*" | tee -a "$OUT/log.txt" >&2; }
+on() { "${SSH[@]}" "$@"; }
+
+cleanup() {
+  log "cleanup"
+  # pedald first, so it can't save the test rig over the resume files once they're back; then the
+  # files, then the rig they name, then pedald again with the test rig gone from its bank.
+  on "sudo systemctl stop pedald; [ -d $R/resume ] && sudo install -m 644 -o pedal -g pedal \
+        $R/resume/last.json $R/resume/last.prev.json /var/lib/pedal/library/rigs/; \
+      sudo rm -f /var/lib/pedal/library/rigs/$RIG; true"
+  on "r=\$($CTL load last.json --compact 2>&1); case \$r in *'\"ok\":true'*) echo restored last.json;; *) echo \"WARNING: \$r\";; esac" \
+    | tee -a "$OUT/log.txt" >&2 || true
+  on "sudo systemctl start pedald; systemctl is-active pedald" | sed 's/^/    pedald now /' | tee -a "$OUT/log.txt" >&2 || true
+  log "cleanup done"
+}
+trap cleanup EXIT
+
+log "O1 on $HOST: $RUN s an arm, target cost $TARGET"
+on "sudo rm -rf $R && sudo mkdir -p $R/resume && sudo chmod 755 $R && \
+    sudo cp /var/lib/pedal/library/rigs/last.json /var/lib/pedal/library/rigs/last.prev.json $R/resume/"
+scp -q "$REPO/scripts/soak/soak-monitor.sh" "$HERE/o1-stream.py" "$HOST:/tmp/"
+on "sudo install -m 755 /tmp/soak-monitor.sh /tmp/o1-stream.py $R/"
+
+# What is running: the record a reader needs to reproduce it.
+{
+  echo "host        $HOST"
+  echo "started     $(date -u +%FT%TZ)"
+  on 'echo "kernel      $(uname -r)"; grep -E "^(commit|rtpi|namchain|rigpa)=" /etc/pedal-image | sed "s/=/      /"
+      echo "rigpa bin   $(sed -n "s/^commit=//p" /opt/rigpa/current/MANIFEST)"
+      echo "engine bin  $(sed -n "s/^commit=//p" /opt/namchain/current/MANIFEST)"
+      sudo vip-boot status | sed -n "3,6p" | sed "s/^/boot        /"'
+} > "$OUT/env.txt"
+
+# The heavy rig: the playing rig's chains repeated until rig.cost is just under the target.
+PLAYING=$(on "$CTL --compact status" | python3 -c "import json,sys; print(json.load(sys.stdin)['status'].get('rig') or '')")
+[[ -n $PLAYING ]] || { log "nothing is playing"; exit 1; }
+log "playing $PLAYING; building $RIG"
+on "sudo python3 - '$(basename "$PLAYING")' '$RIG' '$TARGET'" <<'EOF' | tee -a "$OUT/log.txt" >&2
+import copy, json, os, subprocess, sys
+playing, heavy, target = sys.argv[1], sys.argv[2], float(sys.argv[3])
+root = "/var/lib/pedal/library/rigs"
+ctl = ["/opt/namchain/current/bin/namchainctl", "--token-file", "/etc/namchain/token"]
+doc = json.load(open(os.path.join(root, playing)))
+base = list(doc.get("chains") or [])
+
+def clone(chain, k):
+    c = copy.deepcopy(chain)
+    c["id"] = "%s-c%d" % (chain.get("id", "chain"), k)
+    for n in c.get("nodes") or []:
+        for key in ("id", "element"):
+            if n.get(key):
+                n[key] = "%s-c%d" % (n[key], k)
+    for conn in c.get("connections") or []:
+        for key in ("from", "to"):
+            if isinstance(conn.get(key), str):
+                conn[key] = "%s-c%d" % (conn[key], k)
+    return c
+
+def build(n):
+    d = copy.deepcopy(doc)
+    d["name"] = heavy[:-5]
+    d["chains"] = [clone(base[i % len(base)], i) for i in range(n)]
+    tmp = "/tmp/" + heavy
+    json.dump(d, open(tmp, "w"), indent=1)
+    subprocess.run(["install", "-m", "644", "-o", "pedal", "-g", "pedal", tmp, os.path.join(root, heavy)], check=True)
+
+def cost():
+    out = subprocess.run(ctl + ["cost", heavy, "--compact"], capture_output=True, text=True)
+    reply = json.loads(out.stdout)
+    return (reply.get("cost") or {}).get("cost") if reply.get("ok") else None
+
+best = None
+for n in range(len(base), 9):
+    build(n)
+    c = cost()
+    print("    candidate %d chains -> cost %s" % (n, c))
+    if c is not None and c < target:
+        best = (n, c)
+    else:
+        break
+if best is None:
+    sys.exit("no candidate under the target")
+build(best[0])
+print("    heavy rig %d chains, cost %s" % best)
+EOF
+scp -q "$HOST:/var/lib/pedal/library/rigs/$RIG" "$OUT/$RIG"
+on "sudo systemctl restart pedald"
+sleep 3
+r=$(on "$CTL load $RIG --compact" 2>&1)
+[[ $r == *'"ok":true'* ]] || { log "could not load $RIG: $r"; exit 1; }
+log "loaded $RIG; letting the load transient pass"
+sleep 30
+
+# One sample of what the arm's side readings need: /proc/stat's cpu lines, MemAvailable, and
+# namchaind's own PSS and CPU ticks (the events are made on its control thread).
+sample() {
+  on 'grep -E "^cpu[0-9]" /proc/stat; grep MemAvailable /proc/meminfo
+      pid=$(systemctl show -p MainPID --value namchaind)
+      sudo grep -E "^(Pss|Rss):" /proc/$pid/smaps_rollup; echo "ticks $(awk "{print \$14+\$15}" /proc/$pid/stat)"'
+}
+
+arm() { # arm <label> <events: off|on>
+  local label=$1 events=$2
+  log "arm $label: subscriber and 100 Hz knob $events"
+  sample > "$OUT/$label.before.txt"
+  if [[ $events == on ]]; then
+    # Detached, so it outlives this ssh session, and as root, so it can write beside the rest.
+    on "sudo systemd-run --unit=o1-stream-$label --collect --quiet \
+          sh -c 'exec python3 $R/o1-stream.py $RUN $R/$label.stream.json > $R/$label.stream.log 2>&1'"
+    sleep 5
+    on "systemctl is-active -q o1-stream-$label" || { log "the stream did not start"; on "sudo cat $R/$label.stream.log" >&2; exit 1; }
+  fi
+  on "sudo $R/soak-monitor.sh $R/$label.jsonl $RUN 10"
+  sleep 5
+  sample > "$OUT/$label.after.txt"
+  scp -q "$HOST:$R/$label.jsonl" "$OUT/$label.jsonl"
+  if [[ $events == on ]]; then
+    scp -q "$HOST:$R/$label.stream.json" "$HOST:$R/$label.stream.log" "$OUT/" || log "the stream left no record"
+  fi
+  python3 "$REPO/scripts/soak/soak-summary.py" "$OUT/$label.jsonl" > "$OUT/$label.summary.txt" 2>&1 || true
+  log "arm $label: $(tail -1 "$OUT/$label.summary.txt")"
+}
+
+arm base off
+arm events on
+arm base2 off
+echo "ended       $(date -u +%FT%TZ)" >> "$OUT/env.txt"
+log "done"

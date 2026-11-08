@@ -1426,7 +1426,16 @@ nodes rigpa's views use: vip had run `eba5eef`). The soak passed every arm
 Two deploy-script faults fixed on the way: the planar-kernel check still read namchain's old summary
 line (so every namchain since 0c1a6d8 was refused), and a `| head` under pipefail ended a deploy before
 `components-lock`. **Still to do by eye on the pedal:** the panel's rotation (0 or 180), touch landing
-where touched, legibility from standing. **Then Phase B, from O1** (namchain's event subscription).
+where touched, legibility from standing.
+
+**O1 done, waiting for review** (2026-11-08): namchaind pushes events (namchain `249329a`, test fix
+`453381a`, deployed on vip): `engine.subscribe`, `rig.replaced`/`rig.patched`/`rig.params` with the
+change's origin and tag, `engine.state`/`engine.mute`/`engine.assets`, `seq` and `if_seq`, `namchainctl
+watch`. Tested on the Mac and on Linux in Release, TSan and RTSan; on vip a subscriber with a 100 Hz knob
+passed the gate, render p99 28% → 31% with the knob's own ramps not yet separated from the events'
+([bench-results/2026-11-08-events-vip/README.md](bench-results/2026-11-08-events-vip/README.md)). Found:
+a local-socket reply over 208 KB closes the connection (`engine.schema` on vip); a macro addressed by
+node id is patched structurally. **Next: O2** (pedald foundations).
 
 **The pedal is now run as a fleet, and that plan is agreed** (2026-11-03):
 [docs/operations-plan.md](docs/operations-plan.md). Three Cores (zap, vip, pro), named builds and sets,

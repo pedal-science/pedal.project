@@ -1,0 +1,12 @@
+61 samples over 10.1 min (0 without an answer from namchaind)
+rig o1-heavy, period 64, deadline 1333.3 us
+blocks 452637 (timed 452637)
+load: p50 19%, p99 28%, p99.9 40%, worst bucket 61%
+worst block during the soak: in the 61% bucket (the daemon's all-time worst, 926.4 us, came before it)
+tail: {30: 839, 31: 534, 32: 368, 33: 180, 34: 132, 35: 98, 36: 64, 37: 65, 38: 62, 39: 55, 40: 65, 41: 86, 42: 65, 43: 48, 44: 33, 45: 29, 46: 30, 47: 20, 48: 21, 49: 19, 50: 17, 51: 7, 52: 11, 53: 9, 54: 7, 55: 4, 56: 2, 57: 2, 59: 1, 61: 1}
+temperature 67.0..70.3 C, throttled flags seen: ['0x0']
+slowest core clock seen: 2400 MHz (the cap holds every core at its maximum; below it is throttling)
+edits: generation 5 -> 5, params_applied +0, transitions +0, max TCP connections seen 2
+queue: drops +0, insertions +0, capture bursts +0
+gate: driver xruns 0, deadline overruns 0, guard trips 0, blocks over 90% 0, render errors 0, device lost 0
+PASS

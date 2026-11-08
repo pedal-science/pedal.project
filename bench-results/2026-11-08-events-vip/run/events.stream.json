@@ -1,0 +1,24 @@
+{
+ "seconds": 600.0,
+ "stream": true,
+ "target": {
+  "chain": "64AD55DB-C889-41EC-B223-99AC8B26B40C-c0",
+  "node": {
+   "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-c0"
+  },
+  "param": "bass",
+  "start": 5.0727,
+  "swing": 1.8
+ },
+ "ops": 60000,
+ "refused": 0,
+ "kinds": {
+  "smooth": 60000
+ },
+ "events": {
+  "engine.state": 1,
+  "rig.params": 11998
+ },
+ "event_bytes": 3971133,
+ "resyncs": 0
+}

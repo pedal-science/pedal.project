@@ -1,0 +1,18 @@
+03:37:44Z  O1 on vip: 600 s an arm, target cost 0.70
+03:37:46Z  playing /var/lib/pedal/library/rigs/last.json; building o1-heavy.json
+    candidate 1 chains -> cost 0.47862999999999994
+    candidate 2 chains -> cost 0.56876
+    candidate 3 chains -> cost 0.7365900000000001
+    heavy rig 2 chains, cost 0.56876
+03:37:51Z  loaded o1-heavy.json; letting the load transient pass
+03:38:21Z  arm base: subscriber and 100 Hz knob off
+03:48:31Z  arm base: PASS
+03:48:31Z  arm events: subscriber and 100 Hz knob on
+03:58:47Z  arm events: PASS
+03:58:47Z  arm base2: subscriber and 100 Hz knob off
+04:08:57Z  arm base2: PASS
+04:08:57Z  done
+04:08:57Z  cleanup
+restored last.json
+    pedald now active
+04:08:59Z  cleanup done
