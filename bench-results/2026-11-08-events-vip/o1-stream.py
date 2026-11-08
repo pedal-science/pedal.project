@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-# o1-stream.py SECONDS OUT.json [--no-stream]: O1's load on the engine (namchain docs/daemon.md, "Events").
+# o1-stream.py SECONDS OUT.json [--no-stream] [--no-subscriber]: O1's load on the engine (namchain docs/daemon.md, "Events").
 # Runs on the Core host as root, beside soak-monitor.sh. Two connections to namchaind's local socket:
 #   a subscriber to every event (as a view would be), counting frames, bytes and resyncs, and
 #   a knob: a ramped parameter of the playing rig swept at 100 Hz, a small way either side of where it
 #   was, and put back at the end -- the stream a slider produces.
+# --no-subscriber leaves the subscriber out: the knob alone, the control that separates what the knob
+# costs the render thread (its ramps) from what the events cost (bench-results/2026-11-08-events-vip, knob).
 # Writes what it saw as one JSON object.
 import json, math, select, socket, sys, time
 
@@ -13,6 +15,7 @@ ADDR = ("127.0.0.1", 47810)
 TOKEN = open("/etc/namchain/token").read().split()[0]
 seconds, out = float(sys.argv[1]), sys.argv[2]
 stream = "--no-stream" not in sys.argv
+subscribe = "--no-subscriber" not in sys.argv
 
 class Conn:
     def __init__(self):
@@ -57,9 +60,11 @@ def call(c, req, events=None):
             return msg
 
 knob = connect("o1-knob")
-viewer = connect("o1-viewer")
-sub = call(viewer, {"method": "engine.subscribe"})
-assert sub["ok"], sub
+viewer = None
+if subscribe:
+    viewer = connect("o1-viewer")
+    sub = call(viewer, {"method": "engine.subscribe"})
+    assert sub["ok"], sub
 
 # A rampable numeric parameter in the playing document, and its current value.
 types = {t["id"]: t for t in call(knob, {"method": "engine.schema"})["nodes"]}
@@ -91,7 +96,7 @@ counts, sizes, resyncs, ops, refused, kinds = {}, 0, 0, 0, 0, {}
 t0 = time.monotonic(); nxt = t0
 def drain():
     global sizes, resyncs
-    while viewer.ready():
+    while viewer is not None and viewer.ready():
         b = viewer.recv(); sizes += len(b)
         m = json.loads(b); e = m.get("event", "reply")
         counts[e] = counts.get(e, 0) + 1
@@ -109,7 +114,7 @@ while time.monotonic() - t0 < seconds:
 if stream:
     call(knob, {"method": "rig.patch", "chain": chain, "ops": [dict(node, op="set_param", param=param, value=start)]})
 time.sleep(0.3); drain()
-json.dump({"seconds": seconds, "stream": stream, "target": {"chain": chain, "node": node, "param": param,
+json.dump({"seconds": seconds, "stream": stream, "subscriber": subscribe, "target": {"chain": chain, "node": node, "param": param,
            "start": start, "swing": swing}, "ops": ops, "refused": refused, "kinds": kinds, "events": counts,
            "event_bytes": sizes, "resyncs": resyncs}, open(out, "w"), indent=1)
 print("ops %d refused %d events %s resyncs %d" % (ops, refused, counts, resyncs))

@@ -1432,7 +1432,8 @@ where touched, legibility from standing.
 `453381a`, deployed on vip): `engine.subscribe`, `rig.replaced`/`rig.patched`/`rig.params` with the
 change's origin and tag, `engine.state`/`engine.mute`/`engine.assets`, `seq` and `if_seq`, `namchainctl
 watch`. Tested on the Mac and on Linux in Release, TSan and RTSan; on vip a subscriber with a 100 Hz knob
-passed the gate, render p99 28% → 31% with the knob's own ramps not yet separated from the events'
+passed the gate, render p99 28% → 31%; a fourth arm, the knob with nobody subscribed, put 30% of that
+on the knob's own ramps, leaving events at most a point, inside the noise, and about 1% of core 0
 ([bench-results/2026-11-08-events-vip/README.md](bench-results/2026-11-08-events-vip/README.md)). Found:
 a local-socket reply over 208 KB closes the connection (`engine.schema` on vip); a macro addressed by
 node id is patched structurally. **Next: O2** (pedald foundations).

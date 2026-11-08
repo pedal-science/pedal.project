@@ -10,7 +10,7 @@ import os
 import re
 import sys
 
-ARMS = ["base", "events", "base2"]
+ARMS = ["base", "knob", "events", "knob2", "events2", "base2"]
 TICK = 100  # USER_HZ
 
 
