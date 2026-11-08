@@ -6,5 +6,5 @@
     "video-out"
   ],
   "needs_ram_mb": 1024,
-  "note": "Not written yet."
+  "note": "rigpa's compact layout (D17, docs/pedal-owns-state.md C1-C3): 800x480 touch and the rotary, Play as home, Rigs, Edit, Tuner, Settings. On vip since 2026-11-07 (rigpa f5a6825), on the 4.3-inch DSI panel."
 }

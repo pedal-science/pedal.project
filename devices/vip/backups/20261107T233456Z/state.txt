@@ -2,11 +2,11 @@
 == host
 Linux vip 7.0.0-1017-raspi-realtime-numaemu3-dmaidle1-qled2-trimmed #2 SMP PREEMPT_RT Thu Nov  5 17:20:57 UTC 2026 aarch64 GNU/Linux
 reboot=w coherent_pool=1M 8250.nr_uarts=1 pci=pcie_bus_safe numa_policy=interleave nvme.max_host_mem_size_mb=0  numa=fake=4 system_heap.max_order=0 iommu_dma_numa_policy=interleave smsc95xx.macaddr=98:FE:54:15:25:8B vc_mem.mem_base=0x3fc00000 vc_mem.mem_size=0x40000000  root=LABEL=pedal net.ifnames=0 console=ttyAMA10,115200 console=tty1 rootfstype=ext4 rootwait fixrtc cfg80211.ieee80211_regdom=GB rd.shell=0 rd.emergency=reboot rd.retry=60 rd.timeout=90 panic=10 isolcpus=managed_irq,domain,1-3 nohz_full=1-3 rcu_nocbs=1-3 irqaffinity=0 skew_tick=1 vipboot.root=pedal vipboot.slot=a vipboot.profile=tuned
- 16:28:13 up 38 min,  0 users,  load average: 0.21, 0.39, 0.35
+ 23:34:56 up  1:31,  0 users,  load average: 0.17, 0.28, 0.31
 
 == applied
-commit=cee2ad6
-applied=2026-10-16T20:39:43Z
+commit=83f1e98
+applied=2026-11-07T16:28:28Z
 
 == isolation
 isolated=1-3 nohz_full=1-3
@@ -15,7 +15,7 @@ isolated=1-3 nohz_full=1-3
 policy0 performance max=2400000 cur=2400000
 
 == thermal
-cpu-thermal 62250
+cpu-thermal 69950
 
 == cpusets
 pedal.slice 0-3
@@ -26,10 +26,10 @@ init.scope 0
 == cpuidle
 /sys/devices/system/cpu/cpu[0-9]*cat: '/sys/devices/system/cpu/cpu[0-9]*/cpuidle/state*/name': No such file or directory
 cat: '/sys/devices/system/cpu/cpu[0-9]*/cpuidle/state*/latency': No such file or directory
-cat: '/sys/devices/system/cpu/cpu[0-9]*/cpuidle/state*/disable': No such file or directory
  (us,dis=)
 
 == workqueue
+cat: '/sys/devices/system/cpu/cpu[0-9]*/cpuidle/state*/disable': No such file or directory
 1
 
 == throttle
@@ -43,8 +43,8 @@ cat: '/sys/devices/system/cpu/cpu[0-9]*/cpuidle/state*/disable': No such file or
   9:          0          0          0          0    GICv2  25 Level     vgic
  11:          0          0          0          0    GICv2  30 Level     kvm guest ptimer
  12:          0          0          0          0    GICv2  27 Level     kvm guest vtimer
- 13:    2497488       7595        914        918    GICv2  26 Level     arch_timer
- 15:       2210          0          0          0    GICv2  65 Level     107c013880.mailbox
+ 13:    5920404      16713        705        710    GICv2  26 Level     arch_timer
+ 15:       3736          0          0          0    GICv2  65 Level     107c013880.mailbox
  16:         21          0          0          0    GICv2 152 Level     uart-pl011
  22:          0          0          0          0    GICv2 119 Level     DMA IRQ
  23:          0          0          0          0    GICv2 120 Level     DMA IRQ
@@ -56,22 +56,22 @@ cat: '/sys/devices/system/cpu/cpu[0-9]*/cpuidle/state*/disable': No such file or
  35:          0          0          0          0    GICv2  51 Level     arm-pmu
  36:          0          0          0          0 interrupt-controller@7d508380   1 Level     107d508200.i2c
  37:          0          0          0          0 interrupt-controller@7d508380   2 Level     107d508280.i2c
- 38:       2732          0          0          0    GICv2 308 Level     ttyS0
+ 38:       2733          0          0          0    GICv2 308 Level     ttyS0
  40:          0          0          0          0    GICv2 261 Level     PCIe PME, aerdrv, PCIe bwctrl
 108:          0          0          0          0 rp1_irq_chip   6 Level     eth0
-110:        268          0          0          0 rp1_irq_chip   8 Level     1f00074000.i2c
-113:    1139510          0          0          0 rp1_irq_chip  11 Level     1f00080000.i2c
-127:      19874          0          0          0 rp1_irq_chip  25 Level     uart-pl011
-133:         82          0          0          0 rp1_irq_chip  31 Edge      xhci-hcd:usb1
+110:        238          0          0          0 rp1_irq_chip   8 Level     1f00074000.i2c
+113:    2704765          0          0          0 rp1_irq_chip  11 Level     1f00080000.i2c
+127:          0          0          0          0 rp1_irq_chip  25 Level     uart-pl011
+133:          1          0          0          0 rp1_irq_chip  31 Edge      xhci-hcd:usb1
 138:          1          0          0          0 rp1_irq_chip  36 Edge      xhci-hcd:usb3
-142:          0    6831587          0          0 rp1_irq_chip  40 Level     dw_axi_dmac_platform
-150:       1252          0          0          0 rp1_irq_chip  48 Level     rp1-dsi
+142:          0   16383722          0          0 rp1_irq_chip  40 Level     dw_axi_dmac_platform
+150:       2312          0          0          0 rp1_irq_chip  48 Level     rp1-dsi
 160:          4          0          0          0 rp1_irq_chip  58 Level     1f00008000.mailbox
 163:          0          0          0          0 107d508500.gpio  20 Edge      pwr_button
-164:      19882          0          0          0    GICv2 305 Level     mmc0
+164:     318187          0          0          0    GICv2 306 Level     mmc1
 165:          0          0          0          0    GICv2 150 Level     107d004000.spi
-166:     929897          0          0          0    GICv2 306 Level     mmc1
-167:          0          0          0          0    GICv2 281 Level     v3d_core0
+166:      24294          0          0          0    GICv2 305 Level     mmc0
+167:         98          0          0          0    GICv2 281 Level     v3d_core0
 168:          0          0          0          0    GICv2 282 Level     v3d_hub
 169:          0          0          0          0    GICv2 104 Level     pispbe
 170:          0          0          0          0    GICv2 130 Level     1000800000.codec
@@ -90,12 +90,12 @@ cat: '/sys/devices/system/cpu/cpu[0-9]*/cpuidle/state*/disable': No such file or
 183:          0          0          0          0 interrupt-controller@7c502000   0 Level     107c501000.moplet
 184:          0          0          0          0    GICv2 133 Level     vc4 crtc
 185:          0          0          0          0    GICv2 142 Level     vc4 crtc
-IPI0:   3429187    1707543         17    1707947       Rescheduling interrupts
-IPI1:         2        887        885        887       Function call interrupts
+IPI0:   8324047    4095815         16    4095979       Rescheduling interrupts
+IPI1:         2        855        857        857       Function call interrupts
 IPI2:         0          0          0          0       CPU stop interrupts
 IPI3:         0          0          0          0       CPU stop NMIs
 IPI4:         0          0          0          0       Timer broadcast interrupts
-IPI5:     16312       6689          4         21       IRQ work interrupts
+IPI5:     31518      16042          3         21       IRQ work interrupts
 IPI6:         0          0          0          0       CPU backtrace interrupts
 IPI7:         0          0          0          0       KGDB roundup interrupts
 Err:          0
@@ -171,50 +171,50 @@ Err:          0
     261  FF     49   0 irq/40-s-aerdrv
     262  FF     50   0 irq/40-PCIe bwctrl
     263  FF     50   0 irq/163-pwr_button
-    265  FF     50   0 irq/164-mmc0
-    266  FF     49   0 irq/164-s-mmc0
+    265  FF     50   0 irq/164-mmc1
+    266  FF     49   0 irq/164-s-mmc1
     269  FF     50   0 irq/22-DMA IRQ
-    271  FF     50   0 irq/166-mmc1
-    272  FF     49   0 irq/166-s-mmc1
-    273  FF     50   0 irq/23-DMA IRQ
-    274  FF     50   0 irq/165-107d004000.spi
-    276  FF     85   0 irq/142-dw_axi_dmac_platform
-    278  FF     50   0 irq/160-1f00008000.mailbox
+    270  FF     50   0 irq/23-DMA IRQ
+    271  FF     50   0 irq/165-107d004000.spi
+    273  FF     85   0 irq/142-dw_axi_dmac_platform
+    276  FF     50   0 irq/166-mmc0
+    277  FF     49   0 irq/166-s-mmc0
+    279  FF     50   0 irq/160-1f00008000.mailbox
     280  FF     50   0 irq/113-1f00080000.i2c
     282  FF     50   0 irq/133-xhci-hcd:usb1
     283  FF     50   0 irq/138-xhci-hcd:usb3
-    422  FF     50   0 irq/108-eth%d
-    442  FF     50   0 irq/150-rp1-dsi
-    445  FF     50   0 irq/167-v3d_core0
+    424  FF     50   0 irq/108-eth%d
+    443  FF     50   0 irq/167-v3d_core0
+    444  FF     50   0 irq/150-rp1-dsi
     446  FF     50   0 irq/168-v3d_hub
-    454  FF     50   0 irq/169-pispbe
-    455  FF     50   0 irq/170-1000800000.codec
-    456  FF     49   0 irq/170-s-1000800000.codec
-    503  FF     50   0 irq/110-1f00074000.i2c
-    521  FF     50   0 irq/171-107c580000.hvs
-    522  FF     50   0 irq/172-107c580000.hvs
-    528  FF     50   0 irq/173-107c580000.hvs
-    530  FF     50   0 irq/174-vc4 hdmi hpd connected
-    532  FF     50   0 irq/175-vc4 hdmi hpd disconnected
-    534  FF     50   0 irq/176-vc4 hdmi cec rx
-    535  FF     49   0 irq/176-s-vc4 hdmi cec rx
-    537  FF     50   0 irq/177-vc4 hdmi cec tx
-    538  FF     49   0 irq/177-s-vc4 hdmi cec tx
-    539  FF     50   0 irq/24-DMA IRQ
-    546  FF     50   0 irq/178-vc4 hdmi hpd connected
-    547  FF     50   0 irq/179-vc4 hdmi hpd disconnected
-    550  FF     50   0 irq/180-vc4 hdmi cec rx
-    551  FF     49   0 irq/180-s-vc4 hdmi cec rx
-    552  FF     50   0 irq/181-vc4 hdmi cec tx
-    553  FF     49   0 irq/181-s-vc4 hdmi cec tx
-    554  FF     50   0 irq/25-DMA IRQ
-    560  FF     50   0 irq/38-ttyS0
-    567  FF     50   0 irq/182-107c500000.mop
-    568  FF     50   0 irq/183-107c501000.moplet
-    569  FF     50   0 irq/184-vc4 crtc
-    570  FF     50   0 irq/185-vc4 crtc
-   1084  FF     50   0 irq/127-uart-pl011
-   3388  FF     50   0 irq/16-uart-pl011
+    455  FF     50   0 irq/169-pispbe
+    456  FF     50   0 irq/170-1000800000.codec
+    459  FF     49   0 irq/170-s-1000800000.codec
+    484  FF     50   0 irq/38-ttyS0
+    528  FF     50   0 irq/110-1f00074000.i2c
+    542  FF     50   0 irq/171-107c580000.hvs
+    543  FF     50   0 irq/172-107c580000.hvs
+    544  FF     50   0 irq/173-107c580000.hvs
+    545  FF     50   0 irq/174-vc4 hdmi hpd connected
+    546  FF     50   0 irq/175-vc4 hdmi hpd disconnected
+    548  FF     50   0 irq/176-vc4 hdmi cec rx
+    549  FF     49   0 irq/176-s-vc4 hdmi cec rx
+    550  FF     50   0 irq/177-vc4 hdmi cec tx
+    551  FF     49   0 irq/177-s-vc4 hdmi cec tx
+    552  FF     50   0 irq/24-DMA IRQ
+    563  FF     50   0 irq/178-vc4 hdmi hpd connected
+    564  FF     50   0 irq/179-vc4 hdmi hpd disconnected
+    566  FF     50   0 irq/180-vc4 hdmi cec rx
+    567  FF     49   0 irq/180-s-vc4 hdmi cec rx
+    568  FF     50   0 irq/181-vc4 hdmi cec tx
+    569  FF     49   0 irq/181-s-vc4 hdmi cec tx
+    570  FF     50   0 irq/25-DMA IRQ
+    579  FF     50   0 irq/182-107c500000.mop
+    580  FF     50   0 irq/183-107c501000.moplet
+    581  FF     50   0 irq/184-vc4 crtc
+    582  FF     50   0 irq/185-vc4 crtc
+   1132  FF     50   0 irq/127-uart-pl011
+   2972  FF     50   0 irq/16-uart-pl011
 
 == masked
 alsa-utils.service        masked enabled
@@ -285,13 +285,13 @@ wpa_supplicant.service        loaded active running WPA supplicant
 wpa_supplicant@wlan0.service  loaded active running WPA supplicant daemon (for interface wlan0)
 
 == timers
-Sun 2026-11-08 16:04:47 UTC 23h Sat 2026-11-07 16:04:47 UTC 23min ago systemd-tmpfiles-clean.timer systemd-tmpfiles-clean.service
--                             - -                                   - apt-daily-upgrade.timer      -
--                             - -                                   - apt-daily.timer              -
--                             - -                                   - dpkg-db-backup.timer         -
--                             - -                                   - e2scrub_all.timer            -
--                             - -                                   - fstrim.timer                 -
--                             - -                                   - motd-news.timer              -
+Sun 2026-11-08 22:18:44 UTC 22h Sat 2026-11-07 22:18:44 UTC 1h 16min ago systemd-tmpfiles-clean.timer systemd-tmpfiles-clean.service
+-                             - -                                      - apt-daily-upgrade.timer      -
+-                             - -                                      - apt-daily.timer              -
+-                             - -                                      - dpkg-db-backup.timer         -
+-                             - -                                      - e2scrub_all.timer            -
+-                             - -                                      - fstrim.timer                 -
+-                             - -                                      - motd-news.timer              -
 
 == sysctl
 vm.swappiness = 60

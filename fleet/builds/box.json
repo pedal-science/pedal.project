@@ -15,8 +15,8 @@
     },
     "screen": {
       "part": "waveshare-4.3",
-      "state": "ordered",
-      "note": "Size still being tried"
+      "state": "in-hand",
+      "note": "Working on vip (DSI-1, 800x480 at 60 Hz, touch); whether it fits the case is still being tried"
     },
     "controls": {
       "part": "pico-3fs",
@@ -29,7 +29,8 @@
     },
     "ui": {
       "part": "rigpa-compact",
-      "state": "planned"
+      "state": "fitted",
+      "note": "rigpa f5a6825 on the panel since 2026-11-07"
     }
   },
   "set": "as-found-vip",
@@ -52,7 +53,7 @@
     },
     {
       "title": "rigpa compact",
-      "state": "next"
+      "state": "now"
     },
     {
       "title": "The input board made small",

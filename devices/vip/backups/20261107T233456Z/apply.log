@@ -1,7 +1,7 @@
-  installed /usr/local/lib/pedald/mapping.py
-  installed /usr/local/lib/pedald/resume.py
-  installed /usr/local/sbin/pedal-device
-  installed /usr/local/sbin/pedal-tune
+  installed /etc/rigpa/kms.json
+  installed /etc/rigpa/rigpa.json
+  installed /etc/systemd/system/rigpa.service.d/10-pedal.conf
+  installed /etc/systemd/system/rigpa.service.d/20-vip.conf
   masked by someone else, left alone: rpi-eeprom-update.service
 Unit /etc/systemd/system/pedal-wifi.service is added as a dependency to a non-existent unit sys-subsystem-net-devices-wlan0.device.
 pedal-device: done. Manifest: /var/lib/pedal/manifest

@@ -1418,9 +1418,15 @@ there, milestone by milestone, with a demo and a review after each. **Done: M0**
 plan) **and C1** (rigpa `ed481e6`: `display.layout` / `--layout compact` gives the 800×480 panel's
 views on the Mac: Play as home, Rigs, Edit, Tuner, Settings, by touch and by the rotary; 24 of 24
 tests pass). C1 also fixed the bar's tuner, whose ticks were all drawn at the scale's left end.
-**C2 done too** (rigpa: flowEQ's panel fitted; the other overlays already fit, checked by
-screenshot). **Next: Rik's review of C2, then C3** (the panel on vip: the DSI connector is published by `drm_rp1_dsi`, not vc4, so
-`devices/vip/rootfs/etc/rigpa/kms.json` changes, and the unit's `ExecCondition` must accept DSI).
+**C2 and C3 done too.** C2 fitted flowEQ's panel (the other overlays already fit). **C3 put it on the
+box's panel**: rigpa `f5a6825` on vip's DSI-1 (`drm-rp1-dsi`, 800×480 at 60 Hz), compact layout, its unit
+started by a DSI connector as well as HDMI; namchain `70a6e3f` deployed with it (the flowEQ and tuner
+nodes rigpa's views use: vip had run `eba5eef`). The soak passed every arm
+([bench-results/2026-11-07-rigpa-compact-vip/README.md](bench-results/2026-11-07-rigpa-compact-vip/README.md)).
+Two deploy-script faults fixed on the way: the planar-kernel check still read namchain's old summary
+line (so every namchain since 0c1a6d8 was refused), and a `| head` under pipefail ended a deploy before
+`components-lock`. **Still to do by eye on the pedal:** the panel's rotation (0 or 180), touch landing
+where touched, legibility from standing. **Then Phase B, from O1** (namchain's event subscription).
 
 **The pedal is now run as a fleet, and that plan is agreed** (2026-11-03):
 [docs/operations-plan.md](docs/operations-plan.md). Three Cores (zap, vip, pro), named builds and sets,

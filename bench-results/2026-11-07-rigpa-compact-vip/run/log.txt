@@ -1,0 +1,23 @@
+23:49:35Z  C3 on vip: 600 s an arm, target cost 0.70
+    connector connected 800x480
+23:49:38Z  playing /var/lib/pedal/library/rigs/last.json; building c3-heavy.json
+    candidate 1 chains -> cost 0.47862999999999994
+    candidate 2 chains -> cost 0.56876
+    candidate 3 chains -> cost 0.7365900000000001
+    heavy rig 2 chains, cost 0.56876
+23:49:43Z  loaded c3-heavy.json; letting the load transient pass
+23:50:13Z  arm off: rigpa off
+00:00:18Z  arm off: PASS
+00:00:18Z  arm idle: rigpa on, meters false
+00:10:45Z  arm idle: PASS
+00:10:45Z  arm meters: rigpa on, meters true, --view=settings
+00:21:11Z  arm meters: PASS
+00:21:11Z  arm animate: rigpa on, meters true, --demo-animate
+00:31:39Z  arm animate: PASS
+00:31:39Z  arm off2: rigpa off
+00:41:44Z  arm off2: PASS
+00:41:44Z  done
+00:41:44Z  cleanup
+restored last.json
+    rigpa now active
+00:41:46Z  cleanup done

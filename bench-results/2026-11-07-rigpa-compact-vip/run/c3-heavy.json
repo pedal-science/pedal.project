@@ -1,0 +1,237 @@
+{
+ "chains": [
+  {
+   "connections": [
+    {
+     "from": "in-c0",
+     "from_port": 0,
+     "to": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c0",
+     "to_port": 0
+    },
+    {
+     "from": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c0",
+     "from_port": 0,
+     "to": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c0",
+     "to_port": 0
+    },
+    {
+     "from": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c0",
+     "from_port": 0,
+     "to": "7A67DB6F-EDAA-4214-9877-726C3112C8C3-nam-c0",
+     "to_port": 0
+    },
+    {
+     "from": "7A67DB6F-EDAA-4214-9877-726C3112C8C3-nam-c0",
+     "from_port": 0,
+     "to": "3844602A-8C55-4476-B0D8-D0EC02C8FA3E-gain-c0",
+     "to_port": 0
+    },
+    {
+     "from": "3844602A-8C55-4476-B0D8-D0EC02C8FA3E-gain-c0",
+     "from_port": 0,
+     "to": "96FCE7AF-0997-4D90-BDB5-6A306E862A88-nam-c0",
+     "to_port": 0
+    },
+    {
+     "from": "96FCE7AF-0997-4D90-BDB5-6A306E862A88-nam-c0",
+     "from_port": 0,
+     "to": "5F586965-DD2A-4C6B-8D79-D5B0A9356996-cut-c0",
+     "to_port": 0
+    },
+    {
+     "from": "5F586965-DD2A-4C6B-8D79-D5B0A9356996-cut-c0",
+     "from_port": 0,
+     "to": "BA93D8B1-A70B-4C93-83DC-72C50279010D-cab-c0",
+     "to_port": 0
+    },
+    {
+     "from": "BA93D8B1-A70B-4C93-83DC-72C50279010D-cab-c0",
+     "from_port": 0,
+     "to": "out-c0",
+     "to_port": 0
+    }
+   ],
+   "id": "64AD55DB-C889-41EC-B223-99AC8B26B40C-c0",
+   "input_channel": 0,
+   "name": "Guitar",
+   "nodes": [
+    {
+     "element": "in-c0",
+     "id": "in-c0",
+     "type": "nc.input"
+    },
+    {
+     "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-c0",
+     "id": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c0",
+     "model": "Boss SD-1 Super Overdrive/APP-SD1-Drive-I",
+     "type": "nc.nam"
+    },
+    {
+     "bass": 5.0727,
+     "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-c0",
+     "id": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c0",
+     "mid": 6.0545,
+     "mid_freq": 663.2806,
+     "type": "fx.amp.tonestack"
+    },
+    {
+     "element": "7A67DB6F-EDAA-4214-9877-726C3112C8C3-c0",
+     "id": "7A67DB6F-EDAA-4214-9877-726C3112C8C3-nam-c0",
+     "model": "NAM Ampeg VT-40/Ampeg VT-40 - Vol 6, Bass 6, Mid 5, Treble 8, EQ 800Hz, Super Hard On, M160",
+     "type": "nc.nam"
+    },
+    {
+     "element": "3844602A-8C55-4476-B0D8-D0EC02C8FA3E-c0",
+     "gain_db": -4.5818,
+     "id": "3844602A-8C55-4476-B0D8-D0EC02C8FA3E-gain-c0",
+     "ramp_ms": 86.8182,
+     "type": "nc.gain"
+    },
+    {
+     "element": "96FCE7AF-0997-4D90-BDB5-6A306E862A88-c0",
+     "id": "96FCE7AF-0997-4D90-BDB5-6A306E862A88-nam-c0",
+     "model": "000 Unsorted/Ampeg SVT VR _ 8x10 _ Beta52A + DI",
+     "type": "nc.nam"
+    },
+    {
+     "element": "5F586965-DD2A-4C6B-8D79-D5B0A9356996-c0",
+     "high_cut": 5371.857,
+     "high_slope": "48",
+     "id": "5F586965-DD2A-4C6B-8D79-D5B0A9356996-cut-c0",
+     "low_cut": 100.4149,
+     "low_slope": "48",
+     "type": "fx.filter.cut"
+    },
+    {
+     "element": "BA93D8B1-A70B-4C93-83DC-72C50279010D-c0",
+     "id": "BA93D8B1-A70B-4C93-83DC-72C50279010D-cab-c0",
+     "ir": "Mesa_OS_4x12_57_m160",
+     "type": "nc.cab.ir"
+    },
+    {
+     "element": "out-c0",
+     "id": "out-c0",
+     "type": "nc.output"
+    }
+   ],
+   "output_channel": 0
+  },
+  {
+   "connections": [
+    {
+     "from": "in-c1",
+     "from_port": 0,
+     "to": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c1",
+     "to_port": 0
+    },
+    {
+     "from": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c1",
+     "from_port": 0,
+     "to": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c1",
+     "to_port": 0
+    },
+    {
+     "from": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c1",
+     "from_port": 0,
+     "to": "7A67DB6F-EDAA-4214-9877-726C3112C8C3-nam-c1",
+     "to_port": 0
+    },
+    {
+     "from": "7A67DB6F-EDAA-4214-9877-726C3112C8C3-nam-c1",
+     "from_port": 0,
+     "to": "3844602A-8C55-4476-B0D8-D0EC02C8FA3E-gain-c1",
+     "to_port": 0
+    },
+    {
+     "from": "3844602A-8C55-4476-B0D8-D0EC02C8FA3E-gain-c1",
+     "from_port": 0,
+     "to": "96FCE7AF-0997-4D90-BDB5-6A306E862A88-nam-c1",
+     "to_port": 0
+    },
+    {
+     "from": "96FCE7AF-0997-4D90-BDB5-6A306E862A88-nam-c1",
+     "from_port": 0,
+     "to": "5F586965-DD2A-4C6B-8D79-D5B0A9356996-cut-c1",
+     "to_port": 0
+    },
+    {
+     "from": "5F586965-DD2A-4C6B-8D79-D5B0A9356996-cut-c1",
+     "from_port": 0,
+     "to": "BA93D8B1-A70B-4C93-83DC-72C50279010D-cab-c1",
+     "to_port": 0
+    },
+    {
+     "from": "BA93D8B1-A70B-4C93-83DC-72C50279010D-cab-c1",
+     "from_port": 0,
+     "to": "out-c1",
+     "to_port": 0
+    }
+   ],
+   "id": "64AD55DB-C889-41EC-B223-99AC8B26B40C-c1",
+   "input_channel": 0,
+   "name": "Guitar",
+   "nodes": [
+    {
+     "element": "in-c1",
+     "id": "in-c1",
+     "type": "nc.input"
+    },
+    {
+     "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-c1",
+     "id": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-nam-c1",
+     "model": "Boss SD-1 Super Overdrive/APP-SD1-Drive-I",
+     "type": "nc.nam"
+    },
+    {
+     "bass": 5.0727,
+     "element": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-c1",
+     "id": "11B8C546-F3EC-443F-9D22-5C943AA07E7A-tone-c1",
+     "mid": 6.0545,
+     "mid_freq": 663.2806,
+     "type": "fx.amp.tonestack"
+    },
+    {
+     "element": "7A67DB6F-EDAA-4214-9877-726C3112C8C3-c1",
+     "id": "7A67DB6F-EDAA-4214-9877-726C3112C8C3-nam-c1",
+     "model": "NAM Ampeg VT-40/Ampeg VT-40 - Vol 6, Bass 6, Mid 5, Treble 8, EQ 800Hz, Super Hard On, M160",
+     "type": "nc.nam"
+    },
+    {
+     "element": "3844602A-8C55-4476-B0D8-D0EC02C8FA3E-c1",
+     "gain_db": -4.5818,
+     "id": "3844602A-8C55-4476-B0D8-D0EC02C8FA3E-gain-c1",
+     "ramp_ms": 86.8182,
+     "type": "nc.gain"
+    },
+    {
+     "element": "96FCE7AF-0997-4D90-BDB5-6A306E862A88-c1",
+     "id": "96FCE7AF-0997-4D90-BDB5-6A306E862A88-nam-c1",
+     "model": "000 Unsorted/Ampeg SVT VR _ 8x10 _ Beta52A + DI",
+     "type": "nc.nam"
+    },
+    {
+     "element": "5F586965-DD2A-4C6B-8D79-D5B0A9356996-c1",
+     "high_cut": 5371.857,
+     "high_slope": "48",
+     "id": "5F586965-DD2A-4C6B-8D79-D5B0A9356996-cut-c1",
+     "low_cut": 100.4149,
+     "low_slope": "48",
+     "type": "fx.filter.cut"
+    },
+    {
+     "element": "BA93D8B1-A70B-4C93-83DC-72C50279010D-c1",
+     "id": "BA93D8B1-A70B-4C93-83DC-72C50279010D-cab-c1",
+     "ir": "Mesa_OS_4x12_57_m160",
+     "type": "nc.cab.ir"
+    },
+    {
+     "element": "out-c1",
+     "id": "out-c1",
+     "type": "nc.output"
+    }
+   ],
+   "output_channel": 0
+  }
+ ],
+ "name": "c3-heavy"
+}
