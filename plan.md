@@ -1428,6 +1428,14 @@ line (so every namchain since 0c1a6d8 was refused), and a `| head` under pipefai
 `components-lock`. **Still to do by eye on the pedal:** the panel's rotation (0 or 180), touch landing
 where touched, legibility from standing.
 
+**O6 done, waiting for review** (2026-11-09): ljoss shows pedals and keeps no rigs. It finds pedals over Bonjour,
+keeps one token per pedal id (the old single token moved to vip by itself), and lists known pedals behind "Show
+disconnected". It subscribes to the engine as `ljoss` and reads what the pedal plays instead of sending its own
+document. Its decoder draws the engine document with the pedal's templates, by rigpa's rules. The running rig shows
+read only, with pedald's play line ("Rig up → Standard"). The "This Mac" controls and the start at launch are gone, and
+the old rigs are read and never written. ljoss `019b14d`; evidence in ljoss's
+`bench-results/2026-11-09-o6-pedals-vip/README.md`. **Next: O7** (ljoss: editing through the pedal).
+
 **O5 done, waiting for review** (2026-11-09): rigpa follows the pedal. It applies the engine's pushed changes,
 reads pedald's event stream instead of polling, and loads, makes and undoes rigs through pedald. Its own autosave is
 gone, and pedald's `autosave` is on, on vip too. The palette offers the pedal's 27 templates and the node editor their
