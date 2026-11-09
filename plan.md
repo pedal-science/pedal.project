@@ -1428,6 +1428,13 @@ line (so every namchain since 0c1a6d8 was refused), and a `| head` under pipefai
 `components-lock`. **Still to do by eye on the pedal:** the panel's rotation (0 or 180), touch landing
 where touched, legibility from standing.
 
+**O4 done, waiting for review** (2026-11-09): pedald follows the engine on a second connection and tells a performance
+from an edit, autosaves edits, brings the performance back at resume and keeps one undo history per rig on the card. New routes:
+`/running`, `/undo`, `/redo`, `/history`, `/bank`, and `POST /library/rigs`. Two new map actions, a block toggle and a CC on a
+parameter. **`autosave` stays false on vip until O5 deploys.** Contract in [docs/pedal-service.md](docs/pedal-service.md),
+"Keeping the rig"; evidence in [bench-results/2026-11-09-rig-vip/README.md](bench-results/2026-11-09-rig-vip/README.md). **Next: O5**
+(rigpa follows the pedal).
+
 **O3 done, waiting for review** (2026-11-09): pedald serves the 27 block templates (`GET /catalogue`, written by
 ljoss's `Tools/export-templates`, judged against `engine.schema` when an engine connects), lists models and IRs with
 each file's sha256 and metadata, serves a file with its hash as the ETag, and takes uploads that never replace a file.
