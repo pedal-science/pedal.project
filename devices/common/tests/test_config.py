@@ -236,5 +236,17 @@ class ConfigTest(unittest.TestCase):
             self.load().token()
 
 
+class Autosave(unittest.TestCase):
+    def test_off_unless_asked(self):
+        self.assertIs(Config().autosave, False)
+
+    def test_only_a_boolean(self):
+        cfg = Config()
+        cfg._set("x", "autosave", True)
+        self.assertIs(cfg.autosave, True)
+        with self.assertRaises(ConfigError):
+            cfg._set("x", "autosave", "yes")
+
+
 if __name__ == "__main__":
     unittest.main()

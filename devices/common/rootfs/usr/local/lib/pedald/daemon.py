@@ -12,6 +12,8 @@ must not wait on a client — the HTTP server, the resume read — is either che
 and an HTTP route that needs the engine hands the call to the loop (`on_loop`).
 """
 import argparse
+import copy
+import hashlib
 import json
 import os
 import queue
@@ -20,12 +22,16 @@ import signal
 import sys
 import threading
 import time
+import uuid
 
 from . import config as config_mod
 from . import identity as identity_mod
 from . import catalogue as catalogue_mod
+from . import events as events_mod
 from . import files as files_mod
+from . import history as history_mod
 from . import library as library_mod
+from . import running as running_mod
 from . import mapping as mapping_mod
 from . import protocol
 from . import resume as resume_mod
@@ -44,6 +50,11 @@ LINK_WAIT_S = 0.05
 #: How long an HTTP route waits for the loop to do something for it. Longer than one engine call
 #: (5 s), which is the longest the loop is ever away.
 ON_LOOP_WAIT_S = 10.0
+#: How long after the last edit the rig is written ("Keeping the rig").
+AUTOSAVE_AFTER_S = 1.0
+#: How often a CC mapped to a parameter reaches the engine, the newest value winning.
+PARAM_INTERVAL_S = 0.01
+MAX_BANK_RIGS = 8
 
 #: `source` on a Pico event (docs/uart-protocol.md), as a view is told it.
 SOURCES = {0: "unknown", 1: "footswitch", 2: "midi", 3: "panel", 4: "service"}
@@ -623,7 +634,7 @@ class Service:
             token = None
         self.token = token
         self.engine = EngineClient(host=cfg.engine_host, port=cfg.engine_port,
-                                   token=token, timeout=5.0)
+                                   token=token, timeout=5.0, client="pedald")
         self.link = Link(cfg.uart_device, cfg.uart_baud, log=log)
         self.session = protocol.Session(self.link.send, service_version=VERSION)
         self.link.attach(self.session)
@@ -652,7 +663,17 @@ class Service:
                                      os.path.join(cfg.cache_root, "hashes.json"), log=log,
                                      publish=self.publish)
         self.catalogue = catalogue_mod.Catalogue(log=log)
-        self.resume = resume_mod.Resume(self.engine, cfg.rigs_root, state_root=cfg.state_root, log=log)
+        self.resume = resume_mod.Resume(self.engine, cfg.rigs_root, state_root=cfg.state_root, log=log,
+                                        after_save=self.write_resume_record)
+        # The rig: what is playing, what is stored, and the performance between them ("Keeping the rig").
+        self.rig_state = running_mod.Running(self.stored_document)
+        self.history = history_mod.History(os.path.join(cfg.state_root, "history"), log=log)
+        self.follower = events_mod.Follower(cfg.engine_host, cfg.engine_port, token, wake=self.wake, log=log)
+        self.followed = False            # whether the engine's rig has been looked at since starting
+        self.save_due = None             # when the edited rig is written
+        self.resume_written = None
+        self.params_pending = {}         # (chain, node, param) -> value, a CC's newest
+        self.params_sent_at = 0.0
         self.http = Server(cfg.http_host, cfg.http_port, token,
                            {"/status": self.handle_status,
                             # The Pico's own vocabulary, over HTTP: one event, the same shape the
@@ -672,7 +693,15 @@ class Service:
                             "/library/models/*": self.handle_file,
                             "/library/irs/*": self.handle_file,
                             "POST /library/refresh": self.handle_refresh,
+                            "GET /running": self.handle_running,
+                            "PUT /running": self.handle_running,
+                            "POST /undo": self.handle_undo,
+                            "POST /redo": self.handle_undo,
+                            "GET /history": self.handle_history,
+                            "GET /bank": self.handle_bank,
+                            "PUT /bank": self.handle_bank,
                             "GET /library/rigs": self.handle_rigs,
+                            "POST /library/rigs": self.handle_new_rig,
                             "/library/rigs/*": self.handle_rig}, log=log,
                            # The transport cap has to be the largest upload the API allows, or
                            # a model or IR would be 413 before its route saw it (v3).
@@ -735,11 +764,15 @@ class Service:
     def next_wait(self, now):
         """How long the loop may sleep. A closed link has no clock to keep, so it sleeps until the
         next thing is due: this is what stopped the loop spinning on a host with no UART."""
+        if self.params_pending:
+            return PARAM_INTERVAL_S
         if self.link.open:
-            return LINK_WAIT_S
+            return LINK_WAIT_S if self.save_due is None else max(0.0, min(LINK_WAIT_S, self.save_due - now))
         due = [self.status_at + STATUS_POLL_S - now, self.link.retry_in(now)]
         if self.positions_at:
             due.append(self.positions_at + 2.0 - now)
+        if self.save_due is not None:
+            due.append(self.save_due - now)
         return max(0.0, min(due))
 
     # ------------------------------------------------------------------ what views are told
@@ -756,7 +789,8 @@ class Service:
                 "bank_size": len(self.mapping.current_bank()),
                 "next": None if following == current else following,
                 "bypass": self.bypass,
-                "performance": []}
+                "modified": self.rig_state.modified,
+                "performance": self.rig_state.performance()}
 
     def _engine_now(self):
         status = self.status if isinstance(self.status, dict) else {}
@@ -838,7 +872,12 @@ class Service:
             self.state_key = None
             result = {"ok": True, "on": action["on"]}
         elif action["action"] == "load":
-            result = self.load_rig(action["rig"]) or {"ok": True, "rig": action["rig"]}
+            tag = f"load:{via or SOURCES.get(event.get('source'), 'unknown')}"
+            result = self.load_rig(action["rig"], tag) or {"ok": True, "rig": action["rig"]}
+        elif action["action"] == "block":
+            result = self.toggle_block(action["element"])
+        elif action["action"] == "param":
+            result = self.drive_param(action)
         else:
             result = {"ok": True}
         if self.mapping.is_trigger(kind, a, b):
@@ -856,7 +895,7 @@ class Service:
             return result
         return None
 
-    def load_rig(self, name):
+    def load_rig(self, name, tag="load"):
         """Make a rig audible, with `rig.switch`: a handover if the engine holds it warm, a
         publish if it does not.
 
@@ -889,13 +928,13 @@ class Service:
         # in the warm set (its reply does not say, and the warm set would compile it again).
         playing = self.status.get("rig_name") if isinstance(self.status, dict) else None
         try:
-            reply = self.engine.rig_switch(rig)
+            reply = self.engine.rig_switch(rig, tag=tag)
         except EngineError as exc:
             if exc.code != "warm_disabled":
                 self.log(f"rig.switch {rig} refused: {exc.code}: {exc.message}")
                 return {"ok": False, "rig": rig[:-len(".json")], "code": exc.code, "message": exc.message}
             try:
-                self.engine.rig_load(rig)
+                self.engine.rig_load(rig, tag=tag)
             except EngineError as exc:
                 self.log(f"rig.load {rig} refused: {exc.code}: {exc.message}")
                 return {"ok": False, "rig": rig[:-len(".json")], "code": exc.code, "message": exc.message}
@@ -1156,6 +1195,350 @@ class Service:
     def handle_events(self, request):
         return 200, Stream(sse.stream(self.hub, request.headers.get("last-event-id"), self.hello))
 
+    # ------------------------------------------------------------------ keeping the rig
+    def stored_document(self, name):
+        """A library rig's document, or None. `Running` asks, and it never raises."""
+        try:
+            return self.library.get(name)
+        except library_mod.LibraryError:
+            return None
+
+    def follow_engine(self, now):
+        """What the follower has brought. On the loop."""
+        while True:
+            try:
+                kind, value = self.follower.queue.get_nowait()
+            except queue.Empty:
+                break
+            if kind == "frame":
+                # A rig going means its last edit has to be saved now, while it can still be named.
+                if value.get("event") == "rig.replaced" and (value.get("why") in running_mod.LOADS
+                                                              or value.get("name") != self.rig_state.name):
+                    self.save_now()
+                self.note_change(self.rig_state.on_frame(value), now)
+            else:
+                self.catch_up(now)
+        self.publish_changes()
+
+    def catch_up(self, now):
+        """On connecting, or after events were missed: the engine's document, to compare."""
+        try:
+            reply = self.engine.rig_get()
+        except EngineError as exc:
+            self.log(f"could not read the engine's rig: {exc.code}: {exc.message}")
+            return
+        document = reply.get("document")
+        if not isinstance(document, dict):
+            return
+        name = document.get("name")
+        if not self.followed:
+            self.followed = True
+            self.note_change(self.first_look(document, name, reply.get("seq")), now)
+            return
+        if name != self.rig_state.name:
+            self.save_now()
+        self.note_change(self.rig_state.catch_up(document, name, reply.get("seq")), now)
+
+    def first_look(self, document, name, seq):
+        path = os.path.join(self.cfg.state_root, "resume.json")
+        record = mapping_mod.load_json(path, self.log)
+        last = mapping_mod.load_json(os.path.join(self.cfg.rigs_root, "last.json"), self.log)
+        trusted = None
+        if isinstance(record, dict) and isinstance(last, dict):
+            text = resume_mod.canonical(last)
+            if record.get("hash") == hashlib.sha256(text.encode()).hexdigest():
+                trusted = record
+        change = self.rig_state.start(document, name, seq, self.stored_document(name) if name else None, last, trusted)
+        self.log(f"following '{name}' from seq {seq}: "
+                 f"{len(self.rig_state.overlay)} values are a performance"
+                 + ("" if trusted else " (no record of the last save to trust)"))
+        return change
+
+    def note_change(self, change, now):
+        self.history.use(self.rig_state.name if self.rig_state.in_library else None)
+        if change.kind == "edit":
+            self.history.note(change.before, copy.deepcopy(self.rig_state.stored), change.keys,
+                              change.client, change.gesture)
+            self.save_due = now + AUTOSAVE_AFTER_S
+            self.publish("history", dict({"rig": self.rig_state.name}, **self.history.counts()))
+
+    def save_now(self):
+        """Write the stored document, if there is one to write and it differs from the file."""
+        self.save_due = None
+        state = self.rig_state
+        if not self.cfg.autosave or not state.savable():
+            return
+        try:
+            on_card = self.library.get(state.name)
+        except library_mod.LibraryError:
+            on_card = None
+        if on_card is not None and resume_mod.canonical(on_card) == resume_mod.canonical(state.stored):
+            return
+        try:
+            self.library.put(state.name, state.as_text().encode("utf-8"))
+            self.history.save()
+        except (library_mod.LibraryError, OSError) as exc:
+            self.log(f"could not save '{state.name}': {exc}")
+            return
+        self.cost.invalidate(state.name)
+        self.log(f"saved rig '{state.name}'")
+        self.publish("saved", {"rig": state.name, "seq": state.seq})
+
+    def write_resume_record(self, text):
+        """`state/resume.json`: the hash of what `last.json` holds, and which values in it are a performance."""
+        if not self.followed:
+            return
+        record = self.rig_state.resume_record(text)
+        record["hash"] = hashlib.sha256(text.encode()).hexdigest()
+        body = json.dumps(record, indent=1) + "\n"
+        if body == self.resume_written:
+            return
+        try:
+            resume_mod.write_atomic_plain(os.path.join(self.cfg.state_root, "resume.json"), body)
+            self.resume_written = body
+        except OSError as exc:
+            self.log(f"could not save resume.json: {exc}")
+
+    # What a press or a CC does to the running document: a performance, so neither is saved.
+    def toggle_block(self, element):
+        state = self.rig_state
+        if state.document is None:
+            return {"ok": False, "reason": "the engine's rig isn't known yet"}
+        by_chain = {}
+        for (chain, node), value in running_mod.nodes_of(state.document).items():
+            if value.get("element") == element:
+                by_chain.setdefault(chain, []).append(value)
+        if not by_chain:
+            self.log(f"map names block '{element}', which this rig doesn't have")
+            return {"ok": False, "reason": f"this rig has no block '{element}'"}
+        on = not all(node.get("bypass") for nodes in by_chain.values() for node in nodes)
+        try:
+            for chain, nodes in by_chain.items():
+                self.engine.rig_patch([{"op": "bypass", "node": node["id"], "bypass": on} for node in nodes],
+                                      chain=chain or None, tag="perf:block")
+        except EngineError as exc:
+            self.log(f"could not toggle block '{element}': {exc.code}: {exc.message}")
+            return {"ok": False, "reason": exc.message}
+        return {"ok": True, "element": element, "bypass": on}
+
+    def drive_param(self, action):
+        """A CC's value for one parameter. Sent from the loop at most every `PARAM_INTERVAL_S`."""
+        state = self.rig_state
+        node_id = f"{action.get('element')}-{action.get('slot')}"
+        nodes = running_mod.nodes_of(state.document) if state.document else {}
+        where = next((w for w in nodes if w[1] == node_id), None)
+        if where is None:
+            return {"ok": False, "reason": f"this rig has no node '{node_id}'"}
+        schema = self.catalogue.param(nodes[where].get("type"), action.get("param"))
+        if schema is None or not schema.get("rampable"):
+            self.log(f"map drives {node_id}.{action.get('param')}, which can't be ramped")
+            return {"ok": False, "reason": f"'{action.get('param')}' can't be ramped"}
+        low, high = schema.get("min"), schema.get("max")
+        if low is None or high is None:
+            return {"ok": False, "reason": f"'{action.get('param')}' has no range"}
+        amount = max(0, min(127, int(action["value"]))) / 127
+        value = low * (high / low) ** amount if schema.get("scale") == "log" and low > 0 else low + (high - low) * amount
+        self.params_pending[(where[0], where[1], action["param"])] = value
+        return {"ok": True}
+
+    def send_params(self, now):
+        if not self.params_pending or now - self.params_sent_at < PARAM_INTERVAL_S:
+            return
+        pending, self.params_pending = self.params_pending, {}
+        self.params_sent_at = now
+        by_chain = {}
+        for (chain, node, param), value in pending.items():
+            by_chain.setdefault(chain, []).append({"op": "set_param", "node": node, "param": param, "value": value})
+        for chain, ops in by_chain.items():
+            try:
+                self.engine.rig_patch(ops, chain=chain or None, tag="perf:param")
+            except EngineError as exc:
+                self.log(f"could not drive a parameter: {exc.code}: {exc.message}")
+
+    # ------------------------------------------------------------------ the rig's routes
+    def running_public(self):
+        state = self.rig_state
+        return dict({"rig": state.name, "in_library": state.in_library, "modified": state.modified,
+                     "performance": state.performance(), "seq": state.seq}, **self.history.counts())
+
+    def handle_running(self, request):
+        if request.method == "GET":
+            return 200, self.on_loop(self.running_public)
+        try:
+            rig = json.loads(request.body or b"{}").get("rig")
+        except (ValueError, AttributeError):
+            return 400, {"error": 'the body is {"rig": "<name>"}'}
+        client = request.headers.get("pedal-client")
+        try:
+            return self.on_loop(lambda: self.play(rig, client))
+        except LoopUnavailable as exc:
+            return 503, {"error": str(exc)}
+
+    def play(self, rig, client=None):
+        """An app picking a rig: the footswitch's path, with the cause "app"."""
+        if not isinstance(rig, str) or rig not in self.library.names():
+            return 404, {"error": f"no rig named '{rig}'"}
+        if not playable_verdict(self.cost.verdict(rig)):
+            return 409, {"error": f"the engine says this rig is over what it can play"}
+        action = self.mapping._by_name(rig)
+        if action is None:
+            return 409, {"error": f"'{rig}' can't play"}
+        result = self.load_rig(rig, "load:app") or {"ok": True, "rig": rig}
+        cause = {"source": "app", "kind": "rig_select", "label": "app"}
+        if client:
+            cause["client"] = client
+        self.publish("action", {"cause": cause, "action": action, "result": result})
+        self.poll_engine(time.monotonic(), refresh=False)
+        self.publish_changes()
+        return (200 if result.get("ok") else 409), result
+
+    def handle_undo(self, request):
+        forwards = request.path == "/redo"
+        try:
+            return self.on_loop(lambda: self.step_history(forwards))
+        except LoopUnavailable as exc:
+            return 503, {"error": str(exc)}
+
+    def step_history(self, forwards):
+        state = self.rig_state
+        if not state.in_library or state.document is None:
+            return 409, {"error": "the running rig isn't in the library"}
+        self.history.use(state.name)
+        target = self.history.redo(state.stored) if forwards else self.history.undo(state.stored)
+        if target is None:
+            return 409, {"error": f"nothing to {'redo' if forwards else 'undo'}"}
+        document = state.with_overlay(target)
+        try:
+            reply = self.engine.rig_apply(document, tag="redo" if forwards else "undo", if_seq=state.seq)
+        except EngineError as exc:
+            status = 409 if exc.code == "conflict" else 500
+            return status, {"error": exc.message, "code": exc.code}
+        (self.history.redone if forwards else self.history.undone)()
+        state.set_stored(target)
+        state.document = document
+        if isinstance(reply.get("seq"), int):
+            state.seq = reply["seq"]
+        self.save_now()
+        self.publish("history", dict({"rig": state.name}, **self.history.counts()))
+        self.publish_changes()
+        return 200, dict({"rig": state.name, "seq": state.seq}, **self.history.counts())
+
+    def handle_history(self, request):
+        return 200, self.on_loop(self.history.listing)
+
+    def handle_bank(self, request):
+        if request.method == "GET":
+            return 200, self.on_loop(self.bank_public)
+        try:
+            banks = json.loads(request.body or b"{}").get("banks")
+        except (ValueError, AttributeError):
+            return 400, {"error": 'the body is {"banks": [[...], ...]}'}
+        try:
+            return self.on_loop(lambda: self.set_banks(banks))
+        except LoopUnavailable as exc:
+            return 503, {"error": str(exc)}
+
+    def bank_public(self):
+        return {"banks": self.mapping.banks, "bank": self.mapping.bank, "rig": self.mapping.rig}
+
+    def set_banks(self, banks):
+        names = self.library.names()
+        if not isinstance(banks, list) or not banks:
+            return 400, {"error": "there has to be a bank"}
+        for bank in banks:
+            if not isinstance(bank, list) or not bank:
+                return 400, {"error": "no bank may be empty"}
+            if len(bank) > MAX_BANK_RIGS:
+                return 400, {"error": f"a bank holds at most {MAX_BANK_RIGS} rigs"}
+            for rig in bank:
+                if rig not in names:
+                    return 400, {"error": f"no rig named '{rig}'"}
+        self.write_banks(banks)
+        return 200, self.bank_public()
+
+    def write_banks(self, banks):
+        """New banks, with the position following the rig that's playing."""
+        current = self.mapping.current_name()
+        start_bank = next((i for i, bank in enumerate(banks) if current in bank), 0)
+        document = {"bank": start_bank, "rig": banks[start_bank].index(current) if current in banks[start_bank] else -1,
+                    "banks": banks}
+        try:
+            resume_mod.write_atomic_plain(os.path.join(self.cfg.state_root, "bank.json"), json.dumps(document, indent=2) + "\n")
+        except OSError as exc:
+            self.log(f"could not save the banks: {exc}")
+        self.remake_mapping(document, current, time.monotonic())
+        self.publish_changes()
+
+    def remake_mapping(self, bank, current, now):
+        rigs = self._rig_names()
+        direction = self.mapping.direction
+        self.mapping = mapping_mod.Mapping(rigs, bank=bank, midi_map=self.mapping.map, log=self.log)
+        self.mapping.direction = direction
+        if current in rigs:
+            self.mapping.note_rig(current)
+        self.cost.note_rigs(rigs, now)
+        self.mapping.verdicts = self.cost.verdicts
+        self.bank_at = now
+
+    def handle_new_rig(self, request):
+        try:
+            body = json.loads(request.body or b"{}")
+            name, source = body.get("name"), body.get("from")
+        except (ValueError, AttributeError):
+            return 400, {"error": 'the body is {"name": ..., "from": null|<rig>|":running", "document"?, "load"?}'}
+        client = request.headers.get("pedal-client")
+        try:
+            return self.on_loop(lambda: self.new_rig(name, source, body.get("document"), body.get("load"), client))
+        except LoopUnavailable as exc:
+            return 503, {"error": str(exc)}
+
+    def new_rig(self, name, source, document, load, client):
+        try:
+            library_mod.check_name(name)
+            existing = self.library.find(name)
+            if existing is not None:
+                return 409, {"error": f"the library already has '{existing}'"}
+            if document is None:
+                if source == ":running":
+                    document = copy.deepcopy(self.rig_state.stored)
+                    if document is None:
+                        return 409, {"error": "the engine's rig isn't known yet"}
+                elif source is None:
+                    document = empty_rig()
+                else:
+                    document = self.library.get(source)
+            if not isinstance(document, dict):
+                return 400, {"error": "a rig document is a JSON object"}
+            document["name"] = name
+            self.library.put(name, json.dumps(document, indent=2, ensure_ascii=False).encode("utf-8"))
+        except library_mod.LibraryError as exc:
+            return exc.status, {"error": exc.message}
+        self.log(f"library: new rig '{name}'")
+        self.write_banks(self.placed(name))
+        self.cost.invalidate(name)
+        self.publish("library", {"library": "rigs", "change": "put", "name": name})
+        if load:
+            status, result = self.play(name, client)
+            return (201 if status == 200 else status), dict(result, name=name)
+        return 201, {"name": name}
+
+    def placed(self, name):
+        """The banks with a new rig in place: right after the running rig if its bank has room, otherwise
+        at the end of the last bank, starting a new bank if needed (D17)."""
+        banks = [list(bank) for bank in self.mapping.banks if bank]
+        if name in (rig for bank in banks for rig in bank):
+            return banks
+        current = self.mapping.current_name()
+        for bank in banks:
+            if current in bank and len(bank) < MAX_BANK_RIGS:
+                bank.insert(bank.index(current) + 1, name)
+                return banks
+        if banks and len(banks[-1]) < MAX_BANK_RIGS:
+            banks[-1].append(name)
+        else:
+            banks.append([name])
+        return banks
+
     # ------------------------------------------------------------------ the catalogue and the files
     def follow_scan(self, recovered=False):
         """On the loop, after a status: take the engine's scan when it has moved, whoever moved it,
@@ -1302,6 +1685,31 @@ class Service:
         except library_mod.LibraryError as exc:
             return exc.status, {"error": exc.message}
 
+    def rig_followed_library(self, kind, name, to, neighbour):
+        """What a rename, a delete or someone's `PUT` means for the rig that's playing and its history."""
+        state = self.rig_state
+        if kind == "rename":
+            self.history.renamed(name, to)
+            if state.name == name:
+                state.rename(to)
+                try:
+                    reply = self.engine.rig_apply(state.document, tag="rename", if_seq=state.seq)
+                    if isinstance(reply.get("seq"), int):
+                        state.seq = reply["seq"]
+                except EngineError as exc:
+                    self.log(f"could not rename the running document: {exc.code}: {exc.message}")
+        elif kind == "delete":
+            self.history.deleted(name)
+            if state.name == name:
+                state.in_library = False
+                self.save_due = None
+                if neighbour is not None:
+                    self.load_rig(neighbour, "load:deleted")
+        elif kind == "put" and state.name == name:
+            document = self.stored_document(name)
+            if document is not None:
+                state.take_stored(document)
+
     def apply_library_changes(self, now):
         """On the loop: what the library routes changed, applied to the bank and the verdicts.
 
@@ -1332,14 +1740,18 @@ class Service:
             except OSError as exc:
                 self.log(f"could not save {bank_path}: {exc}")
         current = self.mapping.current_name()
+        # Where the pedal goes if the rig playing is deleted: a press's walk, before the bank changes.
+        neighbour = {}
+        for kind, name, to in changes:
+            if kind == "delete" and name == self.rig_state.name:
+                following = self.mapping.neighbour()
+                neighbour[name] = following if following != name else None
         for kind, name, to in changes:
             if kind == "rename" and current == name:
                 current = to
-        rigs = self._rig_names()
-        self.mapping = mapping_mod.Mapping(rigs, bank=bank, midi_map=self.mapping.map, log=self.log)
-        if current in rigs:
-            self.mapping.note_rig(current)
-        self.cost.note_rigs(rigs, now)
+        self.remake_mapping(bank, current, now)
+        for kind, name, to in changes:
+            self.rig_followed_library(kind, name, to, neighbour.get(name))
         for kind, name, to in changes:
             if kind == "put":
                 self.cost.invalidate(name)
@@ -1382,6 +1794,7 @@ class Service:
         self.link.open_port()
         self.publish_changes()             # so a client connecting at once has something to hold
         self.files.start()
+        self.follower.start()
         self.http.start()
         self.log(f"{VERSION} up: link {self.cfg.uart_device}, http on "
                  f"{self.cfg.http_host}:{self.cfg.http_port}, pedal {self.identity.id}")
@@ -1398,6 +1811,10 @@ class Service:
                 self.on_message(message)
             self.run_work()
             self.apply_library_changes(now)
+            self.follow_engine(now)
+            self.send_params(now)
+            if self.save_due is not None and now >= self.save_due:
+                self.save_now()
             if now - self.status_at >= STATUS_POLL_S:
                 self.poll_engine(now)
             if self.positions_at and now - self.positions_at > 2.0:
@@ -1405,13 +1822,23 @@ class Service:
                 self.positions_at = 0.0
             self.maybe_send_state(now)
         self.log("stopping")
+        self.save_now()
         self.refuse_work()
         self.hub.close()
         self.http.stop()
+        self.follower.stop()
         self.files.stop()
         self.link.close()
         self.engine.close()
         return 0
+
+
+def empty_rig():
+    """A rig with nothing in it yet: the guitar's input to the output."""
+    return {"chains": [{"id": str(uuid.uuid4()).upper(), "name": "Guitar", "input_channel": 0, "output_channel": 0,
+                        "nodes": [{"id": "in", "element": "in", "type": "nc.input"},
+                                  {"id": "out", "element": "out", "type": "nc.output"}],
+                        "connections": [{"from": "in", "from_port": 0, "to": "out", "to_port": 0}]}]}
 
 
 def _unquote_path(text):

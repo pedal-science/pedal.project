@@ -134,7 +134,7 @@ def canonical(document):
 class Resume:
     def __init__(self, engine, rigs_root, *, name="last.json",
                  default_rig="/etc/pedal/default-rig.json", settle_s=2.0,
-                 state_root="/var/lib/pedal/state", owner="pedal", log=None):
+                 state_root="/var/lib/pedal/state", owner="pedal", log=None, after_save=None):
         self.engine = engine
         self.rigs_root = rigs_root
         self.name = name
@@ -143,6 +143,9 @@ class Resume:
         self.state_root = state_root
         self.owner = owner
         self.log = log or (lambda _msg: None)
+        # Told the canonical form of what `last.json` holds, each time it is looked at, so
+        # `state/resume.json` always describes the file beside it.
+        self.after_save = after_save or (lambda _text: None)
         self.written = None       # canonical form of the document on the card
         self.last_key = None      # the engine's own account of what is running, as last seen
         self.quiet_since = None   # when that key last changed
@@ -206,6 +209,7 @@ class Resume:
         text = canonical(document)
         if text == self.written:
             self.saved_key = key
+            self.after_save(text)
             return
         path = os.path.join(self.rigs_root, self.name)
         try:
@@ -215,4 +219,5 @@ class Resume:
             return
         self.written = text
         self.saved_key = key
+        self.after_save(text)
         self.log(f"saved {path} (generation {key[0]}, params_applied {key[1]}, rig {key[3]!r})")

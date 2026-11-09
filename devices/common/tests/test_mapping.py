@@ -273,6 +273,23 @@ class Neighbour(unittest.TestCase):
         self.assertIsNone(self.m.neighbour())
 
 
+class PerformanceActions(unittest.TestCase):
+    def setUp(self):
+        self.mapping = mapping.Mapping(["A"], midi_map={"cc": {
+            "82": {"block": "boost"}, "90": {"param": {"element": "e", "slot": "s", "param": "p"}}}})
+
+    def test_a_block_acts_on_the_press_only(self):
+        self.assertEqual(self.mapping.action("cc", 82, 127), {"action": "block", "element": "boost"})
+        self.assertIsNone(self.mapping.action("cc", 82, 0))
+        self.assertTrue(self.mapping.is_trigger("cc", 82, 127))
+
+    def test_a_parameter_takes_every_value_and_isnt_a_trigger(self):
+        self.assertEqual(self.mapping.action("cc", 90, 10),
+                         {"action": "param", "element": "e", "slot": "s", "param": "p", "value": 10})
+        self.assertEqual(self.mapping.action("cc", 90, 0)["value"], 0)
+        self.assertFalse(self.mapping.is_trigger("cc", 90, 127))
+
+
 if __name__ == "__main__":
     unittest.main()
 

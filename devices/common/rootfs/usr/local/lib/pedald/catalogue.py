@@ -108,6 +108,7 @@ class Catalogue:
         self.blocks = []
         self.checked = False
         self.refused = {}
+        self.types = {}
         try:
             with open(path, encoding="utf-8") as handle:
                 self.blocks = json.load(handle)["blocks"]
@@ -117,6 +118,7 @@ class Catalogue:
     def check(self, schema):
         """Judge every block against an `engine.schema` reply."""
         types = {node["id"]: node for node in schema.get("nodes") or ()}
+        self.types = types
         refused = {}
         for block in self.blocks:
             found = problem(block, types)
@@ -125,6 +127,13 @@ class Catalogue:
                 self.log(f"catalogue: refusing {block['id']}: {found}")
         self.refused = refused
         self.checked = True
+
+    def param(self, type_id, param_id):
+        """A parameter as the engine last described it, or None."""
+        for param in (self.types.get(type_id) or {}).get("params") or ():
+            if param.get("id") == param_id:
+                return param
+        return None
 
     def answer(self):
         """`GET /catalogue`. Before the engine has been asked, `checked` is false."""

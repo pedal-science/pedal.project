@@ -73,7 +73,8 @@ class EngineClient:
     connection.
     """
 
-    def __init__(self, host="127.0.0.1", port=47810, token=None, timeout=5.0):
+    def __init__(self, host="127.0.0.1", port=47810, token=None, timeout=5.0, client=None):
+        self.client = client    # the name this connection's changes carry in `origin`
         self.host = host
         self.port = port
         self.token = token
@@ -117,7 +118,7 @@ class EngineClient:
         """The rig the engine is running, as the engine parsed and lowered it."""
         return self.call("rig.get")
 
-    def rig_load(self, rig):
+    def rig_load(self, rig, tag=None):
         """Load a rig by name, resolved under the daemon's `rigs_root`.
 
         `lite_first` asks for P8's two-step publish: the document's **Lite** goes first — it
@@ -135,7 +136,7 @@ class EngineClient:
         happened (`lite_first`, `lite`, `full`) and `engine.status.cost.lite_first` stays true while
         the Lite is standing in — which is what `engine.lite_pending` reports.
         """
-        return self.call("rig.load", rig=rig, lite_first=True)
+        return self.call("rig.load", rig=rig, lite_first=True, **_tagged(tag))
 
     def rig_cost(self, rig):
         """What a rig would cost on this device, without playing or compiling it.
@@ -180,7 +181,7 @@ class EngineClient:
             return self.call("rig.cool")
         return self.call("rig.cool", rig=rig)
 
-    def rig_switch(self, rig, fallback=True):
+    def rig_switch(self, rig, fallback=True, tag=None):
         """Make a rig audible: a handover when it is warm, a publish when it is not.
 
         This is what a footswitch press asks for. A warm rig answers `switched` `warm` with
@@ -199,7 +200,23 @@ class EngineClient:
         compile. A warm rig ignores it and says so (`switched: warm`, `lite_first: false`) rather
         than obeying it, so asking on every press is safe.
         """
-        return self.call("rig.switch", rig=rig, fallback=bool(fallback), lite_first=True)
+        return self.call("rig.switch", rig=rig, fallback=bool(fallback), lite_first=True, **_tagged(tag))
+
+    def rig_apply(self, document, tag=None, if_seq=None):
+        """Publish a whole document. A stale `if_seq` is the refusal `conflict`, and nothing changes."""
+        return self.call("rig.apply", document=document, **_tagged(tag, if_seq))
+
+    def rig_patch(self, ops, chain=None, tag=None, if_seq=None):
+        """Change the running document, all or nothing (docs/transitions.md)."""
+        params = _tagged(tag, if_seq)
+        if chain is not None:
+            params["chain"] = chain
+        return self.call("rig.patch", ops=ops, **params)
+
+    def read_frame(self, wait):
+        """The next message on this connection, whichever it is: a subscriber's way of reading. A
+        `TimeoutError` loses nothing, since what has arrived of a message stays in the buffer."""
+        return self._read_reply(time.monotonic() + wait)
 
     def assets(self, refresh=False):
         """The model and impulse-response library; `refresh` rescans the roots first."""
@@ -266,6 +283,8 @@ class EngineClient:
             params = {"protocol": PROTOCOL}
             if self.token is not None:
                 params["token"] = self.token
+            if self.client is not None:
+                params["client"] = {"name": self.client}
             request_id, frame = self._request("engine.hello", params)
             self._send(frame, deadline)
             self._hello = self._reply(self._read_reply(deadline), request_id)
@@ -350,6 +369,15 @@ class EngineClient:
         if left <= 0:
             raise TimeoutError("the call timed out")
         return left
+
+
+def _tagged(tag=None, if_seq=None):
+    params = {}
+    if tag is not None:
+        params["tag"] = tag
+    if if_seq is not None:
+        params["if_seq"] = if_seq
+    return params
 
 
 def _reason(exc, host, port):

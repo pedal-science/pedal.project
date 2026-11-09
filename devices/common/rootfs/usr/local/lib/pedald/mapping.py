@@ -203,7 +203,11 @@ class Mapping:
         did. A CC's release isn't, nor is a CC or PC nothing is mapped to: a sweep on an unmapped
         controller would otherwise fill the event ring in half a second."""
         if kind == "cc":
-            return int(b) >= 64 and str(int(a)) in self.map.get("cc", {})
+            spec = self.map.get("cc", {}).get(str(int(a)))
+            # A CC driving a parameter is a sweep: its result is the parameter moving, not an event.
+            if isinstance(spec, dict) and "param" in spec:
+                return False
+            return int(b) >= 64 and spec is not None
         if kind == "pc":
             return str(int(a)) in self.map.get("pc", {})
         return kind != "expression"
@@ -228,9 +232,13 @@ class Mapping:
             # Every cc in the map is a switch-type trigger, read as on or off at 64: a
             # footswitch or a MIDI pedal's button sends 127 on its press and 0 on its release,
             # and only the press acts (pedal-service.md, "The footswitches are triggers too").
+            # The exception is a CC mapped to a parameter, where every value means something.
+            spec = self.map.get("cc", {}).get(str(int(a)))
+            if isinstance(spec, dict) and "param" in spec:
+                return dict(spec["param"], action="param", value=int(b))
             if int(b) < 64:
                 return None
-            return self._resolve(self.map.get("cc", {}).get(str(int(a))))
+            return self._resolve(spec)
         if kind == "pc":
             return self._resolve(self.map.get("pc", {}).get(str(int(a))))
         return None
@@ -294,6 +302,8 @@ class Mapping:
         if spec is None:
             return None
         if isinstance(spec, dict):
+            if "block" in spec:
+                return {"action": "block", "element": spec["block"]}
             if "rig" in spec:
                 return self._by_name(spec["rig"])
             if "bank" in spec:

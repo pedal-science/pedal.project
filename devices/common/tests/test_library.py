@@ -13,7 +13,7 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "rootfs/usr/local/lib"))
 
-from pedald import daemon, library, mapping  # noqa: E402
+from pedald import running, daemon, library, mapping  # noqa: E402
 from pedald.httpd import Request, Server  # noqa: E402
 
 TOKEN = "library-test-token-0123456789"
@@ -206,6 +206,11 @@ def library_service(root):
     service = object.__new__(daemon.Service)
     service.files = types.SimpleNamespace(counts=lambda: None)
     service.follow_scan = lambda *_a: None
+    service.rig_state = running.Running(lambda _name: None)
+    service.history = types.SimpleNamespace(use=lambda *_a: None, counts=lambda: {"undo": 0, "redo": 0},
+                                            renamed=lambda *_a: None, deleted=lambda *_a: None)
+    service.save_due = None
+    service.params_pending = {}
     service.log = logs.append
     service.logs = logs
     service.cfg = types.SimpleNamespace(rigs_root=root, state_root=tempfile.mkdtemp())

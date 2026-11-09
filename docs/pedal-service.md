@@ -298,7 +298,7 @@ app" and ljoss's "send to pedal" were waiting for.
   model either. The rate follows the weights, at the end of the file (`assets.md`), so the check
   runs on the staged file, before the rename, not at the door.
 - **Rig documents are stored, not applied** (**superseded by D17**, 2026-11-07: the pedal owns the
-  document, and pedald saves what the engine plays). The app owns the document and applies it to the
+  document, and pedald saves what the engine plays: "Keeping the rig"). The app owns the document and applies it to the
   engine itself (D2). The library entry is what the bank and the ready set can name, and what
   the resume snapshot is compared against.
 - **An empty bank means nothing happens** (found 2026-10-10, measuring T11): with the library
@@ -367,6 +367,68 @@ until an engine has been asked.
 | The tuner's node | `{"ephemeral": "tuner"}` | a view, and never part of a saved rig |
 
 Ids stay as both apps write them today: an element's is the block's id, and a node's is `<element>-<slot>`.
+
+## Keeping the rig (D17, O4)
+
+The pedal, not an app, owns the stored rig. pedald follows the engine on a second connection (named
+`pedald`, subscribed to `rig` and `params`), so it sees every change and who made it.
+
+**Three things are held** (`running.py`): the document as played, the document as stored, and the
+**overlay**, which is the values that differ only because of a performance. A key is
+`(chain, node, parameter)`, and `bypass` is a parameter. Nothing else is kept about a knob: what is saved
+is always the stored document.
+
+| The change | Treated as |
+|---|---|
+| A rig loaded or switched to (`rig.load`, `rig.switch`, a SIGHUP, startup), by anyone | another rig: the overlay is cleared, and stored is the library's file |
+| pedald's own, tagged `perf:*` | performance: its keys join the overlay, or leave it if they are back at the stored value |
+| pedald's own, tagged `undo`, `redo` or `rename` | bookkeeping: pedald has already changed stored |
+| From a named client | an edit: its keys leave the overlay, it is an undo step, and it is saved |
+| A whole document from a named client | merged key by key: an overlay key it left at the performance value stays in the overlay, and anything else is an edit |
+| A document with another name, by `rig.apply` | another rig; if the library has that name, the differences from the file are an edit |
+| A tuner's mount | nothing, once ephemeral nodes are stripped |
+| From an unnamed client | foreign: shown and never saved. Values join the overlay. A structural change stops saves until another rig loads |
+
+Parsing happens on the follower's thread, so a large document doesn't hold up a press.
+
+**Autosave.** 1 s after the last edit, pedald writes the stored document to the rig's library file if it
+differs, and sends `saved`. `pedald.json`'s `autosave` stays false on vip until O5 deploys, because until then
+rigpa saves for itself. With it false, everything else here still runs, and nothing is written.
+
+**Resume.** `last.json` stays the document as played, performance included. `state/resume.json` holds its hash
+and the overlay's keys, written whenever `last.json` is considered. At start:
+
+- **The hash matches `last.json`:** the overlay comes back, so performance values keep playing and are still not
+  saved. Anything else that differs in the engine's document was edited while pedald was down, and is one undo step.
+- **It doesn't (a crash between the two writes):** every value that differs from the stored file is treated as
+  performance, so nothing is baked in. A structural difference stops saves until another rig loads.
+
+**Undo** (`history.py`). One history per rig, `state/history/<rig>.json`, of node-level deltas, each holding both
+directions. It is written with each autosave, moves with a rename and goes with a delete. One step is one gesture
+(a tag `gesture:<id>` on the requests), or a run of edits to the same control with gaps under 1.5 s. A rig keeps 100
+steps and 64 KiB; all rigs together keep 2 MiB, losing the oldest file first. `POST /undo` and `POST /redo` publish with
+`rig.apply`, `if_seq` and a tag, with the current overlay back on top. A stale `if_seq` is 409, and the client reads again.
+
+| Method | Path | Body | Answer |
+|---|---|---|---|
+| `GET` | `/running` | — | `{rig, in_library, modified, performance, seq, undo, redo}` |
+| `PUT` | `/running` | `{"rig": name}` | the footswitch's path, with the cause `app`: 200 and the result; 404 for no such rig, 409 if the engine's verdict is `over` |
+| `POST` | `/undo`, `/redo` | — | `{rig, undo, redo, seq}`; 409 with nothing to undo, or if the document moved first |
+| `GET` | `/history` | — | `{rig, undo: [steps], redo: [steps]}`, most recent first, each `{at, client, keys}` |
+| `POST` | `/library/rigs` | `{name, from: null\|rig\|":running", document?, load?}` | 201: a new, duplicated or migrated rig. `":running"` is the stored document, without performance. It goes right after the running rig if that bank has room (8 rigs), otherwise at the end of the last bank, starting a new bank if needed |
+| `GET` | `/bank` | — | `{banks, bank, rig}` |
+| `PUT` | `/bank` | `{"banks": [[name, …], …]}` | 200; 400 unless every name exists, no bank is empty and none holds more than 8 |
+
+A **rename** also renames the running document, its history and its bank entries. **Deleting the playing rig** moves the
+pedal to its bank neighbour, as a press would, and removes its history.
+
+**Events.** `running` gains `modified` and a real `performance`, a list of `{chain, node, element, param}`.
+`saved` is `{rig, seq}`, and `history` is `{rig, undo, redo}`.
+
+**Two new map actions** (`state/midi-map.json`). `{"block": "<element>"}` on a CC toggles that block's bypass, on the press.
+`{"param": {"element", "slot", "param"}}` on a CC drives one rampable parameter across its schema range, at most every
+10 ms, the newest winning, and a parameter that can't ramp is refused. Both are tagged `perf:`, so they show in every UI
+and are not saved.
 
 ## The event vocabulary, and the mapping tables
 
@@ -801,8 +863,9 @@ build from before the `termios`/`hmac` change.
 
 ## Threads: what owns one, and how to prove they come back
 
-**Who has threads.** The HTTP server (one accept thread plus one per connection) and `pedald-hash`
-(one, from O3, which only reads files and writes the cache), all daemons. The link, the engine client, resume and the mapping are single-threaded
+**Who has threads.** The HTTP server (one accept thread plus one per connection), `pedald-hash`
+(one, from O3, which only reads files and writes the cache) and `pedald-follow` (one, from O4, which holds
+the engine's event connection, parses, and hands frames to the loop), all daemons. The link, the engine client, resume and the mapping are single-threaded
 and run on the main loop. That is also why there are no locks: the HTTP thread reads cached or
 immutable state only (`self.status`, `link.open`, `session.session_up`, the counters) and never
 calls the engine itself. **A route that needs the engine** hands the call to the main loop with

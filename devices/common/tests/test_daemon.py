@@ -15,7 +15,7 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "rootfs/usr/local/lib"))
 
-from pedald import config, daemon, mapping, protocol, sse  # noqa: E402
+from pedald import running, config, daemon, mapping, protocol, sse  # noqa: E402
 from pedald.engine import EngineError  # noqa: E402
 
 
@@ -58,6 +58,11 @@ def fake_service(status=None, engine_down=False, link_open=True, session_up=True
     service = object.__new__(daemon.Service)
     service.files = types.SimpleNamespace(counts=lambda: None)
     service.follow_scan = lambda *_a: None
+    service.rig_state = running.Running(lambda _name: None)
+    service.history = types.SimpleNamespace(use=lambda *_a: None, counts=lambda: {"undo": 0, "redo": 0},
+                                            renamed=lambda *_a: None, deleted=lambda *_a: None)
+    service.save_due = None
+    service.params_pending = {}
     service.cfg = types.SimpleNamespace(uart_device="/dev/ttyAMA0", uart_baud=115200,
                                         http_port=47820)
     service.started = time.monotonic() - 12.5
@@ -130,7 +135,7 @@ class EventRoute(unittest.TestCase):
         service.log = lambda _m: None
         service.mapping = mapping.Mapping(["a", "b"])
         service.mapping.note_rig("a")
-        service.load_rig = loaded.append
+        service.load_rig = lambda rig, tag=None: loaded.append(rig)
         return service
 
     def test_an_event_reaches_the_mapping(self):
@@ -169,7 +174,7 @@ class EventKinds(unittest.TestCase):
         service.mapping = mapping.Mapping(["a", "b"])
         service.mapping.note_rig("a")            # a position, as the engine's rig_name gives
         loaded = []
-        service.load_rig = loaded.append
+        service.load_rig = lambda rig, tag=None: loaded.append(rig)
         service.state_key = "something"
         service.on_event({"type": protocol.EVENT, "kind": 0x01, "a": 0, "b": 0,
                           "source": 1, "seq": 3})
@@ -271,13 +276,13 @@ class FakeEngine:
             return {"cost": {}}
         return (self.costs or {}).get(rig, engine_cost())
 
-    def rig_load(self, rig):
+    def rig_load(self, rig, tag=None):
         self.load_calls.append(rig)
         self.loaded.append(rig)
         self.rig_name = _name(rig)
         return {"ok": True, "rig": rig}
 
-    def rig_switch(self, rig, fallback=True):
+    def rig_switch(self, rig, fallback=True, tag=None):
         self.switched.append(rig)
         if not self.warm_enabled:
             raise EngineError("warm_disabled", "warming is off: no warm_cpus are configured")
@@ -338,6 +343,11 @@ def cost_service(rigs, costs=None, error=None, status=None, poll_s=daemon.COST_P
     service = object.__new__(daemon.Service)
     service.files = types.SimpleNamespace(counts=lambda: None)
     service.follow_scan = lambda *_a: None
+    service.rig_state = running.Running(lambda _name: None)
+    service.history = types.SimpleNamespace(use=lambda *_a: None, counts=lambda: {"undo": 0, "redo": 0},
+                                            renamed=lambda *_a: None, deleted=lambda *_a: None)
+    service.save_due = None
+    service.params_pending = {}
     service.log = logs.append
     service.logs = logs
     service.cfg = types.SimpleNamespace(rigs_root="/rigs", state_root=tempfile.mkdtemp())

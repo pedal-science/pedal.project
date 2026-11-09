@@ -48,6 +48,7 @@ _SETTINGS = {
     "engine_host": str,
     "state_root": str,
     "cache_root": str,
+    "autosave": bool,
 }
 
 _INT_RANGES = {
@@ -92,6 +93,7 @@ class Config:
         rigs_root, models_root, irs_root           the library, as namchaind sees it
         state_root                                 bank.json and midi-map.json
         cache_root                                 what can be worked out again: the files' hashes
+        autosave                                   whether pedald writes edits to the rig's library file
     """
 
     def __init__(self):
@@ -113,6 +115,7 @@ class Config:
         self.irs_root = ""
         self.state_root = DEFAULT_STATE_ROOT
         self.cache_root = DEFAULT_CACHE_ROOT
+        self.autosave = False
 
     @classmethod
     def load(cls, path="/etc/pedal/pedald.json", engine_path="/etc/namchain/namchaind.json"):
@@ -176,7 +179,10 @@ class Config:
 
     def _set(self, path, key, value):
         """One pedald.json value, checked against the type and range the key has."""
-        if _SETTINGS[key] is int:
+        if _SETTINGS[key] is bool:
+            if not isinstance(value, bool):
+                raise ConfigError(f"{path}: {key} must be true or false, not {value!r}")
+        elif _SETTINGS[key] is int:
             low, high = _INT_RANGES[key]
             value = _as_int(path, key, value, low, high)
         elif not isinstance(value, str) or not value:

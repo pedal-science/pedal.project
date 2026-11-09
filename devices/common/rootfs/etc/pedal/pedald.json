@@ -8,5 +8,6 @@
   "max_rig_bytes": 1048576,
   "max_connections": 16,
   "max_event_streams": 6,
+  "autosave": false,
   "log_level": "info"
 }
