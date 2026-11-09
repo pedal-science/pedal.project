@@ -1434,8 +1434,9 @@ its cause and result, `running`, `engine`, `bank`, `library`, `pedal`). The serv
 and stream replies, and reads bodies when asked; the loop waits in one `select`, and routes reach the engine
 through it. Contract in [docs/pedal-service.md](docs/pedal-service.md). On vip the churn gate passed
 ([bench-results/2026-11-09-pedald-foundations-vip/README.md](bench-results/2026-11-09-pedald-foundations-vip/README.md)).
-**Still to do on the pedal:** a real footswitch through to `/events`: vip's Pico has sent nothing since
-2026-11-07, before this work. `devices/vip/check` still reports the three FAILs it did before (the fallback slot's
+Real footswitches reached `/events` once each on 2026-11-09, after the Pico was reconnected. **Open:** the Pico's
+console keys `e`, `d` and `b` are live events, so an echoing reader on its USB port drives the pedal (it did, about
+1300 rig switches; same README). Read it only after `stty raw -echo`. `devices/vip/check` still reports the three FAILs it did before (the fallback slot's
 kernel; `cost.json`'s engine commit and kernel). **Next: O3** (files and the catalogue).
 
 **O1 done, waiting for review** (2026-11-08): namchaind pushes events (namchain `249329a`, test fix

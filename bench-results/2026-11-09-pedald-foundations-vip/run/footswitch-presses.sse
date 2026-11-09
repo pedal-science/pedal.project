@@ -1,0 +1,44 @@
+id: 46c01fe7-2619
+event: hello
+data: {"running": {"rig": "Bob", "bank": 0, "position": 0, "bank_size": 2, "next": "Standard", "bypass": false, "performance": []}, "engine": {"reachable": true, "state": "running", "health": "warn", "mute": false, "protocol": 2}, "bank": {"banks": [["Bob", "Standard"]], "bank": 0}, "pedal": {"id": "43fdbd44-fa03-40cc-aebb-7c7cb21b3260", "name": "vip", "api": 2}}
+
+: ka
+
+id: 46c01fe7-2620
+event: action
+data: {"cause": {"source": "footswitch", "kind": "cc", "a": 80, "b": 127, "label": "footswitch 1"}, "action": {"action": "load", "rig": "Standard"}, "result": {"ok": true, "rig": "Standard", "how": "warm"}}
+
+id: 46c01fe7-2621
+event: running
+data: {"rig": "Standard", "bank": 0, "position": 1, "bank_size": 2, "next": "Bob", "bypass": false, "performance": []}
+
+id: 46c01fe7-2622
+event: action
+data: {"cause": {"source": "footswitch", "kind": "cc", "a": 81, "b": 127, "label": "footswitch 2"}, "action": {"action": "load", "rig": "Bob"}, "result": {"ok": true, "rig": "Bob", "how": "warm"}}
+
+id: 46c01fe7-2623
+event: running
+data: {"rig": "Bob", "bank": 0, "position": 0, "bank_size": 2, "next": "Standard", "bypass": false, "performance": []}
+
+id: 46c01fe7-2624
+event: action
+data: {"cause": {"source": "footswitch", "kind": "bypass_set", "a": 1, "b": 0, "label": "bypass set"}, "action": {"action": "bypass", "on": true}, "result": {"ok": true, "on": true}}
+
+id: 46c01fe7-2625
+event: running
+data: {"rig": "Bob", "bank": 0, "position": 0, "bank_size": 2, "next": "Standard", "bypass": true, "performance": []}
+
+id: 46c01fe7-2626
+event: action
+data: {"cause": {"source": "footswitch", "kind": "bypass_set", "a": 0, "b": 0, "label": "bypass set"}, "action": {"action": "bypass", "on": false}, "result": {"ok": true, "on": false}}
+
+id: 46c01fe7-2627
+event: running
+data: {"rig": "Bob", "bank": 0, "position": 0, "bank_size": 2, "next": "Standard", "bypass": false, "performance": []}
+
+: ka
+
+: ka
+
+: ka
+

@@ -33,12 +33,30 @@ vip._pedal._tcp.local. can be reached at vip.local.:47820 (interface 11)
  api=2 engine=47810
 ```
 
+## Real footswitches, 15:07 UTC
+
+The Pico was reconnected at 14:48 (it had been unplugged, not at fault; fw `31a5c8d`, session up, 0 bad frames).
+Each press and each release reached pedald once, on `f7e3764`. The stream is `run/footswitch-presses.sse`:
+
+| Press | pedald received | `/events` said |
+|---|---|---|
+| Left | cc 80, 127 then 0 | `footswitch 1`, loaded Standard, warm |
+| Middle | cc 81, 127 then 0 | `footswitch 2`, loaded Bob, warm |
+| Right, short | cc 82, 127 then 0 | no action: nothing is mapped to it |
+| Right, held | cc 82 and `bypass_set` 1 | bypass on, `source: footswitch` |
+| Right, held again | cc 82 and `bypass_set` 0 | bypass off, `source: footswitch` |
+
+The bank holds two rigs, so these presses can't show which way cc 80 and cc 81 step. Nothing here measured the
+relay or the audio during the panic bypass.
+
+**A slip while checking this.** Reading the Pico's console with a plain `cat /dev/ttyACM0` leaves the tty's echo on,
+which sends the Pico's log back to it, and its bench keys `e`, `d` and `b` are real events. From 14:49:22 to 14:50:00
+vip switched rigs about 1300 times and toggled bypass 5 times, with 0 xruns and 0 guard trips. It stopped when the
+reader was killed, and an 8 s read after `stty raw -echo` caused 0 switches. Bypass was left on and was turned off with
+one `POST /event`. Those keys stay live in the firmware.
+
 ## What this doesn't cover
 
-- **A press of a real footswitch through to `/events`.** vip's Pico has sent nothing since 2026-11-07 16:36 UTC,
-  before any of this work, and pedald has received 0 bytes this run: the link is open and nothing is talking
-  on it. `test_daemon.FootswitchOverTheLink` drives the same path with a pty as the Pico, on the real loop,
-  and the steps above went through `POST /event`.
 - **The commits after the churn.** The gate ran on `6b7c001`. The two commits since (`9499387`, the session's
   clock, and `f7e3764`, reading status after a switch) changed the loop's order and add one status read per
   press. They were applied and exercised on vip, but the gate wasn't repeated.
