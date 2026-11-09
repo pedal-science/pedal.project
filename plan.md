@@ -1415,9 +1415,10 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 banks, the model/IR library and the block catalogue; ljoss and rigpa become views that send commands
 and are told of every change with its cause. Rik's answers to two rounds of questions are recorded
 there, milestone by milestone, with a demo and a review after each. **All of it is built: M0, C1–C3
-and O1–O9 are done** (the entries below, newest first). O1–O9 await Rik's review, and nothing is
-pushed. **The end-to-end check passed** (the entry below), after one ljoss fix. **What is left:** the
-panel by eye (below); "Show disconnected" with a second pedal; pushing, when Rik says.
+and O1–O9 are done** (the entries below, newest first), and pushed at Rik's say-so (2026-11-09).
+**The end-to-end check passed** (the entry below), after one ljoss fix, and Rik checked the panel on
+the pedal: it works, reads well and is the right way up. **What is left:** "Show disconnected" with a
+second pedal.
 Known and not fixed: the engine sometimes crossfades once during a drag of ramps with no event saying
 why (namchain's). **Done: M0** (the decision and the
 plan) **and C1** (rigpa `ed481e6`: `display.layout` / `--layout compact` gives the 800×480 panel's
@@ -1430,8 +1431,8 @@ nodes rigpa's views use: vip had run `eba5eef`). The soak passed every arm
 ([bench-results/2026-11-07-rigpa-compact-vip/README.md](bench-results/2026-11-07-rigpa-compact-vip/README.md)).
 Two deploy-script faults fixed on the way: the planar-kernel check still read namchain's old summary
 line (so every namchain since 0c1a6d8 was refused), and a `| head` under pipefail ended a deploy before
-`components-lock`. **Still to do by eye on the pedal:** the panel's rotation (0 or 180), touch landing
-where touched, legibility from standing.
+`components-lock`. **Checked by eye on the pedal (Rik, 2026-11-09):** the panel works, reads well and
+is rotated correctly.
 
 **D17 end to end: pass** (2026-11-09), on vip with real footswitches
 ([bench-results/2026-11-09-d17-end-to-end-vip/README.md](bench-results/2026-11-09-d17-end-to-end-vip/README.md)).
