@@ -392,8 +392,8 @@ is always the stored document.
 Parsing happens on the follower's thread, so a large document doesn't hold up a press.
 
 **Autosave.** 1 s after the last edit, pedald writes the stored document to the rig's library file if it
-differs, and sends `saved`. `pedald.json`'s `autosave` stays false on vip until O5 deploys, because until then
-rigpa saves for itself. With it false, everything else here still runs, and nothing is written.
+differs, and sends `saved`. `pedald.json`'s `autosave` is true from O5 (2026-11-09), when rigpa stopped saving for itself. With it
+false, everything else here still runs, and nothing is written.
 
 **Resume.** `last.json` stays the document as played, performance included. `state/resume.json` holds its hash
 and the overlay's keys, written whenever `last.json` is considered. At start:
