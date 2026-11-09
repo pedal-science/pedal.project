@@ -1,0 +1,556 @@
+{
+  "chains": [
+    {
+      "adopted_generation": 40,
+      "audible_generation": 40,
+      "failed_nodes": 0,
+      "generation": 40,
+      "guard_trips": 0,
+      "id": "4AF52841-CCF7-4480-AF27-F32C09988A80",
+      "input_channel": 0,
+      "missing_assets": [],
+      "muted": false,
+      "name": "Guitar",
+      "output_channel": 0,
+      "slimmed_models": [],
+      "target_generation": 40,
+      "transition_active": false
+    }
+  ],
+  "document": {
+    "chains": [
+      {
+        "connections": [
+          {
+            "from": "in",
+            "from_port": 0,
+            "to": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626-cut",
+            "to_port": 0
+          },
+          {
+            "from": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626-cut",
+            "from_port": 0,
+            "to": "481300D1-457E-4F47-9E20-D4E58105B322-eq",
+            "to_port": 0
+          },
+          {
+            "from": "481300D1-457E-4F47-9E20-D4E58105B322-eq",
+            "from_port": 0,
+            "to": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2-delay",
+            "to_port": 0
+          },
+          {
+            "from": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2-delay",
+            "from_port": 0,
+            "to": "F2193142-589E-4E52-BAD5-52D1E7D1456D-cut",
+            "to_port": 0
+          },
+          {
+            "from": "F2193142-589E-4E52-BAD5-52D1E7D1456D-cut",
+            "from_port": 0,
+            "to": "out",
+            "to_port": 0
+          }
+        ],
+        "id": "4AF52841-CCF7-4480-AF27-F32C09988A80",
+        "input_channel": 0,
+        "name": "Guitar",
+        "nodes": [
+          {
+            "element": "in",
+            "id": "in",
+            "type": "nc.input"
+          },
+          {
+            "element": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626",
+            "id": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626-cut",
+            "low_cut": 80.0,
+            "low_slope": "12",
+            "meta": {
+              "slot": "cut",
+              "template": "eq.lowcut"
+            },
+            "type": "fx.filter.cut"
+          },
+          {
+            "element": "481300D1-457E-4F47-9E20-D4E58105B322",
+            "freq": 900.0,
+            "id": "481300D1-457E-4F47-9E20-D4E58105B322-eq",
+            "meta": {
+              "slot": "eq",
+              "template": "eq.tilt"
+            },
+            "tilt": 0.0,
+            "type": "fx.eq.tilt"
+          },
+          {
+            "element": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2",
+            "feedback": 0.475,
+            "id": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2-delay",
+            "meta": {
+              "slot": "delay",
+              "template": "delay.tape"
+            },
+            "mix": 0.35000000000000003,
+            "time": 420.0,
+            "type": "fx.delay.feedback"
+          },
+          {
+            "element": "F2193142-589E-4E52-BAD5-52D1E7D1456D",
+            "high_cut": 8000.0,
+            "high_slope": "12",
+            "id": "F2193142-589E-4E52-BAD5-52D1E7D1456D-cut",
+            "meta": {
+              "slot": "cut",
+              "template": "eq.highcut"
+            },
+            "type": "fx.filter.cut"
+          },
+          {
+            "element": "out",
+            "id": "out",
+            "type": "nc.output"
+          }
+        ],
+        "output_channel": 0
+      }
+    ],
+    "name": "New Rig 2"
+  },
+  "generation": 40,
+  "loaded": true,
+  "lowered": [
+    {
+      "chain": "4AF52841-CCF7-4480-AF27-F32C09988A80",
+      "connections": [
+        {
+          "from": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:low1",
+          "from_port": 0,
+          "to": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:low2",
+          "to_port": 0
+        },
+        {
+          "from": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:low2",
+          "from_port": 0,
+          "to": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:low3",
+          "to_port": 0
+        },
+        {
+          "from": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:low3",
+          "from_port": 0,
+          "to": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:low4",
+          "to_port": 0
+        },
+        {
+          "from": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:low4",
+          "from_port": 0,
+          "to": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:high1",
+          "to_port": 0
+        },
+        {
+          "from": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:high1",
+          "from_port": 0,
+          "to": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:high2",
+          "to_port": 0
+        },
+        {
+          "from": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:high2",
+          "from_port": 0,
+          "to": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:high3",
+          "to_port": 0
+        },
+        {
+          "from": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:high3",
+          "from_port": 0,
+          "to": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:high4",
+          "to_port": 0
+        },
+        {
+          "from": "481300D1-457E-4F47-9E20-D4E58105B322:low",
+          "from_port": 0,
+          "to": "481300D1-457E-4F47-9E20-D4E58105B322:high",
+          "to_port": 0
+        },
+        {
+          "from": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:sum",
+          "from_port": 0,
+          "to": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:line",
+          "to_port": 0
+        },
+        {
+          "from": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:line",
+          "from_port": 0,
+          "to": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:fb",
+          "to_port": 0
+        },
+        {
+          "from": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:fb",
+          "from_port": 0,
+          "to": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:tap",
+          "to_port": 0
+        },
+        {
+          "from": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:tap",
+          "from_port": 0,
+          "to": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:sum",
+          "to_port": 1
+        },
+        {
+          "from": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:line",
+          "from_port": 0,
+          "to": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:wet",
+          "to_port": 0
+        },
+        {
+          "from": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:dry",
+          "from_port": 0,
+          "to": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:out",
+          "to_port": 0
+        },
+        {
+          "from": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:wet",
+          "from_port": 0,
+          "to": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:out",
+          "to_port": 1
+        },
+        {
+          "from": "F2193142-589E-4E52-BAD5-52D1E7D1456D:low1",
+          "from_port": 0,
+          "to": "F2193142-589E-4E52-BAD5-52D1E7D1456D:low2",
+          "to_port": 0
+        },
+        {
+          "from": "F2193142-589E-4E52-BAD5-52D1E7D1456D:low2",
+          "from_port": 0,
+          "to": "F2193142-589E-4E52-BAD5-52D1E7D1456D:low3",
+          "to_port": 0
+        },
+        {
+          "from": "F2193142-589E-4E52-BAD5-52D1E7D1456D:low3",
+          "from_port": 0,
+          "to": "F2193142-589E-4E52-BAD5-52D1E7D1456D:low4",
+          "to_port": 0
+        },
+        {
+          "from": "F2193142-589E-4E52-BAD5-52D1E7D1456D:low4",
+          "from_port": 0,
+          "to": "F2193142-589E-4E52-BAD5-52D1E7D1456D:high1",
+          "to_port": 0
+        },
+        {
+          "from": "F2193142-589E-4E52-BAD5-52D1E7D1456D:high1",
+          "from_port": 0,
+          "to": "F2193142-589E-4E52-BAD5-52D1E7D1456D:high2",
+          "to_port": 0
+        },
+        {
+          "from": "F2193142-589E-4E52-BAD5-52D1E7D1456D:high2",
+          "from_port": 0,
+          "to": "F2193142-589E-4E52-BAD5-52D1E7D1456D:high3",
+          "to_port": 0
+        },
+        {
+          "from": "F2193142-589E-4E52-BAD5-52D1E7D1456D:high3",
+          "from_port": 0,
+          "to": "F2193142-589E-4E52-BAD5-52D1E7D1456D:high4",
+          "to_port": 0
+        },
+        {
+          "from": "in",
+          "from_port": 0,
+          "to": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:low1",
+          "to_port": 0
+        },
+        {
+          "from": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:high4",
+          "from_port": 0,
+          "to": "481300D1-457E-4F47-9E20-D4E58105B322:low",
+          "to_port": 0
+        },
+        {
+          "from": "481300D1-457E-4F47-9E20-D4E58105B322:high",
+          "from_port": 0,
+          "to": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:dry",
+          "to_port": 0
+        },
+        {
+          "from": "481300D1-457E-4F47-9E20-D4E58105B322:high",
+          "from_port": 0,
+          "to": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:sum",
+          "to_port": 0
+        },
+        {
+          "from": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:out",
+          "from_port": 0,
+          "to": "F2193142-589E-4E52-BAD5-52D1E7D1456D:low1",
+          "to_port": 0
+        },
+        {
+          "from": "F2193142-589E-4E52-BAD5-52D1E7D1456D:high4",
+          "from_port": 0,
+          "to": "out",
+          "to_port": 0
+        }
+      ],
+      "nodes": [
+        {
+          "element": "in",
+          "id": "in",
+          "type": "nc.input"
+        },
+        {
+          "element": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626",
+          "freq": 80.0,
+          "gain_db": 0.0,
+          "id": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:low1",
+          "mode": "highpass",
+          "q": 0.7071067811865476,
+          "role": "low1",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "bypass": true,
+          "element": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626",
+          "freq": 80.0,
+          "gain_db": 0.0,
+          "id": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:low2",
+          "mode": "highpass",
+          "q": 0.707,
+          "role": "low2",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "bypass": true,
+          "element": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626",
+          "freq": 80.0,
+          "gain_db": 0.0,
+          "id": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:low3",
+          "mode": "highpass",
+          "q": 0.707,
+          "role": "low3",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "bypass": true,
+          "element": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626",
+          "freq": 80.0,
+          "gain_db": 0.0,
+          "id": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:low4",
+          "mode": "highpass",
+          "q": 0.707,
+          "role": "low4",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "element": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626",
+          "freq": 20000.0,
+          "gain_db": 0.0,
+          "id": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:high1",
+          "mode": "lowpass",
+          "q": 0.7071067811865476,
+          "role": "high1",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "bypass": true,
+          "element": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626",
+          "freq": 20000.0,
+          "gain_db": 0.0,
+          "id": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:high2",
+          "mode": "lowpass",
+          "q": 0.707,
+          "role": "high2",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "bypass": true,
+          "element": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626",
+          "freq": 20000.0,
+          "gain_db": 0.0,
+          "id": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:high3",
+          "mode": "lowpass",
+          "q": 0.707,
+          "role": "high3",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "bypass": true,
+          "element": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626",
+          "freq": 20000.0,
+          "gain_db": 0.0,
+          "id": "6ED318C0-DD9A-4E87-825E-B2C3A8EDE626:high4",
+          "mode": "lowpass",
+          "q": 0.707,
+          "role": "high4",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "element": "481300D1-457E-4F47-9E20-D4E58105B322",
+          "freq": 900.0,
+          "gain_db": -0.0,
+          "id": "481300D1-457E-4F47-9E20-D4E58105B322:low",
+          "mode": "lowshelf",
+          "q": 0.707,
+          "role": "low",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "element": "481300D1-457E-4F47-9E20-D4E58105B322",
+          "freq": 900.0,
+          "gain_db": 0.0,
+          "id": "481300D1-457E-4F47-9E20-D4E58105B322:high",
+          "mode": "highshelf",
+          "q": 0.707,
+          "role": "high",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "element": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2",
+          "gain": 0.6499999999999999,
+          "id": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:dry",
+          "role": "dry",
+          "type": "nc.gain"
+        },
+        {
+          "element": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2",
+          "id": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:sum",
+          "inputs": 2.0,
+          "role": "sum",
+          "type": "nc.mix"
+        },
+        {
+          "element": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2",
+          "id": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:line",
+          "max_ms": 1000.0,
+          "ms": 420.0,
+          "role": "line",
+          "type": "nc.delay"
+        },
+        {
+          "element": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2",
+          "gain": 0.475,
+          "id": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:fb",
+          "role": "fb",
+          "type": "nc.gain"
+        },
+        {
+          "element": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2",
+          "id": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:tap",
+          "role": "tap",
+          "type": "nc.unit_delay"
+        },
+        {
+          "element": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2",
+          "gain": 0.35000000000000003,
+          "id": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:wet",
+          "role": "wet",
+          "type": "nc.gain"
+        },
+        {
+          "element": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2",
+          "id": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2:out",
+          "inputs": 2.0,
+          "role": "out",
+          "type": "nc.mix"
+        },
+        {
+          "element": "F2193142-589E-4E52-BAD5-52D1E7D1456D",
+          "freq": 20.0,
+          "gain_db": 0.0,
+          "id": "F2193142-589E-4E52-BAD5-52D1E7D1456D:low1",
+          "mode": "highpass",
+          "q": 0.7071067811865476,
+          "role": "low1",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "bypass": true,
+          "element": "F2193142-589E-4E52-BAD5-52D1E7D1456D",
+          "freq": 20.0,
+          "gain_db": 0.0,
+          "id": "F2193142-589E-4E52-BAD5-52D1E7D1456D:low2",
+          "mode": "highpass",
+          "q": 0.707,
+          "role": "low2",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "bypass": true,
+          "element": "F2193142-589E-4E52-BAD5-52D1E7D1456D",
+          "freq": 20.0,
+          "gain_db": 0.0,
+          "id": "F2193142-589E-4E52-BAD5-52D1E7D1456D:low3",
+          "mode": "highpass",
+          "q": 0.707,
+          "role": "low3",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "bypass": true,
+          "element": "F2193142-589E-4E52-BAD5-52D1E7D1456D",
+          "freq": 20.0,
+          "gain_db": 0.0,
+          "id": "F2193142-589E-4E52-BAD5-52D1E7D1456D:low4",
+          "mode": "highpass",
+          "q": 0.707,
+          "role": "low4",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "element": "F2193142-589E-4E52-BAD5-52D1E7D1456D",
+          "freq": 8000.0,
+          "gain_db": 0.0,
+          "id": "F2193142-589E-4E52-BAD5-52D1E7D1456D:high1",
+          "mode": "lowpass",
+          "q": 0.7071067811865476,
+          "role": "high1",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "bypass": true,
+          "element": "F2193142-589E-4E52-BAD5-52D1E7D1456D",
+          "freq": 8000.0,
+          "gain_db": 0.0,
+          "id": "F2193142-589E-4E52-BAD5-52D1E7D1456D:high2",
+          "mode": "lowpass",
+          "q": 0.707,
+          "role": "high2",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "bypass": true,
+          "element": "F2193142-589E-4E52-BAD5-52D1E7D1456D",
+          "freq": 8000.0,
+          "gain_db": 0.0,
+          "id": "F2193142-589E-4E52-BAD5-52D1E7D1456D:high3",
+          "mode": "lowpass",
+          "q": 0.707,
+          "role": "high3",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "bypass": true,
+          "element": "F2193142-589E-4E52-BAD5-52D1E7D1456D",
+          "freq": 8000.0,
+          "gain_db": 0.0,
+          "id": "F2193142-589E-4E52-BAD5-52D1E7D1456D:high4",
+          "mode": "lowpass",
+          "q": 0.707,
+          "role": "high4",
+          "type": "nc.eq.biquad"
+        },
+        {
+          "element": "out",
+          "id": "out",
+          "type": "nc.output"
+        }
+      ]
+    }
+  ],
+  "missing_assets": [],
+  "ok": true,
+  "rig": "",
+  "seq": 2212,
+  "slimmed_models": [],
+  "source": "applied"
+}

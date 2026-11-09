@@ -1,0 +1,190 @@
+id: f2cf2da6-65
+event: hello
+data: {"running": {"rig": "O8 migration test", "bank": 0, "position": 1, "bank_size": 4, "next": "Bob", "bypass": false, "modified": false, "performance": []}, "engine": {"reachable": true, "state": "running", "health": "warn", "mute": false, "protocol": 2}, "bank": {"banks": [["New Rig", "O8 migration test", "Bob", "Standard"]], "bank": 0}, "pedal": {"id": "43fdbd44-fa03-40cc-aebb-7c7cb21b3260", "name": "vip", "api": 2}}
+
+id: f2cf2da6-66
+event: running
+data: {"rig": "O8 migration test", "bank": 0, "position": 1, "bank_size": 5, "next": "New Rig 2", "bypass": false, "modified": false, "performance": []}
+
+id: f2cf2da6-67
+event: bank
+data: {"banks": [["New Rig", "O8 migration test", "New Rig 2", "Bob", "Standard"]], "bank": 0}
+
+id: f2cf2da6-68
+event: library
+data: {"library": "rigs", "change": "put", "name": "New Rig 2"}
+
+id: f2cf2da6-69
+event: action
+data: {"cause": {"source": "app", "kind": "rig_select", "label": "app", "client": "ljoss"}, "action": {"action": "load", "rig": "New Rig 2"}, "result": {"ok": true, "rig": "New Rig 2", "how": "cold", "reason": "that rig is not the warm one"}}
+
+id: f2cf2da6-70
+event: running
+data: {"rig": "New Rig 2", "bank": 0, "position": 2, "bank_size": 5, "next": "Bob", "bypass": false, "modified": false, "performance": []}
+
+id: f2cf2da6-71
+event: engine
+data: {"reachable": true, "state": "running", "health": "ok", "mute": false, "protocol": 2}
+
+id: f2cf2da6-72
+event: saved
+data: {"rig": "O8 migration test", "seq": 2207}
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+id: f2cf2da6-73
+event: history
+data: {"rig": "New Rig 2", "undo": 1, "redo": 0}
+
+id: f2cf2da6-74
+event: engine
+data: {"reachable": true, "state": "running", "health": "warn", "mute": false, "protocol": 2}
+
+id: f2cf2da6-75
+event: saved
+data: {"rig": "New Rig 2", "seq": 2209}
+
+id: f2cf2da6-76
+event: history
+data: {"rig": "New Rig 2", "undo": 2, "redo": 0}
+
+id: f2cf2da6-77
+event: saved
+data: {"rig": "New Rig 2", "seq": 2210}
+
+id: f2cf2da6-78
+event: history
+data: {"rig": "New Rig 2", "undo": 3, "redo": 0}
+
+id: f2cf2da6-79
+event: saved
+data: {"rig": "New Rig 2", "seq": 2211}
+
+id: f2cf2da6-80
+event: history
+data: {"rig": "New Rig 2", "undo": 4, "redo": 0}
+
+id: f2cf2da6-81
+event: saved
+data: {"rig": "New Rig 2", "seq": 2212}
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+id: 990f9eb4-6
+event: hello
+data: {"running": {"rig": "New Rig 2", "bank": 0, "position": 2, "bank_size": 5, "next": "Bob", "bypass": false, "modified": false, "performance": []}, "engine": {"reachable": true, "state": "running", "health": "warn", "mute": false, "protocol": 2}, "bank": {"banks": [["New Rig", "O8 migration test", "New Rig 2", "Bob", "Standard"]], "bank": 0}, "pedal": {"id": "43fdbd44-fa03-40cc-aebb-7c7cb21b3260", "name": "vip", "api": 2}}
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+id: 990f9eb4-7
+event: action
+data: {"cause": {"source": "footswitch", "kind": "cc", "a": 81, "b": 127, "label": "footswitch 2"}, "action": {"action": "load", "rig": "Bob"}, "result": {"ok": true, "rig": "Bob", "how": "warm"}}
+
+id: 990f9eb4-8
+event: running
+data: {"rig": "Bob", "bank": 0, "position": 3, "bank_size": 5, "next": "Standard", "bypass": false, "modified": false, "performance": []}
+
+id: 990f9eb4-9
+event: action
+data: {"cause": {"source": "footswitch", "kind": "cc", "a": 80, "b": 127, "label": "footswitch 1"}, "action": {"action": "load", "rig": "New Rig 2"}, "result": {"ok": true, "rig": "New Rig 2", "how": "cold", "reason": "that rig is not the warm one"}}
+
+id: 990f9eb4-10
+event: running
+data: {"rig": "New Rig 2", "bank": 0, "position": 2, "bank_size": 5, "next": "O8 migration test", "bypass": false, "modified": false, "performance": []}
+
+id: 990f9eb4-11
+event: action
+data: {"cause": {"source": "footswitch", "kind": "cc", "a": 82, "b": 127, "label": "footswitch 3"}, "action": {"action": "block", "element": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2"}, "result": {"ok": true, "element": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2", "bypass": true}}
+
+id: 990f9eb4-12
+event: running
+data: {"rig": "New Rig 2", "bank": 0, "position": 2, "bank_size": 5, "next": "O8 migration test", "bypass": false, "modified": true, "performance": [{"chain": "4AF52841-CCF7-4480-AF27-F32C09988A80", "node": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2-delay", "element": "8BF86D2A-DCF5-4A0F-BA5A-8313F2A5C8F2", "param": "bypass"}]}
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+id: 990f9eb4-13
+event: history
+data: {"rig": "New Rig 2", "undo": 5, "redo": 0}
+
+id: 990f9eb4-14
+event: saved
+data: {"rig": "New Rig 2", "seq": 2216}
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+: ka
+
+id: 990f9eb4-15
+event: saved
+data: {"rig": "New Rig 2", "seq": 2217}
+
+id: 990f9eb4-16
+event: history
+data: {"rig": "New Rig 2", "undo": 4, "redo": 1}
+
+: ka
+

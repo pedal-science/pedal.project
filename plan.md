@@ -1416,8 +1416,8 @@ banks, the model/IR library and the block catalogue; ljoss and rigpa become view
 and are told of every change with its cause. Rik's answers to two rounds of questions are recorded
 there, milestone by milestone, with a demo and a review after each. **All of it is built: M0, C1–C3
 and O1–O9 are done** (the entries below, newest first). O1–O9 await Rik's review, and nothing is
-pushed. **What is left:** the panel by eye (below); the plan's end-to-end check ("Verification, end
-to end", after O8, with vip in the box), which is the next thing to run; pushing, when Rik says.
+pushed. **The end-to-end check passed** (the entry below), after one ljoss fix. **What is left:** the
+panel by eye (below); "Show disconnected" with a second pedal; pushing, when Rik says.
 Known and not fixed: the engine sometimes crossfades once during a drag of ramps with no event saying
 why (namchain's). **Done: M0** (the decision and the
 plan) **and C1** (rigpa `ed481e6`: `display.layout` / `--layout compact` gives the 800×480 panel's
@@ -1432,6 +1432,17 @@ Two deploy-script faults fixed on the way: the planar-kernel check still read na
 line (so every namchain since 0c1a6d8 was refused), and a `| head` under pipefail ended a deploy before
 `components-lock`. **Still to do by eye on the pedal:** the panel's rotation (0 or 180), touch landing
 where touched, legibility from standing.
+
+**D17 end to end: pass** (2026-11-09), on vip with real footswitches
+([bench-results/2026-11-09-d17-end-to-end-vip/README.md](bench-results/2026-11-09-d17-end-to-end-vip/README.md)).
+ljoss found vip and compared files both ways (an unticked file stayed put, a clash kept both, renamed, nothing
+deleted); a rig built in ljoss played, showed the same in rigpa, and was stored unasked, identical to the engine's
+document; footswitch 2 switched and footswitch 3 toggled a block in every app without touching the stored rig, and
+reloading restored it; Undo on rigpa reverted ljoss's edit; through a reboot the history and the unsaved toggle
+survived; with the pedal gone ljoss showed no rigs and kept Models & IRs. **One fault, fixed in ljoss `8b6cd8a`:**
+after the engine restarted, ljoss kept its old `seq`, so every structural edit was refused as a conflict until ljoss
+restarted. Not checkable yet: "Show disconnected" (pro has no pedald). Noted: `/running`'s `modified` is true during a
+performance, though neither app marks the rig unsaved.
 
 **O9 done, waiting for review** (2026-11-09): the docs say what D17 built. pedal.project: `AGENTS.md`'s Architecture
 (the pedal owns its state; ljoss and rigpa are views), `docs/working-across-repos.md`'s ljoss and rigpa rows and how
