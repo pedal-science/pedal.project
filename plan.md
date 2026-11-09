@@ -1428,6 +1428,15 @@ line (so every namchain since 0c1a6d8 was refused), and a `| head` under pipefai
 `components-lock`. **Still to do by eye on the pedal:** the panel's rotation (0 or 180), touch landing
 where touched, legibility from standing.
 
+**O7 done, waiting for review** (2026-11-09): ljoss edits through the pedal. Its palette is the pedal's 27 templates
+plus the engine's own palette types. An edit goes from the pedal's own document: ramps tagged by gesture, a bypass as a
+`bypass` op, anything structural as `rig.apply` with `if_seq`, and a conflict reads the pedal's version again. Picking a
+rig plays it; new, duplicate, rename, delete, banks, undo and redo go to pedald. On vip: a rig built in ljoss shows in
+rigpa with the same names and knobs, Undo on rigpa reverted ljoss's edit, and a bank reordered in ljoss changed the
+footswitch order. ljoss `4de6d44`, rigpa `1c6fc8d` (`--input U`/`Y`); evidence in ljoss's
+`bench-results/2026-11-09-o7-editing-vip/README.md`. Seen on the way and not fixed: the engine sometimes crossfades once
+during a drag of ramps with no event saying why. **Next: O8** (ljoss: files and migration).
+
 **O6 done, waiting for review** (2026-11-09): ljoss shows pedals and keeps no rigs. It finds pedals over Bonjour,
 keeps one token per pedal id (the old single token moved to vip by itself), and lists known pedals behind "Show
 disconnected". It subscribes to the engine as `ljoss` and reads what the pedal plays instead of sending its own
