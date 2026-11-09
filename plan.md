@@ -1428,6 +1428,16 @@ line (so every namchain since 0c1a6d8 was refused), and a `| head` under pipefai
 `components-lock`. **Still to do by eye on the pedal:** the panel's rotation (0 or 180), touch landing
 where touched, legibility from standing.
 
+**O8 done, waiting for review** (2026-11-09): ljoss's files and a pedal's meet by content. ljoss's library hashes
+each file as it reads it (an unchanged file isn't read again). "Compare Files…" opens by itself the first time ljoss
+meets a pedal: two ticked boxes, add to the pedal and add to ljoss, a tick per file, nothing deleted or overwritten; a
+taken name keeps both, the incoming file renamed after its source (`Clash (M2).wav` on vip, `Clash (vip).wav` here).
+Uploads are `PUT` with `If-None-Match: *`; downloads go to a folder chosen once, keeping sub-folders. "Copy ljoss's
+Rigs…" sends the old rigs one at a time: what the pedal can't play is left out and said, files are found by content or
+uploaded, and the rig is created with `POST /library/rigs`; the old files are left alone. On vip a migrated rig played
+from ljoss and showed the same blocks in rigpa. ljoss `cc6d123`; evidence in ljoss's
+`bench-results/2026-11-09-o8-files-vip/README.md`. **Next: O9** (the docs close-out).
+
 **O7 done, waiting for review** (2026-11-09): ljoss edits through the pedal. Its palette is the pedal's 27 templates
 plus the engine's own palette types. An edit goes from the pedal's own document: ramps tagged by gesture, a bypass as a
 `bypass` op, anything structural as `rig.apply` with `if_seq`, and a conflict reads the pedal's version again. Picking a
