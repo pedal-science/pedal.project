@@ -6,5 +6,7 @@
   "max_model_bytes": 16777216,
   "max_ir_bytes": 67108864,
   "max_rig_bytes": 1048576,
+  "max_connections": 16,
+  "max_event_streams": 6,
   "log_level": "info"
 }

@@ -1,17 +1,20 @@
 """The daemon's own decisions: the STATE flags, the bank's verdicts and what /status says
 (docs/pedal-service.md)."""
+import http.client
 import json
 import os
 import pathlib
+import socket
 import sys
 import tempfile
+import threading
 import time
 import types
 import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "rootfs/usr/local/lib"))
 
-from pedald import daemon, mapping, protocol  # noqa: E402
+from pedald import config, daemon, mapping, protocol  # noqa: E402
 from pedald.engine import EngineError  # noqa: E402
 
 
@@ -78,6 +81,7 @@ def fake_service(status=None, engine_down=False, link_open=True, session_up=True
     service.session = types.SimpleNamespace(session_up=session_up, frames_ok=12, frames_bad=1)
     service.pico = pico or {"fw": "0.1", "major": 1, "minor": 0, "caps": 0}
     service.bypass = False
+    service.http = types.SimpleNamespace(stats=lambda: {"connections": 1})
     return service
 
 
@@ -129,7 +133,7 @@ class EventRoute(unittest.TestCase):
     def test_an_event_reaches_the_mapping(self):
         loaded = []
         service = self._service(loaded)
-        request = types.SimpleNamespace(method="POST", path="/event",
+        request = types.SimpleNamespace(method="POST", path="/event", headers={},
                                         body=json.dumps({"kind": 0x01, "a": 0, "b": 0}).encode())
         status, body = service.handle_event(request)
         self.assertEqual(status, 200)
@@ -139,7 +143,7 @@ class EventRoute(unittest.TestCase):
     def test_a_body_that_is_not_an_event_is_refused(self):
         service = self._service([])
         for body in (b"", b"[]", b'{"a": 1}', b'{"kind": "up"}', b"not json"):
-            request = types.SimpleNamespace(method="POST", path="/event", body=body)
+            request = types.SimpleNamespace(method="POST", path="/event", headers={}, body=body)
             status, _ = service.handle_event(request)
             self.assertEqual(status, 400, body)
 
@@ -148,7 +152,7 @@ class EventRoute(unittest.TestCase):
         # have gets an answer that says so, not a rig change.
         loaded = []
         service = self._service(loaded)
-        request = types.SimpleNamespace(method="POST", path="/event",
+        request = types.SimpleNamespace(method="POST", path="/event", headers={},
                                         body=json.dumps({"kind": 0x7F, "a": 0, "b": 0}).encode())
         status, _ = service.handle_event(request)
         self.assertEqual(status, 200)
@@ -852,6 +856,182 @@ class WarmDecision(unittest.TestCase):
     def test_status_carries_the_decision(self):
         _, body = fake_service().handle_status(None)
         self.assertEqual(body["engine"]["warm_decision"]["state"], "idle")
+
+
+class FullService(unittest.TestCase):
+    """A real Service on its own loop, with no UART and no engine: what a host without a Pico runs."""
+
+    def setUp(self):
+        self.dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.dir.cleanup)
+        root = pathlib.Path(self.dir.name)
+        (root / "rigs").mkdir()
+        for name in ("Clean", "Lead"):
+            (root / "rigs" / f"{name}.json").write_text(json.dumps({"name": name, "chains": []}))
+        (root / "token").write_text("t" * 32)
+        cfg = config.Config()
+        cfg.uart_device = str(root / "no-uart")
+        cfg.http_host, cfg.http_port = "127.0.0.1", 0
+        cfg.engine_port = 1                     # nothing listens: refused at once
+        cfg.engine_token_file = str(root / "token")
+        cfg.rigs_root = str(root / "rigs")
+        cfg.state_root = str(root / "state")
+        self.lines = []
+        self.service = daemon.Service(cfg, self.lines.append)
+        self.thread = threading.Thread(target=self.service.run, daemon=True)
+        self.thread.start()
+        self.addCleanup(self.finish)
+        deadline = time.monotonic() + 5
+        while time.monotonic() < deadline and self.service.http.port == 0:
+            time.sleep(0.01)
+
+    def finish(self):
+        self.service.stop()
+        self.thread.join(5)
+
+    def ask(self, method, path, body=None, headers=None):
+        conn = http.client.HTTPConnection("127.0.0.1", self.service.http.port, timeout=15)
+        self.addCleanup(conn.close)
+        conn.request(method, path, body=body,
+                     headers=dict({"Authorization": "Bearer " + "t" * 32}, **(headers or {})))
+        reply = conn.getresponse()
+        return reply.status, json.loads(reply.read() or b"null")
+
+    def events(self):
+        sock = socket.create_connection(("127.0.0.1", self.service.http.port))
+        self.addCleanup(sock.close)
+        sock.settimeout(5)
+        sock.sendall(("GET /events HTTP/1.1\r\nHost: x\r\nAuthorization: Bearer " + "t" * 32 + "\r\n\r\n").encode())
+        return sock
+
+    def next_event(self, sock, kind, seconds=5):
+        buffer = getattr(self, "_buffer", b"")
+        deadline = time.monotonic() + seconds
+        while time.monotonic() < deadline:
+            while b"\n\n" in buffer:
+                block, _, buffer = buffer.partition(b"\n\n")
+                lines = dict(line.split(": ", 1) for line in block.decode().split("\n") if ": " in line)
+                if lines.get("event") == kind:
+                    self._buffer = buffer
+                    return json.loads(lines["data"])
+            buffer += sock.recv(65536)
+        self.fail(f"no {kind} event")
+
+    def test_with_no_uart_the_loop_sleeps(self):
+        before = self.service.loop_passes
+        time.sleep(1.5)
+        passes = self.service.loop_passes - before
+        # A pass for each status poll and each link retry. It spun at tens of thousands a second.
+        self.assertLess(passes, 12)
+        self.assertGreater(passes, 0)
+
+    def test_get_and_put_pedal(self):
+        status, body = self.ask("GET", "/pedal")
+        self.assertEqual(status, 200)
+        self.assertEqual(body["api"], 2)
+        self.assertEqual(body["engine"]["port"], 1)
+        self.assertEqual(body["http"]["port"], self.service.http.port)
+        self.assertEqual(body["id"], self.service.identity.id)
+        stream = self.events()
+        status, renamed = self.ask("PUT", "/pedal", json.dumps({"name": "Stage"}))
+        self.assertEqual((status, renamed["name"], renamed["id"]), (200, "Stage", body["id"]))
+        self.assertEqual(self.next_event(stream, "pedal")["name"], "Stage")
+        self.assertEqual(self.ask("PUT", "/pedal", json.dumps({"name": ""}))[0], 400)
+        self.assertEqual(self.ask("PUT", "/pedal", "not json")[0], 400)
+
+    def test_a_press_over_http_tells_every_view_what_it_did_and_who_asked(self):
+        stream = self.events()
+        hello = self.next_event(stream, "hello")
+        self.assertEqual(hello["pedal"]["id"], self.service.identity.id)
+        self.assertFalse(hello["engine"]["reachable"])
+        # The engine is down here, so the press fails, and the view is told that too.
+        status, body = self.ask("POST", "/event", json.dumps({"kind": 0x10, "a": 81, "b": 127}),
+                                {"Pedal-Client": "rigpa"})
+        self.assertEqual(status, 200)
+        self.assertFalse(body["result"]["ok"])
+        action = self.next_event(stream, "action")
+        self.assertEqual(action["cause"], {"source": "http", "kind": "cc", "a": 81, "b": 127,
+                                           "label": "CC 81", "client": "rigpa"})
+        self.assertEqual(action["action"]["action"], "load")
+        self.assertEqual(action["result"]["code"], "engine_unreachable")
+
+    def test_a_release_or_an_unmapped_trigger_tells_nobody(self):
+        stream = self.events()
+        self.next_event(stream, "hello")
+        for event in ({"kind": 0x10, "a": 81, "b": 0}, {"kind": 0x10, "a": 11, "b": 127},
+                      {"kind": 0x11, "a": 3, "b": 0}):
+            self.assertEqual(self.ask("POST", "/event", json.dumps(event))[1]["result"], None)
+        self.ask("POST", "/event", json.dumps({"kind": 0x08}))         # this one does, last
+        self.assertEqual(self.next_event(stream, "action")["cause"]["kind"], "bypass_toggle")
+
+    def test_a_stored_rig_tells_views_at_once(self):
+        stream = self.events()
+        self.next_event(stream, "hello")
+        status, _ = self.ask("PUT", "/library/rigs/New", json.dumps({"chains": []}))
+        self.assertEqual(status, 201)
+        self.assertEqual(self.next_event(stream, "library"), {"library": "rigs", "change": "put", "name": "New"})
+        self.assertIn("New", self.next_event(stream, "bank")["banks"][0])
+
+    def test_status_reports_the_servers_load(self):
+        _, body = self.ask("GET", "/status")
+        self.assertEqual(body["http"]["max_connections"], 16)
+        self.assertGreaterEqual(body["http"]["connections"], 1)
+
+    def test_on_loop_returns_and_raises_across_threads(self):
+        results = {}
+
+        def from_a_handler():
+            results["thread"] = self.service.on_loop(lambda: threading.current_thread())
+            try:
+                self.service.on_loop(lambda: 1 / 0)
+            except ZeroDivisionError as exc:
+                results["raised"] = exc
+
+        asker = threading.Thread(target=from_a_handler)
+        asker.start()
+        asker.join(5)
+        self.assertIs(results["thread"], self.thread)
+        self.assertIn("raised", results)
+
+    def test_a_call_the_loop_doesnt_reach_gives_up(self):
+        release = threading.Event()
+        blocker = threading.Thread(target=lambda: self.service.on_loop(release.wait))
+        blocker.start()
+        self.addCleanup(blocker.join, 5)
+        self.addCleanup(release.set)
+        time.sleep(0.05)
+        with self.assertRaises(daemon.LoopUnavailable):
+            self.service.on_loop(lambda: None, wait=0.05)
+
+    def test_stopping_answers_whoever_is_waiting(self):
+        self.service.stop()
+        self.thread.join(5)
+        self.assertFalse(self.thread.is_alive())
+        with self.assertRaises(daemon.LoopUnavailable):
+            self.service.on_loop(lambda: None)
+
+
+class StateFrames(unittest.TestCase):
+    def test_state_is_sent_again_after_a_second_even_if_nothing_changed(self):
+        # The contract is "at least once a second" (uart-protocol.md). `now` is in seconds and this
+        # compared it with milliseconds, so an unchanged STATE went out every 1000 s.
+        service = fake_service()
+        sent = []
+        service.session = types.SimpleNamespace(session_up=True, send_state=lambda **kw: sent.append(kw))
+        service.state_key, service.state_at = None, 0.0
+        service.maybe_send_state(100.0)
+        service.maybe_send_state(100.5)
+        self.assertEqual(len(sent), 1)
+        service.maybe_send_state(101.1)
+        self.assertEqual(len(sent), 2)
+
+
+class CauseLabels(unittest.TestCase):
+    def test_what_a_trigger_is_called(self):
+        self.assertEqual(daemon.cause_label("cc", 81, 127, "footswitch"), "footswitch 2")
+        self.assertEqual(daemon.cause_label("cc", 11, 64, "midi"), "MIDI CC 11")
+        self.assertEqual(daemon.cause_label("pc", 3, 0, "midi"), "MIDI PC 3")
+        self.assertEqual(daemon.cause_label("rig_up", 0, 0, "http"), "rig up")
 
 
 if __name__ == "__main__":

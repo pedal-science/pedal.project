@@ -198,6 +198,16 @@ class Mapping:
         return False
 
     # ------------------------------------------------------------------ events
+    def is_trigger(self, kind, a=0, b=0):
+        """Whether this event is one a player would expect to do something, so a view is told what it
+        did. A CC's release isn't, nor is a CC or PC nothing is mapped to: a sweep on an unmapped
+        controller would otherwise fill the event ring in half a second."""
+        if kind == "cc":
+            return int(b) >= 64 and str(int(a)) in self.map.get("cc", {})
+        if kind == "pc":
+            return str(int(a)) in self.map.get("pc", {})
+        return kind != "expression"
+
     def action(self, kind, a=0, b=0):
         """What an event means, as `{"action": ...}` for the daemon to carry out, or None."""
         if kind == "rig_up" or kind == "rig_down":

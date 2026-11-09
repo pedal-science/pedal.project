@@ -1,0 +1,7 @@
+# How ljoss finds a pedal on the network (docs/pedal-service.md, "Finding a pedal"). systemd-resolved
+# serves it. The ports are pedald's http_port and namchaind's tcp_port.
+[Service]
+Name=%H
+Type=_pedal._tcp
+Port=47820
+TxtText=api=2 engine=47810

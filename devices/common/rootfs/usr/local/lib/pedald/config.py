@@ -25,6 +25,8 @@ DEFAULT_HTTP_PORT = 47820
 DEFAULT_MAX_MODEL_BYTES = 16 << 20
 DEFAULT_MAX_IR_BYTES = 64 << 20
 DEFAULT_MAX_RIG_BYTES = 1 << 20
+DEFAULT_MAX_CONNECTIONS = 16
+DEFAULT_MAX_EVENT_STREAMS = 6
 DEFAULT_LOG_LEVEL = "info"
 DEFAULT_ENGINE_HOST = "127.0.0.1"
 DEFAULT_STATE_ROOT = "/var/lib/pedal/state"
@@ -39,6 +41,8 @@ _SETTINGS = {
     "max_model_bytes": int,
     "max_ir_bytes": int,
     "max_rig_bytes": int,
+    "max_connections": int,
+    "max_event_streams": int,
     "log_level": str,
     "engine_host": str,
     "state_root": str,
@@ -50,6 +54,8 @@ _INT_RANGES = {
     "max_model_bytes": (1, None),
     "max_ir_bytes": (1, None),
     "max_rig_bytes": (1, None),
+    "max_connections": (1, None),
+    "max_event_streams": (1, None),
 }
 
 # What the service takes from namchaind.json: attribute name in Config -> key in that file.
@@ -78,6 +84,7 @@ class Config:
         http_host, http_port                       this service's listener
         max_model_bytes, max_ir_bytes,             the upload caps
         max_rig_bytes
+        max_connections, max_event_streams         the HTTP server's caps
         log_level
         engine_host, engine_port, engine_token_file    namchaind, over TCP loopback
         rigs_root, models_root, irs_root           the library, as namchaind sees it
@@ -92,6 +99,8 @@ class Config:
         self.max_model_bytes = DEFAULT_MAX_MODEL_BYTES
         self.max_ir_bytes = DEFAULT_MAX_IR_BYTES
         self.max_rig_bytes = DEFAULT_MAX_RIG_BYTES
+        self.max_connections = DEFAULT_MAX_CONNECTIONS
+        self.max_event_streams = DEFAULT_MAX_EVENT_STREAMS
         self.log_level = DEFAULT_LOG_LEVEL
         self.engine_host = DEFAULT_ENGINE_HOST
         self.engine_port = 0

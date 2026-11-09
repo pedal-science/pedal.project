@@ -31,6 +31,38 @@ class LibraryError(Exception):
         self.message = message
 
 
+def first_absolute_path(document):
+    """The first absolute path a document's nodes name, or None.
+
+    The engine refuses these from a network client in what it is sent (namchain `first_absolute_path`:
+    a model or IR parameter names a file it will open), but a rig stored here reaches it later as a
+    file, which is the operator's trust level. So the rule is applied here too, on the same terms: any
+    string a node holds. `meta` is visual data that nothing opens.
+    """
+    def walk(value):
+        if isinstance(value, str):
+            return value if len(value) > 1 and value.startswith("/") else None
+        if isinstance(value, list):
+            for item in value:
+                found = walk(item)
+                if found:
+                    return found
+        if isinstance(value, dict):
+            for key, item in value.items():
+                found = None if key == "meta" else walk(item)
+                if found:
+                    return found
+        return None
+
+    chains = document.get("chains")
+    graphs = chains if isinstance(chains, list) else [document]
+    for graph in graphs:
+        found = walk(graph.get("nodes")) if isinstance(graph, dict) else None
+        if found:
+            return found
+    return None
+
+
 def check_name(name):
     """The name rules (pedal-service.md, "The upload API"), for a rig: a single component."""
     if not isinstance(name, str) or not name:
@@ -115,6 +147,10 @@ class RigLibrary:
             raise LibraryError(400, "a rig document is a JSON object")
         if "chains" not in document and "nodes" not in document:
             raise LibraryError(400, "a rig document has 'chains' (or a bare graph's 'nodes')")
+        absolute = first_absolute_path(document)
+        if absolute:
+            raise LibraryError(400, f"a rig may not name the absolute path '{absolute}': name files "
+                                    "relative to the library")
         given = document.get("name")
         if given is None:
             document["name"] = name
@@ -197,7 +233,10 @@ def rename_in_bank(bank, old, new):
         return bank, False
     changed = False
     out = []
-    for entries in banks:
+    for bank_entry in banks:
+        # A bank is a list of rigs, or an object holding one (mapping.Mapping reads both).
+        named = isinstance(bank_entry, dict) and isinstance(bank_entry.get("rigs"), list)
+        entries = bank_entry["rigs"] if named else bank_entry
         if not isinstance(entries, list):
             out.append(entries)
             continue
@@ -210,7 +249,7 @@ def rename_in_bank(bank, old, new):
             else:
                 kept.append(entry)
         if kept or not entries:
-            out.append(kept)
+            out.append(dict(bank_entry, rigs=kept) if named else kept)
         else:
             changed = True  # a bank that held only the deleted rig goes with it
     result = dict(bank)

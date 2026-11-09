@@ -49,6 +49,10 @@ class Link:
     def open(self):
         return self.fd is not None
 
+    def retry_in(self, now):
+        """How long until a closed port is worth trying again."""
+        return max(0.0, self.next_try - now)
+
     def attach(self, session):
         self.session = session
 

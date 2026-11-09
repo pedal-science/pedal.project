@@ -81,6 +81,79 @@ by **library id only**, never by absolute path (`path_refused`). That is the por
 anyway (D3), and the service refuses to *store* a rig document that contains an absolute path for
 the same reason.
 
+## The pedal's identity and its event stream (D17, O2)
+
+The contract for what views read from pedald; `docs/pedal-owns-state.md` says why. Every route here
+takes the same bearer token as the rest. Whatever the Bonjour announcement says, nothing here answers
+without it.
+
+**Identity.** `state/pedal.json` holds `{"id": <uuid4>, "name": <hostname>, "created": <UTC>}`. `pedald
+seed` and `pedald run` both create it if it is missing, and the backup carries it, so a restored card
+is the same pedal and a fresh card is a new one. A file that can't be read is moved aside to
+`pedal.json.corrupt` and replaced, because an unreadable id can't be recovered by waiting.
+
+| Route | Answer |
+|---|---|
+| `GET /pedal` | `{id, name, api: 2, service, engine: {port, protocol}, http: {port}}`. `protocol` is null until the engine has answered |
+| `PUT /pedal {"name": …}` | Renames the pedal: 1 to 64 characters, no control characters. Answers as `GET /pedal` and sends a `pedal` event |
+| `GET /events` | The event stream, below |
+
+**Finding a pedal.** `/etc/systemd/dnssd/pedal.dnssd` announces `_pedal._tcp` on port 47820 under the
+host's name, with TXT `api=2 engine=47810`. systemd-resolved serves it, which the Pi hosts already run
+with MulticastDNS on, so no package is added; `pedal-device` restarts resolved when the file changes.
+
+**`GET /events`** is Server-Sent Events: `text/event-stream`, one frame per event.
+
+```
+id: 3f2a91c0-17
+event: action
+data: {"cause": {"source": "footswitch", "kind": "cc", "a": 81, "b": 127, "label": "footswitch 2"}, "action": {"action": "load", "rig": "Clean"}, "result": {"ok": true, "rig": "Clean", "how": "warm"}}
+```
+
+- **The `id`** is `<run>-<sequence>` and is opaque to a client. `run` changes each time pedald starts, so
+  an id from before a restart can't be mistaken for a position in this run's sequence.
+- **Connecting:** with no `Last-Event-ID`, the stream starts with `hello`. With one this run's 512-event
+  ring still covers, it continues with the events after it and no `hello`. With anything else (too old,
+  from another run, malformed) it starts with `resync`, then `hello`. So a client holds what `hello` said
+  plus everything after it, and treats `resync` as "drop what you hold".
+- **Falling behind:** a client that has fallen more than the ring behind gets the same `resync` and
+  `hello` on the same connection. A client that stops reading for 10 s is disconnected. Nothing is queued
+  per client, so a slow client costs its own thread and no memory.
+- **Keep-alive:** a `: ka` comment after 15 s with nothing else sent.
+- **Who caused it:** a request's `Pedal-Client` header names the client; it appears as `client` in the
+  cause of what that request does.
+
+| Event | Data | Sent |
+|---|---|---|
+| `hello` | `{pedal, running, engine, bank}`: everything below as it stands now | On connecting, and after every `resync` |
+| `resync` | `{}` | See above |
+| `action` | `{cause: {source, kind, a, b, label, client?}, action, result}` | A trigger with something mapped to it did something, or could not. `source` is `footswitch`, `midi`, `panel`, `service`, `http` or `unknown`. `action` is the mapping's answer, null if no rig could play. `result` is `{ok, rig?, how?, reason?, code?, message?}`. A CC's release and a CC or PC with nothing mapped send nothing |
+| `running` | `{rig, bank, position, bank_size, next, bypass, performance}` | The playing rig or the position changed. `performance` is the keys that differ from the stored rig: always empty until O4 |
+| `engine` | `{reachable, state, health, mute, protocol}` | One of those changed. Counters are not events; they are on `/status` |
+| `bank` | `{banks, bank}` | The banks' layout changed |
+| `library` | `{library: "rigs", change: "put"\|"rename"\|"delete", name, to?}` | A file changed. Models and IRs join in O3 |
+| `pedal` | `{id, name, api}` | The pedal was renamed |
+| `saved`, `history` | Defined in O4 | From O4 |
+
+**The HTTP server's limits** (`Server`, and `pedald.json` where a key is named). 16 connections in all
+(`max_connections`) and 6 event streams (`max_event_streams`). Past the first, a connection is closed as
+soon as it is accepted, with a journal line. Past the second, `GET /events` is 503 with `Retry-After`. 5 s
+for a new connection's first byte, 30 s between requests on a kept connection. A handler answers JSON,
+a `File` or a `Stream`. A request body is read when a handler asks for it: `request.body` buffers at most
+`max_buffered_body` (1 MiB, the largest rig) and `request.stream` reads any size up to the route cap
+without holding it, so an upload doesn't sit in memory (O3). A body nobody finished reading closes the
+connection after the reply.
+
+**Rigs stored over HTTP** may not name an absolute path, in any string a node holds: the engine's rule
+for a network client (namchain `docs/daemon.md`, "Rig names and trust"), which it can't apply to a file
+that is only stored and loaded later by name. `PUT /library/rigs/<name>` answers 400.
+
+**The main loop.** One `select` over the UART and a wake pipe, and from O4 the engine's event socket. It
+wakes for the link and the status poll, or when an HTTP thread hands it work. With no UART it sleeps until
+the next thing is due. Anything that calls the engine runs on the loop: an HTTP route hands it over with
+`on_loop` and waits up to 10 s, then answers 503. This is the decision "Threads" below asked for, and it
+also corrects `POST /event`, which used to call the engine from the HTTP thread.
+
 ## The process
 
 - `pedald`, Python 3, standard library only. The service is control-plane I/O: a 1 Hz status
@@ -673,9 +746,8 @@ build from before the `termios`/`hmac` change.
 connection, all daemons. The link, the engine client, resume and the mapping are single-threaded
 and run on the main loop. That is also why there are no locks: the HTTP thread reads cached or
 immutable state only (`self.status`, `link.open`, `session.session_up`, the counters) and never
-calls the engine itself. **A v3 route that calls the engine from the HTTP thread** (refresh,
-assets) breaks that argument, so it must either take a lock around the engine client or hand the
-call to the main loop through a queue. Decide when the route is written, not after.
+calls the engine itself. **A route that needs the engine** hands the call to the main loop with
+`on_loop` (decided in O2, 2026-11-09), so the engine client stays single-threaded.
 
 **What is already true**, measured against the module on the Mac (2026-10-04):
 
@@ -694,7 +766,8 @@ way to exhaust it), and a client that dies without a FIN — a Wi-Fi drop, which
 leaves one held for as long as the kernel keeps the socket. namchaind caps its own TCP at
 `tcp_max_connections` for the same reason; this listener caps nothing.
 
-**What to fix, and how to check it:**
+**What to fix, and how to check it** (done in O2, 2026-11-09, with a cap of 16 rather than the 8 below;
+the churn gate's result is in `bench-results/2026-11-09-pedald-foundations-vip/`):
 
 1. **Cap concurrent connections.** `Server(..., max_connections=N)`, default 8, with a
    `max_connections` key in `pedald.json` (and in the loader's known-keys map, or it is refused

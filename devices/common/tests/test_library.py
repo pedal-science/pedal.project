@@ -124,6 +124,47 @@ class Bank(unittest.TestCase):
         self.assertFalse(changed)
 
 
+class BankShapes(unittest.TestCase):
+    def test_a_bank_that_is_an_object_is_renamed_too(self):
+        # mapping.Mapping reads both shapes, so a rename that missed this one left a hole in the bank.
+        bank = {"banks": [{"name": "Live", "rigs": ["Clean", "Lead"]}, {"name": "Solo", "rigs": ["Solo"]}]}
+        renamed, changed = library.rename_in_bank(bank, "Lead", "Lead 2")
+        self.assertTrue(changed)
+        self.assertEqual(renamed["banks"][0], {"name": "Live", "rigs": ["Clean", "Lead 2"]})
+        deleted, changed = library.rename_in_bank(bank, "Solo", None)
+        self.assertTrue(changed)
+        self.assertEqual(len(deleted["banks"]), 1)      # an emptied bank goes, in this shape too
+
+
+class AbsolutePaths(unittest.TestCase):
+    def setUp(self):
+        self.dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.dir.cleanup)
+        self.lib = library.RigLibrary(self.dir.name)
+
+    def put(self, nodes, **document):
+        body = dict({"chains": [{"id": "c", "nodes": nodes, "connections": []}]}, **document)
+        return self.lib.put("Rig", json.dumps(body).encode())
+
+    def test_a_node_may_not_name_an_absolute_path(self):
+        for node in ({"id": "a", "type": "nc.nam", "model": "/etc/shadow"},
+                     {"id": "a", "type": "nc.cab.ir", "params": {"ir": "/root/ir.wav"}}):
+            with self.assertRaises(library.LibraryError) as caught:
+                self.put([node])
+            self.assertEqual(caught.exception.status, 400)
+            self.assertIn("absolute path", caught.exception.message)
+        self.assertEqual(self.lib.names(), [])
+
+    def test_a_bare_graph_is_checked_too(self):
+        with self.assertRaises(library.LibraryError):
+            self.lib.put("Rig", json.dumps({"nodes": [{"id": "a", "model": "/x/y.nam"}]}).encode())
+
+    def test_relative_paths_and_meta_are_fine(self):
+        self.put([{"id": "a", "type": "nc.nam", "model": "amps/twin.nam",
+                   "meta": {"note": "/not/a/file/anyone/opens"}}])
+        self.assertEqual(self.lib.names(), ["Rig"])
+
+
 class PrefixRoutes(unittest.TestCase):
     def setUp(self):
         self.seen = []

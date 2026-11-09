@@ -18,16 +18,18 @@ Run with:
 
 import http.client
 import json
+import os
 import pathlib
 import socket
 import sys
+import tempfile
 import threading
 import time
 import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "rootfs/usr/local/lib"))
 
-from pedald.httpd import Server  # noqa: E402
+from pedald.httpd import File, Server, Stream  # noqa: E402
 
 TOKEN = "pedal-test-token"
 
@@ -138,8 +140,10 @@ class HttpdTest(unittest.TestCase):
     def body_json(self, payload):
         return json.loads(payload.decode("utf-8"))
 
-    def pedald_threads(self):
-        return [t for t in threading.enumerate() if t.name.startswith("pedald-http")]
+    def pedald_threads(self, server=None):
+        """This server's threads, by name: another test's handlers may still be unwinding."""
+        prefix = f"pedald-http-{(server or self.server).port}"
+        return [t for t in threading.enumerate() if t.name.startswith(prefix)]
 
     # -- the answers the API promises -------------------------------------------------
 
@@ -283,9 +287,10 @@ class HttpdTest(unittest.TestCase):
         # 5 s that used to be here was covering a real bug — a socket closed underneath a handler
         # that was inside recv(), which could leave it waiting for its whole read timeout.
         deadline = time.monotonic() + 1
-        while time.monotonic() < deadline and self.pedald_threads():
+        while time.monotonic() < deadline and (self.pedald_threads() or self.pedald_threads(server)):
             time.sleep(0.01)
         self.assertEqual(self.pedald_threads(), [])
+        self.assertEqual(self.pedald_threads(server), [])
 
     def test_stop_shuts_the_peer_down_and_stops_answering(self):
         """What a client sees when the server stops: this connection ends, and no new one starts.
@@ -307,6 +312,183 @@ class HttpdTest(unittest.TestCase):
         conn.close()
         with self.assertRaises(OSError):
             socket.create_connection(("127.0.0.1", server.port), timeout=2)
+
+
+class Limits(unittest.TestCase):
+    """The rules the "Threads" section asked for: nothing a client does holds a thread for long."""
+
+    def serve(self, routes=None, **kwargs):
+        log = []
+        server = Server("127.0.0.1", 0, TOKEN, routes or ROUTES, log=log.append, **kwargs)
+        server.start()
+        self.addCleanup(server.stop)
+        return server, log
+
+    def connect(self, server):
+        sock = socket.create_connection(("127.0.0.1", server.port))
+        sock.settimeout(5)
+        self.addCleanup(sock.close)
+        return sock
+
+    def get_status(self, sock):
+        sock.sendall(f"GET /status HTTP/1.1\r\nHost: x\r\nAuthorization: Bearer {TOKEN}\r\n\r\n".encode())
+        return sock.recv(4096)
+
+    def wait_for(self, check, seconds=3):
+        deadline = time.monotonic() + seconds
+        while time.monotonic() < deadline and not check():
+            time.sleep(0.005)
+        return check()
+
+    def test_past_the_connection_cap_one_is_closed_at_once(self):
+        server, log = self.serve(max_connections=2)
+        held = [self.connect(server), self.connect(server)]
+        self.assertTrue(self.wait_for(lambda: server.stats()["connections"] == 2))
+        extra = self.connect(server)
+        self.assertEqual(extra.recv(1), b"")         # a close, not a claim to have understood it
+        self.assertTrue(self.wait_for(lambda: server.stats()["refused"] == 1))
+        self.assertTrue(any("at the cap of 2" in line for line in log))
+        self.assertIn(b"200 OK", self.get_status(held[0]))     # the two it took are unharmed
+        held[1].close()
+        self.assertTrue(self.wait_for(lambda: server.stats()["connections"] == 1))
+        self.assertIn(b"200 OK", self.get_status(self.connect(server)))
+
+    def test_a_silent_connection_is_closed_at_the_first_byte_deadline(self):
+        server, _ = self.serve(first_byte_timeout=0.1)
+        sock = self.connect(server)
+        started = time.monotonic()
+        self.assertEqual(sock.recv(1), b"")
+        self.assertLess(time.monotonic() - started, 2)
+        self.assertTrue(self.wait_for(lambda: server.stats()["connections"] == 0))
+
+    def test_the_first_byte_deadline_doesnt_apply_to_a_kept_connection(self):
+        server, _ = self.serve(first_byte_timeout=0.1)
+        sock = self.connect(server)
+        self.assertIn(b"200 OK", self.get_status(sock))
+        time.sleep(0.3)
+        self.assertIn(b"200 OK", self.get_status(sock))
+
+    def test_threads_are_named_for_their_server(self):
+        one, _ = self.serve()
+        two, _ = self.serve()
+        sock = self.connect(one)
+        self.get_status(sock)
+        names = {t.name for t in one.threads()}
+        self.assertEqual(names, {f"pedald-http-{one.port}", f"pedald-http-{one.port}-conn"})
+        self.assertEqual({t.name for t in two.threads()}, {f"pedald-http-{two.port}"})
+        self.assertEqual(one.stats()["threads"], 2)
+
+    def test_churn_leaves_one_thread(self):
+        server, _ = self.serve(max_connections=8)
+        for _ in range(40):
+            sock = socket.create_connection(("127.0.0.1", server.port))
+            self.get_status(sock)
+            sock.close()
+            half = socket.create_connection(("127.0.0.1", server.port))
+            half.sendall(b"GET /sta")                # abandoned mid-request
+            half.close()
+        self.assertTrue(self.wait_for(lambda: len(server.threads()) == 1), server.threads())
+
+
+class Replies(unittest.TestCase):
+    def setUp(self):
+        self.dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.dir.cleanup)
+        self.path = os.path.join(self.dir.name, "blob.bin")
+        self.content = bytes(range(256)) * 1024      # 256 KiB, several chunks
+        with open(self.path, "wb") as handle:
+            handle.write(self.content)
+        self.seen = []
+
+        def lines(out):
+            out.write(b"one\n")
+            out.write(b"two\n")
+
+        def upload(request):
+            total, biggest = 0, 0
+            while True:
+                piece = request.stream.read()
+                if not piece:
+                    break
+                total += len(piece)
+                biggest = max(biggest, len(piece))
+            return 201, {"total": total, "biggest": biggest}
+
+        routes = {
+            "GET /file": lambda _r: (200, File(self.path, headers={"ETag": '"abc"'})),
+            "GET /gone": lambda _r: (200, File(self.path + ".nope")),
+            "GET /stream": lambda _r: (200, Stream(lines, content_type="text/plain")),
+            "GET /headers": lambda _r: (200, {"ok": True}, {"ETag": '"xyz"'}),
+            "PUT /upload": upload,
+            "PUT /buffered": lambda r: (200, {"size": len(r.body)}),
+            "PUT /ignores": lambda _r: (200, {"ok": True}),
+            "GET /status": lambda _r: (200, {"ok": True}),
+        }
+        self.server = Server("127.0.0.1", 0, TOKEN, routes, log=lambda _m: None, max_body=1 << 24,
+                             max_buffered_body=1024)
+        self.server.start()
+        self.addCleanup(self.server.stop)
+        self.conn = http.client.HTTPConnection("127.0.0.1", self.server.port, timeout=5)
+        self.addCleanup(self.conn.close)
+
+    def ask(self, method, path, body=None):
+        self.conn.request(method, path, body=body, headers={"Authorization": f"Bearer {TOKEN}"})
+        reply = self.conn.getresponse()
+        return reply, reply.read()
+
+    def test_a_file_arrives_whole_and_the_connection_is_kept(self):
+        reply, body = self.ask("GET", "/file")
+        self.assertEqual(reply.status, 200)
+        self.assertEqual(body, self.content)
+        self.assertEqual(reply.getheader("ETag"), '"abc"')
+        self.assertEqual(reply.getheader("Content-Length"), str(len(self.content)))
+        self.assertEqual(self.ask("GET", "/status")[0].status, 200)
+
+    def test_head_of_a_file_says_its_length_and_sends_nothing(self):
+        reply, body = self.ask("HEAD", "/file")
+        self.assertEqual(reply.getheader("Content-Length"), str(len(self.content)))
+        self.assertEqual(body, b"")
+
+    def test_a_missing_file_is_404(self):
+        self.assertEqual(self.ask("GET", "/gone")[0].status, 404)
+
+    def test_a_stream_runs_and_then_closes_the_connection(self):
+        reply, body = self.ask("GET", "/stream")
+        self.assertEqual(body, b"one\ntwo\n")
+        self.assertEqual(reply.getheader("Content-Type"), "text/plain")
+        self.assertEqual(reply.getheader("Connection"), "close")
+
+    def test_a_handler_may_add_headers_to_json(self):
+        self.assertEqual(self.ask("GET", "/headers")[0].getheader("ETag"), '"xyz"')
+
+    def test_a_large_body_is_read_in_pieces(self):
+        reply, body = self.ask("PUT", "/upload", b"x" * (4 << 20))
+        self.assertEqual(reply.status, 201)
+        answer = json.loads(body)
+        self.assertEqual(answer["total"], 4 << 20)
+        self.assertLessEqual(answer["biggest"], 1 << 16)
+
+    def test_a_body_too_big_to_buffer_is_413_only_where_it_would_be_buffered(self):
+        self.assertEqual(self.ask("PUT", "/buffered", b"x" * 1024)[0].status, 200)
+        self.assertEqual(self.ask("PUT", "/buffered", b"x" * 1025)[0].status, 413)
+
+    def test_a_small_body_nobody_read_keeps_the_connection_usable(self):
+        self.assertEqual(self.ask("PUT", "/ignores", b"y" * 100)[0].status, 200)
+        self.assertEqual(self.ask("GET", "/status")[0].status, 200)
+
+    def test_a_large_body_nobody_read_closes_the_connection(self):
+        sock = socket.create_connection(("127.0.0.1", self.server.port))
+        self.addCleanup(sock.close)
+        sock.settimeout(5)
+        sock.sendall(f"PUT /ignores HTTP/1.1\r\nHost: x\r\nAuthorization: Bearer {TOKEN}\r\n"
+                     f"Content-Length: {1 << 20}\r\n\r\n".encode())
+        reply = b""
+        while True:
+            chunk = sock.recv(4096)
+            if not chunk:
+                break
+            reply += chunk
+        self.assertIn(b"Connection: close", reply)
 
 
 if __name__ == "__main__":

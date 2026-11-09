@@ -6,30 +6,47 @@ codec, I2C or a render buffer (D4), and never in the audio path, so the engine k
 when this is down. ljoss keeps its own connection to the engine (D2); this is a second client,
 not a gateway.
 
-The loop is one thread and one poll a second, which is all the job needs: a 115200-baud link,
-an engine status every second, and a STATE-frame timer. Anything that must not wait on a
-client — the HTTP server, the resume read — is either cheap or on its own thread.
+The loop is one thread, which is all the job needs: a 115200-baud link, an engine status every
+second, and a STATE-frame timer. It waits in one `select` on the link and a wake pipe. Anything that
+must not wait on a client — the HTTP server, the resume read — is either cheap or on its own thread,
+and an HTTP route that needs the engine hands the call to the loop (`on_loop`).
 """
 import argparse
 import json
 import os
 import queue
+import select
 import signal
 import sys
+import threading
 import time
 
 from . import config as config_mod
+from . import identity as identity_mod
 from . import library as library_mod
 from . import mapping as mapping_mod
 from . import protocol
 from . import resume as resume_mod
+from . import sse
 from .engine import EngineClient, EngineError
-from .httpd import Server
+from .httpd import Server, Stream
 from .link import Link
 
 VERSION = "pedald 0.1"
+#: The version of what views read from this service (docs/pedal-service.md).
+API = 2
 STATUS_POLL_S = 1.0
 STATE_S = 1.0
+#: The most an idle loop waits while the link is open, as it always has: the session's clock.
+LINK_WAIT_S = 0.05
+#: How long an HTTP route waits for the loop to do something for it. Longer than one engine call
+#: (5 s), which is the longest the loop is ever away.
+ON_LOOP_WAIT_S = 10.0
+
+#: `source` on a Pico event (docs/uart-protocol.md), as a view is told it.
+SOURCES = {0: "unknown", 1: "footswitch", 2: "midi", 3: "panel", 4: "service"}
+#: The footswitches are CCs (`mapping.DEFAULT_CC`), and the player knows them by number.
+FOOTSWITCH_FIRST_CC = 80
 
 #: How long a bank rig's verdict is trusted before the engine is asked again.
 #:
@@ -96,6 +113,21 @@ def _verdict(cost):
         # which is not a verdict and must not read as one.
         return None
     return verdict
+
+
+class LoopUnavailable(Exception):
+    """The loop didn't get to it: it is stopping, or it has been busy for `ON_LOOP_WAIT_S`."""
+
+
+def cause_label(kind, a, b, source):
+    """What a trigger is called on a screen: "footswitch 2", "MIDI CC 11"."""
+    if kind == "cc":
+        if source == "footswitch":
+            return f"footswitch {int(a) - FOOTSWITCH_FIRST_CC + 1}"
+        return f"MIDI CC {a}" if source == "midi" else f"CC {a}"
+    if kind == "pc":
+        return f"MIDI PC {a}" if source == "midi" else f"PC {a}"
+    return kind.replace("_", " ")
 
 
 def flags_from(status, engine_down):
@@ -548,6 +580,14 @@ def _needs_measuring(issues):
 
 
 class Service:
+    # What the loop has and a service under test may not: no ring means nothing to tell, and no loop
+    # thread means `on_loop` runs the call where it is.
+    hub = None
+    loop_thread = None
+    _wake_w = None
+    #: How many times the loop has gone round, for /status: it is how a spin shows.
+    loop_passes = 0
+
     def __init__(self, cfg, log):
         self.cfg = cfg
         self.log = log
@@ -562,6 +602,14 @@ class Service:
         self.state_at = 0.0
         self.positions_at = 0.0
         self.bank_at = 0.0               # when the library was last listed (relist_rigs)
+        self.identity = identity_mod.Identity(cfg.state_root, log)
+        self.hub = sse.EventHub()
+        self.work = queue.SimpleQueue()
+        self.engine_protocol = None
+        self._wake_r, self._wake_w = os.pipe()
+        os.set_blocking(self._wake_r, False)
+        os.set_blocking(self._wake_w, False)
+        self.published = {"running": None, "engine": None, "bank": None}
 
         try:
             token = cfg.token()
@@ -608,11 +656,119 @@ class Service:
                             # is exactly what a footswitch is. Nothing here is a second mapping: the
                             # tables decide what an event means, whoever sent it.
                             "POST /event": self.handle_event,
+                            "GET /pedal": self.handle_pedal,
+                            "PUT /pedal": self.handle_pedal,
+                            "GET /events": self.handle_events,
                             "GET /library/rigs": self.handle_rigs,
                             "/library/rigs/*": self.handle_rig}, log=log,
                            # The transport cap has to be the largest upload the API allows, or
                            # a model or IR would be 413 before its route saw it (v3).
-                           max_body=cfg.max_ir_bytes)
+                           max_body=cfg.max_ir_bytes, max_buffered_body=cfg.max_rig_bytes,
+                           max_connections=cfg.max_connections, max_streams=cfg.max_event_streams)
+
+    # ------------------------------------------------------------------ the loop's door
+    def wake(self):
+        """Bring the loop out of its `select`. Safe from any thread and from a signal handler."""
+        if self._wake_w is None:
+            return
+        try:
+            os.write(self._wake_w, b"x")
+        except (BlockingIOError, OSError):
+            pass                              # a full pipe will wake it just as well
+
+    def on_loop(self, call, wait=ON_LOOP_WAIT_S):
+        """Run `call` on the loop and return what it returns, or raise what it raises.
+
+        The engine client belongs to one thread (engine.py), so this is how an HTTP route asks it
+        something. Raises `LoopUnavailable` if the loop doesn't get to it within `wait`. A call that
+        was still queued then will still run, so it should be one a client can safely see happen late.
+        """
+        if self.loop_thread is None or threading.current_thread() is self.loop_thread:
+            return call()
+        if not self.running:
+            raise LoopUnavailable("the service is stopping")
+        item = {"call": call, "done": threading.Event(), "result": None, "error": None}
+        self.work.put(item)
+        self.wake()
+        if not item["done"].wait(wait):
+            raise LoopUnavailable(f"the service's loop has been busy for {wait:g} s")
+        if item["error"] is not None:
+            raise item["error"]
+        return item["result"]
+
+    def run_work(self):
+        """What the HTTP threads have handed over. On the loop."""
+        while True:
+            try:
+                item = self.work.get_nowait()
+            except queue.Empty:
+                return
+            try:
+                item["result"] = item["call"]()
+            except Exception as exc:        # the asker's to deal with: it re-raises on its own thread
+                item["error"] = exc
+            item["done"].set()
+
+    def refuse_work(self):
+        """The loop is finished: nobody waiting should wait for it to say so."""
+        while True:
+            try:
+                item = self.work.get_nowait()
+            except queue.Empty:
+                return
+            item["error"] = LoopUnavailable("the service is stopping")
+            item["done"].set()
+
+    def next_wait(self, now):
+        """How long the loop may sleep. A closed link has no clock to keep, so it sleeps until the
+        next thing is due: this is what stopped the loop spinning on a host with no UART."""
+        if self.link.open:
+            return LINK_WAIT_S
+        due = [self.status_at + STATUS_POLL_S - now, self.link.retry_in(now)]
+        if self.positions_at:
+            due.append(self.positions_at + 2.0 - now)
+        return max(0.0, min(due))
+
+    # ------------------------------------------------------------------ what views are told
+    def publish(self, kind, data):
+        if self.hub is not None:
+            self.hub.publish(kind, data)
+
+    def _running_now(self):
+        status = self.status if isinstance(self.status, dict) else {}
+        current = self.mapping.current_name()
+        following = self.mapping.neighbour()
+        return {"rig": status.get("rig_name") or current,
+                "bank": self.mapping.bank, "position": self.mapping.rig,
+                "bank_size": len(self.mapping.current_bank()),
+                "next": None if following == current else following,
+                "bypass": self.bypass,
+                "performance": []}
+
+    def _engine_now(self):
+        status = self.status if isinstance(self.status, dict) else {}
+        return {"reachable": not self.engine_down, "state": status.get("state"),
+                "health": status.get("health"), "mute": status.get("mute"),
+                "protocol": self.engine_protocol}
+
+    def publish_changes(self):
+        """Tell views what has changed since they were last told. On the loop, cheap, and safe to
+        call often: nothing goes out unless a value differs."""
+        if self.hub is None:
+            return
+        for kind, value in (("running", self._running_now()), ("engine", self._engine_now()),
+                            ("bank", {"banks": self.mapping.banks, "bank": self.mapping.bank})):
+            if value != self.published[kind]:
+                self.published[kind] = value
+                self.publish(kind, value)
+
+    def pedal_public(self):
+        return {"id": self.identity.id, "name": self.identity.name, "api": API}
+
+    def hello(self):
+        """What a client should hold on connecting. Read on its own thread, from what the loop has
+        already published, so a client connecting never asks the engine anything."""
+        return dict(self.published, pedal=self.pedal_public())
 
     # ------------------------------------------------------------------ helpers
     def _rig_names(self):
@@ -650,24 +806,38 @@ class Service:
         elif kind == protocol.EVENT:
             self.on_event(message)
 
-    def on_event(self, event):
+    def on_event(self, event, client=None, via=None):
+        """One event, from the link or a route: what it means, doing it, and telling views. On the
+        loop. Returns the result a view is told, or None if the event means nothing."""
         kind = {0x01: "rig_up", 0x02: "rig_down", 0x03: "rig_select", 0x04: "bank_up",
                 0x05: "bank_down", 0x06: "bank_select", 0x07: "bypass_set",
                 0x08: "bypass_toggle", 0x10: "cc", 0x11: "pc", 0x12: "expression"}.get(event.get("kind"))
         if kind is None:
             self.log(f"event {event.get('kind')}: unknown kind, ignored")
-            return
-        self.log(f"event {kind} a={event.get('a')} b={event.get('b')} "
-                 f"source={event.get('source')} seq={event.get('seq')}")
-        action = self.mapping.action(kind, event.get("a", 0), event.get("b", 0))
+            return None
+        a, b = event.get("a", 0), event.get("b", 0)
+        self.log(f"event {kind} a={a} b={b} source={event.get('source')} seq={event.get('seq')}")
+        action = self.mapping.action(kind, a, b)
         if action is None:
-            return
-        if action["action"] == "bypass":
+            result = {"ok": False, "reason": "no rig can play here"}
+        elif action["action"] == "bypass":
             self.bypass = action["on"]
             self.state_key = None
-            return
-        if action["action"] == "load":
-            self.load_rig(action["rig"])
+            result = {"ok": True, "on": action["on"]}
+        elif action["action"] == "load":
+            result = self.load_rig(action["rig"]) or {"ok": True, "rig": action["rig"]}
+        else:
+            result = {"ok": True}
+        if self.mapping.is_trigger(kind, a, b):
+            source = via or SOURCES.get(event.get("source"), "unknown")
+            cause = {"source": source, "kind": kind, "a": a, "b": b,
+                     "label": cause_label(kind, a, b, source)}
+            if client:
+                cause["client"] = client
+            self.publish("action", {"cause": cause, "action": action, "result": result})
+            self.publish_changes()
+            return result
+        return None
 
     def load_rig(self, name):
         """Make a rig audible, with `rig.switch`: a handover if the engine holds it warm, a
@@ -696,7 +866,8 @@ class Service:
             why = verdict.get("verdict") or "unusable"
             self.log(f"not loading {rig}: the engine says {why} (cost {verdict.get('cost')} "
                      f"against a headroom of {verdict.get('headroom')})")
-            return
+            return {"ok": False, "rig": rig[:-len(".json")], "code": why,
+                    "message": f"the engine says {why}"}
         # What the engine is playing before this switch, which is also what a warm switch leaves
         # in the warm set (its reply does not say, and the warm set would compile it again).
         playing = self.status.get("rig_name") if isinstance(self.status, dict) else None
@@ -705,12 +876,12 @@ class Service:
         except EngineError as exc:
             if exc.code != "warm_disabled":
                 self.log(f"rig.switch {rig} refused: {exc.code}: {exc.message}")
-                return
+                return {"ok": False, "rig": rig[:-len(".json")], "code": exc.code, "message": exc.message}
             try:
                 self.engine.rig_load(rig)
             except EngineError as exc:
                 self.log(f"rig.load {rig} refused: {exc.code}: {exc.message}")
-                return
+                return {"ok": False, "rig": rig[:-len(".json")], "code": exc.code, "message": exc.message}
             self.log(f"loading {rig}: warming is off on this device, so there is no switch")
             reply = None
         if reply is not None:
@@ -727,6 +898,12 @@ class Service:
         # holds the rig this press left — said here, so it is not asked for again.
         holding = playing if reply is not None and reply.get("switched") == "warm" else None
         self.warm.tick(self.mapping, time.monotonic(), holding=holding)
+        result = {"ok": True, "rig": rig[:-len(".json")], "how": "cold"}
+        if isinstance(reply, dict):
+            result["how"] = reply.get("switched") or "cold"
+            if reply.get("reason"):
+                result["reason"] = reply["reason"]
+        return result
 
     # ------------------------------------------------------------------ engine
     def poll_engine(self, now, refresh=True):
@@ -752,6 +929,7 @@ class Service:
                 self.log(f"engine status failed: {exc.code}: {exc.message}; "
                          f"the bank's verdicts are dropped until it answers again")
             self.engine_down = True
+            self.publish_changes()
             return
         if self.engine_down:
             # It was down and it is not now: a new process may have loaded a different cost
@@ -778,6 +956,13 @@ class Service:
         # Milliseconds: the settle window is in ms, and passing seconds here would make it
         # 2000 seconds, which is a save that never happens (found by the local smoke test).
         self.resume.tick(int(now * 1000), self.status)
+        if self.hub is not None and self.engine_protocol is None:
+            try:
+                # The answer this connection was authenticated with, so no round trip.
+                self.engine_protocol = (self.engine.hello() or {}).get("protocol")
+            except EngineError:
+                pass
+        self.publish_changes()
 
     def relist_rigs(self, now, names=None):
         """Notice a rig that has appeared or gone, at most once every `COST_POLL_S`.
@@ -805,7 +990,7 @@ class Service:
         bank = self.mapping.current_bank()
         key = (flags_from(self.status, self.engine_down), self.mapping.index_of(name),
                self.mapping.bank, len(bank), name)
-        if key == self.state_key and now - self.state_at < STATE_S * 1000:
+        if key == self.state_key and now - self.state_at < STATE_S:
             return
         self.session.send_state(flags=key[0], rig_index=key[1], bank=key[2],
                                 bank_size=key[3], name=name)
@@ -893,6 +1078,8 @@ class Service:
                      "verdicts": self.cost.status(),
                      "verdict_max_age_s": COST_POLL_S},
             "bypass": self.bypass,
+            "http": self.http.stats(),
+            "loop_passes": self.loop_passes,
         }
         return 200, body
 
@@ -906,6 +1093,9 @@ class Service:
         indistinguishable to everything downstream: the mapping tables decide, and the engine is
         asked for a switch or a load exactly as it would be for a press.
 
+        The call to the engine happens on the loop (`on_loop`), and the reply carries what happened.
+        A `Pedal-Client` header names who asked, in the `action` event views are told.
+
         This is the bench's surface (T7's service half, T8's press storm) and a UI's: a rig step
         from a panel is the same event a footswitch sends, which is the point of D2 making the two
         identical. It is authenticated like every other route, and a body that is not an event is
@@ -917,8 +1107,34 @@ class Service:
             return 400, {"error": "the body is {\"kind\": N, \"a\": A, \"b\": B}"}
         if not isinstance(event, dict) or not isinstance(event.get("kind"), int):
             return 400, {"error": "the body is {\"kind\": N, \"a\": A, \"b\": B}"}
-        self.on_event(event)
-        return 200, {"ok": True, "kind": event["kind"]}
+        client = request.headers.get("pedal-client")
+        try:
+            result = self.on_loop(lambda: self.on_event(event, client=client, via="http"))
+        except LoopUnavailable as exc:
+            return 503, {"error": str(exc)}
+        return 200, {"ok": True, "kind": event["kind"], "result": result}
+
+    # ------------------------------------------------------------------ who this is, and what changed
+    def handle_pedal(self, request):
+        if request.method == "PUT":
+            try:
+                name = json.loads(request.body or b"{}").get("name")
+            except (ValueError, AttributeError):
+                return 400, {"error": "the body is {\"name\": \"<new name>\"}"}
+            try:
+                self.identity.rename(name)
+            except identity_mod.IdentityError as exc:
+                return 400, {"error": str(exc)}
+            except OSError as exc:
+                return 500, {"error": f"could not save the name: {exc.strerror}"}
+            self.log(f"this pedal is now called '{self.identity.name}'")
+            self.publish("pedal", self.pedal_public())
+        return 200, {"id": self.identity.id, "name": self.identity.name, "api": API, "service": VERSION,
+                     "engine": {"port": self.cfg.engine_port, "protocol": self.engine_protocol},
+                     "http": {"port": self.http.port}}
+
+    def handle_events(self, request):
+        return 200, Stream(sse.stream(self.hub, request.headers.get("last-event-id"), self.hello))
 
     # ------------------------------------------------------------------ the rig library (v3)
     def running_rig(self, status=None):
@@ -960,6 +1176,7 @@ class Service:
                     return 400, {"error": "the body is {\"to\": \"<new name>\"}"}
                 self.library.rename(name, to)
                 self.library_changes.put(("rename", name, to))
+                self.wake()
                 self.log(f"library: renamed rig '{name}' to '{to}'")
                 return 200, {"name": to}
             if request.method in ("GET", "HEAD"):
@@ -967,11 +1184,13 @@ class Service:
             if request.method == "PUT":
                 replaced = self.library.put(name, request.body)
                 self.library_changes.put(("put", name, None))
+                self.wake()
                 self.log(f"library: {'replaced' if replaced else 'stored'} rig '{name}'")
                 return 201, {"name": name, "replaced": replaced}
             if request.method == "DELETE":
                 self.library.delete(name)
                 self.library_changes.put(("delete", name, None))
+                self.wake()
                 self.log(f"library: deleted rig '{name}'")
                 return 200, {"name": name, "deleted": True}
             return 405, {"error": f"{request.method} is not a rig operation"}
@@ -1023,25 +1242,53 @@ class Service:
                 self.cost.invalidate(to)
         self.mapping.verdicts = self.cost.verdicts
         self.bank_at = now
+        for kind, name, to in changes:
+            change = {"library": "rigs", "change": kind, "name": name}
+            if kind == "rename":
+                change["to"] = to
+            self.publish("library", change)
+        self.publish_changes()
 
     # ------------------------------------------------------------------ loop
     def stop(self, *_args):
         self.running = False
+        self.wake()
+
+    def wait(self, timeout):
+        """Sleep until the link or the wake pipe has something, or `timeout`."""
+        ready = [self._wake_r]
+        if self.link.fd is not None:
+            ready.append(self.link.fd)
+        try:
+            readable, _, _ = select.select(ready, [], [], timeout)
+        except OSError:
+            return                            # the port went: the link's own poll finds out
+        if self._wake_r in readable:
+            try:
+                os.read(self._wake_r, 4096)
+            except OSError:
+                pass
 
     def run(self):
-        signal.signal(signal.SIGTERM, self.stop)
-        signal.signal(signal.SIGINT, self.stop)
+        if threading.current_thread() is threading.main_thread():
+            signal.signal(signal.SIGTERM, self.stop)
+            signal.signal(signal.SIGINT, self.stop)
+        self.loop_thread = threading.current_thread()
         self.link.open_port()
+        self.publish_changes()             # so a client connecting at once has something to hold
         self.http.start()
         self.log(f"{VERSION} up: link {self.cfg.uart_device}, http on "
-                 f"{self.cfg.http_host}:{self.cfg.http_port}")
+                 f"{self.cfg.http_host}:{self.cfg.http_port}, pedal {self.identity.id}")
         self.poll_engine(time.monotonic())
         while self.running:
+            self.wait(self.next_wait(time.monotonic()))
+            self.loop_passes += 1
             now = time.monotonic()
-            self.link.poll(0.05)
+            self.link.poll(0)
             for message in self.link.take_messages():
                 self.on_message(message)
             self.session.tick(int(now * 1000))
+            self.run_work()
             self.apply_library_changes(now)
             if now - self.status_at >= STATUS_POLL_S:
                 self.poll_engine(now)
@@ -1050,6 +1297,8 @@ class Service:
                 self.positions_at = 0.0
             self.maybe_send_state(now)
         self.log("stopping")
+        self.refuse_work()
+        self.hub.close()
         self.http.stop()
         self.link.close()
         self.engine.close()
@@ -1094,6 +1343,11 @@ def main(argv=None):
         return 2
 
     if args.command == "seed":
-        # Seed needs no engine: it creates the tree and copies the default rig if there is none.
-        return resume_mod.Resume(None, cfg.rigs_root, state_root=cfg.state_root, log=log).seed()
+        # Seed needs no engine: it creates the tree, copies the default rig if there is none, and
+        # gives the pedal its id. Root runs this, so the id's file is handed to the service's user.
+        resume = resume_mod.Resume(None, cfg.rigs_root, state_root=cfg.state_root, log=log)
+        code = resume.seed()
+        identity_mod.Identity(cfg.state_root, log)
+        resume._own(cfg.state_root)
+        return code
     return Service(cfg, log).run()

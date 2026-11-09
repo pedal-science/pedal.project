@@ -326,9 +326,15 @@ do_apply() {
   offline || storage_mount "$stage/rootfs$STORAGE_CONF"
   run mkdir -p "$ROOT$STATE"; (( DRY )) || touch "$ROOT$MANIFEST"
   offline || adopt
+  local dnssd=/etc/systemd/dnssd/pedal.dnssd announced
+  announced=$(cat "$ROOT$dnssd" 2>/dev/null || true)
   install_tree "$stage/rootfs"
   mask_units
   if offline; then activate_offline; else activate "$stage/rootfs$TUNE_CONF"; fi
+  # resolved reads what it announces at startup. A DNS gap of a moment, and only when it changed.
+  if ! offline && [[ -e $dnssd && $(cat "$dnssd") != "$announced" ]]; then
+    run systemctl restart systemd-resolved.service
+  fi
   # After activate, which created the service user, and after install_tree, which is what put
   # default-rig.json and the sysusers.d file there.
   offline || storage_owner "$stage/rootfs$STORAGE_CONF"
