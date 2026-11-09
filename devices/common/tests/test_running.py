@@ -224,10 +224,13 @@ class Starting(unittest.TestCase):
         self.assertEqual(next(n for n in state.stored["chains"][0]["nodes"] if n["id"] == "amp")["gain_db"], -6.0)
         self.assertTrue(state.savable())
 
-    def test_no_record_and_another_shape_stops_saves(self):
+    def test_no_record_and_another_shape_keeps_the_engines(self):
         state = self.state()
-        state.start(doc(extra={"id": "x", "type": "nc.gain"}), "Clean", 4, doc(), None, None)
-        self.assertFalse(state.savable())
+        played = doc(gain=-18.0, extra={"id": "x", "type": "nc.gain"})
+        state.start(played, "Clean", 4, doc(), None, None)
+        self.assertTrue(state.savable())
+        self.assertIn("x", [n["id"] for n in state.stored["chains"][0]["nodes"]])
+        self.assertEqual(state.overlay, {("main", "amp", "gain_db"): PERFORMANCE})
 
     def test_a_rig_the_library_lacks(self):
         state = self.state()

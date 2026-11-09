@@ -328,12 +328,19 @@ class Running:
             for row in saved.get("overlay") or ():
                 self.overlay[(row[0], row[1], row[2])] = row[3]
             return self._merge(document, {"client": "unknown"})
-        # No record to trust: nothing may be baked in. Values are performance, and a different shape
-        # is something this can't file away, so saving stops.
-        keys, structural = compare(file_document, document)
-        self.document, self.stored = document, file_document
-        self.overlay = {key: PERFORMANCE for key in keys}
-        self.saves_stopped = structural
+        # No record to trust: no value may be baked in, so each that differs from the file is a
+        # performance. The shape can't be a performance, and the engine's parse of a file differs from
+        # the file in ways that mean nothing (defaults written out), so the engine's shape is kept.
+        keys, _ = compare(file_document, document)
+        stored = copy.deepcopy(document)
+        file_nodes, stored_nodes = nodes_of(file_document), nodes_of(stored)
+        self.overlay = {}
+        for key in keys:
+            where = (key[0], key[1])
+            if where in file_nodes and where in stored_nodes:
+                _set(stored_nodes[where], key[2], file_nodes[where].get(key[2]))
+                self.overlay[key] = PERFORMANCE
+        self.document, self.stored = document, stored
         return Change("load")
 
     # ------------------------------------------------------------------ what pedald itself decides
