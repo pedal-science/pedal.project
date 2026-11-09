@@ -1,0 +1,233 @@
+{
+ "checks": [
+  {
+   "name": "catalogue checked",
+   "got": true,
+   "ok": true
+  },
+  {
+   "name": "templates",
+   "got": 27,
+   "ok": true
+  },
+  {
+   "name": "refused",
+   "got": [],
+   "ok": true
+  },
+  {
+   "name": "nothing left to hash",
+   "got": 0,
+   "ok": true
+  },
+  {
+   "name": "download's hash matches the listing",
+   "got": "321e46f17eb3c2fd208575d16a6db05e2a3e1f2bb8ceb7a8af8edfe41f9ec4f0",
+   "ok": true
+  },
+  {
+   "name": "download's ETag",
+   "got": "\"321e46f17eb3c2fd208575d16a6db05e2a3e1f2bb8ceb7a8af8edfe41f9ec4f0\"",
+   "ok": true
+  },
+  {
+   "name": "a matching ETag",
+   "got": 304,
+   "ok": true
+  },
+  {
+   "name": "model stored",
+   "got": 201,
+   "ok": true
+  },
+  {
+   "name": "its hash",
+   "got": "321e46f17eb3c2fd208575d16a6db05e2a3e1f2bb8ceb7a8af8edfe41f9ec4f0",
+   "ok": true
+  },
+  {
+   "name": "IR stored",
+   "got": 201,
+   "ok": true
+  },
+  {
+   "name": "again: never replaced",
+   "got": 412,
+   "ok": true
+  },
+  {
+   "name": "no precondition",
+   "got": 428,
+   "ok": true
+  },
+  {
+   "name": "a second file for the id",
+   "got": 409,
+   "ok": true
+  },
+  {
+   "name": "a 44.1 kHz model",
+   "got": 422,
+   "ok": true
+  },
+  {
+   "name": "a path out of the root",
+   "got": 400,
+   "ok": true
+  },
+  {
+   "name": "listed with its hash",
+   "got": "321e46f17eb3c2fd208575d16a6db05e2a3e1f2bb8ceb7a8af8edfe41f9ec4f0",
+   "ok": true
+  },
+  {
+   "name": "listing kept no staged file",
+   "got": false,
+   "ok": true
+  },
+  {
+   "name": "nothing hashed again",
+   "got": "1",
+   "ok": true
+  },
+  {
+   "name": "the rig uses both",
+   "got": [
+    "ir",
+    "model"
+   ],
+   "ok": true
+  },
+  {
+   "name": "rig stored",
+   "got": 201,
+   "ok": true
+  },
+  {
+   "name": "the engine plays it",
+   "got": "o3-check-rig",
+   "ok": true
+  },
+  {
+   "name": "no stand-ins",
+   "got": [],
+   "ok": true
+  },
+  {
+   "name": "64 MiB stored",
+   "got": 201,
+   "ok": true
+  },
+  {
+   "name": "no xruns",
+   "got": 0,
+   "ok": true
+  }
+ ],
+ "listing": {
+  "models": 64,
+  "irs": 520,
+  "ms": [
+   112.6,
+   108.2,
+   117.0,
+   116.5,
+   112.0
+  ],
+  "bytes": 324063
+ },
+ "upload_model_s": 0.218,
+ "upload_ir_s": 0.113,
+ "played": {
+  "rig": "/var/lib/pedal/library/rigs/o3-check-rig.json",
+  "state": "running",
+  "health": "warn",
+  "xruns": 0,
+  "generation": 3,
+  "audible_generation": 3
+ },
+ "large_upload": {
+  "seconds": 23.63,
+  "rss_kb": [
+   26828,
+   26928,
+   26928,
+   26932,
+   26932,
+   26932,
+   26936,
+   26932,
+   26932,
+   26948
+  ],
+  "rss_peak_over_start_kb": 120
+ },
+ "small_uploads_s": {
+  "median": 0.23,
+  "max": 0.369
+ },
+ "press_on_the_pedal_ms": {
+  "idle": {
+   "n": 44,
+   "median": 24.4,
+   "p95": 88.0,
+   "max": 161.5
+  },
+  "during_64_mib": {
+   "n": 185,
+   "median": 24.3,
+   "p95": 60.6,
+   "max": 144.9
+  },
+  "during_small_uploads": {
+   "n": 32,
+   "median": 25.9,
+   "p95": 103.7,
+   "max": 125.3
+  },
+  "slowest_five": [
+   [
+    2.447,
+    161.5
+   ],
+   [
+    28.154,
+    144.9
+   ],
+   [
+    31.814,
+    125.3
+   ],
+   [
+    20.242,
+    114.7
+   ],
+   [
+    26.938,
+    110.3
+   ]
+  ],
+  "marks": {
+   "upload_from": 6.01,
+   "upload_to": 30.04,
+   "small_from": 30.32,
+   "small_to": 34.77
+  }
+ },
+ "after": {
+  "xruns": 0,
+  "guard_trips": 0,
+  "state": "running",
+  "health": "warn"
+ },
+ "left": {
+  "rig": "Bob",
+  "library": {
+   "scan": 25,
+   "models": 64,
+   "irs": 520,
+   "hashing": 0
+  },
+  "bypass": false
+ }
+}

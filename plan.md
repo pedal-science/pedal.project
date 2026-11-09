@@ -1428,6 +1428,15 @@ line (so every namchain since 0c1a6d8 was refused), and a `| head` under pipefai
 `components-lock`. **Still to do by eye on the pedal:** the panel's rotation (0 or 180), touch landing
 where touched, legibility from standing.
 
+**O3 done, waiting for review** (2026-11-09): pedald serves the 27 block templates (`GET /catalogue`, written by
+ljoss's `Tools/export-templates`, judged against `engine.schema` when an engine connects), lists models and IRs with
+each file's sha256 and metadata, serves a file with its hash as the ETag, and takes uploads that never replace a file.
+`scripts/sync-library` is gone, and pedald is the only writer of models and IRs. Contract in
+[docs/pedal-service.md](docs/pedal-service.md), "Files" and "The catalogue"; evidence in
+[bench-results/2026-11-09-files-vip/README.md](bench-results/2026-11-09-files-vip/README.md). **Open:** until O8 a fresh
+card's library goes up by hand with `curl -T`, and pro and zap, which have no pedald, by hand with `rsync`. **Next: O4**
+(pedald keeps the rig).
+
 **O2 done, waiting for review** (2026-11-09): pedald knows which pedal it is (`state/pedal.json`, `GET` and
 `PUT /pedal`, announced as `_pedal._tcp`) and tells views what changed (`GET /events`: `hello`, `action` with
 its cause and result, `running`, `engine`, `bank`, `library`, `pedal`). The server has caps, deadlines, and file
