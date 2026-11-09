@@ -139,17 +139,23 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
 
 ## Architecture
 
+- **The pedal owns its state** (D17, [docs/pedal-owns-state.md](docs/pedal-owns-state.md)): `namchaind`
+  and the pedal service between them own the running rig, the stored rigs and banks, the undo
+  history, the model/IR files and the block catalogue. ljoss and rigpa are views: they send edits and
+  commands and are told of every change with its cause ("Footswitch 2 → Clean").
 - `namchaind` (from namchain) renders the rig and drives ALSA directly (`alsa_raw`).
-  No JACK, PipeWire or LV2.
-- ljoss talks to `namchaind` on the Core host directly over WiFi. The Pico handles physical
-  controls only and never carries rigs or models (D2).
-- A **pedal service** in this repo, beside `namchaind`, owns the rig library, resume
-  at power-up, uploads, and the footswitch/MIDI mapping. namchain stays a generic
-  engine (D4). Designed 2026-09-28, with review points open:
+  No JACK, PipeWire or LV2. It pushes every change to its subscribers (`engine.subscribe`).
+- The **pedal service**, `pedald`, in this repo beside `namchaind` (D4), owns the library, banks,
+  resume, autosave, undo, uploads, the catalogue's templates, the pedal's id and name, and the
+  footswitch/MIDI mapping, and streams its events (`GET /events`). namchain stays a generic engine.
   [docs/pedal-service.md](docs/pedal-service.md).
+- **ljoss** finds pedals over DNS-SD (`_pedal._tcp`) and talks to each directly over WiFi: edits go
+  straight to `namchaind`, commands to `pedald`. It keeps no rigs of its own, and its Models & IRs
+  library reaches a pedal through "Compare Files…". The Pico handles physical controls only and
+  never carries rigs or models (D2).
 - **rigpa** (its own repo, `../rigpa`) is the pedal's on-device UI on the Core host's
-  screen, on core 0 (D14): a client of `namchaind` over TCP loopback and of the pedal service's
-  library API, reading the library read-only.
+  screen, on core 0 (D14), wide (the 8.8″ bar) or compact (the box's 4.3″ panel): the same kind of
+  view as ljoss, over TCP loopback.
 
 ## Constraints — ask before violating any of these
 

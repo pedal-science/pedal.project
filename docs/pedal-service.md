@@ -10,7 +10,10 @@ vip, and running against a live Pico — see "What is staged" at the end. Since 
 service also costs the bank through the engine's `rig.cost`, keeps the verdicts, and skips a rig
 the engine would refuse when stepping ("The bank's verdicts (P5)", below). Since 2026-10-09 it
 also holds the rig one footswitch press away warm in the engine and switches with `rig.switch`,
-so a press is a handover rather than a compile ("The ready set", below).
+so a press is a handover rather than a compile ("The ready set", below). Since 2026-11-09 it is
+**v4**, D17's ([pedal-owns-state.md](pedal-owns-state.md)): the pedal owns its rigs, banks, files and
+catalogue, saves edits by itself, keeps the undo history, and tells every view what changed and why;
+ljoss and rigpa are its views.
 
 **Reviewed by Claude, 2026-09-28.** The comments are at the end (R1–R15). The text already
 carries the changes they propose, and where a choice is yours, it says so.
@@ -784,6 +787,24 @@ pedal changes rigs for real only from v2 (R1):
   routes, with `httpd`'s prefix routes and `DELETE`; tests in `devices/common/tests/test_library.py`.
   Models, IRs, refresh, `/bank` and `/midi-map` are still to come. It reaches vip with the next
   `devices/` apply.
+  **The rest landed with v4** (D17's O3 and O4, 2026-11-09): models and IRs listed with their
+  hashes, served, and uploaded without replacing a file; `POST /library/refresh`; `GET` and
+  `PUT /bank`. `sync-library` is gone rather than moved onto the API: ljoss's "Compare Files…" is
+  the way a library reaches a pedal. `/midi-map` has no endpoint; the map stays a file (D17).
+- **v4** (D17, milestones O2–O4, with the engine's events in namchain O1; landed 2026-11-09, 642
+  tests under `devices/common/tests`): the pedal owns its state, and the apps are views.
+  - **Identity and events** (O2): the pedal's id and name (`state/pedal.json`, `GET`/`PUT /pedal`),
+    announced over DNS-SD as `_pedal._tcp`; `GET /events` (SSE) with `hello`, `action` (its cause
+    and result), `running`, `engine`, `bank`, `library` and `pedal`. "The pedal's identity and its
+    event stream", above.
+  - **Files and the catalogue** (O3): "Files" and "The catalogue", above. pedald is the only writer
+    of models and IRs.
+  - **Keeping the rig** (O4): pedald follows the engine on a second connection, tells a
+    performance from an edit, autosaves edits, brings the performance back at resume, and keeps one
+    undo history per rig on the card; `/running`, `/undo`, `/redo`, `/history`, `/bank` and
+    `POST /library/rigs`; the map's block toggle and CC-on-a-parameter. "Keeping the rig", above.
+  - **Its clients:** rigpa follows it (O5); ljoss shows pedals, edits through them and compares
+    files with them (O6–O8). R6 is closed: neither app applies a document of its own on connect.
 
 ## Implementing what is left, in order
 
@@ -830,7 +851,8 @@ Phase 3's "the relay covers boot and failure".
   feet, and ljoss still applies its own document on connect.
 
 **4. v3: the upload API and the library** (no plan step; the debt register's "no way to upload
-from the app"). Service only — no engine change.
+from the app"). Service only — no engine change. **Landed with v4 (2026-11-09)**, except
+`/midi-map`, which stays a file; what follows is the design it was built to.
 
 - `PUT /library/{models,irs,rigs}/<path>`, `GET` the three listings, `POST /library/refresh`,
   and `GET`/`PUT` for `/bank` and `/midi-map`. The path names the file and the id follows from it
@@ -848,8 +870,8 @@ from the app"). Service only — no engine change.
   it up, and play a rig that names the new id; then the refusals above.
 - ljoss's "send to pedal" is the client of this, and lands in ljoss after it.
 
-**5. What other repos owe this.** R6 (ljoss "my document wins" on connect) was to be decided
-*before* v2 put switches under the player's feet; v2 landed 2026-10-09, so it is owed now. The
+**5. What other repos owe this.** R6 (ljoss "my document wins" on connect) is closed by D17:
+ljoss reads what the pedal plays and never sends a document of its own on connect (ljoss O6). The
 MIDI channel wait for a second controller. The map's learn UI waits for ljoss to name targets
 stably. The silent-input liveness check is namchain's, and the service surfaces it as an issue
 once it exists.
@@ -917,16 +939,14 @@ one, by design.
 
 ## What this leaves
 
-- **ljoss on connect** (`rig-edits.md` C12). Today ljoss applies its own document when it
-  connects ("my document wins"), which would undo a rig the player chose on the pedal. ljoss
-  should follow the device's rig, or ask; that is ljoss's change and your decision, and v2 landed
-  on 2026-10-09, so the switches it protects are now under the player's feet (R6).
+- ~~**ljoss on connect**~~ (`rig-edits.md` C12, R6): closed by D17. ljoss follows the pedal's
+  rig and never applies its own on connect.
 - **The silent-input liveness check** (debt register, the I2S fault). It needs the capture
   stream, so it belongs in namchain; the service surfaces it as an issue and the Pico shows it
   when it exists. The relay rule can't see that fault either: the engine says it is running.
 - Deletion and replace policies for library files; resampling on upload; a second controller's
   channel; MIDI learn; authoring the CC → parameter map (it needs ljoss to name targets
-  stably); mDNS; a browser UI.
+  stably); a browser UI. (mDNS landed with v4: `_pedal._tcp`.)
 - The exact `CFG` body the channel filter would use, and the baud rate, if step 4 measures that
   115200 is not enough (the contract says it will be).
 

@@ -5,6 +5,16 @@ pedal's network is, where the passphrase lives, what the app stores, what proves
 owner's, and what fails. Decisions that are yours are marked **yours**; the proposal beside each says
 why. It pays off the debt register's "the app needs the home network".
 
+**Discovery is built (D17, 2026-11-09); pairing is not.** On whatever network the pedal and ljoss
+share, the pedal announces itself over DNS-SD as `_pedal._tcp` on port 47820 with its id and name
+(`devices/common/rootfs/etc/systemd/dnssd/pedal.dnssd`, systemd-resolved's responder), and ljoss
+browses for it and also tries each known pedal's remembered address. ljoss knows a pedal by the id
+the pedal generated once (`/var/lib/pedal/state/pedal.json`), not by its address, keeps one token per
+id, asks for a new pedal's token once, and offers a known token only to a host whose name or
+address matches that pedal ([pedal-service.md](pedal-service.md), "The pedal's identity and its
+event stream"; [pedal-owns-state.md](pedal-owns-state.md)). Everything below — BLE, setup mode, the
+pedal's own Wi-Fi network, a token that never has to be typed — is still design.
+
 The pieces it leans on: [uart-protocol.md](uart-protocol.md) (draft 3 adds two messages),
 [pedal-service.md](pedal-service.md) (the service hands the Pico what the app needs), `devices/` (the
 Core host's access point) and `firmware/` (the Pico's BLE). The app work is ljoss's; ljoss's

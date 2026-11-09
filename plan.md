@@ -1414,7 +1414,12 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 [docs/pedal-owns-state.md](docs/pedal-owns-state.md). The pedal (pedald and `namchaind`) owns rigs,
 banks, the model/IR library and the block catalogue; ljoss and rigpa become views that send commands
 and are told of every change with its cause. Rik's answers to two rounds of questions are recorded
-there, milestone by milestone, with a demo and a review after each. **Done: M0** (the decision and the
+there, milestone by milestone, with a demo and a review after each. **All of it is built: M0, C1–C3
+and O1–O9 are done** (the entries below, newest first). O1–O9 await Rik's review, and nothing is
+pushed. **What is left:** the panel by eye (below); the plan's end-to-end check ("Verification, end
+to end", after O8, with vip in the box), which is the next thing to run; pushing, when Rik says.
+Known and not fixed: the engine sometimes crossfades once during a drag of ramps with no event saying
+why (namchain's). **Done: M0** (the decision and the
 plan) **and C1** (rigpa `ed481e6`: `display.layout` / `--layout compact` gives the 800×480 panel's
 views on the Mac: Play as home, Rigs, Edit, Tuner, Settings, by touch and by the rotary; 24 of 24
 tests pass). C1 also fixed the bar's tuner, whose ticks were all drawn at the scale's left end.
@@ -1427,6 +1432,16 @@ Two deploy-script faults fixed on the way: the planar-kernel check still read na
 line (so every namchain since 0c1a6d8 was refused), and a `| head` under pipefail ended a deploy before
 `components-lock`. **Still to do by eye on the pedal:** the panel's rotation (0 or 180), touch landing
 where touched, legibility from standing.
+
+**O9 done, waiting for review** (2026-11-09): the docs say what D17 built. pedal.project: `AGENTS.md`'s Architecture
+(the pedal owns its state; ljoss and rigpa are views), `docs/working-across-repos.md`'s ljoss and rigpa rows and how
+each reaches the pedal, `docs/pedal-service.md`'s staged versions (v3 finished, **v4** is D17; R6 closed), and
+`docs/pairing.md` (discovery is built, pairing isn't). The Commands list already had no `sync-library`. ljoss
+`374ad6d`: `docs/ENGINE.md` (the pedal owns the document; edits through it; discovery and push), `ARCHITECTURE.md`,
+`ASSETS.md` (hashing, Compare Files, copying old rigs) and `AGENTS.md` (the stale local-engine-branch note gone).
+The `Pedal/` files in the test runner are the six pure ones, added milestone by milestone; the three that hold
+connections stay out, as `EngineSession` does. rigpa `3aff011`: `docs/spec.md` (Data, Saving, following other
+clients) and `docs/plan.md`. D17 is complete.
 
 **O8 done, waiting for review** (2026-11-09): ljoss's files and a pedal's meet by content. ljoss's library hashes
 each file as it reads it (an unchanged file isn't read again). "Compare Files…" opens by itself the first time ljoss
