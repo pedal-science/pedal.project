@@ -1,0 +1,49 @@
+{
+ "seconds": 600.0,
+ "counts": {
+  "abandoned_mid_request": 2721,
+  "silent": 195,
+  "abandoned_mid_body": 1169,
+  "keepalive": 8340,
+  "fresh": 6557,
+  "dropped_stream": 287,
+  "press": 30,
+  "fresh_error": 112,
+  "over_the_cap": 11,
+  "dropped_stream_error": 2,
+  "listener_reconnect": 1
+ },
+ "threads": [
+  3,
+  9,
+  3
+ ],
+ "rss_kb": [
+  22840,
+  23060,
+  22988
+ ],
+ "fds": [
+  9,
+  15,
+  9
+ ],
+ "cpu_share_of_a_core_while_churning": 0.018,
+ "refused_at_cap": 341,
+ "presses": 30,
+ "presses_ok": 30,
+ "actions_heard": 30,
+ "actions_by_how": {
+  "warm": 30
+ },
+ "resyncs_heard_by_listener": 0,
+ "xruns": [
+  0,
+  0
+ ],
+ "guard_trips": [
+  0,
+  0
+ ],
+ "pass": true
+}

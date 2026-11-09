@@ -1428,6 +1428,16 @@ line (so every namchain since 0c1a6d8 was refused), and a `| head` under pipefai
 `components-lock`. **Still to do by eye on the pedal:** the panel's rotation (0 or 180), touch landing
 where touched, legibility from standing.
 
+**O2 done, waiting for review** (2026-11-09): pedald knows which pedal it is (`state/pedal.json`, `GET` and
+`PUT /pedal`, announced as `_pedal._tcp`) and tells views what changed (`GET /events`: `hello`, `action` with
+its cause and result, `running`, `engine`, `bank`, `library`, `pedal`). The server has caps, deadlines, and file
+and stream replies, and reads bodies when asked; the loop waits in one `select`, and routes reach the engine
+through it. Contract in [docs/pedal-service.md](docs/pedal-service.md). On vip the churn gate passed
+([bench-results/2026-11-09-pedald-foundations-vip/README.md](bench-results/2026-11-09-pedald-foundations-vip/README.md)).
+**Still to do on the pedal:** a real footswitch through to `/events`: vip's Pico has sent nothing since
+2026-11-07, before this work. `devices/vip/check` still reports the three FAILs it did before (the fallback slot's
+kernel; `cost.json`'s engine commit and kernel). **Next: O3** (files and the catalogue).
+
 **O1 done, waiting for review** (2026-11-08): namchaind pushes events (namchain `249329a`, test fix
 `453381a`, deployed on vip): `engine.subscribe`, `rig.replaced`/`rig.patched`/`rig.params` with the
 change's origin and tag, `engine.state`/`engine.mute`/`engine.assets`, `seq` and `if_seq`, `namchainctl
@@ -1438,7 +1448,7 @@ on the knob's own ramps, leaving events at most a point, inside the noise, and a
 older faults found on the way are fixed in namchain `d1aa45c`, deployed on vip: a local-socket reply over
 208 KB closed the connection (each local connection now asks for a larger buffer, and a reply that still
 doesn't fit is refused in words), and a macro addressed by node id was patched structurally (it now
-ramps). **Next: O2** (pedald foundations).
+ramps).
 
 `scripts/deploy-engine` with no `--commit` deploys `origin/main`, which is `70a6e3f`, before O1, until
 namchain is pushed: name the commit until then.

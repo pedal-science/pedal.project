@@ -1,0 +1,20 @@
+id: 815388f5-5
+event: hello
+data: {"running": {"rig": "Standard", "bank": 0, "position": 1, "bank_size": 2, "next": "Bob", "bypass": false, "performance": []}, "engine": {"reachable": true, "state": "running", "health": "warn", "mute": false, "protocol": 2}, "bank": {"banks": [["Bob", "Standard"]], "bank": 0}, "pedal": {"id": "43fdbd44-fa03-40cc-aebb-7c7cb21b3260", "name": "vip", "api": 2}}
+
+id: 815388f5-6
+event: action
+data: {"cause": {"source": "http", "kind": "rig_up", "a": 0, "b": 0, "label": "rig up", "client": "demo"}, "action": {"action": "load", "rig": "Bob"}, "result": {"ok": true, "rig": "Bob", "how": "warm"}}
+
+id: 815388f5-7
+event: running
+data: {"rig": "Bob", "bank": 0, "position": 0, "bank_size": 2, "next": "Standard", "bypass": false, "performance": []}
+
+id: 815388f5-8
+event: action
+data: {"cause": {"source": "http", "kind": "rig_down", "a": 0, "b": 0, "label": "rig down", "client": "demo"}, "action": {"action": "load", "rig": "Standard"}, "result": {"ok": true, "rig": "Standard", "how": "warm"}}
+
+id: 815388f5-9
+event: running
+data: {"rig": "Standard", "bank": 0, "position": 1, "bank_size": 2, "next": "Bob", "bypass": false, "performance": []}
+

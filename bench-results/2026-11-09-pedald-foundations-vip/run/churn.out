@@ -1,0 +1,71 @@
+{"t": 1794225030.2, "label": "before", "threads": 3, "rss_kb": 22840, "fds": 9, "ticks": 298, "http": {"connections": 2, "streams": 0, "threads": 3, "refused": 18, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225061.5, "label": "churn", "threads": 7, "rss_kb": 22956, "fds": 13, "ticks": 353, "http": {"connections": 6, "streams": 2, "threads": 7, "refused": 49, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225091.8, "label": "churn", "threads": 6, "rss_kb": 22968, "fds": 12, "ticks": 409, "http": {"connections": 5, "streams": 1, "threads": 6, "refused": 49, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225122.2, "label": "churn", "threads": 6, "rss_kb": 22980, "fds": 13, "ticks": 464, "http": {"connections": 7, "streams": 1, "threads": 8, "refused": 82, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225152.5, "label": "churn", "threads": 7, "rss_kb": 23000, "fds": 13, "ticks": 518, "http": {"connections": 7, "streams": 2, "threads": 8, "refused": 82, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Bob"}
+{"t": 1794225182.8, "label": "churn", "threads": 9, "rss_kb": 23004, "fds": 14, "ticks": 573, "http": {"connections": 7, "streams": 2, "threads": 8, "refused": 117, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Bob"}
+{"t": 1794225213.3, "label": "churn", "threads": 7, "rss_kb": 22996, "fds": 13, "ticks": 628, "http": {"connections": 7, "streams": 1, "threads": 8, "refused": 117, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225243.6, "label": "churn", "threads": 6, "rss_kb": 22992, "fds": 12, "ticks": 683, "http": {"connections": 5, "streams": 1, "threads": 6, "refused": 151, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225273.9, "label": "churn", "threads": 7, "rss_kb": 23012, "fds": 13, "ticks": 738, "http": {"connections": 6, "streams": 2, "threads": 7, "refused": 177, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Bob"}
+{"t": 1794225304.2, "label": "churn", "threads": 7, "rss_kb": 23000, "fds": 13, "ticks": 791, "http": {"connections": 6, "streams": 1, "threads": 7, "refused": 195, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225334.6, "label": "churn", "threads": 9, "rss_kb": 23020, "fds": 15, "ticks": 843, "http": {"connections": 7, "streams": 2, "threads": 8, "refused": 221, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Bob"}
+{"t": 1794225365.0, "label": "churn", "threads": 6, "rss_kb": 23020, "fds": 13, "ticks": 895, "http": {"connections": 5, "streams": 1, "threads": 6, "refused": 221, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225395.4, "label": "churn", "threads": 8, "rss_kb": 23028, "fds": 14, "ticks": 946, "http": {"connections": 7, "streams": 2, "threads": 8, "refused": 221, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Bob"}
+{"t": 1794225425.8, "label": "churn", "threads": 8, "rss_kb": 23032, "fds": 14, "ticks": 997, "http": {"connections": 7, "streams": 2, "threads": 8, "refused": 246, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225456.3, "label": "churn", "threads": 7, "rss_kb": 23048, "fds": 13, "ticks": 1050, "http": {"connections": 6, "streams": 2, "threads": 7, "refused": 246, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Bob"}
+{"t": 1794225486.7, "label": "churn", "threads": 7, "rss_kb": 23048, "fds": 13, "ticks": 1102, "http": {"connections": 6, "streams": 1, "threads": 7, "refused": 246, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225517.2, "label": "churn", "threads": 7, "rss_kb": 23052, "fds": 13, "ticks": 1155, "http": {"connections": 7, "streams": 2, "threads": 8, "refused": 280, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225547.9, "label": "churn", "threads": 5, "rss_kb": 22992, "fds": 11, "ticks": 1208, "http": {"connections": 4, "streams": 1, "threads": 5, "refused": 306, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225578.3, "label": "churn", "threads": 8, "rss_kb": 23052, "fds": 14, "ticks": 1259, "http": {"connections": 6, "streams": 2, "threads": 7, "refused": 306, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Bob"}
+{"t": 1794225608.6, "label": "churn", "threads": 8, "rss_kb": 23040, "fds": 14, "ticks": 1312, "http": {"connections": 6, "streams": 1, "threads": 7, "refused": 341, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225639.0, "label": "churn", "threads": 7, "rss_kb": 23060, "fds": 14, "ticks": 1365, "http": {"connections": 6, "streams": 1, "threads": 7, "refused": 341, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{"t": 1794225684.4, "label": "after", "threads": 3, "rss_kb": 22988, "fds": 9, "ticks": 1376, "http": {"connections": 2, "streams": 0, "threads": 3, "refused": 341, "max_connections": 16, "max_streams": 6}, "xruns": 0, "guard_trips": 0, "rig": "Standard"}
+{
+ "seconds": 600.0,
+ "counts": {
+  "abandoned_mid_request": 2721,
+  "silent": 195,
+  "abandoned_mid_body": 1169,
+  "keepalive": 8340,
+  "fresh": 6557,
+  "dropped_stream": 287,
+  "press": 30,
+  "fresh_error": 112,
+  "over_the_cap": 11,
+  "dropped_stream_error": 2,
+  "listener_reconnect": 1
+ },
+ "threads": [
+  3,
+  9,
+  3
+ ],
+ "rss_kb": [
+  22840,
+  23060,
+  22988
+ ],
+ "fds": [
+  9,
+  15,
+  9
+ ],
+ "cpu_share_of_a_core_while_churning": 0.018,
+ "refused_at_cap": 341,
+ "presses": 30,
+ "presses_ok": 30,
+ "actions_heard": 30,
+ "actions_by_how": {
+  "warm": 30
+ },
+ "resyncs_heard_by_listener": 0,
+ "xruns": [
+  0,
+  0
+ ],
+ "guard_trips": [
+  0,
+  0
+ ],
+ "pass": true
+}
