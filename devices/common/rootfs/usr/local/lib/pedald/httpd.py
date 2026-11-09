@@ -19,6 +19,8 @@ The rules come from "Security" and "The upload API" in that document:
   authentications on one connection and the connection is closed.
 * One thread per connection is enough for a handful of clients; a handler that raises is that
   handler's bug, and the server answers 500 and carries on.
+* A client that sends `Expect: 100-continue` (curl, for anything large) is told to go on when the
+  handler starts reading, so a refusal costs it no upload.
 * Connections are capped, and past the cap one is closed as soon as it is accepted: a 500 would
   claim the request was understood. A new connection has 5 s to send its first byte, and a kept one
   30 s, so neither a silent client nor a Wi-Fi drop holds a thread.
@@ -80,6 +82,7 @@ _REASONS = {
     201: "Created",
     202: "Accepted",
     204: "No Content",
+    304: "Not Modified",
     400: "Bad Request",
     401: "Unauthorized",
     403: "Forbidden",
@@ -89,8 +92,9 @@ _REASONS = {
     411: "Length Required",
     413: "Payload Too Large",
     415: "Unsupported Media Type",
-    422: "Unprocessable Content",
     412: "Precondition Failed",
+    422: "Unprocessable Content",
+    428: "Precondition Required",
     500: "Internal Server Error",
     501: "Not Implemented",
     503: "Service Unavailable",
@@ -367,7 +371,7 @@ class Server:
                     self._log(f"{method} {path} from {peer}: {e.message}")
                     self._refuse(conn, e.status, e.message, False)
                     return
-                stream = _BodyStream(reader, length)
+                stream = _BodyStream(reader, length, headers.get("expect", "").lower() == "100-continue")
                 request = Request(method, path, query, headers, stream=stream,
                                   max_buffered=self._max_buffered_body)
                 extra = None
@@ -396,6 +400,8 @@ class Server:
                 else:
                     self._reply(conn, status, reply, close=not keep, head_only=head_only, extra=extra)
                 if not keep:
+                    if stream.remaining > 0:
+                        self._drain(conn)       # or the unread body turns the close into a reset
                     return
         finally:
             with self._lock:
@@ -553,6 +559,9 @@ class Server:
 
     def _reply(self, conn, status, body, *, close=False, allow=None, head_only=False, extra=None):
         """Write one JSON reply. A body JSON cannot carry becomes a 500, never a lost reply."""
+        if status == 304:
+            self._reply_raw(conn, self._head(status, "application/json", None, close, extra))
+            return
         try:
             payload = json.dumps(body).encode("utf-8")
         except (TypeError, ValueError) as e:
@@ -595,15 +604,20 @@ class _Rejected(Exception):
 class _BodyStream:
     """One request's body, as a file-like thing that holds nothing it has already handed over."""
 
-    def __init__(self, reader, length):
+    def __init__(self, reader, length, expect_continue=False):
         self._reader = reader
         self.remaining = length
+        # Sent only when the handler starts reading, so one that refuses saves the client the upload.
+        self._expect_continue = expect_continue
 
     def read(self, size=CHUNK):
         """Up to `size` bytes, b"" at the end, or _Rejected(400) if the peer stopped early."""
         if self.remaining <= 0:
             return b""
         try:
+            if self._expect_continue:
+                self._expect_continue = False
+                self._reader.send_continue()
             data = self._reader.read_some(min(size, self.remaining))
         except OSError:
             data = b""
@@ -692,6 +706,9 @@ class _Reader:
             # not something to settle in the sender's favour.
             headers.setdefault(name.strip().lower(), value.strip())
         return lines[0], headers
+
+    def send_continue(self):
+        self._conn.sendall(b"HTTP/1.1 100 Continue\r\n\r\n")
 
     def read_some(self, size):
         """Up to `size` body bytes: what is already here, or one recv. b"" when the peer has stopped."""

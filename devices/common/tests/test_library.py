@@ -204,6 +204,8 @@ def library_service(root):
     """A Service with the library, the bank and the verdicts, and no engine or link."""
     logs = []
     service = object.__new__(daemon.Service)
+    service.files = types.SimpleNamespace(counts=lambda: None)
+    service.follow_scan = lambda *_a: None
     service.log = logs.append
     service.logs = logs
     service.cfg = types.SimpleNamespace(rigs_root=root, state_root=tempfile.mkdtemp())

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# scripts/soak/soak-replay SESSION [--host vip] [--duration 3600] [--sync-library-at SECONDS]
+# scripts/soak/soak-replay SESSION [--host vip] [--duration 3600] [--refresh-library-at SECONDS]
 #                          [--label NAME] [--speed 1] [--writes-only]
-# scripts/soak/soak-replay --idle [--host vip] [--duration 3600] [--sync-library-at SECONDS] [--label NAME]
+# scripts/soak/soak-replay --idle [--host vip] [--duration 3600] [--refresh-library-at SECONDS] [--label NAME]
 #
 # Plan Phase 1 step 8's soak, made repeatable: replay a recorded ljoss session against the
 # Core host's namchaind from this Mac (so over WiFi, as ljoss edits), looping it for --duration,
 # while soak-monitor.sh samples engine.status on the host. Everything runs under the host's lock.
-# With --sync-library-at, scripts/sync-library runs once at that many seconds in, as step 8 asks.
-# --idle sends no edits and leaves the host's rig as it is: step 8's second soak, the sync alone,
+# With --refresh-library-at, the engine rescans its library once at that many seconds in, as step 8 asks.
+# --idle sends no edits and leaves the host's rig as it is: step 8's second soak, the rescan alone,
 # to isolate what WiFi costs.
 #
 # Sessions come from namchain's tools/session/namchain-session-record (ljoss pointed through it),
@@ -26,7 +26,7 @@ REPLAY="$NAMCHAIN_DIR/tools/session/namchain-session-replay"
 
 HOST=vip
 DURATION=3600
-SYNC_AT=
+REFRESH_AT=
 LABEL=
 EXTRA=()
 SESSION=
@@ -41,7 +41,7 @@ while [[ $# -gt 0 ]]; do
   case $1 in
     --host) HOST=$2; shift ;;
     --duration) DURATION=$2; shift ;;
-    --sync-library-at) SYNC_AT=$2; shift ;;
+    --refresh-library-at) REFRESH_AT=$2; shift ;;
     --label) LABEL=$2; shift ;;
     --speed) EXTRA+=(--speed "$2"); shift ;;
     --writes-only) EXTRA+=(--writes-only) ;;
@@ -58,12 +58,12 @@ fi
 # The Mac must stay awake for the whole soak: asleep, its timers stop and the host drops the lock.
 if [[ -z ${SOAK_CAFFEINATED:-} ]] && command -v caffeinate > /dev/null; then
   SOAK_CAFFEINATED=1 exec caffeinate -i "$0" ${IDLE:+--idle} ${SESSION:+"$SESSION"} --host "$HOST" \
-    --duration "$DURATION" ${SYNC_AT:+--sync-library-at "$SYNC_AT"} ${LABEL:+--label "$LABEL"} "${EXTRA[@]}"
+    --duration "$DURATION" ${REFRESH_AT:+--refresh-library-at "$REFRESH_AT"} ${LABEL:+--label "$LABEL"} "${EXTRA[@]}"
 fi
 
 if [[ ${PEDAL_HOST_LOCK:-} != "$HOST" ]]; then
   exec "$REPO/scripts/host-lock" --host "$HOST" -- "$0" "${IDLE:+--idle}${SESSION}" --host "$HOST" \
-    --duration "$DURATION" ${SYNC_AT:+--sync-library-at "$SYNC_AT"} ${LABEL:+--label "$LABEL"} "${EXTRA[@]}"
+    --duration "$DURATION" ${REFRESH_AT:+--refresh-library-at "$REFRESH_AT"} ${LABEL:+--label "$LABEL"} "${EXTRA[@]}"
 fi
 
 SSH=(ssh -o BatchMode=yes -o ConnectTimeout=10 -o ServerAliveInterval=5 -o ServerAliveCountMax=3 "$HOST")
@@ -82,7 +82,7 @@ nc_commit=$(git -C "$NAMCHAIN_DIR" rev-parse --short HEAD)
   printf 'session     %s\n' "${SESSION:+${SESSION#"$REPO"/}}${IDLE:+none (--idle)}"
   printf 'host        %s\n' "$HOST"
   printf 'duration    %s\n' "$DURATION"
-  printf 'sync_at     %s\n' "${SYNC_AT:-none}"
+  printf 'refresh_at  %s\n' "${REFRESH_AT:-none}"
   printf 'replay      %s\n' "$([[ -n $IDLE ]] && echo none || echo "namchain $nc_commit tools/session")"
   printf 'pedal       %s\n' "$(git -C "$REPO" rev-parse --short HEAD)"
   printf 'engine      %s\n' "$("${SSH[@]}" 'readlink /opt/namchain/current' 2>/dev/null || echo '?')"
@@ -99,9 +99,11 @@ monitor=$!
 # Stopped early, leave nothing running on the host (rule 8).
 trap 'kill $monitor 2>/dev/null || true; "${SSH[@]}" "sudo pkill -f \"sh -s -- $remote\"" 2>/dev/null || true' EXIT
 
-if [[ -n $SYNC_AT ]]; then
-  ( sleep "$SYNC_AT"; "$REPO/scripts/sync-library" --host "$HOST" > "$out.sync-library.log" 2>&1 \
-      || echo "sync-library failed; see $out.sync-library.log" >&2 ) &
+if [[ -n $REFRESH_AT ]]; then
+  # Over TCP to the host itself: the library's listing is too big for one local datagram.
+  ( sleep "$REFRESH_AT"; "${SSH[@]}" "sudo /opt/namchain/current/bin/namchainctl --host 127.0.0.1 \
+        --token-file /etc/namchain/token --quiet assets --refresh" > "$out.refresh-library.log" 2>&1 \
+      || echo "the rescan failed; see $out.refresh-library.log" >&2 ) &
 fi
 
 set +e

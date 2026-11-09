@@ -1,0 +1,2458 @@
+{
+ "max_chains": 8,
+ "nodes": [
+  {
+   "arity": null,
+   "category": "io",
+   "flags": {
+    "block_delay": false,
+    "bypassable": false,
+    "has_lookback": false,
+    "has_tail": false,
+    "in_palette": true,
+    "stateful": true
+   },
+   "id": "nc.input",
+   "kind": "primitive",
+   "latency_samples": 0,
+   "name": "Input",
+   "params": [],
+   "per_port_params": [],
+   "ports": {
+    "in": [],
+    "out": [
+     {
+      "channels": 1,
+      "name": "out0",
+      "optional": false
+     }
+    ]
+   },
+   "tail_samples": 0
+  },
+  {
+   "arity": null,
+   "category": "io",
+   "flags": {
+    "block_delay": false,
+    "bypassable": false,
+    "has_lookback": false,
+    "has_tail": false,
+    "in_palette": true,
+    "stateful": false
+   },
+   "id": "nc.output",
+   "kind": "primitive",
+   "latency_samples": 0,
+   "name": "Output",
+   "params": [],
+   "per_port_params": [],
+   "ports": {
+    "in": [
+     {
+      "channels": 1,
+      "name": "in0",
+      "optional": true
+     }
+    ],
+    "out": []
+   },
+   "tail_samples": 0
+  },
+  {
+   "arity": null,
+   "category": "utility",
+   "flags": {
+    "block_delay": false,
+    "bypassable": true,
+    "has_lookback": false,
+    "has_tail": false,
+    "in_palette": true,
+    "stateful": true
+   },
+   "id": "nc.gain",
+   "kind": "primitive",
+   "latency_samples": 0,
+   "name": "Gain",
+   "params": [
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "gain_db",
+     "kind": "number",
+     "max": 24.0,
+     "max_inclusive": true,
+     "min": -60.0,
+     "min_inclusive": true,
+     "name": "Gain",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": "dB"
+    },
+    {
+     "default": 1.0,
+     "hidden": true,
+     "id": "gain",
+     "kind": "number",
+     "max": 16.0,
+     "max_inclusive": true,
+     "min": -8.0,
+     "min_inclusive": true,
+     "name": "Gain (linear)",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": null
+    },
+    {
+     "default": 5.0,
+     "hidden": false,
+     "id": "ramp_ms",
+     "kind": "number",
+     "max": 1000.0,
+     "max_inclusive": true,
+     "min": 0.0,
+     "min_inclusive": true,
+     "name": "Ramp",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": false,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": "ms"
+    }
+   ],
+   "per_port_params": [],
+   "ports": {
+    "in": [
+     {
+      "channels": 1,
+      "name": "in0",
+      "optional": true
+     }
+    ],
+    "out": [
+     {
+      "channels": 1,
+      "name": "out0",
+      "optional": false
+     }
+    ]
+   },
+   "tail_samples": 0
+  },
+  {
+   "arity": null,
+   "category": "eq",
+   "flags": {
+    "block_delay": false,
+    "bypassable": true,
+    "has_lookback": false,
+    "has_tail": false,
+    "in_palette": true,
+    "stateful": true
+   },
+   "id": "nc.eq.biquad",
+   "kind": "primitive",
+   "latency_samples": 0,
+   "name": "Biquad EQ",
+   "params": [
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "mode",
+     "kind": "option",
+     "max": null,
+     "max_inclusive": true,
+     "min": null,
+     "min_inclusive": true,
+     "name": "Mode",
+     "one_of": null,
+     "one_of_required": false,
+     "options": [
+      {
+       "label": "Peaking",
+       "value": "peaking"
+      },
+      {
+       "label": "Low shelf",
+       "value": "lowshelf"
+      },
+      {
+       "label": "High shelf",
+       "value": "highshelf"
+      },
+      {
+       "label": "Low pass",
+       "value": "lowpass"
+      },
+      {
+       "label": "High pass",
+       "value": "highpass"
+      },
+      {
+       "label": "Band pass",
+       "value": "bandpass"
+      },
+      {
+       "label": "Notch",
+       "value": "notch"
+      }
+     ],
+     "options_from": null,
+     "patchable": true,
+     "rampable": false,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": null
+    },
+    {
+     "default": 1000.0,
+     "hidden": false,
+     "id": "freq",
+     "kind": "number",
+     "max": null,
+     "max_inclusive": true,
+     "min": 10.0,
+     "min_inclusive": true,
+     "name": "Frequency",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "unit": "Hz"
+    },
+    {
+     "default": 0.707,
+     "hidden": false,
+     "id": "q",
+     "kind": "number",
+     "max": 20.0,
+     "max_inclusive": true,
+     "min": 0.0,
+     "min_inclusive": false,
+     "name": "Q",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "unit": null
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "gain_db",
+     "kind": "number",
+     "max": 30.0,
+     "max_inclusive": true,
+     "min": -30.0,
+     "min_inclusive": true,
+     "name": "Gain",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": "dB"
+    },
+    {
+     "default": 5.0,
+     "hidden": false,
+     "id": "ramp_ms",
+     "kind": "number",
+     "max": 1000.0,
+     "max_inclusive": true,
+     "min": 0.0,
+     "min_inclusive": true,
+     "name": "Ramp",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": false,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": "ms"
+    }
+   ],
+   "per_port_params": [],
+   "ports": {
+    "in": [
+     {
+      "channels": 1,
+      "name": "in0",
+      "optional": true
+     }
+    ],
+    "out": [
+     {
+      "channels": 1,
+      "name": "out0",
+      "optional": false
+     }
+    ]
+   },
+   "tail_samples": 0
+  },
+  {
+   "arity": null,
+   "category": "eq",
+   "flags": {
+    "block_delay": false,
+    "bypassable": true,
+    "has_lookback": false,
+    "has_tail": false,
+    "in_palette": true,
+    "stateful": true
+   },
+   "id": "nc.eq.flow",
+   "kind": "primitive",
+   "latency_samples": 0,
+   "name": "flowEQ",
+   "params": [
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "x",
+     "kind": "number",
+     "max": 2.0,
+     "max_inclusive": true,
+     "min": -2.0,
+     "min_inclusive": true,
+     "name": "X",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": null
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "y",
+     "kind": "number",
+     "max": 2.0,
+     "max_inclusive": true,
+     "min": -2.0,
+     "min_inclusive": true,
+     "name": "Y",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": null
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "z",
+     "kind": "number",
+     "max": 2.0,
+     "max_inclusive": true,
+     "min": -2.0,
+     "min_inclusive": true,
+     "name": "Z",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": null
+    },
+    {
+     "default": 1.0,
+     "hidden": false,
+     "id": "strength",
+     "kind": "number",
+     "max": 1.0,
+     "max_inclusive": true,
+     "min": 0.0,
+     "min_inclusive": true,
+     "name": "Strength",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": "%"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "in_db",
+     "kind": "number",
+     "max": 12.0,
+     "max_inclusive": true,
+     "min": -60.0,
+     "min_inclusive": true,
+     "name": "In",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": "dB"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "out_db",
+     "kind": "number",
+     "max": 12.0,
+     "max_inclusive": true,
+     "min": -60.0,
+     "min_inclusive": true,
+     "name": "Out",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": "dB"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "extend",
+     "kind": "flag",
+     "max": null,
+     "max_inclusive": true,
+     "min": null,
+     "min_inclusive": true,
+     "name": "Extend",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": null
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "auto_gain",
+     "kind": "flag",
+     "max": null,
+     "max_inclusive": true,
+     "min": null,
+     "min_inclusive": true,
+     "name": "Auto gain",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": null
+    },
+    {
+     "default": 5.0,
+     "hidden": true,
+     "id": "ramp_ms",
+     "kind": "number",
+     "max": 1000.0,
+     "max_inclusive": true,
+     "min": 0.0,
+     "min_inclusive": true,
+     "name": "Ramp",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": false,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": "ms"
+    }
+   ],
+   "per_port_params": [],
+   "ports": {
+    "in": [
+     {
+      "channels": 1,
+      "name": "in0",
+      "optional": true
+     }
+    ],
+    "out": [
+     {
+      "channels": 1,
+      "name": "out0",
+      "optional": false
+     }
+    ]
+   },
+   "tail_samples": 0
+  },
+  {
+   "arity": null,
+   "category": "delay",
+   "flags": {
+    "block_delay": false,
+    "bypassable": true,
+    "has_lookback": false,
+    "has_tail": false,
+    "in_palette": true,
+    "stateful": true
+   },
+   "id": "nc.delay",
+   "kind": "primitive",
+   "latency_samples": 0,
+   "name": "Delay",
+   "params": [
+    {
+     "default": null,
+     "hidden": false,
+     "id": "samples",
+     "kind": "number",
+     "max": null,
+     "max_inclusive": true,
+     "min": 1.0,
+     "min_inclusive": true,
+     "name": "Delay",
+     "one_of": "delay time",
+     "one_of_required": true,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": true,
+     "step": 1.0,
+     "unit": "samples"
+    },
+    {
+     "default": null,
+     "hidden": false,
+     "id": "ms",
+     "kind": "number",
+     "max": null,
+     "max_inclusive": true,
+     "min": 0.021,
+     "min_inclusive": true,
+     "name": "Delay",
+     "one_of": "delay time",
+     "one_of_required": true,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "unit": "ms"
+    },
+    {
+     "default": 5.0,
+     "hidden": false,
+     "id": "ramp_ms",
+     "kind": "number",
+     "max": 1000.0,
+     "max_inclusive": true,
+     "min": 0.0,
+     "min_inclusive": true,
+     "name": "Ramp",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": false,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": "ms"
+    },
+    {
+     "default": null,
+     "hidden": false,
+     "id": "max_samples",
+     "kind": "number",
+     "max": null,
+     "max_inclusive": true,
+     "min": 1.0,
+     "min_inclusive": true,
+     "name": "Max delay",
+     "one_of": "max delay",
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": false,
+     "required": false,
+     "scale": "linear",
+     "snap": true,
+     "step": 1.0,
+     "unit": "samples"
+    },
+    {
+     "default": null,
+     "hidden": false,
+     "id": "max_ms",
+     "kind": "number",
+     "max": null,
+     "max_inclusive": true,
+     "min": 0.021,
+     "min_inclusive": true,
+     "name": "Max delay",
+     "one_of": "max delay",
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": false,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "unit": "ms"
+    }
+   ],
+   "per_port_params": [],
+   "ports": {
+    "in": [
+     {
+      "channels": 1,
+      "name": "in0",
+      "optional": true
+     }
+    ],
+    "out": [
+     {
+      "channels": 1,
+      "name": "out0",
+      "optional": false
+     }
+    ]
+   },
+   "tail_samples": 0
+  },
+  {
+   "arity": null,
+   "category": "amp",
+   "flags": {
+    "block_delay": false,
+    "bypassable": true,
+    "has_lookback": false,
+    "has_tail": false,
+    "in_palette": true,
+    "stateful": true
+   },
+   "id": "nc.nam",
+   "kind": "primitive",
+   "latency_samples": 0,
+   "name": "NAM model",
+   "params": [
+    {
+     "default": null,
+     "hidden": false,
+     "id": "model",
+     "kind": "option",
+     "max": null,
+     "max_inclusive": true,
+     "min": null,
+     "min_inclusive": true,
+     "name": "Model",
+     "one_of": null,
+     "one_of_required": false,
+     "options": [],
+     "options_from": "models",
+     "patchable": true,
+     "rampable": false,
+     "required": true,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": null
+    }
+   ],
+   "per_port_params": [],
+   "ports": {
+    "in": [
+     {
+      "channels": 1,
+      "name": "in0",
+      "optional": true
+     }
+    ],
+    "out": [
+     {
+      "channels": 1,
+      "name": "out0",
+      "optional": false
+     }
+    ]
+   },
+   "tail_samples": 0
+  },
+  {
+   "arity": null,
+   "category": "cab",
+   "flags": {
+    "block_delay": false,
+    "bypassable": true,
+    "has_lookback": false,
+    "has_tail": false,
+    "in_palette": true,
+    "stateful": true
+   },
+   "id": "nc.cab.ir",
+   "kind": "primitive",
+   "latency_samples": 0,
+   "name": "Cabinet IR",
+   "params": [
+    {
+     "default": null,
+     "hidden": false,
+     "id": "ir",
+     "kind": "option",
+     "max": null,
+     "max_inclusive": true,
+     "min": null,
+     "min_inclusive": true,
+     "name": "Impulse response",
+     "one_of": null,
+     "one_of_required": false,
+     "options": [],
+     "options_from": "irs",
+     "patchable": true,
+     "rampable": false,
+     "required": true,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": null
+    }
+   ],
+   "per_port_params": [],
+   "ports": {
+    "in": [
+     {
+      "channels": 1,
+      "name": "in0",
+      "optional": true
+     }
+    ],
+    "out": [
+     {
+      "channels": 1,
+      "name": "out0",
+      "optional": false
+     }
+    ]
+   },
+   "tail_samples": 0
+  },
+  {
+   "arity": {
+    "default": 2,
+    "max": 64,
+    "min": 1,
+    "param": "outputs"
+   },
+   "category": "utility",
+   "flags": {
+    "block_delay": false,
+    "bypassable": false,
+    "has_lookback": false,
+    "has_tail": false,
+    "in_palette": true,
+    "stateful": false
+   },
+   "id": "nc.split",
+   "kind": "primitive",
+   "latency_samples": 0,
+   "name": "Split",
+   "params": [
+    {
+     "default": 2.0,
+     "hidden": false,
+     "id": "outputs",
+     "kind": "number",
+     "max": 64.0,
+     "max_inclusive": true,
+     "min": 1.0,
+     "min_inclusive": true,
+     "name": "Outputs",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": false,
+     "required": false,
+     "scale": "linear",
+     "snap": true,
+     "step": 1.0,
+     "unit": null
+    }
+   ],
+   "per_port_params": [],
+   "ports": {
+    "in": [
+     {
+      "channels": 1,
+      "name": "in0",
+      "optional": true
+     }
+    ],
+    "out": [
+     {
+      "channels": 1,
+      "name": "out0",
+      "optional": false
+     },
+     {
+      "channels": 1,
+      "name": "out1",
+      "optional": false
+     }
+    ]
+   },
+   "tail_samples": 0
+  },
+  {
+   "arity": {
+    "default": 2,
+    "max": 64,
+    "min": 1,
+    "param": "inputs"
+   },
+   "category": "utility",
+   "flags": {
+    "block_delay": false,
+    "bypassable": false,
+    "has_lookback": false,
+    "has_tail": false,
+    "in_palette": true,
+    "stateful": true
+   },
+   "id": "nc.mix",
+   "kind": "primitive",
+   "latency_samples": 0,
+   "name": "Mix",
+   "params": [
+    {
+     "default": 2.0,
+     "hidden": false,
+     "id": "inputs",
+     "kind": "number",
+     "max": 64.0,
+     "max_inclusive": true,
+     "min": 1.0,
+     "min_inclusive": true,
+     "name": "Inputs",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": false,
+     "required": false,
+     "scale": "linear",
+     "snap": true,
+     "step": 1.0,
+     "unit": null
+    },
+    {
+     "default": 5.0,
+     "hidden": false,
+     "id": "ramp_ms",
+     "kind": "number",
+     "max": 1000.0,
+     "max_inclusive": true,
+     "min": 0.0,
+     "min_inclusive": true,
+     "name": "Ramp",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": false,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": "ms"
+    }
+   ],
+   "per_port_params": [
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "level_db",
+     "kind": "number",
+     "max": 12.0,
+     "max_inclusive": true,
+     "min": -60.0,
+     "min_inclusive": true,
+     "name": "Level",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": "dB"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "mute",
+     "kind": "flag",
+     "max": null,
+     "max_inclusive": true,
+     "min": null,
+     "min_inclusive": true,
+     "name": "Mute",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": null
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "phase",
+     "kind": "flag",
+     "max": null,
+     "max_inclusive": true,
+     "min": null,
+     "min_inclusive": true,
+     "name": "Invert",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": null
+    }
+   ],
+   "ports": {
+    "in": [
+     {
+      "channels": 1,
+      "name": "in0",
+      "optional": true
+     },
+     {
+      "channels": 1,
+      "name": "in1",
+      "optional": true
+     }
+    ],
+    "out": [
+     {
+      "channels": 1,
+      "name": "out0",
+      "optional": false
+     }
+    ]
+   },
+   "tail_samples": 0
+  },
+  {
+   "arity": null,
+   "category": "utility",
+   "flags": {
+    "block_delay": false,
+    "bypassable": true,
+    "has_lookback": false,
+    "has_tail": false,
+    "in_palette": true,
+    "stateful": false
+   },
+   "id": "nc.bypass",
+   "kind": "primitive",
+   "latency_samples": 0,
+   "name": "Bypass",
+   "params": [],
+   "per_port_params": [],
+   "ports": {
+    "in": [
+     {
+      "channels": 1,
+      "name": "in0",
+      "optional": true
+     }
+    ],
+    "out": [
+     {
+      "channels": 1,
+      "name": "out0",
+      "optional": false
+     }
+    ]
+   },
+   "tail_samples": 0
+  },
+  {
+   "arity": null,
+   "category": "utility",
+   "flags": {
+    "block_delay": true,
+    "bypassable": true,
+    "has_lookback": false,
+    "has_tail": false,
+    "in_palette": true,
+    "stateful": false
+   },
+   "id": "nc.unit_delay",
+   "kind": "primitive",
+   "latency_samples": 0,
+   "name": "Unit delay",
+   "params": [],
+   "per_port_params": [],
+   "ports": {
+    "in": [
+     {
+      "channels": 1,
+      "name": "in0",
+      "optional": true
+     }
+    ],
+    "out": [
+     {
+      "channels": 1,
+      "name": "out0",
+      "optional": false
+     }
+    ]
+   },
+   "tail_samples": 0
+  },
+  {
+   "arity": null,
+   "category": "utility",
+   "flags": {
+    "block_delay": false,
+    "bypassable": true,
+    "has_lookback": false,
+    "has_tail": false,
+    "in_palette": false,
+    "stateful": true
+   },
+   "id": "nc.tuner",
+   "kind": "primitive",
+   "latency_samples": 0,
+   "name": "Tuner",
+   "params": [
+    {
+     "default": 1.0,
+     "hidden": false,
+     "id": "mute",
+     "kind": "flag",
+     "max": null,
+     "max_inclusive": true,
+     "min": null,
+     "min_inclusive": true,
+     "name": "Mute",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "unit": null
+    }
+   ],
+   "per_port_params": [],
+   "ports": {
+    "in": [
+     {
+      "channels": 1,
+      "name": "in0",
+      "optional": true
+     }
+    ],
+    "out": [
+     {
+      "channels": 1,
+      "name": "out0",
+      "optional": false
+     }
+    ]
+   },
+   "tail_samples": 0
+  },
+  {
+   "bypass": "roles",
+   "category": "eq",
+   "channels": 1,
+   "id": "fx.eq.bands",
+   "inputs": 1,
+   "kind": "macro",
+   "name": "EQ",
+   "outputs": 1,
+   "params": [
+    {
+     "default": 4.0,
+     "hidden": false,
+     "id": "bands",
+     "kind": "number",
+     "max": 4.0,
+     "max_inclusive": true,
+     "min": 1.0,
+     "min_inclusive": true,
+     "name": "Bands",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": false,
+     "required": false,
+     "scale": "linear",
+     "snap": true,
+     "step": 1.0,
+     "targets": [],
+     "unit": null
+    },
+    {
+     "default": 100.0,
+     "hidden": false,
+     "id": "freq1",
+     "kind": "number",
+     "max": 20000.0,
+     "max_inclusive": true,
+     "min": 20.0,
+     "min_inclusive": true,
+     "name": "Low frequency",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "freq",
+       "role": "band1",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "Hz"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "gain1",
+     "kind": "number",
+     "max": 24.0,
+     "max_inclusive": true,
+     "min": -24.0,
+     "min_inclusive": true,
+     "name": "Low gain",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "gain_db",
+       "role": "band1",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "dB"
+    },
+    {
+     "default": 0.707,
+     "hidden": false,
+     "id": "q1",
+     "kind": "number",
+     "max": 10.0,
+     "max_inclusive": true,
+     "min": 0.1,
+     "min_inclusive": true,
+     "name": "Low slope",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "q",
+       "role": "band1",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": null
+    },
+    {
+     "default": 400.0,
+     "hidden": false,
+     "id": "freq2",
+     "kind": "number",
+     "max": 20000.0,
+     "max_inclusive": true,
+     "min": 20.0,
+     "min_inclusive": true,
+     "name": "Low-mid frequency",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "freq",
+       "role": "band2",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "Hz"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "gain2",
+     "kind": "number",
+     "max": 24.0,
+     "max_inclusive": true,
+     "min": -24.0,
+     "min_inclusive": true,
+     "name": "Low-mid gain",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "gain_db",
+       "role": "band2",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "dB"
+    },
+    {
+     "default": 0.707,
+     "hidden": false,
+     "id": "q2",
+     "kind": "number",
+     "max": 10.0,
+     "max_inclusive": true,
+     "min": 0.1,
+     "min_inclusive": true,
+     "name": "Low-mid Q",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "q",
+       "role": "band2",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": null
+    },
+    {
+     "default": 1600.0,
+     "hidden": false,
+     "id": "freq3",
+     "kind": "number",
+     "max": 20000.0,
+     "max_inclusive": true,
+     "min": 20.0,
+     "min_inclusive": true,
+     "name": "High-mid frequency",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "freq",
+       "role": "band3",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "Hz"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "gain3",
+     "kind": "number",
+     "max": 24.0,
+     "max_inclusive": true,
+     "min": -24.0,
+     "min_inclusive": true,
+     "name": "High-mid gain",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "gain_db",
+       "role": "band3",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "dB"
+    },
+    {
+     "default": 0.707,
+     "hidden": false,
+     "id": "q3",
+     "kind": "number",
+     "max": 10.0,
+     "max_inclusive": true,
+     "min": 0.1,
+     "min_inclusive": true,
+     "name": "High-mid Q",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "q",
+       "role": "band3",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": null
+    },
+    {
+     "default": 6400.0,
+     "hidden": false,
+     "id": "freq4",
+     "kind": "number",
+     "max": 20000.0,
+     "max_inclusive": true,
+     "min": 20.0,
+     "min_inclusive": true,
+     "name": "High frequency",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "freq",
+       "role": "band4",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "Hz"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "gain4",
+     "kind": "number",
+     "max": 24.0,
+     "max_inclusive": true,
+     "min": -24.0,
+     "min_inclusive": true,
+     "name": "High gain",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "gain_db",
+       "role": "band4",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "dB"
+    },
+    {
+     "default": 0.707,
+     "hidden": false,
+     "id": "q4",
+     "kind": "number",
+     "max": 10.0,
+     "max_inclusive": true,
+     "min": 0.1,
+     "min_inclusive": true,
+     "name": "High slope",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "q",
+       "role": "band4",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": null
+    }
+   ],
+   "roles": [
+    {
+     "role": "band1",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "band2",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "band3",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "band4",
+     "type": "nc.eq.biquad"
+    }
+   ],
+   "stereo": false
+  },
+  {
+   "bypass": "roles",
+   "category": "eq",
+   "channels": 1,
+   "id": "fx.eq.tilt",
+   "inputs": 1,
+   "kind": "macro",
+   "name": "Tilt EQ",
+   "outputs": 1,
+   "params": [
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "tilt",
+     "kind": "number",
+     "max": 12.0,
+     "max_inclusive": true,
+     "min": -12.0,
+     "min_inclusive": true,
+     "name": "Tilt",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "gain_db",
+       "role": "low",
+       "scale": -0.5,
+       "transform": "scale_by"
+      },
+      {
+       "param": "gain_db",
+       "role": "high",
+       "scale": 0.5,
+       "transform": "scale_by"
+      }
+     ],
+     "unit": "dB"
+    },
+    {
+     "default": 700.0,
+     "hidden": false,
+     "id": "freq",
+     "kind": "number",
+     "max": 8000.0,
+     "max_inclusive": true,
+     "min": 100.0,
+     "min_inclusive": true,
+     "name": "Centre",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "freq",
+       "role": "low",
+       "scale": 0.0,
+       "transform": "direct"
+      },
+      {
+       "param": "freq",
+       "role": "high",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "Hz"
+    }
+   ],
+   "roles": [
+    {
+     "role": "low",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "high",
+     "type": "nc.eq.biquad"
+    }
+   ],
+   "stereo": false
+  },
+  {
+   "bypass": "roles",
+   "category": "filter",
+   "channels": 1,
+   "id": "fx.filter.cut",
+   "inputs": 1,
+   "kind": "macro",
+   "name": "Cut",
+   "outputs": 1,
+   "params": [
+    {
+     "default": 20.0,
+     "hidden": false,
+     "id": "low_cut",
+     "kind": "number",
+     "max": 2000.0,
+     "max_inclusive": true,
+     "min": 10.0,
+     "min_inclusive": true,
+     "name": "Low cut",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "freq",
+       "role": "low1",
+       "scale": 0.0,
+       "transform": "direct"
+      },
+      {
+       "param": "freq",
+       "role": "low2",
+       "scale": 0.0,
+       "transform": "direct"
+      },
+      {
+       "param": "freq",
+       "role": "low3",
+       "scale": 0.0,
+       "transform": "direct"
+      },
+      {
+       "param": "freq",
+       "role": "low4",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "Hz"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "low_slope",
+     "kind": "option",
+     "max": null,
+     "max_inclusive": true,
+     "min": null,
+     "min_inclusive": true,
+     "name": "Low cut slope",
+     "one_of": null,
+     "one_of_required": false,
+     "options": [
+      {
+       "label": "12 dB/oct",
+       "value": "12"
+      },
+      {
+       "label": "24 dB/oct",
+       "value": "24"
+      },
+      {
+       "label": "36 dB/oct",
+       "value": "36"
+      },
+      {
+       "label": "48 dB/oct",
+       "value": "48"
+      }
+     ],
+     "options_from": null,
+     "patchable": true,
+     "rampable": false,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [],
+     "unit": null
+    },
+    {
+     "default": 20000.0,
+     "hidden": false,
+     "id": "high_cut",
+     "kind": "number",
+     "max": 24000.0,
+     "max_inclusive": true,
+     "min": 1000.0,
+     "min_inclusive": true,
+     "name": "High cut",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "freq",
+       "role": "high1",
+       "scale": 0.0,
+       "transform": "direct"
+      },
+      {
+       "param": "freq",
+       "role": "high2",
+       "scale": 0.0,
+       "transform": "direct"
+      },
+      {
+       "param": "freq",
+       "role": "high3",
+       "scale": 0.0,
+       "transform": "direct"
+      },
+      {
+       "param": "freq",
+       "role": "high4",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "Hz"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "high_slope",
+     "kind": "option",
+     "max": null,
+     "max_inclusive": true,
+     "min": null,
+     "min_inclusive": true,
+     "name": "High cut slope",
+     "one_of": null,
+     "one_of_required": false,
+     "options": [
+      {
+       "label": "12 dB/oct",
+       "value": "12"
+      },
+      {
+       "label": "24 dB/oct",
+       "value": "24"
+      },
+      {
+       "label": "36 dB/oct",
+       "value": "36"
+      },
+      {
+       "label": "48 dB/oct",
+       "value": "48"
+      }
+     ],
+     "options_from": null,
+     "patchable": true,
+     "rampable": false,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [],
+     "unit": null
+    }
+   ],
+   "roles": [
+    {
+     "role": "low1",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "low2",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "low3",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "low4",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "high1",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "high2",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "high3",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "high4",
+     "type": "nc.eq.biquad"
+    }
+   ],
+   "stereo": false
+  },
+  {
+   "bypass": "crossfade",
+   "category": "utility",
+   "channels": 1,
+   "id": "fx.mix.drywet",
+   "inputs": 2,
+   "kind": "macro",
+   "name": "Dry/Wet",
+   "outputs": 1,
+   "params": [
+    {
+     "default": 1.0,
+     "hidden": false,
+     "id": "mix",
+     "kind": "number",
+     "max": 1.0,
+     "max_inclusive": true,
+     "min": 0.0,
+     "min_inclusive": true,
+     "name": "Mix",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "gain",
+       "role": "dry",
+       "scale": 0.0,
+       "transform": "one_minus"
+      },
+      {
+       "param": "gain",
+       "role": "wet",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "%"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "level_db",
+     "kind": "number",
+     "max": 12.0,
+     "max_inclusive": true,
+     "min": -24.0,
+     "min_inclusive": true,
+     "name": "Level",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "gain_db",
+       "role": "level",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "dB"
+    }
+   ],
+   "roles": [
+    {
+     "role": "dry",
+     "type": "nc.gain"
+    },
+    {
+     "role": "wet",
+     "type": "nc.gain"
+    },
+    {
+     "role": "sum",
+     "type": "nc.mix"
+    },
+    {
+     "role": "level",
+     "type": "nc.gain"
+    }
+   ],
+   "stereo": false
+  },
+  {
+   "bypass": "crossfade",
+   "category": "delay",
+   "channels": 1,
+   "id": "fx.delay.feedback",
+   "inputs": 1,
+   "kind": "macro",
+   "name": "Delay",
+   "outputs": 1,
+   "params": [
+    {
+     "default": 300.0,
+     "hidden": false,
+     "id": "time",
+     "kind": "number",
+     "max": 1000.0,
+     "max_inclusive": true,
+     "min": 1.0,
+     "min_inclusive": true,
+     "name": "Time",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "ms",
+       "role": "line",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "ms"
+    },
+    {
+     "default": 0.35,
+     "hidden": false,
+     "id": "feedback",
+     "kind": "number",
+     "max": 0.95,
+     "max_inclusive": true,
+     "min": 0.0,
+     "min_inclusive": true,
+     "name": "Feedback",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "gain",
+       "role": "fb",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": null
+    },
+    {
+     "default": 0.3,
+     "hidden": false,
+     "id": "mix",
+     "kind": "number",
+     "max": 1.0,
+     "max_inclusive": true,
+     "min": 0.0,
+     "min_inclusive": true,
+     "name": "Mix",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "gain",
+       "role": "dry",
+       "scale": 0.0,
+       "transform": "one_minus"
+      },
+      {
+       "param": "gain",
+       "role": "wet",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "%"
+    }
+   ],
+   "roles": [
+    {
+     "role": "dry",
+     "type": "nc.gain"
+    },
+    {
+     "role": "sum",
+     "type": "nc.mix"
+    },
+    {
+     "role": "line",
+     "type": "nc.delay"
+    },
+    {
+     "role": "fb",
+     "type": "nc.gain"
+    },
+    {
+     "role": "tap",
+     "type": "nc.unit_delay"
+    },
+    {
+     "role": "wet",
+     "type": "nc.gain"
+    },
+    {
+     "role": "out",
+     "type": "nc.mix"
+    }
+   ],
+   "stereo": false
+  },
+  {
+   "bypass": "roles",
+   "category": "amp",
+   "channels": 1,
+   "id": "fx.amp.tonestack",
+   "inputs": 1,
+   "kind": "macro",
+   "name": "Tone stack",
+   "outputs": 1,
+   "params": [
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "bass",
+     "kind": "number",
+     "max": 18.0,
+     "max_inclusive": true,
+     "min": -18.0,
+     "min_inclusive": true,
+     "name": "Bass",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "gain_db",
+       "role": "bass",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "dB"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "mid",
+     "kind": "number",
+     "max": 18.0,
+     "max_inclusive": true,
+     "min": -18.0,
+     "min_inclusive": true,
+     "name": "Mid",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "gain_db",
+       "role": "mid",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "dB"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "treble",
+     "kind": "number",
+     "max": 18.0,
+     "max_inclusive": true,
+     "min": -18.0,
+     "min_inclusive": true,
+     "name": "Treble",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "gain_db",
+       "role": "treble",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "dB"
+    },
+    {
+     "default": 500.0,
+     "hidden": false,
+     "id": "mid_freq",
+     "kind": "number",
+     "max": 2000.0,
+     "max_inclusive": true,
+     "min": 200.0,
+     "min_inclusive": true,
+     "name": "Mid frequency",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "freq",
+       "role": "mid",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "Hz"
+    }
+   ],
+   "roles": [
+    {
+     "role": "bass",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "mid",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "treble",
+     "type": "nc.eq.biquad"
+    }
+   ],
+   "stereo": false
+  },
+  {
+   "bypass": "roles",
+   "category": "cab",
+   "channels": 1,
+   "id": "fx.cab.ir",
+   "inputs": 1,
+   "kind": "macro",
+   "name": "Cabinet",
+   "outputs": 1,
+   "params": [
+    {
+     "default": null,
+     "hidden": false,
+     "id": "ir",
+     "kind": "option",
+     "max": null,
+     "max_inclusive": true,
+     "min": null,
+     "min_inclusive": true,
+     "name": "Impulse response",
+     "one_of": null,
+     "one_of_required": false,
+     "options": [],
+     "options_from": "irs",
+     "patchable": true,
+     "rampable": false,
+     "required": true,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "ir",
+       "role": "ir",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": null
+    },
+    {
+     "default": 20.0,
+     "hidden": false,
+     "id": "low_cut",
+     "kind": "number",
+     "max": 2000.0,
+     "max_inclusive": true,
+     "min": 10.0,
+     "min_inclusive": true,
+     "name": "Low cut",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "freq",
+       "role": "low",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "Hz"
+    },
+    {
+     "default": 20000.0,
+     "hidden": false,
+     "id": "high_cut",
+     "kind": "number",
+     "max": 24000.0,
+     "max_inclusive": true,
+     "min": 1000.0,
+     "min_inclusive": true,
+     "name": "High cut",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "log",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "freq",
+       "role": "high",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "Hz"
+    },
+    {
+     "default": 0.0,
+     "hidden": false,
+     "id": "level_db",
+     "kind": "number",
+     "max": 12.0,
+     "max_inclusive": true,
+     "min": -24.0,
+     "min_inclusive": true,
+     "name": "Level",
+     "one_of": null,
+     "one_of_required": false,
+     "options": null,
+     "options_from": null,
+     "patchable": true,
+     "rampable": true,
+     "required": false,
+     "scale": "linear",
+     "snap": false,
+     "step": null,
+     "targets": [
+      {
+       "param": "gain_db",
+       "role": "level",
+       "scale": 0.0,
+       "transform": "direct"
+      }
+     ],
+     "unit": "dB"
+    }
+   ],
+   "roles": [
+    {
+     "role": "low",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "ir",
+     "type": "nc.cab.ir"
+    },
+    {
+     "role": "high",
+     "type": "nc.eq.biquad"
+    },
+    {
+     "role": "level",
+     "type": "nc.gain"
+    }
+   ],
+   "stereo": false
+  }
+ ],
+ "ok": true,
+ "protocol": 2,
+ "stereo": false
+}

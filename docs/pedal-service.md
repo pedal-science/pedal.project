@@ -191,18 +191,15 @@ also corrects `POST /event`, which used to call the engine from the HTTP thread.
     └── midi-map.json                # triggers (PC, CC, the footswitches) → actions
 ```
 
-- **Writers.** The service owns every write under `/var/lib/pedal` after this design, with one
-  exception for now: `scripts/sync-library` mirrors the operator's Mac library into `models/`
-  and `irs/` (Phase 1: it is how the library gets there with no app). It mirrors with
-  `rsync --delete --delete-excluded`, so it removes whatever the Mac doesn't have, an upload
-  included. Until uploads exist (v3) it is the only writer of `models/` and `irs/`. With v3 it
-  sends what changed through the upload API instead, and the service is the one writer (R10).
-  The operator may drop files in by hand. Nothing watches the directories and nothing scans on a
-  timer (the engine's rule): a file appears via `POST /library/refresh` or a reboot.
-- **Uploads stage, then rename.** The bytes go to `.<name>.part` in the destination directory,
-  are fsynced, and are renamed into place. The engine's scan skips dot-names, so a half-written
-  file is invisible to `engine.assets` even before the rename, and the rename is atomic on one
-  filesystem. After any rename: `engine.assets {"refresh": true}`.
+- **Writers.** The service owns every write under `/var/lib/pedal` (D17, O3): `pedald seed`, which
+  is root, gives it `models/`, `irs/` and `cache/`. The operator may drop files in by hand. Nothing
+  watches the directories and nothing scans on a timer (the engine's rule): a file appears via
+  `POST /library/refresh` or a reboot. A rescan by anyone is followed, because `engine.status` carries
+  the scan's number.
+- **Uploads stage, then link.** The bytes go to `.upload-<random>.part` at the top of the root, are
+  fsynced, and are linked into place. The engine's scan skips dot-names, so a half-written file is
+  invisible, and a link fails if the name is taken, so it can't replace anything. Folders are made
+  only then, so a refused upload leaves none. A restart removes staged files a power cut left.
 - **Writes are atomic in the `pedal-resume` way** — temp, fsync, rename, fsync the directory —
   for the library and for `state/`. A power cut costs the upload or the last few seconds of
   edits, never a good file.
@@ -210,9 +207,9 @@ also corrects `POST /event`, which used to call the engine from the HTTP thread.
   are configuration installed by `devices/`, and Phase 4's overlayroot is the reason.
 - `devices/<host>/backup` takes `/var/lib/pedal` less `library/models` and `library/irs`, so
   `state/` is covered as soon as it exists and **`library/rigs/` is covered too** (2026-10-05):
-  `last.json`, `last.prev.json` and every stored rig have no other copy — `sync-library` carries
-  models and IRs, not rigs — and it is small (12 KB for the two resume files, against 15 MB of
-  models and 142 MB of IRs, which stay the Mac's, R13). `var/lib/pedal/soak` is excluded with
+  `last.json`, `last.prev.json` and every stored rig have no other copy, and it is small (12 KB for
+  the two resume files, against 15 MB of models and 142 MB of IRs, R13). `var/lib/pedal/cache` is left
+  out too, since it can be worked out again. `var/lib/pedal/soak` is excluded with
   them: soak results are evidence and belong in a repo's `bench-results/` (rule 8), not in a
   backup that is committed to git. Before the change the tar was 4.9 MB, of which the soak runs
   were 4.8 MB; it is 250 KB now.
@@ -255,15 +252,17 @@ app" and ljoss's "send to pedal" were waiting for.
 | Method | Path | Body | Answer |
 |---|---|---|---|
 | `GET` | `/status` | — | service version and uptime; engine state, health, generations and the warm set; the link; the bank, the position and the verdicts; library counts |
-| `GET` | `/library/models`, `/library/irs` | — | the engine's `engine.assets` scan, ids and all — there is no second scan |
+| `GET` | `/catalogue` | — | the block templates this engine can play ("The catalogue") |
+| `GET` | `/library/models`, `/library/irs` | — | `{kind, scan, readable, error, hashing, files}`: the engine's `engine.assets` scan, plus each file's `sha256` and `metadata`, without `path` ("Files") |
+| `GET`, `HEAD` | `/library/models/<file>`, `/library/irs/<file>` | — | the file, with its sha256 as the `ETag`; a matching `If-None-Match` is 304 |
 | `GET` | `/library/rigs` | — | `{"rigs": [{name, modified, size}], "running": name or null}`: the library's rigs by name, and the one the engine runs (by its file, or by the document's name after a boot resumed `last.json`) |
 | `GET` | `/library/rigs/<name>` | — | the document |
-| `PUT` | `/library/models/<file>` | the `.nam` bytes | 201 and whether it replaced; a declared rate other than 48000 is refused |
-| `PUT` | `/library/irs/<file>` | the `.wav` or `.nam` bytes | 201; any rate is stored — `nc.cab.ir` resamples 44.1/96 kHz, and the engine refuses at compile time what it cannot use |
+| `PUT` | `/library/models/<file>` | the `.nam` bytes, with `If-None-Match: *` | 201 and `{id, relative, size, sha256, metadata, scan}`; a declared rate other than 48000 is 422 |
+| `PUT` | `/library/irs/<file>` | the `.wav` or `.nam` bytes, with `If-None-Match: *` | the same; any rate is stored — `nc.cab.ir` resamples 44.1/96 kHz, and the engine refuses at compile time what it cannot use |
 | `PUT` | `/library/rigs/<name>` | the document | 201, stored, **not applied**; absolute model/IR paths refused, and a name another rig already has |
 | `DELETE` | `/library/rigs/<name>` | — | 200; the rig leaves `bank.json` too |
 | `POST` | `/library/rigs/<name>/rename` | `{"to": name}` | 200; the file and the document's `name` change together, and `bank.json` follows |
-| `POST` | `/library/refresh` | — | the scan (the service does it after every upload anyway) |
+| `POST` | `/library/refresh` | — | `{scan, files_parsed, models, irs}` (the service does it after every upload anyway) |
 
 - **A path names a file, and the id follows from it** (`assets.md`: the path under the root, less
   the extension). `PUT /library/irs/v30/57-cap.wav` stores the IR whose id is `v30/57-cap`.
@@ -282,13 +281,16 @@ app" and ljoss's "send to pedal" were waiting for.
   routes write files on the server's threads and queue the change; the loop then rewrites
   `bank.json` for a rename or a delete, rebuilds the bank keeping its rig, and drops the changed
   rig's cost verdict. The MIDI map's names are not rewritten: it has no endpoint yet.
-- **Overwrite is the default**, and the answer says whether it replaced: a "send to pedal"
-  repeated after an edit should not need a delete first. Deletion is deliberately absent for now
-  — a model the library lists may be named by rigs, and removing it is a library-management job
-  with a UI that shows what would break. Over ssh is the escape hatch.
+- **A file is never replaced, and is never deleted** (D17): nothing here offers either. An upload
+  that doesn't say `If-None-Match: *` is 428, an existing path is 412, a second file for an id or a name
+  differing only in case is 409, and so is a path being uploaded right now. Over ssh is the escape hatch.
 - **Caps** (configurable): a model 16 MiB, an IR 64 MiB, a rig 1 MiB (the engine's own TCP
-  request cap). The cap is checked from `Content-Length` before the body is read. Free space is
-  checked with `statvfs` and a full card is answered 507 rather than half-written.
+  request cap). The cap is checked from `Content-Length` before the body is read (413), and so is
+  free space with `statvfs`: a card that would keep less than 64 MiB, counting what other uploads have
+  promised, is 507, so an upload can't stop the rig being saved. `Expect: 100-continue` is answered
+  only when reading starts, so a refusal costs the client no upload.
+- **A rescan follows each upload**, and `scan` in the reply is its number. With the engine down the file
+  is still stored, `scan` is null, and the next scan finds it.
 - **A model's rate is the one thing the service refuses on.** The engine cannot resample NAM
   models (debt register), so a model that declares a rate other than 48 kHz is refused, quoting
   the rate it declares; one that declares none is stored, and the engine's load is the final
@@ -308,6 +310,63 @@ app" and ljoss's "send to pedal" were waiting for.
 - **Banks and the map have no endpoint yet.** Until v3 adds `GET` and `PUT` for `/bank` and
   `/midi-map`, `bank.json` and `midi-map.json` are written by hand. With no `bank.json`, the bank
   is the library's rigs by name, eight to a bank, so v1 works with nothing configured (R15).
+
+## Files (D17, O3)
+
+The engine's scan is the library's list, and pedald keeps the latest one. It takes a new one when
+`engine.status`'s `assets.scan` moves, whoever moved it, so a listing never asks the engine anything.
+
+- **The hash and the metadata** are worked out on one thread, `pedald-hash`, and kept in
+  `cache/hashes.json`, keyed by path, size and mtime. A second listing and a restart hash nothing. A file
+  not hashed yet is `sha256: null`, `hashing` says how many, and a `library` event says when they are done.
+- **`metadata` is the `.nam`'s own**, found without parsing the weights: the last `"metadata"` key, since a
+  slimmable model repeats it for each model it holds, and the file's own follows them. Over 4 KiB it is null.
+- **A download hashes the file if the thread hasn't**, and takes the size and the mtime from the disk.
+  A symlink that leaves the root is 404.
+- **Events.** `library` carries `{library: "models"|"irs", change: "added", id, relative, sha256}`, then
+  `{library: "files", change: "scan", scan, models, irs}`, and `{library: "files", change: "hashed", files}`.
+- **After `scripts/sync-library`.** It is gone. The Mac's library reaches a pedal through these routes:
+  ljoss's "Compare files…" once O8 lands, and `curl -T` until then. A host with no pedald (pro, zap) is
+  copied to by hand with `rsync`.
+
+## The catalogue (D17, O3)
+
+`GET /catalogue` answers `{format, checked, templates, refused}`. A template is one of ljoss's 27 playable
+blocks, from `pedald/templates.json`. **That file is their one home**, written by ljoss's
+`Tools/export-templates`, and is checked against `engine.schema` when an engine connects: a block whose
+type, parameter, option or range this engine lacks moves to `refused` with its reason. `checked` is false
+until an engine has been asked.
+
+```json
+{ "id": "eq.lowcut", "name": "Low Cut", "subtitle": "Clean up the mud", "category": "eq",
+  "sources": ["bass", "guitar", "vocal"], "symbol": "line.3.horizontal.decrease",
+  "nodes": [ { "slot": "cut", "type": "fx.filter.cut", "fixed": {}, "assets": {} } ],
+  "controls": [ { "id": "freq", "name": "Frequency", "kind": "continuous", "min": 20, "max": 500,
+                  "default": 80, "unit": "Hz", "slot": "cut", "param": "low_cut",
+                  "transform": { "kind": "direct" }, "engine_range": [10, 2000] } ] }
+```
+
+- **`nodes`** are in signal order, the first's input the block's and the last's output the block's.
+  `assets` names each parameter that needs a file, and which kind (`model` or `ir`): a block is not added
+  until it has one, so the pedal never holds a half-made block.
+- **`controls`** leave out interface-only knobs, so nothing here does nothing. A control's `kind` is
+  `continuous`, `stepped` (with `step`) or `options` (with `options`). A range is cut to `engine_range`
+  when the knob's number is the engine's, and an option the engine lacks isn't offered.
+- **`transform`** is one of `direct`, `knob_decibels` (`span`), `knob_fraction` (`top`), `knob_attenuation`
+  (`floor`), `multiplied` (`by`) and `option` (`map`). Each inverts (`catalogue.to_engine`, `from_engine`),
+  so a knob's position comes from the engine's value and nothing extra is stored.
+
+**`meta`: what the apps write in the engine's document, and the engine keeps without reading.**
+
+| Where | `meta` | Means |
+|---|---|---|
+| A template's node | `{"template": "eq.lowcut", "slot": "cut"}` | which block it came from |
+| A lane's gain node | `{"kind": "lane_gain"}` | the level of a split's lane, not a block |
+| A chain | `{"source": "guitar"}` | the chain's instrument |
+| The document | `{"layout": …}` | how an editor draws it |
+| The tuner's node | `{"ephemeral": "tuner"}` | a view, and never part of a saved rig |
+
+Ids stay as both apps write them today: an element's is the block's id, and a node's is `<element>-<slot>`.
 
 ## The event vocabulary, and the mapping tables
 
@@ -721,8 +780,8 @@ from the app"). Service only — no engine change.
   reading), free space (`statvfs`, 507), a model whose declared rate is not 48 kHz (checked on
   the staged file, after its weights, R9), a second file for an id that already has one, absolute
   paths, `..`, control characters, an over-long id, and a rig name that another rig has.
-- **Then `sync-library` moves onto the API** (R10) and the service becomes the only writer of
-  `models/` and `irs/`.
+- **The service becomes the only writer of `models/` and `irs/`** (R10, done in O3: `sync-library` is
+  gone).
 - **Acceptance**: upload one of each kind over the LAN from the Mac, watch the engine's scan pick
   it up, and play a rig that names the new id; then the refusals above.
 - ljoss's "send to pedal" is the client of this, and lands in ljoss after it.
@@ -742,8 +801,8 @@ build from before the `termios`/`hmac` change.
 
 ## Threads: what owns one, and how to prove they come back
 
-**Who has threads.** The HTTP server, and nothing else: one accept thread plus one per
-connection, all daemons. The link, the engine client, resume and the mapping are single-threaded
+**Who has threads.** The HTTP server (one accept thread plus one per connection) and `pedald-hash`
+(one, from O3, which only reads files and writes the cache), all daemons. The link, the engine client, resume and the mapping are single-threaded
 and run on the main loop. That is also why there are no locks: the HTTP thread reads cached or
 immutable state only (`self.status`, `link.open`, `session.session_up`, the counters) and never
 calls the engine itself. **A route that needs the engine** hands the call to the main loop with

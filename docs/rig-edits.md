@@ -34,7 +34,7 @@ the device while you edited "Ambient Wash" and "Crunch Lead" (22:17–22:37, pol
 This section first said ljoss couldn't connect to piv, and that was wrong. Over TCP, which ljoss
 uses, both replies were under the old 1 MiB limit. With 1,538 IRs, `engine.assets` is 1,016,823
 bytes, 97% of it, and `engine.schema` is 808,492. Only the Unix socket failed, which is how
-namchainctl and `sync-library` reach the daemon.
+namchainctl and pedald reach the daemon.
 
 History and undo, the tree-to-graph conversion and versions wait.
 

@@ -1,0 +1,1856 @@
+{
+  "blocks" : [
+    {
+      "category" : "amp",
+      "controls" : [
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "bass",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Bass",
+          "param" : "bass",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "mid",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Mid",
+          "param" : "mid",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "treble",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Treble",
+          "param" : "treble",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        }
+      ],
+      "id" : "amp.cleanblack",
+      "name" : "Black Panel Clean",
+      "nodes" : [
+        {
+          "assets" : {
+            "model" : "model"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "nam",
+          "type" : "nc.nam"
+        },
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "tone",
+          "type" : "fx.amp.tonestack"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar"
+      ],
+      "subtitle" : "Scooped American clean",
+      "symbol" : "amplifier"
+    },
+    {
+      "category" : "amp",
+      "controls" : [
+
+      ],
+      "id" : "amp.tweed",
+      "name" : "Tweed Combo",
+      "nodes" : [
+        {
+          "assets" : {
+            "model" : "model"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "nam",
+          "type" : "nc.nam"
+        },
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "tone",
+          "type" : "fx.amp.tonestack"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar"
+      ],
+      "subtitle" : "Woody breakup, early drive",
+      "symbol" : "amplifier"
+    },
+    {
+      "category" : "amp",
+      "controls" : [
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "bass",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Bass",
+          "param" : "bass",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 6,
+          "engine_range" : null,
+          "id" : "mid",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Mid",
+          "param" : "mid",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 6,
+          "engine_range" : null,
+          "id" : "treble",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Treble",
+          "param" : "treble",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        }
+      ],
+      "id" : "amp.britplexi",
+      "name" : "Brit Plexi",
+      "nodes" : [
+        {
+          "assets" : {
+            "model" : "model"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "nam",
+          "type" : "nc.nam"
+        },
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "tone",
+          "type" : "fx.amp.tonestack"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar"
+      ],
+      "subtitle" : "Cranked British rock",
+      "symbol" : "amplifier"
+    },
+    {
+      "category" : "amp",
+      "controls" : [
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "bass",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Bass",
+          "param" : "bass",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "mid",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Mid",
+          "param" : "mid",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 6,
+          "engine_range" : null,
+          "id" : "treble",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Treble",
+          "param" : "treble",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        }
+      ],
+      "id" : "amp.brit800",
+      "name" : "Brit 800",
+      "nodes" : [
+        {
+          "assets" : {
+            "model" : "model"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "nam",
+          "type" : "nc.nam"
+        },
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "tone",
+          "type" : "fx.amp.tonestack"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar"
+      ],
+      "subtitle" : "Hot-rodded 80s lead",
+      "symbol" : "amplifier"
+    },
+    {
+      "category" : "amp",
+      "controls" : [
+        {
+          "default" : 6,
+          "engine_range" : null,
+          "id" : "bass",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Bass",
+          "param" : "bass",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 4,
+          "engine_range" : null,
+          "id" : "mid",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Mid",
+          "param" : "mid",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 6,
+          "engine_range" : null,
+          "id" : "treble",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Treble",
+          "param" : "treble",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        }
+      ],
+      "id" : "amp.rectified",
+      "name" : "Recto Modern",
+      "nodes" : [
+        {
+          "assets" : {
+            "model" : "model"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "nam",
+          "type" : "nc.nam"
+        },
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "tone",
+          "type" : "fx.amp.tonestack"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar"
+      ],
+      "subtitle" : "High-gain modern rhythm",
+      "symbol" : "amplifier"
+    },
+    {
+      "category" : "amp",
+      "controls" : [
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "bass",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Bass",
+          "param" : "bass",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 7,
+          "engine_range" : null,
+          "id" : "treble",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Treble",
+          "param" : "treble",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        }
+      ],
+      "id" : "amp.chime",
+      "name" : "Chime Top Boost",
+      "nodes" : [
+        {
+          "assets" : {
+            "model" : "model"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "nam",
+          "type" : "nc.nam"
+        },
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "tone",
+          "type" : "fx.amp.tonestack"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar"
+      ],
+      "subtitle" : "British jangle",
+      "symbol" : "amplifier"
+    },
+    {
+      "category" : "amp",
+      "controls" : [
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "bass",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Bass",
+          "param" : "bass",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "mid",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Mid",
+          "param" : "mid",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "treble",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Treble",
+          "param" : "treble",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        }
+      ],
+      "id" : "amp.hiwattage",
+      "name" : "Hi Wattage",
+      "nodes" : [
+        {
+          "assets" : {
+            "model" : "model"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "nam",
+          "type" : "nc.nam"
+        },
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "tone",
+          "type" : "fx.amp.tonestack"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar"
+      ],
+      "subtitle" : "Clean headroom, stiff",
+      "symbol" : "amplifier"
+    },
+    {
+      "category" : "amp",
+      "controls" : [
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "bass",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Bass",
+          "param" : "bass",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 7,
+          "engine_range" : null,
+          "id" : "mid",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Mid",
+          "param" : "mid",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 6,
+          "engine_range" : null,
+          "id" : "treble",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Treble",
+          "param" : "treble",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        }
+      ],
+      "id" : "amp.leadchannel",
+      "name" : "Solo Lead",
+      "nodes" : [
+        {
+          "assets" : {
+            "model" : "model"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "nam",
+          "type" : "nc.nam"
+        },
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "tone",
+          "type" : "fx.amp.tonestack"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar"
+      ],
+      "subtitle" : "Singing sustain lead",
+      "symbol" : "amplifier"
+    },
+    {
+      "category" : "amp",
+      "controls" : [
+        {
+          "default" : 6,
+          "engine_range" : null,
+          "id" : "bass",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Bass",
+          "param" : "bass",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "mid",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Mid",
+          "param" : "mid",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "treble",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Treble",
+          "param" : "treble",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        }
+      ],
+      "id" : "amp.bassflip",
+      "name" : "Flip-Top Bass",
+      "nodes" : [
+        {
+          "assets" : {
+            "model" : "model"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "nam",
+          "type" : "nc.nam"
+        },
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "tone",
+          "type" : "fx.amp.tonestack"
+        }
+      ],
+      "sources" : [
+        "bass"
+      ],
+      "subtitle" : "Vintage valve bass amp",
+      "symbol" : "amplifier"
+    },
+    {
+      "category" : "amp",
+      "controls" : [
+        {
+          "default" : 6,
+          "engine_range" : null,
+          "id" : "bass",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Bass",
+          "param" : "bass",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "lowmid",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Low Mid",
+          "param" : "mid",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 6,
+          "engine_range" : null,
+          "id" : "treble",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Treble",
+          "param" : "treble",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        }
+      ],
+      "id" : "amp.bassrock",
+      "name" : "Rock Bass Stack",
+      "nodes" : [
+        {
+          "assets" : {
+            "model" : "model"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "nam",
+          "type" : "nc.nam"
+        },
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "tone",
+          "type" : "fx.amp.tonestack"
+        }
+      ],
+      "sources" : [
+        "bass"
+      ],
+      "subtitle" : "Aggressive modern bass",
+      "symbol" : "amplifier"
+    },
+    {
+      "category" : "amp",
+      "controls" : [
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "bass",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Bass",
+          "param" : "bass",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "mid",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Mid",
+          "param" : "mid",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        },
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "treble",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Treble",
+          "param" : "treble",
+          "slot" : "tone",
+          "transform" : {
+            "kind" : "knob_decibels",
+            "span" : 12
+          },
+          "unit" : null
+        }
+      ],
+      "id" : "amp.acoustic",
+      "name" : "Acoustic DI Amp",
+      "nodes" : [
+        {
+          "assets" : {
+            "model" : "model"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "nam",
+          "type" : "nc.nam"
+        },
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "tone",
+          "type" : "fx.amp.tonestack"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar"
+      ],
+      "subtitle" : "Transparent acoustic voice",
+      "symbol" : "amplifier"
+    },
+    {
+      "category" : "cab",
+      "controls" : [
+        {
+          "default" : 0,
+          "engine_range" : [
+            -24,
+            12
+          ],
+          "id" : "level",
+          "kind" : "continuous",
+          "max" : 12,
+          "min" : -24,
+          "name" : "Level",
+          "param" : "level_db",
+          "slot" : "cab",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "dB"
+        }
+      ],
+      "id" : "cab.412brit",
+      "name" : "4x12 British",
+      "nodes" : [
+        {
+          "assets" : {
+            "ir" : "ir"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "cab",
+          "type" : "fx.cab.ir"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar"
+      ],
+      "subtitle" : "Classic greenback stack",
+      "symbol" : "hifispeaker.2"
+    },
+    {
+      "category" : "cab",
+      "controls" : [
+        {
+          "default" : 0,
+          "engine_range" : [
+            -24,
+            12
+          ],
+          "id" : "level",
+          "kind" : "continuous",
+          "max" : 12,
+          "min" : -24,
+          "name" : "Level",
+          "param" : "level_db",
+          "slot" : "cab",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "dB"
+        }
+      ],
+      "id" : "cab.212chime",
+      "name" : "2x12 Chime",
+      "nodes" : [
+        {
+          "assets" : {
+            "ir" : "ir"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "cab",
+          "type" : "fx.cab.ir"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar"
+      ],
+      "subtitle" : "Alnico jangle pair",
+      "symbol" : "hifispeaker.2"
+    },
+    {
+      "category" : "cab",
+      "controls" : [
+        {
+          "default" : 0,
+          "engine_range" : [
+            -24,
+            12
+          ],
+          "id" : "level",
+          "kind" : "continuous",
+          "max" : 12,
+          "min" : -24,
+          "name" : "Level",
+          "param" : "level_db",
+          "slot" : "cab",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "dB"
+        }
+      ],
+      "id" : "cab.112open",
+      "name" : "1x12 Open Back",
+      "nodes" : [
+        {
+          "assets" : {
+            "ir" : "ir"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "cab",
+          "type" : "fx.cab.ir"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar"
+      ],
+      "subtitle" : "Airy American combo",
+      "symbol" : "hifispeaker.2"
+    },
+    {
+      "category" : "cab",
+      "controls" : [
+        {
+          "default" : 0,
+          "engine_range" : [
+            -24,
+            12
+          ],
+          "id" : "level",
+          "kind" : "continuous",
+          "max" : 12,
+          "min" : -24,
+          "name" : "Level",
+          "param" : "level_db",
+          "slot" : "cab",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "dB"
+        }
+      ],
+      "id" : "cab.810bass",
+      "name" : "8x10 Bass Fridge",
+      "nodes" : [
+        {
+          "assets" : {
+            "ir" : "ir"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "cab",
+          "type" : "fx.cab.ir"
+        }
+      ],
+      "sources" : [
+        "bass"
+      ],
+      "subtitle" : "Full-range bass wall",
+      "symbol" : "hifispeaker.2"
+    },
+    {
+      "category" : "cab",
+      "controls" : [
+        {
+          "default" : 80,
+          "engine_range" : [
+            10,
+            2000
+          ],
+          "id" : "lowcut",
+          "kind" : "continuous",
+          "max" : 400,
+          "min" : 20,
+          "name" : "Low Cut",
+          "param" : "low_cut",
+          "slot" : "cab",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "Hz"
+        },
+        {
+          "default" : 8000,
+          "engine_range" : [
+            1000,
+            24000
+          ],
+          "id" : "highcut",
+          "kind" : "continuous",
+          "max" : 20000,
+          "min" : 2000,
+          "name" : "High Cut",
+          "param" : "high_cut",
+          "slot" : "cab",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "Hz"
+        },
+        {
+          "default" : 0,
+          "engine_range" : [
+            -24,
+            12
+          ],
+          "id" : "level",
+          "kind" : "continuous",
+          "max" : 12,
+          "min" : -24,
+          "name" : "Level",
+          "param" : "level_db",
+          "slot" : "cab",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "dB"
+        }
+      ],
+      "id" : "cab.ir",
+      "name" : "IR Loader",
+      "nodes" : [
+        {
+          "assets" : {
+            "ir" : "ir"
+          },
+          "fixed" : {
+
+          },
+          "slot" : "cab",
+          "type" : "fx.cab.ir"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar",
+        "vocal"
+      ],
+      "subtitle" : "User impulse response",
+      "symbol" : "waveform.path"
+    },
+    {
+      "category" : "eq",
+      "controls" : [
+        {
+          "default" : 120,
+          "engine_range" : null,
+          "id" : "lowfreq",
+          "kind" : "continuous",
+          "max" : 500,
+          "min" : 20,
+          "name" : "Low Freq",
+          "param" : "freq1",
+          "slot" : "eq",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "Hz"
+        },
+        {
+          "default" : 0,
+          "engine_range" : null,
+          "id" : "lowgain",
+          "kind" : "continuous",
+          "max" : 15,
+          "min" : -15,
+          "name" : "Low Gain",
+          "param" : "gain1",
+          "slot" : "eq",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "dB"
+        },
+        {
+          "default" : 800,
+          "engine_range" : null,
+          "id" : "midfreq",
+          "kind" : "continuous",
+          "max" : 5000,
+          "min" : 200,
+          "name" : "Mid Freq",
+          "param" : "freq2",
+          "slot" : "eq",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "Hz"
+        },
+        {
+          "default" : 0,
+          "engine_range" : null,
+          "id" : "midgain",
+          "kind" : "continuous",
+          "max" : 15,
+          "min" : -15,
+          "name" : "Mid Gain",
+          "param" : "gain2",
+          "slot" : "eq",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "dB"
+        },
+        {
+          "default" : 1,
+          "engine_range" : null,
+          "id" : "midq",
+          "kind" : "continuous",
+          "max" : 8,
+          "min" : 0.20000000000000001,
+          "name" : "Mid Q",
+          "param" : "q2",
+          "slot" : "eq",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : null
+        },
+        {
+          "default" : 0,
+          "engine_range" : null,
+          "id" : "highgain",
+          "kind" : "continuous",
+          "max" : 15,
+          "min" : -15,
+          "name" : "High Gain",
+          "param" : "gain4",
+          "slot" : "eq",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "dB"
+        }
+      ],
+      "id" : "eq.parametric",
+      "name" : "Parametric EQ",
+      "nodes" : [
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+            "bands" : 4
+          },
+          "slot" : "eq",
+          "type" : "fx.eq.bands"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar",
+        "vocal"
+      ],
+      "subtitle" : "Three surgical bands",
+      "symbol" : "slider.vertical.3"
+    },
+    {
+      "category" : "eq",
+      "controls" : [
+        {
+          "default" : 0,
+          "engine_range" : [
+            -12,
+            12
+          ],
+          "id" : "tilt",
+          "kind" : "continuous",
+          "max" : 6,
+          "min" : -6,
+          "name" : "Tilt",
+          "param" : "tilt",
+          "slot" : "eq",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "dB"
+        },
+        {
+          "default" : 900,
+          "engine_range" : [
+            100,
+            8000
+          ],
+          "id" : "pivot",
+          "kind" : "continuous",
+          "max" : 4000,
+          "min" : 200,
+          "name" : "Pivot",
+          "param" : "freq",
+          "slot" : "eq",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "Hz"
+        }
+      ],
+      "id" : "eq.tilt",
+      "name" : "Tilt EQ",
+      "nodes" : [
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "eq",
+          "type" : "fx.eq.tilt"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar",
+        "vocal"
+      ],
+      "subtitle" : "One knob, dark to bright",
+      "symbol" : "slider.horizontal.3"
+    },
+    {
+      "category" : "eq",
+      "controls" : [
+        {
+          "default" : 80,
+          "engine_range" : [
+            10,
+            2000
+          ],
+          "id" : "freq",
+          "kind" : "continuous",
+          "max" : 500,
+          "min" : 20,
+          "name" : "Frequency",
+          "param" : "low_cut",
+          "slot" : "cut",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "Hz"
+        },
+        {
+          "default" : "12 dB",
+          "engine_range" : null,
+          "id" : "slope",
+          "kind" : "options",
+          "name" : "Slope",
+          "options" : [
+            "12 dB",
+            "24 dB"
+          ],
+          "param" : "low_slope",
+          "slot" : "cut",
+          "transform" : {
+            "kind" : "option",
+            "map" : {
+              "12 dB" : "12",
+              "24 dB" : "24"
+            }
+          },
+          "unit" : null
+        }
+      ],
+      "id" : "eq.lowcut",
+      "name" : "Low Cut",
+      "nodes" : [
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "cut",
+          "type" : "fx.filter.cut"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar",
+        "vocal"
+      ],
+      "subtitle" : "Clean up the mud",
+      "symbol" : "line.3.horizontal.decrease"
+    },
+    {
+      "category" : "eq",
+      "controls" : [
+        {
+          "default" : 8000,
+          "engine_range" : [
+            1000,
+            24000
+          ],
+          "id" : "freq",
+          "kind" : "continuous",
+          "max" : 20000,
+          "min" : 1000,
+          "name" : "Frequency",
+          "param" : "high_cut",
+          "slot" : "cut",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "Hz"
+        },
+        {
+          "default" : "12 dB",
+          "engine_range" : null,
+          "id" : "slope",
+          "kind" : "options",
+          "name" : "Slope",
+          "options" : [
+            "12 dB",
+            "24 dB"
+          ],
+          "param" : "high_slope",
+          "slot" : "cut",
+          "transform" : {
+            "kind" : "option",
+            "map" : {
+              "12 dB" : "12",
+              "24 dB" : "24"
+            }
+          },
+          "unit" : null
+        }
+      ],
+      "id" : "eq.highcut",
+      "name" : "High Cut",
+      "nodes" : [
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "cut",
+          "type" : "fx.filter.cut"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar",
+        "vocal"
+      ],
+      "subtitle" : "Tame the fizz",
+      "symbol" : "line.3.horizontal.decrease"
+    },
+    {
+      "category" : "eq",
+      "controls" : [
+        {
+          "default" : 10000,
+          "engine_range" : null,
+          "id" : "freq",
+          "kind" : "continuous",
+          "max" : 16000,
+          "min" : 4000,
+          "name" : "Frequency",
+          "param" : "freq4",
+          "slot" : "eq",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "Hz"
+        },
+        {
+          "default" : 3,
+          "engine_range" : null,
+          "id" : "gain",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Gain",
+          "param" : "gain4",
+          "slot" : "eq",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "dB"
+        }
+      ],
+      "id" : "eq.vocalair",
+      "name" : "Vocal Air",
+      "nodes" : [
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+            "bands" : 4
+          },
+          "slot" : "eq",
+          "type" : "fx.eq.bands"
+        }
+      ],
+      "sources" : [
+        "vocal"
+      ],
+      "subtitle" : "High shelf sheen",
+      "symbol" : "sparkles"
+    },
+    {
+      "category" : "delay",
+      "controls" : [
+        {
+          "default" : 380,
+          "engine_range" : [
+            1,
+            1000
+          ],
+          "id" : "time",
+          "kind" : "continuous",
+          "max" : 1000,
+          "min" : 10,
+          "name" : "Time",
+          "param" : "time",
+          "slot" : "delay",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "ms"
+        },
+        {
+          "default" : 4,
+          "engine_range" : null,
+          "id" : "feedback",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Feedback",
+          "param" : "feedback",
+          "slot" : "delay",
+          "transform" : {
+            "kind" : "knob_fraction",
+            "top" : 0.94999999999999996
+          },
+          "unit" : null
+        },
+        {
+          "default" : 35,
+          "engine_range" : null,
+          "id" : "mix",
+          "kind" : "continuous",
+          "max" : 100,
+          "min" : 0,
+          "name" : "Mix",
+          "param" : "mix",
+          "slot" : "delay",
+          "transform" : {
+            "by" : 0.01,
+            "kind" : "multiplied"
+          },
+          "unit" : "%"
+        }
+      ],
+      "id" : "delay.digital",
+      "name" : "Digital Delay",
+      "nodes" : [
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "delay",
+          "type" : "fx.delay.feedback"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar",
+        "vocal"
+      ],
+      "subtitle" : "Clean precise repeats",
+      "symbol" : "timer"
+    },
+    {
+      "category" : "delay",
+      "controls" : [
+        {
+          "default" : 420,
+          "engine_range" : [
+            1,
+            1000
+          ],
+          "id" : "time",
+          "kind" : "continuous",
+          "max" : 1000,
+          "min" : 20,
+          "name" : "Time",
+          "param" : "time",
+          "slot" : "delay",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "ms"
+        },
+        {
+          "default" : 5,
+          "engine_range" : null,
+          "id" : "feedback",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Feedback",
+          "param" : "feedback",
+          "slot" : "delay",
+          "transform" : {
+            "kind" : "knob_fraction",
+            "top" : 0.94999999999999996
+          },
+          "unit" : null
+        },
+        {
+          "default" : 35,
+          "engine_range" : null,
+          "id" : "mix",
+          "kind" : "continuous",
+          "max" : 100,
+          "min" : 0,
+          "name" : "Mix",
+          "param" : "mix",
+          "slot" : "delay",
+          "transform" : {
+            "by" : 0.01,
+            "kind" : "multiplied"
+          },
+          "unit" : "%"
+        }
+      ],
+      "id" : "delay.tape",
+      "name" : "Tape Echo",
+      "nodes" : [
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "delay",
+          "type" : "fx.delay.feedback"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar",
+        "vocal"
+      ],
+      "subtitle" : "Warm wowing repeats",
+      "symbol" : "timer"
+    },
+    {
+      "category" : "delay",
+      "controls" : [
+        {
+          "default" : 320,
+          "engine_range" : [
+            1,
+            1000
+          ],
+          "id" : "time",
+          "kind" : "continuous",
+          "max" : 900,
+          "min" : 20,
+          "name" : "Time",
+          "param" : "time",
+          "slot" : "delay",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "ms"
+        },
+        {
+          "default" : 4,
+          "engine_range" : null,
+          "id" : "feedback",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Feedback",
+          "param" : "feedback",
+          "slot" : "delay",
+          "transform" : {
+            "kind" : "knob_fraction",
+            "top" : 0.94999999999999996
+          },
+          "unit" : null
+        },
+        {
+          "default" : 35,
+          "engine_range" : null,
+          "id" : "mix",
+          "kind" : "continuous",
+          "max" : 100,
+          "min" : 0,
+          "name" : "Mix",
+          "param" : "mix",
+          "slot" : "delay",
+          "transform" : {
+            "by" : 0.01,
+            "kind" : "multiplied"
+          },
+          "unit" : "%"
+        }
+      ],
+      "id" : "delay.analog",
+      "name" : "Analog Delay",
+      "nodes" : [
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "delay",
+          "type" : "fx.delay.feedback"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar",
+        "vocal"
+      ],
+      "subtitle" : "Dark bucket-brigade",
+      "symbol" : "timer"
+    },
+    {
+      "category" : "delay",
+      "controls" : [
+        {
+          "default" : 95,
+          "engine_range" : [
+            1,
+            1000
+          ],
+          "id" : "time",
+          "kind" : "continuous",
+          "max" : 200,
+          "min" : 40,
+          "name" : "Time",
+          "param" : "time",
+          "slot" : "delay",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "ms"
+        },
+        {
+          "default" : 1.5,
+          "engine_range" : null,
+          "id" : "feedback",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Feedback",
+          "param" : "feedback",
+          "slot" : "delay",
+          "transform" : {
+            "kind" : "knob_fraction",
+            "top" : 0.94999999999999996
+          },
+          "unit" : null
+        },
+        {
+          "default" : 35,
+          "engine_range" : null,
+          "id" : "mix",
+          "kind" : "continuous",
+          "max" : 100,
+          "min" : 0,
+          "name" : "Mix",
+          "param" : "mix",
+          "slot" : "delay",
+          "transform" : {
+            "by" : 0.01,
+            "kind" : "multiplied"
+          },
+          "unit" : "%"
+        }
+      ],
+      "id" : "delay.slapback",
+      "name" : "Slapback",
+      "nodes" : [
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "delay",
+          "type" : "fx.delay.feedback"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar",
+        "vocal"
+      ],
+      "subtitle" : "Short rockabilly bounce",
+      "symbol" : "timer"
+    },
+    {
+      "category" : "utility",
+      "controls" : [
+        {
+          "default" : 10,
+          "engine_range" : null,
+          "id" : "position",
+          "kind" : "continuous",
+          "max" : 10,
+          "min" : 0,
+          "name" : "Pedal",
+          "param" : "gain_db",
+          "slot" : "gain",
+          "transform" : {
+            "floor" : -60,
+            "kind" : "knob_attenuation"
+          },
+          "unit" : null
+        }
+      ],
+      "id" : "util.volume",
+      "name" : "Volume Pedal",
+      "nodes" : [
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "gain",
+          "type" : "nc.gain"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar",
+        "vocal"
+      ],
+      "subtitle" : "Expression volume",
+      "symbol" : "dial.high"
+    },
+    {
+      "category" : "utility",
+      "controls" : [
+        {
+          "default" : 0,
+          "engine_range" : [
+            -60,
+            24
+          ],
+          "id" : "gain",
+          "kind" : "continuous",
+          "max" : 24,
+          "min" : -24,
+          "name" : "Gain",
+          "param" : "gain_db",
+          "slot" : "gain",
+          "transform" : {
+            "kind" : "direct"
+          },
+          "unit" : "dB"
+        }
+      ],
+      "id" : "util.gain",
+      "name" : "Gain",
+      "nodes" : [
+        {
+          "assets" : {
+
+          },
+          "fixed" : {
+
+          },
+          "slot" : "gain",
+          "type" : "nc.gain"
+        }
+      ],
+      "sources" : [
+        "bass",
+        "guitar",
+        "vocal"
+      ],
+      "subtitle" : "Trim the level",
+      "symbol" : "dial.medium"
+    }
+  ],
+  "format" : 1
+}

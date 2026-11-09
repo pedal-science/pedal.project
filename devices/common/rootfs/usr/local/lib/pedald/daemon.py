@@ -23,13 +23,15 @@ import time
 
 from . import config as config_mod
 from . import identity as identity_mod
+from . import catalogue as catalogue_mod
+from . import files as files_mod
 from . import library as library_mod
 from . import mapping as mapping_mod
 from . import protocol
 from . import resume as resume_mod
 from . import sse
 from .engine import EngineClient, EngineError
-from .httpd import Server, Stream
+from .httpd import File, Server, Stream
 from .link import Link
 
 VERSION = "pedald 0.1"
@@ -645,6 +647,11 @@ class Service:
         # verdicts, so neither is ever touched from two threads.
         self.library = library_mod.RigLibrary(cfg.rigs_root, cfg.max_rig_bytes, log=log)
         self.library_changes = queue.SimpleQueue()
+        self.files = files_mod.Files({"models": cfg.models_root, "irs": cfg.irs_root},
+                                     {"models": cfg.max_model_bytes, "irs": cfg.max_ir_bytes},
+                                     os.path.join(cfg.cache_root, "hashes.json"), log=log,
+                                     publish=self.publish)
+        self.catalogue = catalogue_mod.Catalogue(log=log)
         self.resume = resume_mod.Resume(self.engine, cfg.rigs_root, state_root=cfg.state_root, log=log)
         self.http = Server(cfg.http_host, cfg.http_port, token,
                            {"/status": self.handle_status,
@@ -659,6 +666,12 @@ class Service:
                             "GET /pedal": self.handle_pedal,
                             "PUT /pedal": self.handle_pedal,
                             "GET /events": self.handle_events,
+                            "GET /catalogue": self.handle_catalogue,
+                            "GET /library/models": self.handle_listing,
+                            "GET /library/irs": self.handle_listing,
+                            "/library/models/*": self.handle_file,
+                            "/library/irs/*": self.handle_file,
+                            "POST /library/refresh": self.handle_refresh,
                             "GET /library/rigs": self.handle_rigs,
                             "/library/rigs/*": self.handle_rig}, log=log,
                            # The transport cap has to be the largest upload the API allows, or
@@ -941,7 +954,9 @@ class Service:
             self.cost.forget()
             self.warm.lost()
             self.log("engine recovered: the bank's verdicts are being asked for again")
+        recovered = self.engine_down
         self.engine_down = False
+        self.follow_scan(recovered)
         name = self.status.get("rig_name") or ""
         if name:
             index = self.mapping.note_rig(name)
@@ -1083,6 +1098,7 @@ class Service:
                      "verdict_max_age_s": COST_POLL_S},
             "bypass": self.bypass,
             "http": self.http.stats(),
+            "library": self.files.counts(),
             "loop_passes": self.loop_passes,
         }
         return 200, body
@@ -1139,6 +1155,91 @@ class Service:
 
     def handle_events(self, request):
         return 200, Stream(sse.stream(self.hub, request.headers.get("last-event-id"), self.hello))
+
+    # ------------------------------------------------------------------ the catalogue and the files
+    def follow_scan(self, recovered=False):
+        """On the loop, after a status: take the engine's scan when it has moved, whoever moved it,
+        and judge the templates when this may be an engine they haven't been judged against. A new
+        process starts its scans from 1, so a number going down says the same as a recovery."""
+        assets = self.status.get("assets") if isinstance(self.status, dict) else None
+        number = assets.get("scan") if isinstance(assets, dict) else None
+        held = self.files.scan_number
+        restarted = recovered or (number is not None and held is not None and number < held)
+        try:
+            if restarted or not self.catalogue.checked:
+                self.catalogue.check(self.engine.call("engine.schema"))
+            if restarted or held is None or (number is not None and number != held):
+                self.take_scan(self.engine.assets())
+        except EngineError as exc:
+            self.log(f"could not read the engine's library: {exc.code}: {exc.message}")
+
+    def take_scan(self, reply):
+        """A scan from the engine. A rescan may change what a rig costs (`RigCost`)."""
+        changed = reply.get("scan") != self.files.scan_number
+        self.files.set_scan(reply)
+        if changed:
+            self.cost.forget()
+            self.publish("library", {"library": "files", "change": "scan", "scan": reply.get("scan"),
+                                     "models": len(reply.get("models") or ()),
+                                     "irs": len(reply.get("irs") or ())})
+        return reply
+
+    def rescan(self):
+        """Have the engine rescan, from an HTTP thread. The engine's scan is the library's list."""
+        return self.on_loop(lambda: self.take_scan(self.engine.assets(refresh=True)))
+
+    def handle_catalogue(self, request):
+        return 200, self.catalogue.answer()
+
+    def handle_refresh(self, request):
+        try:
+            reply = self.rescan()
+        except (EngineError, LoopUnavailable) as exc:
+            return 503, {"error": f"the engine couldn't rescan: {exc}"}
+        return 200, {"scan": reply.get("scan"), "files_parsed": reply.get("files_parsed"),
+                     "models": len(reply.get("models") or ()), "irs": len(reply.get("irs") or ())}
+
+    def handle_listing(self, request):
+        kind = request.path[len("/library/"):]
+        listing = self.files.listing(kind)
+        if listing is None:
+            try:
+                self.on_loop(lambda: self.take_scan(self.engine.assets()))
+            except (EngineError, LoopUnavailable) as exc:
+                return 503, {"error": f"the engine hasn't listed the library: {exc}"}
+            listing = self.files.listing(kind)
+        return 200, listing
+
+    def handle_file(self, request):
+        kind = request.path.split("/")[2]
+        relative = _unquote_path(request.path[len(f"/library/{kind}/"):])
+        try:
+            if request.method in ("GET", "HEAD"):
+                path, sha256 = self.files.locate(kind, relative)
+                tag = f'"{sha256}"'
+                if request.headers.get("if-none-match") == tag:
+                    return 304, None, {"ETag": tag}
+                return 200, File(path, headers={"ETag": tag})
+            if request.method == "PUT":
+                return self.put_file(kind, relative, request)
+            return 405, {"error": f"{request.method} is not something a file allows"}
+        except files_mod.Refusal as exc:
+            return exc.status, {"error": exc.message}
+
+    def put_file(self, kind, relative, request):
+        if request.headers.get("if-none-match") != "*":
+            return 428, {"error": "an upload says If-None-Match: *, because a file is never replaced"}
+        stored = self.files.store(kind, relative, request.stream, request.stream.remaining)
+        self.log(f"library: stored {kind}/{relative} ({stored['size']} bytes)")
+        self.publish("library", {"library": kind, "change": "added", "id": stored["id"],
+                                 "relative": relative, "sha256": stored["sha256"]})
+        try:
+            stored["scan"] = self.rescan().get("scan")
+        except (EngineError, LoopUnavailable) as exc:
+            # The file is stored, and the engine finds it at its next scan.
+            self.log(f"library: no rescan after {relative}: {exc}")
+            stored["scan"] = None
+        return 201, stored
 
     # ------------------------------------------------------------------ the rig library (v3)
     def running_rig(self, status=None):
@@ -1280,6 +1381,7 @@ class Service:
         self.loop_thread = threading.current_thread()
         self.link.open_port()
         self.publish_changes()             # so a client connecting at once has something to hold
+        self.files.start()
         self.http.start()
         self.log(f"{VERSION} up: link {self.cfg.uart_device}, http on "
                  f"{self.cfg.http_host}:{self.cfg.http_port}, pedal {self.identity.id}")
@@ -1306,6 +1408,7 @@ class Service:
         self.refuse_work()
         self.hub.close()
         self.http.stop()
+        self.files.stop()
         self.link.close()
         self.engine.close()
         return 0
@@ -1355,5 +1458,10 @@ def main(argv=None):
         code = resume.seed()
         identity_mod.Identity(cfg.state_root, log)
         resume._own(cfg.state_root)
+        # The service is the only writer of the models and the IRs, and it can't make its cache
+        # itself: /var/lib/pedal is root's.
+        for path in (cfg.models_root, cfg.irs_root, cfg.cache_root):
+            os.makedirs(path, exist_ok=True)
+            resume._own(path)
         return code
     return Service(cfg, log).run()

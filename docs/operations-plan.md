@@ -84,8 +84,8 @@ qualify just by being downloadable: their licences rarely cover redistribution.
 
 - `scripts/measure-core`'s default units, and `devices/common/rootfs/etc/pedal/default-rig.json`, name
   private files today.
-- `scripts/sync-library` copies from the owner's Mac; by default it installs the reference set, and the
-  owner's library becomes an explicit extra.
+- A rebuilt pedal gets its files through pedald's uploads; by default it installs the reference set, and
+  the owner's library becomes an explicit extra.
 - rigpa's `dev/` rigs and scripts, and any test that needs a real file, move to the reference set.
 - **vip's and pro's cost tables are re-measured with the public model.** Their numbers rest on a private
   file today, and the same architecture does not guarantee the same cost: `A2.nam` is 666 kB and the

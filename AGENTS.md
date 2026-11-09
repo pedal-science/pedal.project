@@ -65,9 +65,8 @@ Full hardware context, schematic findings and reasoning: [docs/hardware-handoff.
   commit and run its tests (for vip on the Mac, in the image build's container,
   `devices/common/image/build-namchain`; piv and pro build in a dedicated tree of their own), install
   into `/opt/namchain/<commit>/`, swap `current`, write the manifest, restart `namchaind`.
-- `scripts/sync-library [--host vip] [--dry-run]`: mirror `~/Documents/Audio/NAM` and
-  `IRs` into `/var/lib/pedal/library/{models,irs}` on the Core host, and ask
-  `namchaind` to rescan. Rigs on the host are never touched.
+- `PUT http://<host>:47820/library/{models,irs}/<path>` with `If-None-Match: *`: put a model or an IR on
+  the pedal, which never replaces a file; pedald is the only writer of them (docs/pedal-service.md, "Files").
 - `devices/<host>/{apply,check,backup}` (symlinks into `devices/common/`): the Core
   host's configuration as code. Run `backup` before changing anything. `pedal-device apply <stage> --root
   <dir>` applies the same tree to a root that isn't running (vip's image build);

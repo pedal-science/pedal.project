@@ -30,6 +30,7 @@ DEFAULT_MAX_EVENT_STREAMS = 6
 DEFAULT_LOG_LEVEL = "info"
 DEFAULT_ENGINE_HOST = "127.0.0.1"
 DEFAULT_STATE_ROOT = "/var/lib/pedal/state"
+DEFAULT_CACHE_ROOT = "/var/lib/pedal/cache"
 
 # Every key pedald.json may set, and the type each one has. The engine's keys are deliberately
 # absent: `tcp_port` or `rigs_root` written here is a mistake, not an override (R12).
@@ -46,6 +47,7 @@ _SETTINGS = {
     "log_level": str,
     "engine_host": str,
     "state_root": str,
+    "cache_root": str,
 }
 
 _INT_RANGES = {
@@ -89,6 +91,7 @@ class Config:
         engine_host, engine_port, engine_token_file    namchaind, over TCP loopback
         rigs_root, models_root, irs_root           the library, as namchaind sees it
         state_root                                 bank.json and midi-map.json
+        cache_root                                 what can be worked out again: the files' hashes
     """
 
     def __init__(self):
@@ -109,6 +112,7 @@ class Config:
         self.models_root = ""
         self.irs_root = ""
         self.state_root = DEFAULT_STATE_ROOT
+        self.cache_root = DEFAULT_CACHE_ROOT
 
     @classmethod
     def load(cls, path="/etc/pedal/pedald.json", engine_path="/etc/namchain/namchaind.json"):

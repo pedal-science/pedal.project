@@ -248,7 +248,7 @@ keeping written down because each would have been invisible until it mattered:
 - **The configuration is the Pi's tooling with pro's files.** Since 2026-11-01 `devices/pro/` runs
   the same `apply`, `check`, `backup` and `pedal-device` as vip and piv; what differs is which files
   the tree holds, not which code runs. `scripts/host-lock`, `scripts/deploy-engine`,
-  `scripts/components-lock`, `scripts/sync-library` and `scripts/status` all work with `--host pro`.
+  `scripts/components-lock` and `scripts/status` all work with `--host pro`. pro has no pedald, so its library is copied by hand with `rsync`.
 - **Boot is GRUB's, not the Pi firmware's**, so there are no kernel slots, no `config.txt`, no
   EEPROM and no rescue root — and no `tryboot`, because `grub-reboot` is the same one-shot by another
   name. What pro has instead of vip's `eeprom.lock` is a committed record of the BIOS settings that

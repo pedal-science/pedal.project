@@ -56,7 +56,7 @@ paths=(etc/pedal var/lib/pedal var/lib/namchain/host-slim var/lib/pedal-device
 existing=()
 for p in "${paths[@]}"; do [[ -e $p ]] && existing+=("$p"); done
 # What is data and what is the pedal's own: models and IRs are the Mac's library, mirrored down
-# by sync-library, so they stay out — as does vip's images/ (the pedal root's image on pedal-data,
+# through pedald's uploads, so they stay out — as does vip's images/ (the pedal root's image on pedal-data,
 # for rescue: hundreds of MB, made by the image build). **Rigs are not mirrored from anywhere**:
 # last.json is the resume state and a stored rig exists only here, so they go in (R13,
 # docs/pedal-service.md). Soak results are evidence, and evidence lives in a repo's bench-results/
@@ -67,7 +67,7 @@ for p in "${paths[@]}"; do [[ -e $p ]] && existing+=("$p"); done
 # merged, not configuration.
 sudo -n tar --exclude var/lib/pedal/library/models --exclude var/lib/pedal/library/irs \
   --exclude var/lib/pedal/images --exclude var/lib/pedal/soak \
-  --exclude var/lib/pedal/scratch --exclude var/lib/pedal/cost-fragments \
+  --exclude var/lib/pedal/scratch --exclude var/lib/pedal/cost-fragments --exclude var/lib/pedal/cache \
   --exclude etc/namchain/token \
   --exclude var/lib/pedal/lost+found -cf - "${existing[@]}"
 EOF

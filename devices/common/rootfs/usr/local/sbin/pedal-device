@@ -141,9 +141,8 @@ storage_owner() {
     run install -d -o "$user" -g "$user" "$mount/$d"
   done
   run chown "$user:$user" "$mount" "$mount/library"
-  # Rigs are the service's to write (resume, and the library API), so they belong to it outright.
-  # Models and IRs are the Mac's, mirrored down by scripts/sync-library, which sets their modes.
-  run chown -R "$user:$user" "$mount/library/rigs"
+  # Rigs, models and IRs are the service's to write (resume, and the library API).
+  run chown -R "$user:$user" "$mount/library/rigs" "$mount/library/models" "$mount/library/irs"
   # The owner's login gets realtime scheduling and memlock through group audio
   # (etc/security/limits.d/90-pedal-rt.conf), which is what `sudo pedal-rt ./namchain-soak` needs.
   if [[ -n $login ]] && ! id -nG "$login" 2>/dev/null | tr ' ' '\n' | grep -qx audio; then

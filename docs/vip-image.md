@@ -36,7 +36,7 @@ No step happens by hand on vip, and none happens on piv. vip has no compiler
 | rtpi | Fail *safe*: a failed clear, a hang or a power cut returns to the known-good | Every mechanism below keeps that property |
 | pedal.project | `devices/common` + `devices/piv`: the `namchaind` drop-in, `pedal-tune`, `pedal-resume`, `pedal-wifi`, the cpuset slices, masked units, limits, sysctl, the codec overlay and mixer | Baked into the image, then `devices/vip/apply` works on the live board exactly as it does on piv |
 | namchain | `docs/distro-slimming.md`: the tail on piv is memory traffic on the housekeeping cores, not CPU time. A machine that runs nothing else is the predictability win | A minimal root built from packages, not a stripped desktop image. piv had 2,587 packages; vip has 1 GB |
-| pedal.project | `scripts/deploy-engine`, `sync-library`, `host-lock`, `components-lock`, `status` | Each gets `--host vip`. deploy-engine gains a "built on the Mac" path, since vip can't build |
+| pedal.project | `scripts/deploy-engine`, `host-lock`, `components-lock`, `status` | Each gets `--host vip`. deploy-engine gains a "built on the Mac" path, since vip can't build |
 
 What doesn't carry over: `piboot-try` and flash-kernel. They were built for a machine that
 upgrades itself with apt, and their traps are in rtpi's README (the `rm -rf old new`, the silent
@@ -428,7 +428,7 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
    `systemd-firstboot` (machine-id `uninitialized`); the second needed the library the card
    doesn't carry, so namchain now plays a block whose model or IR is missing as a bypass and
    ljoss marks it (f422dd0, 5da4ea6). A fresh card boots playing the default rig's blocks as
-   bypasses, and `sync-library --host vip` brings the rig in without a restart. `pedal-tune
+   bypasses, and an upload to pedald brings the rig in without a restart. `pedal-tune
    check` learned that the RP1's interrupt chip reports no effective affinity. Left for step 8:
    `components.lock` holds one host, piv, and `devices/vip/apply` overwrites it.
 6. **Rehearse every fallback on vip**, as rtpi did on piv, and record the results in
@@ -463,7 +463,7 @@ Each is committed on its own. rtpi lands before pedal.project where they meet.
    That test found `pedal-guard` counting a restarting namchaind as up; now the engine must stay
    up in one run for 10 s. Not covered: a kernel change (refused: `vip-boot try-kernel`'s job), and
    the rescue root and boot partitions, which only a card write changes.
-8. **The move:** `--host vip` in `status`, `host-lock`, `deploy-engine`, `sync-library` and
+8. **The move:** `--host vip` in `status`, `host-lock`, `deploy-engine` and
    `components-lock`; `AGENTS.md`, `working-across-repos.md` and `plan.md` say vip is the Core
    host and piv goes back to being the build host; the SSL 2+ moves to vip.
 

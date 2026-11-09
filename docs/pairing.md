@@ -253,7 +253,7 @@ cannot be tested from a shell, so it is retired before anything is built on it. 
    sheet looks like when the pedal is not in setup mode; whether the entitlement is granted on the
    owner's team. **If the join cannot be made to work, the design changes here**, to the QR path.
 4. **The bench loop.** The Mac joins the pedal's AP and runs `scripts/status` and
-   `sync-library --host <ap address>`; an upload of a model and an IR is timed.
+   an upload of a model and an IR through pedald is timed.
 
 **1. The pedal's own network** (`devices/`, `pedald`): the `pedal-ap` unit and script, the address
 and DHCP, mDNS, the state file, the station path out of the pedal root, the image's secrets change,

@@ -10,7 +10,7 @@
 # ---------------------------------------------------------------- the engine's own needs
 # alsa-utils is what namchain's tools and every capture use (amixer, arecord, aplay, speaker-test).
 alsa-utils
-# scripts/sync-library mirrors the model and IR library with it.
+# pro has no pedald, so its model and IR library is copied to it by hand with this.
 rsync
 # pedal-wifi speaks nl80211 in python; pedal-device's status reads the cost table with it.
 python3

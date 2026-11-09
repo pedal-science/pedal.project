@@ -40,7 +40,10 @@ None of this has been exercised on a Zero 2 W, so expect to fix something.
    `~/.ssh/config`.
 2. Install `rsync` if it is missing, then copy the library. The whole of it is small (55 MB):
    ```bash
-   scripts/sync-library --host zap
+   rsync -rt ~/Documents/Audio/NAM/ zap:/var/lib/pedal/library/models/
+   ```
+   ```bash
+   rsync -rt ~/Documents/Audio/IRs/ zap:/var/lib/pedal/library/irs/
    ```
 3. Put the clock in a known state for a first look: `performance` governor, then check it stays at
    1 GHz. A heatsink is worth having, and use a supply that can really deliver 5 V under load, because

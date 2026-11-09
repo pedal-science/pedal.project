@@ -56,6 +56,8 @@ def fake_service(status=None, engine_down=False, link_open=True, session_up=True
     themselves default to the two the bank below holds.
     """
     service = object.__new__(daemon.Service)
+    service.files = types.SimpleNamespace(counts=lambda: None)
+    service.follow_scan = lambda *_a: None
     service.cfg = types.SimpleNamespace(uart_device="/dev/ttyAMA0", uart_baud=115200,
                                         http_port=47820)
     service.started = time.monotonic() - 12.5
@@ -334,6 +336,8 @@ def cost_service(rigs, costs=None, error=None, status=None, poll_s=daemon.COST_P
     """
     logs = []
     service = object.__new__(daemon.Service)
+    service.files = types.SimpleNamespace(counts=lambda: None)
+    service.follow_scan = lambda *_a: None
     service.log = logs.append
     service.logs = logs
     service.cfg = types.SimpleNamespace(rigs_root="/rigs", state_root=tempfile.mkdtemp())
