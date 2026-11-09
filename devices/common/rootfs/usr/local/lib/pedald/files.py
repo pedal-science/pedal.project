@@ -29,10 +29,15 @@ MIN_FREE_BYTES = 64 << 20
 FRONT_BYTES = 16 << 10
 TAIL_BYTES = 1 << 10
 CHUNK = 64 << 10
+#: An upload is flushed this often as it arrives. A single fsync of 64 MiB at the end holds up the
+#: filesystem's journal for seconds, and every other fsync on the card waits behind it, the loop's
+#: saving of the rig's position among them: 2.2 s for a press, measured on vip (2026-11-09).
+SYNC_EVERY = 2 << 20
 #: A `.nam`'s metadata is a few hundred bytes. One bigger than this isn't kept in the cache.
 MAX_METADATA_BYTES = 4 << 10
 #: How many files are hashed between saves of the cache, so a power cut loses few.
 SAVE_EVERY = 32
+_fdatasync = getattr(os, "fdatasync", os.fsync)    # the Mac, where the tests run, has no fdatasync
 RATE = re.compile(rb'"sample_rate"\s*:\s*([0-9][0-9.eE+-]*)')
 STAGED_PREFIX = ".upload-"
 STAGED_SUFFIX = ".part"
@@ -437,6 +442,7 @@ class Files:
         fd = os.open(staged, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
         with os.fdopen(fd, "wb", buffering=0) as handle:
             try:
+                unsynced = 0
                 while True:
                     chunk = stream.read(CHUNK)
                     if not chunk:
@@ -445,6 +451,10 @@ class Files:
                     view = memoryview(chunk)
                     while view:
                         view = view[handle.write(view):]
+                    unsynced += len(chunk)
+                    if unsynced >= SYNC_EVERY:
+                        _fdatasync(handle.fileno())
+                        unsynced = 0
                 os.fsync(handle.fileno())
             except OSError as exc:
                 if exc.errno == 28:      # ENOSPC, in spite of the check: someone else was writing
