@@ -1,0 +1,34 @@
+{
+ "checks": [
+  {
+   "name": "Bob is playing",
+   "ok": true,
+   "detail": "{'rig': 'Bob', 'in_library': True, 'modified': False, 'performance': [], 'seq': 1, 'undo': 0, 'redo': 0}"
+  },
+  {
+   "name": "pedald saved the edit to Bob.json",
+   "ok": true,
+   "detail": "1.1 s"
+  },
+  {
+   "name": "one more undo step",
+   "ok": true,
+   "detail": "{'rig': 'Bob', 'in_library': True, 'modified': False, 'performance': [], 'seq': 2, 'undo': 1, 'redo': 0}"
+  },
+  {
+   "name": "undo put Bob back, in the file too",
+   "ok": true,
+   "detail": "24"
+  },
+  {
+   "name": "rigpa runs the O5 build",
+   "ok": true,
+   "detail": "['active', '/opt/rigpa/f32bb2a']"
+  }
+ ],
+ "pedald_log": "pedald: saved rig 'Bob'\npedald: saved rig 'Bob'\n",
+ "rigpa": [
+  "active",
+  "/opt/rigpa/f32bb2a"
+ ]
+}

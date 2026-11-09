@@ -1428,6 +1428,13 @@ line (so every namchain since 0c1a6d8 was refused), and a `| head` under pipefai
 `components-lock`. **Still to do by eye on the pedal:** the panel's rotation (0 or 180), touch landing
 where touched, legibility from standing.
 
+**O5 done, waiting for review** (2026-11-09): rigpa follows the pedal. It applies the engine's pushed changes,
+reads pedald's event stream instead of polling, and loads, makes and undoes rigs through pedald. Its own autosave is
+gone, and pedald's `autosave` is on, on vip too. The palette offers the pedal's 27 templates and the node editor their
+0–10 controls. A Banks page reorders the banks, and the play line says what caused a change. rigpa `f32bb2a` is on
+vip. Evidence in [bench-results/2026-11-09-rigpa-follows/README.md](bench-results/2026-11-09-rigpa-follows/README.md).
+**Next: O6** (ljoss: pedals and viewing).
+
 **O4 done, waiting for review** (2026-11-09): pedald follows the engine on a second connection and tells a performance
 from an edit, autosaves edits, brings the performance back at resume and keeps one undo history per rig on the card. New routes:
 `/running`, `/undo`, `/redo`, `/history`, `/bank`, and `POST /library/rigs`. Two new map actions, a block toggle and a CC on a
