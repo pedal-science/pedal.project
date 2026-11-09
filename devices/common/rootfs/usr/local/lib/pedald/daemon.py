@@ -835,6 +835,10 @@ class Service:
             if client:
                 cause["client"] = client
             self.publish("action", {"cause": cause, "action": action, "result": result})
+            if self.hub is not None and action and action["action"] == "load" and result.get("ok"):
+                # The mapping has moved and the last status is up to a second old. Views are told the
+                # position and the rig together, so ask now rather than say one without the other.
+                self.poll_engine(time.monotonic(), refresh=False)
             self.publish_changes()
             return result
         return None

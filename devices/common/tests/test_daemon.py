@@ -15,7 +15,7 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "rootfs/usr/local/lib"))
 
-from pedald import config, daemon, mapping, protocol  # noqa: E402
+from pedald import config, daemon, mapping, protocol, sse  # noqa: E402
 from pedald.engine import EngineError  # noqa: E402
 
 
@@ -520,6 +520,44 @@ class LoadRig(unittest.TestCase):
         # deserves to be. That is why a missing verdict is not a refusal here.
         self.service.load_rig("Ambient Wash")
         self.assertEqual(self.service.engine.loaded, ["Ambient Wash.json"])
+
+
+class WhatViewsAreTold(unittest.TestCase):
+    def setUp(self):
+        self.service = cost_service(["Clean", "Lead"])
+        self.service.engine.hello = lambda: {"protocol": 2}
+        self.service.engine.rig_name = "Clean"
+        self.service.hub = sse.EventHub()
+        self.service.published = {"running": None, "engine": None, "bank": None}
+        self.service.engine_protocol = None
+        self.service.bypass = False
+        self.service.poll_engine(0.0, refresh=False)
+
+    def told(self):
+        frames, _, _, _ = self.service.hub.after(0, 0)
+        out = []
+        for frame in frames:
+            fields = dict(line.split(": ", 1) for line in frame.decode().strip().split("\n"))
+            out.append((fields["event"], json.loads(fields["data"])))
+        return out
+
+    def test_the_rig_and_its_position_are_never_told_apart(self):
+        # The status is up to a second old when a press lands; a view must not be told the new
+        # position with the old rig, which on the pedal read as a flicker on every switch.
+        self.service.on_event({"kind": 0x01})
+        told = self.told()
+        kinds = [kind for kind, _ in told]
+        self.assertLess(kinds.index("action"), len(kinds) - 1)
+        after_the_action = [data for kind, data in told[kinds.index("action"):] if kind == "running"]
+        self.assertEqual(len(after_the_action), 1)
+        self.assertEqual(after_the_action[0]["rig"], "Lead")
+        self.assertEqual(after_the_action[0]["position"], 1)
+
+    def test_nothing_changed_tells_nobody_anything(self):
+        before = len(self.told())
+        self.service.poll_engine(1.0, refresh=False)
+        self.service.publish_changes()
+        self.assertEqual(len(self.told()), before)
 
 
 class CostSweep(unittest.TestCase):
