@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="300mm" height="218mm"
+     viewBox="0 0 300 218" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<title>Medium pedal — internal layout, top down</title>
+<desc>Draft 2D layout of the 1590DD-size pedal: 99 x 59 screen cutout at the
+top-left, Pi landscape behind it, three footswitches, input and output jacks on
+the top edge, codec at the right, output board and Pico in the front strip.</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5"
+          markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+    <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+  </marker>
+  <pattern id="hatch_purple" patternUnits="userSpaceOnUse" width="2.2" height="2.2"
+           patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="2.2" stroke="#6a1b9a" stroke-width="0.45"/>
+  </pattern>
+  <pattern id="hatch_alu" patternUnits="userSpaceOnUse" width="1.6" height="1.6"
+           patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="1.6" stroke="#8d8578" stroke-width="0.4"/>
+  </pattern>
+  <style>
+    text { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    .title { font-size: 6.2px; font-weight: 700; letter-spacing: 0.2px; }
+    .sub { font-size: 2.9px; fill: #444; }
+  </style>
+</defs>
+<rect width="300" height="218" fill="#ffffff"/>
+<text x="26" y="12" class="title">MEDIUM PEDAL — INTERNAL LAYOUT, TOP DOWN</text>
+<text x="26" y="18.5" class="sub">178.26 × 110.26 mm internal · draft, not a drilling template · positions from your corrections</text>
+<text x="26" y="23.5" class="sub">Lid removed / see-through: the screen cutout is in the lid, the Pi hangs below it.</text>
+<g id="plan" transform="translate(26 38)">
+<rect x="-4.87" y="-4.87" width="188" height="120" rx="6" fill="#e7e3da" stroke="#b9b2a5" stroke-width="0.5"/>
+<rect x="0" y="0" width="178.26" height="110.26" rx="3" fill="#fcfcf9" stroke="#1b1b1b" stroke-width="0.9"/>
+<rect x="1.6" y="1.6" width="175.06" height="107.06" rx="2.2" fill="none" stroke="#8d8578" stroke-width="0.3" stroke-dasharray="2 1.5"/>
+<circle cx="5" cy="5" r="4" fill="url(#hatch_alu)" stroke="#6d665c" stroke-width="0.6"/>
+<circle cx="5" cy="5" r="2.4" fill="#b0a99c" stroke="#4e4a42" stroke-width="0.4"/>
+<line x1="3.6" y1="5" x2="6.4" y2="5" stroke="#4e4a42" stroke-width="0.4" stroke-linecap="round"/>
+<circle cx="173.26" cy="5" r="4" fill="url(#hatch_alu)" stroke="#6d665c" stroke-width="0.6"/>
+<circle cx="173.26" cy="5" r="2.4" fill="#b0a99c" stroke="#4e4a42" stroke-width="0.4"/>
+<line x1="171.86" y1="5" x2="174.66" y2="5" stroke="#4e4a42" stroke-width="0.4" stroke-linecap="round"/>
+<circle cx="173.26" cy="105.26" r="4" fill="url(#hatch_alu)" stroke="#6d665c" stroke-width="0.6"/>
+<circle cx="173.26" cy="105.26" r="2.4" fill="#b0a99c" stroke="#4e4a42" stroke-width="0.4"/>
+<line x1="171.86" y1="105.26" x2="174.66" y2="105.26" stroke="#4e4a42" stroke-width="0.4" stroke-linecap="round"/>
+<circle cx="5" cy="105.26" r="4" fill="url(#hatch_alu)" stroke="#6d665c" stroke-width="0.6"/>
+<circle cx="5" cy="105.26" r="2.4" fill="#b0a99c" stroke="#4e4a42" stroke-width="0.4"/>
+<line x1="3.6" y1="105.26" x2="6.4" y2="105.26" stroke="#4e4a42" stroke-width="0.4" stroke-linecap="round"/>
+<circle cx="89.13" cy="5" r="4" fill="url(#hatch_alu)" stroke="#6d665c" stroke-width="0.6"/>
+<circle cx="89.13" cy="5" r="2.4" fill="#b0a99c" stroke="#4e4a42" stroke-width="0.4"/>
+<line x1="87.73" y1="5" x2="90.53" y2="5" stroke="#4e4a42" stroke-width="0.4" stroke-linecap="round"/>
+<circle cx="89.13" cy="105.26" r="4" fill="url(#hatch_alu)" stroke="#6d665c" stroke-width="0.6"/>
+<circle cx="89.13" cy="105.26" r="2.4" fill="#b0a99c" stroke="#4e4a42" stroke-width="0.4"/>
+<line x1="87.73" y1="105.26" x2="90.53" y2="105.26" stroke="#4e4a42" stroke-width="0.4" stroke-linecap="round"/>
+<text x="89.13" y="-10.5" font-size="3" fill="#555" text-anchor="middle" font-weight="bold" letter-spacing="0.15">REAR</text>
+<text x="89.13" y="122.76" font-size="3" fill="#555" text-anchor="middle" font-weight="bold" letter-spacing="0.15">FRONT  /  PLAYER</text>
+<line x1="89.13" y1="113.26" x2="89.13" y2="119.26" stroke="#555" stroke-width="0.4" stroke-linecap="round" marker-end="url(#arrow)"/>
+<text x="86" y="13" font-size="1.45" fill="#4e4a42" text-anchor="end" font-weight="bold">6× full-height</text>
+<text x="86" y="15.3" font-size="1.45" fill="#4e4a42" text-anchor="end" font-weight="bold">screw pillars</text>
+<line x1="86" y1="12.5" x2="89" y2="6.5" stroke="#4e4a42" stroke-width="0.3" stroke-linecap="round" stroke-dasharray="1.0 0.8"/>
+<text x="83" y="103" font-size="1.5" fill="#4e4a42" text-anchor="end" font-weight="bold">full-height pillar</text>
+<line x1="83" y1="103.8" x2="88" y2="105" stroke="#4e4a42" stroke-width="0.3" stroke-linecap="round" stroke-dasharray="1.0 0.8"/>
+<rect x="125" y="8" width="51" height="58" rx="3" fill="#ffebee" stroke="#e57373" stroke-width="0.35" stroke-dasharray="2 1.5" opacity="0.3"/>
+<text x="138" y="12.5" font-size="1.7" fill="#c62828" text-anchor="middle">input-sensitive</text>
+<text x="138" y="15.3" font-size="1.7" fill="#c62828" text-anchor="middle">keep OUT wiring out</text>
+<rect x="17" y="10.5" width="85" height="56" rx="1.5" fill="#e6f2e4" stroke="#2e7d32" stroke-width="1"/>
+<rect x="39" y="10.5" width="5" height="4" rx="0.4" fill="#263238" stroke="#263238" stroke-width="0.2"/>
+<rect x="47" y="10.5" width="5" height="4" rx="0.4" fill="#263238" stroke="#263238" stroke-width="0.2"/>
+<rect x="54" y="10.5" width="5" height="4" rx="0.4" fill="#263238" stroke="#263238" stroke-width="0.2"/>
+<text x="59.5" y="7.5" font-size="1.85" fill="#1b5e20" text-anchor="middle" font-weight="bold">USB-C / HDMI  →  REAR</text>
+<line x1="59.5" y1="8.6" x2="59.5" y2="11" stroke="#1b5e20" stroke-width="0.3" stroke-linecap="round" stroke-dasharray="1.0 0.8"/>
+<rect x="102" y="24" width="3.2" height="9" rx="0.4" fill="#263238" stroke="#263238" stroke-width="0.2"/>
+<rect x="102" y="35" width="3.2" height="8" rx="0.4" fill="#263238" stroke="#263238" stroke-width="0.2"/>
+<text x="107" y="35" font-size="1.55" fill="#1b5e20" text-anchor="middle" font-weight="bold" transform="rotate(90 107 35)">USB-A / ETH</text>
+<rect x="30.5" y="63.5" width="50.8" height="2.5" rx="0.3" fill="#263238" stroke="#263238" stroke-width="0.2"/>
+<text x="59.5" y="62.3" font-size="1.65" fill="#263238" text-anchor="middle" font-weight="bold">40-pin</text>
+<circle cx="30.5" cy="14" r="1.6" fill="#b0bec5" stroke="#455a64" stroke-width="0.4"/>
+<line x1="29.6" y1="14" x2="31.4" y2="14" stroke="#455a64" stroke-width="0.25" stroke-linecap="round"/>
+<line x1="30.5" y1="13.1" x2="30.5" y2="14.9" stroke="#455a64" stroke-width="0.25" stroke-linecap="round"/>
+<circle cx="30.5" cy="63" r="1.6" fill="#b0bec5" stroke="#455a64" stroke-width="0.4"/>
+<line x1="29.6" y1="63" x2="31.4" y2="63" stroke="#455a64" stroke-width="0.25" stroke-linecap="round"/>
+<line x1="30.5" y1="62.1" x2="30.5" y2="63.9" stroke="#455a64" stroke-width="0.25" stroke-linecap="round"/>
+<circle cx="88.5" cy="14" r="1.6" fill="#b0bec5" stroke="#455a64" stroke-width="0.4"/>
+<line x1="87.6" y1="14" x2="89.4" y2="14" stroke="#455a64" stroke-width="0.25" stroke-linecap="round"/>
+<line x1="88.5" y1="13.1" x2="88.5" y2="14.9" stroke="#455a64" stroke-width="0.25" stroke-linecap="round"/>
+<circle cx="88.5" cy="63" r="1.6" fill="#b0bec5" stroke="#455a64" stroke-width="0.4"/>
+<line x1="87.6" y1="63" x2="89.4" y2="63" stroke="#455a64" stroke-width="0.25" stroke-linecap="round"/>
+<line x1="88.5" y1="62.1" x2="88.5" y2="63.9" stroke="#455a64" stroke-width="0.25" stroke-linecap="round"/>
+<text x="59.5" y="57" font-size="1.45" fill="#455a64" text-anchor="middle">4× M2.5 screen standoffs</text>
+<text x="59.5" y="70.8" font-size="2" fill="#1b5e20" text-anchor="middle" font-weight="bold">PI 5  85 × 56  (ON SCREEN STANDOFFS)</text>
+<rect x="10" y="9" width="99" height="59" rx="2" fill="#d32f2f" stroke="#b71c1c" stroke-width="0.9" stroke-dasharray="2.4 1.2" opacity="0.06"/>
+<rect x="10" y="9" width="99" height="59" rx="2" fill="none" stroke="#d32f2f" stroke-width="0.9" stroke-dasharray="2.4 1.2"/>
+<text x="59.5" y="35.5" font-size="3.2" fill="#b71c1c" text-anchor="middle" font-weight="bold" letter-spacing="0.15">SCREEN CUTOUT</text>
+<text x="59.5" y="40.5" font-size="4.6" fill="#b71c1c" text-anchor="middle" font-weight="bold">99 × 59</text>
+<text x="59.5" y="44.9" font-size="2.05" fill="#b71c1c" text-anchor="middle">10 from left · 9 from top</text>
+<circle cx="20.13" cy="81.26" r="12" fill="#ffebee" stroke="#e57373" stroke-width="0.3" stroke-dasharray="1.5 1.0" opacity="0.55"/>
+<rect x="10.13" y="74.06" width="20" height="14.4" rx="2" fill="#eceff1" stroke="#37474f" stroke-width="0.8"/>
+<circle cx="20.13" cy="81.26" r="6" fill="#b0bec5" stroke="#37474f" stroke-width="0.6"/>
+<circle cx="20.13" cy="81.26" r="4.4" fill="#cfd8dc" stroke="#37474f" stroke-width="0.5"/>
+<line x1="17.73" y1="81.26" x2="22.53" y2="81.26" stroke="#607d8b" stroke-width="0.4" stroke-linecap="round"/>
+<line x1="20.13" y1="78.86" x2="20.13" y2="83.66" stroke="#607d8b" stroke-width="0.4" stroke-linecap="round"/>
+<text x="20.13" y="71.76" font-size="2.3" fill="#37474f" text-anchor="middle" font-weight="bold">FS1</text>
+<circle cx="89.13" cy="81.26" r="12" fill="#ffebee" stroke="#e57373" stroke-width="0.3" stroke-dasharray="1.5 1.0" opacity="0.55"/>
+<rect x="79.13" y="74.06" width="20" height="14.4" rx="2" fill="#eceff1" stroke="#37474f" stroke-width="0.8"/>
+<circle cx="89.13" cy="81.26" r="6" fill="#b0bec5" stroke="#37474f" stroke-width="0.6"/>
+<circle cx="89.13" cy="81.26" r="4.4" fill="#cfd8dc" stroke="#37474f" stroke-width="0.5"/>
+<line x1="86.73" y1="81.26" x2="91.53" y2="81.26" stroke="#607d8b" stroke-width="0.4" stroke-linecap="round"/>
+<line x1="89.13" y1="78.86" x2="89.13" y2="83.66" stroke="#607d8b" stroke-width="0.4" stroke-linecap="round"/>
+<text x="89.13" y="71.76" font-size="2.3" fill="#37474f" text-anchor="middle" font-weight="bold">FS2</text>
+<circle cx="158.13" cy="81.26" r="12" fill="#ffebee" stroke="#e57373" stroke-width="0.3" stroke-dasharray="1.5 1.0" opacity="0.55"/>
+<rect x="148.13" y="74.06" width="20" height="14.4" rx="2" fill="#eceff1" stroke="#37474f" stroke-width="0.8"/>
+<circle cx="158.13" cy="81.26" r="6" fill="#b0bec5" stroke="#37474f" stroke-width="0.6"/>
+<circle cx="158.13" cy="81.26" r="4.4" fill="#cfd8dc" stroke="#37474f" stroke-width="0.5"/>
+<line x1="155.73" y1="81.26" x2="160.53" y2="81.26" stroke="#607d8b" stroke-width="0.4" stroke-linecap="round"/>
+<line x1="158.13" y1="78.86" x2="158.13" y2="83.66" stroke="#607d8b" stroke-width="0.4" stroke-linecap="round"/>
+<text x="158.13" y="71.76" font-size="2.3" fill="#37474f" text-anchor="middle" font-weight="bold">FS3</text>
+<rect x="110" y="0" width="20" height="20" rx="2" fill="#efebe9" stroke="#6d4c41" stroke-width="0.7"/>
+<circle cx="120" cy="0" r="7.4" fill="#d7ccc8" stroke="#6d4c41" stroke-width="0.6"/>
+<circle cx="120" cy="0" r="3.6" fill="#8d6e63" stroke="#6d4c41" stroke-width="0.4"/>
+<text x="120" y="13" font-size="3" fill="#4e342e" text-anchor="middle" font-weight="bold">OUT</text>
+<text x="120" y="16.2" font-size="1.7" fill="#4e342e" text-anchor="middle">top edge</text>
+<rect x="148" y="0" width="20" height="20" rx="2" fill="#546e7a" stroke="#263238" stroke-width="0.7"/>
+<circle cx="158" cy="0" r="7.4" fill="#cfd8dc" stroke="#263238" stroke-width="0.6"/>
+<circle cx="158" cy="0" r="3.6" fill="#37474f" stroke="#263238" stroke-width="0.4"/>
+<text x="158" y="13" font-size="3" fill="#fff" text-anchor="middle" font-weight="bold">IN</text>
+<text x="158" y="16.2" font-size="1.7" fill="#eceff1" text-anchor="middle">top edge</text>
+<rect x="128" y="20" width="25.4" height="40.64" rx="0.8" fill="#fbe9e7" stroke="#c62828" stroke-width="0.9"/>
+<rect x="129" y="24" width="2.2" height="32.64" rx="0.3" fill="#263238" stroke="#263238" stroke-width="0.2"/>
+<rect x="150.2" y="24" width="2.2" height="32.64" rx="0.3" fill="#263238" stroke="#263238" stroke-width="0.2"/>
+<text x="140.7" y="37" font-size="2.5" fill="#b71c1c" text-anchor="middle" font-weight="bold">WM8960</text>
+<text x="140.7" y="40.4" font-size="2.2" fill="#b71c1c" text-anchor="middle" font-weight="bold">CODEC</text>
+<text x="140.7" y="44" font-size="2" fill="#b71c1c" text-anchor="middle">25.4 × 40.6</text>
+<rect x="40" y="94" width="15" height="15" rx="1" fill="#fff3e0" stroke="#ef6c00" stroke-width="0.9"/>
+<text x="47.5" y="99.4" font-size="2.6" fill="#e65100" text-anchor="middle" font-weight="bold">OUT</text>
+<text x="47.5" y="102.6" font-size="2" fill="#e65100" text-anchor="middle">15 × 15</text>
+<rect x="60" y="92.5" width="55" height="8" rx="0.8" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="0.9"/>
+<rect x="60" y="92.5" width="55" height="8" rx="0.8" fill="url(#hatch_purple)" opacity="0.55"/>
+<text x="87.5" y="97.9" font-size="2.5" fill="#4a148c" text-anchor="middle" font-weight="bold">PICO 2 W ON EDGE</text>
+<rect x="65" y="92.8" width="7" height="3" rx="0.4" fill="#ffffff" stroke="#6a1b9a" stroke-width="0.5"/>
+<text x="68.5" y="95" font-size="1.3" fill="#4a148c" text-anchor="middle">XH</text>
+<rect x="82" y="92.8" width="7" height="3" rx="0.4" fill="#ffffff" stroke="#6a1b9a" stroke-width="0.5"/>
+<text x="85.5" y="95" font-size="1.3" fill="#4a148c" text-anchor="middle">XH</text>
+<rect x="99" y="92.8" width="7" height="3" rx="0.4" fill="#ffffff" stroke="#6a1b9a" stroke-width="0.5"/>
+<text x="102.5" y="95" font-size="1.3" fill="#4a148c" text-anchor="middle">XH</text>
+<text x="117" y="98" font-size="1.7" fill="#4a148c" text-anchor="start">21 mm tall</text>
+<line x1="158" y1="10" x2="147.05" y2="22" stroke="#c62828" stroke-width="0.5" stroke-linecap="round" stroke-dasharray="1.5 1.0" marker-end="url(#arrow)"/>
+<line x1="128" y1="40" x2="102.5" y2="40" stroke="#6a1b9a" stroke-width="0.5" stroke-linecap="round" stroke-dasharray="1.5 1.0" marker-end="url(#arrow)"/>
+<text x="108" y="38.5" font-size="1.6" fill="#6a1b9a" text-anchor="middle">I2S</text>
+<polyline points="103,60 112,60 112,96 114,89.5" fill="none" stroke="#1565c0" stroke-width="0.5" stroke-dasharray="1.5 1.0" marker-end="url(#arrow)"/>
+<text x="110" y="88" font-size="1.5" fill="#1565c0" text-anchor="middle" transform="rotate(90 110 88)">USB/UART</text>
+<polyline points="120,20 112,20 112,91 58,91 58,97 55,99" fill="none" stroke="#ef6c00" stroke-width="0.5" stroke-dasharray="1.5 1.0" marker-end="url(#arrow)"/>
+<text x="114" y="50" font-size="1.5" fill="#ef6c00" text-anchor="middle" transform="rotate(90 114 50)">OUT</text>
+<line x1="0" y1="118" x2="178.26" y2="118" stroke="#333" stroke-width="0.35" stroke-linecap="round" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="89.13" y="116.8" font-size="2.3" fill="#333" text-anchor="middle" font-style="italic">178.26 internal</text>
+<line x1="-13" y1="0" x2="-13" y2="110.26" stroke="#333" stroke-width="0.35" stroke-linecap="round" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="-14.3" y="55.13" font-size="2.3" fill="#333" text-anchor="middle" font-style="italic" transform="rotate(-90 -14.3 55.13)">110.26 internal</text>
+<line x1="10" y1="-5.5" x2="109" y2="-5.5" stroke="#333" stroke-width="0.35" stroke-linecap="round" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="59.5" y="-6.7" font-size="2.2" fill="#333" text-anchor="middle" font-style="italic">99</text>
+<line x1="-6" y1="9" x2="-6" y2="68" stroke="#333" stroke-width="0.35" stroke-linecap="round" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="-7.3" y="38.5" font-size="2.2" fill="#333" text-anchor="middle" font-style="italic" transform="rotate(-90 -7.3 38.5)">59</text>
+</g>
+<g id="notes" transform="translate(212 38)">
+<text x="5.5" y="6" font-size="1.95" fill="#222" text-anchor="start">NOTES</text>
+<text x="5.5" y="11.5" font-size="1.95" fill="#222" text-anchor="start">Case 178.26 × 110.26 × ~33 mm.</text>
+<text x="5.5" y="14.25" font-size="1.95" fill="#222" text-anchor="start">Front (player) bottom; rear top. mm.</text>
+<text x="5.5" y="17" font-size="1.95" fill="#222" text-anchor="start">6 screw pillars (corners + top/bottom</text>
+<text x="5.5" y="19.75" font-size="1.95" fill="#222" text-anchor="start">centre) are full-height aluminium.</text>
+<text x="5.5" y="22.5" font-size="1.95" fill="#222" text-anchor="start">Keep parts and wires clear of them.</text>
+<text x="5.5" y="25.25" font-size="1.95" fill="#222" text-anchor="start">Draft — check before cutting.</text>
+<text x="5.5" y="28" font-size="1.95" fill="#222" text-anchor="start">Dashed = above / proposed.</text>
+<text x="0" y="33.5" font-size="1.95" fill="#111" text-anchor="start" font-weight="bold">1</text>
+<text x="5.5" y="33.5" font-size="1.95" fill="#222" text-anchor="start">SCREEN cutout 99 × 59, 10 from</text>
+<text x="5.5" y="36.25" font-size="1.95" fill="#222" text-anchor="start">left, 9 from top. No module outline</text>
+<text x="5.5" y="39" font-size="1.95" fill="#222" text-anchor="start">is dimensioned; the cutout is exact.</text>
+<text x="5.5" y="41.75" font-size="1.95" fill="#222" text-anchor="start">The 9 mm strip above it is free for the</text>
+<text x="5.5" y="44.5" font-size="1.95" fill="#222" text-anchor="start">Pi’s USB-C/HDMI leads; the Pi top edge</text>
+<text x="5.5" y="47.25" font-size="1.95" fill="#222" text-anchor="start">sits 1.5 mm below the cutout top.</text>
+<text x="0" y="52.75" font-size="1.95" fill="#111" text-anchor="start" font-weight="bold">2</text>
+<text x="5.5" y="52.75" font-size="1.95" fill="#222" text-anchor="start">Pi 5 85 × 56 landscape, centred</text>
+<text x="5.5" y="55.5" font-size="1.95" fill="#222" text-anchor="start">on the screen’s Pi standoffs.</text>
+<text x="5.5" y="58.25" font-size="1.95" fill="#222" text-anchor="start">USB-C/HDMI on the top edge;</text>
+<text x="5.5" y="61" font-size="1.95" fill="#222" text-anchor="start">USB-A/Ethernet on the right edge;</text>
+<text x="5.5" y="63.75" font-size="1.95" fill="#222" text-anchor="start">40-pin header on the bottom edge.</text>
+<text x="5.5" y="66.5" font-size="1.95" fill="#222" text-anchor="start">Holes 58 × 49. The Pi is clear of</text>
+<text x="5.5" y="69.25" font-size="1.95" fill="#222" text-anchor="start">the footswitches.</text>
+<text x="0" y="74.75" font-size="1.95" fill="#111" text-anchor="start" font-weight="bold">3</text>
+<text x="5.5" y="74.75" font-size="1.95" fill="#222" text-anchor="start">FOOTSWITCHES: middle at W/2 =</text>
+<text x="5.5" y="77.5" font-size="1.95" fill="#222" text-anchor="start">89.13; ±69 gives 20.13 / 158.13;</text>
+<text x="5.5" y="80.25" font-size="1.95" fill="#222" text-anchor="start">29 mm from the bottom edge.</text>
+<text x="0" y="85.75" font-size="1.95" fill="#111" text-anchor="start" font-weight="bold">4</text>
+<text x="5.5" y="85.75" font-size="1.95" fill="#222" text-anchor="start">IN / OUT both on the top edge:</text>
+<text x="5.5" y="88.5" font-size="1.95" fill="#222" text-anchor="start">OUT x=120, IN x=158, ~38 mm apart.</text>
+<text x="5.5" y="91.25" font-size="1.95" fill="#222" text-anchor="start">Codec sits between them, FS3, the</text>
+<text x="5.5" y="94" font-size="1.95" fill="#222" text-anchor="start">Pi and the right wall; input lead</text>
+<text x="5.5" y="96.75" font-size="1.95" fill="#222" text-anchor="start">&lt; 20 mm.</text>
+<text x="0" y="102.25" font-size="1.95" fill="#111" text-anchor="start" font-weight="bold">5</text>
+<text x="5.5" y="102.25" font-size="1.95" fill="#222" text-anchor="start">CODEC WM8960 25.4 × 40.6,</text>
+<text x="5.5" y="105" font-size="1.95" fill="#222" text-anchor="start">x=128..153, y=20..61.</text>
+<text x="0" y="110.5" font-size="1.95" fill="#111" text-anchor="start" font-weight="bold">6</text>
+<text x="5.5" y="110.5" font-size="1.95" fill="#222" text-anchor="start">OUT BOARD 15 × 15, front-left,</text>
+<text x="5.5" y="113.25" font-size="1.95" fill="#222" text-anchor="start">clear of the input side. A second</text>
+<text x="5.5" y="116" font-size="1.95" fill="#222" text-anchor="start">fits beside it.</text>
+<text x="0" y="121.5" font-size="1.95" fill="#111" text-anchor="start" font-weight="bold">7</text>
+<text x="5.5" y="121.5" font-size="1.95" fill="#222" text-anchor="start">PICO 2 W on edge: 55 × 8 plan,</text>
+<text x="5.5" y="124.25" font-size="1.95" fill="#222" text-anchor="start">21 mm tall; moved up by the pillar</text>
+<text x="5.5" y="127" font-size="1.95" fill="#222" text-anchor="start">width to clear it. XH sockets on top.</text>
+<text x="0" y="132.5" font-size="1.95" fill="#111" text-anchor="start" font-weight="bold">8</text>
+<text x="5.5" y="132.5" font-size="1.95" fill="#222" text-anchor="start">Screen 7 + standoff 6 + Pi 17</text>
+<text x="5.5" y="135.25" font-size="1.95" fill="#222" text-anchor="start">≈ 30 of 33; Pi clear of FS2 in plan.</text>
+</g>
+<g id="section" transform="translate(26 168)">
+<text x="0" y="0" font-size="3" fill="#111" text-anchor="start" font-weight="bold">SECTION A–A  (through x = 89: Pi, FS2, Pico and bottom-centre pillar)</text>
+<rect x="8" y="26.45" width="143.34" height="1.2" fill="#b9b2a5" stroke="#6d665c" stroke-width="0.3"/>
+<rect x="8" y="5" width="143.34" height="1.2" fill="#b9b2a5" stroke="#6d665c" stroke-width="0.3"/>
+<line x1="8" y1="26.45" x2="8" y2="5" stroke="#1b1b1b" stroke-width="0.6" stroke-linecap="round"/>
+<line x1="151.34" y1="26.45" x2="151.34" y2="5" stroke="#1b1b1b" stroke-width="0.6" stroke-linecap="round"/>
+<rect x="19.7" y="5" width="76.7" height="4.55" fill="#e8f1fb" stroke="#1565c0" stroke-width="0.5"/>
+<text x="58.05" y="6.95" font-size="1.8" fill="#0d47a1" text-anchor="middle">screen</text>
+<line x1="26.2" y1="9.55" x2="26.2" y2="13.45" stroke="#607d8b" stroke-width="0.8" stroke-linecap="round"/>
+<line x1="89.9" y1="9.55" x2="89.9" y2="13.45" stroke="#607d8b" stroke-width="0.8" stroke-linecap="round"/>
+<text x="57.4" y="10.33" font-size="1.45" fill="#455a64" text-anchor="middle">standoffs</text>
+<rect x="21.65" y="13.45" width="72.8" height="11.05" fill="#e6f2e4" stroke="#2e7d32" stroke-width="0.5"/>
+<text x="58.05" y="18.65" font-size="1.8" fill="#1b5e20" text-anchor="middle">Pi 5</text>
+<rect x="104.2" y="5" width="18.2" height="12.35" fill="#eceff1" stroke="#37474f" stroke-width="0.5"/>
+<text x="113.3" y="12.15" font-size="1.7" fill="#37474f" text-anchor="middle">FS2</text>
+<rect x="128.25" y="9.55" width="10.4" height="13.65" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="0.5"/>
+<text x="133.45" y="16.38" font-size="1.6" fill="#4a148c" text-anchor="middle" transform="rotate(90 133.45 16.38)">Pico</text>
+<rect x="139.69" y="5" width="10.4" height="21.45" fill="url(#hatch_alu)" stroke="#6d665c" stroke-width="0.6"/>
+<text x="144.89" y="15.72" font-size="1.55" fill="#4e4a42" text-anchor="middle" font-weight="bold" transform="rotate(90 144.89 15.72)">screw pillar</text>
+<line x1="156.34" y1="26.45" x2="156.34" y2="5" stroke="#333" stroke-width="0.35" stroke-linecap="round" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<text x="158.34" y="15.72" font-size="2" fill="#333" text-anchor="middle" font-style="italic">33</text>
+<text x="8" y="29.85" font-size="1.7" fill="#555" text-anchor="start" font-weight="bold">REAR</text>
+<text x="151.34" y="29.85" font-size="1.7" fill="#555" text-anchor="end" font-weight="bold">FRONT</text>
+<text x="8" y="33.45" font-size="1.75" fill="#555" text-anchor="start">screen 7 + standoff 6 + Pi 17 ≈ 30 of 33; Pi clear of FS2; pillar full height.</text>
+</g><g id="scale" transform="translate(26 213)">
+<line x1="0" y1="0" x2="50" y2="0" stroke="#111" stroke-width="0.5" stroke-linecap="round" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+<line x1="0" y1="-1.2" x2="0" y2="1.2" stroke="#111" stroke-width="0.4" stroke-linecap="round"/>
+<text x="0" y="3.4" font-size="1.8" fill="#333" text-anchor="middle">0</text>
+<line x1="10" y1="-1.2" x2="10" y2="1.2" stroke="#111" stroke-width="0.4" stroke-linecap="round"/>
+<text x="10" y="3.4" font-size="1.8" fill="#333" text-anchor="middle">10</text>
+<line x1="20" y1="-1.2" x2="20" y2="1.2" stroke="#111" stroke-width="0.4" stroke-linecap="round"/>
+<text x="20" y="3.4" font-size="1.8" fill="#333" text-anchor="middle">20</text>
+<line x1="30" y1="-1.2" x2="30" y2="1.2" stroke="#111" stroke-width="0.4" stroke-linecap="round"/>
+<text x="30" y="3.4" font-size="1.8" fill="#333" text-anchor="middle">30</text>
+<line x1="40" y1="-1.2" x2="40" y2="1.2" stroke="#111" stroke-width="0.4" stroke-linecap="round"/>
+<text x="40" y="3.4" font-size="1.8" fill="#333" text-anchor="middle">40</text>
+<line x1="50" y1="-1.2" x2="50" y2="1.2" stroke="#111" stroke-width="0.4" stroke-linecap="round"/>
+<text x="50" y="3.4" font-size="1.8" fill="#333" text-anchor="middle">50</text>
+<text x="55" y="0.8" font-size="2.2" fill="#333" text-anchor="start">mm</text>
+<text x="0" y="-3.4" font-size="2" fill="#555" text-anchor="start">Drawing units are mm; print 300 mm wide for 1:1 (not to scale on screen).</text>
+</g>
+</svg>
