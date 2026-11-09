@@ -71,6 +71,11 @@ sends the same 60,000 ramped `set_param`s at 100 Hz and opens no subscriber.
   a whole `rig.patched` per op — 300 recompiles in three seconds in a trial. By `element`, as ljoss and
   rigpa address a block, it ramps. The driver addresses by element.
 
+Both are fixed in namchain `d1aa45c` and checked on vip (2026-11-09). Over the local socket
+`namchainctl schema` returns its 313,742 bytes and `assets` its 376,528; a reply that still can't fit is
+answered `reply_too_large` on a connection that stays open. A macro `set_param` by node id is answered
+`smooth`. The soaks above ran on `453381a`, before these fixes; `o1-stream.py` still uses TCP and element.
+
 ## How it ran
 
 `run-o1` (from C3's `run-c3`, without rigpa's arms): the heavy rig is built from the playing rig's

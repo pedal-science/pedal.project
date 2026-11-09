@@ -1434,9 +1434,14 @@ change's origin and tag, `engine.state`/`engine.mute`/`engine.assets`, `seq` and
 watch`. Tested on the Mac and on Linux in Release, TSan and RTSan; on vip a subscriber with a 100 Hz knob
 passed the gate, render p99 28% → 31%; a fourth arm, the knob with nobody subscribed, put 30% of that
 on the knob's own ramps, leaving events at most a point, inside the noise, and about 1% of core 0
-([bench-results/2026-11-08-events-vip/README.md](bench-results/2026-11-08-events-vip/README.md)). Found:
-a local-socket reply over 208 KB closes the connection (`engine.schema` on vip); a macro addressed by
-node id is patched structurally. **Next: O2** (pedald foundations).
+([bench-results/2026-11-08-events-vip/README.md](bench-results/2026-11-08-events-vip/README.md)). Two
+older faults found on the way are fixed in namchain `d1aa45c`, deployed on vip: a local-socket reply over
+208 KB closed the connection (each local connection now asks for a larger buffer, and a reply that still
+doesn't fit is refused in words), and a macro addressed by node id was patched structurally (it now
+ramps). **Next: O2** (pedald foundations).
+
+`scripts/deploy-engine` with no `--commit` deploys `origin/main`, which is `70a6e3f`, before O1, until
+namchain is pushed: name the commit until then.
 
 **The pedal is now run as a fleet, and that plan is agreed** (2026-11-03):
 [docs/operations-plan.md](docs/operations-plan.md). Three Cores (zap, vip, pro), named builds and sets,
