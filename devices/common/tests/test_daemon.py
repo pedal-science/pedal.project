@@ -4,6 +4,7 @@ import http.client
 import json
 import os
 import pathlib
+import pty
 import socket
 import sys
 import tempfile
@@ -858,8 +859,8 @@ class WarmDecision(unittest.TestCase):
         self.assertEqual(body["engine"]["warm_decision"]["state"], "idle")
 
 
-class FullService(unittest.TestCase):
-    """A real Service on its own loop, with no UART and no engine: what a host without a Pico runs."""
+class RunningService(unittest.TestCase):
+    """A real Service on its own loop, with no engine, and no UART unless a test gives it one."""
 
     def setUp(self):
         self.dir = tempfile.TemporaryDirectory()
@@ -870,7 +871,7 @@ class FullService(unittest.TestCase):
             (root / "rigs" / f"{name}.json").write_text(json.dumps({"name": name, "chains": []}))
         (root / "token").write_text("t" * 32)
         cfg = config.Config()
-        cfg.uart_device = str(root / "no-uart")
+        cfg.uart_device = self.uart_device(root)
         cfg.http_host, cfg.http_port = "127.0.0.1", 0
         cfg.engine_port = 1                     # nothing listens: refused at once
         cfg.engine_token_file = str(root / "token")
@@ -884,6 +885,9 @@ class FullService(unittest.TestCase):
         deadline = time.monotonic() + 5
         while time.monotonic() < deadline and self.service.http.port == 0:
             time.sleep(0.01)
+
+    def uart_device(self, root):
+        return str(root / "no-uart")
 
     def finish(self):
         self.service.stop()
@@ -916,6 +920,10 @@ class FullService(unittest.TestCase):
                     return json.loads(lines["data"])
             buffer += sock.recv(65536)
         self.fail(f"no {kind} event")
+
+
+class FullService(RunningService):
+    """What a host without a Pico runs."""
 
     def test_with_no_uart_the_loop_sleeps(self):
         before = self.service.loop_passes
@@ -1009,6 +1017,40 @@ class FullService(unittest.TestCase):
         self.assertFalse(self.thread.is_alive())
         with self.assertRaises(daemon.LoopUnavailable):
             self.service.on_loop(lambda: None)
+
+
+class FootswitchOverTheLink(RunningService):
+    """The whole way, with a pty as the Pico: frame in on the UART, through the loop's `select`, out
+    as an event. A press with the Pico on the link is the one path a bench can't always drive."""
+
+    def setUp(self):
+        self.master, slave = pty.openpty()
+        self.addCleanup(os.close, self.master)
+        self.addCleanup(os.close, slave)
+        self.device = os.ttyname(slave)
+        super().setUp()
+
+    def uart_device(self, _root):
+        return self.device
+
+    def test_a_press_names_the_footswitch(self):
+        stream = self.events()
+        self.next_event(stream, "hello")
+        os.write(self.master, protocol.frame(protocol.HELLO, bytes([2, 0, 0, 0]) + protocol.str8("0.1", 16)))
+        deadline = time.monotonic() + 3
+        while time.monotonic() < deadline and not self.service.session.session_up:
+            time.sleep(0.01)
+        self.assertTrue(self.service.session.session_up)
+        # seq 1, source 1 (footswitch), kind 0x10 (cc), a=81, b=127: the second switch's press.
+        os.write(self.master, protocol.frame(protocol.EVENT, bytes([1, 1, 0x10, 81, 127])))
+        action = self.next_event(stream, "action")
+        self.assertEqual(action["cause"], {"source": "footswitch", "kind": "cc", "a": 81, "b": 127,
+                                           "label": "footswitch 2"})
+        self.assertEqual(action["action"]["action"], "load")
+        # And the release says nothing.
+        os.write(self.master, protocol.frame(protocol.EVENT, bytes([2, 1, 0x10, 81, 0])))
+        os.write(self.master, protocol.frame(protocol.EVENT, bytes([3, 1, 0x08, 0, 0])))
+        self.assertEqual(self.next_event(stream, "action")["cause"]["kind"], "bypass_toggle")
 
 
 class StateFrames(unittest.TestCase):

@@ -1284,10 +1284,12 @@ class Service:
             self.wait(self.next_wait(time.monotonic()))
             self.loop_passes += 1
             now = time.monotonic()
+            # The clock first: a frame is stamped with the session's idea of now, and one stamped
+            # before the first tick looks ancient to the tick after it, which ends the session.
+            self.session.tick(int(now * 1000))
             self.link.poll(0)
             for message in self.link.take_messages():
                 self.on_message(message)
-            self.session.tick(int(now * 1000))
             self.run_work()
             self.apply_library_changes(now)
             if now - self.status_at >= STATUS_POLL_S:
