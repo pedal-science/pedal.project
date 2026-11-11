@@ -20,12 +20,13 @@ rather than a rule.
 | `pedal-science/NAMBench` | `~/code.local/pedal/NAMBench` | NAM and IR kernel research. It reaches the pedal only through `namchain`, as a vendor patch or a port |
 | `pedal-science/rigpa` | `~/code.local/pedal/rigpa` | The pedal's on-device UI (C++, Qt 6) on the Core host's screen (D14). A view of the pedal, like ljoss (D17): it follows `namchaind`'s and `pedald`'s events and sends edits and commands, wide on the 8.8″ bar or compact on the 4.3″ panel. Its deployment on the Core host is `devices/`'s, like the engine's |
 | `pedal-science/comms` | `~/code.local/pedal/comms` | The website and the video. Owns the public *wording* of the pedal's claims and a register (`docs/claims.md`) linking each to its evidence here or in the other repos; owns no technical fact itself |
+| `pedal-science/pedal-codec` | `~/code.local/pedal/pedal-codec` | A Raspberry Pi audio HAT around TI's TAC5242: its requirements, design, plan, KiCad project, overlay and bench results. Started 2026-11-11 as an aside; the pedal keeps its WM8960 board unless the owner decides otherwise once the board is measured |
 | `rikkus/OptimisationWorkOnNeuralAmpModelerCore` (fork) | `~/code.local/pedal/namchain/vendor/NeuralAmpModelerCore` | The planar NEON kernels (upstream PR #313). It is **vendored into `namchain` as a declared submodule** at `all-optimisations`, so there is one checkout of it, not two |
 | `rikkus/AudioDSPTools` (fork) | not checked out here | The partitioned-FFT IR branch, which `namchain` carries as a port — `nc.cab.ir` doesn't use AudioDSPTools. `rikkus/AudioDSPTools` no longer exists on GitHub; the only copy of `partitioned-ir` is `~/code.local/nam/AudioDSPTools-spread` |
 | `rikkus/midi-commander-custom` (fork) | `~/code.local/comidi/midi-commander-custom-rikkus` | The MIDI Commander's firmware and button configuration. Deliberately outside the workspace: it is a peripheral, and its two sibling clones in `comidi/` are other people's |
 
-Those five rows above `AudioDSPTools` are the ones the workspace holds, plus this repository: the
-seven checkouts under `~/code.local/pedal/` are the accepted layout since 2026-10-06, declared in
+The rows above `AudioDSPTools` are the ones the workspace holds: the
+eight checkouts under `~/code.local/pedal/` are the accepted layout since 2026-10-06, declared in
 `workspace.repos` and checked by `scripts/workspace`. [docs/workspace.md](workspace.md) says why
 they are arranged that way and what the guard around them does. The NAM research checkouts stay
 where they are, in `~/code.local/nam/`.
@@ -40,7 +41,7 @@ UART protocol and change together. A reverb goes in `namchain`, and a device-tre
 
 | Host | Role | Notes |
 |---|---|---|
-| **M2** (MacBook Air) | Where editing and agent sessions happen, and where every deploy is started. Xcode, macOS builds of the engine | Holds every repo, all seven of them under `~/code.local/pedal/` |
+| **M2** (MacBook Air) | Where editing and agent sessions happen, and where every deploy is started. Xcode, macOS builds of the engine | Holds every repo, all eight of them under `~/code.local/pedal/` |
 | **vip** (Pi 5, 1 GB, aarch64) | **The Core host** (from 2026-10-01), and nothing else. Built from an image (`devices/vip/make-card`, `docs/vip-image.md`); where testing happens until it's a pedal nobody should disrupt | No compiler: everything arrives built (the engine in colima on the Mac, `scripts/deploy-engine`) |
 | **piv** (Pi 500, aarch64) | **The machine that stays up** (the owner, 2026-11-03): the live bench device, the ARM build host (native aarch64, armv7 cross-compiler GCC 15.2, `qemu-arm-static` for armv7 tests), and from here on the one that co-ordinates builds and scheduled work ([operations-plan.md](operations-plan.md)) | The M2 is often closed, so piv is what to rely on. Colima on the Mac remains a second route for builds, which `rtpi` and vip's image still use today. Its dev checkouts are at `~/code.local/pedal/<repo>`, the Mac's layout (`scripts/status` lists them); NAMBench is still at `~/NAMBench` |
 | **zap** (Raspberry Pi Zero 2 W, 512 MB, aarch64) | The Core host candidate for a small battery pedal (from 2026-11-03). **On order, not yet here** | Its bench is built and waiting ([docs/zap.md](zap.md)); `devices/zap/` holds only what that needs |
@@ -96,7 +97,7 @@ Rollback on the Core host is the previous symlink. For the kernel it is `rtpi`'s
 
 ## Setting up an agent session
 
-- **Open the workspace for cross-repo work.** `~/code.local/pedal/` holds all seven repositories as
+- **Open the workspace for cross-repo work.** `~/code.local/pedal/` holds all eight repositories as
   siblings, so a session opened on that folder can read and write every one of them with no extra
   permissions and nothing to configure — no `additionalDirectories`, no per-machine settings file.
   That is the whole point of the layout ([docs/workspace.md](workspace.md)); the
