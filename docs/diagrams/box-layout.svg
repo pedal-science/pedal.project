@@ -6,16 +6,16 @@
 <rect x="902.5" y="40" width="20" height="20" fill="#d9d5c8" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="30" y="567.5" width="20" height="20" fill="#d9d5c8" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="902.5" y="567.5" width="20" height="20" fill="#d9d5c8" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
-<rect x="607.5" y="50" width="265" height="520" fill="#bfe6d6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
-<rect x="872.5" y="100" width="45" height="430" fill="#bfe6d6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
+<rect x="605" y="50" width="285" height="520" fill="#bfe6d6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
+<rect x="890" y="100" width="27.5" height="430" fill="#bfe6d6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="90" y="50" width="355" height="350" fill="#b9d6f2" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
-<rect x="610" y="40" width="80" height="115" fill="#6cc9a6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
-<rect x="697.5" y="40" width="80" height="115" fill="#6cc9a6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
-<rect x="785" y="40" width="80" height="115" fill="#6cc9a6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
+<rect x="609.5" y="40" width="91" height="105" fill="#6cc9a6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
+<rect x="703" y="40" width="91" height="105" fill="#6cc9a6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
+<rect x="796.5" y="40" width="91" height="105" fill="#6cc9a6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="800" y="212.5" width="122.5" height="125" fill="#6cc9a6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="192.5" y="337.5" width="260" height="30" fill="#7fb2e5" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="207.5" y="40" width="45" height="37.5" fill="#7fb2e5" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
-<rect x="385" y="40" width="30" height="70" fill="#7fb2e5" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
+<rect x="390" y="40" width="40" height="80" fill="#7fb2e5" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="287.5" y="167.5" width="75" height="75" fill="#f3c2b0" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="495" y="95" width="105" height="270" fill="#c9c4ee" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="195.5" y="340" width="254" height="25" fill="#8f88d8" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
@@ -31,10 +31,10 @@
 <text x="140" y="350" font-size="12" text-anchor="middle" fill="#111">Pi board</text>
 <text x="325" y="210" font-size="12" text-anchor="middle" fill="#111">heat block</text>
 <text x="230" y="32.5" font-size="12" text-anchor="middle" fill="#111">USB-C</text>
-<text x="400" y="32.5" font-size="12" text-anchor="middle" fill="#111">MIDI</text>
-<text x="650" y="32.5" font-size="12" text-anchor="middle" fill="#111">out</text>
-<text x="737.5" y="32.5" font-size="12" text-anchor="middle" fill="#111">EXT FS</text>
-<text x="825" y="32.5" font-size="12" text-anchor="middle" fill="#111">in</text>
+<text x="410" y="32.5" font-size="12" text-anchor="middle" fill="#111">MIDI</text>
+<text x="655" y="32.5" font-size="12" text-anchor="middle" fill="#111">out</text>
+<text x="748.5" y="32.5" font-size="12" text-anchor="middle" fill="#111">EXT FS</text>
+<text x="842" y="32.5" font-size="12" text-anchor="middle" fill="#111">in</text>
 <text x="860" y="280" font-size="12" text-anchor="middle" fill="#111">mic</text>
 <text x="730" y="530" font-size="12" text-anchor="middle" fill="#111">audio board</text>
 <text x="685" y="180" font-size="12" text-anchor="middle" fill="#111">encoder</text>
@@ -46,10 +46,10 @@
 <rect x="982.5" y="40" width="152.5" height="547.5" fill="none" stroke="#333" stroke-width="1.5"/>
 <text x="982.5" y="605.5" font-size="12" fill="#333">base</text><text x="1135" y="605.5" font-size="12" text-anchor="end" fill="#333">face</text>
 <rect x="994.5" y="50" width="8" height="520" fill="#bfe6d6" stroke="#444" stroke-width="0.7" fill-opacity="0.85"/>
-<rect x="1002.5" y="40" width="60" height="115" fill="#6cc9a6" stroke="#444" stroke-width="0.7" fill-opacity="0.85"/>
+<rect x="1002.5" y="40" width="78.5" height="105" fill="#6cc9a6" stroke="#444" stroke-width="0.7" fill-opacity="0.85"/>
 <rect x="1002.5" y="212.5" width="125" height="125" fill="#6cc9a6" stroke="#444" stroke-width="0.7" fill-opacity="0.85"/>
 <rect x="1055" y="410" width="65" height="65" fill="#e8e4d6" stroke="#444" stroke-width="0.7" fill-opacity="0.85"/>
-<rect x="1082.5" y="92.5" width="52.5" height="75" fill="#f6dfb4" stroke="#444" stroke-width="0.7" fill-opacity="0.85"/>
+<rect x="1085" y="92.5" width="50" height="75" fill="#f6dfb4" stroke="#444" stroke-width="0.7" fill-opacity="0.85"/>
 <line x1="830" y1="34" x2="830" y2="593.5" stroke="#b33" stroke-width="0.8" stroke-dasharray="8 5"/>
 <text x="30" y="627.5" font-size="12" fill="#555">Blocks, not shapes: each part is its bounding box. Dashed: on the face, above the boards. Sizes marked est. in box_layout.py are estimates.</text>
 </svg>

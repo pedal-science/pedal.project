@@ -11,7 +11,7 @@ the smallest clearances, and draws a plan and a section.
     rsvg-convert -w 1700 docs/diagrams/box-layout.svg -o docs/diagrams/box-layout.png
 
 "1590DD" is not one case.  Hammond's and Tayda's differ in depth, wall, width and pillars, so
-the layout is checked in each maker's drawing (CASES) and in the owner's measured prototype.
+the layout is checked in each maker's drawing (CASES) and at the owner's measured depth.
 It exits non-zero if anything collides in any of them.  Numbers marked "est." are estimates to be replaced
 from the maker's drawing when the part is chosen; the rest are from the drawings named beside
 them or from the owner's measurements of 2026-11-14.  No third-party Python is needed.
@@ -29,17 +29,19 @@ import sys
 #   hammond: drawing 1590DD: inside 179.26 x 112.26 x 32.00, wall and floor 2.50.  Six screws
 #            on 178 x 110 (and the middle of the long sides); the bosses' reach is est. from
 #            the 101.07 between the middle pair.
-#   prototype: the owner's case as measured, 2026-11-14, with the pillars as first modelled.
+#   hammond-30: Hammond's, which the owner's case is, at the 30 mm he measured inside it
+#            (the drawing says 32.00): the shallowest the design has to fit.
 CASES = {
     "tayda": dict(W=178.5, D=109.5, H=30.5, wall=2.2, mid=False, half=0.0, reach=(4.0, 4.0),
                   source="Tayda drawing A-5141"),
     "hammond": dict(W=179.26, D=112.26, H=32.0, wall=2.5, mid=True, half=5.5, reach=(6.5, 7.0),
                     source="Hammond drawing 1590DD"),
-    "prototype": dict(W=178.26, D=110.26, H=30.0, wall=2.3, mid=True, half=4.0, reach=(9.0, 9.0),
-                      source="the owner's measurements"),
+    "hammond-30": dict(W=179.26, D=112.26, H=30.0, wall=2.5, mid=True, half=5.5,
+                       reach=(6.5, 7.0), source="Hammond drawing 1590DD, 30 mm deep"),
 }
 DEFAULT = "tayda"                  # the shallowest drawing, and the case Tayda's service drills
 NEUTRIK_MAX_PANEL = 3.0            # NCJ6FA-H, drawing 20004521
+JACKS = (("out socket", 125.0), ("EXT FS socket", 143.7), ("guitar in socket", 162.4))
 
 W = D = H = CX = 0.0
 CASE: dict = {}
@@ -96,17 +98,20 @@ def build(name):
     part("Pi board header socket", PIX + 6.5, PIX + 58.5, PIY + 49.5, PIY + 55.5, PB_TOP,
          PI_Z - 8.5 + 6.0, "piboard", "#7fb2e5")
     part("USB-C power socket", 35.5, 44.5, 0, 7.5, PB_TOP, PB_TOP + 3.3, "piboard", "#7fb2e5")
-    part("MIDI socket (3.5 mm)", 71, 77, 0, 14, PB_TOP, PB_TOP + 5.0, "piboard", "#7fb2e5",
-         "est.")
+    # PJ-392 type, threaded bush and nut: 8 x 8 mm, 16 long (LCSC's listing; drawing to read).
+    part("MIDI socket (3.5 mm)", 72, 80, 0, 16, PB_TOP, PB_TOP + 8.0, "piboard", "#7fb2e5",
+         "PJ-392 type")
 
     # --- the audio board -----------------------------------------------------------------
     AB_TOP = 4.0
-    part("audio board", 115.5, 168.5, 2, 106, AB_TOP - 1.6, AB_TOP, "audio", "#bfe6d6")
-    part("audio board, mic tongue", 168.5, 177.5, 12, 98, AB_TOP - 1.6, AB_TOP, "audio",
+    part("audio board", 115.0, 172.0, 2, 106, AB_TOP - 1.6, AB_TOP, "audio", "#bfe6d6")
+    part("audio board, mic tongue", 172.0, 177.5, 12, 98, AB_TOP - 1.6, AB_TOP, "audio",
          "#bfe6d6")
-    # 1/4-inch sockets: est. 16 wide, 12 tall, 23 behind the wall (Neutrik NMJ6HFD2's model).
-    for name, cx in (("out socket", 124.0), ("EXT FS socket", 141.5), ("guitar in socket", 159.0)):
-        part(name, cx - 8, cx + 8, 0, 23, AB_TOP, AB_TOP + 12.0, "audio", "#6cc9a6", "size est.")
+    # Neutrik NMJ6HCD2 (drawing ST-NMJ6HCD2): 18.2 wide, 15.67 tall, 20.6 behind the wall,
+    # its axis 7.53 above the board; an 11.4 mm hole.  18.7 apart leaves 0.5 between bodies.
+    for name, cx in JACKS:
+        part(name, cx - 9.1, cx + 9.1, 0, 21, AB_TOP, AB_TOP + 15.7, "audio", "#6cc9a6",
+             "Neutrik NMJ6HCD2")
     # Neutrik NCJ6FA-H (drawing 20004521): 25 x 25 behind the wall, 24.5 deep, its centre
     # 12.5 above the board, pins 3.5 below the body.
     MIC_Y = 47.0
@@ -121,8 +126,8 @@ def build(name):
     # --- the controls on the face -------------------------------------------------------
     ENC = (131.1, 27.1)                                    # the owner's position
     part("control board and encoder", ENC[0] - 16, ENC[0] + 16, ENC[1] - 12, ENC[1] + 42,
-         20.4, H, "control", "#f6dfb4", "board at z 21.9, EC11 body above it; est.")
-    part("button 2", 157.5, 172.5, 10.5, 25.5, 20.0, H, "control", "#f6dfb4",
+         H - 9.6, H, "control", "#f6dfb4", "board 8.1 below the face, EC11 body above it; est.")
+    part("button 2", 157.5, 172.5, 10.5, 25.5, H - 10.0, H, "control", "#f6dfb4",
          "10 mm deep; above the guitar socket")
 
 
@@ -197,8 +202,8 @@ def svg():
                  f'height="{n((y1 - y0) * S)}" fill="{p["colour"]}" stroke="#444" '
                  f'stroke-width="0.7"{dash}/>')
     labels = [("Pi 5 on the screen", 70, 30), ("Pi board", 22, 62), ("heat block", 59, 34),
-              ("USB-C", 40, -1.5), ("MIDI", 74, -1.5), ("out", 124, -1.5), ("EXT FS", 141.5, -1.5),
-              ("in", 159, -1.5), ("mic", 166, 48), ("audio board", 140, 98),
+              ("USB-C", 40, -1.5), ("MIDI", 76, -1.5), ("out", 125, -1.5), ("EXT FS", 143.7, -1.5),
+              ("in", 162.4, -1.5), ("mic", 166, 48), ("audio board", 140, 98),
               ("encoder", 131, 28), ("FS1", 24, 82), ("FS2", 93, 82), ("FS3", 162, 82),
               ("B2", 165, 19), ("USB, Ethernet", 103.5, 40)]
     for s, lx, ly in labels:

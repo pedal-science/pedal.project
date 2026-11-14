@@ -77,7 +77,7 @@ extra screw holes for them.
 |---|---|
 | 0–2.8 mm | Under the boards: pin ends, trimmed |
 | 2.8–4.4 mm | The boards |
-| 4.4–17 mm | Sockets on the audio board (a ¼″ socket is about 12.5 mm tall); low parts elsewhere |
+| 4.4–17 mm | Sockets on the audio board (the ¼″ socket is 15.7 mm tall, so they reach 19.7 mm); low parts elsewhere |
 | 14–27 mm | The footswitch bodies, sunk 16 mm below the face as the owner chose, with their lugs pointing sideways |
 | 20–30 mm | The control board, the encoder's body, the buttons |
 | 3–27 mm | The mic socket's barrel on the right wall, so nothing sits on the face above it |
@@ -89,15 +89,15 @@ socket or a plug.
 
 | Socket | Where | Part type | Why there |
 |---|---|---|---|
-| Guitar in | Rear wall, x ≈ 158 | ¼″, board-mounted, metal bush and nut, switching (plug detect) | At the corner furthest from the Pi. Its sleeve is the one bond between circuit ground and the case |
-| EXT FS | Rear wall, x ≈ 140 | ¼″ stereo, board-mounted, insulated bush | Dual footswitch leads are ¼″. Its two lines are slow, filtered where they enter, and cross the link to the RP2350 |
-| Stereo out | Rear wall, x ≈ 122 | ¼″ stereo, board-mounted, insulated bush | As the prototype |
+| Guitar in | Rear wall, x ≈ 162 | ¼″, board-mounted, metal bush and nut, switching (plug detect) | At the corner furthest from the Pi. Its sleeve is the one bond between circuit ground and the case |
+| EXT FS | Rear wall, x ≈ 144 | ¼″ stereo, board-mounted, insulated bush | Dual footswitch leads are ¼″. Its two lines are slow, filtered where they enter, and cross the link to the RP2350 |
+| Stereo out | Rear wall, x ≈ 125 | ¼″ stereo, board-mounted, insulated bush | As the prototype |
 | Mic | Right wall, y ≈ 34–60 | Combo XLR/¼″, board-mounted, behind the wall, two screws from outside | **Not between the rear sockets**: its flange is 26 mm wide and the rear wall has 56 mm to the right of the Pi, which three ¼″ sockets fill. It sits behind the wall with nothing poking through, so the board can still tilt into the rear wall |
-| MIDI in | Rear wall, x ≈ 74, under the Pi | 3.5 mm stereo, board-mounted, behind the wall | 5 mm tall, so it fits under the Pi where a ¼″ socket cannot. On the digital board, beside its optocoupler |
+| MIDI in | Rear wall, x ≈ 76, under the Pi | 3.5 mm stereo, board-mounted, threaded bush and nut | 8 mm tall, so it fits in the 11 mm under the Pi where a ¼″ socket cannot. On the digital board, beside its optocoupler |
 | USB-C power | Rear wall, x ≈ 40, under the Pi | USB-C socket, board-mounted | See "Power" |
 
-The rear ¼″ sockets are 18 mm apart, which takes ordinary plugs and nuts but not three wide
-"pancake" plugs side by side. The mic socket's fit in a 30 mm wall is the tightest thing in the
+The rear ¼″ sockets are 18.7 mm apart, set by the socket's 18.2 mm body. That takes ordinary
+plugs but not three wide "pancake" plugs side by side. The mic socket's fit in a 30 mm wall is the tightest thing in the
 design: a 24 mm hole leaves 3 mm above and below, and its board must sit at exactly the height the
 socket sets. It is the first thing the mechanical model checks. If it fails, the mic socket becomes
 a panel part on a bought lead.
@@ -121,7 +121,7 @@ filter and low-noise regulators, on the audio board.
 
 "1590DD" is two different cases, from the makers' own drawings:
 
-| | Hammond 1590DD | Tayda 1590DD (A-5141) | The prototype, measured |
+| | Hammond 1590DD | Tayda 1590DD (A-5141) | The prototype (a Hammond, the owner says), measured |
 |---|---|---|---|
 | Outside, with lid | 188 × 120 × 37 mm | 190.5 × 121.5 × 37.4 mm (listed as 188 × 119 × 37.5) | recorded as 188 × 119 × 37.5 |
 | Inside height | **32.0 mm** | **30.5 mm** | 30 mm |
@@ -132,12 +132,12 @@ filter and low-noise regulators, on the audio board.
 So the wall is 2.5 mm at most in either, and Neutrik's 3 mm limit for the mic socket is met. The
 walls do not thicken toward the face, as an earlier note here said.
 
-The prototype's depth and wall match Tayda's drawing; its six pillars match Hammond's. Which it is
-does not change the design, because **the layout has to fit the shallower one anyway**: Tayda's
-drilling service drills Tayda's case, and that is the first route to a made case. Hammond's is
-1.5 mm deeper and its middle pillars come 7 mm in from the long walls, so the layout is checked in
-both. A design that needs 30.0 mm also allows for Tayda's stated 1 mm tolerance against its
-drawing.
+The prototype's case is a Hammond (the owner, 2026-11-14). Its measured 30 mm is 2 mm under the
+drawing's 32.0 and is not explained; nothing depends on which is right, because **the layout has
+to fit a shallow case anyway**: Tayda's drilling service drills Tayda's case, which is 30.5 mm,
+and that is the first route to a made case. So the layout is checked in Tayda's case, in
+Hammond's as drawn, and in Hammond's at 30 mm. Hammond's middle pillars come 7 mm in from the
+long walls; Tayda's case has none.
 
 ## Heat
 
@@ -159,9 +159,15 @@ dust, no fan noise in the room or on the supply, and two fewer things to cut.
 
 Never throttled in any of them, and the clock stayed at 2400 MHz. So the box, as it was on
 7 November with no vents, costs about 10 °C over October's set-up and sits about 10 °C under the
-80 °C the test below asks for. The records do not say whether a cooler was fitted that night or
-whether the base was on; that is worth a line when the test is run. This is the baseline the
-block has to beat, so no new baseline run is needed.
+80 °C the test below asks for. That night the Pi had **a heatsink covering its chips and no fan**
+(the owner). This is the baseline the test has to beat, so no new baseline run is needed.
+
+**The heatsink changes the test.** The block above was sized for a bare processor. With a
+heatsink already on the Pi, the test is to join the heatsink's top to the base plate: thermal pad
+alone if the gap is a few millimetres, a piece of aluminium bar with a pad on it if it is more.
+The gap is measured with a lump of Blu-Tack on the heatsink, the base closed on it and opened
+again. For the design itself the same idea may replace the block: a flat-topped bought heatsink
+and a pad, with no made metal part at all.
 
 The estimate above is not a measurement. **The test** is on the prototype, before anything else is
 designed: a block and a pad between the processor and the base plate, the case closed, the engine
@@ -233,28 +239,60 @@ Hammond's case, in Tayda's, and in the prototype as measured.
 - **Its cut-out is round**: a 22 mm hole and two 3.2 mm screw holes, which a drilling service
   can do.
 - **Its wall is thin enough**: 2.2 or 2.5 mm against Neutrik's limit of 3 mm.
-- **Three ¼″ sockets fit the rear wall.** At 17.5 mm apart they have 2 mm to the Pi's Ethernet
-  socket, taking each as 16 mm wide (an estimate from Neutrik's model of the NMJ6HFD2). The
-  corner pillar is no longer a limit: by the drawings it reaches 4 mm in (Tayda) or about 6.5 mm
-  (Hammond), not the 9 mm first modelled. A slimmer socket would still ease the Ethernet side.
-- **The Pi board stops at x = 83**, which leaves 1.1 mm to Hammond's middle pillar. Tayda's
-  case has no middle pillars.
-- **Above the rear sockets there is 14 mm or more** to the face, enough for the encoder, its
-  board and the second button.
+- **Three ¼″ sockets fit the rear wall, with little to spare.** The chosen socket (Neutrik
+  NMJ6HCD2) is 18.2 mm wide, not the 16 mm first assumed, so the three sit 18.7 mm apart at
+  x = 125.0, 143.7 and 162.4. That leaves 1.9 mm to the Pi's Ethernet socket and 1.3 mm to
+  Hammond's corner pillar (2.5 mm in Tayda's case). A slimmer socket would ease it, but none is
+  stocked where the boards are assembled.
+- **The socket is 15.7 mm tall**, not 12, so its top is at 19.7 mm. The control board above the
+  out and EXT FS sockets clears them by 0.7 mm in a 30 mm case, 1.2 mm in Tayda's and 2.7 mm in
+  Hammond's as drawn. The second button, 10 mm deep, clears the guitar socket by 0.3, 0.8 and
+  2.3 mm. A shallower button, or the button moved off the socket, removes the tightest of these.
+- **The Pi board stops at x = 83**, which leaves 1.1 mm to Hammond's middle pillar.
+- **The MIDI socket fits under the Pi**: 8 mm tall in an 11 mm gap, 2 mm to the side of the Pi's
+  HDMI sockets.
 - **Under the footswitches there is 10 mm or more** above the audio board.
 
-Still estimates in the model: the ¼″ and 3.5 mm sockets' sizes, the screen module's frame
+Still estimates in the model: the USB-C socket, the control board, the screen module's frame
 (Waveshare publish no outline), the processor's position on the Pi, and Hammond's pillars' reach
 (taken from the 101.07 mm between its middle pair).
 
+## Parts chosen so far
+
+The parts that set the case's holes, each from its maker's drawing and found at LCSC on
+2026-11-14 (stock and price as the parts database had them that day):
+
+| Use | Part | LCSC | Stock | Price | Hole in the case |
+|---|---|---|---|---|---|
+| Guitar in, EXT FS, stereo out | Neutrik NMJ6HCD2: ¼″ stereo, switched, board-mounted, chrome ferrule and nut from outside. 18.2 × 15.7 mm, 20.6 mm behind the wall, axis 7.53 mm above the board | C368502 | 795 | $3.27 | ⌀11.4 mm, its centre 11.5 mm above the base plate |
+| Mic | Neutrik NCJ6FA-H: combo XLR and ¼″, board-mounted, behind the wall | C368458 | 667 | $3.06 | ⌀22 mm and two ⌀3.2 mm, its centre 16.5 mm above the base plate |
+| MIDI in | A PJ-392-type 3.5 mm stereo socket with a threaded bush and nut (HOOYA PJ-392A, or CAX PJ-392-AG). Drawing still to read | C2939164, or C49274303 | 346, 826 | $0.37, $0.32 | ⌀6 mm (to confirm) |
+| Footswitch leads, on the Pi board | JST S2B-XH-A, side entry, 6.1 mm high, for bought two-wire XH leads | C157931 | 66,327 | $0.07 | none |
+
+One ¼″ part serves all three places. Whether its chrome ferrule is joined to its sleeve contact
+is not on the drawing and is checked with a meter on the first one, since the guitar socket is
+meant to be the one bond to the case.
+
+Still to choose, with what is known:
+
+- **USB-C power socket.** Ordinary board-edge sockets (LCSC has them in hundreds of thousands)
+  are 7.35 mm long and overhang the board by about a millimetre, which leaves the socket's mouth
+  about a millimetre inside a 2.5 mm wall. A USB-C plug needs the mouth nearly flush with the
+  outside. So this wants a long-bodied socket, and a ⌀9.5–10 mm round hole in place of a slot.
+- **The encoder.** Alps EC11E types are stocked in thousands (C361167, C370970, C202365 among
+  them); which one depends on shaft length, detents and bush, read from Alps' drawing.
+- **The two buttons.** Either the owner's 15 mm panel buttons on bought leads, or lit switches on
+  the control board that poke through round holes. The owner's taste decides; see the model's
+  note on depth above.
+- **The flat cables and their connectors** (Pi board to audio board, Pi board to control board),
+  and **the 40-pin socket** under the Pi. Common parts; not yet picked by number.
+
 ## Needed from the owner
 
-- **For the heat test only:** a piece of aluminium about 15 × 15 mm and 10–11 mm thick, and soft
-  thermal pad 2 mm thick, to fill the 13 mm between the Pi's processor and the base plate, and
-  vip switched on. The logging is run from a session.
-- **In passing, next time the case is open:** whose name is cast inside it. Tayda's has
-  "TAYDA ELECTRONICS 1590DD" under the lid; Hammond's has "HAMMOND 1590DD" in the box and the
-  lid. Nothing waits on this.
+- **For the heat test:** the gap between the top of the Pi's heatsink and the base plate, by the
+  Blu-Tack method in "Heat". Then thermal pad of about that thickness, or a piece of aluminium
+  bar and a thinner pad; and vip switched on. The logging is run from a session.
+- **The two buttons:** keep the panel buttons, or board-mounted ones through round holes.
 
 ## Plan
 
@@ -281,6 +319,7 @@ case, the firmware and the device configuration are here.
 - [Hammond: 1590DD drawing](https://www.hammfg.com/files/parts/pdf/1590DD.pdf),
   [Tayda: 1590DD drawing A-5141](https://www.taydaelectronics.com/datasheets/files/TAYDA-A-5141.pdf)
   and [its listing](https://www.taydaelectronics.com/hardware-tools/enclosures/1590dd-style/1590dd-style-aluminum-diecast-enclosure.html)
+- [Neutrik NMJ6HCD2](https://www.neutrik.com/en/product/nmj6hcd2) and its [drawing](https://www.neutrik.com/media/8582/download/st-nmj6hcd2.PDF?v=3)
 - [JLCCNC: enclosure machining guide](https://jlccnc.com/blog/cnc-enclosure-guide)
 - [Raspberry Pi: heating and cooling Raspberry Pi 5](https://www.raspberrypi.com/news/heating-and-cooling-raspberry-pi-5/),
   [Akasa Pi-5 Pro review](https://bret.dk/akasa-pi-5-pro-raspberry-pi-5-case-review/),
