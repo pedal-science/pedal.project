@@ -8,6 +8,7 @@ the smallest clearances, and draws a plan and a section.
 
     python3 enclosure/src/box_layout.py            # check every case, write the SVG
     python3 enclosure/src/box_layout.py hammond    # one case, and draw that one
+    python3 enclosure/src/box_layout.py --holes hammond tayda    # the hole table
     rsvg-convert -w 1700 docs/diagrams/box-layout.svg -o docs/diagrams/box-layout.png
 
 "1590DD" is not one case.  Hammond's and Tayda's differ in depth, wall, width and pillars, so
@@ -42,6 +43,9 @@ CASES = {
 DEFAULT = "tayda"                  # the shallowest drawing, and the case Tayda's service drills
 NEUTRIK_MAX_PANEL = 3.0            # NCJ6FA-H, drawing 20004521
 JACKS = (("out socket", 125.0), ("EXT FS socket", 143.7), ("guitar in socket", 162.4))
+USBC_X, MIDI_X, MIC_Y = 40.0, 76.0, 47.0
+ENCODER, BUTTONS = (131.1, 30.0), ((125.0, 55.0), (141.0, 55.0))
+FLOOR = 2.5                        # the face's thickness, both makers
 
 W = D = H = CX = 0.0
 CASE: dict = {}
@@ -97,10 +101,14 @@ def build(name):
          "cut out around the heat block")
     part("Pi board header socket", PIX + 6.5, PIX + 58.5, PIY + 49.5, PIY + 55.5, PB_TOP,
          PI_Z - 8.5 + 6.0, "piboard", "#7fb2e5")
-    part("USB-C power socket", 35.5, 44.5, 0, 7.5, PB_TOP, PB_TOP + 3.3, "piboard", "#7fb2e5")
-    # PJ-392 type, threaded bush and nut: 8 x 8 mm, 16 long (LCSC's listing; drawing to read).
-    part("MIDI socket (3.5 mm)", 72, 80, 0, 16, PB_TOP, PB_TOP + 8.0, "piboard", "#7fb2e5",
-         "PJ-392 type")
+    # SHOU HAN TYPE-C 16PIN L8.35: 8.94 x 3.26, 8.35 long, its mouth about 2.5 past the
+    # board's edge and so about 2 mm into the wall.
+    part("USB-C power socket", USBC_X - 4.5, USBC_X + 4.5, 0, 6.4, PB_TOP, PB_TOP + 3.3,
+         "piboard", "#7fb2e5", "SHOU HAN TYPE-C 16PIN L8.35")
+    # XKB PJ-324M0: 11.5 wide, 6.45 tall, 10.7 behind the wall, axis 3.0 above the board,
+    # an M6 nose 3.55 long that sits in the wall.
+    part("MIDI socket (3.5 mm)", MIDI_X - 6, MIDI_X + 6, 0, 10.7, PB_TOP, PB_TOP + 6.5,
+         "piboard", "#7fb2e5", "XKB PJ-324M0")
 
     # --- the audio board -----------------------------------------------------------------
     AB_TOP = 4.0
@@ -114,7 +122,6 @@ def build(name):
              "Neutrik NMJ6HCD2")
     # Neutrik NCJ6FA-H (drawing 20004521): 25 x 25 behind the wall, 24.5 deep, its centre
     # 12.5 above the board, pins 3.5 below the body.
-    MIC_Y = 47.0
     part("mic combo socket", W - 24.5, W, MIC_Y - 12.5, MIC_Y + 12.5, AB_TOP, AB_TOP + 25.0,
          "audio", "#6cc9a6", "Neutrik NCJ6FA-H")
 
@@ -233,6 +240,33 @@ def svg():
     return "\n".join(o)
 
 
+def holes(name):
+    """The case's holes, from its centre lines and from the outside of the face."""
+    build(name)
+    pb_top = H - 13.0 - 1.6 - 11.0
+    below = lambda z: FLOOR + H - z                    # mm below the face's outside
+    rows = [("face", "screen window, 99 x 59", 59.5 - CX, D / 2 - 38.5, "rectangle"),
+            ("face", "encoder", ENCODER[0] - CX, D / 2 - ENCODER[1], "7.2")]
+    rows += [("face", f"button {i + 1}", bx - CX, D / 2 - by, "7.5")
+             for i, (bx, by) in enumerate(BUTTONS)]
+    rows += [("face", f"footswitch {i + 1}", fx - CX, D / 2 - (D - 29), "12")
+             for i, fx in enumerate((CX - 69, CX, CX + 69))]
+    rows += [("rear wall", "USB-C power", USBC_X - CX, below(pb_top + 1.65), "10"),
+             ("rear wall", "MIDI in", MIDI_X - CX, below(pb_top + 3.0), "6.5")]
+    rows += [("rear wall", jn.replace(" socket", ""), jx - CX, below(4.0 + 7.53), "11.4")
+             for jn, jx in JACKS]
+    rows += [("right wall", "mic", D / 2 - MIC_Y, below(4.0 + 12.5), "22"),
+             ("right wall", "mic screw", D / 2 - MIC_Y + 9.9, below(4.0 + 12.5 + 9.9), "3.2"),
+             ("right wall", "mic screw", D / 2 - MIC_Y - 9.9, below(4.0 + 12.5 - 9.9), "3.2")]
+    print(f"== holes, {name} ({CASE['source']})")
+    print("   face: mm right of centre, mm toward the rear of centre, seen from above")
+    print("   walls: mm along the wall from its centre (rear wall: toward the player's right;"
+          " right wall: toward the rear), mm below the outside of the face")
+    for wall, what, a, b, dia in rows:
+        print(f"   {wall:10s} {what:22s} {a:7.1f} {b:7.1f}   {dia}")
+    return rows
+
+
 def report(name):
     build(name)
     hits, near = check()
@@ -256,7 +290,12 @@ def report(name):
 
 
 def main():
-    names = sys.argv[1:] or list(CASES)
+    args = sys.argv[1:]
+    if args and args[0] == "--holes":
+        for name in args[1:] or ["hammond"]:
+            holes(name)
+        return 0
+    names = args or list(CASES)
     bad = [name for name in names if report(name)]
     drawn = names[0] if len(names) == 1 else DEFAULT
     build(drawn)

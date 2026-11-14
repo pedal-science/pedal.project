@@ -269,7 +269,10 @@ The parts that set the case's holes, each from its maker's drawing and found at 
 |---|---|---|---|---|---|
 | Guitar in, EXT FS, stereo out | Neutrik NMJ6HCD2: ¼″ stereo, switched, board-mounted, chrome ferrule and nut from outside. 18.2 × 15.7 mm, 20.6 mm behind the wall, axis 7.53 mm above the board | C368502 | 795 | $3.27 | ⌀11.4 mm, its centre 11.5 mm above the base plate |
 | Mic | Neutrik NCJ6FA-H: combo XLR and ¼″, board-mounted, behind the wall | C368458 | 667 | $3.06 | ⌀22 mm and two ⌀3.2 mm, its centre 16.5 mm above the base plate |
-| MIDI in | A PJ-392-type 3.5 mm stereo socket with a threaded bush and nut (HOOYA PJ-392A, or CAX PJ-392-AG). Drawing still to read | C2939164, or C49274303 | 346, 826 | $0.37, $0.32 | ⌀6 mm (to confirm) |
+| MIDI in | XKB PJ-324M0: 3.5 mm stereo, board-mounted, lying flat, an M6 threaded nose 3.55 mm long with a nut. 11.5 × 6.45 mm, 10.7 mm behind the wall, axis 3.0 mm above the board | C2884986 | 1,316 | $0.55 | ⌀6.5 mm |
+| USB-C power | SHOU HAN TYPE-C 16PIN L8.35: 16 contacts, four through-hole legs, 8.94 × 3.26 mm and 8.35 mm long, so its mouth reaches about 2 mm into the wall | C5379909 | 14,835 | $0.16 | ⌀10 mm, round |
+| The Pi's 40-pin socket | ZHOURI 2.54-2*20: 2 × 20, 8.5 mm high | C2977589 | 37,783 | $0.32 | none |
+| The two buttons | Kinghelm KH-12X12X12H-TJ: a 12 × 12 mm switch, its ⌀6.5 mm round stem 12 mm above the board, so 2.5 mm proud of the face. Not lit | C18186459 | 4,819 | $0.06 | ⌀7.5 mm |
 | Encoder | Bourns PEC11R-4215F-S0024: 24 detents, 24 pulses, push switch, 15 mm flatted shaft, M7 threaded bush with its nut and washer. Body 12.5 × 13.4 mm, about 7 mm behind the face | C143790 | 4,186 | $2.33 | ⌀7.2 mm |
 | The two flat cables' sockets (four) | JUSHUO AFA07-S16FCC-00: 16-way, 1.0 mm pitch, 2.5 mm high, slide lock, for bought 16-way flat cables | C13744 | 19,214 | $0.11 | none |
 | Footswitch leads, on the Pi board | JST S2B-XH-A, side entry, 6.1 mm high, for bought two-wire XH leads | C157931 | 66,327 | $0.07 | none |
@@ -283,25 +286,53 @@ EC11E types LCSC stocks in thousands have none (Alps' drawing shows a plain 7 mm
 rules them out. The Bourns part gives one pulse per detent; the KY-040 in the prototype gives 20,
 so the firmware's count changes by one constant.
 
-Still to choose, with what is known:
+The PJ-392 type first listed for MIDI stands upright on its board (its drawing shows the pins
+out of its back), so it was the wrong kind for a rear wall; the PJ-324M0 lies flat. Its nose is
+3.55 mm long, which leaves a nut only a millimetre of thread through a 2.5 mm wall. It may be
+left without its nut, the nose sitting in the hole.
 
-- **USB-C power socket.** Ordinary board-edge sockets are 7.35 mm long and overhang the board
-  by about a millimetre, which leaves the socket's mouth about a millimetre inside a 2.5 mm
-  wall. A USB-C plug needs the mouth nearly flush with the outside. Candidate: SHOU HAN TYPE-C
-  16PIN L8.35 (C5379909, 14,835 in stock), a millimetre longer; its drawing is still to read.
-  The hole is round, ⌀9.5–10 mm, in place of a slot.
-- **The two buttons.** Board-mounted and lit, their tops 10.5–11 mm above the control board
-  (7 mm to the face, 2.5 mm of wall, a millimetre proud), through round holes. Lit switches
-  that tall are thinly stocked at LCSC (E-Switch's TL1265 at 70 pieces, ROCPU's TPB02 in tens),
-  so the likely answer is a plain tall switch with a translucent cap and a light beside it on
-  the board. To settle with a sample in the test case.
-- **The 40-pin socket** under the Pi: a standard 8.5 mm part; the one first looked up (C50982)
-  is out of stock.
+Still to choose: **how the buttons are lit.** Lit switches tall enough to reach through the face
+are stocked in tens at LCSC (E-Switch's TL1265, ROCPU's TPB02). The switch chosen is plain, so
+the light is a separate part on the control board: a small lamp through its own ⌀3 mm hole beside
+each button is the simple way. Tried with a sample in the test case.
 
 **A risk the test case answers.** The Pi hangs from the screen, the Pi board from the Pi, and the
 Pi board's two sockets must meet their holes in the rear wall. The chain's tolerance may be a
 millimetre. The USB-C hole is round and oversize for that reason; the MIDI socket's nut then
 fixes the board, and the screen must be free to settle behind its window before it is fixed.
+
+## The case's holes
+
+For Hammond's case, from `python3 enclosure/src/box_layout.py --holes hammond` (it prints Tayda's
+too). Face holes are measured from the face's centre; wall holes along the wall from its centre
+line, and down from the outside of the face. Centre lines are used because the walls slope.
+
+| Where | Hole | Across | Up or down | Size |
+|---|---|---|---|---|
+| Face | Screen window | 30.1 mm left of centre | 17.6 mm toward the rear | 99 × 59 mm rectangle |
+| Face | Encoder | 41.5 mm right | 26.1 mm toward the rear | ⌀7.2 mm |
+| Face | Button 1, button 2 | 35.4 and 51.4 mm right | 1.1 mm toward the rear | ⌀7.5 mm |
+| Face | Footswitches 1–3 | 69.0 mm left, centre, 69.0 mm right | 27.1 mm toward the player | ⌀12 mm |
+| Rear wall | USB-C power | 49.6 mm left of centre, seen from the player | 26.5 mm below the face | ⌀10 mm |
+| Rear wall | MIDI in | 13.6 mm left | 25.1 mm below | ⌀6.5 mm |
+| Rear wall | Out, EXT FS, guitar in | 35.4, 54.1 and 72.8 mm right | 23.0 mm below | ⌀11.4 mm |
+| Right wall | Mic | 9.1 mm toward the rear of centre | 18.0 mm below | ⌀22 mm, and two ⌀3.2 mm screw holes 9.9 mm out on a diagonal (which diagonal, from Neutrik's drawing) |
+
+Fifteen holes and one window. This is a first table for a test case, not a drilling order: the
+sockets hanging from the Pi (USB-C, MIDI) move with the Pi, whose place is from the owner's
+measurements of the prototype.
+
+**Two things the drawings raise, for the test case to answer:**
+
+- **The walls slope.** Tayda's drawing gives about 2.5–3° a side. Hammond's gives no angle; its
+  inside is 1.9 mm a side wider at the rim than at the face, some of which is the step the lid
+  sits in. A socket nutted flat to a sloping wall wants to tilt its board by that angle. Made
+  pedals with board-mounted jacks in these cases live with it; here the audio board is also
+  held on a second wall. If it strains, the fixes are a board that rests on posts and sockets
+  left a turn loose until it is level, or a made case with a flat spot at each socket.
+- **Tayda's lid has a rim** that stands about 4 mm up inside the walls (Hammond's is under
+  2 mm). The audio board's sockets start 4.0 mm above the base plate, so in Tayda's case the
+  board may need to sit half a millimetre higher, which the mic socket's 1.5 mm to spare allows.
 
 ## Needed from the owner
 
@@ -335,6 +366,7 @@ case, the firmware and the device configuration are here.
   [Tayda: 1590DD drawing A-5141](https://www.taydaelectronics.com/datasheets/files/TAYDA-A-5141.pdf)
   and [its listing](https://www.taydaelectronics.com/hardware-tools/enclosures/1590dd-style/1590dd-style-aluminum-diecast-enclosure.html)
 - [Neutrik NMJ6HCD2](https://www.neutrik.com/en/product/nmj6hcd2) and its [drawing](https://www.neutrik.com/media/8582/download/st-nmj6hcd2.PDF?v=3)
+- LCSC's datasheets for the [USB-C socket](https://jlcpcb.com/partdetail/C5379909), the [MIDI socket](https://jlcpcb.com/partdetail/C2884986) and the [button switch](https://jlcpcb.com/partdetail/C18186459)
 - [Bourns PEC11R datasheet](https://www.bourns.com/docs/product-datasheets/pec11r.pdf),
   [Alps EC11E15244G1](https://tech.alpsalpine.com/e/products/detail/EC11E15244G1/)
 - [JLCCNC: enclosure machining guide](https://jlccnc.com/blog/cnc-enclosure-guide)
