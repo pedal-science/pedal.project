@@ -1,7 +1,8 @@
 # The box, designed to be made
 
-Written 2026-11-14, at the owner's request. **A proposal, not a decision**: the owner confirms or
-changes the choices under "To confirm" before anything is drawn in KiCad or cut in metal.
+Written 2026-11-14, at the owner's request, and **agreed by the owner the same day** ("Decided").
+The first pass of the mechanical model is in "The model so far"; what it still needs from the
+owner is in "Needed from the owner".
 
 The prototype in the 1590DD works, and it taught what the format needs. It is also hand-wired,
 hand-cut and unfinished: no input buffer, mono out, no mic input, no MIDI, the encoder and buttons
@@ -91,7 +92,7 @@ socket or a plug.
 | EXT FS | Rear wall, x ≈ 140 | ¼″ stereo, board-mounted, insulated bush | Dual footswitch leads are ¼″. Its two lines are slow, filtered where they enter, and cross the link to the RP2350 |
 | Stereo out | Rear wall, x ≈ 122 | ¼″ stereo, board-mounted, insulated bush | As the prototype |
 | Mic | Right wall, y ≈ 34–60 | Combo XLR/¼″, board-mounted, behind the wall, two screws from outside | **Not between the rear sockets**: its flange is 26 mm wide and the rear wall has 56 mm to the right of the Pi, which three ¼″ sockets fill. It sits behind the wall with nothing poking through, so the board can still tilt into the rear wall |
-| MIDI in | Rear wall, x ≈ 62, under the Pi | 3.5 mm stereo, board-mounted, behind the wall | 5 mm tall, so it fits under the Pi where a ¼″ socket cannot. On the digital board, beside its optocoupler |
+| MIDI in | Rear wall, x ≈ 74, under the Pi | 3.5 mm stereo, board-mounted, behind the wall | 5 mm tall, so it fits under the Pi where a ¼″ socket cannot. On the digital board, beside its optocoupler |
 | USB-C power | Rear wall, x ≈ 40, under the Pi | USB-C socket, board-mounted | See "Power" |
 
 The rear ¼″ sockets are 18 mm apart, which takes ordinary plugs and nuts but not three wide
@@ -165,15 +166,56 @@ second is there if the window cannot be cut.
   It needs standoffs screwed through the face to hold its long end, and the ribbon's sockets do
   not fit under the footswitches.
 
-## To confirm (owner)
+## Decided (owner, 2026-11-14)
+
+The owner agreed the concept as proposed:
 
 1. Sockets soldered to the boards and nutted to the case (rule 2), not on flying leads.
-2. Two boards and the control board, as above.
-3. Power through the Pi board, changing the decision of 2026-10-01; or keep the extension lead.
-4. Try sealed, block-cooled first; a fan only if the test says so.
-5. EXT FS as a ¼″ socket between out and in at 18 mm pitch; or a 3.5 mm socket beside MIDI, with
-   an adaptor lead.
+2. An audio board, a Pi board and a control board.
+3. Power through the Pi board. This is for this design; the prototype keeps the 2026-10-01
+   arrangement that hardware-handoff.md describes.
+4. Sealed and block-cooled first; a fan only if the heat test says so.
+5. EXT FS as a ¼″ socket between out and in.
 6. The Pi 5 stays; the Compute Module is for later.
+
+Also his: the footswitches stay where the case drawing has them, sunk 16 mm.
+
+## The model so far
+
+`enclosure/src/box_layout.py` holds every part as a block and checks that none share space;
+[diagrams/box-layout.png](diagrams/box-layout.png) is its plan and a section. First pass,
+2026-11-14: **27 parts, no collisions.** What it shows:
+
+- **The mic socket fits, with 1 mm to spare.** Neutrik's NCJ6FA-H is 25 × 25 mm behind the wall
+  and 24.5 mm deep, with its centre 12.5 mm above its board (Neutrik drawing 20004521). With the
+  audio board's top 4.0 mm above the base plate, the socket's top is 1.0 mm below the face and
+  its pins end 0.5 mm above the base plate. So the audio board's height is set by this socket,
+  and the 30 mm depth must be right to within about half a millimetre.
+- **Its cut-out is round**: a 22 mm hole and two 3.2 mm screw holes, which a drilling service
+  can do.
+- **Its wall must be 3 mm thick or less** (Neutrik's limit, or the plug does not latch). A
+  1590DD's walls are die-cast with a taper and are thicker toward the face. This is not known
+  for this case and is the first thing to measure. If the wall is too thick there, the choices
+  are a recess milled around the hole (not a drilling-service job), or the mic socket as a panel
+  part on a bought lead.
+- **Three ¼″ sockets fit the rear wall, just.** At 17.5 mm apart they have 2 mm to the Pi's
+  Ethernet socket on one side and 2.3 mm to the corner pillar on the other, taking each as
+  16 mm wide (an estimate from Neutrik's model of the NMJ6HFD2). A slimmer socket would ease it.
+- **Above the rear sockets there is 14 mm** to the face, enough for the encoder, its board and
+  the second button.
+- **Under the footswitches there is 10 mm** above the audio board.
+
+Still estimates in the model: the ¼″ and 3.5 mm sockets' sizes, the screen module's frame
+(Waveshare publish no outline), the processor's position on the Pi, and the pillars' exact size.
+
+## Needed from the owner
+
+- **The wall's thickness** on the right-hand wall, about half-way up and 45–50 mm from the rear:
+  callipers across the wall, or the depth of a drilled hole.
+- **The inside depth again**, to half a millimetre if possible, near the right wall.
+- **For the heat test:** a piece of aluminium about 15 × 15 mm and 10–11 mm thick, and soft
+  thermal pad 2 mm thick, to fill the 13 mm between the Pi's processor and the base plate. With
+  vip switched on and reachable, the logging is run from a session.
 
 ## Plan
 
@@ -183,7 +225,7 @@ case, the firmware and the device configuration are here.
 | Step | What | Done when |
 |---|---|---|
 | 1 | **The heat test** on the prototype: block, pad, closed case, an hour's heavy rig, the log in `bench-results/` | Sealed or fan is decided from a number |
-| 2 | **Parts and the mechanical model.** Every socket, switch and connector chosen with its datasheet drawing and its LCSC number; the case, the Pi, the screen and the three boards modelled in `enclosure/` in plan and section; the assembly order walked through in the model | The mic socket's fit, every height and the order of assembly are shown to work, and the model gives the board outlines and the hole table |
+| 2 | **Parts and the mechanical model** (started: `enclosure/src/box_layout.py`). Every socket, switch and connector chosen with its datasheet drawing and its LCSC number; the case, the Pi, the screen and the three boards modelled in `enclosure/` in plan and section; the assembly order walked through in the model | The mic socket's fit, every height and the order of assembly are shown to work, and the model gives the board outlines and the hole table |
 | 3 | **A test case.** One 1590DD drilled, coated and printed from the hole table; dummy boards cut from card or printed, with the real sockets, tried in it | The owner has a made case that everything fits |
 | 4 | **Schematics**: the audio board cut from pedal-codec's phase 2 sheets, the Pi board new, the control board; ngspice for what changed | The owner has reviewed the PDFs |
 | 5 | **Layouts**, four layers for the audio board, checked in the model | DRC clean; the owner has reviewed the plots and the boards in the case model |
