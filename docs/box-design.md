@@ -13,7 +13,8 @@ together.
 
 The picture is [diagrams/box-concept.png](diagrams/box-concept.png). Positions in this file are in
 the case layout's frame: x from the left inside wall, y from the rear inside wall, in mm, and z up
-from the base plate. The 1590DD is 178.26 × 110.26 mm inside and 30 mm deep (measured).
+from the base plate. The case's sizes are in "Which 1590DD" below: there are two, and the
+layout is checked in both.
 
 ## What it is
 
@@ -116,6 +117,28 @@ decision and the bought extension lead, which is also a plug-in part. The owner 
 The analogue supplies stay as pedal-codec's design has them: from the 5 V through a load switch,
 filter and low-noise regulators, on the audio board.
 
+## Which 1590DD
+
+"1590DD" is two different cases, from the makers' own drawings:
+
+| | Hammond 1590DD | Tayda 1590DD (A-5141) | The prototype, measured |
+|---|---|---|---|
+| Outside, with lid | 188 × 120 × 37 mm | 190.5 × 121.5 × 37.4 mm (listed as 188 × 119 × 37.5) | recorded as 188 × 119 × 37.5 |
+| Inside height | **32.0 mm** | **30.5 mm** | 30 mm |
+| Wall | **2.5 mm**, the same at both ends: the draft is on both faces | **2.2 mm** | about 2.3 mm (the owner) |
+| Inside at the face | 179.26 × 112.26 mm | 178.5 × 109.5 mm (its outside at the floor less two walls) | 178.26 × 110.26 mm |
+| Lid screws | six: the corners and the middle of each long side | four, in the corners | six pillars |
+
+So the wall is 2.5 mm at most in either, and Neutrik's 3 mm limit for the mic socket is met. The
+walls do not thicken toward the face, as an earlier note here said.
+
+The prototype's depth and wall match Tayda's drawing; its six pillars match Hammond's. Which it is
+does not change the design, because **the layout has to fit the shallower one anyway**: Tayda's
+drilling service drills Tayda's case, and that is the first route to a made case. Hammond's is
+1.5 mm deeper and its middle pillars come 7 mm in from the long walls, so the layout is checked in
+both. A design that needs 30.0 mm also allows for Tayda's stated 1 mm tolerance against its
+drawing.
+
 ## Heat
 
 The Pi's processor faces the base plate, 13.5 mm above it. **Proposed:** an aluminium block on the
@@ -125,7 +148,22 @@ roughly 15–20 °C over the room by a first estimate. Bought fanless aluminium 
 smaller, are reported to hold a fully loaded Pi 5 at about 60–77 °C. No fan means no vents, no
 dust, no fan noise in the room or on the supply, and two fewer things to cut.
 
-That estimate is not a measurement. **The test** is on the prototype, before anything else is
+**What is already measured** (vip, `bench-results/`):
+
+| When | Where | Load | Temperature |
+|---|---|---|---|
+| 2026-10-08 | before the box | an hour's playing through the codec | 53.8–58.2 °C |
+| 2026-10-10 | before the box | a heavy rig, five ten-minute arms (the rigpa soak) | 56.5–63.7 °C |
+| 2026-10-10 | before the box | every render core full (T11) | 80.4 °C |
+| 2026-11-07 | **in the box** | a heavy rig from the same harness, five ten-minute arms (the compact-layout soak) | **68.1–71.9 °C** |
+
+Never throttled in any of them, and the clock stayed at 2400 MHz. So the box, as it was on
+7 November with no vents, costs about 10 °C over October's set-up and sits about 10 °C under the
+80 °C the test below asks for. The records do not say whether a cooler was fitted that night or
+whether the base was on; that is worth a line when the test is run. This is the baseline the
+block has to beat, so no new baseline run is needed.
+
+The estimate above is not a measurement. **The test** is on the prototype, before anything else is
 designed: a block and a pad between the processor and the base plate, the case closed, the engine
 running a heavy rig for an hour, the temperature logged. If it stays well under 80 °C, the design
 is sealed. If not, a 30 mm fan on the Pi's fan header and a row of round vent holes in the rear
@@ -182,40 +220,41 @@ Also his: the footswitches stay where the case drawing has them, sunk 16 mm.
 
 ## The model so far
 
-`enclosure/src/box_layout.py` holds every part as a block and checks that none share space;
-[diagrams/box-layout.png](diagrams/box-layout.png) is its plan and a section. First pass,
-2026-11-14: **27 parts, no collisions.** What it shows:
+`enclosure/src/box_layout.py` holds every part as a block and checks that none share space, in
+Hammond's case, in Tayda's, and in the prototype as measured.
+[diagrams/box-layout.png](diagrams/box-layout.png) is its plan and a section, drawn in Tayda's.
+2026-11-14: **no collisions in any of the three.** What it shows:
 
-- **The mic socket fits, with 1 mm to spare.** Neutrik's NCJ6FA-H is 25 × 25 mm behind the wall
-  and 24.5 mm deep, with its centre 12.5 mm above its board (Neutrik drawing 20004521). With the
-  audio board's top 4.0 mm above the base plate, the socket's top is 1.0 mm below the face and
-  its pins end 0.5 mm above the base plate. So the audio board's height is set by this socket,
-  and the 30 mm depth must be right to within about half a millimetre.
+- **The mic socket fits.** Neutrik's NCJ6FA-H is 25 × 25 mm behind the wall and 24.5 mm deep,
+  with its centre 12.5 mm above its board (Neutrik drawing 20004521). With the audio board's top
+  4.0 mm above the base plate, its pins end 0.5 mm above the base plate and its top is 1.5 mm
+  below the face in Tayda's case, 3.0 mm in Hammond's, 1.0 mm at the measured 30 mm. The audio
+  board's height is set by this socket.
 - **Its cut-out is round**: a 22 mm hole and two 3.2 mm screw holes, which a drilling service
   can do.
-- **Its wall must be 3 mm thick or less** (Neutrik's limit, or the plug does not latch). A
-  1590DD's walls are die-cast with a taper and are thicker toward the face. This is not known
-  for this case and is the first thing to measure. If the wall is too thick there, the choices
-  are a recess milled around the hole (not a drilling-service job), or the mic socket as a panel
-  part on a bought lead.
-- **Three ¼″ sockets fit the rear wall, just.** At 17.5 mm apart they have 2 mm to the Pi's
-  Ethernet socket on one side and 2.3 mm to the corner pillar on the other, taking each as
-  16 mm wide (an estimate from Neutrik's model of the NMJ6HFD2). A slimmer socket would ease it.
-- **Above the rear sockets there is 14 mm** to the face, enough for the encoder, its board and
-  the second button.
-- **Under the footswitches there is 10 mm** above the audio board.
+- **Its wall is thin enough**: 2.2 or 2.5 mm against Neutrik's limit of 3 mm.
+- **Three ¼″ sockets fit the rear wall.** At 17.5 mm apart they have 2 mm to the Pi's Ethernet
+  socket, taking each as 16 mm wide (an estimate from Neutrik's model of the NMJ6HFD2). The
+  corner pillar is no longer a limit: by the drawings it reaches 4 mm in (Tayda) or about 6.5 mm
+  (Hammond), not the 9 mm first modelled. A slimmer socket would still ease the Ethernet side.
+- **The Pi board stops at x = 83**, which leaves 1.1 mm to Hammond's middle pillar. Tayda's
+  case has no middle pillars.
+- **Above the rear sockets there is 14 mm or more** to the face, enough for the encoder, its
+  board and the second button.
+- **Under the footswitches there is 10 mm or more** above the audio board.
 
 Still estimates in the model: the ¼″ and 3.5 mm sockets' sizes, the screen module's frame
-(Waveshare publish no outline), the processor's position on the Pi, and the pillars' exact size.
+(Waveshare publish no outline), the processor's position on the Pi, and Hammond's pillars' reach
+(taken from the 101.07 mm between its middle pair).
 
 ## Needed from the owner
 
-- **The wall's thickness** on the right-hand wall, about half-way up and 45–50 mm from the rear:
-  callipers across the wall, or the depth of a drilled hole.
-- **The inside depth again**, to half a millimetre if possible, near the right wall.
-- **For the heat test:** a piece of aluminium about 15 × 15 mm and 10–11 mm thick, and soft
-  thermal pad 2 mm thick, to fill the 13 mm between the Pi's processor and the base plate. With
-  vip switched on and reachable, the logging is run from a session.
+- **For the heat test only:** a piece of aluminium about 15 × 15 mm and 10–11 mm thick, and soft
+  thermal pad 2 mm thick, to fill the 13 mm between the Pi's processor and the base plate, and
+  vip switched on. The logging is run from a session.
+- **In passing, next time the case is open:** whose name is cast inside it. Tayda's has
+  "TAYDA ELECTRONICS 1590DD" under the lid; Hammond's has "HAMMOND 1590DD" in the box and the
+  lid. Nothing waits on this.
 
 ## Plan
 
@@ -239,6 +278,9 @@ case, the firmware and the device configuration are here.
 - [Tayda: enclosure drill service guide](https://www.taydaelectronics.com/enclosure-drill-service-guide),
   [UV printing service](https://m2.taydaelectronics.com/hardware/enclosures/enclosure-uv-printing-service.html)
 - [DigiKey: Hammond custom enclosures](https://www.digikey.com/en/supplier-centers/h/hammond-manufacturing/custom-enclosures) (the 25-piece minimum)
+- [Hammond: 1590DD drawing](https://www.hammfg.com/files/parts/pdf/1590DD.pdf),
+  [Tayda: 1590DD drawing A-5141](https://www.taydaelectronics.com/datasheets/files/TAYDA-A-5141.pdf)
+  and [its listing](https://www.taydaelectronics.com/hardware-tools/enclosures/1590dd-style/1590dd-style-aluminum-diecast-enclosure.html)
 - [JLCCNC: enclosure machining guide](https://jlccnc.com/blog/cnc-enclosure-guide)
 - [Raspberry Pi: heating and cooling Raspberry Pi 5](https://www.raspberrypi.com/news/heating-and-cooling-raspberry-pi-5/),
   [Akasa Pi-5 Pro review](https://bret.dk/akasa-pi-5-pro-raspberry-pi-5-case-review/),

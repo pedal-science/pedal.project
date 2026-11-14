@@ -6,10 +6,13 @@ rear inside wall toward the player, z up from the base plate.  The script checks
 two blocks share space unless the pair is listed as meant to (a socket on its board), prints
 the smallest clearances, and draws a plan and a section.
 
-    python3 enclosure/src/box_layout.py            # check, report, write the SVG
+    python3 enclosure/src/box_layout.py            # check every case, write the SVG
+    python3 enclosure/src/box_layout.py hammond    # one case, and draw that one
     rsvg-convert -w 1700 docs/diagrams/box-layout.svg -o docs/diagrams/box-layout.png
 
-It exits non-zero if anything collides.  Numbers marked "est." are estimates to be replaced
+"1590DD" is not one case.  Hammond's and Tayda's differ in depth, wall, width and pillars, so
+the layout is checked in each maker's drawing (CASES) and in the owner's measured prototype.
+It exits non-zero if anything collides in any of them.  Numbers marked "est." are estimates to be replaced
 from the maker's drawing when the part is chosen; the rest are from the drawings named beside
 them or from the owner's measurements of 2026-11-14.  No third-party Python is needed.
 """
@@ -19,9 +22,27 @@ from __future__ import annotations
 import os
 import sys
 
-W, D, H = 178.26, 110.26, 30.0     # inside; H measured by the owner
-CX = W / 2
+# Inside sizes at the face (the tub's floor, the narrow end of the draft), in mm.
+#   tayda:   drawing A-5141 "1590DD", 2024-06-06: inside height 30.5, floor 2.5, wall 2.2.
+#            Length and width are its outside sizes at the floor (182.9, 113.9) less two walls.
+#            Four screws, in the corners; the bosses reach 3.75 mm in (171 and 102 between them).
+#   hammond: drawing 1590DD: inside 179.26 x 112.26 x 32.00, wall and floor 2.50.  Six screws
+#            on 178 x 110 (and the middle of the long sides); the bosses' reach is est. from
+#            the 101.07 between the middle pair.
+#   prototype: the owner's case as measured, 2026-11-14, with the pillars as first modelled.
+CASES = {
+    "tayda": dict(W=178.5, D=109.5, H=30.5, wall=2.2, mid=False, half=0.0, reach=(4.0, 4.0),
+                  source="Tayda drawing A-5141"),
+    "hammond": dict(W=179.26, D=112.26, H=32.0, wall=2.5, mid=True, half=5.5, reach=(6.5, 7.0),
+                    source="Hammond drawing 1590DD"),
+    "prototype": dict(W=178.26, D=110.26, H=30.0, wall=2.3, mid=True, half=4.0, reach=(9.0, 9.0),
+                      source="the owner's measurements"),
+}
+DEFAULT = "tayda"                  # the shallowest drawing, and the case Tayda's service drills
+NEUTRIK_MAX_PANEL = 3.0            # NCJ6FA-H, drawing 20004521
 
+W = D = H = CX = 0.0
+CASE: dict = {}
 PARTS: list[dict] = []
 
 
@@ -30,66 +51,80 @@ def part(name, x0, x1, y0, y1, z0, z1, group, colour="#cccccc", note=""):
                       colour=colour, note=note))
 
 
-# --- the case -------------------------------------------------------------------
-for i, (px, py) in enumerate([(5, 5), (CX, 5), (W - 5, 5), (5, D - 5), (CX, D - 5),
-                              (W - 5, D - 5)]):
-    part(f"pillar {i + 1}", px - 4, px + 4, py - 4, py + 4, 0, H, "case", "#d9d5c8")
+def build(name):
+    """Fill PARTS for one case."""
+    global W, D, H, CX, CASE
+    CASE = CASES[name]
+    W, D, H, CX = CASE["W"], CASE["D"], CASE["H"], CASE["W"] / 2
+    PARTS.clear()
 
-# --- the screen and the Pi ---------------------------------------------------------
-# Window 99 x 59, 10 from the left, 9 from the rear (the owner).  The module's own outline
-# is not published, and it clears the corner pillars in the prototype, so only the window's
-# own area is modelled, 7 mm thick.
-part("screen module", 10, 109, 9, 68, 23, H, "pi", "#e3e0f7", "frame not modelled")
-# Pi 5, 85 x 56 (Raspberry Pi's mechanical drawing), component side down.  Its left end is
-# 26 mm from the left wall and its rear edge 10 mm from the rear wall, from the owner's
-# measurements of the header plug.  Its board is 13 mm below the face (screen 7 + standoff 6).
-PIX, PIY, PI_Z = 26.0, 10.0, H - 13.0 - 1.6          # PI_Z: the component face, 15.4
-part("Pi 5 board", PIX, PIX + 85, PIY, PIY + 56, PI_Z, PI_Z + 1.6, "pi", "#c9c4ee")
-part("Pi USB and Ethernet", PIX + 67, PIX + 88, PIY + 1, PIY + 55, 0.0, PI_Z, "pi",
-     "#c9c4ee", "fills the depth; 3 mm past the board's end")
-part("Pi header pins", PIX + 7.1, PIX + 57.9, PIY + 50, PIY + 55, PI_Z - 8.5, PI_Z, "pi",
-     "#8f88d8")
-part("Pi power and HDMI sockets", PIX + 6, PIX + 44, PIY - 1, PIY + 8, PI_Z - 3.4, PI_Z,
-     "pi", "#8f88d8")
-SOC = (PIX + 33.0, PIY + 23.0)                        # est. from the drawing
-part("heat block", SOC[0] - 7.5, SOC[0] + 7.5, SOC[1] - 7.5, SOC[1] + 7.5, 0.0, PI_Z - 2.4,
-     "heat", "#f3c2b0", "on the base plate, pad on top; position est.")
+    # --- the case -------------------------------------------------------------------
+    rx, ry = CASE["reach"]
+    hw = CASE["half"]                                  # the middle pillars' half-width, est.
+    spots = [(0, rx, 0), (CX - hw, CX + hw, 0), (W - rx, W, 0),
+             (0, rx, 1), (CX - hw, CX + hw, 1), (W - rx, W, 1)]
+    for i, (x0, x1, front) in enumerate(spots):
+        if i in (1, 4) and not CASE["mid"]:
+            continue
+        y0, y1 = (D - ry, D) if front else (0, ry)
+        part(f"pillar {i + 1}", x0, x1, y0, y1, 0, H, "case", "#d9d5c8")
 
-# --- the Pi board (a HAT on the Pi's header) ---------------------------------------
-PB_TOP = PI_Z - 11.0                                   # 4.4: a HAT sits 11 mm from the Pi
-part("Pi board", 12, 84, 2, 72, PB_TOP - 1.6, PB_TOP, "piboard", "#b9d6f2",
-     "cut out around the heat block")
-part("Pi board header socket", PIX + 6.5, PIX + 58.5, PIY + 49.5, PIY + 55.5, PB_TOP,
-     PI_Z - 8.5 + 6.0, "piboard", "#7fb2e5")
-part("USB-C power socket", 35.5, 44.5, 0, 7.5, PB_TOP, PB_TOP + 3.3, "piboard", "#7fb2e5")
-part("MIDI socket (3.5 mm)", 71, 77, 0, 14, PB_TOP, PB_TOP + 5.0, "piboard", "#7fb2e5",
-     "est.")
+    # --- the screen and the Pi ---------------------------------------------------------
+    # Window 99 x 59, 10 from the left, 9 from the rear (the owner).  The module's own outline
+    # is not published, and it clears the corner pillars in the prototype, so only the window's
+    # own area is modelled, 7 mm thick.
+    part("screen module", 10, 109, 9, 68, 23, H, "pi", "#e3e0f7", "frame not modelled")
+    # Pi 5, 85 x 56 (Raspberry Pi's mechanical drawing), component side down.  Its left end is
+    # 26 mm from the left wall and its rear edge 10 mm from the rear wall, from the owner's
+    # measurements of the header plug.  Its board is 13 mm below the face (screen 7 + standoff 6).
+    PIX, PIY, PI_Z = 26.0, 10.0, H - 13.0 - 1.6          # PI_Z: the Pi's component face
+    part("Pi 5 board", PIX, PIX + 85, PIY, PIY + 56, PI_Z, PI_Z + 1.6, "pi", "#c9c4ee")
+    part("Pi USB and Ethernet", PIX + 67, PIX + 88, PIY + 1, PIY + 55, 0.0, PI_Z, "pi",
+         "#c9c4ee", "fills the depth; 3 mm past the board's end")
+    part("Pi header pins", PIX + 7.1, PIX + 57.9, PIY + 50, PIY + 55, PI_Z - 8.5, PI_Z, "pi",
+         "#8f88d8")
+    part("Pi power and HDMI sockets", PIX + 6, PIX + 44, PIY - 1, PIY + 8, PI_Z - 3.4, PI_Z,
+         "pi", "#8f88d8")
+    SOC = (PIX + 33.0, PIY + 23.0)                        # est. from the drawing
+    part("heat block", SOC[0] - 7.5, SOC[0] + 7.5, SOC[1] - 7.5, SOC[1] + 7.5, 0.0, PI_Z - 2.4,
+         "heat", "#f3c2b0", "on the base plate, pad on top; position est.")
 
-# --- the audio board -----------------------------------------------------------------
-AB_TOP = 4.0
-part("audio board", 115.5, 168.5, 2, 106, AB_TOP - 1.6, AB_TOP, "audio", "#bfe6d6")
-part("audio board, mic tongue", 168.5, 177.5, 12, 98, AB_TOP - 1.6, AB_TOP, "audio",
-     "#bfe6d6")
-# 1/4-inch sockets: est. 16 wide, 12 tall, 23 behind the wall (Neutrik NMJ6HFD2's model).
-for name, cx in (("out socket", 124.0), ("EXT FS socket", 141.5), ("guitar in socket", 159.0)):
-    part(name, cx - 8, cx + 8, 0, 23, AB_TOP, AB_TOP + 12.0, "audio", "#6cc9a6", "size est.")
-# Neutrik NCJ6FA-H (drawing 20004521): 25 x 25 behind the wall, 24.5 deep, its centre
-# 12.5 above the board, pins 3.5 below the body.
-MIC_Y = 47.0
-part("mic combo socket", W - 24.5, W, MIC_Y - 12.5, MIC_Y + 12.5, AB_TOP, AB_TOP + 25.0,
-     "audio", "#6cc9a6", "Neutrik NCJ6FA-H")
+    # --- the Pi board (a HAT on the Pi's header) ---------------------------------------
+    PB_TOP = PI_Z - 11.0                                   # a HAT sits 11 mm from the Pi
+    part("Pi board", 12, 83, 2, 72, PB_TOP - 1.6, PB_TOP, "piboard", "#b9d6f2",
+         "cut out around the heat block")
+    part("Pi board header socket", PIX + 6.5, PIX + 58.5, PIY + 49.5, PIY + 55.5, PB_TOP,
+         PI_Z - 8.5 + 6.0, "piboard", "#7fb2e5")
+    part("USB-C power socket", 35.5, 44.5, 0, 7.5, PB_TOP, PB_TOP + 3.3, "piboard", "#7fb2e5")
+    part("MIDI socket (3.5 mm)", 71, 77, 0, 14, PB_TOP, PB_TOP + 5.0, "piboard", "#7fb2e5",
+         "est.")
 
-# --- the footswitches (the owner's part: 13 x 13 body, 29.7 with lugs, sunk 16 mm) -----
-for i, fx in enumerate((CX - 69, CX, CX + 69)):
-    part(f"footswitch {i + 1}", fx - 11, fx + 18.7, D - 29 - 6.5, D - 29 + 6.5, H - 16.0,
-         H - 3.0, "fs", "#e8e4d6", "13 mm body with its top 3 mm below the face; lugs sideways")
+    # --- the audio board -----------------------------------------------------------------
+    AB_TOP = 4.0
+    part("audio board", 115.5, 168.5, 2, 106, AB_TOP - 1.6, AB_TOP, "audio", "#bfe6d6")
+    part("audio board, mic tongue", 168.5, 177.5, 12, 98, AB_TOP - 1.6, AB_TOP, "audio",
+         "#bfe6d6")
+    # 1/4-inch sockets: est. 16 wide, 12 tall, 23 behind the wall (Neutrik NMJ6HFD2's model).
+    for name, cx in (("out socket", 124.0), ("EXT FS socket", 141.5), ("guitar in socket", 159.0)):
+        part(name, cx - 8, cx + 8, 0, 23, AB_TOP, AB_TOP + 12.0, "audio", "#6cc9a6", "size est.")
+    # Neutrik NCJ6FA-H (drawing 20004521): 25 x 25 behind the wall, 24.5 deep, its centre
+    # 12.5 above the board, pins 3.5 below the body.
+    MIC_Y = 47.0
+    part("mic combo socket", W - 24.5, W, MIC_Y - 12.5, MIC_Y + 12.5, AB_TOP, AB_TOP + 25.0,
+         "audio", "#6cc9a6", "Neutrik NCJ6FA-H")
 
-# --- the controls on the face -------------------------------------------------------
-ENC = (131.1, 27.1)                                    # the owner's position
-part("control board and encoder", ENC[0] - 16, ENC[0] + 16, ENC[1] - 12, ENC[1] + 42,
-     20.4, H, "control", "#f6dfb4", "board at z 21.9, EC11 body above it; est.")
-part("button 2", 157.5, 172.5, 10.5, 25.5, 20.0, H, "control", "#f6dfb4",
-     "10 mm deep; above the guitar socket")
+    # --- the footswitches (the owner's part: 13 x 13 body, 29.7 with lugs, sunk 16 mm) -----
+    for i, fx in enumerate((CX - 69, CX, CX + 69)):
+        part(f"footswitch {i + 1}", fx - 11, fx + 18.7, D - 29 - 6.5, D - 29 + 6.5, H - 16.0,
+             H - 3.0, "fs", "#e8e4d6", "13 mm body with its top 3 mm below the face; lugs sideways")
+
+    # --- the controls on the face -------------------------------------------------------
+    ENC = (131.1, 27.1)                                    # the owner's position
+    part("control board and encoder", ENC[0] - 16, ENC[0] + 16, ENC[1] - 12, ENC[1] + 42,
+         20.4, H, "control", "#f6dfb4", "board at z 21.9, EC11 body above it; est.")
+    part("button 2", 157.5, 172.5, 10.5, 25.5, 20.0, H, "control", "#f6dfb4",
+         "10 mm deep; above the guitar socket")
+
 
 # Pairs that are meant to touch or pass through each other.
 ALLOWED = {
@@ -145,7 +180,8 @@ def svg():
     o = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{n(width)}" height="{n(height)}" '
          f'viewBox="0 0 {n(width)} {n(height)}" font-family="Helvetica, Arial, sans-serif">',
          f'<rect width="{n(width)}" height="{n(height)}" fill="#fff"/>',
-         f'<text x="{ox}" y="22" font-size="15" fill="#222">The box: plan from above '
+         f'<text x="{ox}" y="22" font-size="15" fill="#222">The box in {CASE["source"]}\'s '
+         f'case ({n(W)} x {n(D)} x {n(H)} mm inside): plan from above '
          f'(rear wall at top), and a section at x = 160 looking from the right</text>',
          f'<rect x="{ox}" y="{oy}" width="{n(W * S)}" height="{n(D * S)}" rx="8" fill="none" '
          f'stroke="#333" stroke-width="1.5"/>']
@@ -191,26 +227,39 @@ def svg():
     return "\n".join(o)
 
 
-def main():
+def report(name):
+    build(name)
     hits, near = check()
     out = inside()
-    print(f"{len(PARTS)} parts in a {W} x {D} x {H} mm case")
-    for name in out:
-        print(f"OUTSIDE THE CASE: {name}")
+    print(f"== {name}: {len(PARTS)} parts in {W} x {D} x {H} mm, wall {CASE['wall']} "
+          f"({CASE['source']})")
+    for part_name in out:
+        print(f"OUTSIDE THE CASE: {part_name}")
     for a, b, o in hits:
         print(f"COLLISION: {a} / {b}: overlap {o[0]:.1f} x {o[1]:.1f} x {o[2]:.1f} mm")
-    print("Tightest clearances (under 3 mm):")
+    if CASE["wall"] > NEUTRIK_MAX_PANEL:
+        print(f"WALL TOO THICK for the mic socket: {CASE['wall']} > {NEUTRIK_MAX_PANEL}")
+    print("  tightest clearances (under 3 mm):")
     for gap, a, b, axis in near:
-        print(f"  {gap:4.1f} mm in {axis}: {a} / {b}")
-    for name, z in (("mic combo socket", None), ("guitar in socket", None)):
-        p = next(q for q in PARTS if q["name"] == name)
-        print(f"{name}: z {p['z'][0]:.1f}-{p['z'][1]:.1f}, {H - p['z'][1]:.1f} mm below the face")
+        print(f"  {gap:5.1f} mm in {axis}: {a} / {b}")
+    for part_name in ("mic combo socket", "guitar in socket"):
+        p = next(q for q in PARTS if q["name"] == part_name)
+        print(f"  {part_name}: z {p['z'][0]:.1f}-{p['z'][1]:.1f}, "
+              f"{H - p['z'][1]:.1f} mm below the face")
+    return bool(hits or out or CASE["wall"] > NEUTRIK_MAX_PANEL)
+
+
+def main():
+    names = sys.argv[1:] or list(CASES)
+    bad = [name for name in names if report(name)]
+    drawn = names[0] if len(names) == 1 else DEFAULT
+    build(drawn)
     here = os.path.dirname(os.path.abspath(__file__))
     dst = os.path.join(here, "..", "..", "docs", "diagrams", "box-layout.svg")
     with open(dst, "w") as f:
         f.write(svg())
-    print("wrote", os.path.normpath(dst))
-    return 1 if hits or out else 0
+    print(f"wrote {os.path.normpath(dst)} ({drawn})")
+    return 1 if bad else 0
 
 
 if __name__ == "__main__":
