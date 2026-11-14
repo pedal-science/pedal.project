@@ -54,7 +54,7 @@ extra screw holes for them.
 |---|---|---|---|
 | **Audio board** | Rear right and the right end of the front strip: about 60 × 104 mm (x 112–172, y 2–106), near the base plate | The three ¼″ sockets' nuts on the rear wall and the mic socket's two screws on the right wall | Guitar in, EXT FS and stereo out on the rear wall; the mic combo socket on the right wall; the guitar buffer, the mic preamp, the codec (TAC5212), the output stage, the bypass relay, the analogue supplies. Nothing digital but the codec's own lines |
 | **Pi board** | Under the Pi, as a HAT: about 71 × 71 mm (x 12–83, y 2–73) | The Pi's 40-pin header and the Pi's mounting holes | The USB-C power socket and the MIDI 3.5 mm socket on the rear wall; the RP2350 with its flash and crystal; the MIDI optocoupler; the HAT+ ID EEPROM; the plugs for the footswitches, the control board and the link. A cut-out under the Pi's processor for the heat block |
-| **Control board** | Under the face, rear right, above the audio board | The encoder's nut | The encoder and the two buttons, and one cable to the Pi board |
+| **Control board** | Under the face, rear right, behind the rear sockets: 37 × 44.5 mm (x 115.5–152.5, y 21.5–66), 7 mm below the face | The encoder's nut | The encoder and the two buttons, and one flat cable to the Pi board |
 
 - **The link** between the Pi board and the audio board is one short flat cable across the front
   of the Pi: the audio clocks and data (I2S), I2C, 5 V, 3.3 V, ground, the two EXT FS lines and
@@ -222,7 +222,8 @@ The owner agreed the concept as proposed:
 5. EXT FS as a ¼″ socket between out and in.
 6. The Pi 5 stays; the Compute Module is for later.
 
-Also his: the footswitches stay where the case drawing has them, sunk 16 mm.
+Also his: the footswitches stay where the case drawing has them, sunk 16 mm; and the two
+buttons are **board-mounted**, on the control board, not panel buttons on leads.
 
 ## The model so far
 
@@ -244,10 +245,12 @@ Hammond's case, in Tayda's, and in the prototype as measured.
   x = 125.0, 143.7 and 162.4. That leaves 1.9 mm to the Pi's Ethernet socket and 1.3 mm to
   Hammond's corner pillar (2.5 mm in Tayda's case). A slimmer socket would ease it, but none is
   stocked where the boards are assembled.
-- **The socket is 15.7 mm tall**, not 12, so its top is at 19.7 mm. The control board above the
-  out and EXT FS sockets clears them by 0.7 mm in a 30 mm case, 1.2 mm in Tayda's and 2.7 mm in
-  Hammond's as drawn. The second button, 10 mm deep, clears the guitar socket by 0.3, 0.8 and
-  2.3 mm. A shallower button, or the button moved off the socket, removes the tightest of these.
+- **The socket is 15.7 mm tall**, not 12, so its top is at 19.7 mm, too close under the face
+  for a board to sit above it. So **the control board is behind the rear sockets**, not over
+  them: 37 × 44.5 mm (x 115.5–152.5, y 21.5–66), 7 mm below the face, with the encoder at
+  (131, 30) and the two buttons side by side in front of it at (125, 55) and (141, 55). It
+  clears the sockets by 0.5 mm and the mic socket by 1.5 mm or more. These positions are a
+  proposal; the owner's were for the prototype's panel buttons.
 - **The Pi board stops at x = 83**, which leaves 1.1 mm to Hammond's middle pillar.
 - **The MIDI socket fits under the Pi**: 8 mm tall in an 11 mm gap, 2 mm to the side of the Pi's
   HDMI sockets.
@@ -267,32 +270,44 @@ The parts that set the case's holes, each from its maker's drawing and found at 
 | Guitar in, EXT FS, stereo out | Neutrik NMJ6HCD2: ¼″ stereo, switched, board-mounted, chrome ferrule and nut from outside. 18.2 × 15.7 mm, 20.6 mm behind the wall, axis 7.53 mm above the board | C368502 | 795 | $3.27 | ⌀11.4 mm, its centre 11.5 mm above the base plate |
 | Mic | Neutrik NCJ6FA-H: combo XLR and ¼″, board-mounted, behind the wall | C368458 | 667 | $3.06 | ⌀22 mm and two ⌀3.2 mm, its centre 16.5 mm above the base plate |
 | MIDI in | A PJ-392-type 3.5 mm stereo socket with a threaded bush and nut (HOOYA PJ-392A, or CAX PJ-392-AG). Drawing still to read | C2939164, or C49274303 | 346, 826 | $0.37, $0.32 | ⌀6 mm (to confirm) |
+| Encoder | Bourns PEC11R-4215F-S0024: 24 detents, 24 pulses, push switch, 15 mm flatted shaft, M7 threaded bush with its nut and washer. Body 12.5 × 13.4 mm, about 7 mm behind the face | C143790 | 4,186 | $2.33 | ⌀7.2 mm |
+| The two flat cables' sockets (four) | JUSHUO AFA07-S16FCC-00: 16-way, 1.0 mm pitch, 2.5 mm high, slide lock, for bought 16-way flat cables | C13744 | 19,214 | $0.11 | none |
 | Footswitch leads, on the Pi board | JST S2B-XH-A, side entry, 6.1 mm high, for bought two-wire XH leads | C157931 | 66,327 | $0.07 | none |
 
 One ¼″ part serves all three places. Whether its chrome ferrule is joined to its sleeve contact
 is not on the drawing and is checked with a meter on the first one, since the guitar socket is
 meant to be the one bond to the case.
 
+The encoder is the part that holds the control board, so it needs a threaded bush. The Alps
+EC11E types LCSC stocks in thousands have none (Alps' drawing shows a plain 7 mm boss), which
+rules them out. The Bourns part gives one pulse per detent; the KY-040 in the prototype gives 20,
+so the firmware's count changes by one constant.
+
 Still to choose, with what is known:
 
-- **USB-C power socket.** Ordinary board-edge sockets (LCSC has them in hundreds of thousands)
-  are 7.35 mm long and overhang the board by about a millimetre, which leaves the socket's mouth
-  about a millimetre inside a 2.5 mm wall. A USB-C plug needs the mouth nearly flush with the
-  outside. So this wants a long-bodied socket, and a ⌀9.5–10 mm round hole in place of a slot.
-- **The encoder.** Alps EC11E types are stocked in thousands (C361167, C370970, C202365 among
-  them); which one depends on shaft length, detents and bush, read from Alps' drawing.
-- **The two buttons.** Either the owner's 15 mm panel buttons on bought leads, or lit switches on
-  the control board that poke through round holes. The owner's taste decides; see the model's
-  note on depth above.
-- **The flat cables and their connectors** (Pi board to audio board, Pi board to control board),
-  and **the 40-pin socket** under the Pi. Common parts; not yet picked by number.
+- **USB-C power socket.** Ordinary board-edge sockets are 7.35 mm long and overhang the board
+  by about a millimetre, which leaves the socket's mouth about a millimetre inside a 2.5 mm
+  wall. A USB-C plug needs the mouth nearly flush with the outside. Candidate: SHOU HAN TYPE-C
+  16PIN L8.35 (C5379909, 14,835 in stock), a millimetre longer; its drawing is still to read.
+  The hole is round, ⌀9.5–10 mm, in place of a slot.
+- **The two buttons.** Board-mounted and lit, their tops 10.5–11 mm above the control board
+  (7 mm to the face, 2.5 mm of wall, a millimetre proud), through round holes. Lit switches
+  that tall are thinly stocked at LCSC (E-Switch's TL1265 at 70 pieces, ROCPU's TPB02 in tens),
+  so the likely answer is a plain tall switch with a translucent cap and a light beside it on
+  the board. To settle with a sample in the test case.
+- **The 40-pin socket** under the Pi: a standard 8.5 mm part; the one first looked up (C50982)
+  is out of stock.
+
+**A risk the test case answers.** The Pi hangs from the screen, the Pi board from the Pi, and the
+Pi board's two sockets must meet their holes in the rear wall. The chain's tolerance may be a
+millimetre. The USB-C hole is round and oversize for that reason; the MIDI socket's nut then
+fixes the board, and the screen must be free to settle behind its window before it is fixed.
 
 ## Needed from the owner
 
 - **For the heat test:** the gap between the top of the Pi's heatsink and the base plate, by the
   Blu-Tack method in "Heat". Then thermal pad of about that thickness, or a piece of aluminium
   bar and a thinner pad; and vip switched on. The logging is run from a session.
-- **The two buttons:** keep the panel buttons, or board-mounted ones through round holes.
 
 ## Plan
 
@@ -320,6 +335,8 @@ case, the firmware and the device configuration are here.
   [Tayda: 1590DD drawing A-5141](https://www.taydaelectronics.com/datasheets/files/TAYDA-A-5141.pdf)
   and [its listing](https://www.taydaelectronics.com/hardware-tools/enclosures/1590dd-style/1590dd-style-aluminum-diecast-enclosure.html)
 - [Neutrik NMJ6HCD2](https://www.neutrik.com/en/product/nmj6hcd2) and its [drawing](https://www.neutrik.com/media/8582/download/st-nmj6hcd2.PDF?v=3)
+- [Bourns PEC11R datasheet](https://www.bourns.com/docs/product-datasheets/pec11r.pdf),
+  [Alps EC11E15244G1](https://tech.alpsalpine.com/e/products/detail/EC11E15244G1/)
 - [JLCCNC: enclosure machining guide](https://jlccnc.com/blog/cnc-enclosure-guide)
 - [Raspberry Pi: heating and cooling Raspberry Pi 5](https://www.raspberrypi.com/news/heating-and-cooling-raspberry-pi-5/),
   [Akasa Pi-5 Pro review](https://bret.dk/akasa-pi-5-pro-raspberry-pi-5-case-review/),

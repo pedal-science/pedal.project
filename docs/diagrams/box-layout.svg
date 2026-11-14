@@ -25,8 +25,7 @@
 <rect x="76.25" y="410" width="148.5" height="65" fill="#e8e4d6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="421.25" y="410" width="148.5" height="65" fill="#e8e4d6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="766.25" y="410" width="148.5" height="65" fill="#e8e4d6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
-<rect x="817.5" y="92.5" width="75" height="75" fill="#f6dfb4" stroke="#444" stroke-width="0.7" stroke-dasharray="6 4" fill-opacity="0.25"/>
-<rect x="605.5" y="115.5" width="160" height="270" fill="#f6dfb4" stroke="#444" stroke-width="0.7" stroke-dasharray="6 4" fill-opacity="0.25"/>
+<rect x="607.5" y="147.5" width="185" height="222.5" fill="#f6dfb4" stroke="#444" stroke-width="0.7" stroke-dasharray="6 4" fill-opacity="0.25"/>
 <text x="380" y="190" font-size="12" text-anchor="middle" fill="#111">Pi 5 on the screen</text>
 <text x="140" y="350" font-size="12" text-anchor="middle" fill="#111">Pi board</text>
 <text x="325" y="210" font-size="12" text-anchor="middle" fill="#111">heat block</text>
@@ -37,11 +36,11 @@
 <text x="842" y="32.5" font-size="12" text-anchor="middle" fill="#111">in</text>
 <text x="860" y="280" font-size="12" text-anchor="middle" fill="#111">mic</text>
 <text x="730" y="530" font-size="12" text-anchor="middle" fill="#111">audio board</text>
-<text x="685" y="180" font-size="12" text-anchor="middle" fill="#111">encoder</text>
+<text x="685" y="195" font-size="12" text-anchor="middle" fill="#111">encoder</text>
+<text x="695" y="320" font-size="12" text-anchor="middle" fill="#111">B1  B2</text>
 <text x="150" y="450" font-size="12" text-anchor="middle" fill="#111">FS1</text>
 <text x="495" y="450" font-size="12" text-anchor="middle" fill="#111">FS2</text>
 <text x="840" y="450" font-size="12" text-anchor="middle" fill="#111">FS3</text>
-<text x="855" y="135" font-size="12" text-anchor="middle" fill="#111">B2</text>
 <text x="547.5" y="240" font-size="12" text-anchor="middle" fill="#111">USB, Ethernet</text>
 <rect x="982.5" y="40" width="152.5" height="547.5" fill="none" stroke="#333" stroke-width="1.5"/>
 <text x="982.5" y="605.5" font-size="12" fill="#333">base</text><text x="1135" y="605.5" font-size="12" text-anchor="end" fill="#333">face</text>
@@ -49,7 +48,6 @@
 <rect x="1002.5" y="40" width="78.5" height="105" fill="#6cc9a6" stroke="#444" stroke-width="0.7" fill-opacity="0.85"/>
 <rect x="1002.5" y="212.5" width="125" height="125" fill="#6cc9a6" stroke="#444" stroke-width="0.7" fill-opacity="0.85"/>
 <rect x="1055" y="410" width="65" height="65" fill="#e8e4d6" stroke="#444" stroke-width="0.7" fill-opacity="0.85"/>
-<rect x="1085" y="92.5" width="50" height="75" fill="#f6dfb4" stroke="#444" stroke-width="0.7" fill-opacity="0.85"/>
 <line x1="830" y1="34" x2="830" y2="593.5" stroke="#b33" stroke-width="0.8" stroke-dasharray="8 5"/>
 <text x="30" y="627.5" font-size="12" fill="#555">Blocks, not shapes: each part is its bounding box. Dashed: on the face, above the boards. Sizes marked est. in box_layout.py are estimates.</text>
 </svg>

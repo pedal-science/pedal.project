@@ -124,11 +124,13 @@ def build(name):
              H - 3.0, "fs", "#e8e4d6", "13 mm body with its top 3 mm below the face; lugs sideways")
 
     # --- the controls on the face -------------------------------------------------------
-    ENC = (131.1, 27.1)                                    # the owner's position
-    part("control board and encoder", ENC[0] - 16, ENC[0] + 16, ENC[1] - 12, ENC[1] + 42,
-         H - 9.6, H, "control", "#f6dfb4", "board 8.1 below the face, EC11 body above it; est.")
-    part("button 2", 157.5, 172.5, 10.5, 25.5, H - 10.0, H, "control", "#f6dfb4",
-         "10 mm deep; above the guitar socket")
+    # One board, held by the encoder's nut: Bourns PEC11R-4215F-S0024 (M7 bush, body about
+    # 7 mm behind the face, pins 1.9 mm through the board), and two board-mounted buttons in
+    # front of it (the owner, 2026-11-14).  The board starts behind the rear sockets and
+    # stops short of the mic socket, so nothing of it is above either.  Positions are a
+    # proposal: encoder at (131.1, 30), buttons at (125, 55) and (141, 55).
+    part("control board and its parts", 115.5, 152.5, 21.5, 66.0, H - 10.5, H, "control",
+         "#f6dfb4", "board 7 mm below the face; pin ends 1.9 mm below it")
 
 
 # Pairs that are meant to touch or pass through each other.
@@ -204,8 +206,7 @@ def svg():
     labels = [("Pi 5 on the screen", 70, 30), ("Pi board", 22, 62), ("heat block", 59, 34),
               ("USB-C", 40, -1.5), ("MIDI", 76, -1.5), ("out", 125, -1.5), ("EXT FS", 143.7, -1.5),
               ("in", 162.4, -1.5), ("mic", 166, 48), ("audio board", 140, 98),
-              ("encoder", 131, 28), ("FS1", 24, 82), ("FS2", 93, 82), ("FS3", 162, 82),
-              ("B2", 165, 19), ("USB, Ethernet", 103.5, 40)]
+              ("encoder", 131, 31), ("B1  B2", 133, 56), ("FS1", 24, 82), ("FS2", 93, 82), ("FS3", 162, 82), ("USB, Ethernet", 103.5, 40)]
     for s, lx, ly in labels:
         o.append(f'<text x="{n(ox + lx * S)}" y="{n(oy + ly * S)}" font-size="12" '
                  f'text-anchor="middle" fill="#111">{s}</text>')
