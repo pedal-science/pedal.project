@@ -166,8 +166,16 @@ Never throttled in any of them, and the clock stayed at 2400 MHz. So the box, as
 heatsink already on the Pi, the test is to join the heatsink's top to the base plate: thermal pad
 alone if the gap is a few millimetres, a piece of aluminium bar with a pad on it if it is more.
 The gap is measured with a lump of Blu-Tack on the heatsink, the base closed on it and opened
-again. For the design itself the same idea may replace the block: a flat-topped bought heatsink
-and a pad, with no made metal part at all.
+again.
+
+**In the design the block passes through the Pi board.** The Pi board sits between the Pi and
+the base plate, 11 mm from the Pi, so it has a hole under the processor, about 17 × 17 mm for a
+15 × 15 mm block, and the block stands on the base plate and reaches up through it. That hole is
+why the design cools the processor alone: a heatsink covering several chips, like the one on
+the prototype's Pi, would need a hole its own size and would also be too tall for the 11 mm
+between the two boards. The Pi ran its soaks bare at 48–53 °C on the bench (`plan.md`, the first
+vip soaks), so the other chips are not expected to need help; the heat test in the finished
+box is what confirms it. The prototype has no Pi board, so its test can keep the heatsink.
 
 The estimate above is not a measurement. **The test** is on the prototype, before anything else is
 designed: a block and a pad between the processor and the base plate, the case closed, the engine
