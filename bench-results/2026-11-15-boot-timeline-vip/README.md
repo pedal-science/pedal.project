@@ -44,8 +44,11 @@ vip). The design rows below are kept as the plan that the boot tested, not as th
 
 ## Outcome on vip, 2026-11-15
 
-The new root (pedal `c9b41a6`, rigpa `ea73e50`, namchain `d1aa45c`) boots on the box's DSI panel
-and runs the engine, pedald and the UI. Three things were decided by the hardware, not the plan:
+The new root (pedal `8b9b74e`, rigpa `ea73e50`, namchain `d1aa45c`) boots on the box's DSI panel
+and runs the engine, pedald and the UI. The running card's slot a has a hand-built storage-only
+initrd; `image.lock` now pins rtpi `60dfc1c`, whose `INITRD_DRIVERS` is storage-only, so the next
+card build has the same shape. The image has not been rebuilt from that lock since the hardware
+rejection. Three things were decided by the hardware, not the plan:
 
 1. **The initramfs DSI/DRM stack does not boot.** With `vc4`, `drm-rp1-dsi`, `panel-simple`,
    `rpi-panel-attiny-regulator`, `backlight` and `i2c-brcmstb` in the initrd (for a Plymouth boot
