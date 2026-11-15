@@ -1,4 +1,12 @@
-# Cold boot: network-install delay removed from the EEPROM, and the console cost
+# Cold boot: EEPROM network-install experiment (reverted) and the console cost
+
+**Verdict: the EEPROM change is reverted.** It removed the network-install delay (4.8 s measured
+once), but cold boot was then **intermittent**: one attempt stopped at `BOOTSYS`, one booted, and a
+later attempt stopped after `Starting OS` and never came up. The original EEPROM config
+(`BOOT_ORDER=0xf461`, `NET_INSTALL_AT_POWER_ON=1`, no extra keys) was restored on the matching
+2026-09-25 image and the board booted normally. The quiet-console change is kept; the EEPROM result
+is a measured but rejected experiment, most likely because `BOOT_ORDER=0xf` removed the SD retry/
+fallback path (not isolated).
 
 Two changes measured on vip on 2026-11-15 with the official Pi PSU, same card and image. They are
 both about the **pre-kernel** half that the OS cannot change from within Linux.
@@ -37,7 +45,7 @@ HDMI_DELAY=0
 written through the BOOTSEL partition and `rpi-eeprom-update -d -f`, flashed by `recovery.bin` at
 the next reboot. The bootloader version stayed `1accd665…` (2026/09/25).
 
-After the change, the next cold power-on:
+After the change, one cold power-on:
 
 ```
 1.15 s  BOOTSYS release 1accd665 2026/09/25
@@ -46,7 +54,7 @@ After the change, the next cold power-on:
 ```
 
 `Starting OS` is **8.17 s instead of 12.98 s: 4.81 s saved**, essentially all the network-install
-UI. The following kernel/initrd/userspace were unchanged:
+UI. That one boot's kernel/initrd/userspace:
 
 | Milestone (cold boot, after EEPROM) | Value |
 |---|---:|
@@ -58,10 +66,11 @@ UI. The following kernel/initrd/userspace were unchanged:
 | rigpa first frame (from kernel start) | 9.226 s |
 | **power-on → rigpa first frame** | **≈17.4 s** |
 
-Before the EEPROM change the same cold-boot path was **≈21.7 s** to the first frame. One cold
-attempt immediately after the flash stopped at `BOOTSYS` and needed a power cycle; the next cold
-boot completed. That transient is recorded, not explained; the config is a stock bootloader
-image with only the five keys above.
+Before the EEPROM change the same cold-boot path was **≈21.7 s** to the first frame. The EEPROM
+config was **reverted** after the cold stability failures below; the 4.8 s is real but not usable
+as-is. A safer retry would keep `BOOT_ORDER=0xf461` (SD first, then USB/NVMe fallback) and only
+disable `NET_INSTALL_AT_POWER_ON`/`NET_INSTALL_ENABLED`, then cold-test several times before
+keeping it.
 
 Notes:
 
@@ -85,14 +94,14 @@ Notes:
   removing it is the last half-second and loses kernel debug on the probe.
 
 The cold measurement used `console=tty1` only; the runtime has since been restored to
-`quiet loglevel=3 systemd.show_status=0` **with** `console=ttyAMA10,115200` for debug. One normal
-boot with that final configuration measured: kernel 0.414 s, initrd 2.576 s, userspace 16.802 s,
-rigpa active 7.401 s, first frame 9.218 s after kernel — i.e. **≈17.4 s from the post-EEPROM
-cold `Starting OS` (8.17 s) to the first frame**. The serial console costs ≈0.5 s versus
-`console=tty1` only.
+`quiet loglevel=3 systemd.show_status=0` **with** `console=ttyAMA10,115200` for debug, and the
+EEPROM was reverted. One normal quiet+serial boot with the original EEPROM measured: kernel 0.414 s,
+initrd 2.576 s, userspace 16.802 s, rigpa active 7.401 s, first frame 9.218 s after kernel. The
+serial console costs ≈0.5 s versus `console=tty1` only.
 
-The final screen target is unchanged: firmware ≈8.2 s + kernel/initrd ≈3.0 s + userspace/rigpa
-≈9.2 s, so a 5 s cold boot is still not reachable on this stack.
+The final screen target is unchanged: with the original bootloader the cold path is back to
+≈13 s firmware + ≈3 s kernel/initrd + ≈9.2 s userspace/rigpa; a 5 s cold boot is not reachable on
+this stack.
 
 ## Reproduce
 
