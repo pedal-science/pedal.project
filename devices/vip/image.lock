@@ -4,7 +4,7 @@
 snapshot=20260929T000000Z
 pedal=5b73bc3a57a2b8ed5d2b2d26f2ca89443c496004
 rtpi=de874cf697173abbf77068ba5d6a93599fc40d28
-namchain=eba5eef57897899dab2d7560661a620679a9048f
+namchain=d1aa45cef850777d14d3f5ec9326f5c638446a2b
 rigpa=ea73e50822aefa4f451984f6a074db6965719058
 
 # The pedal kernel: rtpi's rebuild, which is in no archive, so the image takes it from rtpi's
