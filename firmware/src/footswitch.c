@@ -116,9 +116,9 @@ void footswitch_poll(uint32_t now_ms) {
         if (i == BYPASS_SWITCH && sw[i].pressed && !sw[i].long_done &&
             now_ms - sw[i].down_ms >= LONG_PRESS_MS) {
             // Taken while the switch is still down, so the player hears it without letting go.
-            // The service turns this into its tuner, which mutes the rig; the relay is local and
-            // comes with step 6. The release that follows this sends 0 only, so the hold is not
-            // also a tap.
+            // The service turns this into its tuner, whose node a client mounts to mute the rig;
+            // a relay comes with step 6. The release that follows this sends 0 only, so the hold
+            // is not also a tap.
             sw[i].long_done = true;
             printf("fs: hold on %u -> bypass_toggle\n", i + 1);
             proto_send_event(PROTO_EV_BYPASS_TOGGLE, 0, 0, PROTO_SRC_FOOTSWITCH);
