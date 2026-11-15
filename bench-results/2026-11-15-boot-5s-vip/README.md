@@ -174,3 +174,25 @@ Caveats: one boot, one card (SK32G, date 04/2026), official Pi PSU, bootloader 2
 capture is a reboot, so power-on-to-first-byte is not included and the real cold-boot number is
 slightly larger. `systemd-analyze`'s “kernel”/“initrd”/“userspace” are from the kernel's clock;
 the firmware times are from the bootloader's own UART log.
+
+## Ideas from the fast-boot references (added 2026-11-15)
+
+From [instant-pi](https://github.com/AndreVallestero/instant-pi) and Qt's
+[fast-booting part 3](https://www.qt.io/blog/2016/05/25/fast-booting-qt-devices-part-3-optimizing-system-image):
+
+- **The closed RPi bootloader is the floor.** instant-pi measures a "CD bootloader overhead" of
+  ~4.1 s; on this Pi 5 the bootloader still takes ~8.2 s to `Starting OS` after the network-install
+  check is removed. No userspace work can go below that.
+- **Build a tiny OS image** (Buildroot/musl/BusyBox, F2FS, LZ4/LZO kernel, stripped rootfs and
+  modules, no initramfs): instant-pi reaches 4.7 s on an old Pi 0W including the bootloader. This
+  is a replacement for Ubuntu/systemd, not a tuning step; it is the only credible path toward
+  single-digit cold boot on this class of hardware.
+- **Static Qt / optimized Qt** (Qt blog: strip rootfs 500→24 MB, kernel 5.5→1.6 MB, static Qt,
+  disable console, faster SD/eMMC, compression): it takes a Qt device from 22.8 s to 1.56 s, but
+  with U-Boot/SPL and full image control. Our Qt binary and QML start is ~1.8 s, a small part of
+  the current ~17.4 s.
+- **EEPROM tags** worth trying next: `BOOT_UART=0` (removes bootloader UART output; loses serial
+  boot log), `USB_MSD_DISCOVER_TIMEOUT=5000` if USB boot is ever re-enabled, and keeping
+  `BOOT_ORDER=0xf`/`NET_INSTALL_ENABLED=0` (already applied).
+- **Disable the serial console entirely** (`console=tty1` only): measured ≈0.5 s; the verbose
+  logging was the big item (≈1.9 s) and is already off.
