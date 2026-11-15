@@ -42,6 +42,14 @@ Masking `systemd-binfmt.service` and its automount (a 462 ms item on the old cri
 not move the screen: first frame 11.293 s vs 11.314 s, within boot-to-boot noise; the masks were
 reverted. The 1.9 s win is from the ordering, not from shaving `basic.target`.
 
+Ordering only after `systemd-udevd.service` instead of `basic.target` was also tried: systemd's
+default dependencies still add `basic.target`, and the first frame was 11.728 s — no better. Kept
+`After=basic.target`.
+
+Repeated early-rigpa boots: first frame 11.314 s and 11.407 s after kernel start (baseline
+13.189 s); the ≈1.9 s win is stable across the two boots. Kernel+initrd varied 5.30–5.53 s, which
+is why first-frame numbers vary by ~0.1 s.
+
 ## What did not change
 
 - Kernel + initramfs are still ≈5.3 s; the firmware still ≈8.7 s to the kernel. This is a screen
