@@ -52,7 +52,7 @@ extra screw holes for them.
 
 | Board | Where | Held by | Carries |
 |---|---|---|---|
-| **Audio board** | Rear right and the right end of the front strip: about 60 × 104 mm (x 112–172, y 2–106), near the base plate | The three ¼″ sockets' nuts on the rear wall and the mic socket's two screws on the right wall | Guitar in, EXT FS and stereo out on the rear wall; the mic combo socket on the right wall; the guitar buffer, the mic preamp, the codec (TAC5212), the output stage, the bypass relay, the analogue supplies. Nothing digital but the codec's own lines |
+| **Audio board** | Rear right and the right end of the front strip: about 60 × 104 mm (x 112–172, y 2–106), near the base plate | The three ¼″ sockets' nuts on the rear wall and the mic socket's two screws on the right wall | Guitar in, EXT FS and stereo out on the rear wall; the mic combo socket on the right wall; the guitar buffer, the mic preamp, the codec (TAC5212), the output stage, the two bypass relays, the analogue supplies. Nothing digital but the codec's own lines |
 | **Pi board** | Under the Pi, as a HAT: about 71 × 71 mm (x 12–83, y 2–73) | The Pi's 40-pin header and the Pi's mounting holes | The USB-C power socket and the MIDI 3.5 mm socket on the rear wall; the RP2350 with its flash and crystal; the MIDI optocoupler; the HAT+ ID EEPROM; the plugs for the footswitches, the control board and the link. A cut-out under the Pi's processor for the heat block |
 | **Control board** | Under the face, rear right, behind the rear sockets: 37 × 44.5 mm (x 115.5–152.5, y 21.5–66), 7 mm below the face | The encoder's nut | The encoder and the two buttons, and one flat cable to the Pi board |
 
@@ -89,12 +89,12 @@ board's socket's.
 | 8 | GND | | |
 | 9 | SCL | Pi → codec | I2C1 (GPIO 3). The codec is at 0x50 |
 | 10 | SDA | both | I2C1 (GPIO 2) |
-| 11 | RELAY | RP2350 → audio board | High = effect. Pulled down on the audio board, so no cable, or an RP2350 that is not driving it, is bypass |
+| 11 | RELAY | RP2350 → audio board | High = effect, for both bypass relays. Pulled down on the audio board, so no cable, or an RP2350 that is not driving it, is bypass |
 | 12 | EXTFS_A | audio board → RP2350 | EXT FS tip, through 1 kΩ and 100 nF. The pull-up is on the Pi board |
 | 13 | EXTFS_B | audio board → RP2350 | EXT FS ring, the same |
 | 14 | +3V3 | Pi → audio board | The **Pi's** 3.3 V, not the RP2350's: it feeds the codec's IOVDD and switches the analogue supplies on, so they follow the Pi into standby (HAT+) |
 | 15 | GND | | |
-| 16 | +5V | Pi board → audio board | About 0.1 A: the op-amps, the codec's analogue supply and the relay coil |
+| 16 | +5V | Pi board → audio board | About 0.15 A: the op-amps, the codec's analogue supply and the two relay coils |
 
 Why this order:
 
