@@ -64,7 +64,8 @@ The bootloader's own clock:
 ```
 
 The read rates are **≈16 MB/s for the initrd and ≈23 MB/s for the kernel**; the files are read in
-≈2 s together. The larger item is the **≈4 s from `BOOTSYS` to the first initrd read**, which is
+≈2 s together. The raw card itself reads at **≈90 MB/s** for a 64 MiB direct read, so the
+firmware's read mode — not the card's bandwidth — is limiting the firmware stage. The larger item is the **≈4 s from `BOOTSYS` to the first initrd read**, which is
 bootloader/card initialisation, not bandwidth. A faster card can only attack that 4 s; the reads
 are already a small part of the 8.7 s.
 
