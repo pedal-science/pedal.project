@@ -16,7 +16,7 @@ but not timed.
 
 The 2026-11-15 boot work is in these `deepseek-boot` worktrees: rigpa's splash and startup gate
 are commit `ea73e5` on branch `deepseek/boot-and-ui`, and the `pedal.project` and `rtpi` sides are
-`ccf80b9` and `de874cf` on the same branch. It is **built but not booted**: no boot with
+`5b73bc3` and `de874cf` on the same branch. It is **built but not booted**: no boot with
 Plymouth, the DSI stack in the initrd, `splash` or the startup gate has been observed on vip. This
 page cites those files as the design of record and puts no measured duration on them. The live
 capture below is the root that was running before them.
@@ -102,7 +102,7 @@ What this capture establishes:
   observed; the four authority labels say what each number rests on.
 - It is **not** a claim that the Plymouth/INITRD_DRIVERS/splash/mask work has been booted,
   reviewed or is correct. It is committed on `deepseek/boot-and-ui` (rigpa `ea73e5`,
-  pedal.project `ccf80b9`, rtpi `de874cf`) and this page reads it from there; the
+  pedal.project `5b73bc3`, rtpi `de874cf`) and this page reads it from there; the
   current-image durations stay estimate/unknown until a boot with it is captured.
 - It is **not** a power-on number. The anchor is the bootloader's first byte; power applied is
   earlier by however long the PMIC and boot ROM take, and that has never been measured.
@@ -192,7 +192,7 @@ is measured and is what makes the current one arguable rather than invented.
 
 ### Configuration facts behind the ordering
 
-These are the recorded-state facts the dependency graph is built from. They are committed on `deepseek/boot-and-ui`: rigpa `ea73e5`, pedal.project `ccf80b9`,
+These are the recorded-state facts the dependency graph is built from. They are committed on `deepseek/boot-and-ui`: rigpa `ea73e5`, pedal.project `5b73bc3`,
 rtpi `de874cf`.
 
 | Fact | Where |
@@ -305,7 +305,7 @@ masked, so it is not in the picture at all, while Plymouth is — on the display
    "multi-user.target" as "the pedal is up", and do not carry the 13.774 s figure into the
    current image.
 5. **The 2026-11-15 work is built in the worktrees but has never booted.** rigpa is commit
-   `ea73e5` on `deepseek/boot-and-ui`; the `pedal.project` and `rtpi` changes are `ccf80b9`
+   `ea73e5` on `deepseek/boot-and-ui`; the `pedal.project` and `rtpi` changes are `5b73bc3`
    and `de874cf`.
    when this page was written. If the implementation changes (for example the `INITRD_DRIVERS`
    names, or whether `quiet` is added alongside `splash`), rows 6, 11 and 16–19 move.

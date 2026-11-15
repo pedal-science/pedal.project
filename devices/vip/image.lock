@@ -2,7 +2,7 @@
 # the snapshot and the kernel change by hand, deliberately. Check namchain is the engine and
 # rigpa the UI you mean, and that the kernel is the rebuild you mean (docs/vip-kernel-image.md).
 snapshot=20260929T000000Z
-pedal=ccf80b9ae90cf86f633ad5a94b666e9397a8a0cb
+pedal=5b73bc3a57a2b8ed5d2b2d26f2ca89443c496004
 rtpi=de874cf697173abbf77068ba5d6a93599fc40d28
 namchain=eba5eef57897899dab2d7560661a620679a9048f
 rigpa=ea73e50822aefa4f451984f6a074db6965719058

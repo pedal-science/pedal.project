@@ -1,7 +1,7 @@
 {
   "schema": "pedal-boot-timeline/1",
   "title": "vip boot timeline: plug-pull to sound",
-  "subtitle": "2026-11-15. Measured on 2026-10-02; the current design is the 2026-11-15 boot work (rigpa ea73e50, pedal.project ccf80b9, rtpi de874cf), built but booted only on the pre-splash root. Current durations are estimate/unknown.",
+  "subtitle": "2026-11-15. Measured on 2026-10-02; the current design is the 2026-11-15 boot work (rigpa ea73e50, pedal.project 5b73bc3, rtpi de874cf), built but booted only on the pre-splash root. Current durations are estimate/unknown.",
   "anchor": "All times are seconds from the bootloader's first byte on the debug UART. Power-on is earlier than that and is not on the wire: the PMIC and boot ROM before the first byte are still unmeasured.",
   "authority": {
     "measured-2026-10-02": "Measured on vip's plug-pull boot of 2026-10-02 (serial wire + vip's own journal/systemd-analyze + the jack-end run). bench-results/2026-10-02-boot-time-vip/results.md.",
