@@ -1427,13 +1427,13 @@ was measured and made no difference; reverted. See
 **Also kept:** `quiet loglevel=3 systemd.show_status=0` (kernel 2.43 s → 0.41 s; ~1.9 s), with
 the serial console kept (≈0.5 s versus `console=tty1` only) for debug.
 
-**Measured and reverted:** a config-only EEPROM update on the matching 2026-09-25 bootloader image
-(`NET_INSTALL_AT_POWER_ON=0`, `NET_INSTALL_ENABLED=0`, `HDMI_DELAY=0`, `BOOT_ORDER=0xf`) removed a
-**4.8 s** cold-boot network-install wait (`Starting OS` 12.98 s → 8.17 s), but cold boot became
-intermittent (stalls at `BOOTSYS` and after `Starting OS`). The original config
-(`BOOT_ORDER=0xf461`, `NET_INSTALL_AT_POWER_ON=1`) was restored and the board boots normally. A
-safer retry would keep `BOOT_ORDER=0xf461` and only disable the network install, then cold-test
-several times. See [bench-results/2026-11-15-boot-eeprom-vip/](bench-results/2026-11-15-boot-eeprom-vip/).
+**Also kept:** a config-only EEPROM update on the matching 2026-09-25 bootloader image with the
+original boot order kept: `BOOT_ORDER=0xf461`, `NET_INSTALL_AT_POWER_ON=0`, `NET_INSTALL_ENABLED=0`,
+`BOOT_UART=1`. It removes a **4.8 s** cold-boot network-install wait (`Starting OS` 12.98 s →
+8.05 s). One cold boot with this config reached rigpa and both Ethernet and Wi-Fi; cold first frame
+was **≈8.9 s after kernel start, ≈17.0 s from power-on**. The earlier `BOOT_ORDER=0xf`/`HDMI_DELAY`
+variant was reverted (no SD fallback; cold failures were confounded by Wi-Fi association). See
+[bench-results/2026-11-15-boot-eeprom-vip/](bench-results/2026-11-15-boot-eeprom-vip/).
 
 The realistic
 best case after software work (faster boot medium/EEPROM settings, no initramfs, start rigpa

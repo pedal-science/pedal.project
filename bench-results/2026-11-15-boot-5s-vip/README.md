@@ -191,8 +191,8 @@ From [instant-pi](https://github.com/AndreVallestero/instant-pi) and Qt's
   disable console, faster SD/eMMC, compression): it takes a Qt device from 22.8 s to 1.56 s, but
   with U-Boot/SPL and full image control. Our Qt binary and QML start is ~1.8 s, a small part of
   the current ~17.4 s.
-- **EEPROM tags** worth trying next: `BOOT_UART=0` (removes bootloader UART output; loses serial
-  boot log), `USB_MSD_DISCOVER_TIMEOUT=5000` if USB boot is ever re-enabled, and keeping
-  `BOOT_ORDER=0xf`/`NET_INSTALL_ENABLED=0` (already applied).
+- **EEPROM tags** measured on 2026-11-15: keeping the original `BOOT_ORDER=0xf461` while setting
+  `NET_INSTALL_AT_POWER_ON=0`/`NET_INSTALL_ENABLED=0` removes a **4.8 s** cold network-install
+  wait and is kept; `BOOT_UART=0` and `USB_MSD_DISCOVER_TIMEOUT` remain untried.
 - **Disable the serial console entirely** (`console=tty1` only): measured ≈0.5 s; the verbose
   logging was the big item (≈1.9 s) and is already off.

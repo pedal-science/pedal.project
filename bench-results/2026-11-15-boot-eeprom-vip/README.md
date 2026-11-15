@@ -1,12 +1,24 @@
 # Cold boot: EEPROM network-install experiment (reverted) and the console cost
 
-**Verdict: the EEPROM change is reverted.** It removed the network-install delay (4.8 s measured
-once), but cold boot was then **intermittent**: one attempt stopped at `BOOTSYS`, one booted, and a
-later attempt stopped after `Starting OS` and never came up. The original EEPROM config
-(`BOOT_ORDER=0xf461`, `NET_INSTALL_AT_POWER_ON=1`, no extra keys) was restored on the matching
-2026-09-25 image and the board booted normally. The quiet-console change is kept; the EEPROM result
-is a measured but rejected experiment, most likely because `BOOT_ORDER=0xf` removed the SD retry/
-fallback path (not isolated).
+**Verdict: the aggressive config was reverted; a safer retry is kept.** The first config
+(`BOOT_ORDER=0xf`, `HDMI_DELAY=0`) removed the network-install delay (4.8 s measured once), but
+cold boot then looked intermittent: one attempt stopped at `BOOTSYS`, another reached `Starting OS`
+but had no network. Further work showed the no-network symptom was the **Wi-Fi association**, not
+the bootloader: with the board out of the enclosure, a cold boot with the safer config reached
+rigpa and both Ethernet and Wi-Fi came up. The final config keeps the original
+`BOOT_ORDER=0xf461` (SD first, USB/NVMe fallback) and only disables the network-install check:
+
+```
+[all]
+BOOT_UART=1
+BOOT_ORDER=0xf461
+NET_INSTALL_AT_POWER_ON=0
+NET_INSTALL_ENABLED=0
+```
+
+It was cold-verified (one boot) and is the config currently on the board. The aggressive
+`BOOT_ORDER=0xf`/`HDMI_DELAY=0` variant is **not** used; it removed the SD retry/fallback path and
+its cold failures were not isolated from the Wi-Fi problem.
 
 Two changes measured on vip on 2026-11-15 with the official Pi PSU, same card and image. They are
 both about the **pre-kernel** half that the OS cannot change from within Linux.
@@ -45,7 +57,7 @@ HDMI_DELAY=0
 written through the BOOTSEL partition and `rpi-eeprom-update -d -f`, flashed by `recovery.bin` at
 the next reboot. The bootloader version stayed `1accd665…` (2026/09/25).
 
-After the change, one cold power-on:
+After the aggressive change, one cold power-on:
 
 ```
 1.15 s  BOOTSYS release 1accd665 2026/09/25
@@ -66,11 +78,14 @@ UI. That one boot's kernel/initrd/userspace:
 | rigpa first frame (from kernel start) | 9.226 s |
 | **power-on → rigpa first frame** | **≈17.4 s** |
 
-Before the EEPROM change the same cold-boot path was **≈21.7 s** to the first frame. The EEPROM
-config was **reverted** after the cold stability failures below; the 4.8 s is real but not usable
-as-is. A safer retry would keep `BOOT_ORDER=0xf461` (SD first, then USB/NVMe fallback) and only
-disable `NET_INSTALL_AT_POWER_ON`/`NET_INSTALL_ENABLED`, then cold-test several times before
-keeping it.
+Before the EEPROM change the same cold-boot path was **≈21.7 s** to the first frame. The aggressive config was reverted. The **safer config** (`BOOT_ORDER=0xf461`,
+`NET_INSTALL_AT_POWER_ON=0`, `NET_INSTALL_ENABLED=0`) was then cold-verified: `Starting OS` at
+8.05 s and rigpa running/networked after the boot. That is the config kept on the board.
+
+Cold measurement with the safer config (one boot): kernel 0.414 s, initrd 2.570 s, userspace
+13.500 s, rigpa active 7.200 s, first frame 8.918 s after kernel → **≈17.0 s from power-on to
+first frame**. Play took longer on that boot (engine at 4.793 s after rigpa, ready 4.870 s) because
+the engine came up late; the screen is not waiting for it.
 
 Notes:
 
