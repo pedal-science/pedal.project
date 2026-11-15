@@ -510,14 +510,23 @@ def figure_timeline(data: dict) -> str:
     canvas.text(LEFT, bottom + 4,
                 "Headline (estimate, not measured): " + data["current"].get("headline", ""),
                 size=9.2, fill=INK, weight="600")
-    canvas.text(LEFT, bottom + 18,
+    live = data.get("live_2026_11_15") or {}
+    if live:
+        canvas.text(LEFT, bottom + 18,
+                    "Live 2026-11-15, pre-splash root (measured): kernel %.3f + initrd %.3f + "
+                    "userspace %.3f = %.3f s; rigpa started at %.3fs, multi-user at %.3fs. "
+                    "The new design is unmeasured."
+                    % (live["kernel_s"], live["initrd_s"], live["userspace_s"], live["total_s"],
+                       live["rigpa_start_s"], live["multi_user_s"]),
+                    size=8.2, fill=INK)
+    canvas.text(LEFT, bottom + 32,
                 "Sources: bench-results/2026-10-02-boot-time-vip/results.md (measured rows); "
                 "devices/, docs/vip-image.md and docs/vip-kernel-image.md (recorded state); "
                 "the 2026-11-15 plan (Plymouth, INITRD_DRIVERS, splash, masked units, "
                 "rigpa qInfo marks). Drawn by chart.py from timeline.json.",
                 size=8.2, fill=FAINT)
 
-    canvas.height = int(bottom + 36)
+    canvas.height = int(bottom + 50)
     return canvas.svg()
 
 

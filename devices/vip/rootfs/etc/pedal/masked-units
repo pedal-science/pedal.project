@@ -27,7 +27,7 @@ rpi-eeprom-update.service
 # the login prompt; recovery is the serial console, ssh, or the rescue root.
 plymouth-quit.service
 plymouth-quit-wait.service
-getty@tty1.service
+getty@.service
 #
 # Deliberately NOT masked:
 #   systemd-timesyncd   vip has no RTC battery; without it the clock starts wherever it stopped.

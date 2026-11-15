@@ -1,7 +1,7 @@
 {
   "schema": "pedal-boot-timeline/1",
   "title": "vip boot timeline: plug-pull to sound",
-  "subtitle": "2026-11-15. Measured on 2026-10-02; the current design is the 2026-11-15 boot work (rigpa 7ed3c58; pedal.project/rtpi uncommitted), built but never booted. Current durations are estimate/unknown.",
+  "subtitle": "2026-11-15. Measured on 2026-10-02; the current design is the 2026-11-15 boot work (rigpa ea73e50, pedal.project ccf80b9, rtpi de874cf), built but booted only on the pre-splash root. Current durations are estimate/unknown.",
   "anchor": "All times are seconds from the bootloader's first byte on the debug UART. Power-on is earlier than that and is not on the wire: the PMIC and boot ROM before the first byte are still unmeasured.",
   "authority": {
     "measured-2026-10-02": "Measured on vip's plug-pull boot of 2026-10-02 (serial wire + vip's own journal/systemd-analyze + the jack-end run). bench-results/2026-10-02-boot-time-vip/results.md.",
@@ -1115,5 +1115,20 @@
         "label": "no ordering"
       }
     ]
+  },
+  "live_2026_11_15": {
+    "date": "2026-11-15",
+    "note": "live boot of the pre-splash running root (pedal cb3292a, rigpa f32bb2a, no Plymouth); see README 'The 2026-11-15 live capture'",
+    "kernel_s": 2.391,
+    "initrd_s": 3.206,
+    "userspace_s": 17.589,
+    "total_s": 23.187,
+    "rigpa_start_s": 11.122,
+    "namchaind_start_s": 10.906,
+    "pedald_start_s": 10.931,
+    "pedal_tune_start_s": 8.218,
+    "pedal_tune_end_s": 23.178,
+    "multi_user_s": 23.182,
+    "authority": "measured-2026-11-15"
   }
 }

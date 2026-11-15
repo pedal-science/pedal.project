@@ -159,7 +159,7 @@ where the first splash lives:
 - The command line gets `splash plymouth.ignore-serial-consoles vt.global_cursor_default=0`
   (rtpi's `BASE_ARGS`); the serial console keeps its diagnostics (there is no `quiet`).
 - Plymouth stays up until **rigpa** takes over: the pedal root masks `plymouth-quit.service`,
-  `plymouth-quit-wait.service` and `getty@tty1.service`, and rigpa's drop-in runs
+  `plymouth-quit-wait.service` and the `getty@` template (so no virtual console, tty1 included, takes the screen), and rigpa's drop-in runs
   `ExecStartPre=-/usr/bin/plymouth quit --retain-splash`. The last splash pixels stay on the
   framebuffer while eglfs and QML initialise, then rigpa's own full-screen splash (and finally
   the Play view) replaces them. A rigpa that never starts leaves the splash up rather than a

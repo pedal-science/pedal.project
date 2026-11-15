@@ -4,20 +4,22 @@
 are expected to do, and exactly what to run on the next boot to turn every estimate into a
 measurement.
 
-**Read this first: the current image was not measured.** vip is unreachable and the Debug Probe
-is not attached, so nothing below describes a boot of the current image. The measured column is
-the 2026-10-02 plug-pull boot, stage for stage; the current column is what the configuration says
-will happen and what the one number that can be carried over from that measurement (the initrd
-read rate) implies. Every current-image duration is an estimate or unknown, and the charts say so
-in their fill: solid = measured, hatched = estimate, ragged with `?` = unknown, dashed = an
-ordering that is recorded but not timed.
+**Read this first: the new design has not been booted.** A live boot of the **running,
+pre-splash** root was captured on 2026-11-15 (see "The 2026-11-15 live capture" below); it has
+the old image, old rigpa and no Plymouth, so it measures the userspace tail and the multi-user
+gate, not the splash. The measured columns are the 2026-10-02 plug-pull boot and that live
+capture; the "current design" column is what the configuration says will happen and what the one
+number that can be carried over from the 2026-10-02 measurement (the initrd read rate) implies.
+Every new-design duration is an estimate or unknown, and the charts say so in their fill: solid =
+measured, hatched = estimate, ragged with `?` = unknown, dashed = an ordering that is recorded
+but not timed.
 
 The 2026-11-15 boot work is in these `deepseek-boot` worktrees: rigpa's splash and startup gate
 are commit `ea73e5` on branch `deepseek/boot-and-ui`, and the `pedal.project` and `rtpi` sides are
-`ccf80b9` and `de874cf` on the same branch. It is **built but not booted**:
-no boot with Plymouth, the DSI stack in the initrd, `splash` or the startup gate has been observed
-on vip. This page cites those files as the design of record and puts no measured duration on
-them.
+`ccf80b9` and `de874cf` on the same branch. It is **built but not booted**: no boot with
+Plymouth, the DSI stack in the initrd, `splash` or the startup gate has been observed on vip. This
+page cites those files as the design of record and puts no measured duration on them. The live
+capture below is the root that was running before them.
 
 ![The boot timeline](boot-timeline.svg)
 
@@ -36,10 +38,60 @@ them.
   the initrd stage's duration is the least known number on this page. Treat the current figure as
   "about the same as measured, with ~1.5 s of expected headroom that may be eaten", not as a
   predicted boot time.
+- **Measured live, 2026-11-15, pre-splash root:** `systemd-analyze` reports **23.187 s** = 2.391
+  kernel + 3.206 initrd + 17.589 userspace; `namchaind` starts at 10.906 s, `pedald` 10.931,
+  `rigpa` 11.122. The old root's userspace tail is gated by `pedal-tune` (14.957 s, finishing at
+  23.178) and `pedal-guard` (11.016 s), not by the engine or the UI. The screen is rigpa's
+  placeholder from 11.1 s; the old rigpa logs no first-frame time.
 - **Unknown:** the time from applying power to the bootloader's first byte (PMIC and boot ROM,
-  still not on the wire); every current-image userspace, rigpa and Plymouth duration; and the
-  13.774 s userspace tail on the old image, which is 8.8 s *after* the engine had published and
-  whose cause the 2026-10-02 record does not name.
+  still not on the wire); and every duration of the **new** design — Plymouth, the startup gate,
+  rigpa's first frame. The old image's 13.774 s userspace tail has a cause after all: see the live
+  capture.
+
+## The 2026-11-15 live capture (pre-splash root)
+
+A live boot was captured at 01:19 UTC on the running root, with the debug probe attached: pedal
+image `cb3292a`, namchain `d1aa45c`, rigpa `f32bb2a`, no Plymouth, and the `getty@tty1` login
+prompt on the DSI panel. It is **not** the 2026-11-15 design; it is the baseline that design
+replaces.
+
+| | measured 2026-11-15 |
+|---|---|
+| `systemd-analyze` kernel | 2.391 s |
+| `systemd-analyze` initrd | 3.206 s |
+| `systemd-analyze` userspace | 17.589 s |
+| **total** | **23.187 s** |
+| `networkd` active | 7.190 s |
+| `pedal-codec` start → exit | 8.202 → 10.514 s |
+| `pedal-uart` start → exit | 8.222 → 8.950 s |
+| `pedal-tune` start → exit | 8.218 → **23.178 s** (14.957 s; the multi-user gate) |
+| `wpa_supplicant` → `ssh` | 9.666 → 9.843 s |
+| `getty@tty1` | 9.801 s |
+| `namchaind` | 10.906 s |
+| `pedald` | 10.931 s |
+| `rigpa` | 11.122 s |
+| `pedal-guard` start → exit | 10.916 → 21.933 s (11.016 s) |
+| `multi-user.target` | 23.182 s |
+
+What this capture establishes:
+
+- **The engine and the UI are up long before `multi-user.target`.** `namchaind` at 10.9 s,
+  `pedald` at 10.9, `rigpa` at 11.1. The screen is rigpa's placeholder from then on; the 12 s to
+  `multi-user.target` is `pedal-tune` and `pedal-guard`, not the screen or the audio path.
+- **`pedal-tune` is the critical path's tail.** `systemd-analyze critical-chain` is
+  `graphical.target → multi-user.target → pedal-tune.service @2.623s +14.957s`. The script itself
+  finishes in under a second when run by hand; at boot it is the `systemctl set-property --runtime
+  init.scope` call that waits while systemd is still bringing units up. That is the one obvious
+  boot-time optimisation left, and it is **not** in this change.
+- **The 2026-10-02 kernel/initrd split is stale.** This boot reports 2.391 s kernel and 3.206 s
+  initrd, against 0.707 and 1.830 then. The firmware numbers (first byte → kernel) still come only
+  from the 2026-10-02 wire capture.
+- **Wall-clock unit timestamps are not trustworthy on this board.** The NTP correction after boot
+  jumped the clock by about 1 h 50 m, so `who -b` and the units' "since" lines say 23:29 while
+  `/proc/uptime` and the monotonic stamps say the boot was minutes old. Use only the monotonic
+  stamps (as this table does).
+- **The old rigpa cannot say when it first painted.** The new design's `startup: first frame`
+  marker is exactly what fills that gap on the next boot.
 
 ## What this page is, and what it is not
 
@@ -237,9 +289,11 @@ masked, so it is not in the picture at all, while Plymouth is — on the display
 
 ## Caveats
 
-1. **vip is unreachable and the probe is not attached.** No current-image duration exists. The
-   current column is a design argument, not a measurement; the measured column is a month old and
-   from an image without pedald, rigpa, the DSI panel or Plymouth.
+1. **The new design has not been booted.** The live 2026-11-15 capture is the **pre-splash**
+   running root (old image, old rigpa, no Plymouth), so it measures the userspace tail and the
+   multi-user gate, not the splash. The current-design column remains a design argument; the
+   2026-10-02 measured column is a month old and from an image without pedald, rigpa, the DSI
+   panel or Plymouth.
 2. **The firmware measurements are on the factory EEPROM.** The 2026-10-02 boot ran the
    `2026-05-11` bootloader; vip's EEPROM has been `2026-09-25` since 2026-10-07. The bootloader's
    SD wait, initrd read and handover timings are not guaranteed identical; re-measure with the

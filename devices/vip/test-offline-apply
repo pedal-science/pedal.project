@@ -74,7 +74,7 @@ check "pedal-maint.target leaves the engine out" '! grep -q "multi-user\|namchai
 check "pedal-maint.target lets users log in" 'grep -q "^Wants=.*systemd-user-sessions.service" $R/etc/systemd/system/pedal-maint.target'
 check "the boot splash is installed" '[[ -s $R/usr/share/plymouth/themes/pedal/splash.png && -f $R/etc/plymouth/plymouthd.conf ]]'
 check "rigpa hands over from Plymouth without a black frame" 'grep -q "retain-splash" $R/etc/systemd/system/rigpa.service.d/10-pedal.conf'
-check "getty@tty1 is masked under the splash" '[[ $(readlink $R/etc/systemd/system/getty@tty1.service) == /dev/null ]]'
+check "the virtual-console getty is masked under the splash" '[[ $(readlink $R/etc/systemd/system/getty@.service) == /dev/null ]]'
 check "the maintenance profile leaves the splash" 'grep -q "pedal-splash-quit" $R/etc/systemd/system/pedal-maint.target'
 check "eth0 not required for online" 'grep -qx "RequiredForOnline=no" $R/etc/systemd/network/20-eth0.network'
 check "apply again changes nothing" 'before=$(cd $R && find etc usr/local var/lib/pedal -printf "%p %s %l\n" | sort | sha256sum); SOURCE_DATE_EPOCH=0 bash $S/rootfs/usr/local/sbin/pedal-device apply $S --root $R --commit test >/dev/null; after=$(cd $R && find etc usr/local var/lib/pedal -printf "%p %s %l\n" | sort | sha256sum); [[ $before == "$after" ]]'
