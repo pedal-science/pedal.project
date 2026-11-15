@@ -1410,6 +1410,17 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**Boot time: <5 s from power-on is not reachable on this hardware (measured 2026-11-15).**
+[bench-results/2026-11-15-boot-5s-vip/](bench-results/2026-11-15-boot-5s-vip/) has a Debug
+Probe capture of a real boot: the firmware/bootloader takes **≈8.7 s to the kernel** (`BOOTSYS`
+at 1.18 s, first initrd read at 5.15 s, `Starting OS` at 8.62 s), the kernel + initramfs take
+**5.55 s**, and rigpa’s first frame is **13.19 s after kernel start** — **≈21.9 s from power-on**.
+The 17 s `multi-user.target` tail is `pedal-tune`/`pedal-guard` and is not on the screen path.
+Even a zero-cost bootloader leaves 13.2 s; even a zero-cost userspace leaves 14.3 s. The realistic
+best case after software work (faster boot medium/EEPROM settings, no initramfs, start rigpa
+before the engine, smaller kernel) is **≈10–14 s**, not 5. A 5 s cold boot would need a different
+boot medium/stack (NVMe, no initramfs), a much earlier UI, or an always-on MCU/display controller;
+keeping the pedal suspended/wake-on-footswitch is the only route to a perceived instant start.
 **Boot splash, metering and the footswitch's release-press** (2026-11-15). The panel used to be
 dark from power-on until rigpa had a rig to draw. rigpa's own full-screen Startup splash now covers
 that from its first frame (measured 1.922 s after rigpa starts, 500 ms visible) until the rig
