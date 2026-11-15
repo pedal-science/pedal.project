@@ -1,16 +1,13 @@
-# The pedal's boot splash: the rigpa mark and wordmark on the same near-black the app uses,
-# scaled to fit whichever screen the firmware brought up (the 4.3" panel, 800x480, or a bar).
+# The pedal's boot splash: the rigpa mark and wordmark on the same near-black the app uses.
 # Static on purpose: it costs nothing while the engine, pedald and the disk come up.
+#
+# No Scale() and no conditionals: the script plugin is small, and the first version's
+# conditional + fractional Scale() segfaulted plymouthd on vip (a splash that crashes is worse
+# than none). splash.png is 1200x480; centring it shows the mark and the wordmark on the 800x480
+# panel and on a bar, with the edges cropped or padded.
 Window.SetBackgroundTopColor(0.043, 0.043, 0.043);
 Window.SetBackgroundBottomColor(0.043, 0.043, 0.043);
-
-splash_image = Image("splash.png");
-if (Window.GetWidth() / splash_image.GetWidth() < Window.GetHeight() / splash_image.GetHeight())
-    scale = Window.GetWidth() * 0.82 / splash_image.GetWidth();
-else
-    scale = Window.GetHeight() * 0.72 / splash_image.GetHeight();
-splash_image = splash_image.Scale(splash_image.GetWidth() * scale,
-                                  splash_image.GetHeight() * scale);
-sprite = Sprite(splash_image);
-sprite.SetX((Window.GetWidth() - splash_image.GetWidth()) / 2);
-sprite.SetY((Window.GetHeight() - splash_image.GetHeight()) / 2);
+splash = Image("splash.png");
+sprite = Sprite(splash);
+sprite.SetX((Window.GetWidth() - splash.GetWidth()) / 2);
+sprite.SetY((Window.GetHeight() - splash.GetHeight()) / 2);
