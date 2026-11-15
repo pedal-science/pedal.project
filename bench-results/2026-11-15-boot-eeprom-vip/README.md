@@ -132,3 +132,31 @@ sudo vcgencmd bootloader_version; sudo vcgencmd bootloader_config
 
 Cold boot timestamps come from `tools/measure-boot.py`; kernel/initrd/userspace and rigpa's
 `startup: first frame` from `systemd-analyze` and the journal.
+
+## Also tested and reverted: BOOT_UART=0 and USB_MSD_DISCOVER_TIMEOUT
+
+**`BOOT_UART=0`** (with the safe network-install config and the original boot order) booted
+normally, but there was no measurable kernel/initrd/userspace change; without the bootloader UART
+there is no way to measure the firmware half from the Probe. The cold measurements were within
+normal boot-to-boot variance (kernel 0.415 s, initrd 2.953 s, userspace 18.339 s), so there is no
+evidence it helps. Reverted to `BOOT_UART=1` to keep the serial boot/debug log.
+
+**`USB_MSD_DISCOVER_TIMEOUT=5000`** was applied with the safe config and Boot UART on. A warm
+reboot measured the same bootloader path as the baseline:
+
+```
+1.19 s BOOTSYS
+2.77 s SDC start
+3.70 s Boot mode: SD (01) order f4
+4.61 s Loading b/initrd.img
+5.07 s initrd read
+8.05 s Starting OS
+```
+
+`Starting OS` was **8.05 s — identical to the safe baseline**. With SD first in `BOOT_ORDER`, the
+bootloader never waits on USB, so the timeout has nothing to change on this board. (This was a warm
+reboot; `USB_MSD_DISCOVER_TIMEOUT` only matters if USB boot is attempted, which needs a cold USB/
+SD-failure path to exercise.) Reverted.
+
+The final EEPROM config remains the safe one: `BOOT_UART=1`, `BOOT_ORDER=0xf461`,
+`NET_INSTALL_AT_POWER_ON=0`, `NET_INSTALL_ENABLED=0`.

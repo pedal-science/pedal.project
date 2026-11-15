@@ -1434,6 +1434,8 @@ original boot order kept: `BOOT_ORDER=0xf461`, `NET_INSTALL_AT_POWER_ON=0`, `NET
 **≈8.6–8.9 s after kernel start, ≈16.6–17.0 s from power-on**. The earlier `BOOT_ORDER=0xf`/`HDMI_DELAY`
 variant was reverted (no SD fallback; cold failures were confounded by Wi-Fi association). See
 [bench-results/2026-11-15-boot-eeprom-vip/](bench-results/2026-11-15-boot-eeprom-vip/).
+`BOOT_UART=0` and `USB_MSD_DISCOVER_TIMEOUT=5000` were tried and made no measurable difference;
+both reverted (USB timeout matters only when USB boot is attempted).
 
 The realistic
 best case after software work (faster boot medium/EEPROM settings, no initramfs, start rigpa
