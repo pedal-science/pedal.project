@@ -1437,6 +1437,13 @@ variant was reverted (no SD fallback; cold failures were confounded by Wi-Fi ass
 `BOOT_UART=0` and `USB_MSD_DISCOVER_TIMEOUT=5000` were tried and made no measurable difference;
 both reverted (USB timeout matters only when USB boot is attempted).
 
+**No-initramfs kernel: tried and reverted.** Building `MMC_BLOCK`, `RPMB`, `SDHCI_BRCMSTB` and
+ext4 in makes `sdhci-brcmstb` probe at 1.3 s before the RP1/PCIe resources exist, so the SD card
+never appears and the board falls back to the stock kernel. The initrd is what loads that driver
+late enough to work. A hand-built 1 MB BusyBox initramfs already cut `Starting OS` 8.05 → 7.09 s
+but did not mount root; the minimal-initramfs route (storage modules + a correct `/init`) is the
+remaining direction. See [bench-results/2026-11-15-boot-noinitrd-vip/](bench-results/2026-11-15-boot-noinitrd-vip/).
+
 The realistic
 best case after software work (faster boot medium/EEPROM settings, no initramfs, start rigpa
 before the engine, smaller kernel) is **≈10–14 s**, not 5. A 5 s cold boot would need a different
