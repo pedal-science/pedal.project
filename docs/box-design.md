@@ -71,6 +71,53 @@ extra screw holes for them.
   board tilts into the rear wall, the Pi board pushes onto the header), and the flat cable takes
   up the difference. It also keeps every digital part off the analogue board.
 
+### The link's pin order
+
+Decided 2026-11-15, when the audio board's schematic was drawn
+(`pedal-codec/hardware/audio-board/`, J1). The Pi board must match it. Pin numbers are the audio
+board's socket's.
+
+| Pin | Net | Direction | What it is |
+|---|---|---|---|
+| 1 | GND | | |
+| 2 | I2S_BCLK | Pi → codec | Bit clock, 3.072 MHz at 48 kHz (Pi GPIO 18) |
+| 3 | GND | | |
+| 4 | I2S_FSYNC | Pi → codec | Frame clock (GPIO 19) |
+| 5 | GND | | |
+| 6 | I2S_TO_PI | codec → Pi | The codec's DOUT (GPIO 20, PCM_DIN) |
+| 7 | I2S_FROM_PI | Pi → codec | The codec's DIN (GPIO 21, PCM_DOUT) |
+| 8 | GND | | |
+| 9 | SCL | Pi → codec | I2C1 (GPIO 3). The codec is at 0x50 |
+| 10 | SDA | both | I2C1 (GPIO 2) |
+| 11 | RELAY | RP2350 → audio board | High = effect. Pulled down on the audio board, so no cable, or an RP2350 that is not driving it, is bypass |
+| 12 | EXTFS_A | audio board → RP2350 | EXT FS tip, through 1 kΩ and 100 nF. The pull-up is on the Pi board |
+| 13 | EXTFS_B | audio board → RP2350 | EXT FS ring, the same |
+| 14 | +3V3 | Pi → audio board | The **Pi's** 3.3 V, not the RP2350's: it feeds the codec's IOVDD and switches the analogue supplies on, so they follow the Pi into standby (HAT+) |
+| 15 | GND | | |
+| 16 | +5V | Pi board → audio board | About 0.1 A: the op-amps, the codec's analogue supply and the relay coil |
+
+Why this order:
+
+- **A ground on each side of each clock** and of the I2S data pair. The I2C pair has a ground on
+  one side and RELAY on the other, which changes only when the pedal is switched. Five grounds in
+  all, which is every conductor the eleven signals leave.
+- **The supplies are at one end**, with a ground between them and the 5 V at the edge. The slow
+  lines (RELAY, EXT FS) sit between the I2C pair and the supplies.
+- **A cable put in the other way round puts no supply on a signal pin.** Mirrored, pin 16 lands on
+  pin 1 and pin 14 on pin 3, which are both grounds: each supply is shorted to ground instead,
+  which the Pi board's input protection and the Pi's own 3.3 V regulator have to survive. That
+  matters because of the next point.
+- **Each conductor carries one net; the Pi board's pin numbers are not yet fixed.** Both sockets
+  are bottom-contact. Whether the Pi board's pin 1 or its pin 16 meets the audio board's pin 1
+  depends on which way the two sockets face and on whether the bought cable has its contacts on
+  the same side at both ends. That is settled when both boards are laid out, and written here.
+
+Not on the cable: whether a plug is in the guitar socket (the codec reads the socket's contact on
+its GPIO2, and the Pi reads the codec over I2C), and the codec's interrupt (a test point).
+
+The audio board has 33 Ω in series with each of the four I2S lines at the codec. The Pi board
+should have its own at the header on the three the Pi drives, since they now cross a cable.
+
 ### Heights
 
 | Level above the base plate | What is there |
