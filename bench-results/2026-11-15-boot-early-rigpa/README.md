@@ -46,6 +46,21 @@ Ordering only after `systemd-udevd.service` instead of `basic.target` was also t
 default dependencies still add `basic.target`, and the first frame was 11.728 s — no better. Kept
 `After=basic.target`.
 
+The current critical chain explains why shaving `basic.target` does not help:
+
+```
+rigpa.service +1.554s
+└─basic.target @2.936s
+  └─sockets.target @2.936s
+    └─... sysinit.target @2.926s
+      └─systemd-binfmt.service @2.486s +439ms
+        └─proc-sys-fs-binfmt_misc.mount @2.833s +86ms
+```
+
+The 439 ms binfmt item is real, but rigpa's screen wait is after `basic.target`, and the DSI
+connector is not ready until later; masking binfmt moves the start of the wait, not the moment the
+screen is usable. The floor is the panel becoming ready plus Qt, not `basic.target`.
+
 Repeated early-rigpa boots: first frame 11.314 s and 11.407 s after kernel start (baseline
 13.189 s); the ≈1.9 s win is stable across the two boots. Kernel+initrd varied 5.30–5.53 s, which
 is why first-frame numbers vary by ~0.1 s.
