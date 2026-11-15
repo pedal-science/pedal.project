@@ -36,6 +36,12 @@ After=basic.target
 `ExecCondition` now waits up to 5 s for a connected DSI/HDMI connector, so an early start at
 `basic.target` does not skip before the DSI panel's DRM connector appears.
 
+## Also measured, not kept
+
+Masking `systemd-binfmt.service` and its automount (a 462 ms item on the old critical chain) did
+not move the screen: first frame 11.293 s vs 11.314 s, within boot-to-boot noise; the masks were
+reverted. The 1.9 s win is from the ordering, not from shaving `basic.target`.
+
 ## What did not change
 
 - Kernel + initramfs are still ≈5.3 s; the firmware still ≈8.7 s to the kernel. This is a screen
