@@ -4,22 +4,19 @@
 are expected to do, and exactly what to run on the next boot to turn every estimate into a
 measurement.
 
-**Read this first: the new design has not been booted.** A live boot of the **running,
-pre-splash** root was captured on 2026-11-15 (see "The 2026-11-15 live capture" below); it has
-the old image, old rigpa and no Plymouth, so it measures the userspace tail and the multi-user
-gate, not the splash. The measured columns are the 2026-10-02 plug-pull boot and that live
-capture; the "current design" column is what the configuration says will happen and what the one
-number that can be carried over from the 2026-10-02 measurement (the initrd read rate) implies.
-Every new-design duration is an estimate or unknown, and the charts say so in their fill: solid =
-measured, hatched = estimate, ragged with `?` = unknown, dashed = an ordering that is recorded
-but not timed.
+**Read this first.** The **new root was booted and measured on vip on 2026-11-15**, but the
+initrd boot splash and Plymouth were both tried and rejected: the DSI/DRM initramfs stopped the SD
+root from appearing, and `plymouthd` SIGSEGVs on the panel's DSI stack. What covers the screen is
+**rigpa's own Startup splash**, measured below. The "current design" column is the plan as it
+stood before that boot; "Outcome on vip" says what actually shipped, and the live-capture section
+has the numbers. Charts: solid = measured, hatched = estimate, ragged with `?` = unknown, dashed
+= an ordering that is recorded but not timed.
 
 The 2026-11-15 boot work is in these `deepseek-boot` worktrees: rigpa's splash and startup gate
 are commit `ea73e5` on branch `deepseek/boot-and-ui`, and the `pedal.project` and `rtpi` sides are
-`5b73bc3` and `de874cf` on the same branch. It is **built but not booted**: no boot with
-Plymouth, the DSI stack in the initrd, `splash` or the startup gate has been observed on vip. This
-page cites those files as the design of record and puts no measured duration on them. The live
-capture below is the root that was running before them.
+`5b73bc3` and `de874cf` on the same branch, and the root was booted on 2026-11-15. The DSI/Plymouth
+boot splash was tried and rejected; the startup gate is what shipped and was measured (Outcome on
+vip). The design rows below are kept as the plan that the boot tested, not as the shipped shape.
 
 ![The boot timeline](boot-timeline.svg)
 
@@ -32,21 +29,48 @@ capture below is the root that was running before them.
   wait and a 2.2 s read of a 52.8 MB initrd), and 8.05–8.95 s is the kernel, systemd and the
   engine, with `namchaind` active 5.80 s after the kernel's first line and the rig published
   7.48 s after it. [`results.md`](../2026-10-02-boot-time-vip/results.md).
-- **Current design, estimate (not measured):** **18.6–21.3 s** from the first byte to audible.
-  The initrd slimming should remove about 1.4 s of the firmware's initrd read; the plan's
-  Plymouth start and the DRM/DSI/panel modules in the initrd can spend part or all of that, and
-  the initrd stage's duration is the least known number on this page. Treat the current figure as
-  "about the same as measured, with ~1.5 s of expected headroom that may be eaten", not as a
-  predicted boot time.
+- **Current design, estimate as planned:** **18.6–21.3 s** from the first byte to audible. The
+  initrd slimming should remove about 1.4 s of the firmware's initrd read. The boot of 2026-11-15
+  rejected the initrd DSI/Plymouth part (Outcome on vip), so this figure remains an estimate for
+  the audio path, not a measured screen time.
 - **Measured live, 2026-11-15, pre-splash root:** `systemd-analyze` reports **23.187 s** = 2.391
   kernel + 3.206 initrd + 17.589 userspace; `namchaind` starts at 10.906 s, `pedald` 10.931,
   `rigpa` 11.122. The old root's userspace tail is gated by `pedal-tune` (14.957 s, finishing at
   23.178) and `pedal-guard` (11.016 s), not by the engine or the UI. The screen is rigpa's
   placeholder from 11.1 s; the old rigpa logs no first-frame time.
 - **Unknown:** the time from applying power to the bootloader's first byte (PMIC and boot ROM,
-  still not on the wire); and every duration of the **new** design — Plymouth, the startup gate,
-  rigpa's first frame. The old image's 13.774 s userspace tail has a cause after all: see the live
-  capture.
+  still not on the wire). The new root's screen numbers are measured in Outcome on vip; the
+  boot-to-*sound* total is still an estimate.
+
+## Outcome on vip, 2026-11-15
+
+The new root (pedal `c9b41a6`, rigpa `ea73e50`, namchain `d1aa45c`) boots on the box's DSI panel
+and runs the engine, pedald and the UI. Three things were decided by the hardware, not the plan:
+
+1. **The initramfs DSI/DRM stack does not boot.** With `vc4`, `drm-rp1-dsi`, `panel-simple`,
+   `rpi-panel-attiny-regulator`, `backlight` and `i2c-brcmstb` in the initrd (for a Plymouth boot
+   splash), the boot stopped at `sdhci-brcmstb 1001100000.mmc: error -EINVAL: invalid resource
+   (null)` and never reached the root or ssh; the slot had to be abandoned after a power cycle.
+   A storage-only initrd boots. `INITRD_DRIVERS` is storage-only again.
+2. **`plymouthd` SIGSEGVs in userspace** on this DSI stack (`plymouth-start.service: Main process
+   exited, code=killed, status=11/SEGV`), with both the scaled theme script and a static one. All
+   three Plymouth units are masked and `splash` is off the command line. The theme remains in the
+   tree, inert, for a future retry.
+3. **rigpa's Startup splash is what shows**, and it was measured on the new root:
+
+| | measured 2026-11-15, new root |
+|---|---|
+| kernel / initrd | 2.397 s / 2.092 s |
+| `rigpa.service` active | 10.168 s (from kernel start) |
+| `startup: scene built` | +1.797 s after rigpa starts |
+| `startup: first frame` | +1.922 s — **the screen first shows the splash at ≈12.09 s** |
+| `startup: ready` / dismissed | +2.422 / +2.423 s — **Play at ≈12.59 s** |
+| `multi-user.target` | 34.989 s (the `pedal-tune` tail again) |
+
+The screen is black from the kernel's first line to 12.09 s; from then it is the full-screen
+rigpa splash for 501 ms, then Play. The firmware/bootloader time before the kernel is still only
+the 2026-10-02 measurement. The new root's `getty@.service` is masked, so no login prompt paints
+over the splash.
 
 ## The 2026-11-15 live capture (pre-splash root)
 
@@ -100,10 +124,9 @@ What this capture establishes:
   of record.
 - It is **not** a measurement of the current image. No duration in the current column was
   observed; the four authority labels say what each number rests on.
-- It is **not** a claim that the Plymouth/INITRD_DRIVERS/splash/mask work has been booted,
-  reviewed or is correct. It is committed on `deepseek/boot-and-ui` (rigpa `ea73e5`,
-  pedal.project `5b73bc3`, rtpi `de874cf`) and this page reads it from there; the
-  current-image durations stay estimate/unknown until a boot with it is captured.
+- It **recorded** the 2026-11-15 boot of the new root: the initrd splash and Plymouth were
+  rejected by the hardware, and rigpa's startup splash was measured (Outcome on vip). The design
+  rows remain the plan that boot tested.
 - It is **not** a power-on number. The anchor is the bootloader's first byte; power applied is
   earlier by however long the PMIC and boot ROM take, and that has never been measured.
 
@@ -289,11 +312,10 @@ masked, so it is not in the picture at all, while Plymouth is — on the display
 
 ## Caveats
 
-1. **The new design has not been booted.** The live 2026-11-15 capture is the **pre-splash**
-   running root (old image, old rigpa, no Plymouth), so it measures the userspace tail and the
-   multi-user gate, not the splash. The current-design column remains a design argument; the
-   2026-10-02 measured column is a month old and from an image without pedald, rigpa, the DSI
-   panel or Plymouth.
+1. **The initrd splash was tried and rejected; the startup splash was booted.** See Outcome on
+   vip: the DSI/DRM initramfs stopped the root, `plymouthd` segfaulted, and rigpa's Startup
+   splash is what shows (first frame 1.922 s after rigpa starts). The current-design column is
+   the pre-boot plan; the live-capture section is the pre-splash root.
 2. **The firmware measurements are on the factory EEPROM.** The 2026-10-02 boot ran the
    `2026-05-11` bootloader; vip's EEPROM has been `2026-09-25` since 2026-10-07. The bootloader's
    SD wait, initrd read and handover timings are not guaranteed identical; re-measure with the
@@ -418,7 +440,8 @@ both SVGs. The chart reads only `timeline.json`; there is no second copy of a nu
    `quiet`), `plymouth-quit`/`plymouth-quit-wait`/`getty@tty1` masked, rigpa's
    `ExecStartPre=-/usr/bin/plymouth quit --retain-splash`, the loose profile's
    `pedal-splash-quit.service`, and rigpa's startup qInfo marks (scene built, first frame,
-   engine, document, ready, dismissed). It has not been booted.
+   engine, document, ready, dismissed). It was booted on 2026-11-15; the first-frame and ready
+numbers are in Outcome on vip.
 2. `~19.75 MB` is the plan's current-tree initrd size; the last measured initrd was **19 MB** on
    2026-10-05 for the trimmed kernel. The estimate uses 19.75 MB and scales from the 2026-10-02
    read rate.

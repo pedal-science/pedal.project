@@ -1411,10 +1411,12 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 ## Next session starts with
 
 **Boot splash, metering and the footswitch's release-press** (2026-11-15). The panel used to be
-dark from power-on until rigpa had a rig to draw. Now a Plymouth splash (pedal.project's theme;
-the initrd's DSI/panel modules; `splash` on the command line) covers the initramfs and userspace
-until rigpa's `ExecStartPre` quits it with `--retain-splash`, and rigpa's own full-screen splash
-covers the rest until the rig document is on screen. On the compact panel the Play view draws the
+dark from power-on until rigpa had a rig to draw. rigpa's own full-screen Startup splash now covers
+that from its first frame (measured 1.922 s after rigpa starts, 500 ms visible) until the rig
+document is on screen. Plymouth was tried in the initramfs and in userspace and **both failed on
+vip** (the DSI/DRM initrd stopped the SD root, and `plymouthd` segfaults on the panel's DSI stack);
+the initramfs is storage-only and the Plymouth units are masked, with the theme left inert for a
+future retry. `docs/vip-image.md`, "The screen at boot", has the evidence. On the compact panel the Play view draws the
 live In/Out meters when Settings has them on (it had none before; the setting only reached the
 Settings view), the top-left `‹ Play` target is about twice its old area, and a footswitch hold on
 the right switch enters the tuner (the pedal's bypass until there is a relay): the Pico takes a
@@ -1423,11 +1425,12 @@ the tuner and is consumed rather than changing rigs. Footswitch and pedald behav
 `docs/uart-protocol.md` and `docs/pedal-service.md`; the rigpa side is its `docs/spec.md` and
 `docs/tuner.md`; the image side is `docs/vip-image.md` and `docs/vip-kernel-image.md`. The boot
 timeline, its parallel/sequential drawing and the dependency graph are in
-[bench-results/2026-11-15-boot-timeline-vip/](bench-results/2026-11-15-boot-timeline-vip/).
-**Open:** the Pico needs flashing and the Plymouth boot needs a card (or `vip-boot try-kernel`
-with the new initrd) before either is checked on hardware; vip was unreachable while this was
-built, so the report's current-image numbers are marked estimate/unknown and its `collect.sh`
-fills them in on the next boot.
+[bench-results/2026-11-15-boot-timeline-vip/](bench-results/2026-11-15-boot-timeline-vip/), with
+the new root's measured startup and the rejected Plymouth attempt in its "Outcome on vip".
+**Open:** the Pico is flashed and the release-press was seen on the wire; the right-switch hold
+still needs a physical press with the new pedald. The new root is on vip; the report's screen
+numbers are measured, the boot-to-sound total is still partly an estimate, and `collect.sh` fills
+in the rest on the next boot.
 
 **The pedal owns its state: D17, and the plan that gets there** (2026-11-07):
 [docs/pedal-owns-state.md](docs/pedal-owns-state.md). The pedal (pedald and `namchaind`) owns rigs,
