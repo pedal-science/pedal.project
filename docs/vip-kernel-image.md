@@ -266,10 +266,11 @@ figures were read off vip on 2026-10-05. A fresh root also drops two accidents t
 carries and this plan does not: `/lib/modules/lib` (561 MB, a mis-extracted copy) and the superseded
 full `...-numaemu1` tree (561 MB).
 
-Since 2026-11-15 the pedal initrd also carries the DSI/panel module stack and Plymouth (rtpi's
-`INITRD_DRIVERS`), so it is larger than the 19 MB measured above; the image build fails if
-`lsinitrd` does not list `plymouthd`, the theme and `vc4` for the pedal kernel, rather than
-shipping a card that boots dark.
+On 2026-11-15 the pedal initrd was tried with the DSI/panel module stack and Plymouth for a boot
+splash; it stopped vip's SD root from appearing (`sdhci-brcmstb: invalid resource`) and the board
+never answered, so `INITRD_DRIVERS` is storage-only again and the image build checks for the
+storage drivers instead. The screen is covered by rigpa's own splash once userspace starts; see
+`vip-image.md`, "The screen at boot".
 
 ## How it gets onto the board
 

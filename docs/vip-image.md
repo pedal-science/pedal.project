@@ -139,35 +139,29 @@ power cut mid-write leaves the old sector or the new one. Tested on vip with the
 | Rescue once | `vip-boot rescue` (`reboot "3"`: no flag, nothing written) | rescue-boot | next boot is the pedal |
 | Stay in rescue | `vip-boot rescue --stay` (or from rescue: `vip-boot stay`) | rescue every boot | `vip-boot default pedal` from rescue |
 
-### The boot splash
+### The screen at boot
 
 The panel is dark until Linux can drive it; the Pi's firmware cannot draw on the box's DSI panel
 (the DSI host is `drm_rp1_dsi`, a Linux driver, and the overlay is applied by the firmware but
-bound by the kernel). The earliest anything can be shown is therefore the initramfs, so that is
-where the first splash lives:
+bound by the kernel). Two things were tried for that gap:
 
-- `devices/vip/packages` installs **Plymouth**; the pedal root carries one custom theme
-  (`devices/common/rootfs/usr/share/plymouth/themes/pedal/`: the rigpa mark, the wordmark and
-  “starting…” on `#0b0b0b`, rendered once to `splash.png`) and `/etc/plymouth/plymouthd.conf`
-  (`Theme=pedal`, `ShowDelay=0`, `DeviceTimeout=8`).
-- The initramfs carries the panel's KMS stack so the splash can appear as soon as the panel is
-  up: `INITRD_DRIVERS` in rtpi's `devices/vip/device.env` lists the storage drivers plus `vc4`,
-  `drm-rp1-dsi`, `panel-simple`, `rpi-panel-attiny-regulator`, `backlight` and `i2c-brcmstb`.
-  `vip-install-kernel` (the pedal kernel) and `build-image` (the fallback kernel) both read that
-  one list. The build fails if the pedal kernel's `lsinitrd` listing has no `plymouthd`, theme or
-  `vc4`, rather than shipping a card that silently boots dark.
-- The command line gets `splash plymouth.ignore-serial-consoles vt.global_cursor_default=0`
-  (rtpi's `BASE_ARGS`); the serial console keeps its diagnostics (there is no `quiet`).
-- Plymouth stays up until **rigpa** takes over: the pedal root masks `plymouth-quit.service`,
-  `plymouth-quit-wait.service` and the `getty@` template (so no virtual console, tty1 included, takes the screen), and rigpa's drop-in runs
-  `ExecStartPre=-/usr/bin/plymouth quit --retain-splash`. The last splash pixels stay on the
-  framebuffer while eglfs and QML initialise, then rigpa's own full-screen splash (and finally
-  the Play view) replaces them. A rigpa that never starts leaves the splash up rather than a
-  login prompt; recovery is the serial console, ssh, or the rescue root.
-- The loose profile (`systemd.unit=pedal-maint.target`) has no rigpa, so
-  `pedal-splash-quit.service` leaves Plymouth there (a normal `plymouth quit`).
-- Rollback is the usual one: the splash is in the root and the initrd, not the EEPROM; a card
-  from the previous lock, or the spare slot's kernel, boots the old behaviour.
+- **The initramfs carrying the DSI/DRM stack with Plymouth.** It was built, installed and booted
+  on vip on 2026-11-15; it stopped the SD root from appearing (`sdhci-brcmstb: invalid resource`)
+  and the board never answered, so the slot was abandoned (the good slot stayed). `INITRD_DRIVERS`
+  in rtpi's `device.env` is storage-only again; the initrd carries `sdhci-brcmstb`, `mmc_block`,
+  `ext4` and the guard, nothing for the panel.
+- **Plymouth in userspace.** The `plymouth` package and a custom theme are in the image, and a
+  boot with `splash` starts `plymouth-start`; on vip's DSI stack `plymouthd` dies with SIGSEGV
+  before it draws (2026-11-15), so `plymouth-start` is masked and `splash` is not on the command
+  line. The theme stays in the tree for a future retry; it is inert.
+
+**What shows, then, is rigpa's own splash** (`qml/Splash.qml`, `src/app/Startup.*`): from rigpa's
+first frame — about 1.9 s after the process starts on vip (measured 2026-11-15) — it fills the
+screen with the mark, the wordmark and the phase, holds for at least 500 ms from that frame, and
+leaves when the engine is connected with a rig and the rig's document has been read (at most 8 s).
+It is latched and fades in 200 ms. The journal has `startup: scene built`, `first frame`, `engine`,
+`document`, `ready` and `dismissed` for the boot timeline. `getty@.service` is masked so no login
+prompt is painted over it; recovery is the serial console, ssh, or the rescue root.
 
 ### Falling back without being asked
 

@@ -298,14 +298,14 @@ for rel in "$PEDAL_KERNEL" "$FALLBACK_KERNEL"; do
   grep -q 'vip-guard\.sh' "$W/initrd-$rel.txt" \
     || die "vip-guard isn't in the $rel initramfs: a boot of that slot would never count"
 done
-# The splash and the panel's KMS stack are the whole point of the extra drivers; a build that
-# silently lost either would boot to a dark panel with nothing saying why.
-grep -q 'plymouthd' "$W/initrd-$PEDAL_KERNEL.txt" \
-  || die "Plymouth isn't in the pedal kernel's initramfs: the boot splash would be missing"
-grep -q 'splash\.png' "$W/initrd-$PEDAL_KERNEL.txt" \
-  || die "the Plymouth theme isn't in the pedal kernel's initramfs"
-grep -q 'vc4\.ko' "$W/initrd-$PEDAL_KERNEL.txt" \
-  || die "vc4 isn't in the pedal kernel's initramfs: the panel would stay dark until userspace"
+# The initramfs is storage only (rtpi's INITRD_DRIVERS): the DSI/DRM modules were tried for a
+# Plymouth boot splash and stopped vip's SD root from appearing (2026-11-15). The panel is brought
+# up in userspace and rigpa's own splash covers the screen; a build that lost the storage drivers
+# would not boot at all, so check those instead.
+for m in sdhci-brcmstb mmc_block ext4; do
+  grep -q "$m" "$W/initrd-$PEDAL_KERNEL.txt" \
+    || die "$m isn't in the pedal kernel's initramfs: the root would not be mountable"
+done
 
 log "rescue root: customise"
 common "$RESCUE" rescue

@@ -22,11 +22,15 @@ motd-news.timer
 # EEPROM is the owner's decision, made where the board can be reached, not a side effect of an
 # image build.
 rpi-eeprom-update.service
-# Plymouth's own quit, held back so the boot splash survives until rigpa takes DRM master (the
-# rigpa drop-in quits it with --retain-splash). With no getty on tty1 it would otherwise sit on
-# the login prompt; recovery is the serial console, ssh, or the rescue root.
+# Plymouth is installed (the theme came from the 2026-11-15 splash attempt) but not started:
+# plymouthd SIGSEGVs on this DSI stack, and with no splash on the command line a start would be a
+# failed unit. All three are masked so a stray start or a future cmdline cannot paint over rigpa;
+# recovery is the serial console, ssh, or the rescue root.
 plymouth-quit.service
 plymouth-quit-wait.service
+# Plymouth itself, until its DSI renderer stops segfaulting on vip: with the theme installed but
+# no boot splash requested, a start is a failed unit and nothing else.
+plymouth-start.service
 getty@.service
 #
 # Deliberately NOT masked:
