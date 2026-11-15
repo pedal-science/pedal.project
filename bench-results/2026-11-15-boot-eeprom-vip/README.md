@@ -16,7 +16,7 @@ NET_INSTALL_AT_POWER_ON=0
 NET_INSTALL_ENABLED=0
 ```
 
-It was cold-verified (one boot) and is the config currently on the board. The aggressive
+It was cold-verified twice (the second boot: kernel 0.412 s, initrd 2.575 s, userspace 18.410 s, rigpa active 6.999 s, first frame 8.585 s after kernel; Ethernet and Wi-Fi both came up) and is the config currently on the board. The aggressive
 `BOOT_ORDER=0xf`/`HDMI_DELAY=0` variant is **not** used; it removed the SD retry/fallback path and
 its cold failures were not isolated from the Wi-Fi problem.
 
@@ -82,10 +82,11 @@ Before the EEPROM change the same cold-boot path was **≈21.7 s** to the first 
 `NET_INSTALL_AT_POWER_ON=0`, `NET_INSTALL_ENABLED=0`) was then cold-verified: `Starting OS` at
 8.05 s and rigpa running/networked after the boot. That is the config kept on the board.
 
-Cold measurement with the safer config (one boot): kernel 0.414 s, initrd 2.570 s, userspace
-13.500 s, rigpa active 7.200 s, first frame 8.918 s after kernel → **≈17.0 s from power-on to
-first frame**. Play took longer on that boot (engine at 4.793 s after rigpa, ready 4.870 s) because
-the engine came up late; the screen is not waiting for it.
+Cold measurements with the safer config: boot 1 kernel 0.414 s, initrd 2.570 s, userspace 13.500 s,
+rigpa active 7.200 s, first frame 8.918 s; boot 2 kernel 0.412 s, initrd 2.575 s, userspace
+18.410 s, rigpa active 6.999 s, first frame 8.585 s. **≈16.6–17.0 s from power-on to first frame**
+(firmware `Starting OS` 8.05 s + 8.6–8.9 s). Play took 4.5–4.9 s after rigpa on these boots
+because the engine came up late; the screen is not waiting for it.
 
 Notes:
 

@@ -1430,8 +1430,8 @@ the serial console kept (≈0.5 s versus `console=tty1` only) for debug.
 **Also kept:** a config-only EEPROM update on the matching 2026-09-25 bootloader image with the
 original boot order kept: `BOOT_ORDER=0xf461`, `NET_INSTALL_AT_POWER_ON=0`, `NET_INSTALL_ENABLED=0`,
 `BOOT_UART=1`. It removes a **4.8 s** cold-boot network-install wait (`Starting OS` 12.98 s →
-8.05 s). One cold boot with this config reached rigpa and both Ethernet and Wi-Fi; cold first frame
-was **≈8.9 s after kernel start, ≈17.0 s from power-on**. The earlier `BOOT_ORDER=0xf`/`HDMI_DELAY`
+8.05 s). Two cold boots with this config reached rigpa and both Ethernet and Wi-Fi; cold first frame was
+**≈8.6–8.9 s after kernel start, ≈16.6–17.0 s from power-on**. The earlier `BOOT_ORDER=0xf`/`HDMI_DELAY`
 variant was reverted (no SD fallback; cold failures were confounded by Wi-Fi association). See
 [bench-results/2026-11-15-boot-eeprom-vip/](bench-results/2026-11-15-boot-eeprom-vip/).
 
