@@ -160,3 +160,24 @@ SD-failure path to exercise.) Reverted.
 
 The final EEPROM config remains the safe one: `BOOT_UART=1`, `BOOT_ORDER=0xf461`,
 `NET_INSTALL_AT_POWER_ON=0`, `NET_INSTALL_ENABLED=0`.
+
+## What the 8.05 s bootloader time is made of
+
+This is the **closed bootloader/firmware**, not the kernel; the kernel itself is 0.41 s. The
+firmware's UART clock (cold safe-config boot) shows, grouped into phases (messages from parallel
+threads are not strictly ordered, so these are rounded ranges):
+
+| Phase | From → to (firmware clock) | Time | What happens |
+|---|---:|---:|---|
+| ROM/EEPROM/SDRAM/RP1 boot | 0.00 → 1.18 s | 1.18 s | boot ROM, EEPROM, DDR init, first RP1 boot |
+| second-stage bootloader | 1.18 → 3.73 s | 2.55 s | RP1 firmware load, PCIe scan/reset, SDC start, `RPi: BOOTLOADER` |
+| card/partition setup | 3.73 → 4.59 s | 0.86 s | USB-PD, SD OCR/CID/CSD, 50 MHz bus, GPT, `config.txt` |
+| initrd read | 4.59 → 5.87 s | 1.28 s | 21,495,759-byte `b/initrd.img`; ≈16 MB/s |
+| dtb/overlay/cmdline | 5.87 → 6.65 s | 0.78 s | dtb, `overlay_map`, two overlays, `cmdline-tuned.txt`, 14 MB `vmlinuz` read starts |
+| vmlinuz / handover | 6.65 → 8.05 s | 1.40 s | 14,069,804-byte vmlinuz read (≈29 MB/s), final PCI reset, `Starting OS` |
+| **total** | | **8.05 s** | |
+
+The biggest pieces are the RP1/PCIe/SD bring-up (~2.5 s), the 21.5 MB initrd (~1.3 s), and the
+vmlinuz/handover (~1.4 s). The raw SD card reads at ~90 MB/s, but the firmware reads at 16–29 MB/s.
+A no-initramfs kernel could remove the ~1.3 s initrd read plus some handover, but the closed
+RP1/PCIe/SD and ROM phases remain.
