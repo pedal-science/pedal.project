@@ -96,8 +96,10 @@ rigpa.service +363ms
 ```
 
 - `basic.target` is at **2.898 s** into userspace.
-- `pedal-codec` adds **2.144 s** before `namchaind`; this is the audio-codec bring-up and is on
-  rigpa's path only because rigpa is ordered after the engine.
+- `pedal-codec` adds **2.144 s** before `namchaind`; this is the audio-codec bring-up and was on
+  rigpa's path only because rigpa was ordered after the engine. The ordering was changed on
+  2026-11-15: see [early rigpa](../2026-11-15-boot-early-rigpa/README.md), which paints 1.9 s
+  earlier.
 - `namchaind` +388 ms and `pedald` +363 ms.
 - Qt/QML then takes **1.766 s** to the first frame.
 
@@ -133,9 +135,11 @@ leaves ≈18 s. Boot medium alone cannot reach 5 s.
    in the firmware stage; still nowhere near 5 s.
 3. **Remove the initramfs** — build SDHCI/ext4 and the DSI/KMS stack into the kernel, boot the
    root directly. Expected **−2 to −3 s**; needs a kernel rebuild and a careful boot trial.
-4. **Start rigpa before the engine** — drop `After=namchaind/pedald` for the UI, let `Startup`
-   show the disconnected/starting state, and let engine readiness arrive later. Expected
-   **−2 to −3 s to first frame**; the Play data/audio would still be later.
+4. **Start rigpa before the engine** — this was measured and kept on 2026-11-15: drop
+   `After=namchaind/pedald` for the UI, start at `basic.target`, let `Startup` show the
+   disconnected/starting state, and let engine readiness arrive later. Measured **−1.9 s to first
+   frame** ([early rigpa](../2026-11-15-boot-early-rigpa/README.md)); Play data/audio still arrive
+   about half a second after the first frame.
 5. **Trim `basic.target` / `pedal-codec`** — the 2.9 s base and the 2.1 s codec are the userspace
    floor; a codec path that does not block `namchaind`/rigpa could save a second or two.
 6. **Kernel config** — remove unused drivers/features and shrink the kernel; expected **−0.5 to
