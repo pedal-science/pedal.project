@@ -1416,7 +1416,15 @@ Probe capture of a real boot: the firmware/bootloader takes **≈8.7 s to the ke
 at 1.18 s, first initrd read at 5.15 s, `Starting OS` at 8.62 s), the kernel + initramfs take
 **5.55 s**, and rigpa’s first frame is **13.19 s after kernel start** — **≈21.9 s from power-on**.
 The 17 s `multi-user.target` tail is `pedal-tune`/`pedal-guard` and is not on the screen path.
-Even a zero-cost bootloader leaves 13.2 s; even a zero-cost userspace leaves 14.3 s. The realistic
+Even a zero-cost bootloader leaves 13.2 s; even a zero-cost userspace leaves 14.3 s.
+
+**Kept 2026-11-15:** rigpa now starts at `basic.target` instead of after `namchaind`/`pedald`, and
+waits up to 5 s for the panel connector; measured first frame **11.3 s after kernel start** (was
+13.2 s), **≈20.0 s from power-on**, saved 1.9 s. Engine/Play arrive ~0.5 s after the first frame.
+Masking `systemd-binfmt` was measured and made no difference; reverted. See
+[bench-results/2026-11-15-boot-early-rigpa/](bench-results/2026-11-15-boot-early-rigpa/).
+
+The realistic
 best case after software work (faster boot medium/EEPROM settings, no initramfs, start rigpa
 before the engine, smaller kernel) is **≈10–14 s**, not 5. A 5 s cold boot would need a different
 boot medium/stack (NVMe, no initramfs), a much earlier UI, or an always-on MCU/display controller;
