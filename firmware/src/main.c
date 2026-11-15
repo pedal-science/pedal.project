@@ -120,9 +120,8 @@ int main(void) {
                        (unsigned long)proto_frames_ok(), (unsigned long)proto_frames_bad(),
                        (unsigned long)proto_events_lost(), (unsigned)proto_session_up(),
                        (int)proto_state_rig_index(), proto_state_rig_name());
-                printf("fs: 1=%s 2=%s 3=%s panic=%u\n", footswitch_pressed(0) ? "down" : "up",
-                       footswitch_pressed(1) ? "down" : "up", footswitch_pressed(2) ? "down" : "up",
-                       (unsigned)footswitch_panic());
+                printf("fs: 1=%s 2=%s 3=%s\n", footswitch_pressed(0) ? "down" : "up",
+                       footswitch_pressed(1) ? "down" : "up", footswitch_pressed(2) ? "down" : "up");
                 break;
             default:
                 break;

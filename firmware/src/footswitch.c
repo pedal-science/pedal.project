@@ -25,10 +25,15 @@ static const uint8_t pins[FOOTSWITCH_COUNT] = {12, 10, 11};
 // keeps the press inside D10's 50 ms with room for the link and the switch.
 #define DEBOUNCE_MS 10u
 
-// The panic bypass is a long press on footswitch 3, the assignable one (index 2). Its press still
-// sends cc 82 at once, so the press is not held back; footswitches 1 and 2 step rigs, and a long
-// press on either would step one before it bypassed.
-#define PANIC_SWITCH 2u
+// A press is taken when the switch is released, not when it goes down: a hold is then a hold,
+// and not a tap followed by a hold. A short release sends the press message (cc 127) and then its
+// release (0); a release after the hold sends only 0, so a hold never also taps.
+//
+// The bypass hold is a long press on footswitch 3, the assignable one (index 2). It sends one
+// `bypass_toggle` while the switch is still down, which the pedal service turns into its tuner
+// (the tuner node mutes the rig; there is no relay yet). Footswitches 1 and 2 step rigs, so a
+// long press on either would step one before it did anything else.
+#define BYPASS_SWITCH 2u
 #define LONG_PRESS_MS 1000u
 
 static struct {
@@ -39,15 +44,14 @@ static struct {
     bool long_done;    // this press has already been taken as a long press
 } sw[FOOTSWITCH_COUNT];
 
-static bool panic_on;
 static uint32_t last_poll_ms;
 
 static bool read_pressed(unsigned i) {
 #if PRESS_OPENS
     // Pulled up, and grounded by the switch at rest: a press opens it and the pin goes high. A
     // loom that comes unplugged reads as all three held. At power-up that is no press at all
-    // (footswitch_init), but pulled out while running it is three presses and, a second later,
-    // the panic bypass.
+    // (footswitch_init), but pulled out while running it is three releases and, a second later,
+    // the bypass hold.
     return gpio_get(pins[i]);
 #else
     return !gpio_get(pins[i]);  // pulled up: the switch pulls the pin to ground
@@ -64,28 +68,33 @@ void footswitch_init(void) {
     uint32_t now = to_ms_since_boot(get_absolute_time());
     for (unsigned i = 0; i < FOOTSWITCH_COUNT; i++) {
         // A switch held at power-up is taken as already down: it is not a press. Its release
-        // still sends the cc's 0, which acts on nothing (the service acts on the press).
+        // still sends the cc's 0, which acts on nothing.
         sw[i].raw = sw[i].pressed = read_pressed(i);
         sw[i].since_ms = now;
         sw[i].down_ms = now;
         sw[i].long_done = true;
     }
     last_poll_ms = now;
-    printf("fs: footswitches 1/2/3 on GP%u/GP%u/GP%u, a press %s, panic is a %u ms press on %u\n",
+    printf("fs: footswitches 1/2/3 on GP%u/GP%u/GP%u, a press %s, the hold is a %u ms press on %u\n",
            pins[0], pins[1], pins[2], PRESS_OPENS ? "opens" : "closes", LONG_PRESS_MS,
-           PANIC_SWITCH + 1);
+           BYPASS_SWITCH + 1);
 }
 
 static void on_change(unsigned i, bool pressed, uint32_t now_ms) {
     uint8_t cc = (uint8_t)(CC_FIRST + i);
     printf("fs: %u %s\n", i + 1, pressed ? "down" : "up");
     if (pressed) {
+        // A press is only recorded here. It is registered on release, so a hold is a hold and
+        // not a tap followed by one.
         sw[i].down_ms = now_ms;
         sw[i].long_done = false;
-        proto_send_event(PROTO_EV_CC, cc, 127, PROTO_SRC_FOOTSWITCH);
-    } else {
-        proto_send_event(PROTO_EV_CC, cc, 0, PROTO_SRC_FOOTSWITCH);
+        return;
     }
+    if (!sw[i].long_done) {
+        // The short release is the press: the same pair a MIDI switch sends, 127 then 0.
+        proto_send_event(PROTO_EV_CC, cc, 127, PROTO_SRC_FOOTSWITCH);
+    }
+    proto_send_event(PROTO_EV_CC, cc, 0, PROTO_SRC_FOOTSWITCH);
 }
 
 void footswitch_poll(uint32_t now_ms) {
@@ -104,22 +113,19 @@ void footswitch_poll(uint32_t now_ms) {
             on_change(i, raw, now_ms);
         }
 
-        if (i == PANIC_SWITCH && sw[i].pressed && !sw[i].long_done &&
+        if (i == BYPASS_SWITCH && sw[i].pressed && !sw[i].long_done &&
             now_ms - sw[i].down_ms >= LONG_PRESS_MS) {
             // Taken while the switch is still down, so the player hears it without letting go.
-            // The relay is local and comes with step 6; until then this is the service's word.
+            // The service turns this into its tuner, which mutes the rig; the relay is local and
+            // comes with step 6. The release that follows this sends 0 only, so the hold is not
+            // also a tap.
             sw[i].long_done = true;
-            panic_on = !panic_on;
-            printf("fs: panic bypass %s\n", panic_on ? "on" : "off");
-            proto_send_event(PROTO_EV_BYPASS_SET, panic_on ? 1 : 0, 0, PROTO_SRC_FOOTSWITCH);
+            printf("fs: hold on %u -> bypass_toggle\n", i + 1);
+            proto_send_event(PROTO_EV_BYPASS_TOGGLE, 0, 0, PROTO_SRC_FOOTSWITCH);
         }
     }
 }
 
 bool footswitch_pressed(unsigned index) {
     return index < FOOTSWITCH_COUNT && sw[index].pressed;
-}
-
-bool footswitch_panic(void) {
-    return panic_on;
 }

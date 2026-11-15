@@ -31,7 +31,8 @@ import json
 import os
 
 # The footswitches' default map (uart-protocol.md draft 2, U8): they are triggers like any
-# other controller, and 82 is the assignable one. A switch acts on its press.
+# other controller, and 82 is the assignable one. The Pico takes a press on the release of its
+# switch and sends the same cc 127 a MIDI controller would; the service acts on that 127.
 DEFAULT_CC = {"80": "rig_down", "81": "rig_up"}
 
 KINDS = (
@@ -224,15 +225,17 @@ class Mapping:
             return self._move_bank(0, absolute=int(a))
         if kind == "bypass_set":
             self.bypass = bool(a)
-            return {"action": "bypass", "on": self.bypass}
+            return {"action": "tuner", "on": self.bypass}
         if kind == "bypass_toggle":
             self.bypass = not self.bypass
-            return {"action": "bypass", "on": self.bypass}
+            return {"action": "tuner", "on": self.bypass}
         if kind == "cc":
             # Every cc in the map is a switch-type trigger, read as on or off at 64: a
-            # footswitch or a MIDI pedal's button sends 127 on its press and 0 on its release,
-            # and only the press acts (pedal-service.md, "The footswitches are triggers too").
-            # The exception is a CC mapped to a parameter, where every value means something.
+            # footswitch or a MIDI pedal's button sends 127 and 0, and only the press acts
+            # (pedal-service.md, "The footswitches are triggers too"). The Pico takes the press
+            # on the release of its own switch, so the 127 arrives at release; the message is
+            # still the one a MIDI controller sends. The exception is a CC mapped to a
+            # parameter, where every value means something.
             spec = self.map.get("cc", {}).get(str(int(a)))
             if isinstance(spec, dict) and "param" in spec:
                 return dict(spec["param"], action="param", value=int(b))

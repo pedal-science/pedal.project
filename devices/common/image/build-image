@@ -176,9 +176,13 @@ common() {  # common <root> <kind>
   printf '%s=%s\n' commit "${PIN[pedal]}" rtpi "${PIN[rtpi]}" namchain "$NC_COMMIT" rigpa "$RG_COMMIT" \
     snapshot "$SNAPSHOT" root "$kind" > "$r/etc/pedal-image"
 }
-initramfs() {  # initramfs <root> <release>
+initramfs() {  # initramfs <root> <release> [drivers]
+  # The pedal kernel's own initramfs is built by rtpi's vip-install-kernel; this one is the
+  # stock fallback's. `drivers` defaults to storage only, and is INITRD_DRIVERS for the pedal
+  # (the DSI KMS stack, so Plymouth can draw before the root is mounted).
+  local drivers=${3:-"sdhci-brcmstb sdhci-iproc mmc_block ext4 vfat"}
   inroot "$1" dracut --quiet --force --reproducible --no-hostonly --kver "$2" \
-    --add-drivers "sdhci-brcmstb sdhci-iproc mmc_block ext4 vfat" "/boot/initrd.img-$2"
+    --add-drivers "$drivers" "/boot/initrd.img-$2"
 }
 
 log "pedal root: customise"
@@ -280,19 +284,27 @@ log "pedal root: rigpa renders a frame offscreen"
 printf '{"settings_file": "/tmp/rigpa-check.ini", "engine": {"port": 9}, "pedald": {"port": 9}}\n' \
   > "$PEDAL/tmp/rigpa-check.json"
 inroot "$PEDAL" env QT_QPA_PLATFORM=offscreen QT_QUICK_BACKEND=software \
-  /opt/rigpa/current/bin/rigpa --config /tmp/rigpa-check.json --screenshot /tmp/rigpa-check.png \
+  /opt/rigpa/current/bin/rigpa --config /tmp/rigpa-check.json --splash off --screenshot /tmp/rigpa-check.png \
   > "$W/rigpa-check.log" 2>&1 \
   || { cat "$W/rigpa-check.log" >&2; die "rigpa does not start in the pedal root (a QML module or plugin is missing)"; }
 cp "$PEDAL/tmp/rigpa-check.png" "$W/rigpa-check.log" "$OUT/"
 rm -f "$PEDAL"/tmp/rigpa-check.*
 
 log "pedal root: initramfs for both kernels, with vip-guard"
-initramfs "$PEDAL" "$FALLBACK_KERNEL"      # the pedal kernel's came from vip-install-kernel
+initramfs "$PEDAL" "$FALLBACK_KERNEL" "${INITRD_DRIVERS:-sdhci-brcmstb sdhci-iproc mmc_block ext4 vfat}"   # the pedal kernel's came from vip-install-kernel
 for rel in "$PEDAL_KERNEL" "$FALLBACK_KERNEL"; do
   chroot "$PEDAL" lsinitrd "/boot/initrd.img-$rel" > "$W/initrd-$rel.txt"
   grep -q 'vip-guard\.sh' "$W/initrd-$rel.txt" \
     || die "vip-guard isn't in the $rel initramfs: a boot of that slot would never count"
 done
+# The splash and the panel's KMS stack are the whole point of the extra drivers; a build that
+# silently lost either would boot to a dark panel with nothing saying why.
+grep -q 'plymouthd' "$W/initrd-$PEDAL_KERNEL.txt" \
+  || die "Plymouth isn't in the pedal kernel's initramfs: the boot splash would be missing"
+grep -q 'splash\.png' "$W/initrd-$PEDAL_KERNEL.txt" \
+  || die "the Plymouth theme isn't in the pedal kernel's initramfs"
+grep -q 'vc4\.ko' "$W/initrd-$PEDAL_KERNEL.txt" \
+  || die "vc4 isn't in the pedal kernel's initramfs: the panel would stay dark until userspace"
 
 log "rescue root: customise"
 common "$RESCUE" rescue

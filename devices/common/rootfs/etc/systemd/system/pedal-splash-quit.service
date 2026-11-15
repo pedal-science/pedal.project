@@ -1,0 +1,14 @@
+# Leave Plymouth's boot splash where nothing else will: the loose profile (systemd.unit=
+# pedal-maint.target) has no rigpa to quit it, and the pedal root masks plymouth-quit so that a
+# normal boot keeps the splash until rigpa is ready. A host without Plymouth skips this.
+[Unit]
+Description=Leave the boot splash for the maintenance profile
+Documentation=file:/etc/pedal/masked-units
+ConditionPathExists=/usr/bin/plymouth
+
+[Service]
+Type=oneshot
+ExecStart=-/usr/bin/plymouth quit
+
+[Install]
+WantedBy=pedal-maint.target

@@ -1410,6 +1410,25 @@ Every part, with its CPC order code, price and purpose, is in [docs/bom.md](docs
 
 ## Next session starts with
 
+**Boot splash, metering and the footswitch's release-press** (2026-11-15). The panel used to be
+dark from power-on until rigpa had a rig to draw. Now a Plymouth splash (pedal.project's theme;
+the initrd's DSI/panel modules; `splash` on the command line) covers the initramfs and userspace
+until rigpa's `ExecStartPre` quits it with `--retain-splash`, and rigpa's own full-screen splash
+covers the rest until the rig document is on screen. On the compact panel the Play view draws the
+live In/Out meters when Settings has them on (it had none before; the setting only reached the
+Settings view), the top-left `‹ Play` target is about twice its old area, and a footswitch hold on
+the right switch enters the tuner (the pedal's bypass until there is a relay): the Pico takes a
+short press on **release**, a 1 s hold sends `bypass_toggle`, and a later tap on any switch leaves
+the tuner and is consumed rather than changing rigs. Footswitch and pedald behaviour is
+`docs/uart-protocol.md` and `docs/pedal-service.md`; the rigpa side is its `docs/spec.md` and
+`docs/tuner.md`; the image side is `docs/vip-image.md` and `docs/vip-kernel-image.md`. The boot
+timeline, its parallel/sequential drawing and the dependency graph are in
+[bench-results/2026-11-15-boot-timeline-vip/](bench-results/2026-11-15-boot-timeline-vip/).
+**Open:** the Pico needs flashing and the Plymouth boot needs a card (or `vip-boot try-kernel`
+with the new initrd) before either is checked on hardware; vip was unreachable while this was
+built, so the report's current-image numbers are marked estimate/unknown and its `collect.sh`
+fills them in on the next boot.
+
 **The pedal owns its state: D17, and the plan that gets there** (2026-11-07):
 [docs/pedal-owns-state.md](docs/pedal-owns-state.md). The pedal (pedald and `namchaind`) owns rigs,
 banks, the model/IR library and the block catalogue; ljoss and rigpa become views that send commands

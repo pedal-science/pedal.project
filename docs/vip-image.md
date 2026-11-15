@@ -139,6 +139,36 @@ power cut mid-write leaves the old sector or the new one. Tested on vip with the
 | Rescue once | `vip-boot rescue` (`reboot "3"`: no flag, nothing written) | rescue-boot | next boot is the pedal |
 | Stay in rescue | `vip-boot rescue --stay` (or from rescue: `vip-boot stay`) | rescue every boot | `vip-boot default pedal` from rescue |
 
+### The boot splash
+
+The panel is dark until Linux can drive it; the Pi's firmware cannot draw on the box's DSI panel
+(the DSI host is `drm_rp1_dsi`, a Linux driver, and the overlay is applied by the firmware but
+bound by the kernel). The earliest anything can be shown is therefore the initramfs, so that is
+where the first splash lives:
+
+- `devices/vip/packages` installs **Plymouth**; the pedal root carries one custom theme
+  (`devices/common/rootfs/usr/share/plymouth/themes/pedal/`: the rigpa mark, the wordmark and
+  “starting…” on `#0b0b0b`, rendered once to `splash.png`) and `/etc/plymouth/plymouthd.conf`
+  (`Theme=pedal`, `ShowDelay=0`, `DeviceTimeout=8`).
+- The initramfs carries the panel's KMS stack so the splash can appear as soon as the panel is
+  up: `INITRD_DRIVERS` in rtpi's `devices/vip/device.env` lists the storage drivers plus `vc4`,
+  `drm-rp1-dsi`, `panel-simple`, `rpi-panel-attiny-regulator`, `backlight` and `i2c-brcmstb`.
+  `vip-install-kernel` (the pedal kernel) and `build-image` (the fallback kernel) both read that
+  one list. The build fails if the pedal kernel's `lsinitrd` listing has no `plymouthd`, theme or
+  `vc4`, rather than shipping a card that silently boots dark.
+- The command line gets `splash plymouth.ignore-serial-consoles vt.global_cursor_default=0`
+  (rtpi's `BASE_ARGS`); the serial console keeps its diagnostics (there is no `quiet`).
+- Plymouth stays up until **rigpa** takes over: the pedal root masks `plymouth-quit.service`,
+  `plymouth-quit-wait.service` and `getty@tty1.service`, and rigpa's drop-in runs
+  `ExecStartPre=-/usr/bin/plymouth quit --retain-splash`. The last splash pixels stay on the
+  framebuffer while eglfs and QML initialise, then rigpa's own full-screen splash (and finally
+  the Play view) replaces them. A rigpa that never starts leaves the splash up rather than a
+  login prompt; recovery is the serial console, ssh, or the rescue root.
+- The loose profile (`systemd.unit=pedal-maint.target`) has no rigpa, so
+  `pedal-splash-quit.service` leaves Plymouth there (a normal `plymouth quit`).
+- Rollback is the usual one: the splash is in the root and the initrd, not the EEPROM; a card
+  from the previous lock, or the spare slot's kernel, boots the old behaviour.
+
 ### Falling back without being asked
 
 A candidate that fails falls back on its own, as on piv. The harder case is the **default**

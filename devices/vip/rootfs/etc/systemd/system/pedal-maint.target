@@ -14,6 +14,9 @@ Wants=ssh.service systemd-timesyncd.service getty.target pedal-wifi.service
 # Removes /run/nologin. multi-user.target pulls it in; without it here, pam_nologin refuses every
 # login in the loose profile ("System is booting up"), so ssh answers and nobody gets in (step 6).
 Wants=systemd-user-sessions.service
+# A loose boot has no rigpa to take over from the splash, so it leaves it here rather than
+# sitting under a frozen logo until someone reboots.
+Wants=pedal-splash-quit.service
 After=basic.target
 Conflicts=rescue.service rescue.target
 AllowIsolate=yes

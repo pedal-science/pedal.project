@@ -1,0 +1,1119 @@
+{
+  "schema": "pedal-boot-timeline/1",
+  "title": "vip boot timeline: plug-pull to sound",
+  "subtitle": "2026-11-15. Measured on 2026-10-02; the current design is the 2026-11-15 boot work (rigpa 7ed3c58; pedal.project/rtpi uncommitted), built but never booted. Current durations are estimate/unknown.",
+  "anchor": "All times are seconds from the bootloader's first byte on the debug UART. Power-on is earlier than that and is not on the wire: the PMIC and boot ROM before the first byte are still unmeasured.",
+  "authority": {
+    "measured-2026-10-02": "Measured on vip's plug-pull boot of 2026-10-02 (serial wire + vip's own journal/systemd-analyze + the jack-end run). bench-results/2026-10-02-boot-time-vip/results.md.",
+    "recorded-state": "Read from the recorded configuration (unit ordering, vip-boot, device.env, image.lock, the plan). It says what must happen and in what order, not how long it takes.",
+    "estimate": "Derived from a measurement with the arithmetic shown in README.md (largely the initrd read rate) or bounded by the design. Not measured on the current image.",
+    "unknown": "Not measured and not derivable. The bar's drawn width in the chart is not a measurement; a '?' marks it."
+  },
+  "lanes": [
+    {
+      "id": "firmware",
+      "label": "firmware / bootloader",
+      "colour": "#0e7490"
+    },
+    {
+      "id": "kernel",
+      "label": "kernel + initrd",
+      "colour": "#1d4ed8"
+    },
+    {
+      "id": "audio",
+      "label": "audio chain",
+      "colour": "#b91c1c"
+    },
+    {
+      "id": "display",
+      "label": "display / Plymouth / UI",
+      "colour": "#7c3aed"
+    },
+    {
+      "id": "network",
+      "label": "network / session",
+      "colour": "#047857"
+    },
+    {
+      "id": "health",
+      "label": "health / guard",
+      "colour": "#a16207"
+    }
+  ],
+  "measured_boot": {
+    "label": "2026-10-02 plug pull (por 1) on the then-current image",
+    "source": "bench-results/2026-10-02-boot-time-vip/results.md; serial-plug-pull.log; vip journal + systemd-analyze; jack/boot-run",
+    "markers": [
+      {
+        "label": "kernel [0]",
+        "start": 12.95,
+        "kind": "exact"
+      },
+      {
+        "label": "namchaind active",
+        "start": 18.75,
+        "kind": "exact"
+      },
+      {
+        "label": "rig published",
+        "start": 20.43,
+        "kind": "exact"
+      },
+      {
+        "label": "audible (jack)",
+        "start_range": [
+          21.0,
+          21.9
+        ],
+        "kind": "range"
+      },
+      {
+        "label": "multi-user.target",
+        "start": 29.26,
+        "kind": "exact"
+      }
+    ]
+  },
+  "current": {
+    "label": "current design: 2026-11-15 boot work in the worktrees (built, not booted)",
+    "note": "Rigpa's splash/startup is commit 7ed3c58 on deepseek/boot-and-ui; the pedal.project and rtpi changes were uncommitted when this was written. Unit ordering, DSI overlay and image pins are read from the trees.",
+    "markers": [
+      {
+        "label": "kernel",
+        "start_range": [
+          11.42,
+          11.72
+        ],
+        "kind": "range"
+      },
+      {
+        "label": "namchaind",
+        "start_range": [
+          16.42,
+          18.02
+        ],
+        "kind": "range"
+      },
+      {
+        "label": "published",
+        "start_range": [
+          18.02,
+          19.82
+        ],
+        "kind": "range"
+      },
+      {
+        "label": "audible",
+        "start_range": [
+          18.62,
+          21.32
+        ],
+        "kind": "range"
+      },
+      {
+        "label": "splash quits",
+        "start_range": [
+          16.5,
+          18.5
+        ],
+        "kind": "range"
+      },
+      {
+        "label": "UI ready",
+        "start_range": [
+          18.52,
+          21.32
+        ],
+        "kind": "range"
+      },
+      {
+        "label": "guard cleared",
+        "start_range": [
+          26.42,
+          28.42
+        ],
+        "kind": "range"
+      }
+    ],
+    "headline": "first byte -> audible: estimate 18.6-21.3 s; 2026-10-02 measured 21-22 s"
+  },
+  "stages": [
+    {
+      "id": "fw-first-byte",
+      "lane": "firmware",
+      "name": "first byte -> BOOTSYS",
+      "measured": {
+        "start": 0.0,
+        "duration": 0.007
+      },
+      "current": {
+        "start": 0.0,
+        "duration": 0.007,
+        "authority": "measured-2026-10-02",
+        "note": "The anchor itself. vip's EEPROM was the factory 2026-05-11 image on 2026-10-02 and has been 2026-09-25 since 2026-10-07, so the bootloader stages below are about +/-0.1 s until re-measured with the probe."
+      },
+      "depends_on": [],
+      "critical_path": true,
+      "start": 0.0,
+      "duration": 0.007,
+      "authority": "measured-2026-10-02"
+    },
+    {
+      "id": "fw-second-stage",
+      "lane": "firmware",
+      "name": "-> 2nd stage + SD select",
+      "measured": {
+        "start": 0.007,
+        "duration": 2.697
+      },
+      "current": {
+        "start": 0.007,
+        "duration": 2.697,
+        "authority": "measured-2026-10-02",
+        "note": "Old bootloader. Domains: BOOTSYS release, PCIEx1, second-stage BOOTLOADER release, Boot mode SD (01) order f4."
+      },
+      "depends_on": [
+        "fw-first-byte"
+      ],
+      "critical_path": true,
+      "start": 0.007,
+      "duration": 2.697,
+      "authority": "measured-2026-10-02"
+    },
+    {
+      "id": "fw-sd-wait",
+      "lane": "firmware",
+      "name": "SD card up (fixed wait)",
+      "measured": {
+        "start": 2.704,
+        "duration": 4.664
+      },
+      "current": {
+        "start": 2.704,
+        "duration": 4.664,
+        "authority": "measured-2026-10-02",
+        "note": "4.666/4.664/4.664 s across three boots of two kinds: a bootloader wait, not contention. Largest fixed cost in the boot and Phase 4's target."
+      },
+      "depends_on": [
+        "fw-second-stage"
+      ],
+      "critical_path": true,
+      "start": 2.704,
+      "duration": 4.664,
+      "authority": "measured-2026-10-02"
+    },
+    {
+      "id": "fw-start-elf",
+      "lane": "firmware",
+      "name": "card up -> start.elf",
+      "measured": {
+        "start": 7.368,
+        "duration": 0.417
+      },
+      "current": {
+        "start": 7.368,
+        "duration": 0.417,
+        "authority": "measured-2026-10-02",
+        "note": "The 0.417 s between the SD card being up and start.elf's 'Restart logging'; part of the firmware's card handling, not the initrd read."
+      },
+      "depends_on": [
+        "fw-sd-wait"
+      ],
+      "critical_path": true,
+      "start": 7.368,
+      "duration": 0.417,
+      "authority": "measured-2026-10-02"
+    },
+    {
+      "id": "fw-initrd",
+      "lane": "firmware",
+      "name": "start.elf -> initrd read",
+      "measured": {
+        "start": 7.785,
+        "duration": 2.526
+      },
+      "current": {
+        "start": 7.785,
+        "duration": 1.15,
+        "duration_range": [
+          1.05,
+          1.25
+        ],
+        "authority": "estimate",
+        "note": "Measured stage on 2026-10-02: 2.2 s reading 52.8 MB plus 0.33 s of SD/FS overhead. The current initrd is ~19.75 MB (19 MB measured 2026-10-05, docs/vip-kernel-image.md; the plan adds DSI/DRM modules and Plymouth), so ~0.82 s of read plus the same 0.33 s overhead."
+      },
+      "depends_on": [
+        "fw-sd-wait"
+      ],
+      "critical_path": true,
+      "start": 7.785,
+      "duration": 1.15,
+      "authority": "estimate"
+    },
+    {
+      "id": "fw-vmlinuz",
+      "lane": "firmware",
+      "name": "-> vmlinuz read",
+      "measured": {
+        "start": 10.311,
+        "duration": 1.156
+      },
+      "current": {
+        "start": 8.935,
+        "duration": 1.156,
+        "duration_range": [
+          1.1,
+          1.2
+        ],
+        "authority": "estimate",
+        "note": "Measured stage: 0.6 s reading 14.7 MB plus ~0.56 s of overhead. The trimmed vmlinuz is 14 MB (2026-10-05), so the read shrinks by about 30 ms: no real change."
+      },
+      "depends_on": [
+        "fw-initrd"
+      ],
+      "critical_path": true,
+      "start": 8.935,
+      "duration": 1.156,
+      "authority": "estimate"
+    },
+    {
+      "id": "fw-start-os",
+      "lane": "firmware",
+      "name": "-> Starting OS",
+      "measured": {
+        "start": 11.467,
+        "duration": 1.358
+      },
+      "current": {
+        "start": 10.091,
+        "duration": 1.358,
+        "authority": "measured-2026-10-02",
+        "note": "Bootloader hands over the kernel, device tree and command line; no reason for the current tree to change it."
+      },
+      "depends_on": [
+        "fw-vmlinuz"
+      ],
+      "critical_path": true,
+      "start": 10.091,
+      "duration": 1.358,
+      "authority": "measured-2026-10-02"
+    },
+    {
+      "id": "fw-kernel",
+      "lane": "firmware",
+      "name": "-> kernel [0.000000]",
+      "measured": {
+        "start": 12.825,
+        "duration": 0.125
+      },
+      "current": {
+        "start": 11.449,
+        "duration": 0.125,
+        "authority": "measured-2026-10-02",
+        "note": "The 0.125 s between 'Starting OS ...' and the kernel's first line, as seen on the wire."
+      },
+      "depends_on": [
+        "fw-start-os"
+      ],
+      "critical_path": true,
+      "start": 11.449,
+      "duration": 0.125,
+      "authority": "measured-2026-10-02"
+    },
+    {
+      "id": "k-handover",
+      "lane": "kernel",
+      "name": "kernel -> initrd takeover",
+      "measured": {
+        "start": 12.95,
+        "duration": 0.707
+      },
+      "current": {
+        "start": 11.574,
+        "duration": 0.6,
+        "duration_range": [
+          0.5,
+          0.7
+        ],
+        "authority": "estimate",
+        "note": "2026-10-02's systemd-analyze 'kernel' was 707 ms. Less initrd to unpack now, by an unmeasured amount."
+      },
+      "depends_on": [
+        "fw-kernel"
+      ],
+      "critical_path": true,
+      "start": 11.574,
+      "duration": 0.6,
+      "authority": "estimate"
+    },
+    {
+      "id": "k-initrd",
+      "lane": "kernel",
+      "name": "initrd stage (dracut)",
+      "measured": {
+        "start": 13.657,
+        "duration": 1.83
+      },
+      "current": {
+        "start": 12.174,
+        "duration": 1.8,
+        "duration_range": [
+          1.4,
+          2.2
+        ],
+        "authority": "estimate",
+        "note": "2026-10-02's systemd-analyze 'initrd' was 1.830 s on a 52.8 MB initrd. The plan's initrd is smaller but must load DRM/DSI/panel modules and start Plymouth: the two effects oppose, so the range is wide and the direction is not established."
+      },
+      "depends_on": [
+        "fw-kernel"
+      ],
+      "critical_path": true,
+      "start": 12.174,
+      "duration": 1.8,
+      "authority": "estimate"
+    },
+    {
+      "id": "a-pedal-codec",
+      "lane": "audio",
+      "name": "pedal-codec (Before=namchaind)",
+      "measured": null,
+      "current": {
+        "draw": "window",
+        "start": 13.97,
+        "end": 17.97,
+        "authority": "recorded-state",
+        "value_note": "ordering only \u00b7 ?",
+        "note": "devices/common/rootfs/etc/systemd/system/pedal-codec.service: Before=namchaind.service. A oneshot that loads the WM8960 overlay and mixer; no duration has been recorded. The window is the userspace-to-namchaind estimate and is not its duration."
+      },
+      "depends_on": [
+        "k-initrd"
+      ],
+      "critical_path": true,
+      "start": 13.97,
+      "duration": null,
+      "authority": "recorded-state"
+    },
+    {
+      "id": "a-userspace-namchaind",
+      "lane": "audio",
+      "name": "userspace -> namchaind active",
+      "measured": {
+        "start": 15.487,
+        "duration": 3.263
+      },
+      "current": {
+        "start": 13.974,
+        "start_range": [
+          13.32,
+          14.62
+        ],
+        "duration": 3.25,
+        "duration_range": [
+          3.1,
+          3.4
+        ],
+        "authority": "estimate",
+        "note": "Measured: kernel 5.80 s to namchaind, minus 0.707 s kernel + 1.830 s initrd = 3.263 s. Current: same root mount/systemd/codec path, so the measured figure carries; the absolute start moves because the initrd estimate moves."
+      },
+      "depends_on": [
+        "k-initrd",
+        "a-pedal-codec"
+      ],
+      "critical_path": true,
+      "start": 13.974,
+      "duration": 3.25,
+      "authority": "estimate"
+    },
+    {
+      "id": "a-engine",
+      "lane": "audio",
+      "name": "namchaind -> rig published",
+      "measured": {
+        "start": 18.75,
+        "duration": 1.68
+      },
+      "current": {
+        "start": 17.224,
+        "start_range": [
+          16.42,
+          18.02
+        ],
+        "duration": 1.7,
+        "duration_range": [
+          1.6,
+          1.8
+        ],
+        "authority": "estimate",
+        "note": "Measured: 7.48 s to 'rig published' minus 5.80 s to namchaind = 1.68 s (engine loads the rig, opens ALSA). No engine-path change in this tree."
+      },
+      "depends_on": [
+        "a-userspace-namchaind"
+      ],
+      "critical_path": true,
+      "start": 17.224,
+      "duration": 1.7,
+      "authority": "estimate"
+    },
+    {
+      "id": "a-audible",
+      "lane": "audio",
+      "name": "published -> audible (jack)",
+      "measured": {
+        "start": 20.43,
+        "duration": 1.0,
+        "duration_range": [
+          0.6,
+          1.5
+        ],
+        "authority": "measured-2026-10-02"
+      },
+      "current": {
+        "start": 18.924,
+        "start_range": [
+          18.02,
+          19.82
+        ],
+        "duration": 1.0,
+        "duration_range": [
+          0.6,
+          1.5
+        ],
+        "authority": "estimate",
+        "note": "The jack run had 'published' at kernel+8.179 s and the tone crossing the gate 0.73 s later (first detectable 0.17 s before 'published'). The fixture's 100 uF cap smears both ends by ~1 s, so the honest bound is 0.6-1.5 s and 'playing' and 'audible' are the same moment to within the method's second. The analogue path is unchanged; only its start moves."
+      },
+      "depends_on": [
+        "a-engine"
+      ],
+      "critical_path": true,
+      "start": 18.924,
+      "duration": 1.0,
+      "authority": "estimate"
+    },
+    {
+      "id": "d-plymouth",
+      "lane": "display",
+      "name": "Plymouth splash (initrd -> quit)",
+      "measured": null,
+      "current": {
+        "draw": "window-unknown",
+        "start_range": [
+          12.2,
+          12.8
+        ],
+        "end_range": [
+          16.5,
+          18.5
+        ],
+        "authority": "unknown",
+        "value_note": "? start/end estimated",
+        "note": "Built, never booted: Plymouth with the pedal theme and ShowDelay=0/DeviceTimeout=8 (devices/common/rootfs/etc/plymouth, usr/share/plymouth/themes/pedal), the DSI/panel KMS stack in the initrd via INITRD_DRIVERS, and splash + plymouth.ignore-serial-consoles + vt.global_cursor_default=0 in BASE_ARGS (no quiet). Both window ends are the kernel/initrd and rigpa estimates, not measurements."
+      },
+      "depends_on": [
+        "k-initrd"
+      ],
+      "critical_path": false,
+      "start": 12.2,
+      "duration": null,
+      "authority": "unknown"
+    },
+    {
+      "id": "d-frame",
+      "lane": "display",
+      "name": "rigpa Qt -> first frame",
+      "measured": null,
+      "current": {
+        "start": 17.5,
+        "start_range": [
+          16.5,
+          18.5
+        ],
+        "duration": null,
+        "authority": "unknown",
+        "value_note": "? (qInfo first-frame mark)",
+        "note": "Qt eglfs on drm-rp1-dsi and the QML scene load. rigpa's Startup logs 'startup: scene built at N ms' and 'startup: first frame at N ms' (commit 7ed3c58); those journal lines are what will measure this row."
+      },
+      "depends_on": [
+        "d-plymouth"
+      ],
+      "critical_path": false,
+      "start": 17.5,
+      "duration": null,
+      "authority": "unknown"
+    },
+    {
+      "id": "d-ready",
+      "lane": "display",
+      "name": "startup latch -> UI ready",
+      "measured": null,
+      "current": {
+        "start": 18.1,
+        "start_range": [
+          17.5,
+          20.0
+        ],
+        "duration": null,
+        "band_range": [
+          0.5,
+          8.0
+        ],
+        "authority": "unknown",
+        "value_note": "? \u00b7 design 0.5-8 s",
+        "note": "rigpa's Startup gate (commit 7ed3c58): ready on EngineSession Connected + hasRig + RigSession hasDocument, at least 500 ms after the first frame and at most 8 s after start, then a 200 ms fade. Bounds are the code's; actual value unmeasured."
+      },
+      "depends_on": [
+        "d-frame",
+        "a-engine"
+      ],
+      "critical_path": false,
+      "start": 18.1,
+      "duration": null,
+      "authority": "unknown"
+    },
+    {
+      "id": "n-multiuser",
+      "lane": "network",
+      "name": "userspace -> multi-user.target",
+      "measured": {
+        "start": 15.487,
+        "duration": 13.774
+      },
+      "current": {
+        "draw": "none",
+        "authority": "unknown",
+        "value_note": "unmeasured; not on sound path"
+      },
+      "depends_on": [
+        "k-initrd"
+      ],
+      "critical_path": false,
+      "start": 15.487,
+      "duration": null,
+      "authority": "unknown"
+    },
+    {
+      "id": "n-network",
+      "lane": "network",
+      "name": "networkd \u00b7 wpa_supplicant \u00b7 ssh",
+      "measured": null,
+      "current": {
+        "draw": "none",
+        "authority": "recorded-state",
+        "value_note": "independent",
+        "note": "No ordering into the audio path and not part of the pedal's health (pedal-guard requires namchaind only). On 2026-10-02 the target finished 8.8 s after the engine published; the record does not say which unit held it, so the WiFi is a candidate, not a finding."
+      },
+      "depends_on": [],
+      "critical_path": false,
+      "start": null,
+      "duration": null,
+      "authority": "recorded-state"
+    },
+    {
+      "id": "h-guard",
+      "lane": "health",
+      "name": "pedal-guard: 10 s -> clear",
+      "measured": null,
+      "current": {
+        "start": 17.224,
+        "start_range": [
+          16.42,
+          18.02
+        ],
+        "duration": 10.1,
+        "duration_range": [
+          10.0,
+          10.4
+        ],
+        "authority": "recorded-state",
+        "value_note": "10 s settle + oneshot",
+        "note": "rtpi pedal-guard.service: After=namchaind.service, then vip-boot guard-clear --require-unit namchaind.service --wait 120; vip-boot's default --settle is 10 s, so the counter clears about 10 s after the engine is active, not on the sound path."
+      },
+      "depends_on": [
+        "a-userspace-namchaind"
+      ],
+      "critical_path": false,
+      "start": 17.224,
+      "duration": 10.1,
+      "authority": "recorded-state"
+    },
+    {
+      "id": "h-deadline",
+      "lane": "health",
+      "name": "vip-boot-deadline: 300 s",
+      "measured": null,
+      "current": {
+        "start": 13.97,
+        "duration": 300,
+        "authority": "recorded-state",
+        "clip": true,
+        "value_note": "300 s \u00b7 off chart",
+        "note": "rtpi vip-boot-deadline.service: DefaultDependencies=no, WantedBy=sysinit.target, ordered after nothing, runs vip-boot deadline --after 300. It reboots a pedal boot that never reached pedal-guard; not on the sound path."
+      },
+      "depends_on": [
+        "k-initrd"
+      ],
+      "critical_path": false,
+      "start": 13.97,
+      "duration": 300,
+      "authority": "recorded-state"
+    }
+  ],
+  "dependency_graph": {
+    "title": "vip boot dependencies: what must finish, and what only appears to be ordered",
+    "critical_path": [
+      "power",
+      "bootloader",
+      "kernel",
+      "initrd",
+      "sysinit",
+      "pedal-codec",
+      "namchaind",
+      "engine-ready",
+      "audible"
+    ],
+    "nodes": [
+      {
+        "id": "power",
+        "col": 0,
+        "row": 2,
+        "lines": [
+          "power applied",
+          "PMIC + boot ROM"
+        ],
+        "kind": "unknown",
+        "tag": "? unmeasured"
+      },
+      {
+        "id": "bootloader",
+        "col": 1,
+        "row": 2,
+        "lines": [
+          "bootloader (EEPROM)",
+          "start.elf \u00b7 SD wait \u00b7 initrd"
+        ],
+        "kind": "measured",
+        "tag": "measured-2026-10-02"
+      },
+      {
+        "id": "kernel",
+        "col": 2,
+        "row": 2,
+        "lines": [
+          "kernel [0.000000]",
+          "entry"
+        ],
+        "kind": "measured",
+        "tag": "measured-2026-10-02"
+      },
+      {
+        "id": "initrd",
+        "col": 3,
+        "row": 2,
+        "lines": [
+          "initrd (dracut)",
+          "vip-guard \u00b7 DSI \u00b7 Plymouth"
+        ],
+        "kind": "recorded-state",
+        "tag": "plan + tree"
+      },
+      {
+        "id": "sysinit",
+        "col": 4,
+        "row": 2,
+        "lines": [
+          "sysinit.target",
+          "systemd starts units in parallel"
+        ],
+        "kind": "recorded-state",
+        "tag": "recorded-state"
+      },
+      {
+        "id": "pedal-codec",
+        "col": 5,
+        "row": 1,
+        "lines": [
+          "pedal-codec",
+          "Before=namchaind"
+        ],
+        "kind": "recorded-state",
+        "tag": "recorded-state"
+      },
+      {
+        "id": "namchaind",
+        "col": 6,
+        "row": 1,
+        "lines": [
+          "namchaind",
+          "exec (Type=simple)"
+        ],
+        "kind": "recorded-state",
+        "tag": "recorded-state"
+      },
+      {
+        "id": "engine-ready",
+        "col": 7,
+        "row": 1,
+        "lines": [
+          "engine ready",
+          "'rig published'"
+        ],
+        "kind": "measured",
+        "tag": "measured-2026-10-02"
+      },
+      {
+        "id": "audible",
+        "col": 8,
+        "row": 1,
+        "lines": [
+          "audible at the jack",
+          "the sound goal"
+        ],
+        "kind": "measured",
+        "tag": "measured (21-22 s)"
+      },
+      {
+        "id": "pedal-uart",
+        "col": 5,
+        "row": 3,
+        "lines": [
+          "pedal-uart",
+          "Before=pedald"
+        ],
+        "kind": "recorded-state",
+        "tag": "recorded-state"
+      },
+      {
+        "id": "pedald",
+        "col": 6,
+        "row": 3,
+        "lines": [
+          "pedald",
+          "Wants/After namchaind"
+        ],
+        "kind": "recorded-state",
+        "tag": "recorded-state"
+      },
+      {
+        "id": "rigpa",
+        "col": 7,
+        "row": 3,
+        "lines": [
+          "rigpa",
+          "After namchaind, pedald"
+        ],
+        "kind": "recorded-state",
+        "tag": "recorded-state"
+      },
+      {
+        "id": "ui-ready",
+        "col": 8,
+        "row": 3,
+        "lines": [
+          "UI ready",
+          "startup latch"
+        ],
+        "kind": "unknown",
+        "tag": "? qInfo will measure"
+      },
+      {
+        "id": "screen",
+        "col": 5,
+        "row": 4,
+        "lines": [
+          "DSI panel / DRM",
+          "vc4-kms-v3d + dsi overlay"
+        ],
+        "kind": "recorded-state",
+        "tag": "tree"
+      },
+      {
+        "id": "plymouth",
+        "col": 4,
+        "row": 4,
+        "lines": [
+          "Plymouth splash",
+          "starts in the initrd"
+        ],
+        "kind": "recorded-state",
+        "tag": "plan"
+      },
+      {
+        "id": "splash-quit",
+        "col": 8,
+        "row": 4,
+        "lines": [
+          "splash dismissed",
+          "plymouth quit --retain-splash"
+        ],
+        "kind": "recorded-state",
+        "tag": "plan"
+      },
+      {
+        "id": "pedal-guard",
+        "col": 7,
+        "row": 5,
+        "lines": [
+          "pedal-guard",
+          "After namchaind \u00b7 10 s"
+        ],
+        "kind": "recorded-state",
+        "tag": "recorded-state"
+      },
+      {
+        "id": "boot-counted",
+        "col": 8,
+        "row": 5,
+        "lines": [
+          "boot counter cleared",
+          "the boot counts as good"
+        ],
+        "kind": "recorded-state",
+        "tag": "recorded-state"
+      },
+      {
+        "id": "deadline",
+        "col": 5,
+        "row": 6,
+        "lines": [
+          "vip-boot-deadline",
+          "sysinit + 300 s \u00b7 reboots"
+        ],
+        "kind": "recorded-state",
+        "tag": "recorded-state"
+      },
+      {
+        "id": "network",
+        "col": 5,
+        "row": 0,
+        "lines": [
+          "networkd \u00b7 wpa",
+          "independent"
+        ],
+        "kind": "recorded-state",
+        "tag": "independent"
+      },
+      {
+        "id": "ssh",
+        "col": 6,
+        "row": 0,
+        "lines": [
+          "ssh.service",
+          "reachable, not playing"
+        ],
+        "kind": "recorded-state",
+        "tag": "recorded-state"
+      },
+      {
+        "id": "multiuser",
+        "col": 7,
+        "row": 0,
+        "lines": [
+          "multi-user.target",
+          "not the UI-ready mark"
+        ],
+        "kind": "recorded-state",
+        "tag": "target"
+      },
+      {
+        "id": "pedal-tune",
+        "col": 5,
+        "row": 2,
+        "lines": [
+          "pedal-tune",
+          "no ordering vs namchaind"
+        ],
+        "kind": "recorded-state",
+        "tag": "recorded-state"
+      }
+    ],
+    "edges": [
+      {
+        "from": "power",
+        "to": "bootloader",
+        "style": "unknown",
+        "critical": true
+      },
+      {
+        "from": "bootloader",
+        "to": "kernel",
+        "style": "order",
+        "critical": true
+      },
+      {
+        "from": "kernel",
+        "to": "initrd",
+        "style": "order",
+        "critical": true
+      },
+      {
+        "from": "initrd",
+        "to": "sysinit",
+        "style": "order",
+        "critical": true
+      },
+      {
+        "from": "sysinit",
+        "to": "pedal-codec",
+        "style": "order",
+        "critical": true
+      },
+      {
+        "from": "pedal-codec",
+        "to": "namchaind",
+        "style": "order",
+        "critical": true
+      },
+      {
+        "from": "sysinit",
+        "to": "namchaind",
+        "style": "order",
+        "critical": true,
+        "via_y": 292
+      },
+      {
+        "from": "namchaind",
+        "to": "engine-ready",
+        "style": "order",
+        "critical": true
+      },
+      {
+        "from": "engine-ready",
+        "to": "audible",
+        "style": "order",
+        "critical": true
+      },
+      {
+        "from": "sysinit",
+        "to": "pedal-uart",
+        "style": "order"
+      },
+      {
+        "from": "pedal-uart",
+        "to": "pedald",
+        "style": "order"
+      },
+      {
+        "from": "namchaind",
+        "to": "pedald",
+        "style": "async",
+        "label": "Wants/After",
+        "same_col": true
+      },
+      {
+        "from": "pedald",
+        "to": "rigpa",
+        "style": "order"
+      },
+      {
+        "from": "namchaind",
+        "to": "rigpa",
+        "style": "async",
+        "label": "After"
+      },
+      {
+        "from": "kernel",
+        "to": "screen",
+        "style": "order",
+        "label": "overlay + modules",
+        "via_y": 470
+      },
+      {
+        "from": "screen",
+        "to": "rigpa",
+        "style": "condition",
+        "label": "ExecCondition: connected",
+        "via_y": 566
+      },
+      {
+        "from": "initrd",
+        "to": "plymouth",
+        "style": "order"
+      },
+      {
+        "from": "rigpa",
+        "to": "splash-quit",
+        "style": "order",
+        "label": "ExecStartPre"
+      },
+      {
+        "from": "plymouth",
+        "to": "splash-quit",
+        "style": "order",
+        "via_y": 566
+      },
+      {
+        "from": "rigpa",
+        "to": "ui-ready",
+        "style": "order"
+      },
+      {
+        "from": "engine-ready",
+        "to": "ui-ready",
+        "style": "async",
+        "label": "Connected + hasRig"
+      },
+      {
+        "from": "pedald",
+        "to": "ui-ready",
+        "style": "async",
+        "label": "hasDocument",
+        "via_y": 388
+      },
+      {
+        "from": "namchaind",
+        "to": "pedal-guard",
+        "style": "async",
+        "label": "After"
+      },
+      {
+        "from": "pedal-guard",
+        "to": "boot-counted",
+        "style": "order"
+      },
+      {
+        "from": "sysinit",
+        "to": "deadline",
+        "style": "order"
+      },
+      {
+        "from": "sysinit",
+        "to": "network",
+        "style": "order"
+      },
+      {
+        "from": "network",
+        "to": "ssh",
+        "style": "order"
+      },
+      {
+        "from": "ssh",
+        "to": "multiuser",
+        "style": "order"
+      },
+      {
+        "from": "namchaind",
+        "to": "multiuser",
+        "style": "async",
+        "label": "WantedBy"
+      },
+      {
+        "from": "rigpa",
+        "to": "multiuser",
+        "style": "async",
+        "label": "WantedBy",
+        "route": "left"
+      },
+      {
+        "from": "sysinit",
+        "to": "pedal-tune",
+        "style": "order"
+      },
+      {
+        "from": "pedal-tune",
+        "to": "namchaind",
+        "style": "independent",
+        "label": "no ordering"
+      }
+    ]
+  }
+}

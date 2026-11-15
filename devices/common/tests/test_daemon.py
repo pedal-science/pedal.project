@@ -89,6 +89,7 @@ def fake_service(status=None, engine_down=False, link_open=True, session_up=True
     service.session = types.SimpleNamespace(session_up=session_up, frames_ok=12, frames_bad=1)
     service.pico = pico or {"fw": "0.1", "major": 1, "minor": 0, "caps": 0}
     service.bypass = False
+    service.tuner = False
     service.http = types.SimpleNamespace(stats=lambda: {"connections": 1})
     return service
 
@@ -363,6 +364,8 @@ def cost_service(rigs, costs=None, error=None, status=None, poll_s=daemon.COST_P
     service.mapping.verdicts = service.cost.verdicts
     service.warm = daemon.WarmSet(service.engine, log=logs.append)
     service.resume = types.SimpleNamespace(tick=lambda *_a: None)
+    service.bypass = False
+    service.tuner = False
     return service
 
 
@@ -999,6 +1002,47 @@ class FullService(RunningService):
         self.assertEqual(self.ask("PUT", "/pedal", json.dumps({"name": ""}))[0], 400)
         self.assertEqual(self.ask("PUT", "/pedal", "not json")[0], 400)
 
+    def test_the_tuner_route_sets_and_clears_and_tells_views(self):
+        stream = self.events()
+        self.next_event(stream, "hello")
+        self.assertEqual(self.ask("GET", "/tuner")[1], {"on": False})
+        status, body = self.ask("PUT", "/tuner", json.dumps({"on": True}), {"Pedal-Client": "rigpa"})
+        self.assertEqual((status, body), (200, {"on": True}))
+        event = self.next_event(stream, "tuner")
+        self.assertTrue(event["on"])
+        self.assertEqual(event["cause"]["source"], "http")
+        self.assertEqual(event["cause"]["client"], "rigpa")
+        running = self.next_event(stream, "running")
+        self.assertTrue(running["tuner"])
+        self.assertTrue(running["bypass"])
+        self.assertEqual(self.ask("PUT", "/tuner", json.dumps({"on": "yes"}))[0], 400)
+        self.assertEqual(self.ask("PUT", "/tuner", json.dumps({"on": False}))[1], {"on": False})
+        self.assertFalse(self.next_event(stream, "tuner")["on"])
+
+    def test_a_footswitch_press_leaves_the_tuner_and_does_nothing_else(self):
+        stream = self.events()
+        self.next_event(stream, "hello")
+        self.ask("PUT", "/tuner", json.dumps({"on": True}))
+        self.next_event(stream, "tuner")
+        before = self.service.mapping.rig
+        status, body = self.ask("POST", "/event", json.dumps({"kind": 0x10, "a": 81, "b": 127}))
+        self.assertEqual(status, 200)
+        self.assertEqual(body["result"], {"ok": True, "tuner": False})
+        self.assertEqual(self.next_event(stream, "action")["action"],
+                         {"action": "tuner", "on": False})
+        self.assertEqual(self.service.mapping.rig, before)   # it did not step
+        self.assertFalse(self.service.tuner)
+        self.assertFalse(self.service.bypass)
+
+    def test_a_release_does_not_leave_the_tuner(self):
+        stream = self.events()
+        self.next_event(stream, "hello")
+        self.ask("PUT", "/tuner", json.dumps({"on": True}))
+        self.next_event(stream, "tuner")
+        self.assertIsNone(self.ask("POST", "/event",
+                                   json.dumps({"kind": 0x10, "a": 81, "b": 0}))[1]["result"])
+        self.assertTrue(self.service.tuner)
+
     def test_a_press_over_http_tells_every_view_what_it_did_and_who_asked(self):
         stream = self.events()
         hello = self.next_event(stream, "hello")
@@ -1103,6 +1147,26 @@ class FootswitchOverTheLink(RunningService):
         os.write(self.master, protocol.frame(protocol.EVENT, bytes([2, 1, 0x10, 81, 0])))
         os.write(self.master, protocol.frame(protocol.EVENT, bytes([3, 1, 0x08, 0, 0])))
         self.assertEqual(self.next_event(stream, "action")["cause"]["kind"], "bypass_toggle")
+
+    def test_a_hold_enters_the_tuner_and_a_press_leaves_it(self):
+        stream = self.events()
+        self.next_event(stream, "hello")
+        os.write(self.master, protocol.frame(protocol.HELLO, bytes([2, 0, 0, 0]) + protocol.str8("0.1", 16)))
+        deadline = time.monotonic() + 3
+        while time.monotonic() < deadline and not self.service.session.session_up:
+            time.sleep(0.01)
+        self.assertTrue(self.service.session.session_up)
+        # seq 1, source 1 (footswitch), kind 0x08 (bypass_toggle): the 1 s hold on switch 3.
+        os.write(self.master, protocol.frame(protocol.EVENT, bytes([1, 1, 0x08, 0, 0])))
+        self.assertTrue(self.next_event(stream, "tuner")["on"])
+        self.assertTrue(self.service.tuner)
+        # A press on switch 2 (cc 81, 127) leaves the tuner and does nothing else.
+        os.write(self.master, protocol.frame(protocol.EVENT, bytes([2, 1, 0x10, 81, 127])))
+        self.assertFalse(self.next_event(stream, "tuner")["on"])
+        self.assertEqual(self.next_event(stream, "action")["action"],
+                         {"action": "tuner", "on": False})
+        self.assertFalse(self.service.tuner)
+        self.assertFalse(self.service.bypass)
 
 
 class StateFrames(unittest.TestCase):

@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!-- The Plymouth splash art. splash.png is this rendered at 1200x480 with
+     `rsvg-convert -w 1200 -h 480 splash.svg -o splash.png`; the image build uses the PNG and
+     needs no SVG tool. The pedal is rigpa/resources/icons/rigpa.svg (ljoss's app icon). -->
+<svg width="1200" height="480" viewBox="0 0 1200 480" xmlns="http://www.w3.org/2000/svg">
+  <svg x="420" y="76" width="360" height="172" viewBox="52 328 920 440">
+    <defs>
+      <linearGradient id="orange" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#E08050"/>
+        <stop offset="1" stop-color="#D07040"/>
+      </linearGradient>
+      <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#80B0D0"/>
+        <stop offset="1" stop-color="#70A0C0"/>
+      </linearGradient>
+    </defs>
+    <rect x="64" y="512" width="894" height="64" rx="32" fill="#555555"/>
+    <g transform="translate(206, 352)">
+      <rect width="256" height="384" rx="48" fill="url(#orange)"/>
+      <circle cx="128" cy="316" r="30" fill="#eee"/>
+      <circle cx="56" cy="96" r="30" fill="#333"/>
+      <circle cx="128" cy="96" r="30" fill="#333"/>
+      <circle cx="200" cy="96" r="30" fill="#333"/>
+    </g>
+    <g transform="translate(576, 352)">
+      <rect width="256" height="384" rx="48" fill="url(#blue)"/>
+      <circle cx="128" cy="316" r="30" fill="#eee"/>
+      <circle cx="56" cy="96" r="30" fill="#333"/>
+      <circle cx="128" cy="96" r="30" fill="#333"/>
+      <circle cx="200" cy="96" r="30" fill="#333"/>
+    </g>
+  </svg>
+  <text x="600" y="330" text-anchor="middle" font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
+        font-size="68" font-weight="600" fill="#e6e6e6">rigpa</text>
+  <text x="600" y="378" text-anchor="middle" font-family="DejaVu Sans, Helvetica, Arial, sans-serif"
+        font-size="26" fill="#8c8c8c">starting…</text>
+</svg>

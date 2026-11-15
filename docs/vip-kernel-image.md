@@ -266,6 +266,11 @@ figures were read off vip on 2026-10-05. A fresh root also drops two accidents t
 carries and this plan does not: `/lib/modules/lib` (561 MB, a mis-extracted copy) and the superseded
 full `...-numaemu1` tree (561 MB).
 
+Since 2026-11-15 the pedal initrd also carries the DSI/panel module stack and Plymouth (rtpi's
+`INITRD_DRIVERS`), so it is larger than the 19 MB measured above; the image build fails if
+`lsinitrd` does not list `plymouthd`, the theme and `vc4` for the pedal kernel, rather than
+shipping a card that boots dark.
+
 ## How it gets onto the board
 
 - **A written card** is the whole arrangement in one go: slot a pedal, slot b stock, both good.

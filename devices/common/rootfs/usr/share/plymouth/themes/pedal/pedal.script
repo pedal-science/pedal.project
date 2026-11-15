@@ -1,0 +1,16 @@
+# The pedal's boot splash: the rigpa mark and wordmark on the same near-black the app uses,
+# scaled to fit whichever screen the firmware brought up (the 4.3" panel, 800x480, or a bar).
+# Static on purpose: it costs nothing while the engine, pedald and the disk come up.
+Window.SetBackgroundTopColor(0.043, 0.043, 0.043);
+Window.SetBackgroundBottomColor(0.043, 0.043, 0.043);
+
+splash_image = Image("splash.png");
+if (Window.GetWidth() / splash_image.GetWidth() < Window.GetHeight() / splash_image.GetHeight())
+    scale = Window.GetWidth() * 0.82 / splash_image.GetWidth();
+else
+    scale = Window.GetHeight() * 0.72 / splash_image.GetHeight();
+splash_image = splash_image.Scale(splash_image.GetWidth() * scale,
+                                  splash_image.GetHeight() * scale);
+sprite = Sprite(splash_image);
+sprite.SetX((Window.GetWidth() - splash_image.GetWidth()) / 2);
+sprite.SetY((Window.GetHeight() - splash_image.GetHeight()) / 2);

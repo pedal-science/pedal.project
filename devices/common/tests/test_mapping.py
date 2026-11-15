@@ -49,8 +49,8 @@ class LibraryBank(unittest.TestCase):
         self.assertEqual(self.m.action("bank_select", 1)["rig"], "rig09")
 
     def test_bypass_mirrors_and_calls_nothing(self):
-        self.assertEqual(self.m.action("bypass_toggle"), {"action": "bypass", "on": True})
-        self.assertEqual(self.m.action("bypass_set", 0), {"action": "bypass", "on": False})
+        self.assertEqual(self.m.action("bypass_toggle"), {"action": "tuner", "on": True})
+        self.assertEqual(self.m.action("bypass_set", 0), {"action": "tuner", "on": False})
 
     def test_unknown_kind_is_none(self):
         self.assertIsNone(self.m.action("expression", 1))
@@ -110,7 +110,7 @@ class Map(unittest.TestCase):
 
     def test_an_entry_may_name_another_kind(self):
         m = mapping.Mapping(["a", "b"], midi_map={"cc": {"20": {"action": "bypass_toggle"}}})
-        self.assertEqual(m.action("cc", 20, 127), {"action": "bypass", "on": True})
+        self.assertEqual(m.action("cc", 20, 127), {"action": "tuner", "on": True})
 
     def test_an_entry_naming_nothing_is_logged_not_raised(self):
         logs = []

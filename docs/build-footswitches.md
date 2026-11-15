@@ -34,7 +34,7 @@ inside itself. The board's net names (FS1–FS3, the order of the header's pins)
 do not move. **Which switch is 1, 2 or 3 is the player's, left to right**, and the firmware maps
 each to the pin its wire landed on (`pins[]` in `firmware/src/footswitch.c`). Switch 1 sends `cc`
 80, 2 sends 81 and 3 sends 82 (`docs/uart-protocol.md`, U8), and `pedald`'s map decides what each
-means. The panic bypass is a long press on switch 3, the right-hand one.
+means. The bypass (the tuner, until there is a relay) is a long press on switch 3, the right-hand one.
 
 ## The FS connector, pin by pin
 
@@ -47,7 +47,7 @@ As built in the box:
 |---|---|---|---|
 | 1 | GND | the **NC** lug of pole A on each switch, jumped from switch to switch | — |
 | 2 | FS1 (GP10) | footswitch **2** (middle), **COM** lug of pole A | 2 (cc 81) |
-| 3 | FS2 (GP11) | footswitch **3** (right), **COM** lug of pole A | 3 (cc 82), and the panic long-press |
+| 3 | FS2 (GP11) | footswitch **3** (right), **COM** lug of pole A | 3 (cc 82), and the bypass hold |
 | 4 | FS3 (GP12) | footswitch **1** (left), **COM** lug of pole A | 1 (cc 80) |
 
 The design drew GND to the NO lugs and FS pins 2–4 to switches 1–3 in order. The box differs in
@@ -81,8 +81,8 @@ read "down" at rest and "up" while held.
 
 **What the closed-at-rest wiring costs.** A loom that comes unplugged reads as all three switches
 held. At power-up the firmware takes a switch that is already held as no press, so nothing
-happens. If the plug comes out while the pedal runs, though, that is three presses and, a second
-later, the panic bypass. With the NO wiring an unplugged loom is simply silent. Each closed switch
+happens. If the plug comes out while the pedal runs, though, that is three releases and, a second
+later, the bypass hold (the tuner). With the NO wiring an unplugged loom is simply silent. Each closed switch
 also passes the pull-up's current, about 60 µA, which is nothing here.
 
 ## The link connector, D3
@@ -110,8 +110,8 @@ Pico socket's pin 14, 15 and 16, and FS pin 1 to pin 13. With the loom plugged i
 
 With the Pico in and powered: pins 14–16 read 3.3 V at rest and 0 V pressed. The firmware
 (`firmware/src/footswitch.c`) turns their pull-ups on, takes a reading that holds for 10 ms, and
-prints `fs: 1 down` and `fs: 1 up` on its USB console; `?` there prints all three. A press sends
-`cc` 80, 81 or 82 with 127 and its release the same with 0, and the service acts on the press only.
-**A 1 s press on footswitch 3 is the panic bypass**, and another takes it off: it is sent as
-`bypass_set`, and drives the relay once there is one (step 6). HELLO's caps say three
-footswitches.
+prints `fs: 1 down` and `fs: 1 up` on its USB console; `?` there prints all three. **A short
+press is registered on release**: the release sends `cc` 80, 81 or 82 with 127 and then the same
+with 0, so a hold is not first a tap. **A 1 s hold on footswitch 3 enters the tuner** (the pedal's
+bypass until there is a relay): it sends one `bypass_toggle` while still held, its release sends
+0 only, and a later tap on any footswitch leaves the tuner. HELLO's caps say three footswitches.

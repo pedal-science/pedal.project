@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Pedal
+Description=The pedal's boot splash, until rigpa is on screen
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/pedal
+ScriptFile=/usr/share/plymouth/themes/pedal/pedal.script

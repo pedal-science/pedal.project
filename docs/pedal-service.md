@@ -128,10 +128,11 @@ data: {"cause": {"source": "footswitch", "kind": "cc", "a": 81, "b": 127, "label
 
 | Event | Data | Sent |
 |---|---|---|
-| `hello` | `{pedal, running, engine, bank}`: everything below as it stands now | On connecting, and after every `resync` |
+| `hello` | `{pedal, running, engine, bank, tuner}`: everything below as it stands now | On connecting, and after every `resync` |
 | `resync` | `{}` | See above |
 | `action` | `{cause: {source, kind, a, b, label, client?}, action, result}` | A trigger with something mapped to it did something, or could not. `source` is `footswitch`, `midi`, `panel`, `service`, `http` or `unknown`. `action` is the mapping's answer, null if no rig could play. `result` is `{ok, rig?, how?, reason?, code?, message?}`. A CC's release and a CC or PC with nothing mapped send nothing |
-| `running` | `{rig, bank, position, bank_size, next, bypass, performance}` | The playing rig or the position changed. `performance` is the keys that differ from the stored rig: always empty until O4 |
+| `running` | `{rig, bank, position, bank_size, next, bypass, tuner, performance}` | The playing rig or the position changed. `tuner` is whether the tuner is up (the pedal's bypass until there is a relay); `performance` is the keys that differ from the stored rig: always empty until O4 |
+| `tuner` | `{on, cause?}` | The tuner was entered or left: a footswitch hold, a tap that leaves it, or `PUT /tuner`. The view that mounts the `nc.tuner` node follows this |
 | `engine` | `{reachable, state, health, mute, protocol}` | One of those changed. Counters are not events; they are on `/status` |
 | `bank` | `{banks, bank}` | The banks' layout changed |
 | `library` | `{library: "rigs", change: "put"\|"rename"\|"delete", name, to?}` | A file changed. Models and IRs join in O3 |
@@ -416,6 +417,8 @@ steps and 64 KiB; all rigs together keep 2 MiB, losing the oldest file first. `P
 |---|---|---|---|
 | `GET` | `/running` | — | `{rig, in_library, modified, performance, seq, undo, redo}` |
 | `PUT` | `/running` | `{"rig": name}` | the footswitch's path, with the cause `app`: 200 and the result; 404 for no such rig, 409 if the engine's verdict is `over` |
+| `GET` | `/tuner` | — | `{on: bool}`: whether the tuner (the pedal's bypass until there is a relay) is up |
+| `PUT` | `/tuner` | `{"on": bool}` | 200 `{on}`; 400 unless `on` is a boolean. Publishes `tuner` to every view |
 | `POST` | `/undo`, `/redo` | — | `{rig, undo, redo, seq}`; 409 with nothing to undo, or if the document moved first |
 | `GET` | `/history` | — | `{rig, undo: [steps], redo: [steps]}`, most recent first, each `{at, client, keys}` |
 | `POST` | `/library/rigs` | `{name, from: null\|rig\|":running", document?, load?}` | 201: a new, duplicated or migrated rig. `":running"` is the stored document, without performance. It goes right after the running rig if that bank has room (8 rigs), otherwise at the end of the last bank, starting a new bank if needed |
@@ -450,7 +453,7 @@ which is unbounded and is a catch-up (P8) rather than a switch.
 | `rig_select` | index within the current bank, refused if that rig is unusable |
 | `bank_up`, `bank_down` | the next/previous bank, landing on its first rig |
 | `bank_select` | that bank, its first rig |
-| `bypass_set`, `bypass_toggle` | mirror the relay's state for the panel and the app; no engine call |
+| `bypass_set`, `bypass_toggle` | enter or toggle the tuner (the pedal's bypass until there is a relay); no engine call. A footswitch hold sends `bypass_toggle`; while the tuner is up a switch press leaves it and is consumed |
 | `cc` | the map: an action, or a parameter on the running rig (below) |
 | `pc` | the map: an action, usually a rig **by name**; the jump may move the bank window, and the ready set follows the position it lands on (a jump outside the neighbours is a catch-up) |
 | `expression` | reserved — mapped like `cc` if the expression jack survives the debt register |
@@ -474,11 +477,13 @@ can reach.
   They send `cc` 80, 81 and 82, as a MIDI controller would, and the default map sends 80
   to `rig_down` and 81 to `rig_up`, with 82 the assignable one. Assigning it is a line in
   `midi-map.json`: a rig, a bank, a toggle. No new kind, no protocol change, and the same line
-  serves a MIDI pedal sending the same controller. A switch acts on its press (127); the release
-  (0) is there for a momentary action later. `source` stays on every event, so a map that wants a
-  footswitch to mean something different from the same controller over MIDI can key on it without
-  a wire change. The firmware half is 3.5's (there are no switches to send it yet); the map here
-  already does it.
+  serves a MIDI pedal sending the same controller. The Pico **takes a short press on release**
+  (the release sends 127 then 0), so a hold is not first a tap; the service still acts on the
+  127. A hold on switch 3 sends `bypass_toggle` and the service enters its tuner, which mutes
+  the rig until there is a relay; while the tuner is up a switch press leaves it and is consumed,
+  so tuning never also changes rigs. `source` stays on every event, so a map that wants a
+  footswitch to mean something different from the same controller over MIDI can key on it
+  without a wire change. The firmware half is 3.5's; the map here already does it.
 - **Names, not indexes, in the map.** A PC entry names a rig; indexes are positions in a bank and
   a reordering must not silently repoint a MIDI pedal. `pc` may name a rig in another bank: the
   window moves to that bank and that position. A rig in no bank is legal — it joins the ready
@@ -526,9 +531,13 @@ decision the contract deferred, and it is **yours to make** (R4). Proposed:
     guitar — audio, not silence, but not the rig either.
 - **The alternative**, this document's first answer: leave the relay where it is on link loss,
   and energise it once, at boot. It never clicks after boot, but a hung or rebooting Core host is
-  silence until the panic press.
-- **The panic bypass** (a long press) is local to the Pico and holds until the player takes it
-  off. It is sent as `bypass_set` so the panel and the app agree.
+  silence until the bypass hold.
+- **The bypass hold** (a 1 s press on switch 3) enters the tuner: the client that owns the UI
+  mounts an `nc.tuner` after each chain's input, whose output is silence, so the rig is muted
+  while the tuner is up. The service owns the state (`tuner`, `PUT /tuner`, the `tuner` event);
+  it is also mirrored in `running.bypass` because that is what the panel and the app already
+  read. A later tap on any footswitch leaves the tuner and is consumed. This is the pedal's
+  bypass until the relay (3.6) exists; with a relay the same state will drive it.
 - **`audio_ready`** is `engine.status` with `state == "running"` and `audible_generation > 0`: a
   device open and a document adopted. Not `audible_generation == generation`: namchain reports
   the previous generation as audible while any chain is still moving, so that test is false for
@@ -661,7 +670,7 @@ not in the audio path and the engine is a separate process with its own service 
 
 | Failure | Audio | What the service does | What the player sees |
 |---|---|---|---|
-| The service is stopped, crashes or is upgraded | plays on | nothing; systemd restarts it in 2 s | link down after 1 s → panel/LED fault; presses do nothing; the relay stays (a restart is well inside 5 s); panic bypass still works |
+| The service is stopped, crashes or is upgraded | plays on | nothing; systemd restarts it in 2 s | link down after 1 s → panel/LED fault; presses do nothing; the relay stays (a restart is well inside 5 s), and the hold reaches nothing |
 | The service restarts | plays on | waits for `HELLO` (≤ 1 s), answers `WELCOME`, sends `STATE` | the fault clears; the display converges on the truth |
 | `namchaind` is down or restarting | silent | status polls fail; `STATE` health fault, `audio_ready` 0; keeps retrying | fault on the panel; bypass after 2 s, under the proposed rule |
 | The engine's device is lost | silent until it returns | same; the issue is namchain's `device_lost` | fault; bypass after 2 s, and back when the device is (250 ms retries) |
@@ -976,7 +985,7 @@ the document's name, "modified" when the content differs, unique names in the li
 position, step from the hint.
 
 **R4. The relay rule — yours.** "Stay where it is on link loss, energise once at boot" leaves a
-hung Core host, or one rebooting under a powered Pico, silent until the panic press. 3.6 wants
+hung Core host, or one rebooting under a powered Pico, silent until the bypass hold. 3.6 wants
 a booting Core host to fall back to bypass, and Phase 3's "Done when" says "the relay covers boot
 and failure"; the failure table had no row for either case. Proposed: bypass after 5 s without the
 link or 2 s without `audio_ready`; engage again after 1 s of `audio_ready`. It costs a click

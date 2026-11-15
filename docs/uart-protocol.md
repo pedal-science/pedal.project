@@ -201,15 +201,17 @@ table, not the Pico's — that is what makes USB MIDI a firmware-only change lat
 
 **Footswitches send what a MIDI controller would** (draft 2, U8; **decided 2026-10-06**).
 Footswitches 1–3 send `cc` 80, 81 and 82, the general-purpose switch controllers, with `b` 127
-on press and 0 on release. The service's map turns every `cc` and `pc` into an action
-(`pedal-service.md`); by default 80 is `rig_down`, 81 `rig_up`, and 82 is the assignable one. A
-press on the pedal and the same controller from the MIDI Commander are then the same message,
-byte for byte apart from `source`. The semantic kinds stay for what only the Pico can say: the
-panel's choices (step 7), and `bypass_set` for the panic bypass, whose long press stays local.
-The decision changes the firmware only, and only when 3.5 builds the switches: `pedald` already
-ships this map (`DEFAULT_CC` in `mapping.py`). `source` stays on every event, so a map that wants
-to treat a footswitch differently from the same controller over MIDI can key on it later without
-a wire change.
+for a press and 0 for its release. The Pico **takes a short press on the release of its own
+switch**, so a hold is a hold rather than a tap followed by one: the release sends 127 and then 0,
+the same pair a MIDI controller sends. A hold on footswitch 3 (the right one) sends one
+`bypass_toggle` at 1 s and its release sends 0 only, so it is never also a tap; the service turns
+that into its tuner, which mutes the rig until there is a relay. The service's map turns every
+`cc` and `pc` into an action (`pedal-service.md`); by default 80 is `rig_down`, 81 `rig_up`, and
+82 is the assignable one. A press on the pedal and the same controller from the MIDI Commander
+are then the same message, byte for byte apart from `source`. The semantic kinds stay for what
+only the Pico can say: the panel's choices (step 7), and the hold's `bypass_toggle`. `source`
+stays on every event, so a map that wants to treat a footswitch differently from the same
+controller over MIDI can key on it without a wire change.
 
 Kind 0x12 exists only while the expression-jack debt entry survives.
 
@@ -249,10 +251,13 @@ Events are the only thing here that is not idempotent, so:
   it only after a `STATE` with `audio_ready`. That is a physical rule, not a protocol one, and it
   survives a dead Pico and a dead service. A Core host that reboots while the Pico stays powered
   is the link-down rule's case.
-- **Panic bypass** (long press) is a Pico-local action; it is also sent as `bypass_set` so the
-  service and the display agree. It is a 1 s press on footswitch 3, the assignable one, and a
-  second long press takes it off (`firmware/src/footswitch.c`); footswitches 1 and 2 step rigs,
-  so a long press on either would step one first.
+- **The bypass hold** is a 1 s press on footswitch 3, the assignable one; it sends one
+  `bypass_toggle` while the switch is still down and its release sends 0 only, so the hold is
+  never also a tap (`firmware/src/footswitch.c`). The pedal service turns it into its tuner:
+  the rig is muted by the tuner node (there is no relay yet), and a later tap on any footswitch
+  leaves the tuner. Footswitches 1 and 2 step rigs, so a long press on either would step one
+  first. A MIDI controller may send `bypass_set`/`bypass_toggle` too; the service treats the
+  same message the same way.
 - **Service down must never mean audio down** (D4): the service is not in the audio path, so this
   link dying cannot stop the engine. What the Pico loses without a service is rig switching, not
   sound.
@@ -358,4 +363,6 @@ D4 puts it — the service's table — rather than in a `CFG` map the Pico must 
 is what keeps the choice open: it is provenance today, and a map that wants a footswitch to mean
 something different from the same controller over MIDI can key on it later with no wire change.
 `pedald` needs no change for the decision (`DEFAULT_CC` in `mapping.py` already maps 80 and 81,
-with 82 assignable); the firmware half lands with 3.5, when there are switches to send it.
+with 82 assignable); the firmware half lands with 3.5, when there are switches to send it. The
+Pico's own edge timing changed on 2026-11-15 (a short press is taken on release, so a hold is not
+a tap first) without changing the message a MIDI controller would send.

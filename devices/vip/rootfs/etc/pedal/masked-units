@@ -22,6 +22,12 @@ motd-news.timer
 # EEPROM is the owner's decision, made where the board can be reached, not a side effect of an
 # image build.
 rpi-eeprom-update.service
+# Plymouth's own quit, held back so the boot splash survives until rigpa takes DRM master (the
+# rigpa drop-in quits it with --retain-splash). With no getty on tty1 it would otherwise sit on
+# the login prompt; recovery is the serial console, ssh, or the rescue root.
+plymouth-quit.service
+plymouth-quit-wait.service
+getty@tty1.service
 #
 # Deliberately NOT masked:
 #   systemd-timesyncd   vip has no RTC battery; without it the clock starts wherever it stopped.

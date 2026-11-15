@@ -611,6 +611,7 @@ class Service:
         self.status_at = 0.0
         self.pico = {}
         self.bypass = False
+        self.tuner = False
         self.state_key = None
         self.state_at = 0.0
         self.positions_at = 0.0
@@ -695,6 +696,8 @@ class Service:
                             "POST /library/refresh": self.handle_refresh,
                             "GET /running": self.handle_running,
                             "PUT /running": self.handle_running,
+                            "GET /tuner": self.handle_tuner,
+                            "PUT /tuner": self.handle_tuner,
                             "POST /undo": self.handle_undo,
                             "POST /redo": self.handle_undo,
                             "GET /history": self.handle_history,
@@ -789,6 +792,7 @@ class Service:
                 "bank_size": len(self.mapping.current_bank()),
                 "next": None if following == current else following,
                 "bypass": self.bypass,
+                "tuner": self.tuner,
                 "modified": self.rig_state.modified,
                 "performance": self.rig_state.performance()}
 
@@ -815,7 +819,7 @@ class Service:
     def hello(self):
         """What a client should hold on connecting. Read on its own thread, from what the loop has
         already published, so a client connecting never asks the engine anything."""
-        return dict(self.published, pedal=self.pedal_public())
+        return dict(self.published, pedal=self.pedal_public(), tuner=self.tuner)
 
     # ------------------------------------------------------------------ helpers
     def _rig_names(self):
@@ -864,12 +868,26 @@ class Service:
             return None
         a, b = event.get("a", 0), event.get("b", 0)
         self.log(f"event {kind} a={a} b={b} source={event.get('source')} seq={event.get('seq')}")
+        # While the tuner is up (the pedal's bypass until there is a relay), a switch's press
+        # leaves it and does nothing else. The release that ends the hold is not a press: the
+        # Pico sends only 0 for it. A parameter CC is a sweep, not a switch.
+        if self.tuner and (kind == "pc" or (kind == "cc" and int(b) >= 64)) \
+                and (via == "http" or event.get("source") == 1):
+            self.set_tuner(False, cause={"source": via or SOURCES.get(event.get("source"), "unknown"),
+                                         "kind": kind, "a": a, "b": b})
+            cause = {"source": via or SOURCES.get(event.get("source"), "unknown"),
+                     "kind": kind, "a": a, "b": b,
+                     "label": cause_label(kind, a, b, via or SOURCES.get(event.get("source"), "unknown"))}
+            if client:
+                cause["client"] = client
+            self.publish("action", {"cause": cause, "action": {"action": "tuner", "on": False},
+                                    "result": {"ok": True, "tuner": False}})
+            return {"ok": True, "tuner": False}
         action = self.mapping.action(kind, a, b)
         if action is None:
             result = {"ok": False, "reason": "no rig can play here"}
-        elif action["action"] == "bypass":
-            self.bypass = action["on"]
-            self.state_key = None
+        elif action["action"] == "tuner":
+            self.set_tuner(action["on"])
             result = {"ok": True, "on": action["on"]}
         elif action["action"] == "load":
             tag = f"load:{via or SOURCES.get(event.get('source'), 'unknown')}"
@@ -894,6 +912,27 @@ class Service:
             self.publish_changes()
             return result
         return None
+
+    def set_tuner(self, on, cause=None):
+        """Enter or leave the tuner — the pedal's bypass until there is a relay.
+
+        On the loop. The tuner node a client mounts is what silences the rig; this is the
+        service's half, so a footswitch and every view agree on whether the tuner is up. While it
+        is up a footswitch press leaves it (see `on_event`), and `running.bypass` mirrors it.
+        """
+        on = bool(on)
+        if on == self.tuner:
+            return
+        self.tuner = on
+        self.bypass = on
+        self.mapping.bypass = on
+        self.state_key = None
+        event = {"on": on}
+        if cause:
+            event["cause"] = cause
+        self.log(f"tuner {'on' if on else 'off'}" + (f" ({cause.get('source')})" if cause else ""))
+        self.publish("tuner", event)
+        self.publish_changes()
 
     def load_rig(self, name, tag="load"):
         """Make a rig audible, with `rig.switch`: a handover if the engine holds it warm, a
@@ -1136,6 +1175,7 @@ class Service:
                      "verdicts": self.cost.status(),
                      "verdict_max_age_s": COST_POLL_S},
             "bypass": self.bypass,
+            "tuner": self.tuner,
             "http": self.http.stats(),
             "library": self.files.counts(),
             "loop_passes": self.loop_passes,
@@ -1172,6 +1212,34 @@ class Service:
         except LoopUnavailable as exc:
             return 503, {"error": str(exc)}
         return 200, {"ok": True, "kind": event["kind"], "result": result}
+
+    # ------------------------------------------------------------------ the tuner
+    def handle_tuner(self, request):
+        """`GET /tuner` and `PUT /tuner`: the pedal's bypass-until-there-is-a-relay.
+
+        The view that mounts the tuner node is a client, not the service; this is the service's
+        half of the state, so a footswitch hold and every view agree. `PUT {"on": bool}` is what
+        rigpa sends when the tuner view opens or closes, and what a bench test can send. The
+        tuner event goes to every view, including the client that asked; a client that is
+        already where it asked to be ignores it.
+        """
+        if request.method != "PUT":
+            return 200, {"on": self.tuner}
+        try:
+            on = json.loads(request.body or b"{}").get("on")
+        except (ValueError, AttributeError):
+            return 400, {"error": "the body is {\"on\": true|false}"}
+        if not isinstance(on, bool):
+            return 400, {"error": "the body is {\"on\": true|false}"}
+        client = request.headers.get("pedal-client")
+        cause = {"source": "http", "kind": "tuner", "a": 1 if on else 0, "b": 0, "label": "tuner"}
+        if client:
+            cause["client"] = client
+        try:
+            self.on_loop(lambda: self.set_tuner(on, cause=cause))
+        except LoopUnavailable as exc:
+            return 503, {"error": str(exc)}
+        return 200, {"on": self.tuner}
 
     # ------------------------------------------------------------------ who this is, and what changed
     def handle_pedal(self, request):

@@ -230,7 +230,7 @@ activate_offline() {
   else
     echo "  note      no systemd-sysusers in the root: the pedal user is missing from it"
   fi
-  for u in pedal-tune.service pedal-uart.service pedald.service pedal-codec.service pedal-wifi.service; do
+  for u in pedal-tune.service pedal-uart.service pedald.service pedal-codec.service pedal-wifi.service pedal-splash-quit.service; do
     [[ -e $ROOT/etc/systemd/system/$u ]] || continue
     run sctl enable "$u" >/dev/null 2>&1
     echo "  enabled   $u"

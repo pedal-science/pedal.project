@@ -80,3 +80,8 @@ libgbm1
 libgles2
 mesa-libgallium
 fonts-dejavu-core
+
+# The boot splash, before rigpa: Plymouth (the theme is in devices/common/rootfs, the DSI/panel
+# modules in the initramfs come from device.env's INITRD_DRIVERS). It stays up until rigpa's
+# drop-in quits it with --retain-splash, so the splash pixels hold while Qt takes DRM master.
+plymouth
