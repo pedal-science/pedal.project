@@ -13,8 +13,8 @@ in their fill: solid = measured, hatched = estimate, ragged with `?` = unknown, 
 ordering that is recorded but not timed.
 
 The 2026-11-15 boot work is in these `deepseek-boot` worktrees: rigpa's splash and startup gate
-are commit `7ed3c58` on branch `deepseek/boot-and-ui`, and the `pedal.project` and `rtpi` sides
-were uncommitted working-tree changes when this page was written. It is **built but not booted**:
+are commit `d1fa127` on branch `deepseek/boot-and-ui`, and the `pedal.project` and `rtpi` sides are
+`ccf80b9` and `de874cf` on the same branch. It is **built but not booted**:
 no boot with Plymouth, the DSI stack in the initrd, `splash` or the startup gate has been observed
 on vip. This page cites those files as the design of record and puts no measured duration on
 them.
@@ -49,8 +49,8 @@ them.
 - It is **not** a measurement of the current image. No duration in the current column was
   observed; the four authority labels say what each number rests on.
 - It is **not** a claim that the Plymouth/INITRD_DRIVERS/splash/mask work has been booted,
-  reviewed or is correct. It is present in the worktrees (rigpa commit `7ed3c58`; uncommitted
-  `pedal.project`/`rtpi` changes at the time of writing) and this page reads it from there; the
+  reviewed or is correct. It is committed on `deepseek/boot-and-ui` (rigpa `d1fa127`,
+  pedal.project `ccf80b9`, rtpi `de874cf`) and this page reads it from there; the
   current-image durations stay estimate/unknown until a boot with it is captured.
 - It is **not** a power-on number. The anchor is the bootloader's first byte; power applied is
   earlier by however long the PMIC and boot ROM take, and that has never been measured.
@@ -127,21 +127,21 @@ is measured and is what makes the current one arguable rather than invented.
 | 15 | audio | rig published → audible at the jack | 0.6–1.5 s | 0.6–1.5 s | `estimate` | The jack run put "published" at kernel+8.179 s and the tone crossing the gate 0.73 s later (first detectable 0.17 s *before* "published"); the fixture's 100 µF cap smears both ends by about a second. "Playing" and "audible" are the same moment to within the method's second. Analogue path unchanged, so the measured bound carries. |
 | — | audio | **first byte → audible** | **21.0–21.9 s** | **≈18.6–21.3 s** | `estimate` | 11.4–11.7 s (firmware) + 0.5–0.7 + 1.4–2.2 + 3.1–3.4 + 1.6–1.8 + 0.6–1.5. See the arithmetic below. |
 | 16 | display | Plymouth splash, from the initrd to rigpa's `ExecStartPre` | — | starts ≈12.2–12.8 s; ends at rigpa start ≈16.6–18.5 s; duration `?` | `unknown` | Plymouth (`devices/vip/packages`) with the `pedal` theme and `ShowDelay=0`/`DeviceTimeout=8`, the DSI stack in the initrd via `INITRD_DRIVERS`, and `splash plymouth.ignore-serial-consoles vt.global_cursor_default=0` in `BASE_ARGS`. Both ends are derived from rows 6–11 and 18; nothing about Plymouth has been timed on this hardware. |
-| 17 | display | rigpa Qt start → first frame | — | `?` | `unknown` | Qt eglfs on the DSI device, QML scene load, first frame. rigpa's startup gate logs exactly this: `startup: scene built at N ms`, `startup: first frame at N ms`, then `startup: engine`, `startup: document`, `startup: ready` and `startup: dismissed at N ms (ready)` (rigpa `src/app/Startup.cpp`, commit `7ed3c58`). Those journal lines replace this row. |
-| 18 | display | startup latch → UI ready | — | `?`; bounded below at 500 ms and above at 8 s, plus a 200 ms fade; estimate ≈18.5–21.3 s absolute, hard cap ≈24.5–26.5 s | `unknown` | rigpa's `Startup` gate (commit `7ed3c58`) holds its splash until `EngineSession` is Connected with a rig and `RigSession` has the document, min 500 ms from the first frame and max 8 s; then a 200 ms fade. The bounds are the code's; the actual value is unmeasured, and the 8 s cap is an absolute ceiling relative to rigpa's start (≈24.5–26.5 s from the first byte), not a typical value. |
+| 17 | display | rigpa Qt start → first frame | — | `?` | `unknown` | Qt eglfs on the DSI device, QML scene load, first frame. rigpa's startup gate logs exactly this: `startup: scene built at N ms`, `startup: first frame at N ms`, then `startup: engine`, `startup: document`, `startup: ready` and `startup: dismissed at N ms (ready)` (rigpa `src/app/Startup.cpp`, commit `d1fa127`). Those journal lines replace this row. |
+| 18 | display | startup latch → UI ready | — | `?`; bounded below at 500 ms and above at 8 s, plus a 200 ms fade; estimate ≈18.5–21.3 s absolute, hard cap ≈24.5–26.5 s | `unknown` | rigpa's `Startup` gate (commit `d1fa127`) holds its splash until `EngineSession` is Connected with a rig and `RigSession` has the document, min 500 ms from the first frame and max 8 s; then a 200 ms fade. The bounds are the code's; the actual value is unmeasured, and the 8 s cap is an absolute ceiling relative to rigpa's start (≈24.5–26.5 s from the first byte), not a typical value. |
 | 19 | display | splash dismissed | — | at rigpa's `ExecStartPre`, ≈16.6–18.5 s | `recorded-state` | rigpa's drop-in runs `ExecStartPre=-/usr/bin/plymouth quit --retain-splash`; `--retain-splash` leaves the last splash frame on the DRM output until Qt draws. `getty@tty1`, `plymouth-quit` and `plymouth-quit-wait` are masked so nothing else dismisses it on a tuned boot; the loose profile uses `pedal-splash-quit.service`. |
 | 20 | network | userspace start → `multi-user.target` | **13.774 s** userspace = 16.311 s after the kernel = 29.26 s from the first byte | `unknown` | `unknown` | The old image's target completed 8.8 s after the engine had published; the record does not name the unit that held it (WiFi association is a candidate, not a finding). The current tree makes the network independent of the pedal's health, and the target is not an audible or UI-ready proxy — see "What is not a dependency". `collect.sh` captures `systemd-analyze blame` and `critical-chain` to settle it. |
 | 21 | network | networkd · wpa_supplicant · ssh | — | independent; no duration | `recorded-state` | No ordering into the audio path. `pedal-guard` requires `namchaind` only ("not the network, which a pedal at a gig doesn't have"), and the tuned profile does not wait on `network-online.target`. |
 | 22 | health | `pedal-guard`: 10 s stable after namchaind → boot counter cleared | — | ≈26.5–28.4 s (namchaind + 10 s settle + oneshot) | `recorded-state` | `pedal-guard.service` is `After=namchaind.service` and runs `vip-boot guard-clear --require-unit namchaind.service --wait 120`; `vip-boot`'s default `--settle` is 10 s (rtpi `devices/vip/usr/local/sbin/vip-boot`). The 10 s is by design; its absolute placement is derived from the estimates above. Not on the sound path. |
 | 23 | health | `vip-boot-deadline` | — | sysinit + 300 s | `recorded-state` | `vip-boot-deadline.service` is `WantedBy=sysinit.target`, `DefaultDependencies=no`, ordered after nothing, and runs `vip-boot deadline --after 300`; it reboots a pedal boot that never reached `pedal-guard`. It holds nothing up. |
 | 24 | display | Plymouth in the initrd and on the command line | — | configuration only, no duration | `recorded-state` | rtpi's `device.env` sets `INITRD_DRIVERS="sdhci-brcmstb sdhci-iproc mmc_block ext4 vfat vc4 drm-rp1-dsi panel-simple rpi-panel-attiny-regulator backlight i2c-brcmstb"`, read by both `vip-install-kernel` and [`build-image`](../../devices/common/image/build-image), whose build **fails** if the pedal kernel's `lsinitrd` lacks `plymouthd`, the theme or `vc4`. `BASE_ARGS` adds `splash plymouth.ignore-serial-consoles vt.global_cursor_default=0` (no `quiet`). Uncommitted working-tree changes at the time of writing. |
-| 25 | display | rigpa startup qInfo marks | — | measurement instrument, no duration | `recorded-state` | rigpa commit `7ed3c58` on `deepseek/boot-and-ui`: `Startup` logs `startup: scene built`, `first frame`, `engine`, `document`, `ready`, plus `dismissed`/`gave up`, each `at N ms` on rigpa's own clock. |
+| 25 | display | rigpa startup qInfo marks | — | measurement instrument, no duration | `recorded-state` | rigpa commit `d1fa127` on `deepseek/boot-and-ui`: `Startup` logs `startup: scene built`, `first frame`, `engine`, `document`, `ready`, plus `dismissed`/`gave up`, each `at N ms` on rigpa's own clock. |
 | 26 | everything | the 2026-10-02 boot's own limits | method accuracy ≈0.1 s | — | `measured-2026-10-02` | The wire's own cost is 0.12–0.13 s (115200 serial plus the 10 ms read cycle), the firmware's clock agrees with the wire's, and the jack end is good to about a second because of the fixture's capacitor. |
 
 ### Configuration facts behind the ordering
 
-These are the recorded-state facts the dependency graph is built from. They are in the worktrees:
-rigpa is commit `7ed3c58`, and the `pedal.project`/`rtpi` changes were uncommitted when this was written.
+These are the recorded-state facts the dependency graph is built from. They are committed on `deepseek/boot-and-ui`: rigpa `d1fa127`, pedal.project `ccf80b9`,
+rtpi `de874cf`.
 
 | Fact | Where |
 |---|---|
@@ -160,7 +160,7 @@ rigpa is commit `7ed3c58`, and the `pedal.project`/`rtpi` changes were uncommitt
 | the initrd carries the DSI/panel KMS stack and Plymouth | rtpi `device.env`: `INITRD_DRIVERS` (storage plus `vc4 drm-rp1-dsi panel-simple rpi-panel-attiny-regulator backlight i2c-brcmstb`); read by `vip-install-kernel` and `build-image`; `build-image` fails the build if `plymouthd`, the theme or `vc4` is absent from the pedal kernel's initrd |
 | `splash` is on the command line | rtpi `device.env`: `BASE_ARGS` gains `splash plymouth.ignore-serial-consoles vt.global_cursor_default=0`; deliberately **no `quiet`** |
 | nothing else dismisses the splash on a tuned boot | [`masked-units`](../../devices/vip/rootfs/etc/pedal/masked-units) masks `plymouth-quit.service`, `plymouth-quit-wait.service` and `getty@tty1.service`; rigpa's drop-in has `ExecStartPre=-/usr/bin/plymouth quit --retain-splash`; the loose profile uses [`pedal-splash-quit.service`](../../devices/common/rootfs/etc/systemd/system/pedal-splash-quit.service) |
-| rigpa logs its startup timings | rigpa `src/app/Startup.{h,cpp}`, commit `7ed3c58`; `qInfo` lines `startup: scene built at N ms` … `startup: dismissed at N ms (ready)` |
+| rigpa logs its startup timings | rigpa `src/app/Startup.{h,cpp}`, commit `d1fa127`; `qInfo` lines `startup: scene built at N ms` … `startup: dismissed at N ms (ready)` |
 
 ## In parallel, and in sequence
 
@@ -251,7 +251,8 @@ masked, so it is not in the picture at all, while Plymouth is — on the display
    "multi-user.target" as "the pedal is up", and do not carry the 13.774 s figure into the
    current image.
 5. **The 2026-11-15 work is built in the worktrees but has never booted.** rigpa is commit
-   `7ed3c58` on `deepseek/boot-and-ui`; the `pedal.project` and `rtpi` changes were uncommitted
+   `d1fa127` on `deepseek/boot-and-ui`; the `pedal.project` and `rtpi` changes are `ccf80b9`
+   and `de874cf`.
    when this page was written. If the implementation changes (for example the `INITRD_DRIVERS`
    names, or whether `quiet` is added alongside `splash`), rows 6, 11 and 16–19 move.
 6. **`console=tty1` without `quiet`.** `BASE_ARGS` keeps `console=tty1` and adds
