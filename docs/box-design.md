@@ -89,7 +89,7 @@ board's socket's.
 | 8 | GND | | |
 | 9 | SCL | Pi → codec | I2C1 (GPIO 3). The codec is at 0x50 |
 | 10 | SDA | both | I2C1 (GPIO 2) |
-| 11 | RELAY | RP2350 → audio board | High = effect, for both bypass relays. Pulled down on the audio board, so no cable, or an RP2350 that is not driving it, is bypass |
+| 11 | RELAY | RP2350 → audio board | High = effect, for both bypass relays. Not driven high until 10 s after the Pi's 3.3 V comes up, or the outputs thump (pedal-codec, box-board.md). Pulled down on the audio board, so no cable, or an RP2350 that is not driving it, is bypass |
 | 12 | EXTFS_A | audio board → RP2350 | EXT FS tip, through 1 kΩ and 100 nF. The pull-up is on the Pi board |
 | 13 | EXTFS_B | audio board → RP2350 | EXT FS ring, the same |
 | 14 | +3V3 | Pi → audio board | The **Pi's** 3.3 V, not the RP2350's: it feeds the codec's IOVDD and switches the analogue supplies on, so they follow the Pi into standby (HAT+) |
