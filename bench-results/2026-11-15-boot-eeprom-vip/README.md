@@ -84,9 +84,14 @@ Notes:
 - Keeping `console=ttyAMA10` with `quiet` preserves error/panic output and the bootloader log;
   removing it is the last half-second and loses kernel debug on the probe.
 
-The current boot used `console=tty1` only for the cold measurement; the runtime keeps
-`quiet loglevel=3 systemd.show_status=0` and will restore `console=ttyAMA10,115200` for debug.
-The final screen target is unchanged: firmware ≈8.2 s + kernel/initrd ≈3.4 s + userspace/rigpa
+The cold measurement used `console=tty1` only; the runtime has since been restored to
+`quiet loglevel=3 systemd.show_status=0` **with** `console=ttyAMA10,115200` for debug. One normal
+boot with that final configuration measured: kernel 0.414 s, initrd 2.576 s, userspace 16.802 s,
+rigpa active 7.401 s, first frame 9.218 s after kernel — i.e. **≈17.4 s from the post-EEPROM
+cold `Starting OS` (8.17 s) to the first frame**. The serial console costs ≈0.5 s versus
+`console=tty1` only.
+
+The final screen target is unchanged: firmware ≈8.2 s + kernel/initrd ≈3.0 s + userspace/rigpa
 ≈9.2 s, so a 5 s cold boot is still not reachable on this stack.
 
 ## Reproduce

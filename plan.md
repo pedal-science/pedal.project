@@ -1420,9 +1420,17 @@ Even a zero-cost bootloader leaves 13.2 s; even a zero-cost userspace leaves 14.
 
 **Kept 2026-11-15:** rigpa now starts at `basic.target` instead of after `namchaind`/`pedald`, and
 waits up to 5 s for the panel connector; measured first frame **11.3 s after kernel start** (was
-13.2 s), **≈20.0 s from power-on**, saved 1.9 s. Engine/Play arrive ~0.5 s after the first frame.
-Masking `systemd-binfmt` was measured and made no difference; reverted. See
+13.2 s), saved 1.9 s. Engine/Play arrive ~0.5 s after the first frame. Masking `systemd-binfmt`
+was measured and made no difference; reverted. See
 [bench-results/2026-11-15-boot-early-rigpa/](bench-results/2026-11-15-boot-early-rigpa/).
+
+**Also kept the same day:** `quiet loglevel=3 systemd.show_status=0` (kernel 2.43 s → 0.41 s;
+~1.9 s), a config-only EEPROM update on the matching 2026-09-25 bootloader image
+(`NET_INSTALL_AT_POWER_ON=0`, `NET_INSTALL_ENABLED=0`, `HDMI_DELAY=0`, `BOOT_ORDER=0xf`, keeping
+`BOOT_UART=1`), which removes a **4.8 s** cold-boot network-install wait (`Starting OS` 12.98 s →
+8.17 s). The serial console is kept (≈0.5 s versus `console=tty1` only) for debug. Cold power-on
+to rigpa's first frame is now **≈17.4 s**, from ≈21.7 s. See
+[bench-results/2026-11-15-boot-eeprom-vip/](bench-results/2026-11-15-boot-eeprom-vip/).
 
 The realistic
 best case after software work (faster boot medium/EEPROM settings, no initramfs, start rigpa
