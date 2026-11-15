@@ -479,7 +479,7 @@ can reach.
   `midi-map.json`: a rig, a bank, a toggle. No new kind, no protocol change, and the same line
   serves a MIDI pedal sending the same controller. The Pico **takes a short press on release**
   (the release sends 127 then 0), so a hold is not first a tap; the service still acts on the
-  127. A hold on switch 3 sends `bypass_toggle` and the service enters its tuner, which mutes
+  127. A hold on the right-hand switch (cc 80) sends `bypass_toggle` and the service enters its tuner, which mutes
   the rig until there is a relay; while the tuner is up a switch press leaves it and is consumed,
   so tuning never also changes rigs. `source` stays on every event, so a map that wants a
   footswitch to mean something different from the same controller over MIDI can key on it
@@ -532,7 +532,7 @@ decision the contract deferred, and it is **yours to make** (R4). Proposed:
 - **The alternative**, this document's first answer: leave the relay where it is on link loss,
   and energise it once, at boot. It never clicks after boot, but a hung or rebooting Core host is
   silence until the bypass hold.
-- **The bypass hold** (a 1 s press on switch 3) enters the tuner: the client that owns the UI
+- **The bypass hold** (a 1 s press on the right-hand switch, cc 80) enters the tuner: the client that owns the UI
   mounts an `nc.tuner` after each chain's input, whose output is silence, so the rig is muted
   while the tuner is up. The service owns the state (`tuner`, `PUT /tuner`, the `tuner` event);
   it is also mirrored in `running.bypass` because that is what the panel and the app already

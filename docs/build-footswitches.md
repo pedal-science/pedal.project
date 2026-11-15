@@ -25,16 +25,16 @@ wiring picks up, and the firmware debounces the rest (10–20 ms) (`docs/hardwar
 | Net | Pico physical pin | GPIO | Board | Lid |
 |---|---|---|---|---|
 | FS1 | **14** | GP10 | FS pin 2 | in the box, footswitch **2** (middle), COM lug; one leg of C2 (100 nF) |
-| FS2 | **15** | GP11 | FS pin 3 | in the box, footswitch **3** (right), COM lug; one leg of C3 (100 nF) |
-| FS3 | **16** | GP12 | FS pin 4 | in the box, footswitch **1** (left), COM lug; one leg of C1 (100 nF) |
+| FS2 | **15** | GP11 | FS pin 3 | in the box, footswitch **1** (left), COM lug; one leg of C3 (100 nF) |
+| FS3 | **16** | GP12 | FS pin 4 | in the box, footswitch **3** (right), COM lug; one leg of C1 (100 nF) |
 | GND | **13** (and 3, 8, 18, 23, 28, 33, 38) | — | FS pin 1 | footswitch 1, 2 and 3, **NC** lug in the box; the other leg of C1, C2 and C3 |
 
 Pin 13 is the Pico ground on the FS header's own strip; the Pico joins all eight of its grounds
 inside itself. The board's net names (FS1–FS3, the order of the header's pins) are the board's and
-do not move. **Which switch is 1, 2 or 3 is the player's, left to right**, and the firmware maps
-each to the pin its wire landed on (`pins[]` in `firmware/src/footswitch.c`). Switch 1 sends `cc`
-80, 2 sends 81 and 3 sends 82 (`docs/uart-protocol.md`, U8), and `pedald`'s map decides what each
-means. The bypass (the tuner, until there is a relay) is a long press on switch 3, the right-hand one.
+do not move. The firmware's index order is the player's **right to left** in the box: index 0 is
+GP12 (cc 80, the right-hand switch and the bypass hold), index 1 GP10 (cc 81, middle), index 2 GP11
+(cc 82, left) (`pins[]` in `firmware/src/footswitch.c`). `pedald`'s map decides what each means.
+The bypass (the tuner, until there is a relay) is a long press on the right-hand switch, cc 80.
 
 ## The FS connector, pin by pin
 
@@ -46,9 +46,9 @@ As built in the box:
 | FS pin | Net | Goes to | Firmware's switch (cc) |
 |---|---|---|---|
 | 1 | GND | the **NC** lug of pole A on each switch, jumped from switch to switch | — |
-| 2 | FS1 (GP10) | footswitch **2** (middle), **COM** lug of pole A | 2 (cc 81) |
-| 3 | FS2 (GP11) | footswitch **3** (right), **COM** lug of pole A | 3 (cc 82), and the bypass hold |
-| 4 | FS3 (GP12) | footswitch **1** (left), **COM** lug of pole A | 1 (cc 80) |
+| 2 | FS1 (GP10) | footswitch **2** (middle), **COM** lug of pole A | cc 81 (index 1) |
+| 3 | FS2 (GP11) | footswitch **1** (left), **COM** lug of pole A | cc 82 (index 2) |
+| 4 | FS3 (GP12) | footswitch **3** (right), **COM** lug of pole A | cc 80 (index 0), and the bypass hold |
 
 The design drew GND to the NO lugs and FS pins 2–4 to switches 1–3 in order. The box differs in
 both. Rather than rewire the lid, the firmware takes the box as it is (decided 2026-11-07). A loom
@@ -112,6 +112,6 @@ With the Pico in and powered: pins 14–16 read 3.3 V at rest and 0 V pressed. T
 (`firmware/src/footswitch.c`) turns their pull-ups on, takes a reading that holds for 10 ms, and
 prints `fs: 1 down` and `fs: 1 up` on its USB console; `?` there prints all three. **A short
 press is registered on release**: the release sends `cc` 80, 81 or 82 with 127 and then the same
-with 0, so a hold is not first a tap. **A 1 s hold on footswitch 3 enters the tuner** (the pedal's
+with 0, so a hold is not first a tap. **A 1 s hold on the right-hand switch (cc 80) enters the tuner** (the pedal's
 bypass until there is a relay): it sends one `bypass_toggle` while still held, its release sends
 0 only, and a later tap on any footswitch leaves the tuner. HELLO's caps say three footswitches.

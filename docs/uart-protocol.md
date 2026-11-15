@@ -203,7 +203,7 @@ table, not the Pico's — that is what makes USB MIDI a firmware-only change lat
 Footswitches 1–3 send `cc` 80, 81 and 82, the general-purpose switch controllers, with `b` 127
 for a press and 0 for its release. The Pico **takes a short press on the release of its own
 switch**, so a hold is a hold rather than a tap followed by one: the release sends 127 and then 0,
-the same pair a MIDI controller sends. A hold on footswitch 3 (the right one) sends one
+the same pair a MIDI controller sends. A hold on the right-hand switch (cc 80) sends one
 `bypass_toggle` at 1 s and its release sends 0 only, so it is never also a tap; the service turns
 that into its tuner, which mutes the rig until there is a relay. The service's map turns every
 `cc` and `pc` into an action (`pedal-service.md`); by default 80 is `rig_down`, 81 `rig_up`, and
@@ -251,7 +251,7 @@ Events are the only thing here that is not idempotent, so:
   it only after a `STATE` with `audio_ready`. That is a physical rule, not a protocol one, and it
   survives a dead Pico and a dead service. A Core host that reboots while the Pico stays powered
   is the link-down rule's case.
-- **The bypass hold** is a 1 s press on footswitch 3, the assignable one; it sends one
+- **The bypass hold** is a 1 s press on the right-hand switch (cc 80); it sends one
   `bypass_toggle` while the switch is still down and its release sends 0 only, so the hold is
   never also a tap (`firmware/src/footswitch.c`). The pedal service turns it into its tuner:
   the rig is muted by the tuner node (there is no relay yet), and a later tap on any footswitch

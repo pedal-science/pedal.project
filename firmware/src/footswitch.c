@@ -29,11 +29,11 @@ static const uint8_t pins[FOOTSWITCH_COUNT] = {12, 10, 11};
 // and not a tap followed by a hold. A short release sends the press message (cc 127) and then its
 // release (0); a release after the hold sends only 0, so a hold never also taps.
 //
-// The bypass hold is a long press on footswitch 3, the assignable one (index 2). It sends one
+// The bypass hold is a long press on the right-hand switch (index 0, GP12, cc 80). It sends one
 // `bypass_toggle` while the switch is still down, which the pedal service turns into its tuner
-// (the tuner node mutes the rig; there is no relay yet). Footswitches 1 and 2 step rigs, so a
-// long press on either would step one before it did anything else.
-#define BYPASS_SWITCH 2u
+// (the tuner node mutes the rig; there is no relay yet). The other two step rigs, so a long press
+// on either would step one before it did anything else.
+#define BYPASS_SWITCH 0u
 #define LONG_PRESS_MS 1000u
 
 static struct {
