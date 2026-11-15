@@ -220,26 +220,6 @@ install -D -m 755 "$RTPI_DEV/usr/local/libexec/vip-boot-validate" "$PEDAL/usr/lo
 install -D -m 755 "$RTPI_DEV/usr/local/sbin/vip-install-kernel" "$PEDAL/usr/local/sbin/vip-install-kernel"
 cp -a "$RTPI_DEV/usr/lib/dracut/modules.d/95vip-guard" "$PEDAL/usr/lib/dracut/modules.d/"
 
-# The pedal kernel, from the artefacts make-card verified. rtpi's own script does it, so the
-# image and a live deploy share one version of the gates, the device-tree copy and the dracut
-# invocation (docs/vip-kernel-image.md). It runs inside the root, with /proc, /sys and /dev, and
-# builds that release's guarded initramfs as it goes.
-log "pedal root: the pedal kernel $PEDAL_KERNEL, from rtpi's artefacts"
-install -d "$PEDAL/tmp/kernel"
-cp -a "$IN/kernel/." "$PEDAL/tmp/kernel/"
-inroot "$PEDAL" /usr/local/sbin/vip-install-kernel --artefacts /tmp/kernel
-rm -rf "$PEDAL/tmp/kernel"
-# The kernel bytes each slot will boot: the manifest records them, and `--remote` compares the
-# board's booted slot against them before it writes a root under it (image/remote).
-PEDAL_VMLINUZ_SHA=$(sha256sum "$PEDAL/boot/vmlinuz-$PEDAL_KERNEL" | cut -d' ' -f1)
-FALLBACK_VMLINUZ_SHA=$(sha256sum "$PEDAL/boot/vmlinuz-$FALLBACK_KERNEL" | cut -d' ' -f1)
-# The board's own record of which kernel it carries and where it came from (the rescue root's
-# /etc/pedal-image has the commits only: it boots neither).
-{ echo "pedal-kernel=$PEDAL_KERNEL"
-  echo "fallback-kernel=$FALLBACK_KERNEL"
-  echo "kernel-kind=${PIN[kernel-kind]:-}"
-  echo "kernel-rtpi=${PIN[kernel-rtpi]:-}"; } >> "$PEDAL/etc/pedal-image"
-
 log "pedal root: namchain $NC_SHORT into /opt/namchain"
 nc=/opt/namchain/$NC_SHORT
 install -d "$PEDAL$nc/bin" "$PEDAL$nc/packaging"
@@ -276,6 +256,27 @@ cp -a "$IN/pedal/devices/common/rootfs/." "$S/rootfs/"
 cp -a "$DEV/rootfs/." "$S/rootfs/"
 bash "$S/rootfs/usr/local/sbin/pedal-device" apply "$S" --root "$PEDAL" --commit "${PIN[pedal]:0:7}" >&2
 chroot "$PEDAL" systemctl enable -q namchaind rigpa vip-boot-settle vip-boot-validate pedal-guard pedal-guard-maint vip-boot-deadline
+
+# The pedal kernel, from the artefacts make-card verified. rtpi's own script does it, so the
+# image and a live deploy share one version of the gates, the device-tree copy and the dracut
+# invocation (docs/vip-kernel-image.md). It runs inside the root, with /proc, /sys and /dev, and
+# builds that release's guarded initramfs as it goes.
+log "pedal root: the pedal kernel $PEDAL_KERNEL, from rtpi's artefacts"
+install -d "$PEDAL/tmp/kernel"
+cp -a "$IN/kernel/." "$PEDAL/tmp/kernel/"
+inroot "$PEDAL" /usr/local/sbin/vip-install-kernel --artefacts /tmp/kernel
+rm -rf "$PEDAL/tmp/kernel"
+# The kernel bytes each slot will boot: the manifest records them, and `--remote` compares the
+# board's booted slot against them before it writes a root under it (image/remote).
+PEDAL_VMLINUZ_SHA=$(sha256sum "$PEDAL/boot/vmlinuz-$PEDAL_KERNEL" | cut -d' ' -f1)
+FALLBACK_VMLINUZ_SHA=$(sha256sum "$PEDAL/boot/vmlinuz-$FALLBACK_KERNEL" | cut -d' ' -f1)
+# The board's own record of which kernel it carries and where it came from (the rescue root's
+# /etc/pedal-image has the commits only: it boots neither).
+{ echo "pedal-kernel=$PEDAL_KERNEL"
+  echo "fallback-kernel=$FALLBACK_KERNEL"
+  echo "kernel-kind=${PIN[kernel-kind]:-}"
+  echo "kernel-rtpi=${PIN[kernel-rtpi]:-}"; } >> "$PEDAL/etc/pedal-image"
+
 
 # rigpa's QML imports come from packages (devices/<host>/packages), which ldd cannot see: render one
 # frame inside the pedal root, offscreen, so a missing module stops the build here rather than the
