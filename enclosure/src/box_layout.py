@@ -296,35 +296,55 @@ def holes(name):
 
 
 COAT = 0.4        # Tayda: add 0.4 mm to every diameter when the case is powder-coated
-SIDES = {"face": "A", "rear wall": "B", "front wall": "D", "left wall": "C", "right wall": "E"}
+# Tayda's Box Tool draws the 1590DD upright: the face 117 mm wide and 185 mm high, B and D its
+# short walls, C and E its long ones, each 33 mm deep (read from the tool's own picture,
+# 2026-11-16).  The pedal is turned a quarter turn anticlockwise to fit it, so its rear wall is
+# Tayda's left.
+SIDES = {"face": "A", "rear wall": "C", "front wall": "E", "right wall": "B", "left wall": "D"}
+TAYDA_SIDE = {"A": (117.0, 185.0), "B": (117.0, 33.0), "D": (117.0, 33.0), "C": (33.0, 185.0),
+              "E": (33.0, 185.0)}
 
 
 def tayda():
     """The holes as Tayda's Box Tool takes them: per side, X and Y in mm from the centre of that
     side's full outside, X to the right and Y up, and the diameter to drill (finished size plus
-    0.4 mm for the powder coat; nothing under 3 mm).  Sides as in Tayda's unfolded picture with
-    the rear wall at the top: A the face, B the rear wall, D the front wall, C left, E right.
-    On B, up is away from the face; on D, up is toward it; on C and E, across is the depth.
-    The signs on B to E are read from Tayda's picture, so check each side in the tool's preview."""
+    0.4 mm for the powder coat; nothing under 3 mm).  Sides as in the tool's unfolded picture,
+    which has the face upright: the pedal's right wall is B (top), its rear wall C (left), its
+    front wall E (right), its left wall D (bottom).  The walls fold away from the face, so on C
+    the face is to the right, on E to the left, on B below and on D above.  Returns True if a
+    hole reaches the edge of its side as the tool draws it."""
     rows = holes("tayda")
     half = (H + FLOOR) / 2                           # the tub's outside height, halved
     print(f"== for Tayda's Box Tool: 1590DD, the tub {H + FLOOR:g} mm high outside")
     print("   side  what                          X       Y    drill")
+    bad = False
     for wall, what, a, b, dia in rows:
         side = SIDES[wall]
         if side == "A":
-            x, y = a, b
-        elif side == "B":
-            x, y = a, b - half
-        elif side == "D":
-            x, y = a, half - b
+            x, y = -b, a
+        elif side == "C":
+            x, y = half - b, a
         elif side == "E":
             x, y = b - half, a
+        elif side == "B":
+            x, y = -a, b - half
         else:
-            x, y = half - b, a
-        size = f"{99 + COAT:g} x {59 + COAT:g} rectangle, corners 0.5" if dia == "rectangle" \
-            else f"{float(dia) + COAT:.1f}"
-        print(f"   {side}     {what:24s} {x:7.1f} {y:7.1f}    {size}")
+            x, y = -a, half - b
+        if dia == "rectangle":
+            w, h = 59 + COAT, 99 + COAT
+            size = f"rectangle {w:g} wide, {h:g} high"
+        else:
+            w = h = float(dia) + COAT
+            size = f"{w:.1f}"
+        sw, sh = TAYDA_SIDE[side]
+        edge = min(sw / 2 - abs(x) - w / 2, sh / 2 - abs(y) - h / 2)
+        note = ""
+        if edge <= 0:
+            bad, note = True, "   OVER THE EDGE OF ITS SIDE"
+        elif edge < 2:
+            note = f"   {edge:.1f} mm from the side's edge"
+        print(f"   {side}     {what:24s} {x:7.1f} {y:7.1f}    {size}{note}")
+    return bad
 
 
 def report(name):
@@ -352,8 +372,7 @@ def report(name):
 def main():
     args = sys.argv[1:]
     if args and args[0] == "--tayda":
-        tayda()
-        return 0
+        return int(tayda())
     if args and args[0] == "--holes":
         for name in args[1:] or ["hammond"]:
             holes(name)

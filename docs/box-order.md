@@ -33,7 +33,7 @@ About $25 before postage and VAT.
 - Tayda's rules, from those guides: millimetres from the centre of each side's full outside, X
   to the right and Y up; no hole under 3 mm; **add 0.4 mm to every diameter for a powder-coated
   case** (they drill before coating); ±0.5 mm on the face and ±1 mm on the sides; rectangles
-  with corners down to 0.5 mm radius, which is the screen's window.
+  (the tool's Shapes tab), which is the screen's window.
 - No printing on this one: there is no artwork yet. Coated, though, in any colour: the finished
   pedal will be, and whether a socket or a lamp fits its hole depends on the coat. If a bare
   case is ordered instead, take the 0.4 mm back off every diameter.
@@ -41,47 +41,56 @@ About $25 before postage and VAT.
 
 The table is `python3 enclosure/src/box_layout.py --tayda`, for Tayda's own case (its drawing
 A-5141; Hammond's differs by a millimetre or so in places): 31 round holes and the window,
-diameters already with the 0.4 mm added. If the model changes, print it again. Side A is the
-face seen from above with the rear wall at the top, B the rear wall, D the front wall, E the
-right wall. **The signs on B, D and E are read from Tayda's unfolded picture, not tried in the
-tool: check each side in its preview.** The sockets' holes on B belong nearer the lid's edge
-than the face's, and the fan's seven holes on D sit about the middle of the wall's height.
+diameters already with the 0.4 mm added. If the model changes, print it again.
+
+**Tayda's tool draws the 1590DD upright**, the face 117 mm wide and 185 mm high (seen in the
+tool itself on 2026-11-16; the table before that date had the pedal on its side, and was
+wrong). So the pedal is turned a quarter turn anticlockwise to fit: side A is the face with
+the pedal's right-hand end at the top, **B the pedal's right wall** (the mic), **C its rear
+wall** (the sockets), **E its front wall** (the fan), D its left wall (nothing). The walls
+are drawn folded out flat from the face, so on C the face is to the right and the lid's edge
+to the left, and on E the other way round. In the tool's picture the sockets on C belong
+nearer the picture's left edge, the fan's seven holes on E about the middle, and the screen's
+window in the lower left of the face.
+
+One hole is close to an edge: the USB-C socket's, 1.4 mm from the tub's rim as drilled.
+Tayda's ±1 mm on the walls could leave that strip under a millimetre wide.
 
 ```
 == for Tayda's Box Tool: 1590DD, the tub 33 mm high outside
    side  what                          X       Y    drill
-   A     screen window, 99 x 59     -29.8    16.2    99.4 x 59.4 rectangle, corners 0.5
-   A     encoder                     41.8    24.8    7.6
-   A     button 1                    35.8    -0.2    7.9
-   A     button 2                    51.8    -0.2    7.9
-   A     lamp 1                      35.8    -9.2    3.7
-   A     lamp 2                      51.8    -9.2    3.7
-   A     footswitch 1               -69.0   -25.8    12.4
-   A     footswitch 2                 0.0   -25.8    12.4
-   A     footswitch 3                69.0   -25.8    12.4
-   B     USB-C power                -49.2     9.9    10.4
-   B     MIDI in                    -13.2     8.6    6.9
-   B     out                         35.8     5.0    11.8
-   B     EXT FS                      54.4     5.0    11.8
-   B     guitar in                   73.2     5.0    11.8
-   B     air in                     -39.2     3.1    4.9
-   B     air in                     -32.2     3.1    4.9
-   B     air in                     -25.2     3.1    4.9
-   B     air in                     -35.8     8.6    4.9
-   B     air in                     -28.8     8.6    4.9
-   B     air in                     -21.8     8.6    4.9
-   D     air out (fan)              -31.2     0.5    5.9
-   D     air out (fan)              -23.8     0.5    5.9
-   D     air out (fan)              -27.5     7.0    5.9
-   D     air out (fan)              -35.0     7.0    5.9
-   D     air out (fan)              -38.8     0.5    5.9
-   D     air out (fan)              -35.0    -6.0    5.9
-   D     air out (fan)              -27.5    -6.0    5.9
-   D     fan screw                  -21.2    10.5    3.4
-   D     fan screw                  -41.2    -9.5    3.4
-   E     mic                          0.0     7.8    22.4
-   E     mic screw                   -9.9    17.6    3.6
-   E     mic screw                    9.9    -2.2    3.6
+   A     screen window, 99 x 59     -16.2   -29.8    rectangle 59.4 wide, 99.4 high
+   A     encoder                    -24.8    41.8    7.6
+   A     button 1                     0.2    35.8    7.9
+   A     button 2                     0.2    51.8    7.9
+   A     lamp 1                       9.2    35.8    3.7
+   A     lamp 2                       9.2    51.8    3.7
+   A     footswitch 1                25.8   -69.0    12.4
+   A     footswitch 2                25.8     0.0    12.4
+   A     footswitch 3                25.8    69.0    12.4
+   C     USB-C power                 -9.9   -49.2    10.4   1.4 mm from the side's edge
+   C     MIDI in                     -8.6   -13.2    6.9
+   C     out                         -5.0    35.8    11.8
+   C     EXT FS                      -5.0    54.4    11.8
+   C     guitar in                   -5.0    73.2    11.8
+   C     air in                      -3.1   -39.2    4.9
+   C     air in                      -3.1   -32.2    4.9
+   C     air in                      -3.1   -25.2    4.9
+   C     air in                      -8.6   -35.8    4.9
+   C     air in                      -8.6   -28.8    4.9
+   C     air in                      -8.6   -21.8    4.9
+   E     air out (fan)               -0.5   -31.2    5.9
+   E     air out (fan)               -0.5   -23.8    5.9
+   E     air out (fan)               -7.0   -27.5    5.9
+   E     air out (fan)               -7.0   -35.0    5.9
+   E     air out (fan)               -0.5   -38.8    5.9
+   E     air out (fan)                6.0   -35.0    5.9
+   E     air out (fan)                6.0   -27.5    5.9
+   E     fan screw                  -10.5   -21.2    3.4
+   E     fan screw                    9.5   -41.2    3.4
+   B     mic                         -7.8     0.0    22.4
+   B     mic screw                  -17.6    -9.9    3.6
+   B     mic screw                    2.2     9.9    3.6
 ```
 
 ## 3. Anywhere: the fan
