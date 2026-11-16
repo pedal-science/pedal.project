@@ -1441,8 +1441,9 @@ both reverted (USB timeout matters only when USB boot is attempted).
 ext4 in makes `sdhci-brcmstb` probe at 1.3 s before the RP1/PCIe resources exist, so the SD card
 never appears and the board falls back to the stock kernel. The initrd is what loads that driver
 late enough to work. A hand-built 1 MB BusyBox initramfs already cut `Starting OS` 8.05 → 7.09 s
-but did not mount root; the minimal-initramfs route (storage modules + a correct `/init`) is the
-remaining direction. See [bench-results/2026-11-15-boot-noinitrd-vip/](bench-results/2026-11-15-boot-noinitrd-vip/).
+but did not mount root: its `/init` ran and loaded modules, yet `sdhci-brcmstb` still failed with
+`invalid resource` and no `/dev/mmcblk*` appeared. The minimal-initramfs route now needs the same
+driver-probe environment dracut provides, not just a smaller cpio. See [bench-results/2026-11-15-boot-noinitrd-vip/](bench-results/2026-11-15-boot-noinitrd-vip/).
 
 The realistic
 best case after software work (faster boot medium/EEPROM settings, no initramfs, start rigpa

@@ -35,10 +35,14 @@ with its normal initrd). The same driver loaded from the initrd works because dr
 after RP1/PCIe are up.
 
 A hand-built 1.1 MB BusyBox initramfs cut the firmware's initrd read enough for
-`Starting OS 7093 ms` (vs 8.05 s), but it never mounted the root; the custom `/init` was not
-reached reliably and the attempt was abandoned. (A separate empty-initrd trial also failed; the
-kernel does not fall back to the root filesystem when an initramfs is present but has no
-`/init`.)
+`Starting OS 7093–7862 ms` (vs 8.05 s). With the correct tryboot reboot
+(`systemctl reboot "--reboot-argument=0 tryboot"`, not a plain reboot) its `/init` did run — the
+Debug Probe on piv showed `MI start`, `MI wait done`, `load mmc_block ... rc=0`, then
+`dev 100` and `/dev/mmcblk*: No such file`: `sdhci-brcmstb` still fails with
+`error -EINVAL: invalid resource (null)` and no block device appears. The board fell back to b.
+The custom cpio/init path works; the difference is dracut's module load/probe environment, not
+the archive format. (An empty-initrd trial also failed; the kernel does not fall back to the root
+filesystem when an initramfs is present but has no `/init`.)
 
 ## Conclusion
 
