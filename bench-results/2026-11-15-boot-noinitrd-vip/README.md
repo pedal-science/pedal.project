@@ -58,3 +58,27 @@ filesystem when an initramfs is present but has no `/init`.)
 
 The candidate was removed from the root, the original 21 MB initrd is back, and slot b is the
 running/default slot. EEPROM/quiet/early-rigpa changes are unchanged.
+
+### Final minimal-initrd attempt
+
+Loading the modules in dependency order (`rpmb-core`, `mmc_block`, `cqhci`, `sdhci-brcmstb`) made
+every `insmod` return 0, but the initramfs still saw no `/dev/mmcblk*` after 10 s:
+
+```
+MI start
+load rpmb-core    rc=0
+load mmc_block    rc=0
+load cqhci        rc=0
+load sdhci-brcmstb rc=0
+dev 100
+ls: /dev/mmcblk*: No such file or directory
+```
+
+The stock boot shows both `mmc0` (`1000fff000.mmc`, the card) and `mmc1` (`1001100000.mmc`,
+SDIO) bound to `sdhci-brcmstb`; the card is `mmcblk0` with `p1..p6`. The module loads in the
+minimal init but the card host/block device does not appear, so this is the dracut
+environment/ordering (udev/systemd-udevd, module autoload and device probe) — not the cpio or the
+`/init` script. The trial hung before validation and needed a power cycle; the board recovered on
+slot b.
+
+This ends the hand-built initramfs route unless dracut's init environment is reproduced.
