@@ -9,6 +9,7 @@ the smallest clearances, and draws a plan and a section.
     python3 enclosure/src/box_layout.py            # check every case, write the SVG
     python3 enclosure/src/box_layout.py hammond    # one case, and draw that one
     python3 enclosure/src/box_layout.py --holes hammond tayda    # the hole table
+    python3 enclosure/src/box_layout.py --tayda                  # the same, as Tayda's Box Tool takes it
     rsvg-convert -w 1700 docs/diagrams/box-layout.svg -o docs/diagrams/box-layout.png
 
 "1590DD" is not one case.  Hammond's and Tayda's differ in depth, wall, width and pillars, so
@@ -45,6 +46,18 @@ NEUTRIK_MAX_PANEL = 3.0            # NCJ6FA-H, drawing 20004521
 JACKS = (("out socket", 125.0), ("EXT FS socket", 143.7), ("guitar in socket", 162.4))
 USBC_X, MIDI_X, MIC_Y = 40.0, 76.0, 47.0
 ENCODER, BUTTONS = (131.1, 30.0), ((125.0, 55.0), (141.0, 55.0))
+LAMPS = ((125.0, 64.0), (141.0, 64.0))    # one in front of each button (the owner, 2026-11-16)
+# The fan (the owner, 2026-11-16: assume one is needed).  25 x 25 x 10 mm, standing against the
+# front wall between footswitches 1 and 2, in line with the processor, blowing out.  Its centre
+# is 13.5 mm below the inside of the face: 1 mm under the face, 0.5 mm over Tayda's 4 mm lid rim.  The air comes
+# in through the rear wall, into the 11 mm between the Pi and the Pi board.
+FAN_X, FAN_BELOW_FACE, FAN = 58.0, 13.5, (25.0, 10.0)
+FAN_VENTS = [(0.0, 0.0)] + [(7.5 * c, 7.5 * s) for c, s in
+                           ((1, 0), (.5, .866), (-.5, .866), (-1, 0), (-.5, -.866), (.5, -.866))]
+FAN_SCREWS = ((10.0, 10.0), (-10.0, -10.0))          # two of the fan's four holes, 20 mm apart
+# Air in: two staggered rows of three between the USB-C and MIDI sockets, in the height of the
+# gap between the Pi and the Pi board.  (x, mm above the Pi board's top); 6.5 mm between centres.
+INTAKE = ((50.0, 8.5), (57.0, 8.5), (64.0, 8.5), (53.5, 3.0), (60.5, 3.0), (67.5, 3.0))
 FLOOR = 2.5                        # the face's thickness, both makers
 
 W = D = H = CX = 0.0
@@ -136,8 +149,13 @@ def build(name):
     # front of it (the owner, 2026-11-14).  The board starts behind the rear sockets and
     # stops short of the mic socket, so nothing of it is above either.  Positions are a
     # proposal: encoder at (131.1, 30), buttons at (125, 55) and (141, 55).
-    part("control board and its parts", 115.5, 152.5, 21.5, 66.0, H - 10.5, H, "control",
+    part("control board and its parts", 115.5, 152.5, 21.5, 68.5, H - 10.5, H, "control",
          "#f6dfb4", "board 7 mm below the face; pin ends 1.9 mm below it")
+
+    # --- the fan ------------------------------------------------------------------------
+    fz = H - FAN_BELOW_FACE
+    part("fan", FAN_X - FAN[0] / 2, FAN_X + FAN[0] / 2, D - FAN[1], D, fz - FAN[0] / 2,
+         fz + FAN[0] / 2, "fan", "#cfe8f5", "25 x 25 x 10 mm, on the front wall, blowing out")
 
 
 # Pairs that are meant to touch or pass through each other.
@@ -199,7 +217,8 @@ def svg():
          f'(rear wall at top), and a section at x = 160 looking from the right</text>',
          f'<rect x="{ox}" y="{oy}" width="{n(W * S)}" height="{n(D * S)}" rx="8" fill="none" '
          f'stroke="#333" stroke-width="1.5"/>']
-    order = {"case": 0, "piboard": 1, "audio": 1, "heat": 2, "pi": 3, "fs": 4, "control": 5}
+    order = {"case": 0, "piboard": 1, "audio": 1, "heat": 2, "pi": 3, "fs": 4, "control": 5,
+             "fan": 4}
     for p in sorted(PARTS, key=lambda q: (order[q["group"]], q["z"][0])):
         x0, x1 = p["x"]
         y0, y1 = p["y"]
@@ -213,7 +232,7 @@ def svg():
     labels = [("Pi 5 on the screen", 70, 30), ("Pi board", 22, 62), ("heat block", 59, 34),
               ("USB-C", 40, -1.5), ("MIDI", 76, -1.5), ("out", 125, -1.5), ("EXT FS", 143.7, -1.5),
               ("in", 162.4, -1.5), ("mic", 166, 48), ("audio board", 140, 98),
-              ("encoder", 131, 31), ("B1  B2", 133, 56), ("FS1", 24, 82), ("FS2", 93, 82), ("FS3", 162, 82), ("USB, Ethernet", 103.5, 40)]
+              ("encoder", 131, 31), ("B1  B2", 133, 56), ("fan", 58, 97), ("FS1", 24, 82), ("FS2", 93, 82), ("FS3", 162, 82), ("USB, Ethernet", 103.5, 40)]
     for s, lx, ly in labels:
         o.append(f'<text x="{n(ox + lx * S)}" y="{n(oy + ly * S)}" font-size="12" '
                  f'text-anchor="middle" fill="#111">{s}</text>')
@@ -249,22 +268,63 @@ def holes(name):
             ("face", "encoder", ENCODER[0] - CX, D / 2 - ENCODER[1], "7.2")]
     rows += [("face", f"button {i + 1}", bx - CX, D / 2 - by, "7.5")
              for i, (bx, by) in enumerate(BUTTONS)]
+    rows += [("face", f"lamp {i + 1}", lx - CX, D / 2 - ly, "3.3")
+             for i, (lx, ly) in enumerate(LAMPS)]
     rows += [("face", f"footswitch {i + 1}", fx - CX, D / 2 - (D - 29), "12")
              for i, fx in enumerate((CX - 69, CX, CX + 69))]
     rows += [("rear wall", "USB-C power", USBC_X - CX, below(pb_top + 1.65), "10"),
              ("rear wall", "MIDI in", MIDI_X - CX, below(pb_top + 3.0), "6.5")]
     rows += [("rear wall", jn.replace(" socket", ""), jx - CX, below(4.0 + 7.53), "11.4")
              for jn, jx in JACKS]
+    rows += [("rear wall", "air in", ix - CX, below(pb_top + dz), "4.5") for ix, dz in INTAKE]
+    fz = H - FAN_BELOW_FACE
+    rows += [("front wall", "air out (fan)", FAN_X + dx - CX, below(fz + dz), "5.5")
+             for dx, dz in FAN_VENTS]
+    rows += [("front wall", "fan screw", FAN_X + dx - CX, below(fz + dz), "3.0")
+             for dx, dz in FAN_SCREWS]
     rows += [("right wall", "mic", D / 2 - MIC_Y, below(4.0 + 12.5), "22"),
              ("right wall", "mic screw", D / 2 - MIC_Y + 9.9, below(4.0 + 12.5 + 9.9), "3.2"),
              ("right wall", "mic screw", D / 2 - MIC_Y - 9.9, below(4.0 + 12.5 - 9.9), "3.2")]
     print(f"== holes, {name} ({CASE['source']})")
     print("   face: mm right of centre, mm toward the rear of centre, seen from above")
-    print("   walls: mm along the wall from its centre (rear wall: toward the player's right;"
-          " right wall: toward the rear), mm below the outside of the face")
+    print("   walls: mm along the wall from its centre (rear and front walls: toward the player's"
+          " right; right wall: toward the rear), mm below the outside of the face")
     for wall, what, a, b, dia in rows:
         print(f"   {wall:10s} {what:22s} {a:7.1f} {b:7.1f}   {dia}")
+    print(f"   {len(rows) - 1} round holes and the window")
     return rows
+
+
+COAT = 0.4        # Tayda: add 0.4 mm to every diameter when the case is powder-coated
+SIDES = {"face": "A", "rear wall": "B", "front wall": "D", "left wall": "C", "right wall": "E"}
+
+
+def tayda():
+    """The holes as Tayda's Box Tool takes them: per side, X and Y in mm from the centre of that
+    side's full outside, X to the right and Y up, and the diameter to drill (finished size plus
+    0.4 mm for the powder coat; nothing under 3 mm).  Sides as in Tayda's unfolded picture with
+    the rear wall at the top: A the face, B the rear wall, D the front wall, C left, E right.
+    On B, up is away from the face; on D, up is toward it; on C and E, across is the depth.
+    The signs on B to E are read from Tayda's picture, so check each side in the tool's preview."""
+    rows = holes("tayda")
+    half = (H + FLOOR) / 2                           # the tub's outside height, halved
+    print(f"== for Tayda's Box Tool: 1590DD, the tub {H + FLOOR:g} mm high outside")
+    print("   side  what                          X       Y    drill")
+    for wall, what, a, b, dia in rows:
+        side = SIDES[wall]
+        if side == "A":
+            x, y = a, b
+        elif side == "B":
+            x, y = a, b - half
+        elif side == "D":
+            x, y = a, half - b
+        elif side == "E":
+            x, y = b - half, a
+        else:
+            x, y = half - b, a
+        size = f"{99 + COAT:g} x {59 + COAT:g} rectangle, corners 0.5" if dia == "rectangle" \
+            else f"{float(dia) + COAT:.1f}"
+        print(f"   {side}     {what:24s} {x:7.1f} {y:7.1f}    {size}")
 
 
 def report(name):
@@ -291,6 +351,9 @@ def report(name):
 
 def main():
     args = sys.argv[1:]
+    if args and args[0] == "--tayda":
+        tayda()
+        return 0
     if args and args[0] == "--holes":
         for name in args[1:] or ["hammond"]:
             holes(name)

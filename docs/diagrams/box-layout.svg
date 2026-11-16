@@ -22,10 +22,11 @@
 <rect x="190" y="85" width="190" height="45" fill="#8f88d8" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="160" y="90" width="425" height="280" fill="#c9c4ee" stroke="#444" stroke-width="0.7" fill-opacity="0.35"/>
 <rect x="80" y="85" width="495" height="295" fill="#e3e0f7" stroke="#444" stroke-width="0.7" fill-opacity="0.35"/>
+<rect x="257.5" y="537.5" width="125" height="50" fill="#cfe8f5" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="76.25" y="410" width="148.5" height="65" fill="#e8e4d6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="421.25" y="410" width="148.5" height="65" fill="#e8e4d6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
 <rect x="766.25" y="410" width="148.5" height="65" fill="#e8e4d6" stroke="#444" stroke-width="0.7" fill-opacity="0.8"/>
-<rect x="607.5" y="147.5" width="185" height="222.5" fill="#f6dfb4" stroke="#444" stroke-width="0.7" stroke-dasharray="6 4" fill-opacity="0.25"/>
+<rect x="607.5" y="147.5" width="185" height="235" fill="#f6dfb4" stroke="#444" stroke-width="0.7" stroke-dasharray="6 4" fill-opacity="0.25"/>
 <text x="380" y="190" font-size="12" text-anchor="middle" fill="#111">Pi 5 on the screen</text>
 <text x="140" y="350" font-size="12" text-anchor="middle" fill="#111">Pi board</text>
 <text x="325" y="210" font-size="12" text-anchor="middle" fill="#111">heat block</text>
@@ -38,6 +39,7 @@
 <text x="730" y="530" font-size="12" text-anchor="middle" fill="#111">audio board</text>
 <text x="685" y="195" font-size="12" text-anchor="middle" fill="#111">encoder</text>
 <text x="695" y="320" font-size="12" text-anchor="middle" fill="#111">B1  B2</text>
+<text x="320" y="525" font-size="12" text-anchor="middle" fill="#111">fan</text>
 <text x="150" y="450" font-size="12" text-anchor="middle" fill="#111">FS1</text>
 <text x="495" y="450" font-size="12" text-anchor="middle" fill="#111">FS2</text>
 <text x="840" y="450" font-size="12" text-anchor="middle" fill="#111">FS3</text>
