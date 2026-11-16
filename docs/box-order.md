@@ -34,13 +34,18 @@ About $25 before postage and VAT.
   to the right and Y up; no hole under 3 mm; **add 0.4 mm to every diameter for a powder-coated
   case** (they drill before coating); ±0.5 mm on the face and ±1 mm on the sides; rectangles
   with corners down to 0.5 mm radius, which is the screen's window.
-- No printing on this one: there is no artwork yet.
+- No printing on this one: there is no artwork yet. Coated, though, in any colour: the finished
+  pedal will be, and whether a socket or a lamp fits its hole depends on the coat. If a bare
+  case is ordered instead, take the 0.4 mm back off every diameter.
+- About $15 to $21 for the case and its drilling, before postage.
 
-The table is `python3 enclosure/src/box_layout.py --tayda`: 31 round holes and the window,
-diameters already with the 0.4 mm added. Side A is the face seen from above with the rear wall at
-the top, B the rear wall, D the front wall, E the right wall. **The signs on B, D and E are read
-from Tayda's unfolded picture, not tried in the tool: check each side in its preview** (the
-sockets' holes on B belong near the lid's edge, the fan's on D, the mic's on E).
+The table is `python3 enclosure/src/box_layout.py --tayda`, for Tayda's own case (its drawing
+A-5141; Hammond's differs by a millimetre or so in places): 31 round holes and the window,
+diameters already with the 0.4 mm added. If the model changes, print it again. Side A is the
+face seen from above with the rear wall at the top, B the rear wall, D the front wall, E the
+right wall. **The signs on B, D and E are read from Tayda's unfolded picture, not tried in the
+tool: check each side in its preview.** The sockets' holes on B belong nearer the lid's edge
+than the face's, and the fan's seven holes on D sit about the middle of the wall's height.
 
 ```
 == for Tayda's Box Tool: 1590DD, the tub 33 mm high outside

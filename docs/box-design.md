@@ -359,7 +359,7 @@ parts are to hand, because it says whether the block is worth fitting alongside 
 
 | Route | What it does | Minimum | Fits? |
 |---|---|---|---|
-| **Tayda's drill and print service** | Drills a stock 1590DD on the face and the walls from a hole table (up to 40 holes an order), powder-coats, UV-prints the legends | One | Round holes, yes. The screen's window is reported by builders as a "line cut" in its template tool; unconfirmed, so one test case is ordered first |
+| **Tayda's drill and print service** | Drills a stock 1590DD on the face and the walls from a hole table (up to 40 holes an order), powder-coats, UV-prints the legends | One | Round holes of 3 mm and up, yes. The screen's window too: Tayda's ordering guide says it cuts rectangles with corners down to 0.5 mm radius. It holds ±0.5 mm on the face and ±1 mm on the walls, and asks for 0.4 mm more on every diameter under a powder coat, so one test case is ordered first |
 | **CNC from our own model** (JLCCNC, PCBWay) | Mills a 1590DD-shaped tub and base from solid | A few | Anything, including bosses for the boards and the heat block as part of the base. Priced by quote from a CAD file; expect several times a drilled Hammond |
 | **Hammond's own modification service** (through DigiKey) | Holes, cut-outs, tapping, printing on their enclosures | 25 | Later, if this is ever made in numbers |
 
@@ -456,7 +456,8 @@ The parts that set the case's holes, each from its maker's drawing and found at 
 | MIDI in | XKB PJ-324M0: 3.5 mm stereo, board-mounted, lying flat, an M6 threaded nose 3.55 mm long with a nut. 11.5 × 6.45 mm, 10.7 mm behind the wall, axis 3.0 mm above the board | C2884986 | 1,316 | $0.55 | ⌀6.5 mm |
 | USB-C power | SHOU HAN TYPE-C 16PIN L8.35: 16 contacts, four through-hole legs, 8.94 × 3.26 mm and 8.35 mm long, so its mouth reaches about 2 mm into the wall | C5379909 | 14,835 | $0.16 | ⌀10 mm, round |
 | The Pi's 40-pin socket | ZHOURI 2.54-2*20: 2 × 20, 8.5 mm high | C2977589 | 37,783 | $0.32 | none |
-| The two buttons | Kinghelm KH-12X12X12H-TJ: a 12 × 12 mm switch, its ⌀6.5 mm round stem 12 mm above the board, so 2.5 mm proud of the face. Not lit | C18186459 | 4,819 | $0.06 | ⌀7.5 mm |
+| The two buttons | Kinghelm KH-12X12X12H-TJ: a 12 × 12 mm switch, its ⌀6.5 mm round stem 12 mm above the board, so 2.5 mm proud of the face. Not lit itself: a lamp stands in front of it | C18186459 | 4,819 | $0.06 | ⌀7.5 mm |
+| The two lamps (2026-11-16) | Everlight 204-10SURD/S530-A3: a 3 mm red lamp, frosted, 2.0 V. Lens 3.0 mm, flange 4.0 mm and 1.0 mm thick, 4.2 mm of lens above the flange, so with its flange under the 2.5 mm face it stands 1.7 mm proud | C99772 | 35,965 | $0.04 | ⌀3.3 mm |
 | Encoder | Bourns PEC11R-4215F-S0024: 24 detents, 24 pulses, push switch, 15 mm flatted shaft, M7 threaded bush with its nut and washer. Body 12.5 × 13.4 mm, about 7 mm behind the face | C143790 | 4,186 | $2.33 | ⌀7.2 mm |
 | The two flat cables' sockets (four) | JUSHUO AFA07-S16FCC-00: 16-way, 1.0 mm pitch, 2.5 mm high, slide lock, for bought 16-way flat cables | C13744 | 19,214 | $0.11 | none |
 | Footswitch leads, on the Pi board | JST S2B-XH-A, side entry, 6.1 mm high, for bought two-wire XH leads | C157931 | 66,327 | $0.07 | none |
@@ -475,10 +476,16 @@ out of its back), so it was the wrong kind for a rear wall; the PJ-324M0 lies fl
 3.55 mm long, which leaves a nut only a millimetre of thread through a 2.5 mm wall. It may be
 left without its nut, the nose sitting in the hole.
 
-Still to choose: **how the buttons are lit.** Lit switches tall enough to reach through the face
-are stocked in tens at LCSC (E-Switch's TL1265, ROCPU's TPB02). The switch chosen is plain, so
-the light is a separate part on the control board: a small lamp through its own ⌀3 mm hole beside
-each button is the simple way. Tried with a sample in the test case.
+**How the buttons are lit: a lamp in front of each** (the owner, 2026-11-16). Lit switches tall
+enough to reach through the face are stocked only in tens at LCSC (E-Switch's TL1265, ROCPU's
+TPB02), and the switch chosen is plain, so the light is a separate part on the control board, 9 mm
+in front of its button, through its own ⌀3.3 mm hole. It is soldered with the board already in
+the case and the lamp pushed up into its hole, so its flange rests under the face and its height
+sets itself (pedal-codec, control-board.md, Decided 5 and 6). Red, because it is fed from 3.3 V.
+Still tried with a sample in the test case: the fit of the hole once coated, and the brightness.
+
+The fan is not a board part and has no LCSC number: 25 × 25 × 10 mm, 5 V, two wires, with an
+XH2.54 two-pin plug for the Pi board's J9 ("Heat"; [box-order.md](box-order.md)).
 
 **A risk the test case answers.** The Pi hangs from the screen, the Pi board from the Pi, and the
 Pi board's two sockets must meet their holes in the rear wall. The chain's tolerance may be a
@@ -496,15 +503,24 @@ line, and down from the outside of the face. Centre lines are used because the w
 | Face | Screen window | 30.1 mm left of centre | 17.6 mm toward the rear | 99 × 59 mm rectangle |
 | Face | Encoder | 41.5 mm right | 26.1 mm toward the rear | ⌀7.2 mm |
 | Face | Button 1, button 2 | 35.4 and 51.4 mm right | 1.1 mm toward the rear | ⌀7.5 mm |
+| Face | Lamp 1, lamp 2 | 35.4 and 51.4 mm right | 7.9 mm toward the player | ⌀3.3 mm |
 | Face | Footswitches 1–3 | 69.0 mm left, centre, 69.0 mm right | 27.1 mm toward the player | ⌀12 mm |
 | Rear wall | USB-C power | 49.6 mm left of centre, seen from the player | 26.5 mm below the face | ⌀10 mm |
 | Rear wall | MIDI in | 13.6 mm left | 25.1 mm below | ⌀6.5 mm |
 | Rear wall | Out, EXT FS, guitar in | 35.4, 54.1 and 72.8 mm right | 23.0 mm below | ⌀11.4 mm |
+| Rear wall | Air in, upper three | 39.6, 32.6 and 25.6 mm left | 19.6 mm below | ⌀4.5 mm |
+| Rear wall | Air in, lower three | 36.1, 29.1 and 22.1 mm left | 25.1 mm below | ⌀4.5 mm |
+| Front wall | Air out, behind the fan | One 31.6 mm left of centre, seen from above, and six round it on a 15 mm circle | 16.0 mm below at the centre | ⌀5.5 mm |
+| Front wall | The fan's two screws | 21.6 and 41.6 mm left | 6.0 and 26.0 mm below | ⌀3.0 mm |
 | Right wall | Mic | 9.1 mm toward the rear of centre | 18.0 mm below | ⌀22 mm, and two ⌀3.2 mm screw holes 9.9 mm out on a diagonal (which diagonal, from Neutrik's drawing) |
 
-Fifteen holes and one window. This is a first table for a test case, not a drilling order: the
-sockets hanging from the Pi (USB-C, MIDI) move with the Pi, whose place is from the owner's
-measurements of the prototype.
+Thirty-one round holes and one window, under the 40 that one of Tayda's drill orders covers.
+These are finished sizes. **For Tayda the same holes are printed as its Box Tool takes them** by
+`python3 enclosure/src/box_layout.py --tayda`: per side, from the side's centre, with the 0.4 mm
+Tayda asks for under a powder coat added to each diameter ([box-order.md](box-order.md) has that
+table). This is a first table for a test case: the sockets hanging from the Pi (USB-C, MIDI) and
+the air inlet between them move with the Pi, whose place is from the owner's measurements of the
+prototype.
 
 **Two things the drawings raise, for the test case to answer:**
 
@@ -517,12 +533,29 @@ measurements of the prototype.
 - **Tayda's lid has a rim** that stands about 4 mm up inside the walls (Hammond's is under
   2 mm). The audio board's sockets start 4.0 mm above the base plate, so in Tayda's case the
   board may need to sit half a millimetre higher, which the mic socket's 1.5 mm to spare allows.
+  The fan's foot is 0.5 mm above that rim, so the rim's real height matters to it too.
+- **Tayda's ±1 mm on the walls.** Three ¼″ sockets on one board must meet three holes, and the
+  mic socket a fourth on another wall. Holes drilled in one setting should keep their spacing
+  far better than ±1 mm; the test case shows whether they do.
 
 ## Needed from the owner
 
-- **For the heat test:** the gap between the top of the Pi's heatsink and the base plate, by the
-  Blu-Tack method in "Heat". Then thermal pad of about that thickness, or a piece of aluminium
-  bar and a thinner pad; and vip switched on. The logging is run from a session.
+As of 2026-11-16, in the order they unblock things:
+
+1. **The order for the test case**, in three baskets: [box-order.md](box-order.md). The Tayda
+   one needs an account in its Box Tool and a colour chosen.
+2. **Three measurements on the prototype**, which the model still estimates:
+   - which screen it is (Waveshare's 4.3″ with touch or without), how far its frame reaches past
+     the window on each of the four sides, and how thick it is behind the face;
+   - on the Pi, the centre of the processor's metal lid from the two nearest board edges. It
+     places the Pi board's hole;
+   - the height of the lid's rim inside the walls of the prototype's case.
+3. **When the parts come, two checks with a meter** (pedal-codec, plan.md, phase 4): on an
+   NMJ6HCD2, whether the chrome ferrule is joined to the sleeve contact; on a PJ-324M0 with a
+   plug in it, which terminal is the tip and which the ring.
+4. **Optional, the heat test:** the gap between the top of the Pi's heatsink and the base plate,
+   by the Blu-Tack method in "Heat"; then a thermal pad of about that thickness, or a piece of
+   aluminium bar and a thinner pad; and vip switched on. The logging is run from a session.
 
 ## Plan
 
@@ -531,10 +564,10 @@ case, the firmware and the device configuration are here.
 
 | Step | What | Done when |
 |---|---|---|
-| 1 | **The heat test** on the prototype: block, pad, closed case, an hour's heavy rig, the log in `bench-results/` | Sealed or fan is decided from a number |
-| 2 | **Parts and the mechanical model** (started: `enclosure/src/box_layout.py`). Every socket, switch and connector chosen with its datasheet drawing and its LCSC number; the case, the Pi, the screen and the three boards modelled in `enclosure/` in plan and section; the assembly order walked through in the model | The mic socket's fit, every height and the order of assembly are shown to work, and the model gives the board outlines and the hole table |
-| 3 | **A test case.** One 1590DD drilled, coated and printed from the hole table; dummy boards cut from card or printed, with the real sockets, tried in it | The owner has a made case that everything fits |
-| 4 | **Schematics**: the audio board cut from pedal-codec's phase 2 sheets, the Pi board new, the control board; ngspice for what changed | The owner has reviewed the PDFs |
+| 1 | **The heat test** on the prototype: block, pad, closed case, an hour's heavy rig, the log in `bench-results/`. **No longer waited for** (the owner, 2026-11-16: assume a fan). Still worth doing when the parts are to hand: it says whether the block is worth fitting as well | A number in `bench-results/` |
+| 2 | **Parts and the mechanical model** (started: `enclosure/src/box_layout.py`). With the fan, the vents and the lamps since 2026-11-16; still to do: the three measurements in "Needed from the owner" and the order of assembly. Every socket, switch and connector chosen with its datasheet drawing and its LCSC number; the case, the Pi, the screen and the three boards modelled in `enclosure/` in plan and section; the assembly order walked through in the model | The mic socket's fit, every height and the order of assembly are shown to work, and the model gives the board outlines and the hole table |
+| 3 | **A test case.** One 1590DD drilled and coated from the hole table; dummy boards cut from card or printed, with the real sockets, the lamps and the fan, tried in it. **The order is prepared** ([box-order.md](box-order.md), 2026-11-16); the owner places it | The owner has a made case that everything fits |
+| 4 | **Schematics**: the audio board cut from pedal-codec's phase 2 sheets, the Pi board new, the control board; ngspice for what changed. **Done 2026-11-16**: the owner looked over all three, and the decisions of that day are drawn (pedal-codec, plan.md) | The owner has reviewed the PDFs |
 | 5 | **Layouts**, four layers for the audio board, checked in the model | DRC clean; the owner has reviewed the plots and the boards in the case model |
 | 6 | **Order** the boards, assembled. Agents prepare; the owner orders | Ordered |
 | 7 | **Bring-up**: the boards on the bench, then in the case; the firmware moved to the Pi board's pins; the codec's overlay and configuration in `rtpi` and here | The pedal plays, every control works |
@@ -543,7 +576,10 @@ case, the firmware and the device configuration are here.
 
 ## Sources
 
-- [Tayda: enclosure drill service guide](https://www.taydaelectronics.com/enclosure-drill-service-guide),
+- [Tayda: enclosure drill service guide](https://www.taydaelectronics.com/enclosure-drill-service-guide)
+  (coordinates, the 3 mm minimum, 0.4 mm for the coat, the tolerances),
+  [its ordering guide](https://www.taydaelectronics.com/enclosure-modification-ordering-guide-v1)
+  (the Box Tool, and rectangles with corners down to 0.5 mm),
   [UV printing service](https://m2.taydaelectronics.com/hardware/enclosures/enclosure-uv-printing-service.html)
 - [DigiKey: Hammond custom enclosures](https://www.digikey.com/en/supplier-centers/h/hammond-manufacturing/custom-enclosures) (the 25-piece minimum)
 - [Hammond: 1590DD drawing](https://www.hammfg.com/files/parts/pdf/1590DD.pdf),
@@ -551,6 +587,11 @@ case, the firmware and the device configuration are here.
   and [its listing](https://www.taydaelectronics.com/hardware-tools/enclosures/1590dd-style/1590dd-style-aluminum-diecast-enclosure.html)
 - [Neutrik NMJ6HCD2](https://www.neutrik.com/en/product/nmj6hcd2) and its [drawing](https://www.neutrik.com/media/8582/download/st-nmj6hcd2.PDF?v=3)
 - LCSC's datasheets for the [USB-C socket](https://jlcpcb.com/partdetail/C5379909), the [MIDI socket](https://jlcpcb.com/partdetail/C2884986) and the [button switch](https://jlcpcb.com/partdetail/C18186459)
+- [Everlight's drawing of the 204-10 lamp](https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/559/204-10SDRD%2CS530-A3.pdf)
+  (the 204-10SDRD's sheet: the same package as the lamp chosen)
+- [Waveshare: 4.3″ DSI display](https://www.waveshare.com/product/43h-800480-ips.htm?sku=24773)
+  (the module's size), and the fan's figures from
+  [RS's listing of Sunon's MF25100V2-1000U-A99](https://uk.rs-online.com/web/p/axial-fans/2884890)
 - [Bourns PEC11R datasheet](https://www.bourns.com/docs/product-datasheets/pec11r.pdf),
   [Alps EC11E15244G1](https://tech.alpsalpine.com/e/products/detail/EC11E15244G1/)
 - [JLCCNC: enclosure machining guide](https://jlccnc.com/blog/cnc-enclosure-guide)
