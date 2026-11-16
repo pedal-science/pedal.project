@@ -1427,6 +1427,12 @@ was measured and made no difference; reverted. See
 **Also kept:** `quiet loglevel=3 systemd.show_status=0` (kernel 2.43 s → 0.41 s; ~1.9 s), with
 the serial console kept (≈0.5 s versus `console=tty1` only) for debug.
 
+**Promoted to vip's default (2026-11-16):** `devices/vip/image.lock` now pins the commits carrying
+these wins — rtpi `ed4e163` (quiet cmdline), rigpa `aeb4a40` (`After=basic.target`) and pedal
+`654c3ec` (the 5 s DSI-connector wait in the rigpa drop-in) — so a rebuilt vip card includes them.
+The running board already has all three, the safe EEPROM config, and both kernel slots good
+(default slot b).
+
 **Also kept:** a config-only EEPROM update on the matching 2026-09-25 bootloader image with the
 original boot order kept: `BOOT_ORDER=0xf461`, `NET_INSTALL_AT_POWER_ON=0`, `NET_INSTALL_ENABLED=0`,
 `BOOT_UART=1`. It removes a **4.8 s** cold-boot network-install wait (`Starting OS` 12.98 s →
