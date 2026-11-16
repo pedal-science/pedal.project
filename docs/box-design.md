@@ -219,6 +219,12 @@ decision and the bought extension lead, which is also a plug-in part. The owner 
 The analogue supplies stay as pedal-codec's design has them: from the 5 V through a load switch,
 filter and low-noise regulators, on the audio board.
 
+Feeding the Pi through its header makes the Pi board a **Power HAT+** in Raspberry Pi's HAT+
+specification, which requires it to pass current one way only and to survive the Pi's own supply
+being plugged in as well. The Pi board does that with an eFuse (TI's TPS259470A) between the
+socket and the Pi's 5 V, which also limits the current and slows the rise at plug-in, and its
+overlay tells the Pi it may draw 3 A (pedal-codec, pi-board.md, decided 2026-11-16).
+
 ## Which 1590DD
 
 "1590DD" is two different cases, from the makers' own drawings:
