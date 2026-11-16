@@ -116,7 +116,62 @@ Not on the cable: whether a plug is in the guitar socket (the codec reads the so
 its GPIO2, and the Pi reads the codec over I2C), and the codec's interrupt (a test point).
 
 The audio board has 33 Ω in series with each of the four I2S lines at the codec. The Pi board
-should have its own at the header on the three the Pi drives, since they now cross a cable.
+has its own at the header on the three the Pi drives (BCLK, FSYNC, I2S_FROM_PI), since they now
+cross a cable.
+
+### The control link's pin order
+
+Decided 2026-11-16, when the Pi board's and the control board's schematics were drawn
+(`pedal-codec/hardware/pi-board/` J4, `pedal-codec/hardware/control-board/` J1). Pin numbers are
+the control board's socket's; which end of the Pi board's socket meets them is settled at layout,
+as for the link above.
+
+| Pin | Net | What it is |
+|---|---|---|
+| 1, 3, 5, 7, 9, 11, 15 | GND | A ground beside every signal |
+| 2 | ENC_A | The encoder's A, to the RP2350's GPIO 2 |
+| 4 | ENC_B | Its B, GPIO 3 |
+| 6 | ENC_SW | Its push, GPIO 4 |
+| 8 | BTN1 | Button 1, GPIO 6 |
+| 10 | BTN2 | Button 2, GPIO 7 |
+| 12 | LED1_OUT | Button 1's light, from GPIO 15 through 330 Ω on the Pi board. Not connected on the control board until the light is chosen |
+| 13 | LED2_OUT | Button 2's light, from GPIO 16, the same |
+| 14 | | Spare, not connected |
+| 16 | VDD | The RP2350's 3.3 V, for the control board's pull-ups |
+
+The pull-ups and filters are on the control board, at the switches (A and B as Bourns draws them:
+10 kΩ up, 10 kΩ in series, 10 nF; the pushes 10 kΩ up, 1 kΩ, 100 nF), so the lines are already
+slow when they reach the cable. Mirrored, VDD (16) meets a ground (1); the RP2350's regulator
+limits its current and shuts down when hot.
+
+### The RP2350's pins
+
+Decided 2026-11-16 with the Pi board's schematic. The firmware follows this table when it moves
+to the Pi board (Plan, step 7); the footswitches and the link to the Pi keep the pins they have
+on the Pico today (`firmware/src/footswitch.c`, `main.c`).
+
+| GPIO | Net | What it is |
+|---|---|---|
+| 0 | MCU_TX | UART0 TX, to the Pi's GPIO 15 (RXD, header pin 10) through 1 kΩ |
+| 1 | MCU_RX | UART0 RX, from the Pi's GPIO 14 (TXD, pin 8) through 1 kΩ |
+| 2, 3 | ENC_A, ENC_B | The encoder |
+| 4 | ENC_SW | The encoder's push |
+| 5 | MIDI_RX | UART1 RX, from the MIDI optocoupler (H11L1); idle high |
+| 6, 7 | BTN1, BTN2 | The two buttons |
+| 8, 9 | FSX_A, FSX_B | EXT FS tip and ring, from the audio board; pulled up on the Pi board |
+| 10, 11, 12 | FS2, FS3, FS1 | The three footswitches, on JST XH plugs, pulled up, with 1 kΩ and 100 nF |
+| 13 | RELAY | Both bypass relays, high = effect; not before 10 s after the Pi's 3.3 V comes up |
+| 14 | PI_3V3_SENSE | High while the Pi's 3.3 V is up (10 kΩ from it, 100 kΩ down) |
+| 15, 16 | LED1, LED2 | The buttons' lights, through 330 Ω |
+| 17–29 | | Free |
+
+From the Pi to the RP2350: GPIO 23 (header pin 16) holds it in reset while high, through a 2N7002
+on its RUN pin; GPIO 24 and 25 (pins 18 and 22) are its SWDIO and SWCLK, through 330 Ω, so the Pi
+programs it with no debug probe. Its USB and BOOTSEL are on test pads, for recovery only.
+
+The RP2350 runs whenever the 5 V is up; the Pi's 3.3 V is off in standby. Every line between
+them goes through a resistor, and the firmware keeps MCU_TX an input while GPIO 14 is low, so a
+Pi in standby is not back-powered (HAT+).
 
 ### Heights
 
