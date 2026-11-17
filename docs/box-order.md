@@ -21,7 +21,7 @@ LCSC's basket shows today's, and its minimum for a part may be more than the num
 
 About $25 before postage and VAT.
 
-## 2. Tayda: the case, drilled
+## 2. Tayda: the case, drilled (ordered 2026-11-17)
 
 - The case: **1590DD Style Aluminum Diecast Enclosure, A-5141**, $9.99 bare (the coated colours
   were listed at $15.99; matte black, A-5925, at $14.99). Its drilling: **A-5141-CST-DR1**,
@@ -86,10 +86,15 @@ shop's basket at quantity 1 each: $27.49 before postage, Tayda's own total. The 
 the basket in a new tab, which an agent's browser pane blocks; the dashboard's "Re-checkout @
 Tayda" button makes the same link,
 `https://www.taydaelectronics.com/direct/index/add/?product=<SKUs>&qty=<quantities>`, which can
-be opened directly. Left: the owner checks out, changing no quantity (the Box Tool says a changed
-quantity stops it matching the order to the reservation), and the order shows as Processing on
-the dashboard about ten minutes later. Tayda's page for A-5925 says the case may take 3-4
-business days to make, and matte black longer than other colours.
+be opened directly. The basket's quantities are left as they are: the Box Tool says a changed
+quantity stops it matching the order to the reservation.
+
+**Ordered by the owner the same day**, with DHL Express, VAT and duty paid, $26.04 and 2-4 days
+in transit: $53.53 in all (the order number is in Tayda's email to the owner). The order turns to
+Processing on the Box Tool's dashboard about ten minutes after checkout. Tayda raises any problem
+with a template on that dashboard, not by email, so it is the place to look until the case
+ships. Tayda's page for A-5925 says the case may take 3-4 business days to make, and matte black
+longer than other colours.
 
 One hole is close to an edge: the USB-C socket's, 1.4 mm from the tub's rim as drilled.
 Tayda's ±1 mm on the walls could leave that strip under a millimetre wide.

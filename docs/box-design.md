@@ -587,9 +587,11 @@ prototype.
 
 As of 2026-11-17, in the order they unblock things:
 
-1. **The order for the test case**, in three baskets: [box-order.md](box-order.md). The Tayda
-   one is set up in the owner's Box Tool account, matte black; it waits for the print file to
-   be uploaded (Tayda's form asks the owner to confirm the file) and for the owner's go-ahead.
+1. **The rest of the order for the test case**: the case itself was ordered from Tayda on
+   2026-11-17, matte black, drilled and printed. The other two baskets in
+   [box-order.md](box-order.md), the LCSC parts and the fan with its filter, screws and feet,
+   are not recorded as ordered. Until the case ships, Tayda raises any problem with it on the
+   Box Tool's dashboard, not by email.
 2. **Three measurements on the prototype**, which the model still estimates:
    - which screen it is (Waveshare's 4.3″ with touch or without), how far its frame reaches past
      the window on each of the four sides, and how thick it is behind the face;
@@ -612,7 +614,7 @@ case, the firmware and the device configuration are here.
 |---|---|---|
 | 1 | **The heat test** on the prototype: block, pad, closed case, an hour's heavy rig, the log in `bench-results/`. **No longer waited for** (the owner, 2026-11-16: assume a fan). Still worth doing when the parts are to hand: it says whether the block is worth fitting as well | A number in `bench-results/` |
 | 2 | **Parts and the mechanical model** (started: `enclosure/src/box_layout.py`). With the fan, the vents and the lamps since 2026-11-16, and one fan on the base plate since 2026-11-17; still to do: the three measurements in "Needed from the owner" and the order of assembly. Every socket, switch and connector chosen with its datasheet drawing and its LCSC number; the case, the Pi, the screen and the three boards modelled in `enclosure/` in plan and section; the assembly order walked through in the model | The mic socket's fit, every height and the order of assembly are shown to work, and the model gives the board outlines and the hole table |
-| 3 | **A test case.** One 1590DD drilled and coated from the hole table; dummy boards cut from card or printed, with the real sockets, the lamps and the fan, tried in it. **The order is prepared** ([box-order.md](box-order.md)): the drill templates are in Tayda's tool and the print file is made, 2026-11-17; the owner places it | The owner has a made case that everything fits |
+| 3 | **A test case.** One 1590DD drilled and coated from the hole table; dummy boards cut from card or printed, with the real sockets, the lamps and the fan, tried in it. **The case is ordered** ([box-order.md](box-order.md)): from Tayda on 2026-11-17, matte black, drilled from drill template 37371 on the case and the base plate, and the name printed on the face; Tayda says 3-4 business days to make it, then DHL's 2-4 days. The sockets, the lamps and the fan are their own baskets | The owner has a made case that everything fits |
 | 4 | **Schematics**: the audio board cut from pedal-codec's phase 2 sheets, the Pi board new, the control board; ngspice for what changed. **Done 2026-11-16**: the owner looked over all three, and the decisions of that day are drawn (pedal-codec, plan.md) | The owner has reviewed the PDFs |
 | 5 | **Layouts**, four layers for the audio board, checked in the model | DRC clean; the owner has reviewed the plots and the boards in the case model |
 | 6 | **Order** the boards, assembled. Agents prepare; the owner orders | Ordered |
