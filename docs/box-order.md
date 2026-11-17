@@ -43,8 +43,10 @@ About $25 before postage and VAT.
   `enclosure/print/tayda-1590dd-side-a.pdf` (box-design.md, "The print on the face"). Tayda
   prints the file as it is sent and does not check it, and its form asks the owner to confirm
   three things about the file before it will save it.
-- About $23.50 for the case and both drillings, before the printing and postage; the box job's
-  order review shows the whole.
+- **$27.49 before postage** (Tayda's shop, 2026-11-17): the case $14.99, its drilling $4.50, the
+  base plate's $4.00, and the face's print, **A-5141-CST-UV**, $4.00. The box job also offers
+  printing the white twice (A-99999-CST-UV-WH, $2.00 a side), which Tayda sells "only for some
+  customers who want white to be more white"; not chosen.
 
 The table is `python3 enclosure/src/box_layout.py --tayda`, for Tayda's own case (its drawing
 A-5141; Hammond's differs by a millimetre or so in places): 18 round holes and the window in
@@ -66,20 +68,21 @@ seen from below, which puts the fan's eight holes in the lower left of the lid's
 lid's corner screws are symmetric: it is fitted whichever way round puts the fan's holes under
 the gap between footswitches 1 and 2, so a lid drawn the other way up still fits.
 
-**In the owner's Box Tool account** (2026-11-17), none shared:
+**In the owner's Box Tool account** (2026-11-17); the drill templates are not shared:
 
 | What | Number | Holds |
 |---|---|---|
+| Box job "Pedal box test case 3, floor fan, printed, matte black" | 4918 | **The one to order**: the case, **A-5925, 1590DD matte black**; its drilling, A-5141-CST-DR1, and the base plate's, A-5141-CST-DRL, both from drill template 37371; the face's print, A-5141-CST-UV, from UV template 35359 |
+| UV print template "Pedal box face, pedal.science" | 35359 | `enclosure/print/tayda-1590dd-side-a.pdf` on side A, CMYK and RDG White; uploaded and confirmed by the owner |
 | Drill template "Pedal box test case 3, floor fan" | 37371 | **The table below**: 26 holes and the window, read back from the tool's own picture and equal to the table, none marked red |
 | Drill template "Pedal box test case 2, two fans" | 37366 | Two 25 mm fans blowing out through the left and front walls. Superseded the same day, kept |
 | Drill template "Pedal box test case 1" | 37365 | One fan on the front wall, six small inlet holes. Superseded, kept |
-| Box job "Pedal box test case 1, matte black" | 4909 | The case, **A-5925, 1590DD matte black, $14.99**, and the drilling, A-5141-CST-DR1, with drill template 1. **To be replaced**, see below |
+| Box job "Pedal box test case 1, matte black" | 4909 | The case and its drilling with drill template 1, no print. Superseded by 4918 and kept: it gets no quantity when the order is made |
 
-Still to do there, in order: the UV print template (the owner uploads
-`enclosure/print/tayda-1590dd-side-a.pdf` and confirms it; the form is the owner's to sign);
-then a box job with the matte black case, both drilling services, drill template 37371 and the
-print; then "Create Order", quantity 1, which fills the shop's basket; the owner checks out.
-Tayda's page for A-5925 says matte black can take longer to make than other colours.
+Left to do there: "Create Order" on the Box Job Templates page, quantity 1 against box job 4918
+and none against 4909, then "Add to Cart & Create Order", which fills the shop's basket; the
+owner checks out. Tayda's page for A-5925 says the case may take 3-4 business days to make, and
+matte black longer than other colours.
 
 One hole is close to an edge: the USB-C socket's, 1.4 mm from the tub's rim as drilled.
 Tayda's ±1 mm on the walls could leave that strip under a millimetre wide.
