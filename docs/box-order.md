@@ -24,7 +24,9 @@ About $25 before postage and VAT.
 ## 2. Tayda: the case, drilled
 
 - The case: **1590DD Style Aluminum Diecast Enclosure, A-5141**, $9.99 bare (the coated colours
-  were listed at $15.99). Its drilling: **A-5141-CST-DR1**, $4.50, up to 40 holes.
+  were listed at $15.99; matte black, A-5925, at $14.99). Its drilling: **A-5141-CST-DR1**,
+  $4.50, up to 40 holes. The base plate (Tayda's "lid") is drilled by a separate service,
+  **A-5141-CST-DRL**, $4.00, ±0.5 mm, chosen in the box job beside the first.
 - Tayda's order is made in its Box Tool (drill.taydakits.com), with an account under the same
   email as the Tayda shop account: a drill template, then a box job, then "Create Order", which
   fills the shop's basket. Its guides:
@@ -41,34 +43,43 @@ About $25 before postage and VAT.
   `enclosure/print/tayda-1590dd-side-a.pdf` (box-design.md, "The print on the face"). Tayda
   prints the file as it is sent and does not check it, and its form asks the owner to confirm
   three things about the file before it will save it.
-- About $20 for the case and its drilling, before the printing and postage.
+- About $23.50 for the case and both drillings, before the printing and postage; the box job's
+  order review shows the whole.
 
 The table is `python3 enclosure/src/box_layout.py --tayda`, for Tayda's own case (its drawing
-A-5141; Hammond's differs by a millimetre or so in places): 30 round holes and the window,
-diameters already with the 0.4 mm added. If the model changes, print it again.
+A-5141; Hammond's differs by a millimetre or so in places): 18 round holes and the window in
+the case, 8 in the base plate, diameters already with the 0.4 mm added. If the model changes,
+print it again.
 
 **Tayda's tool draws the 1590DD upright**, the face 117 mm wide and 185 mm high (seen in the
 tool itself on 2026-11-16; the table before that date had the pedal on its side, and was
 wrong). So the pedal is turned a quarter turn anticlockwise to fit: side A is the face with
 the pedal's right-hand end at the top, **B the pedal's right wall** (the mic), **C its rear
-wall** (the sockets and the air inlet), **E its front wall** (fan B), **D its left wall**
-(fan A). The walls are drawn folded out flat from the face, so on C the face is to the right
-and the lid's edge to the left, and on E the other way round. In the tool's picture the
-sockets on C belong nearer the picture's left edge, fan B's holes on E about the middle, fan
-A's at the right-hand end of D, and the screen's window in the lower left of the face.
+wall** (the sockets and the air outlet), E its front wall and D its left wall (nothing on
+either). The walls are drawn folded out flat from the face, so on C the face is to the right
+and the lid's edge to the left. In the tool's picture the sockets on C belong nearer the
+picture's left edge, and the screen's window in the lower left of the face.
+
+**The base plate is Tayda's "Lid"**, drawn the size of the face. Tayda gives no orientation
+for it. Every other side's coordinates are as seen from outside, so the lid's are taken as
+seen from below, which puts the fan's eight holes in the lower left of the lid's picture. The
+lid's corner screws are symmetric: it is fitted whichever way round puts the fan's holes under
+the gap between footswitches 1 and 2, so a lid drawn the other way up still fits.
 
 **In the owner's Box Tool account** (2026-11-17), none shared:
 
 | What | Number | Holds |
 |---|---|---|
-| Drill template "Pedal box test case 2, two fans" | 37366 | **The table below**: 30 holes and the window, read back from the tool's own picture and equal to the table, none marked red |
-| Drill template "Pedal box test case 1" | 37365 | The design before 2026-11-17: one fan on the front wall, six small inlet holes. Kept, not for ordering |
-| Box job "Pedal box test case 1, matte black" | 4909 | The case, **A-5925, 1590DD matte black, $14.99**, and the drilling, A-5141-CST-DR1, with drill template 1. **To be replaced** by a box job with template 2 and the print |
+| Drill template "Pedal box test case 3, floor fan" | 37371 | **The table below**: 26 holes and the window, read back from the tool's own picture and equal to the table, none marked red |
+| Drill template "Pedal box test case 2, two fans" | 37366 | Two 25 mm fans blowing out through the left and front walls. Superseded the same day, kept |
+| Drill template "Pedal box test case 1" | 37365 | One fan on the front wall, six small inlet holes. Superseded, kept |
+| Box job "Pedal box test case 1, matte black" | 4909 | The case, **A-5925, 1590DD matte black, $14.99**, and the drilling, A-5141-CST-DR1, with drill template 1. **To be replaced**, see below |
 
-Tayda's page for A-5925 says matte black can take longer to make than other colours. Still to
-do there: the UV print template (the owner uploads the file and confirms it), a box job with
-drill template 2 and the print, then "Create Order", quantity 1, which fills the shop's
-basket; the owner checks out.
+Still to do there, in order: the UV print template (the owner uploads
+`enclosure/print/tayda-1590dd-side-a.pdf` and confirms it; the form is the owner's to sign);
+then a box job with the matte black case, both drilling services, drill template 37371 and the
+print; then "Create Order", quantity 1, which fills the shop's basket; the owner checks out.
+Tayda's page for A-5925 says matte black can take longer to make than other colours.
 
 One hole is close to an edge: the USB-C socket's, 1.4 mm from the tub's rim as drilled.
 Tayda's ±1 mm on the walls could leave that strip under a millimetre wide.
@@ -90,31 +101,29 @@ Tayda's ±1 mm on the walls could leave that strip under a millimetre wide.
    C     out                         -5.0    35.8    11.8
    C     EXT FS                      -5.0    54.4    11.8
    C     guitar in                   -5.0    73.2    11.8
-   C     air in                      -6.5   -36.2    9.4
-   C     air in                      -6.5   -24.7    9.4
-   D     air out (fan A)             28.8     0.5    8.4
-   D     air out (fan A)             36.2     8.0    8.4
-   D     air out (fan A)             43.8     0.5    8.4
-   D     air out (fan A)             36.2    -7.0    8.4
-   D     fan A screw                 26.2    10.5    3.4
-   D     fan A screw                 46.2    -9.5    3.4
-   E     air out (fan B)             -0.5   -23.8    8.4
-   E     air out (fan B)             -8.0   -31.2    8.4
-   E     air out (fan B)             -0.5   -38.8    8.4
-   E     air out (fan B)              7.0   -31.2    8.4
-   E     fan B screw                -10.5   -21.2    3.4
-   E     fan B screw                  9.5   -41.2    3.4
+   C     air out                     -6.5   -36.2    9.4
+   C     air out                     -6.5   -24.7    9.4
+   Lid   air in (fan)               -34.8   -24.0    8.4
+   Lid   air in (fan)               -43.8   -29.2    8.4
+   Lid   air in (fan)               -43.8   -39.8    8.4
+   Lid   air in (fan)               -34.8   -45.0    8.4
+   Lid   air in (fan)               -25.7   -39.8    8.4
+   Lid   air in (fan)               -25.7   -29.2    8.4
+   Lid   fan screw                  -46.8   -22.5    3.4
+   Lid   fan screw                  -22.8   -46.5    3.4
    B     mic                         -7.8     0.0    22.4
    B     mic screw                  -17.6    -9.9    3.6
    B     mic screw                    2.2     9.9    3.6
 ```
 
-## 3. Anywhere: the fans
+## 3. Anywhere: the fan, its filter and the feet
 
 | Qty | Part | For |
 |---|---|---|
-| 3 | 25 × 25 mm, **6 or 7 mm thick**, 5 V, two-wire fan (Sunon's MF25060V2-1000U-A99 is 6 mm; sold loosely as "2506" or "2507 5V"). With an XH2.54 two-pin plug if it can be had, or bare leads and a bought XH lead | Two in the case and one spare. **Not 10 mm thick**: fan A, on the left wall, has 9 mm to footswitch 1. Check which wire is + before it is plugged in: the Pi board's pin 1 is +5 V |
-| 8 | M2.5 × 12 mm screws and nuts | Two hold each fan |
+| 2 | 30 × 30 × 10 mm, 5 V, two-wire fan (Sunon's MF30100V2-1000U-A99 is the kind: 4.7 cubic feet a minute, 21 dB(A)). With an XH2.54 two-pin plug if it can be had, or bare leads and a bought XH lead | One in the case and one spare. Its holes should be 24 mm apart; check against its drawing. Check which wire is + before it is plugged in: the Pi board's pin 1 is +5 V |
+| 1 | A sheet of fan filter mesh about 1 mm thick, nylon or fine stainless (sold for 40 mm or larger fans; cut to 30 mm square) | Under the fan, clamped between it and the base plate |
+| 4 | M2.5 × 16 mm screws and nuts | Two hold the fan through the base plate, the filter and the fan |
+| 4 | Rubber feet, 5 mm tall or more | The base plate stands on them so the fan can breathe |
 
 ## Not on this order
 
