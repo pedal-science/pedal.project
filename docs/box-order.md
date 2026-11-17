@@ -53,6 +53,11 @@ to the left, and on E the other way round. In the tool's picture the sockets on 
 nearer the picture's left edge, the fan's seven holes on E about the middle, and the screen's
 window in the lower left of the face.
 
+**Entered on 2026-11-17** as the drill template "Pedal box test case 1" (number 37365) in the
+owner's Box Tool account, not shared: all 31 holes and the window, read back from the tool's
+own picture and equal to the table below, none marked red. Still to do there: a box job
+template (the case, its colour, this drill template), then "Create Order".
+
 One hole is close to an edge: the USB-C socket's, 1.4 mm from the tub's rim as drilled.
 Tayda's ±1 mm on the walls could leave that strip under a millimetre wide.
 
