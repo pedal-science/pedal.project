@@ -47,23 +47,20 @@ JACKS = (("out socket", 125.0), ("EXT FS socket", 143.7), ("guitar in socket", 1
 USBC_X, MIDI_X, MIC_Y = 40.0, 76.0, 47.0
 ENCODER, BUTTONS = (131.1, 30.0), ((125.0, 55.0), (141.0, 55.0))
 LAMPS = ((125.0, 64.0), (141.0, 64.0))    # one in front of each button (the owner, 2026-11-16)
-# The fans (the owner, 2026-11-16: assume one is needed; 2026-11-17: on a side panel if it can
-# be, and a second if there is room).  Each 25 x 25 mm and 6 to 7 mm thick (Sunon's
-# MF25060V2-1000U-A99 is 6), two wires, blowing out.  Fan A stands against the LEFT wall in its
-# front corner, the one place on a side wall with room from the rim to the face: the screen is
-# above the rest of the left wall, and the mic socket, footswitch 3 and the guitar socket fill
-# the right.  Fan B stands against the front wall between footswitches 1 and 2, as the one fan
-# did.  Each centre is 13.5 mm below the inside of the face: 1 mm under the face, 0.5 mm over
-# Tayda's 4 mm lid rim.  The air comes in through the rear wall, into the 11 mm between the Pi
-# and the Pi board; it cannot come from the right wall, because that pocket is closed on its
-# right by the Pi's USB sockets and on its front by the 40-pin socket.
-FAN_X, FAN_BELOW_FACE, FAN = 58.0, 13.5, (25.0, 7.0)
-FAN_A_FROM_PILLAR = 2.0            # fan A's front edge, behind the front-left pillar
-FAN_VENTS = ((7.5, 0.0), (0.0, 7.5), (-7.5, 0.0), (0.0, -7.5))      # four of 8 mm, off the hub
-FAN_SCREWS = ((10.0, 10.0), (-10.0, -10.0))          # two of the fan's four holes, 20 mm apart
-# Air in: two 9 mm holes between the USB-C and MIDI sockets, in the height of the gap between
+# The fan (the owner, 2026-11-16: assume one is needed; 2026-11-17: one only, in the floor
+# between footswitches 1 and 2, drawing in through a thin dust filter, with vents only in the
+# rear wall).  30 x 30 x 10 mm, 5 V, two wires (Sunon's MF30100V2-1000U-A99 is the kind), lying
+# on the base plate on a 1 mm filter, held by two screws through the base plate.  It sits in
+# front of the Pi board and under the footswitches, whose bodies end 14.5 mm above the base.
+# The air leaves through the rear wall, at the gap between the Pi and the Pi board.
+FAN, FILTER = (30.0, 10.0), 1.0
+FAN_Y0 = 74.5                      # the fan's rear edge: 2.5 mm in front of the Pi board
+FAN_VENTS = [(10.5 * c, 10.5 * s) for c, s in
+             ((1, 0), (.5, .866), (-.5, .866), (-1, 0), (-.5, -.866), (.5, -.866))]   # six of 8 mm
+FAN_SCREWS = ((12.0, 12.0), (-12.0, -12.0))          # two of the fan's four holes, 24 mm apart
+# Air out: two 9 mm holes between the USB-C and MIDI sockets, in the height of the gap between
 # the Pi and the Pi board.  (x, mm above the Pi board's top).  Round, so a coin cannot get in.
-INTAKE = ((53.0, 5.1), (64.6, 5.1))
+EXHAUST = ((53.0, 5.1), (64.6, 5.1))
 FLOOR = 2.5                        # the face's thickness, both makers
 
 W = D = H = CX = 0.0
@@ -158,18 +155,17 @@ def build(name):
     part("control board and its parts", 115.5, 152.5, 21.5, 68.5, H - 10.5, H, "control",
          "#f6dfb4", "board 7 mm below the face; pin ends 1.9 mm below it")
 
-    # --- the fans -----------------------------------------------------------------------
-    fz = H - FAN_BELOW_FACE
-    ay1 = fan_a_front()
-    part("fan A", 0, FAN[1], ay1 - FAN[0], ay1, fz - FAN[0] / 2, fz + FAN[0] / 2, "fan",
-         "#cfe8f5", "25 x 25 x 7 mm at most, on the left wall, blowing out")
-    part("fan B", FAN_X - FAN[0] / 2, FAN_X + FAN[0] / 2, D - FAN[1], D, fz - FAN[0] / 2,
-         fz + FAN[0] / 2, "fan", "#cfe8f5", "the same, on the front wall, blowing out")
+    # --- the fan ------------------------------------------------------------------------
+    fx, fy = fan_centre()
+    part("fan's filter", fx - FAN[0] / 2, fx + FAN[0] / 2, fy - FAN[0] / 2, fy + FAN[0] / 2,
+         0, FILTER, "fan", "#e9eef1", "1 mm, under the fan")
+    part("fan", fx - FAN[0] / 2, fx + FAN[0] / 2, fy - FAN[0] / 2, fy + FAN[0] / 2, FILTER,
+         FILTER + FAN[1], "fan", "#cfe8f5", "30 x 30 x 10 mm on the base plate, drawing in")
 
 
-def fan_a_front():
-    """Fan A's front edge, y: just behind the front-left pillar."""
-    return D - CASE["reach"][1] - FAN_A_FROM_PILLAR
+def fan_centre():
+    """The fan's centre: midway between footswitches 1 and 2, in front of the Pi board."""
+    return CX - 34.5, FAN_Y0 + FAN[0] / 2
 
 
 # Pairs that are meant to touch or pass through each other.
@@ -232,7 +228,7 @@ def svg():
          f'<rect x="{ox}" y="{oy}" width="{n(W * S)}" height="{n(D * S)}" rx="8" fill="none" '
          f'stroke="#333" stroke-width="1.5"/>']
     order = {"case": 0, "piboard": 1, "audio": 1, "heat": 2, "pi": 3, "fs": 4, "control": 5,
-             "fan": 4}
+             "fan": 2}
     for p in sorted(PARTS, key=lambda q: (order[q["group"]], q["z"][0])):
         x0, x1 = p["x"]
         y0, y1 = p["y"]
@@ -246,7 +242,7 @@ def svg():
     labels = [("Pi 5 on the screen", 70, 30), ("Pi board", 22, 62), ("heat block", 59, 34),
               ("USB-C", 40, -1.5), ("MIDI", 76, -1.5), ("out", 125, -1.5), ("EXT FS", 143.7, -1.5),
               ("in", 162.4, -1.5), ("mic", 166, 48), ("audio board", 140, 98),
-              ("encoder", 131, 31), ("B1  B2", 133, 56), ("fan B", 58, 97), ("A", 3.5, 92), ("FS1", 24, 82), ("FS2", 93, 82), ("FS3", 162, 82), ("USB, Ethernet", 103.5, 40)]
+              ("encoder", 131, 31), ("B1  B2", 133, 56), ("fan, on the base", 54.75, 101), ("FS1", 24, 82), ("FS2", 93, 82), ("FS3", 162, 82), ("USB, Ethernet", 103.5, 40)]
     for s, lx, ly in labels:
         o.append(f'<text x="{n(ox + lx * S)}" y="{n(oy + ly * S)}" font-size="12" '
                  f'text-anchor="middle" fill="#111">{s}</text>')
@@ -290,22 +286,15 @@ def holes(name):
              ("rear wall", "MIDI in", MIDI_X - CX, below(pb_top + 3.0), "6.5")]
     rows += [("rear wall", jn.replace(" socket", ""), jx - CX, below(4.0 + 7.53), "11.4")
              for jn, jx in JACKS]
-    rows += [("rear wall", "air in", ix - CX, below(pb_top + dz), "9") for ix, dz in INTAKE]
-    fz = H - FAN_BELOW_FACE
-    ay = D / 2 - (fan_a_front() - FAN[0] / 2)       # fan A's centre, mm toward the rear of centre
-    rows += [("left wall", "air out (fan A)", ay + dy, below(fz + dz), "8")
-             for dy, dz in FAN_VENTS]
-    rows += [("left wall", "fan A screw", ay + dy, below(fz + dz), "3.0")
-             for dy, dz in FAN_SCREWS]
-    rows += [("front wall", "air out (fan B)", FAN_X + dx - CX, below(fz + dz), "8")
-             for dx, dz in FAN_VENTS]
-    rows += [("front wall", "fan B screw", FAN_X + dx - CX, below(fz + dz), "3.0")
-             for dx, dz in FAN_SCREWS]
+    rows += [("rear wall", "air out", ix - CX, below(pb_top + dz), "9") for ix, dz in EXHAUST]
+    fx, fy = fan_centre()
+    rows += [("base", "air in (fan)", fx + dx - CX, D / 2 - (fy + dy), "8") for dx, dy in FAN_VENTS]
+    rows += [("base", "fan screw", fx + dx - CX, D / 2 - (fy + dy), "3.0") for dx, dy in FAN_SCREWS]
     rows += [("right wall", "mic", D / 2 - MIC_Y, below(4.0 + 12.5), "22"),
              ("right wall", "mic screw", D / 2 - MIC_Y + 9.9, below(4.0 + 12.5 + 9.9), "3.2"),
              ("right wall", "mic screw", D / 2 - MIC_Y - 9.9, below(4.0 + 12.5 - 9.9), "3.2")]
     print(f"== holes, {name} ({CASE['source']})")
-    print("   face: mm right of centre, mm toward the rear of centre, seen from above")
+    print("   face and base: mm right of centre, mm toward the rear of centre, seen from above")
     print("   walls: mm along the wall from its centre (rear and front walls: toward the player's"
           " right; left and right walls: toward the rear), mm below the outside of the face")
     for wall, what, a, b, dia in rows:
@@ -319,9 +308,15 @@ COAT = 0.4        # Tayda: add 0.4 mm to every diameter when the case is powder-
 # short walls, C and E its long ones, each 33 mm deep (read from the tool's own picture,
 # 2026-11-16).  The pedal is turned a quarter turn anticlockwise to fit it, so its rear wall is
 # Tayda's left.
-SIDES = {"face": "A", "rear wall": "C", "front wall": "E", "right wall": "B", "left wall": "D"}
+# The base plate is Tayda's "Lid", drawn the size of the face.  Tayda gives no orientation for
+# it; every other side's coordinates are as seen from outside, so the lid's are taken as seen
+# from below: the face's frame turned over about the pedal's long axis, which mirrors the
+# front-to-rear direction.  The lid's screws are symmetric, so it is fitted whichever way round
+# puts the fan's holes under the gap between footswitches 1 and 2.
+SIDES = {"face": "A", "rear wall": "C", "front wall": "E", "right wall": "B", "left wall": "D",
+         "base": "Lid"}
 TAYDA_SIDE = {"A": (117.0, 185.0), "B": (117.0, 33.0), "D": (117.0, 33.0), "C": (33.0, 185.0),
-              "E": (33.0, 185.0)}
+              "E": (33.0, 185.0), "Lid": (117.0, 185.0)}
 
 
 def tayda_rows():
@@ -333,6 +328,8 @@ def tayda_rows():
         side = SIDES[wall]
         if side == "A":
             x, y = -b, a
+        elif side == "Lid":
+            x, y = b, a
         elif side == "C":
             x, y = half - b, a
         elif side == "E":
@@ -369,7 +366,7 @@ def tayda():
             bad, note = True, "   OVER THE EDGE OF ITS SIDE"
         elif edge < 2:
             note = f"   {edge:.1f} mm from the side's edge"
-        print(f"   {side}     {what:24s} {x:7.1f} {y:7.1f}    {size}{note}")
+        print(f"   {side:5s} {what:24s} {x:7.1f} {y:7.1f}    {size}{note}")
     return bad
 
 
