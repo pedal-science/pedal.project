@@ -55,8 +55,12 @@ window in the lower left of the face.
 
 **Entered on 2026-11-17** as the drill template "Pedal box test case 1" (number 37365) in the
 owner's Box Tool account, not shared: all 31 holes and the window, read back from the tool's
-own picture and equal to the table below, none marked red. Still to do there: a box job
-template (the case, its colour, this drill template), then "Create Order".
+own picture and equal to the table below, none marked red. With it, the box job template
+"Pedal box test case 1, matte black" (number 4909): the case in the owner's colour,
+**A-5925, 1590DD matte black, $14.99**, and the drilling, A-5141-CST-DR1, with this drill
+template; no printing, the lid in the same colour. Tayda's page for A-5925 says matte black
+can take longer to make than other colours. Still to do there: "Create Order", quantity 1,
+which fills the shop's basket; the owner checks out.
 
 One hole is close to an edge: the USB-C socket's, 1.4 mm from the tub's rim as drilled.
 Tayda's ±1 mm on the walls could leave that strip under a millimetre wide.
