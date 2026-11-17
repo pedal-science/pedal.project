@@ -90,10 +90,11 @@ be opened directly. The basket's quantities are left as they are: the Box Tool s
 quantity stops it matching the order to the reservation.
 
 **Ordered by the owner the same day**, with DHL Express, VAT and duty paid, $26.04 and 2-4 days
-in transit: $53.53 in all (the order number is in Tayda's email to the owner). The order turns to
-Processing on the Box Tool's dashboard about ten minutes after checkout. Tayda raises any problem
-with a template on that dashboard, not by email, so it is the place to look until the case
-ships. Tayda's page for A-5925 says the case may take 3-4 business days to make, and matte black
+in transit: $53.53 in all (the order number is in Tayda's email to the owner). The Box Tool's
+dashboard then showed it received, as **box job 80927**, "awaiting production", with both
+drillings against drill template 37371 and the print against UV template 35359, and counters for
+Drilled (0/2), UV Printed (0/1) and QC Passed (0/1). Tayda raises any problem with a template on
+that dashboard, not by email, so it is the place to look until the case ships. Tayda's page for A-5925 says the case may take 3-4 business days to make, and matte black
 longer than other colours.
 
 One hole is close to an edge: the USB-C socket's, 1.4 mm from the tub's rim as drilled.
