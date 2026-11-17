@@ -277,8 +277,8 @@ air in through a thin dust filter, and vents only in the rear wall.
 |---|---|
 | Fan | One, 30 × 30 × 10 mm, 5 V, two wires. Sunon's MF30100V2-1000U-A99 is the kind: 80 mA, 4.7 cubic feet a minute, 21 dB(A), 9,500 rpm, by Element14's listing |
 | Where | Lying on the base plate, between footswitches 1 and 2 (its centre 34.5 mm left of the case's centre line), 2.5 mm in front of the Pi board and so beside its plug, J9. Its top is 11 mm above the base plate; the footswitches' bodies end 14.5 mm above it |
-| Filter | A 1 mm sheet of fan filter mesh, 30 × 30 mm, between the fan and the base plate, clamped by the fan's screws. It is inside the case, so it cannot be knocked off; cleaning it means taking the base off |
-| Held by | Two M2.5 screws through the base plate, the filter and two of the fan's four holes (24 mm apart on a 30 mm fan), with nuts on top |
+| Filter | A 1 mm sheet of fan filter mesh, 30 × 30 mm, between the fan and the base plate, clamped by the fan's screws. It is inside the case, so it cannot be knocked off; cleaning it means taking the base off. For the test case, the foam pad of an Adda GRM40 (a 40 mm fan filter) cut to 30 mm, since no thin mesh was found at a UK shop ([box-order.md](box-order.md)) |
+| Held by | Two M2.5 × 20 mm pan-head screws through the base plate, the filter and two of the fan's three holes, with nuts on top. The Sunon has a hole in three corners only, the fourth carrying its lead, so the screws use the diagonal away from the lead (24 mm apart) |
 | Air in | Six ⌀8 mm holes in the base plate under the fan's blades, on a 21 mm circle: 302 mm² |
 | Air out | Two ⌀9 mm holes in the rear wall, between the USB-C and MIDI sockets, at the height of the 11 mm gap between the Pi and the Pi board, where the processor is: 127 mm² |
 | Plugged into | The Pi board's two-way JST XH plug (J9). The Pi's GPIO 12 switches it, so it runs only when the Pi is hot, and can be slowed by PWM on that pin (pedal-codec, pi-board.md, Decided 16) |
@@ -589,9 +589,9 @@ As of 2026-11-17, in the order they unblock things:
 
 1. **The rest of the order for the test case**: the case itself was ordered from Tayda on
    2026-11-17, matte black, drilled and printed. The other two baskets in
-   [box-order.md](box-order.md), the LCSC parts and the fan with its filter, screws and feet,
-   are not recorded as ordered. Until the case ships, Tayda raises any problem with it on the
-   Box Tool's dashboard, not by email.
+   [box-order.md](box-order.md) were filled the same day, for the owner to check out: the LCSC
+   parts in LCSC's cart, and the fan with its filter, screws and feet in Rapid's basket. Until
+   the case ships, Tayda raises any problem with it on the Box Tool's dashboard, not by email.
 2. **Three measurements on the prototype**, which the model still estimates:
    - which screen it is (Waveshare's 4.3″ with touch or without), how far its frame reaches past
      the window on each of the four sides, and how thick it is behind the face;
@@ -614,7 +614,7 @@ case, the firmware and the device configuration are here.
 |---|---|---|
 | 1 | **The heat test** on the prototype: block, pad, closed case, an hour's heavy rig, the log in `bench-results/`. **No longer waited for** (the owner, 2026-11-16: assume a fan). Still worth doing when the parts are to hand: it says whether the block is worth fitting as well | A number in `bench-results/` |
 | 2 | **Parts and the mechanical model** (started: `enclosure/src/box_layout.py`). With the fan, the vents and the lamps since 2026-11-16, and one fan on the base plate since 2026-11-17; still to do: the three measurements in "Needed from the owner" and the order of assembly. Every socket, switch and connector chosen with its datasheet drawing and its LCSC number; the case, the Pi, the screen and the three boards modelled in `enclosure/` in plan and section; the assembly order walked through in the model | The mic socket's fit, every height and the order of assembly are shown to work, and the model gives the board outlines and the hole table |
-| 3 | **A test case.** One 1590DD drilled and coated from the hole table; dummy boards cut from card or printed, with the real sockets, the lamps and the fan, tried in it. **The case is ordered** ([box-order.md](box-order.md)): from Tayda on 2026-11-17, matte black, drilled from drill template 37371 on the case and the base plate, and the name printed on the face; Tayda says 3-4 business days to make it, then DHL's 2-4 days. The sockets, the lamps and the fan are their own baskets | The owner has a made case that everything fits |
+| 3 | **A test case.** One 1590DD drilled and coated from the hole table; dummy boards cut from card or printed, with the real sockets, the lamps and the fan, tried in it. **The case is ordered** ([box-order.md](box-order.md)): from Tayda on 2026-11-17, matte black, drilled from drill template 37371 on the case and the base plate, and the name printed on the face; Tayda says 3-4 business days to make it, then DHL's 2-4 days. The sockets and the lamps are in LCSC's cart, and the fan and its fixings in Rapid's basket, for the owner to check out (2026-11-17) | The owner has a made case that everything fits |
 | 4 | **Schematics**: the audio board cut from pedal-codec's phase 2 sheets, the Pi board new, the control board; ngspice for what changed. **Done 2026-11-16**: the owner looked over all three, and the decisions of that day are drawn (pedal-codec, plan.md) | The owner has reviewed the PDFs |
 | 5 | **Layouts**, four layers for the audio board, checked in the model | DRC clean; the owner has reviewed the plots and the boards in the case model |
 | 6 | **Order** the boards, assembled. Agents prepare; the owner orders | Ordered |

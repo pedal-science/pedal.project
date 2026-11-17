@@ -21,6 +21,20 @@ LCSC's basket shows today's, and its minimum for a part may be more than the num
 
 About $25 before postage and VAT.
 
+**In LCSC's cart on 2026-11-17**, for the owner to check out. It is a guest cart in the agent's
+browser pane, so it is there until the owner signs in on that pane. LCSC sells some of these
+only in tens or twenties, so the cart holds more than the table:
+
+- the buttons: 10, not 5;
+- the red lamps: 20, not 10;
+- the 40-pin sockets: 5, not 2;
+- the XH sockets: 10, not 5;
+- the two lamps to compare: 5 yellow and 20 yellow-green.
+
+Everything was in stock. The parts come to $28.69. The cart guessed $12.23 for shipping before it
+had an address, and says the buyer pays any duties and taxes at the destination. LCSC's site warns
+that its shipments may be delayed by traffic restrictions in China until 21 November.
+
 ## 2. Tayda: the case, drilled (ordered 2026-11-17)
 
 - The case: **1590DD Style Aluminum Diecast Enclosure, A-5141**, $9.99 bare (the coated colours
@@ -132,14 +146,42 @@ Tayda's ±1 mm on the walls could leave that strip under a millimetre wide.
    B     mic screw                    2.2     9.9    3.6
 ```
 
-## 3. Anywhere: the fan, its filter and the feet
+## 3. Rapid: the fan, its filter, screws and feet
 
-| Qty | Part | For |
-|---|---|---|
-| 2 | 30 × 30 × 10 mm, 5 V, two-wire fan (Sunon's MF30100V2-1000U-A99 is the kind: 4.7 cubic feet a minute, 21 dB(A)). With an XH2.54 two-pin plug if it can be had, or bare leads and a bought XH lead | One in the case and one spare. Its holes should be 24 mm apart; check against its drawing. Check which wire is + before it is plugged in: the Pi board's pin 1 is +5 V |
-| 1 | A sheet of fan filter mesh about 1 mm thick, nylon or fine stainless (sold for 40 mm or larger fans; cut to 30 mm square) | Under the fan, clamped between it and the base plate |
-| 4 | M2.5 × 16 mm screws and nuts | Two hold the fan through the base plate, the filter and the fan |
-| 4 | Rubber feet, 5 mm tall or more | The base plate stands on them so the fan can breathe |
+| Qty | Part | Rapid | Each, ex VAT | For |
+|---|---|---|---|---|
+| 2 | Sunon MF30100V2-1000U-A99: 30 × 30 × 10 mm, 5 V, 80 mA, 4.7 cubic feet a minute, 21 dB(A) | 07-2382 | £9.73 | One in the case and one spare |
+| 1 pack of 100 | R-TECH 337031: M2.5 × 20 mm, Pozi pan head, zinc plated | 33-7031 | £3.01 | Two hold the fan through the base plate and the filter |
+| 1 pack of 100 | R-TECH 337145: M2.5 nuts, zinc plated | 33-7145 | £1.61 | On the screws, on top of the fan |
+| 1 sheet of 36 | R-TECH 310036: self-adhesive rubber feet, 19.8 mm across, 5.0 mm tall | 31-0036 | £5.26 | Four under the base plate, so the fan can breathe |
+| 1 | Adda GRM40: a guard and foam filter for a 40 mm fan | 37-0870 | £2.08 | Its foam pad, cut to 30 mm square, is the filter under the fan |
+
+**£31.42 before VAT, £37.70 with it.** Rapid delivers free over £30 before VAT. **In Rapid's
+basket on 2026-11-17**, for the owner to check out. It is a guest basket in the agent's browser
+pane.
+
+- **Why Rapid.** The fan was not in stock at LCSC, which had none of its fans in stock that day, or
+  at Digi-Key UK. Farnell, RS, Mouser and TME refused the agent's browser. Rapid had 103 of the
+  exact part. Digi-Key UK had the faster MF30100V1-1000U-A99 (5.5 cubic feet a minute, 23 dB(A),
+  120 mA) at £5.71, but charges £22 for delivery under £65.
+- **The fan has three holes, not four** (Sunon's drawing, spec D03035840G-01). They are ⌀3.2 mm
+  and 24 mm apart; the fourth corner carries the lead. So the two screws go through the two holes
+  on the diagonal away from the lead, and the lead comes out at one of the two corners with no
+  screw. The leads are 145 mm of 28 AWG, red + and black −, bare and stripped 5 mm. Sunon asks for
+  M2.5 pan-head machine screws at 1–2 kgf·cm.
+- **20 mm screws, not 16.** The base plate is about 4.4 mm thick: Tayda's 37.4 mm overall, less
+  the 33 mm tub (not measured). So the screw passes 4.4 + 1 + 10 = 15.4 mm (plate, filter, fan)
+  before the 2 mm nut, and needs 17.4 mm at least. A 20 mm screw ends about 2.6 mm above its nut,
+  inside the fan's own square.
+- **The filter is foam, not mesh**, for the test case. No thin mesh for small fans was found at a
+  UK shop. The Adda's polyurethane pad can be washed. How thick it is under the fan is measured in
+  the test case, against the model's 1 mm.
+- **No XH plug in this order.** The fan comes with bare leads; with the dummy boards it can be run
+  from clips at 5 V. Its plug can come with the footswitches' XH leads when the boards are
+  ordered: either an XHP-2 housing with two SXH-001T-P0.6 contacts crimped on, or a bought,
+  pre-crimped lead. That day, Rapid's XH contacts were out of stock until March 2027, LCSC had no
+  pre-crimped XH leads in stock, and Digi-Key's (ASXHSXH22K152, £0.61) carry its £22 delivery.
+  Until then, the S2B-XH-A in the LCSC cart has no fan plug to be tried with.
 
 ## Not on this order
 

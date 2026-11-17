@@ -57,7 +57,7 @@ FAN, FILTER = (30.0, 10.0), 1.0
 FAN_Y0 = 74.5                      # the fan's rear edge: 2.5 mm in front of the Pi board
 FAN_VENTS = [(10.5 * c, 10.5 * s) for c, s in
              ((1, 0), (.5, .866), (-.5, .866), (-1, 0), (-.5, -.866), (.5, -.866))]   # six of 8 mm
-FAN_SCREWS = ((12.0, 12.0), (-12.0, -12.0))          # two of the fan's four holes, 24 mm apart
+FAN_SCREWS = ((12.0, 12.0), (-12.0, -12.0))   # two of the fan's three holes, away from its lead
 # Air out: two 9 mm holes between the USB-C and MIDI sockets, in the height of the gap between
 # the Pi and the Pi board.  (x, mm above the Pi board's top).  Round, so a coin cannot get in.
 EXHAUST = ((53.0, 5.1), (64.6, 5.1))
