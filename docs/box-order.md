@@ -79,10 +79,17 @@ the gap between footswitches 1 and 2, so a lid drawn the other way up still fits
 | Drill template "Pedal box test case 1" | 37365 | One fan on the front wall, six small inlet holes. Superseded, kept |
 | Box job "Pedal box test case 1, matte black" | 4909 | The case and its drilling with drill template 1, no print. Superseded by 4918 and kept: it gets no quantity when the order is made |
 
-Left to do there: "Create Order" on the Box Job Templates page, quantity 1 against box job 4918
-and none against 4909, then "Add to Cart & Create Order", which fills the shop's basket; the
-owner checks out. Tayda's page for A-5925 says the case may take 3-4 business days to make, and
-matte black longer than other colours.
+Done there on 2026-11-17, on the owner's go-ahead: "Create Order" with quantity 1 against box
+job 4918 and none against 4909, then "Add to Cart & Create Order", which reserved the order
+(reservation 3734, "Awaiting order" on the Box Tool's dashboard) and put the four items in the
+shop's basket at quantity 1 each: $27.49 before postage, Tayda's own total. The Box Tool opens
+the basket in a new tab, which an agent's browser pane blocks; the dashboard's "Re-checkout @
+Tayda" button makes the same link,
+`https://www.taydaelectronics.com/direct/index/add/?product=<SKUs>&qty=<quantities>`, which can
+be opened directly. Left: the owner checks out, changing no quantity (the Box Tool says a changed
+quantity stops it matching the order to the reservation), and the order shows as Processing on
+the dashboard about ten minutes later. Tayda's page for A-5925 says the case may take 3-4
+business days to make, and matte black longer than other colours.
 
 One hole is close to an edge: the USB-C socket's, 1.4 mm from the tub's rim as drilled.
 Tayda's ±1 mm on the walls could leave that strip under a millimetre wide.
