@@ -38,8 +38,9 @@ The same pedal as the prototype, in the same case:
    from the screen and the Pi, joined to the digital side by one cable.
 5. **A fan and vents, and a way for the heat into the case as well.** The first version of this
    rule was "sealed and silent if the measurement allows it"; the owner chose on 2026-11-16 to
-   assume a fan is needed and not wait for the measurement ("Heat"). Holes that turn out not to
-   be needed are left for a later version to drop.
+   assume a fan is needed and not wait for the measurement, and on 2026-11-17 asked for two,
+   run slowly, with one on a side panel ("Heat"). Holes that turn out not to be needed are
+   left for a later version to drop.
 6. **The Pi 5 stays a bought module**, unplugged and replaced in a minute.
 
 Rule 2 reverses the prototype's "nothing mounted through the case, everything on flying leads".
@@ -55,7 +56,7 @@ extra screw holes for them.
 | Board | Where | Held by | Carries |
 |---|---|---|---|
 | **Audio board** | Rear right and the right end of the front strip: about 60 × 104 mm (x 112–172, y 2–106), near the base plate | The three ¼″ sockets' nuts on the rear wall and the mic socket's two screws on the right wall | Guitar in, EXT FS and stereo out on the rear wall; the mic combo socket on the right wall; the guitar buffer, the mic preamp, the codec (TAC5212), the output stage, the two bypass relays, the analogue supplies. Nothing digital but the codec's own lines |
-| **Pi board** | Under the Pi, as a HAT: about 71 × 71 mm (x 12–83, y 2–73) | The Pi's 40-pin header and the Pi's mounting holes | The USB-C power socket and the MIDI 3.5 mm socket on the rear wall; the RP2350 with its flash and crystal; the MIDI optocoupler; the HAT+ ID EEPROM; the plugs for the footswitches, the control board, the link and the fan. A cut-out under the Pi's processor for the heat block |
+| **Pi board** | Under the Pi, as a HAT: about 71 × 71 mm (x 12–83, y 2–73) | The Pi's 40-pin header and the Pi's mounting holes | The USB-C power socket and the MIDI 3.5 mm socket on the rear wall; the RP2350 with its flash and crystal; the MIDI optocoupler; the HAT+ ID EEPROM; the plugs for the footswitches, the control board, the link and the two fans. A cut-out under the Pi's processor for the heat block |
 | **Control board** | Under the face, rear right, behind the rear sockets: 37 × 47 mm (x 115.5–152.5, y 21.5–68.5), 7 mm below the face | The encoder's nut | The encoder, the two buttons with a lamp in front of each, and one flat cable to the Pi board |
 
 - **The link** between the Pi board and the audio board is one short flat cable across the front
@@ -172,12 +173,14 @@ on the Pico today (`firmware/src/footswitch.c`, `main.c`).
 From the Pi to the RP2350: GPIO 23 (header pin 16) holds it in reset while high, through a 2N7002
 on its RUN pin; GPIO 24 and 25 (pins 18 and 22) are its SWDIO and SWCLK, through 330 Ω, so the Pi
 programs it with no debug probe. Its USB and BOOTSEL are on test pads, for recovery only. The
-Pi's GPIO 12 (pin 32) switches the fan, through a transistor on the Pi board: high is on.
+Pi's GPIO 12 (pin 32) switches the two fans, through one transistor on the Pi board: high is
+on. GPIO 12 is also one of the Pi's PWM pins, so the same line can run them slowly.
 
 **Still to write, at bring-up (Plan, step 7):** the firmware's reading of the two CC pins and a
 message for it in [uart-protocol.md](uart-protocol.md), the pedal service's warning on the
-screen when the supply offers under 3 A, and the fan's line in the device configuration
-(`dtoverlay=gpio-fan,gpiopin=12` with a temperature).
+screen when the supply offers under 3 A, and the fans' line in the device configuration
+(`dtoverlay=gpio-fan,gpiopin=12` with a temperature, or `pwm-fan` on the same pin if the fans
+are to run slowly; which, is tried on the bench with the real fans).
 
 The RP2350 runs whenever the 5 V is up; the Pi's 3.3 V is off in standby. Every line between
 them goes through a resistor, and the firmware keeps MCU_TX an input while GPIO 14 is low, so a
@@ -265,37 +268,57 @@ them. The Pi board keeps its hole under the processor, so the block described be
 or left out. What follows is first what the fan design is, then the reasoning and measurements
 from before the decision, which still say how much the fan has to do.
 
-### The fan and the vents
+### The fans and the vents
+
+As asked for by the owner on 2026-11-17: the fan on a side panel if it can be, a second fan if
+there is room, the two run slowly. What could be done, and what could not:
 
 | | |
 |---|---|
-| Fan | 25 × 25 × 10 mm, 5 V, two wires. Sunon's MF25100V2-1000U-A99 is the kind: 65 mA, 3.0 cubic feet a minute, 16 dB(A), by its distributors' listings |
-| Where | Standing against the front wall (the player's side), between footswitches 1 and 2, its centre at x = 58, in line with the processor. Its centre is 13.5 mm below the inside of the face, so its top is 1 mm under the face and its foot 0.5 mm above the 4 mm rim of Tayda's lid |
-| Held by | Two M2.5 screws through the wall into two of its four holes, with nuts |
-| Blows | Out, through seven ⌀5.5 mm holes in the front wall: one at its centre and six on a 15 mm circle |
-| Air in | Six ⌀4.5 mm holes in the rear wall, between the USB-C and MIDI sockets, at the height of the 11 mm gap between the Pi and the Pi board |
-| Plugged into | The Pi board's two-way JST XH plug (J9). The Pi's GPIO 12 switches it, so it runs only when the Pi is hot (pedal-codec, pi-board.md, Decided 16) |
+| Fans | Two, each 25 × 25 mm and 6 or 7 mm thick, 5 V, two wires. Sunon's MF25060V2-1000U-A99 is the kind: 6 mm thick, 75 mA, 2.2 cubic feet a minute, 18 dB(A), and rated to run from 2.5 V to 6 V, by DigiKey's listing |
+| Fan A | Standing against the **left side panel**, in its front corner: y 78.5 to 103.5, behind the corner pillar and in front of the screen. 2.2 mm clear of footswitch 1 in Tayda's case |
+| Fan B | Standing against the front wall between footswitches 1 and 2, its centre at x = 58, where the one fan was |
+| Height | Each centre is 13.5 mm below the inside of the face, so its top is 1 mm under the face and its foot 0.5 mm above the 4 mm rim of Tayda's lid |
+| Held by | Two M2.5 screws each, through the wall into two of the fan's four holes, with nuts |
+| Blow | Out, each through four ⌀8 mm holes on a 15 mm circle, clear of the fan's hub |
+| Air in | Two ⌀9 mm holes in the rear wall, between the USB-C and MIDI sockets, at the height of the 11 mm gap between the Pi and the Pi board |
+| Plugged into | The Pi board's two JST XH plugs, J9 and J10, wired side by side. The Pi's GPIO 12 switches both through one transistor, so they run only when the Pi is hot, and can be slowed by PWM on that pin (pedal-codec, pi-board.md, Decided 16) |
 
-- **Why 25 mm and not the 30 mm first proposed.** The case is 30 to 30.5 mm deep inside, and
-  Tayda's lid has a rim. A 30 mm fan cannot stand up in it. Lying flat it would have to blow
-  through the face or the base plate: the face is where feet and drinks land, and a pedal is
-  fixed to a board by its base.
+- **Why only one fan is on a side panel.** A 25 mm fan needs the wall's whole height from the
+  lid's rim to the face. On the left wall the screen is above all but the front 30 mm (Waveshare
+  give the module as 105.4 × 67.1 mm, or 106.1 × 67.8 mm with touch, against a 99 × 59 mm
+  window, so its frame reaches up to 8 mm past the window), and footswitch 1 is 9 mm from that
+  wall, which is why the fan must be thin. The right wall has no place for one at all: the mic
+  socket fills its middle, footswitch 3's lugs come within 1.5 mm of it, and the guitar socket
+  is in its rear corner, where a fan's motor would sit against the most sensitive input in the
+  pedal.
+- **Why the air does not come in at the opposite side panel.** The processor is under the Pi, in
+  the 11 mm gap between the Pi and the Pi board. That gap is closed on its right by the Pi's USB
+  and Ethernet sockets, which fill the case's depth, and on its front by the 40-pin socket. It
+  is open only at the rear and at its left end. Air let in at the right wall would run along the
+  open front of the case, past the footswitches, to the fans, and never pass the processor. So
+  the inlet stays in the rear wall, facing the gap, and the fans pull from the gap's left end.
+- **The inlet is the narrow place.** Two ⌀9 mm holes are 127 mm², where the six ⌀4.5 mm holes
+  before them were 95 mm²; that stretch of rear wall, 21 mm between two sockets and 11 mm high,
+  has room for no more. Each fan's four holes are 201 mm². Round holes, not a slot, so that a
+  coin cannot get in to the Pi board. Two fans side by side add flow, not pressure, so with an
+  inlet this small the second fan may add little: that is measured, not assumed (plan, step 8,
+  one fan against two).
+- **Running slowly.** The fans are rated down to 2.5 V. Chopping their supply from the Pi's PWM
+  pin is the simple way and needs no part the board does not have; whether these fans run
+  quietly from a chopped supply is tried on the bench.
+- **Why 25 mm and not 30 mm.** The case is 30 to 30.5 mm deep inside, and Tayda's lid has a
+  rim. A 30 mm fan cannot stand up in it. Lying flat it would have to blow through the face or
+  the base plate: the face is where feet and drinks land, and a pedal is fixed to a board by
+  its base.
 - **Why not the Pi's own fan header.** It wants a four-wire fan with its small plug, and the
-  ones found for it are 30 mm. A two-wire fan switched by the Pi board is one transistor.
-- **Why the front wall.** It is the one place with room from the base to the face and nothing
-  estimated nearby. Along the left and rear walls the screen's frame is above (Waveshare give
-  the module as 105.4 × 67.1 mm, or 106.1 × 67.8 mm with touch, against a 99 × 59 mm window, so
-  it reaches 3 to 4 mm past the window on each side) and the Pi board is below.
-- **The air's path.** In at the rear wall, into the gap between the Pi and the Pi board, across
-  the processor. The 40-pin socket closes the gap's front and the USB sockets its right end, so
-  the air leaves the gap at its left end, runs forward along the left wall and out through the
-  fan. The fan pulls; the inlet being the only other opening is what makes the air take that
-  path.
-- **What is not known.** None of this is calculated or measured. The inlet is small (95 mm²
-  against the fan's 166 mm²), because that stretch of rear wall is all there is beside the gap.
-  Step 8 of the plan measures it in the box; a later case can have more or fewer holes.
-- **Noise.** The fan's 65 mA comes from the digital 5 V, with 10 µF at its plug. The audio board
-  has its own regulators. Measured in the box with the fan running and stopped.
+  ones found for it are 30 mm. Two-wire fans switched by the Pi board are one transistor.
+- **What is not known.** None of this is calculated or measured: not the flow, not how much of
+  the air crosses the processor rather than running along the rear wall to the fans, not the
+  noise. Step 8 of the plan measures it in the box; a later case can have more or fewer holes.
+- **Noise on the supply.** The fans' 150 mA comes from the digital 5 V, with 10 µF at their
+  plugs. The audio board has its own regulators. Measured in the box with the fans running and
+  stopped.
 
 ### The block, as an option
 
@@ -404,13 +427,24 @@ After looking over the three schematics (pedal-codec, plan.md):
 4. **The mic input keeps its four 63 V capacitors only if they are needed**, and they are not:
    one 22 µF in each leg (pedal-codec, box-board.md, "Mic input").
 
+## Decided (owner, 2026-11-17)
+
+After seeing the drill template in Tayda's tool:
+
+1. **The fan on a side panel, the inlet on the opposite one, and a second fan, if they can
+   be.** One fan could go on the left side panel and a second stays on the front wall; the
+   inlet has to stay in the rear wall ("Heat" says why).
+2. **The pedal's name printed on the face**: pedal.science, small, to the right of the
+   encoder, running from the rear toward the player with the tops of its letters toward the
+   right edge, set as the website sets it ("The print on the face").
+
 ## The model so far
 
 `enclosure/src/box_layout.py` holds every part as a block and checks that none share space, in
 Hammond's case, in Tayda's, and in the prototype as measured.
 [diagrams/box-layout.png](diagrams/box-layout.png) is its plan and a section, drawn in Tayda's.
-2026-11-14, and again on 2026-11-16 with the fan and the longer control board: **no collisions
-in any of the three.** What it shows:
+2026-11-14, on 2026-11-16 with the fan and the longer control board, and on 2026-11-17 with two
+fans: **no collisions in any of the three.** What it shows:
 
 - **The mic socket fits.** Neutrik's NCJ6FA-H is 25 × 25 mm behind the wall and 24.5 mm deep,
   with its centre 12.5 mm above its board (Neutrik drawing 20004521). With the audio board's top
@@ -432,8 +466,10 @@ in any of the three.** What it shows:
   9 mm in front of each button, at (125, 64) and (141, 64). It clears the sockets by 0.5 mm and
   the mic socket by 1.5 mm or more. These positions are a proposal; the owner's were for the
   prototype's panel buttons.
-- **The fan fits against the front wall**, x 45.5–70.5, between footswitches 1 and 2, clear of
-  Hammond's middle pillar by 13 mm ("Heat").
+- **Fan B fits against the front wall**, x 45.5–70.5, between footswitches 1 and 2, clear of
+  Hammond's middle pillar by 13 mm, and **fan A against the left wall** in its front corner,
+  2.0 mm behind the corner pillar and 2.2 mm (Tayda) or 2.6 mm (Hammond) from footswitch 1
+  ("Heat"). Fan A's place also depends on the screen's frame, which is not modelled.
 - **The Pi board stops at x = 83**, which leaves 1.1 mm to Hammond's middle pillar.
 - **The MIDI socket fits under the Pi**: 8 mm tall in an 11 mm gap, 2 mm to the side of the Pi's
   HDMI sockets.
@@ -484,8 +520,26 @@ the case and the lamp pushed up into its hole, so its flange rests under the fac
 sets itself (pedal-codec, control-board.md, Decided 5 and 6). Red, because it is fed from 3.3 V.
 Still tried with a sample in the test case: the fit of the hole once coated, and the brightness.
 
-The fan is not a board part and has no LCSC number: 25 × 25 × 10 mm, 5 V, two wires, with an
-XH2.54 two-pin plug for the Pi board's J9 ("Heat"; [box-order.md](box-order.md)).
+The fans are not board parts and have no LCSC number: two, 25 × 25 mm and 6 or 7 mm thick,
+5 V, two wires, each with an XH2.54 two-pin plug for the Pi board's J9 and J10 ("Heat";
+[box-order.md](box-order.md)).
+
+### The print on the face
+
+The owner, 2026-11-17: the word pedal.science, small, in the space to the right of the encoder,
+turned so that it runs from the rear toward the player with the tops of its letters toward the
+pedal's right edge. It is set as the website sets its name in dark mode: DM Sans Bold with the
+letters 0.03 em closer, "pedal" in the site's text colour (#cdc1c9, a warm off-white) and
+".science" in its mark colour (#2a95a7). The type is 3.8 mm (about 11 point), which makes the
+word 24.7 mm long with letters 1.9 mm high, centred 72 mm right of the face's centre on the
+encoder's line.
+
+`uv run enclosure/src/box_print.py` makes it: `enclosure/print/tayda-1590dd-side-a.pdf`, the
+file Tayda's UV printing takes (a 117 × 185 mm page, outlines only, white ink under the colour,
+as Tayda's guide asks), and [diagrams/box-face-print.png](diagrams/box-face-print.png), the
+print on the drilled face as the player sees it. Not tried: how the two colours look printed
+on a matte black coat, and whether the file passes Tayda's own checking tool, which wants a
+login typed in.
 
 **A risk the test case answers.** The Pi hangs from the screen, the Pi board from the Pi, and the
 Pi board's two sockets must meet their holes in the rear wall. The chain's tolerance may be a
@@ -508,13 +562,14 @@ line, and down from the outside of the face. Centre lines are used because the w
 | Rear wall | USB-C power | 49.6 mm left of centre, seen from the player | 26.5 mm below the face | ⌀10 mm |
 | Rear wall | MIDI in | 13.6 mm left | 25.1 mm below | ⌀6.5 mm |
 | Rear wall | Out, EXT FS, guitar in | 35.4, 54.1 and 72.8 mm right | 23.0 mm below | ⌀11.4 mm |
-| Rear wall | Air in, upper three | 39.6, 32.6 and 25.6 mm left | 19.6 mm below | ⌀4.5 mm |
-| Rear wall | Air in, lower three | 36.1, 29.1 and 22.1 mm left | 25.1 mm below | ⌀4.5 mm |
-| Front wall | Air out, behind the fan | One 31.6 mm left of centre, seen from above, and six round it on a 15 mm circle | 16.0 mm below at the centre | ⌀5.5 mm |
-| Front wall | The fan's two screws | 21.6 and 41.6 mm left | 6.0 and 26.0 mm below | ⌀3.0 mm |
+| Rear wall | Air in, two | 36.6 and 25.0 mm left | 23.0 mm below | ⌀9 mm |
+| Left wall | Air out, behind fan A | Four on a 15 mm circle about a point 34.6 mm toward the player from the wall's centre | 16.0 mm below at that point | ⌀8 mm |
+| Left wall | Fan A's two screws | 24.6 and 44.6 mm toward the player | 6.0 and 26.0 mm below | ⌀3.0 mm |
+| Front wall | Air out, behind fan B | Four on a 15 mm circle about a point 31.6 mm left of centre, seen from above | 16.0 mm below at that point | ⌀8 mm |
+| Front wall | Fan B's two screws | 21.6 and 41.6 mm left | 6.0 and 26.0 mm below | ⌀3.0 mm |
 | Right wall | Mic | 9.1 mm toward the rear of centre | 18.0 mm below | ⌀22 mm, and two ⌀3.2 mm screw holes 9.9 mm out on a diagonal (which diagonal, from Neutrik's drawing) |
 
-Thirty-one round holes and one window, under the 40 that one of Tayda's drill orders covers.
+Thirty round holes and one window, under the 40 that one of Tayda's drill orders covers.
 These are finished sizes. **For Tayda the same holes are printed as its Box Tool takes them** by
 `python3 enclosure/src/box_layout.py --tayda`: per side, from the side's centre, with the 0.4 mm
 Tayda asks for under a powder coat added to each diameter ([box-order.md](box-order.md) has that
@@ -533,7 +588,7 @@ prototype.
 - **Tayda's lid has a rim** that stands about 4 mm up inside the walls (Hammond's is under
   2 mm). The audio board's sockets start 4.0 mm above the base plate, so in Tayda's case the
   board may need to sit half a millimetre higher, which the mic socket's 1.5 mm to spare allows.
-  The fan's foot is 0.5 mm above that rim, so the rim's real height matters to it too.
+  Each fan's foot is 0.5 mm above that rim, so the rim's real height matters to them too.
 - **Tayda's ±1 mm on the walls.** Three ¼″ sockets on one board must meet three holes, and the
   mic socket a fourth on another wall. Holes drilled in one setting should keep their spacing
   far better than ±1 mm; the test case shows whether they do.
@@ -565,13 +620,13 @@ case, the firmware and the device configuration are here.
 | Step | What | Done when |
 |---|---|---|
 | 1 | **The heat test** on the prototype: block, pad, closed case, an hour's heavy rig, the log in `bench-results/`. **No longer waited for** (the owner, 2026-11-16: assume a fan). Still worth doing when the parts are to hand: it says whether the block is worth fitting as well | A number in `bench-results/` |
-| 2 | **Parts and the mechanical model** (started: `enclosure/src/box_layout.py`). With the fan, the vents and the lamps since 2026-11-16; still to do: the three measurements in "Needed from the owner" and the order of assembly. Every socket, switch and connector chosen with its datasheet drawing and its LCSC number; the case, the Pi, the screen and the three boards modelled in `enclosure/` in plan and section; the assembly order walked through in the model | The mic socket's fit, every height and the order of assembly are shown to work, and the model gives the board outlines and the hole table |
-| 3 | **A test case.** One 1590DD drilled and coated from the hole table; dummy boards cut from card or printed, with the real sockets, the lamps and the fan, tried in it. **The order is prepared** ([box-order.md](box-order.md), 2026-11-16); the owner places it | The owner has a made case that everything fits |
+| 2 | **Parts and the mechanical model** (started: `enclosure/src/box_layout.py`). With the fan, the vents and the lamps since 2026-11-16, and two fans since 2026-11-17; still to do: the three measurements in "Needed from the owner" and the order of assembly. Every socket, switch and connector chosen with its datasheet drawing and its LCSC number; the case, the Pi, the screen and the three boards modelled in `enclosure/` in plan and section; the assembly order walked through in the model | The mic socket's fit, every height and the order of assembly are shown to work, and the model gives the board outlines and the hole table |
+| 3 | **A test case.** One 1590DD drilled and coated from the hole table; dummy boards cut from card or printed, with the real sockets, the lamps and the fans, tried in it. **The order is prepared** ([box-order.md](box-order.md)): two drill templates and the print file are in Tayda's tool, 2026-11-17; the owner places it | The owner has a made case that everything fits |
 | 4 | **Schematics**: the audio board cut from pedal-codec's phase 2 sheets, the Pi board new, the control board; ngspice for what changed. **Done 2026-11-16**: the owner looked over all three, and the decisions of that day are drawn (pedal-codec, plan.md) | The owner has reviewed the PDFs |
 | 5 | **Layouts**, four layers for the audio board, checked in the model | DRC clean; the owner has reviewed the plots and the boards in the case model |
 | 6 | **Order** the boards, assembled. Agents prepare; the owner orders | Ordered |
 | 7 | **Bring-up**: the boards on the bench, then in the case; the firmware moved to the Pi board's pins; the codec's overlay and configuration in `rtpi` and here | The pedal plays, every control works |
-| 8 | **Measure in the box**: noise, heat, Wi-Fi range, a kick on each plug | Numbers in `bench-results/` |
+| 8 | **Measure in the box**: noise, heat with one fan and with two, Wi-Fi range, a kick on each plug | Numbers in `bench-results/` |
 | 9 | **The build guide and the bill**: every step with a photo, the time it took, the cost of one. Then a second pedal is built from the guide alone | A second pedal exists |
 
 ## Sources
@@ -590,8 +645,10 @@ case, the firmware and the device configuration are here.
 - [Everlight's drawing of the 204-10 lamp](https://mm.digikey.com/Volume0/opasdata/d220001/medias/docus/559/204-10SDRD%2CS530-A3.pdf)
   (the 204-10SDRD's sheet: the same package as the lamp chosen)
 - [Waveshare: 4.3″ DSI display](https://www.waveshare.com/product/43h-800480-ips.htm?sku=24773)
-  (the module's size), and the fan's figures from
-  [RS's listing of Sunon's MF25100V2-1000U-A99](https://uk.rs-online.com/web/p/axial-fans/2884890)
+  (the module's size), and the fans' figures from
+  [DigiKey's listing of Sunon's MF25060V2-1000U-A99](https://www.digikey.co.uk/en/products/detail/sunon-fans/MF25060V2-1000U-A99/10441400)
+- [Tayda: UV printing guide](https://www.taydaelectronics.com/uv-printing-service-guide-v1)
+  (the artboard's size, the layers and the white ink's spot colour)
 - [Bourns PEC11R datasheet](https://www.bourns.com/docs/product-datasheets/pec11r.pdf),
   [Alps EC11E15244G1](https://tech.alpsalpine.com/e/products/detail/EC11E15244G1/)
 - [JLCCNC: enclosure machining guide](https://jlccnc.com/blog/cnc-enclosure-guide)
