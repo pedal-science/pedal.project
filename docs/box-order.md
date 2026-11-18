@@ -5,7 +5,7 @@ Prepared for the owner, who places every order. It covers step 3 of the plan in
 pedal-codec's plan still needs parts for. Prices and stock are JLCPCB's parts list on 2026-11-16;
 LCSC's basket shows today's, and its minimum for a part may be more than the number here.
 
-## 1. LCSC: the parts that go in the case
+## 1. LCSC: the parts that go in the case (ordered 2026-11-17)
 
 | Qty | Part | LCSC | Each | For |
 |---|---|---|---|---|
@@ -21,9 +21,11 @@ LCSC's basket shows today's, and its minimum for a part may be more than the num
 
 About $25 before postage and VAT.
 
-**In LCSC's cart on 2026-11-17**, for the owner to check out. It is a guest cart in the agent's
-browser pane, so it is there until the owner signs in on that pane. LCSC sells some of these
-only in tens or twenties, so the cart holds more than the table:
+**Ordered by the owner on the night of 2026-11-17, without the two Neutrik rows**: the owner
+bought the NMJ6HCD2s and the NCJ6FA-H from sellers in the UK on eBay instead. What comes is
+checked against the part numbers in the table, since the case's holes are drilled for them. The
+rest went from the cart an agent filled that evening. LCSC sells some of these only in tens or
+twenties, so the order holds more than the table:
 
 - the buttons: 10, not 5;
 - the red lamps: 20, not 10;
@@ -31,9 +33,9 @@ only in tens or twenties, so the cart holds more than the table:
 - the XH sockets: 10, not 5;
 - the two lamps to compare: 5 yellow and 20 yellow-green.
 
-Everything was in stock. The parts come to $28.69. The cart guessed $12.23 for shipping before it
-had an address, and says the buyer pays any duties and taxes at the destination. LCSC's site warns
-that its shipments may be delayed by traffic restrictions in China until 21 November.
+Everything was in stock. With the Neutrik rows, the cart's parts came to $28.69 before shipping.
+The cart said the buyer pays any duties and taxes on delivery, and LCSC's site warned that its
+shipments may be delayed by traffic restrictions in China until 21 November.
 
 ## 2. Tayda: the case, drilled (ordered 2026-11-17)
 
@@ -146,7 +148,7 @@ Tayda's ±1 mm on the walls could leave that strip under a millimetre wide.
    B     mic screw                    2.2     9.9    3.6
 ```
 
-## 3. Rapid: the fan, its filter, screws and feet
+## 3. Rapid: the fan, its filter, screws and feet (ordered 2026-11-17)
 
 | Qty | Part | Rapid | Each, ex VAT | For |
 |---|---|---|---|---|
@@ -156,9 +158,8 @@ Tayda's ±1 mm on the walls could leave that strip under a millimetre wide.
 | 1 sheet of 36 | R-TECH 310036: self-adhesive rubber feet, 19.8 mm across, 5.0 mm tall | 31-0036 | £5.26 | Four under the base plate, so the fan can breathe |
 | 1 | Adda GRM40: a guard and foam filter for a 40 mm fan | 37-0870 | £2.08 | Its foam pad, cut to 30 mm square, is the filter under the fan |
 
-**£31.42 before VAT, £37.70 with it.** Rapid delivers free over £30 before VAT. **In Rapid's
-basket on 2026-11-17**, for the owner to check out. It is a guest basket in the agent's browser
-pane.
+**£31.42 before VAT, £37.70 with it**, delivered free: Rapid delivers free over £30 before VAT.
+**Ordered by the owner on the night of 2026-11-17**, as listed.
 
 - **Why Rapid.** The fan was not in stock at LCSC, which had none of its fans in stock that day, or
   at Digi-Key UK. Farnell, RS, Mouser and TME refused the agent's browser. Rapid had 103 of the
@@ -176,12 +177,11 @@ pane.
 - **The filter is foam, not mesh**, for the test case. No thin mesh for small fans was found at a
   UK shop. The Adda's polyurethane pad can be washed. How thick it is under the fan is measured in
   the test case, against the model's 1 mm.
-- **No XH plug in this order.** The fan comes with bare leads; with the dummy boards it can be run
-  from clips at 5 V. Its plug can come with the footswitches' XH leads when the boards are
-  ordered: either an XHP-2 housing with two SXH-001T-P0.6 contacts crimped on, or a bought,
-  pre-crimped lead. That day, Rapid's XH contacts were out of stock until March 2027, LCSC had no
-  pre-crimped XH leads in stock, and Digi-Key's (ASXHSXH22K152, £0.61) carry its £22 delivery.
-  Until then, the S2B-XH-A in the LCSC cart has no fan plug to be tried with.
+- **The owner fits the fan's XH plug** (2026-11-18), from their own stock of XH connectors, so
+  none is ordered. The fan comes with bare leads, red + and black −; with its plug on, it is tried
+  in the S2B-XH-A from the LCSC order. For a builder without XH stock: on 2026-11-17 Rapid's XH
+  contacts were out of stock until March 2027 and LCSC had no ready-made XH leads in stock, while
+  Digi-Key had them (ASXHSXH22K152, £0.61), with its £22 delivery under £65.
 
 ## Not on this order
 
